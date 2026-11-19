@@ -80,15 +80,21 @@ public partial class ChatPanel : VBoxContainer
     }
 
     /// <summary>
-    /// The chat over the map: the lines on a see-through ground that lets the map's clicks through, and the line let go once sent, so the keys go
-    /// back to the map.
+    /// The chat over the map, in the screen's bottom-left corner above the status bar (<see cref="UiTheme.MapChatSize"/> and its neighbours): the
+    /// lines on a see-through ground that lets the map's clicks through, and the line let go once sent, so the keys go back to the map.
     /// </summary>
     public void OverTheMap()
     {
+        (AnchorLeft, AnchorRight, AnchorTop, AnchorBottom) = (0, 0, 1, 1);
+        OffsetLeft = UiTheme.MapChatLeft;
+        OffsetRight = UiTheme.MapChatLeft + UiTheme.MapChatSize.X;
+        OffsetBottom = -UiTheme.MapChatBottom;
+        OffsetTop = -UiTheme.MapChatBottom - UiTheme.MapChatSize.Y;
+        MouseFilter = MouseFilterEnum.Ignore;
         _releaseAfterSending = true;
         _log.MouseFilter = MouseFilterEnum.Ignore;
         _log.SelectionEnabled = false;
-        _log.AddThemeStyleboxOverride("normal", UiTheme.Box(new Color(UiTheme.Background, 0.55f), Colors.Transparent, 4, borderWidth: 0));
+        _log.AddThemeStyleboxOverride("normal", UiTheme.Box(UiTheme.MapChatBackground, Colors.Transparent, 4, borderWidth: 0));
     }
 
     /// <summary>Puts the keys in the line, to write.</summary>

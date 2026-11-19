@@ -29,6 +29,10 @@ public static class SaveSlotText
     public static string? Continue(SaveEntry? latest, TimeZoneInfo? zone = null) =>
         latest?.Info is { } info ? $"{Title(latest.Path, info)}, {info.Map}, {info.Date} ({LocalTime(info.SavedAt, zone)})" : null;
 
+    /// <summary>What Continue says of the newer saves it passed over (ADR-232): each one's title and why it did not load; empty for none.</summary>
+    public static string Skipped(IReadOnlyList<SkippedSave> skipped) => string.Join(" ", skipped.Select(s =>
+        $"'{(s.Entry.Info is { } info ? Title(s.Entry.Path, info) : Path.GetFileName(s.Entry.Path))}' did not load: {s.Error}"));
+
     /// <summary>A save's title: what an autosave slot holds, else the name it was saved under.</summary>
     public static string Title(string path, SaveInfo info) => GameSaves.SlotOf(path) switch
     {

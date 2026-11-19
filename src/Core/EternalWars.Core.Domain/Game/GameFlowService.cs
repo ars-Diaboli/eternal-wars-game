@@ -107,7 +107,7 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
         }
 
         var rules = state.Rules;
-        WatchPrisons();
+        Track();
         foreach (var player in InGame())
         {
             if (rules.Victory.Where(c => c.Player is null || c.Player == player.Id).FirstOrDefault(c => HoldsFor(c, player)) is { } won)
@@ -222,24 +222,13 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
     /// <summary>The hero the end's reason tells of (<see cref="IScenarioConditionHandler.HeroName"/>).</summary>
     private string? HeroNameOf(ScenarioCondition c) => ScenarioConditionHandlers.Find(c.Kind)?.HeroName(state, c);
 
-    /// <summary>
-    /// Remembers who sits in each prison a condition names: freeing the hero removes the prison, and a prisoner left open by the map is drawn
-    /// after <see cref="Begin"/> (<see cref="Objects.ObjectLifecycleService.PreparePrisons"/>).
-    /// </summary>
-    private void WatchPrisons()
+    /// <summary>What the game remembers for each victory condition before it is checked (<see cref="IScenarioConditionHandler.Track"/>).</summary>
+    private void Track()
     {
-        var prisoners = state.Tracking.Prisoners;
-        foreach (var c in state.Rules.Victory)
+        var tracking = state.Rules.Victory.Aggregate(state.Tracking, (t, c) => ScenarioConditionHandlers.Find(c.Kind)?.Track(state, c, t) ?? t);
+        if (!ReferenceEquals(tracking, state.Tracking))
         {
-            if (c is { Kind: ConditionKind.ReleaseHero, Target: { } id } && state.FindObject(id) is Prison { Hero: { } hero })
-            {
-                prisoners = prisoners.SetItem(id, hero);
-            }
-        }
-
-        if (prisoners != state.Tracking.Prisoners)
-        {
-            state.Tracking = state.Tracking with { Prisoners = prisoners };
+            state.Tracking = tracking;
         }
     }
 

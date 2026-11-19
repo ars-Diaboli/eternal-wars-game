@@ -29,6 +29,7 @@ public class AdventureAiPartsTests
         Assert.Equal(40, weights.FightsChecked);
         Assert.Equal(8, weights.FrontierChecked);
         Assert.Equal(0.08, weights.DistancePenalty);
+        Assert.Equal(70, weights.PlausiblePercent);
         Assert.Equal(0.4, weights.MonsterLoss);
         Assert.Equal(0.15, weights.ArenaLoss);
         Assert.Equal(0.8, weights.SafeShare);
@@ -44,10 +45,24 @@ public class AdventureAiPartsTests
         Assert.Equal(0.1, weights.HuntShare);
         Assert.Equal(3, weights.WayRadius);
         Assert.Equal(500, weights.GuardOpened);
+        Assert.Equal(800, weights.ArtifactValue);
+        Assert.Equal(80, weights.ArtifactScoreValue);
+        Assert.Equal(1500, weights.BankArtifactValue);
+        Assert.Equal(1500, weights.ChestValue);
+        Assert.Equal(0.85, weights.BoxCreatureShare);
+        Assert.Equal(60, weights.TroopsTripPercent);
+        Assert.Equal(0.3, weights.TroopsTripShare);
+        Assert.Equal(1000, weights.TroopsTripFloor);
         Assert.Equal(1200, weights.LessonValue);
         Assert.Equal(1000, weights.ObeliskValue);
         Assert.Equal(12000, weights.GrailValue);
         Assert.Equal(1500, weights.WarMachineCushion);
+        Assert.Equal(3000, weights.TrainingCushion);
+        Assert.Equal(3, weights.KeptGoldPart);
+        Assert.Equal(3, weights.CartographerGoldTimes);
+        Assert.Equal(3, weights.BuildGoldDays);
+        Assert.Equal(7, weights.BuildResourceDays);
+        Assert.Equal(4, weights.MostHeroes);
         Assert.Equal(50, weights.TradeTreasuryPercent);
         Assert.Equal(2, weights.TradeWaitDays);
         Assert.Equal(3, weights.SavingDays);
@@ -57,7 +72,7 @@ public class AdventureAiPartsTests
         Assert.Equal(3, weights.DoorChecksPerHero);
         Assert.Equal(0.3, weights.ViewTerrainShare);
         Assert.Equal(100, weights.NativeWalkSaving);
-        Assert.Equal(32, AiWeights.Names.Count);
+        Assert.Equal(47, AiWeights.Names.Count);
     }
 
     [Fact]
@@ -78,6 +93,9 @@ public class AdventureAiPartsTests
     [InlineData("MonsterLoss", "much")]
     [InlineData("MonsterLoss", "NaN")]
     [InlineData("CandidatesChecked", "1.5")]
+    [InlineData("MonsterLoss", "-0.1")]
+    [InlineData("CandidatesChecked", "-1")]
+    [InlineData("CarryThreshold", "-5")]
     public void AnUnknownWeight_OrABadValue_IsRefused(string name, string value)
     {
         Assert.Throws<FormatException>(() => AiWeights.Default.With(name, value));
@@ -105,6 +123,25 @@ public class AdventureAiPartsTests
         Assert.Contains(state.Objects, o => o == pile);
         Assert.Equal(new MapPosition(0, 0), state.GetHero(A).Position);
         Assert.Same(AiWeights.Default, new AdventureAi(Start(Create("A.B"))).Weights);
+    }
+
+    [Fact]
+    public void TheWeightsOnceInline_ReachTheirParts()
+    {
+        // ADR-232: the gold kept back at a map object and a Pandora's Box's creatures were numbers in the parts.
+        var state = Create("A.B");
+        state.GetPlayer(Blue).Resources = new ResourceSet(Gold: 3000);
+        var session = Start(state);
+        var box = new BoxContents { Creatures = [new CreatureStack(BuiltInCreatures.Wolf, 10)] };
+        var wolves = 10 * state.Creatures.Get(BuiltInCreatures.Wolf).FightValue;
+        var shipped = Context(session);
+        var tuned = Context(session, AiWeights.Default with { KeptGoldPart = 2, BoxCreatureShare = 0.5 });
+
+        Assert.Equal(2000, shipped.Spare(Blue).Gold);
+        Assert.Equal(1500, tuned.Spare(Blue).Gold);
+        Assert.Equal(0.85 * wolves, new TargetValuer(shipped, new ThreatMap(shipped)).BoxValue(state.GetHero(A), box), 6);
+        Assert.Equal(0.5 * wolves, new TargetValuer(tuned, new ThreatMap(tuned)).BoxValue(state.GetHero(A), box), 6);
+        Assert.Equal(0, Context(session, AiWeights.Default with { KeptGoldPart = 0 }).Spare(Blue).Gold); // taken as 1: all the gold is kept
     }
 
     // Threat map ---------------------------------------------------------------------------------------

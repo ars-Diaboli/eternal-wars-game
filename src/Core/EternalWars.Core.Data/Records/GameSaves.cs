@@ -21,6 +21,12 @@ public enum AutosaveSlot
 /// <summary>One file of the save folder: its label, or why it could not be read.</summary>
 public sealed record SaveEntry(string Path, SaveInfo? Info, string? Error);
 
+/// <summary>A save replayed to where it was saved (<see cref="GameSaves.Load"/>), and its file.</summary>
+public sealed record LoadedSave(string Path, GameSession Session, GameRecordDocument Record);
+
+/// <summary>A save newer than the one Continue loaded, whose label reads but whose game does not load, and why (ADR-232).</summary>
+public sealed record SkippedSave(SaveEntry Entry, string Error);
+
 /// <summary>
 /// Saved games (ADR-058): a save is the game record of ADR-036 (initial map, options, accepted commands) plus a label, so
 /// it works at any moment, including in the middle of a battle. Loading replays the commands and checks the digest.
@@ -133,6 +139,45 @@ public static class GameSaves
     {
         var record = GameRecordSerializer.Load(path);
         return (GameReplay.Replay(record, content), record);
+    }
+
+    /// <summary>Replays a save (<see cref="Load"/>); null and why when the file is damaged or its content has changed since.</summary>
+    public static LoadedSave? TryLoad(string path, ContentCatalogs? content, out string error)
+    {
+        try
+        {
+            var (session, record) = Load(path, content);
+            error = "";
+            return new LoadedSave(path, session, record);
+        }
+        catch (Exception e) when (e is InvalidOperationException or FormatException or System.Text.Json.JsonException or IOException
+                                      or KeyNotFoundException or NotSupportedException)
+        {
+            error = e.Message;
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// The main menu's Continue (ADR-232): the newest of <paramref name="entries"/> (in <see cref="List"/>'s order) that loads, with the newer ones
+    /// whose label reads but whose game does not in <paramref name="skipped"/>; null when none loads. Files whose label cannot be read are passed
+    /// over: they never offer Continue.
+    /// </summary>
+    public static LoadedSave? LoadNewest(IEnumerable<SaveEntry> entries, ContentCatalogs? content, out IReadOnlyList<SkippedSave> skipped)
+    {
+        var failed = new List<SkippedSave>();
+        skipped = failed;
+        foreach (var entry in entries.Where(e => e.Info is not null))
+        {
+            if (TryLoad(entry.Path, content, out var error) is { } loaded)
+            {
+                return loaded;
+            }
+
+            failed.Add(new SkippedSave(entry, error));
+        }
+
+        return null;
     }
 
     /// <summary>

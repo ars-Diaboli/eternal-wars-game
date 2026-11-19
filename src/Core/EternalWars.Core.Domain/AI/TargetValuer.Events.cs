@@ -99,7 +99,7 @@ internal sealed partial class TargetValuer
     {
         double Amount(EventExpr expr) => Average(expr, scope);
         double CreatureValue(string id) => _state.Creatures.TryGet(id, out var creature) ? creature.FightValue : 0;
-        double ArtifactWorth(string id) => hero is not null && _state.Artifacts.TryGet(id, out var artifact) ? 800 + (80 * FindScore(hero, artifact)) : 0;
+        double ArtifactGain(string id) => hero is not null && _state.Artifacts.TryGet(id, out var artifact) ? ArtifactWorth(hero, artifact) : 0;
         return action switch
         {
             ResourceAction resource when scope.Player is { } player => Amount(resource.Amount) is var amount && amount >= 0
@@ -109,9 +109,9 @@ internal sealed partial class TargetValuer
             PrimaryStatAction stat when hero is not null => 750 * Math.Max(0, Amount(stat.Amount)),
             SkillAction skill when hero is not null && BuiltInSkills.Contains(skill.Skill) && BuiltInSkills.Resolve(skill.Skill) is var id && hero.Skills.CanRaise(id) =>
                 1000 * Math.Max(0, (int)skill.Level - (int)hero.Skills.Level(id)),
-            ArtifactAction { Take: false } artifact => hero is { Artifacts.BackpackFull: false } ? ArtifactWorth(artifact.Artifact) : 0,
+            ArtifactAction { Take: false } artifact => hero is { Artifacts.BackpackFull: false } ? ArtifactGain(artifact.Artifact) : 0,
             ArtifactAction artifact when hero is not null && (hero.Artifacts.IsWorn(artifact.Artifact) || hero.Artifacts.Backpack.Contains(artifact.Artifact)) =>
-                -ArtifactWorth(artifact.Artifact),
+                -ArtifactGain(artifact.Artifact),
             WarMachineAction machine when hero is not null => machine.Take
                 ? hero.WarMachines.Contains(machine.Slot) ? -300 : 0
                 : hero.WarMachines.Contains(machine.Slot) ? 0 : 300,

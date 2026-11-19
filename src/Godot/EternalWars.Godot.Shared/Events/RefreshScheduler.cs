@@ -6,10 +6,13 @@ namespace EternalWars.Godot.Shared.Events;
 /// <summary>
 /// Refreshes a view once for a burst of events: <see cref="Request"/> marks it out of date, and the refresh runs once, deferred to the end of the
 /// frame, however many events asked for it (a recruit or a hero's step publishes several). Explicit refreshes (opening, a button) stay direct.
+/// <see cref="OnlyWhileShown"/> also holds a refresh while the view is hidden, until it shows again.
 /// </summary>
 public sealed class RefreshScheduler(Node node, Action refresh)
 {
     private bool _pending;
+    private bool _stale;
+    private CanvasItem? _shown;
 
     /// <summary>Refreshes at the end of this frame (once), unless the node is gone by then.</summary>
     public void Request()
@@ -31,12 +34,42 @@ public sealed class RefreshScheduler(Node node, Action refresh)
         return this;
     }
 
+    /// <summary>
+    /// A refresh asked for while the view is hidden (a tab not shown) waits, and runs once when it shows again: a hidden view is not rebuilt for
+    /// every change it would show (ADR-232).
+    /// </summary>
+    public RefreshScheduler OnlyWhileShown()
+    {
+        if (node is CanvasItem item && _shown is null)
+        {
+            _shown = item;
+            item.VisibilityChanged += () =>
+            {
+                if (_stale && item.IsVisibleInTree())
+                {
+                    _stale = false;
+                    Request();
+                }
+            };
+        }
+
+        return this;
+    }
+
     private void Run()
     {
         _pending = false;
-        if (GodotObject.IsInstanceValid(node) && node.IsInsideTree())
+        if (!GodotObject.IsInstanceValid(node) || !node.IsInsideTree())
         {
-            refresh();
+            return;
         }
+
+        if (_shown is { } item && !item.IsVisibleInTree())
+        {
+            _stale = true;
+            return;
+        }
+
+        refresh();
     }
 }

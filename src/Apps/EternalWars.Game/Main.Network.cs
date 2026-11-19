@@ -54,12 +54,6 @@ public partial class Main
     /// <summary>The player's name in LAN games, as last typed (or <c>--name=</c>, or the computer's user name).</summary>
     private string _playerName = LaunchArguments.PlayerName ?? System.Environment.UserName;
 
-    /// <summary>Whether a player plays on another computer (the game's <see cref="LanSeats"/>).</summary>
-    private bool PlaysElsewhere(PlayerId player) => _director!.PlaysElsewhere(player);
-
-    /// <summary>Whether a player plays at this screen, so the map turns to it and its questions open here (<see cref="GameDirector.PlaysHere"/>).</summary>
-    private bool PlaysHere(PlayerId player) => _director!.PlaysHere(player);
-
     /// <summary>Multiplayer: the player's name, Host a game, the games found on the network, an address to type.</summary>
     private void ShowMultiplayer()
     {
@@ -281,16 +275,7 @@ public partial class Main
 
         var layer = new CanvasLayer { Name = "Chat", Layer = 1 };
         _game!.AddChild(layer);
-        _chat = new ChatPanel
-        {
-            AnchorTop = 1,
-            AnchorBottom = 1,
-            OffsetLeft = 8,
-            OffsetRight = 388,
-            OffsetTop = -190,
-            OffsetBottom = -40,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-        };
+        _chat = new ChatPanel();
         layer.AddChild(_chat);
         _chat.OverTheMap();
         _chat.Said += text =>

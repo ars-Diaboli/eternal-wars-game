@@ -83,11 +83,11 @@ internal sealed class AiContext(GameSession session, AiWeights weights, bool con
     public IEnumerable<MonsterGuard> GuardsToBeat(MapPosition position, bool pickup) =>
         State.GuardsOf(position).Where(m => !pickup || m.Mode == GuardMode.Area);
 
-    /// <summary>The gold kept back when spending at a map object: a third of the gold.</summary>
+    /// <summary>What may be spent at a map object: the resources less the part of the gold kept back (<see cref="AiWeights.KeptGoldPart"/>).</summary>
     public ResourceSet Spare(PlayerId player)
     {
         var resources = State.GetPlayer(player).Resources;
-        return resources - new ResourceSet(Gold: resources.Gold / 3);
+        return resources - new ResourceSet(Gold: resources.Gold / Math.Max(1, weights.KeptGoldPart));
     }
 
     public bool OwnTeam(PlayerId player, PlayerId? other) => other is { } o && (o == player || State.AreAllies(o, player));

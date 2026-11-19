@@ -35,6 +35,7 @@
 | [223](#adr-223-the-town-and-hero-screens-are-sections-the-inspector-has-one-section-per-object-type-adr-046-adr-191-2026-11-19) | The town and hero screens are sections; the inspector has one section per object type (ADR-046, ADR-191, 2026-11-19) | implemented |
 | [224](#adr-224-the-sim-tools-commands-are-classes-with-strict-options-saves-stream-to-disk-and-list-from-their-label-adr-034-adr-058-2026-11-19) | The sim tool's commands are classes with strict options; saves stream to disk and list from their label (ADR-034, ADR-058, 2026-11-19) | implemented |
 | [231](#adr-231-the-game-apps-remaining-policy-moves-to-core-autosave-rematch-a-saves-seats-lan-rules-replay-recovery-the-maps-focus-adr-222-adr-226-2026-11-19) | The game app's remaining policy moves to core: autosave, rematch, a save's seats, LAN rules, replay recovery, the map's focus (ADR-222, ADR-226, 2026-11-19) | implemented |
+| [232](#adr-232-code-health-continue-falls-back-to-a-save-that-loads-the-events-panel-refreshes-once-and-while-shown-every-ai-tuning-number-is-a-weight-leftover-cleanups-adr-220-adr-224-adr-226-2026-11-19) | Code health: Continue falls back to a save that loads, the events panel refreshes once and while shown, every AI tuning number is a weight, leftover cleanups (ADR-220, ADR-224, ADR-226, 2026-11-19) | implemented |
 
 
 ### ADR-001: Godot 4.7.2 (.NET) + C# on .NET 10
@@ -533,3 +534,28 @@ keep their values as fixed values, and their heroes start without an army.
     moment); a diverged game is put back where it was on a new session, paused, before `Diverged` is returned; `CanPlayFromHere`
     (`ReplayControllerTests`).
 - `Main` asks these and moves the views; what it shows and the order of commands are unchanged. The 37 game smoke scenarios pass after it.
+
+### ADR-232: Code health: Continue falls back to a save that loads, the events panel refreshes once and while shown, every AI tuning number is a weight, leftover cleanups (ADR-220, ADR-224, ADR-226, 2026-11-19)
+**Status**: implemented (2026-11-19), four of the roadmap's "Code health" items; extends ADR-220. No rule, save, map or protocol change;
+the AI plays as before.
+
+- **Continue** (ADR-224 lists saves from their labels alone, so a save whose commands no longer load still offered Continue):
+  `GameSaves.LoadNewest` loads the newest save that loads, passing over newer ones whose label reads but whose game does not, and names
+  them (`SkippedSave`, `SaveSlotText.Skipped`) on the status line or the saved-game screen; when none loads, the save menu opens and says
+  why. Files whose label cannot be read never offer Continue. `GameSaves.TryLoad` is the one place that turns a load's exceptions into a
+  reason (`ContinueSaveTests`).
+- **The editor's events panel** rebuilt itself whole for every `UndoHistoryChanged`, one deferred call each, also while another tab was
+  shown, and ran the validator twice a rebuild. It refreshes through a `RefreshScheduler` (once for a burst of edits), and
+  `RefreshScheduler.OnlyWhileShown` holds a refresh while the view is hidden, running it once when it shows again; the validator runs once a
+  rebuild.
+- **AI weights**: the tuning numbers left inline in `TargetValuer`, `TownManager`, `DecisionResponder` and `AiContext` are `AiWeights`:
+  `PlausiblePercent` (70), `ArtifactValue` (800), `ArtifactScoreValue` (80), `BankArtifactValue` (1500), `ChestValue` (1500),
+  `BoxCreatureShare` (0.85), `TroopsTripPercent` (60), `TroopsTripShare` (0.3), `TroopsTripFloor` (1000), `TrainingCushion` (3000),
+  `KeptGoldPart` (3: a third of the gold kept), `CartographerGoldTimes` (3), `BuildGoldDays` (3), `BuildResourceDays` (7), `MostHeroes` (4).
+  Comparisons that were on integers stay on integers (a percent), so the defaults decide exactly as the literals did. The expected values of
+  objects' rules (a training site's, a buff's, a loot site's worth in gold) stay in `TargetValuer`: they translate a rule, they are not
+  tuned. `AiWeights.With` refuses a negative value.
+- **Cleanups**: a "release hero" condition's prison is tracked by its handler (`IScenarioConditionHandler.Track`), not by a kind test in
+  `GameFlowService`; the handler interface's comment names the validator's rules check. The game app's views and handlers hold the game's
+  `GameDirector` itself, so a callback after `LeaveGame` no longer dereferences the cleared field. The map chat's place and ground are
+  `UiTheme` tokens, set by `ChatPanel.OverTheMap`.

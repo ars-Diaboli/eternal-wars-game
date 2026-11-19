@@ -50,13 +50,13 @@ internal sealed class DecisionResponder(AiContext ai, TargetValuer values)
                     var site = (TrainingSite)_state.GetObject(training.Site);
                     TrainingOption? pick = training.Options.FirstOrDefault(o => TrainingRules.Stat(o) is not null) is var stat && TrainingRules.Stat(stat) is not null
                         ? stat
-                        : training.Options.Contains(TrainingOption.PayGold) && gold >= TrainingRules.Price(site.Rule, TrainingOption.PayGold).Gold + 3000
+                        : training.Options.Contains(TrainingOption.PayGold) && gold >= TrainingRules.Price(site.Rule, TrainingOption.PayGold).Gold + _weights.TrainingCushion
                             ? TrainingOption.PayGold
                             : training.Options.Contains(TrainingOption.PayMagicResources) ? TrainingOption.PayMagicResources : null;
                     command = new ChooseTrainingCommand(player, pick ?? (training.CanDecline ? null : training.Options[0]));
                     break;
                 case CartographerDecision cartographer:
-                    command = new AnswerCartographerCommand(player, _state.GetPlayer(player).Resources.Gold >= 3 * cartographer.Price);
+                    command = new AnswerCartographerCommand(player, _state.GetPlayer(player).Resources.Gold >= _weights.CartographerGoldTimes * cartographer.Price);
                     break;
                 case DepositDecision deposit:
                     // A mine is worth it while the price leaves the usual cushion.

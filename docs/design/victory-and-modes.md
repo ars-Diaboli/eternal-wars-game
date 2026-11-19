@@ -37,7 +37,7 @@ ADR-092, ADR-101, built ADR-102 … ADR-104, the viewer ADR-164.
   score, title, date.
 - **Replays**: each row keeps its game's record; every end screen offers "Save replay" (`user://replays/*.ewreplay.json`); a replay made with
   other content fails like a save.
-- **Main menu**: Continue (the newest save; disabled without one), New game, Load, Multiplayer (LAN games), Campaign, Watch a replay,
+- **Main menu**: Continue (the newest save that loads, naming any newer one that did not; disabled without a save), New game, Load, Multiplayer (LAN games), Campaign, Watch a replay,
   Leaderboard, Quit (unbuilt ones disabled), on a picture ([presentation.md](presentation.md#camera-and-ui)); reached from the end
   screen and the F10 menu.
 - **Replay viewer** (ADR-164): "Watch a replay" lists two tabs, **Replays** (`user://replays`) and **Saves** (autosaves too), newest

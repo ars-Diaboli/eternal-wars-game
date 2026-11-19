@@ -82,6 +82,9 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
         _ => (ResourceProviderRules.GardenGold + AiContext.GoldValue(ResourceType.Crystal, ResourceProviderRules.GardenMagic)) / 2,
     };
 
+    /// <summary>An artifact to pick up, in gold: <see cref="AiWeights.ArtifactValue"/> and its score for the hero.</summary>
+    private double ArtifactWorth(Hero hero, ArtifactDefinition artifact) => _weights.ArtifactValue + (_weights.ArtifactScoreValue * FindScore(hero, artifact));
+
     /// <summary>What training is worth to the hero now (0: not worth the trip, or the player cannot pay with gold to spare).</summary>
     private double TrainingValue(Hero hero, TrainingRule rule)
     {
@@ -91,10 +94,10 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
             TrainingRule.LearningStone => 1200,
             TrainingRule.Arena or TrainingRule.ColosseumOfTheMagi => 1500,
             TrainingRule.LibraryOfEnlightenment => hero.Level >= TrainingRules.LibraryLevel ? 3000 : 0,
-            TrainingRule.Gazebo => gold >= TrainingRules.GazeboGold + 3000 ? 1000 : 0,
+            TrainingRule.Gazebo => gold >= TrainingRules.GazeboGold + _weights.TrainingCushion ? 1000 : 0,
             TrainingRule.DreamTeacher => 600,
             TrainingRule.TrainingGrounds or TrainingRule.MarlettoTower or TrainingRule.StarAxis or TrainingRule.GardenOfRevelation => 750,
-            _ => gold >= TrainingRules.TreeGold + 3000 ? 1500 : 0,
+            _ => gold >= TrainingRules.TreeGold + _weights.TrainingCushion ? 1500 : 0,
         };
     }
 
@@ -117,7 +120,7 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
         var waiting = _ai.ArmyPower(own.Garrison) + own.Available.Sum(a => _state.Creatures.Get(a.Key) is var line
             ? (long)TownRules.MaxAffordable(resources, TownRules.CreatureCost(_state, own, line), a.Value) * line.FightValue
             : 0);
-        return waiting * 5 > power * 3 ? 0.3 * Math.Min(waiting, Math.Max(power, 1000)) : 0;
+        return waiting * 100 > power * _weights.TroopsTripPercent ? _weights.TroopsTripShare * Math.Min(waiting, Math.Max(power, _weights.TroopsTripFloor)) : 0;
     }
 
     /// <summary>The own town a town gate should take the hero to: the one it needs most whose entrance is free; null when none is worth it.</summary>
@@ -225,14 +228,14 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
     /// <summary>
     /// What a Pandora's Box is worth to the hero, by the AI's values (ADR-100): resources at their gold value, experience 1:1, a primary stat as a
     /// training site's (750), morale and luck a buff's (150 a point), a skill 1000 a level gained, artifacts as pickups (only while the backpack has
-    /// room) and creatures at 85 % of their value where they fit. Mana counts for nothing until there are spells.
+    /// room) and creatures at <see cref="AiWeights.BoxCreatureShare"/> of their value where they fit. Mana counts for nothing until there are spells.
     /// </summary>
     public double BoxValue(Hero hero, BoxContents contents)
     {
         var stats = Enum.GetValues<PrimaryStat>().Sum(contents.Stat);
         var skills = contents.Skills.Where(s => hero.Skills.CanRaise(s.Key)).Sum(s => Math.Max(0, s.Value - hero.Skills.Level(s.Key)));
-        var artifacts = hero.Artifacts.BackpackFull ? 0 : contents.Artifacts.Sum(a => _state.Artifacts.TryGet(a, out var found) ? 800 + (80 * FindScore(hero, found)) : 0);
-        var creatures = contents.Creatures.Where(s => hero.Army.CanAccept(s.Creature)).Sum(s => 0.85 * s.Count * _state.Creatures.Get(s.Creature).FightValue);
+        var artifacts = hero.Artifacts.BackpackFull ? 0 : contents.Artifacts.Sum(a => _state.Artifacts.TryGet(a, out var found) ? ArtifactWorth(hero, found) : 0);
+        var creatures = contents.Creatures.Where(s => hero.Army.CanAccept(s.Creature)).Sum(s => _weights.BoxCreatureShare * s.Count * _state.Creatures.Get(s.Creature).FightValue);
         return AiContext.Value(contents.Resources) + contents.Experience + (750 * stats) + (150 * (contents.Morale + contents.Luck)) + (1000 * skills) + artifacts + creatures;
     }
 
@@ -382,7 +385,7 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
         var power = _ai.ArmyPower(hero.Army);
 
         // Loose pre-filter on the power sum; the real check is the simulated fight.
-        bool Plausible(long enemy) => enemy == 0 || (!hero.Army.IsEmpty && power * 10 >= enemy * 7);
+        bool Plausible(long enemy) => enemy == 0 || (!hero.Army.IsEmpty && power * 100 >= enemy * _weights.PlausiblePercent);
 
         foreach (var mapObject in _state.Objects.OrderBy(o => o.Id.Value))
         {
@@ -398,7 +401,7 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
                     yield return new(visit, AiContext.GoldValue(pile.Resource, pile.Amount ?? ResourcePile.AmountRange(pile.Resource).Min), GuardArmy(visit, pickup: true), MaxLoss: _weights.MonsterLoss);
                     break;
                 case ArtifactPickup { Artifact: { } artifact } when !hero.Artifacts.BackpackFull && _state.Artifacts.TryGet(artifact, out var found) && Plausible(GuardPower(visit, pickup: true)):
-                    yield return new(visit, 800 + (80 * FindScore(hero, found)), GuardArmy(visit, pickup: true), MaxLoss: _weights.MonsterLoss);
+                    yield return new(visit, ArtifactWorth(hero, found), GuardArmy(visit, pickup: true), MaxLoss: _weights.MonsterLoss);
                     break;
                 case ResourceProvider provider when (provider.Owner != hero.Owner || !provider.Stored.IsEmpty) && Plausible(GuardPower(visit)) && visit != hero.Position:
                     yield return new(visit, ProviderValue(hero, provider), GuardArmy(visit), MaxLoss: _weights.MonsterLoss, Later: provider.Stored.IsEmpty);
@@ -408,7 +411,7 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
                     var bankGuard = _ai.Seen(bank.Guard, visit, null);
                     if (Plausible(_ai.ArmyPower(bankGuard)))
                     {
-                        yield return new(visit, AiContext.Value(bank.Reward) + (bank.RewardArtifact is null ? 0 : 1500) + (1500 * bank.MoreArtifacts.Count), bankGuard, MaxLoss: _weights.MonsterLoss);
+                        yield return new(visit, AiContext.Value(bank.Reward) + (bank.RewardArtifact is null ? 0 : _weights.BankArtifactValue) + (_weights.BankArtifactValue * bank.MoreArtifacts.Count), bankGuard, MaxLoss: _weights.MonsterLoss);
                     }
 
                     break;
@@ -444,7 +447,7 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
                     yield return new(visit, LootValue(site.Rule), GuardArmy(visit, pickup: site.Vanishes), MaxLoss: _weights.MonsterLoss);
                     break;
                 case TreasureChest when Plausible(GuardPower(visit, pickup: true)):
-                    yield return new(visit, 1500, GuardArmy(visit, pickup: true), MaxLoss: _weights.MonsterLoss);
+                    yield return new(visit, _weights.ChestValue, GuardArmy(visit, pickup: true), MaxLoss: _weights.MonsterLoss);
                     break;
                 case Deposit deposit when _ai.Spare(owner).CanAfford(deposit.Price) && Plausible(GuardPower(visit)) && visit != hero.Position:
                     var mineYield = _state.ObjectCatalog.Get(deposit.Definition.Becomes!);

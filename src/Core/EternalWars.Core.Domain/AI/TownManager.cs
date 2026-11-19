@@ -119,9 +119,12 @@ internal sealed partial class TownManager(AiContext ai, ThreatMap threats)
         return null;
     }
 
-    /// <summary>Whether the cost can be met within a few days of the income (so saving for it is not hopeless).</summary>
-    private static bool Reachable(ResourceSet cost, ResourceSet have, ResourceSet income) =>
-        Enum.GetValues<ResourceType>().All(r => cost[r] <= have[r] + (income[r] * (r == ResourceType.Gold ? 3 : 7)));
+    /// <summary>
+    /// Whether the cost can be met within a few days of the income, so saving for it is not hopeless (<see cref="AiWeights.BuildGoldDays"/>,
+    /// <see cref="AiWeights.BuildResourceDays"/>).
+    /// </summary>
+    private bool Reachable(ResourceSet cost, ResourceSet have, ResourceSet income) =>
+        Enum.GetValues<ResourceType>().All(r => cost[r] <= have[r] + (income[r] * (r == ResourceType.Gold ? _weights.BuildGoldDays : _weights.BuildResourceDays)));
 
     /// <summary>What a town wants built, best first (the order is the strategy): the fort the dwellings need, units, then income, then the rest.</summary>
     private IEnumerable<(bool Dwelling, string Id)> BuildOrder(Town town)
@@ -197,7 +200,7 @@ internal sealed partial class TownManager(AiContext ai, ThreatMap threats)
     {
         var heroes = _state.HeroesOf(player).Count();
         var towns = _state.ObjectsOf<Town>().Count(t => t.Owner == player);
-        if (heroes >= Math.Min(1 + towns, 4) || !(_state.GetPlayer(player).Resources - new ResourceSet(Gold: reserve)).CanAfford(TavernRules.HeroCost))
+        if (heroes >= Math.Min(1 + towns, _weights.MostHeroes) || !(_state.GetPlayer(player).Resources - new ResourceSet(Gold: reserve)).CanAfford(TavernRules.HeroCost))
         {
             return;
         }
