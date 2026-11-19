@@ -14,6 +14,8 @@
 // wandering lines), each showing the picture shifted by its own random amount, and neighbouring cells meet with the same height blend over
 // the same band, so no straight seam and no regular pattern shows.
 // Steep ground (cliffs) is textured from the side as well (triplanar).
+// A terrain with detail maps (a layer of `detail_layers`: normal XY, roughness, ambient occlusion) bends the light by its normal map, read
+// from above only (the sides stay flat), and gives its roughness and occlusion; the others are flat, 0.95 rough and unoccluded.
 // The tile grid is an overlay drawn here: thin anti-aliased lines along the tile edges, on when `grid` is.
 shader_type spatial;
 
@@ -29,6 +31,16 @@ uniform sampler2DArray albedo_layers : source_color, filter_linear_mipmap_anisot
 // Per terrain number: its layer and the colour multiplied into it.
 uniform int layer_of[MAX_TERRAINS];
 uniform vec4 tint_of[MAX_TERRAINS] : source_color;
+// RG = the normal map's XY (OpenGL: green is up the picture), B = roughness, A = ambient occlusion. Layer 0 is unused (flat).
+uniform sampler2DArray detail_layers : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+// Per terrain number: its detail layer, 0 for none.
+uniform int detail_of[MAX_TERRAINS];
+// How strongly the normal maps bend the light.
+uniform float normal_strength : hint_range(0.0, 4.0) = 2.5;
+// The occlusion map raised to this power: above 1 deepens the crevices.
+uniform float occlusion_power : hint_range(0.5, 4.0) = 2.0;
+// How much the occlusion darkens direct (sun) light, 0 to 1; Godot's default 0 leaves only ambient light occluded.
+uniform float occlusion_light_affect : hint_range(0.0, 1.0) = 1.0;
 // Texture repeats per world unit.
 uniform float uv_scale = 0.0625;
 
@@ -45,6 +57,9 @@ uniform float variation_cell : hint_range(2.0, 32.0) = 7.0;
 
 uniform float grid : hint_range(0.0, 1.0) = 0.0;
 uniform vec4 grid_color : source_color = vec4(0.0, 0.0, 0.0, 0.4);
+
+// Normal XY 0.5 (flat), roughness, no occlusion.
+const vec4 FLAT_DETAIL = vec4(0.5, 0.5, 0.95, 1.0);
 
 varying vec3 local_position;
 varying vec3 local_normal;
@@ -98,9 +113,9 @@ vec3 coverage(float d) {
 		ramp(d - 0.5, blend_width) - ramp(d - 1.5, blend_width));
 }
 
-// A terrain's colour (RGB) and height (A) at p (texture space), from above and, where the ground is steep, from the sides. The gradients
-// are passed in because this runs inside branches.
-vec4 terrain_sample(int terrain, vec3 p, vec3 sides, vec3 dx, vec3 dy) {
+// A terrain's colour (RGB) and height (A) at p (texture space), from above and, where the ground is steep, from the sides; its detail
+// from above only, flat on the sides. The gradients are passed in because this runs inside branches.
+vec4 terrain_sample(int terrain, vec3 p, vec3 sides, vec3 dx, vec3 dy, out vec4 detail) {
 	float layer = float(layer_of[terrain]);
 	vec4 texel = sides.y * textureGrad(albedo_layers, vec3(p.xz, layer), dx.xz, dy.xz);
 	if (sides.x > 0.0) {
@@ -109,17 +124,23 @@ vec4 terrain_sample(int terrain, vec3 p, vec3 sides, vec3 dx, vec3 dy) {
 	if (sides.z > 0.0) {
 		texel += sides.z * textureGrad(albedo_layers, vec3(p.xy, layer), dx.xy, dy.xy);
 	}
+	detail = FLAT_DETAIL;
+	if (detail_of[terrain] > 0) {
+		detail = mix(FLAT_DETAIL, textureGrad(detail_layers, vec3(p.xz, float(detail_of[terrain])), dx.xz, dy.xz), sides.y);
+	}
 	return vec4(texel.rgb * tint_of[terrain].rgb, texel.a);
 }
 
 // The terrain's picture with the repeat hidden: the variation cells round `cell` (the read place in cells) each shift the picture by their
-// own random amount, and where two or four meet they mix by height over the border's band, as two terrains do. RGB = colour, A = height.
-vec4 varied_sample(int terrain, vec3 p, vec2 cell, vec3 sides, vec3 dx, vec3 dy) {
+// own random amount, and where two or four meet they mix by height over the border's band, as two terrains do. RGB = colour, A = height;
+// the detail mixes alike.
+vec4 varied_sample(int terrain, vec3 p, vec2 cell, vec3 sides, vec3 dx, vec3 dy, out vec4 detail) {
 	ivec2 first = ivec2(floor(cell - 0.5));
 	vec2 past = cell - vec2(first + 1); // how far past the line between the first cells and the next, -0.5 to 0.5
 	vec2 next = vec2(ramp(past.x, blend_width / variation_cell), ramp(past.y, blend_width / variation_cell));
 
 	vec4 texels[4];
+	vec4 details[4];
 	float heights[4];
 	float top = -1.0;
 	for (int i = 0; i < 4; i++) {
@@ -127,9 +148,10 @@ vec4 varied_sample(int terrain, vec3 p, vec2 cell, vec3 sides, vec3 dx, vec3 dy)
 		float share = (offset.x == 1 ? next.x : 1.0 - next.x) * (offset.y == 1 ? next.y : 1.0 - next.y);
 		heights[i] = -1.0;
 		texels[i] = vec4(0.0);
+		details[i] = FLAT_DETAIL;
 		if (share > 0.0) {
 			vec3 shift = hash32(vec2(first + offset) + float(layer_of[terrain]) * 17.31);
-			texels[i] = terrain_sample(terrain, p + shift, sides, dx, dy);
+			texels[i] = terrain_sample(terrain, p + shift, sides, dx, dy, details[i]);
 			heights[i] = share + texels[i].a * height_relief;
 			top = max(top, heights[i]);
 		}
@@ -137,12 +159,15 @@ vec4 varied_sample(int terrain, vec3 p, vec2 cell, vec3 sides, vec3 dx, vec3 dy)
 
 	float line = top - blend_depth;
 	vec4 result = vec4(0.0);
+	detail = vec4(0.0);
 	float total = 0.0;
 	for (int i = 0; i < 4; i++) {
 		float share = max(heights[i] - line, 0.0);
 		result += texels[i] * share;
+		detail += details[i] * share;
 		total += share;
 	}
+	detail /= total;
 	return result / total;
 }
 
@@ -191,13 +216,15 @@ void fragment() {
 	// each by how far it rises above that line. The strongest terrain stands at least at its influence, so one that cannot rise to within
 	// blend_depth of that even at its highest is not read at all: well inside a terrain that is every other one.
 	vec3 colors[9];
+	vec4 details[9];
 	float heights[9];
 	float top = 0.0;
 	for (int i = 0; i < 9; i++) {
 		colors[i] = vec3(0.0);
+		details[i] = FLAT_DETAIL;
 		heights[i] = -1.0;
 		if (influence[i] > 0.0 && influence[i] + height_relief + blend_depth > strongest) {
-			vec4 texel = varied_sample(terrains[i], p, cell, sides, dx, dy);
+			vec4 texel = varied_sample(terrains[i], p, cell, sides, dx, dy, details[i]);
 			colors[i] = texel.rgb;
 			heights[i] = influence[i] + texel.a * height_relief;
 			top = max(top, heights[i]);
@@ -206,13 +233,16 @@ void fragment() {
 
 	float line = top - blend_depth;
 	vec3 color = vec3(0.0);
+	vec4 detail = vec4(0.0);
 	float total = 0.0;
 	for (int i = 0; i < 9; i++) {
 		float share = max(heights[i] - line, 0.0);
 		color += colors[i] * share;
+		detail += details[i] * share;
 		total += share;
 	}
 	color /= total;
+	detail /= total;
 
 	// Broad patches a little lighter and darker, so a wide plain of one texture does not read as a tiled picture.
 	color *= 0.86 + 0.28 * soft_noise(at * 0.13 + 5.0);
@@ -229,6 +259,14 @@ void fragment() {
 		color = mix(color, grid_color.rgb, grid_line * grid_color.a * grid * on_map);
 	}
 
+	// The normal map read from above: its X along the map's x, its Y (up the picture) along -z, added to the mesh's normal.
+	vec2 bend_xy = (detail.xy * 2.0 - 1.0) * normal_strength;
+	vec3 bent = normalize(normalize(local_normal) + vec3(bend_xy.x, 0.0, -bend_xy.y));
+	NORMAL = normalize((VIEW_MATRIX * (MODEL_MATRIX * vec4(bent, 0.0))).xyz);
+
 	ALBEDO = color;
-	ROUGHNESS = 0.95;
+	ROUGHNESS = detail.z;
+	// The map is lit mostly by the sun, so the occlusion darkens direct light as well, not only the (faint) ambient light.
+	AO = pow(detail.w, occlusion_power);
+	AO_LIGHT_AFFECT = occlusion_light_affect;
 }
