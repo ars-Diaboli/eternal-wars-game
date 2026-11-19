@@ -93,8 +93,8 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
 - **Services** validate, mutate `GameState`, then publish past-tense events. They depend on `IEventPublisher` only.
   A rule refuses a command by throwing `CommandRefusedException` (an unknown id from `GameState.GetHero` / `GetObject` /
   `GetPlayer` does too) before it changes anything; `Execute` turns only that into a rejected `CommandResult`, so any other
-  exception is a bug and goes on up. The tests turn on `GameSession.CheckRefusals`, which fails a refusal that changed the
-  digest (ADR-165).
+  exception is a bug and goes on up. The tests turn on `GameSession.CheckRefusals` (the runtime switch `EternalWars.CheckRefusals` in
+  the test project), which fails a refusal that changed the digest (ADR-165, ADR-239).
 - **Content tables** travel together as `ContentCatalogs` (creatures, heroes, buildings, artifacts and their spells, map
   objects, terrains; each left out is the built-in table, `ContentCatalogs.Default` all of them). Everything that builds a
   game takes one record and no separate tables: the scenarios, `MapConverter.ToGameState(document, content, options)`,

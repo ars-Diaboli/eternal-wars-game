@@ -299,14 +299,16 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       `LanAddress` / `LanListing` / `LanAccept`, `ReplayViews` and the diverged replay's recovery in `ReplayController`, `MapFocus`
 - [x] Main-menu "Continue" falls back to the newest save that loads and names the ones passed over (ADR-232)
 - [x] `EventsPanel` refreshes through a `RefreshScheduler`, once for a burst and not while its tab is hidden (`OnlyWhileShown`, ADR-232)
-- [ ] Smoke `game-battle-control` fails at frame 184 (no Surrender: the computer's stack is acting), before ADR-227 too; the smoke games draw
-      a random seed, so their battles differ between runs; an entry's `Seed = <n>` now fixes it (ADR-235), set only on the newest scenarios
+- [x] Every smoke scenario plays with a seed of its own (its entry's, else one made from its name; `-Seed` overrides); `game-battle-control`
+      passes with it and with seeds 1–6 (ADR-239)
 - [x] AI tuning numbers left inline are `AiWeights` (15 more, ADR-232); `AiWeights.With` refuses negative values
 - [x] The map-event action type switches in Domain moved into the handlers; a test checks a reward with an amount overrides `Fix` (ADR-237)
 - [x] Map-event `Answer` / `ChooseArmy` through `DecisionSteps.TakeDecision`; `PandorasBoxOpened` no longer carries the box's event
       for `MapEventService` to run (an event used as a request, ADR-214; ADR-238)
-- [ ] From the review, never planned: typed content ids; `InfoSheets` returning structured lines, not English text; `CheckRefusals`
-      not a process-wide static; `ThirdCatalogue.Buyers` / `Stock` not public mutable collections
+- [x] `CheckRefusals` read once from a runtime switch; `Cartographer.Buyers`, `ArtifactMerchant.Stock`, `SkillSchool.Lessons` read-only,
+      and a test for every map object (ADR-239)
+- [ ] From the review, never planned: typed content ids (its own job); `InfoSheets` returning structured lines, not English text (needs a
+      localisation decision first: keys, the English table, plurals)
 - [x] Small (ADR-232): the views hold the game's `GameDirector`; the map chat's place as `UiTheme` tokens; a prison tracked by the
       "release hero" handler (`Track`); `IScenarioConditionHandler`'s comment
 

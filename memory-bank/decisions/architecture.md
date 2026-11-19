@@ -39,6 +39,7 @@
 | [236](#adr-236-a-lan-clients-view-writes-move-the-change-stamp-a-players-sight-is-handed-out-as-a-copy-adr-205-adr-218-adr-226-2026-11-19) | A LAN client's view writes move the change stamp; a player's sight is handed out as a copy (ADR-205, ADR-218, ADR-226, 2026-11-19) | implemented |
 | [237](#adr-237-a-map-event-actions-handler-tells-what-the-action-holds-its-editor-line-and-its-worth-to-the-ai-adr-219-adr-226-2026-11-19) | A map event action's handler tells what the action holds, its editor line and its worth to the AI (ADR-219, ADR-226, 2026-11-19) | implemented |
 | [238](#adr-238-map-event-answers-take-their-decision-through-the-decision-steps-a-pandoras-box-queues-its-hero-event-itself-adr-215-adr-226-2026-11-19) | Map-event answers take their decision through the decision steps; a Pandora's Box queues its hero event itself (ADR-215, ADR-226, 2026-11-19) | implemented |
+| [239](#adr-239-code-health-every-smoke-scenario-has-a-seed-of-its-own-the-refusal-check-is-a-runtime-switch-map-objects-hand-out-read-only-collections-adr-165-adr-226-adr-235-2026-11-19) | Code health: every smoke scenario has a seed of its own, the refusal check is a runtime switch, map objects hand out read-only collections (ADR-165, ADR-226, ADR-235, 2026-11-19) | implemented |
 
 
 ### ADR-001: Godot 4.7.2 (.NET) + C# on .NET 10
@@ -114,7 +115,7 @@ keep their values as fixed values, and their heroes start without an army.
   passed as a quiet refusal. `GameState.GetHero` / `GetObject` / `GetPlayer` refuse an unknown id with it. The answers to a chest, a deposit, a
   cartographer, a Pandora's Box, a witch hut and an event's army choice now find everything they need before they spend, take or clear
   anything (a deposit's price was paid before the deposit was looked up). `GameSession.CheckRefusals` (internal) compares the digest text
-  before and after every refused command and fails loudly when it changed; the test assembly turns it on for every game (`TestSetup`),
+  before and after every refused command and fails loudly when it changed; the test assembly turns it on for every game (since ADR-239 a runtime switch),
   about 10 s on the whole run *(choice: every test game, not one dedicated test)*.
 - **Content tables**: `ContentCatalogs` (creatures, heroes, buildings, artifacts; the spells are the artifact table's) is what the
   scenarios and `MapConverter.ToGameState(document, content, options)` take; the apps pass `GameContent.All`. An edited artifact table
@@ -606,3 +607,25 @@ the AI plays as before.
   to it. The event still runs once the experience and its level-ups are dealt with.
 - **Checked** (`MapEventLoopTests`): a map-event answer or army choice sent while a box's question is pending is refused and leaves the
   question pending; a box's event runs after the level-up its experience brings.
+
+### ADR-239: Code health: every smoke scenario has a seed of its own, the refusal check is a runtime switch, map objects hand out read-only collections (ADR-165, ADR-226, ADR-235, 2026-11-19)
+**Status**: implemented. No rule, save or map format change. Field names in three map objects change, so the LAN schema hash (ADR-229)
+changes.
+
+- **Smoke seeds** (extends ADR-235): `tools/smoke-godot.ps1` passes `--seed=<n>` to every scenario: the entry's `Seed`, else a 32-bit
+  FNV-1a hash of the scenario's name. So every new game, random map and battle in the suite is the same on every run. Renaming a scenario
+  changes its seed. `-Seed <n>` plays every scenario with that seed instead, to look for a failure under other battles. A failed
+  scenario's line names its seed.
+- **`game-battle-control`**: no longer fails. Its own seed, seeds 1 to 6, and two full runs (54 scenarios, 8 side by side) all reach
+  Surrender at frame 184, and two runs of its seed wrote the same battle log. The failure was a battle a drawn seed happened to give;
+  with fixed seeds it cannot come and go between runs.
+- **Refusal check** (amends ADR-165): `GameSession.CheckRefusals` was a static that tests set; now it is read once from the runtime switch
+  `EternalWars.CheckRefusals`, which the test project sets in its runtime config (`RuntimeHostConfigurationOption`). Nothing can turn it on
+  or off while games run, and the module initializer `TestSetup` and ten `CheckRefusals = true` lines in tests are gone.
+  *(Choice: it stays one value for the process rather than a setting per session. Sessions are also made inside core, by a replay or
+  a LAN host playing a day again, and each would have to pass it on.)*
+- **Read-only collections**: `Cartographer.Buyers` (`IReadOnlySet`, changed by `Sell`), `ArtifactMerchant.Stock` (`IReadOnlyList`,
+  changed by `Restock` and `Sell`) and `SkillSchool.Lessons` (`IReadOnlyDictionary`, changed by `SetLessons`), the last one found on
+  the way. `MapObjectCollectionsTests` fails for any map object property whose type is a collection that can be changed.
+- **Not done**: typed content ids (large, its own job) and `InfoSheets` lines as data, not English text. That needs a decision on how
+  text is localised (keys, the English table, plurals), and it touches about 160 lines of text and the tests that read them.

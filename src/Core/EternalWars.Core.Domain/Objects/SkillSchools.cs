@@ -38,8 +38,13 @@ public sealed class SkillSchool(MapObjectId id, MapObjectDefinition definition, 
     /// <summary>The University teaches the magic schools; the War Academy the general groups.</summary>
     public bool TeachesMagic => Definition.Id == BuiltInMapObjects.University;
 
+    private readonly Dictionary<HeroId, IReadOnlyList<Lesson>> _lessons = [];
+
     /// <summary>The lessons drawn for each hero that visited, in the order shown (new groups first).</summary>
-    public Dictionary<HeroId, IReadOnlyList<Lesson>> Lessons { get; } = [];
+    public IReadOnlyDictionary<HeroId, IReadOnlyList<Lesson>> Lessons => _lessons;
+
+    /// <summary>The hero's lessons here are these from now on.</summary>
+    internal void SetLessons(HeroId hero, IReadOnlyList<Lesson> lessons) => _lessons[hero] = lessons;
 }
 
 public static class SkillSchoolRules

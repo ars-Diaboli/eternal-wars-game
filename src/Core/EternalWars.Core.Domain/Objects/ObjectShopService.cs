@@ -188,7 +188,7 @@ public sealed class ObjectShopService(ObjectInteractionContext context, Progress
             throw new CommandRefusedException("Not enough gold.");
         }
 
-        merchant.Stock[slot] = null;
+        merchant.Sell(slot);
         artifacts.Grant(hero, artifact, ArtifactSource.Bought);
         context.Events.Publish(new ArtifactBought(merchant.Id, hero.Id, slot, artifact, price));
     }

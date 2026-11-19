@@ -20,8 +20,13 @@ public sealed class Cartographer(MapObjectId id, MapObjectDefinition definition,
 
     public const int Price = 3000;
 
+    private readonly HashSet<PlayerId> _buyers = [];
+
     /// <summary>The players who bought the map here.</summary>
-    public HashSet<PlayerId> Buyers { get; } = [];
+    public IReadOnlySet<PlayerId> Buyers => _buyers;
+
+    /// <summary>The player bought the map here.</summary>
+    internal void Sell(PlayerId buyer) => _buyers.Add(buyer);
 
     public int Level => Definition.RevealsLevel;
 }
@@ -38,8 +43,20 @@ public sealed class ArtifactMerchant(MapObjectId id, MapObjectDefinition definit
 
     public const int StockSize = 7;
 
+    private readonly List<string?> _stock = [];
+
     /// <summary>What is for sale, slot by slot (null: sold).</summary>
-    public List<string?> Stock { get; } = [];
+    public IReadOnlyList<string?> Stock => _stock;
+
+    /// <summary>The month's artifacts take every slot.</summary>
+    internal void Restock(IEnumerable<string?> artifacts)
+    {
+        _stock.Clear();
+        _stock.AddRange(artifacts);
+    }
+
+    /// <summary>The slot's artifact is sold: the slot stays empty until the next month.</summary>
+    internal void Sell(int slot) => _stock[slot] = null;
 }
 
 /// <summary>Prices of the artifact merchant.</summary>

@@ -87,11 +87,13 @@ public sealed class ObjectLifecycleService(ObjectInteractionContext context, Art
 
         foreach (var merchant in state.ObjectsOf<ArtifactMerchant>().OrderBy(m => m.Id.Value).ToList())
         {
-            merchant.Stock.Clear();
+            var stock = new List<string?>(ArtifactMerchant.StockSize);
             for (var i = 0; i < ArtifactMerchant.StockSize; i++)
             {
-                merchant.Stock.Add(artifacts.Draw(state.Random.Next(2) == 0 ? ArtifactTier.Minor : ArtifactTier.Major));
+                stock.Add(artifacts.Draw(state.Random.Next(2) == 0 ? ArtifactTier.Minor : ArtifactTier.Major));
             }
+
+            merchant.Restock(stock);
 
             context.Events.Publish(new MerchantRestocked(merchant.Id, merchant.Stock.ToList()));
         }

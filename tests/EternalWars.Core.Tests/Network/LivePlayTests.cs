@@ -214,7 +214,6 @@ public class LivePlayTests
 
     private static (GameSession Session, GameHost Host) HostGame(GameState state, PlayerId[] remote)
     {
-        GameSession.CheckRefusals = true;
         var session = new GameSession(state);
         session.Start();
         return (session, new GameHost(session, remote));

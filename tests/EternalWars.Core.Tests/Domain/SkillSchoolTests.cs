@@ -114,7 +114,7 @@ public class SkillSchoolTests
         Assert.False(session.Execute(new TakeLessonCommand(Blue, school.Id, lesson.Skill)).IsAccepted); // nobody stands there
 
         session.Step(A, Direction.North);
-        school.Lessons[A] = [lesson];
+        school.SetLessons(A, [lesson]);
         var taken = new List<LessonTaken>();
         session.Events.Subscribe<LessonTaken>(taken.Add);
         session.Execute(new TakeLessonCommand(Blue, school.Id, lesson.Skill)).ThrowIfRejected();
@@ -127,7 +127,7 @@ public class SkillSchoolTests
         Assert.Contains("does not offer", session.Execute(new TakeLessonCommand(Blue, school.Id, BuiltInSkills.Melee)).Error, StringComparison.Ordinal);
 
         state.GetPlayer(Blue).Resources = new ResourceSet(Gold: 50_000);
-        school.Lessons[A] = [new Lesson(lesson.Skill, SkillLevel.Advanced, NewGroup: false)];
+        school.SetLessons(A, [new Lesson(lesson.Skill, SkillLevel.Advanced, NewGroup: false)]);
         Assert.Contains("Not enough", session.Execute(new TakeLessonCommand(Blue, school.Id, lesson.Skill)).Error, StringComparison.Ordinal);
     }
 

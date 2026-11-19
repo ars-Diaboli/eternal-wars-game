@@ -254,7 +254,6 @@ public class SimultaneousDayTests
     {
         var state = Duel(Simultaneous with { HostPlayer = Blue }, zoneWidth: 8, gap: 1);
         var initial = MapConverter.ToDocument(state);
-        GameSession.CheckRefusals = true;
         var session = new GameSession(state);
         session.Start();
         var host = new GameHost(session, [Red]);
@@ -326,7 +325,6 @@ public class SimultaneousDayTests
     public void OnALanGame_TheHostsClockIsTheOnlyOne_ItEndsTheClientsTurn_AndTheClientShowsIt()
     {
         var state = Duel(Simultaneous with { HostPlayer = Blue, TurnTimerMinutes = 1 });
-        GameSession.CheckRefusals = true;
         var session = new GameSession(state);
         session.Start();
         var host = new GameHost(session, [Red]);
@@ -394,7 +392,6 @@ public class SimultaneousDayTests
 
     internal static GameSession Started(GameState state)
     {
-        GameSession.CheckRefusals = true;
         var session = new GameSession(state);
         session.Start();
         return session;

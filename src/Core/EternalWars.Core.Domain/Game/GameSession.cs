@@ -29,11 +29,15 @@ public sealed class GameSession
     private int _unheard;
     private readonly ViewSink? _viewSink;
 
+    /// <summary>The runtime switch that turns on <see cref="CheckRefusals"/> (ADR-239).</summary>
+    internal const string CheckRefusalsSwitch = "EternalWars.CheckRefusals";
+
     /// <summary>
-    /// Checks that a refused command left the game as it was (its digest text unchanged) and fails loudly otherwise. The tests turn it on for
-    /// every game they play; it costs a digest a command.
+    /// Checks that a refused command left the game as it was (its digest text unchanged) and fails loudly otherwise; it costs a digest a command.
+    /// On when the process starts with the runtime switch <see cref="CheckRefusalsSwitch"/>, as the test project does (ADR-239); read once, so
+    /// nothing turns it on or off while games run.
     /// </summary>
-    internal static bool CheckRefusals { get; set; }
+    internal static bool CheckRefusals { get; } = AppContext.TryGetSwitch(CheckRefusalsSwitch, out var on) && on;
 
     public GameSession(GameState state, IEventBus? bus = null)
         : this(state, bus, followsHost: false)
