@@ -49,7 +49,7 @@ public static class NetLimits
     /// <summary>The bytes that may wait to be sent on a link (two of the biggest messages); one more closes it.</summary>
     public const long MaxBytesWaitingToSend = 2L * TcpConnection.MaxMessageBytes;
 
-    /// <summary>How long a closed link still sends what waits (a refusal's reason) before its socket goes.</summary>
+    /// <summary>How long a piece of what waits may take to go out once the link is closed (a refusal's reason); one slower drops the socket.</summary>
     public static readonly TimeSpan CloseLinger = TimeSpan.FromSeconds(2);
 
     /// <summary>Takes a new link unless <paramref name="unjoined"/> links already wait to join; turns it away (told why) otherwise.</summary>

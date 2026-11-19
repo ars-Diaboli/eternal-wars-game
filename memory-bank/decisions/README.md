@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-229.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-231.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -255,3 +255,5 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [226](project-and-scope.md#adr-226-closing-the-refactoring-plan-adr-202--adr-224-2026-11-19) | project-and-scope | Closing the refactoring plan (ADR-202 … ADR-224, 2026-11-19) | implemented |
 | [227](game-modes.md#adr-227-building-adr-225-old-difficulty-names-player-colours-and-the-new-game-screens-players-adr-225-2026-11-19) | game-modes | Building ADR-225: old difficulty names, player colours and the new-game screen's players (ADR-225, 2026-11-19) | accepted |
 | [228](multiplayer.md#adr-228-lan-hardening-sends-that-never-wait-the-chats-allowance-the-lobbys-waiting-players-the-record-per-colour-adr-203-adr-226-2026-11-19) | multiplayer | LAN hardening: sends that never wait, the chat's allowance, the lobby's waiting players, the record per colour (ADR-203, ADR-226, 2026-11-19) | implemented |
+| [229](multiplayer.md#adr-229-the-schema-hash-leaves-out-the-runtimes-fields-and-carries-enum-numbers-adr-218-adr-226-2026-11-19) | multiplayer | The schema hash leaves out the runtime's fields and carries enum numbers (ADR-218, ADR-226, 2026-11-19) | implemented |
+| [230](multiplayer.md#adr-230-a-tcp-link-reads-and-writes-on-threads-of-its-own-adr-228-2026-11-19) | multiplayer | A TCP link reads and writes on threads of its own (ADR-228, 2026-11-19) | implemented |
