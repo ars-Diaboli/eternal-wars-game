@@ -158,8 +158,9 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       each step against the one before (ADR-188; about even with the greedy AI)
 - [x] A cleverer battle AI, steps (d), (b), (c) (ADR-188): weighs the retaliation it draws and waits for a free hit; goes for and blocks
       enemy shooters; waits for the enemy to come and holds its ground while it shoots better (`HoldBack`: 76 % / 59 % against step (b))
-- [ ] A cleverer battle AI, the last steps (ADR-188): (e) spells weighed a round ahead (a buff before its strongest stack moves, a mass
-      spell over several stacks); (f) sieges (the gate or a breach together, shooters on the walls)
+- [x] A cleverer battle AI, the last steps (ADR-188): (e) the hero's spells weighed a round ahead on copies of the battle (`CastAhead`:
+      59 % / 54 % against `HoldBack` with casting heroes); (f) sieges: the gate first for an aimed siege engine, the attackers in together,
+      the defenders blocking an open way in (`Sieges`: 65 % / 60 % in Castle sieges); `sim ai --spells`, `--siege`
 - [x] Built: morale and luck (ADR-053, ADR-075), war machines (ADR-056, ADR-083, ADR-112, ADR-121), teleporting (ADR-083), sieges
       (ADR-106, ADR-109, ADR-113, ADR-120), circular battle movement (ADR-089)
 - [x] Sieges: the town's own look on the siege field (ADR-144)

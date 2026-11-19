@@ -160,7 +160,12 @@ ADR-099, ADR-106, built ADR-109 and ADR-120 (CMB-11). Numbers are placeholders; 
   battlements on the keep and towers), moat (water, swamp, Inferno's lava, Conflux's shimmer) and the ground of its yard behind the walls, with a
   few of its houses beyond the defenders' edge (more behind a stronger fort). Placeholder shapes and colours until the town models.
 - **AI**: attacks a fortified town only when a siege estimate wins; defenders stay inside; walking attackers go round to a breach or the
-  broken gate, close up to the moat without entering while walls hold, and break the gate with no machine and no breach.
+  broken gate, close up to the moat without entering while walls hold, and break the gate with no machine and no breach. Walking attackers
+  go in together (ADR-188): one with nothing to hit stops 4 cells short of the way in (an open breach or the broken gate, else the standing
+  gate) while less than half of its side's other walking stacks outside (by Fight Value × count) can get within 3 cells of it on their next
+  move. A siege engine the hero aims (Ballistics) fires at the gate first, then the keep, the towers and the wall sections beside the gate.
+  A defender's walking stack with nothing to hit moves into the open breach or broken gate nearest the attackers' walking stacks, never
+  out of the town.
 
 ## Auto and quick combat
 - **Auto combat** (ADR-088, ADR-090), per human player in the game menu: off, ask before each battle, or always; for battles against
@@ -174,6 +179,12 @@ ADR-099, ADR-106, built ADR-109 and ADR-120 (CMB-11). Numbers are placeholders; 
   25 % of its threat more. A melee stack whose target would hit back waits once a round for an own stack still to act that hits it freely
   (a shooter, a no-retaliation creature). With nothing to hit, a melee stack waits once a round for the enemy to come, then holds its ground
   while its side shoots better, else walks at the biggest enemy shooter that can shoot, or the nearest enemy. The AI grows in steps
-  (`BattleAiLevel`); `sim ai` measures each step against the one before it.
+  (`BattleAiLevel`); `sim ai` measures each step against the one before it (`--spells`: casting heroes; `--siege`: Castle sieges).
+- **The battle AI's spells** (ADR-188): a hero casts once a round, on its side's first turn. Each cast it can afford gets a worth (the Fight
+  Value of the hit points it takes off, less own; a lasting effect a share of the stack's value a round). The best aim of each of the
+  three best spells, and casting nothing, are each played out on a copy of the battle with its own random numbers, to the end of the next
+  round (the hero casting nothing more there); the one that leaves the side the most Fight Value of health over the enemy's (a beaten
+  side's counts as none), plus what lasting spells still hold, is cast, the best-looking on a tie. A creature caster casts when its spell
+  is worth more than its own blow or shot (a buff only when it has nothing to hit).
 - **Health bars** (ADR-118, ADR-145): each stack shows a bar under its count, the top creature's hit points against its full health: green
   over 50 %, yellow 21–50 %, red 20 % and below.

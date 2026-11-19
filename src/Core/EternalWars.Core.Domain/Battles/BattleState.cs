@@ -403,11 +403,12 @@ public sealed class BattleState
 
     /// <summary>
     /// A copy that plays on by itself (the auto combat preview, ADR-090): its own units, queues and random generator, all as they are now,
-    /// so it draws the same numbers as this battle would.
+    /// so it draws the same numbers as this battle would; with <paramref name="random"/> it draws that generator's instead (the battle AI's
+    /// look-ahead, ADR-188, which must not foresee this battle's rolls).
     /// </summary>
-    internal BattleState Copy()
+    internal BattleState Copy(GameRandom? random = null)
     {
-        var copy = new BattleState(Attacker, Defender, Terrain, Location, IsAmbush, new GameRandom(Random.State), NativeTowns)
+        var copy = new BattleState(Attacker, Defender, Terrain, Location, IsAmbush, random ?? new GameRandom(Random.State), NativeTowns)
         {
             Phase = Phase,
             Width = Width,

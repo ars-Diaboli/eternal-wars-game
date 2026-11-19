@@ -236,7 +236,8 @@ public class ControlChangeTests
         var enemy = battle.Add(Defender, BuiltInCreatures.Footman, 10, 25, 0);
         battle.StartWith(own);
 
-        BattleAi.Act(battle.State, battle.Engine);
+        // The spell's own worth; the look-ahead (ADR-188 e) would see the far stack do nothing for two rounds either way.
+        BattleAi.Act(battle.State, battle.Engine, BattleAiLevel.HoldBack);
 
         Assert.Contains(battle.Events, e => e is BattleSpellCast c && c.Spell == spell && c.Target == enemy.Id);
     }

@@ -1,5 +1,7 @@
+using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Battles.Spells;
+using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Battles;
 
@@ -30,8 +32,20 @@ public enum BattleAiLevel
     /// </summary>
     HoldBack,
 
+    /// <summary>
+    /// ADR-188 (e): on its side's first turn of a round the hero tries its best spells, and casting nothing yet, on copies of the battle played
+    /// to the end of the next round, and casts what leaves its side best off.
+    /// </summary>
+    CastAhead,
+
+    /// <summary>
+    /// ADR-188 (f): in a siege the attackers go through the gate or a breach together, a siege engine the hero aims breaks the gate first, and the
+    /// defenders' walking stacks block an open way in while their shooters fire from behind the walls.
+    /// </summary>
+    Sieges,
+
     /// <summary>The level the game plays.</summary>
-    Latest = HoldBack,
+    Latest = Sieges,
 }
 
 /// <summary>
@@ -44,7 +58,14 @@ internal static class BattleAi
     /// <summary>A shooter that can shoot now, or a caster with casts left, counts this much more as a threat, in percent (ADR-187, proposal).</summary>
     public const int ActiveThreatPercent = 125;
 
-    public static void Act(BattleState battle, BattleEngine engine, BattleAiLevel level = BattleAiLevel.Latest)
+    public static void Act(BattleState battle, BattleEngine engine, BattleAiLevel level = BattleAiLevel.Latest) =>
+        Act(battle, engine, level, mayCast: true, mayLookAhead: true);
+
+    /// <summary>
+    /// The active unit's turn. Its hero casts first only with <paramref name="mayCast"/>, and weighs its spells a round ahead only with
+    /// <paramref name="mayLookAhead"/> (not inside a look-ahead's own copy).
+    /// </summary>
+    private static void Act(BattleState battle, BattleEngine engine, BattleAiLevel level, bool mayCast, bool mayLookAhead)
     {
         var unit = battle.ActiveUnit ?? throw new InvalidOperationException("No unit is active.");
         var enemies = battle.LivingUnitsOf(unit.Side.Opponent()).ToList();
@@ -52,7 +73,8 @@ internal static class BattleAi
         // The siege engine breaks the fortifications first (ADR-106); with nothing left standing it shoots troops if Ballistics lets it.
         if (SiegeRules.IsSiegeEngine(battle, unit))
         {
-            if (battle.Siege!.AutoTarget() is { } structure && engine.ShootStructure(structure.Id) is null)
+            var aimed = level >= BattleAiLevel.Sieges && !SiegeRules.FiresByItself(battle, unit) ? AimedStructure(battle.Siege!) : battle.Siege!.AutoTarget();
+            if (aimed is { } structure && engine.ShootStructure(structure.Id) is null)
             {
                 return;
             }
@@ -74,10 +96,13 @@ internal static class BattleAi
         }
 
         // A hero with a spell book casts the damage spell worth most, once a round (ADR-110); the unit still acts, unless the spell ended it.
-        Cast(battle, engine, unit.Side);
-        if (battle.ActiveUnit != unit)
+        if (mayCast)
         {
-            return;
+            Cast(battle, engine, unit, level, mayLookAhead);
+            if (battle.ActiveUnit != unit)
+            {
+                return;
+            }
         }
 
         // A creature caster casts when its spell is worth more than its own blow or shot this turn (ADR-120).
@@ -121,6 +146,12 @@ internal static class BattleAi
             }
         }
 
+        // ADR-188 (f): a besieger does not go to the way in ahead of its side's other walking stacks.
+        if (level >= BattleAiLevel.Sieges && Gathers(battle, engine, unit))
+        {
+            return;
+        }
+
         if (BreakGate(battle, engine, unit, enemies))
         {
             return;
@@ -134,6 +165,12 @@ internal static class BattleAi
 
         // In a siege the defenders hold the walls: they fight what reaches them but do not go out (ADR-106). ADR-188 (c): a side that shoots
         // better keeps its melee stacks with its shooters.
+        // ADR-188 (f): a defender's walking stack blocks an open way in instead.
+        if (level >= BattleAiLevel.Sieges && BlocksWayIn(battle, engine, unit))
+        {
+            return;
+        }
+
         var holds = (battle.Siege is not null && unit.Side == BattleSide.Defender) || (level >= BattleAiLevel.HoldBack && HoldsGround(battle, unit, enemies));
         if (enemies.Count > 0 && !holds && Advance(battle, unit, enemies, level) is { } destination && engine.Move(destination) is null)
         {
@@ -390,17 +427,64 @@ internal static class BattleAi
     }
 
     /// <summary>
-    /// The damage spell and aim worth most: the creature value of the hit points it takes off enemy stacks, less that of own stacks it hits.
-    /// Nothing is cast when no aim is worth anything.
+    /// The hero's cast for the turn: the spell and aim worth most (<see cref="CastOptions"/>); nothing is cast when no aim is worth anything. From
+    /// <see cref="BattleAiLevel.CastAhead"/> on (ADR-188 e), on its side's first turn of the round, the best aims of the
+    /// <see cref="LookAheadSpells"/> best spells and casting nothing are each played out on a copy of the battle (<see cref="Outlook"/>), and
+    /// the one that leaves the side best off is chosen (on a tie, the one that looked best); the hero then casts on no other turn of that round.
     /// </summary>
-    private static void Cast(BattleState battle, BattleEngine engine, BattleSide side)
+    private static void Cast(BattleState battle, BattleEngine engine, BattleUnit unit, BattleAiLevel level, bool mayLookAhead)
     {
-        if (battle.Participant(side).Caster is not { } caster || battle.HasCastThisRound(side))
+        var side = unit.Side;
+        if (battle.Participant(side).Caster is null || battle.HasCastThisRound(side))
         {
             return;
         }
 
-        (long Value, string? Spell, int? Target, CellPosition? Cell, int? Second) best = (0, null, null, null, null);
+        var options = CastOptions(battle, side);
+        if (options.Count == 0)
+        {
+            return;
+        }
+
+        var pick = options[0];
+        if (level >= BattleAiLevel.CastAhead && mayLookAhead)
+        {
+            if (!IsFirstTurnOfRound(battle, unit))
+            {
+                return; // the round's cast was weighed on the side's first turn
+            }
+
+            // The best-looking cast wins a tie with the others and with casting nothing: the look-ahead overrules it only when it sees better.
+            var best = long.MinValue;
+            foreach (var option in options.DistinctBy(o => o.Spell).Take(LookAheadSpells))
+            {
+                var outlook = Outlook(battle, unit, option, level);
+                if (outlook > best)
+                {
+                    (best, pick) = (outlook, option);
+                }
+            }
+
+            if (Outlook(battle, unit, null, level) > best)
+            {
+                return;
+            }
+        }
+
+        engine.Cast(side, pick.Spell, pick.Target, pick.Cell, pick.Second);
+    }
+
+    /// <summary>A hero's cast the AI weighs: the spell, its aim and second aim, and what it is worth by the spell's own measure.</summary>
+    internal readonly record struct CastOption(long Value, string Spell, int? Target, CellPosition? Cell, int? Second);
+
+    /// <summary>
+    /// Every cast of the hero's spells it has the mana for, with what it is worth (the creature value of the hit points it takes off enemy stacks,
+    /// less that of own stacks it hits; a lasting effect's share), best first; only those worth something.
+    /// </summary>
+    internal static List<CastOption> CastOptions(BattleState battle, BattleSide side)
+    {
+        var caster = battle.Participant(side).Caster!;
+        var options = new List<CastOption>();
         foreach (var known in caster.Spells.Where(s => s.Effect is not null).OrderBy(s => s.Spell.Id, StringComparer.Ordinal))
         {
             if (battle.ManaOf(side) < BattleMagic.Cost(battle, side, known))
@@ -421,17 +505,209 @@ internal static class BattleAi
                 }
 
                 var value = handler.Value(new CastContext(battle, side, known, target, cell, drinker?.Id)) + (drinker?.Worth ?? 0);
-                if (value > best.Value)
+                if (value > 0)
                 {
-                    best = (value, known.Spell.Id, target, cell, drinker?.Id);
+                    options.Add(new CastOption(value, known.Spell.Id, target, cell, drinker?.Id));
                 }
             }
         }
 
-        if (best.Spell is { } spell)
+        // A stable sort: of aims worth the same, the first found stays first, as the AI has always picked.
+        return [.. options.OrderByDescending(o => o.Value)];
+    }
+
+    /// <summary>How many of the hero's spells (each at its best aim) the look-ahead plays out, besides casting nothing (ADR-188 e, proposal).</summary>
+    public const int LookAheadSpells = 3;
+
+    /// <summary>A bound on the turns one look-ahead plays (a round has at most a few dozen).</summary>
+    private const int LookAheadTurns = 200;
+
+    /// <summary>Mixed into the battle's generator state for the look-ahead's own, so that it neither foresees nor draws this battle's rolls.</summary>
+    private const ulong LookAheadSeed = 0x5EED_A11E_AD00_0188;
+
+    /// <summary>
+    /// Whether this is the side's first turn of the round (ADR-188 e): the unit has not waited, and every other own stack but a war machine is still
+    /// to act. The look-ahead is tried then only, so that it costs a few plays a round.
+    /// </summary>
+    private static bool IsFirstTurnOfRound(BattleState battle, BattleUnit unit) =>
+        !battle.WaitedThisRound.Contains(unit.Id)
+        && battle.LivingUnitsOf(unit.Side).All(u => u == unit || u.IsMachine || battle.Queue.Contains(u.Id));
+
+    /// <summary>
+    /// What the side has at the end of the next round if the hero casts <paramref name="option"/> now, or nothing (null): a copy of the battle with
+    /// a generator of its own, the cast made, then every turn played by this AI for both sides, the side's hero casting nothing more (so each
+    /// option is one cast against none) and the enemy's casting as usual, without looking ahead; <see cref="Standing"/> of the copy then.
+    /// </summary>
+    private static long Outlook(BattleState battle, BattleUnit unit, CastOption? option, BattleAiLevel level)
+    {
+        var copy = battle.Copy(new GameRandom(battle.Random.State ^ LookAheadSeed));
+        var unheard = new EventBus();
+        if (option is { } cast && new BattleEngine(copy, unheard).Cast(unit.Side, cast.Spell, cast.Target, cast.Cell, cast.Second) is not null)
         {
-            engine.Cast(side, spell, best.Target, best.Cell, best.Second);
+            return long.MinValue;
         }
+
+        var until = battle.Round + 1;
+        for (var turn = 0; turn < LookAheadTurns && copy.Phase == BattlePhase.Fighting && copy.Round <= until && copy.ActiveUnit is { } active; turn++)
+        {
+            var engine = new BattleEngine(copy, unheard);
+            if (active.Has(Magic.SpellStatus.Frenzied))
+            {
+                ActFrenzied(copy, engine);
+            }
+            else if (active.Has(Magic.SpellStatus.Confused))
+            {
+                ActConfused(copy, engine);
+            }
+            else
+            {
+                Act(copy, engine, level, mayCast: active.Side != unit.Side, mayLookAhead: false);
+            }
+        }
+
+        return Standing(copy, unit.Side);
+    }
+
+    /// <summary>
+    /// How well <paramref name="side"/> stands (ADR-188 e): the creature value of the health of its stacks less the enemy's (copies left out; a
+    /// beaten side's count for nothing, its army is lost), plus what the lasting spells on them are still worth, at the usual share a round for
+    /// the rounds or turns they have left, for the side that cast them and against the other.
+    /// </summary>
+    internal static long Standing(BattleState battle, BattleSide side)
+    {
+        long standing = 0;
+        foreach (var unit in battle.LivingUnits.Where(u => !u.IsCopy && (battle.Winner is not { } winner || u.Side == winner)))
+        {
+            standing += (unit.Side == side ? 1 : -1) * Worth(unit, unit.TotalHealth);
+            foreach (var spell in unit.Spells.Where(s => !s.IsMartyr && !s.Modifiers.IsEmpty))
+            {
+                var left = Math.Min(MaxValuedRounds, spell.TurnsLeft ?? (spell.UntilRound - battle.Round + 1));
+                if (left <= 0)
+                {
+                    continue;
+                }
+
+                var m = spell.Modifiers;
+                var percent = m.Has(Magic.SpellStatus.Controlled) ? TakenPercentPerRound
+                    : m.Has(Magic.SpellStatus.Blind | Magic.SpellStatus.Stasis | Magic.SpellStatus.Confused | Magic.SpellStatus.Frenzied) ? ControlPercentPerRound
+                    : EnchantPercentPerRound;
+                standing += (spell.Caster == side ? 1 : -1) * StackValue(unit) * percent * left / 100;
+            }
+        }
+
+        return standing;
+    }
+
+    /// <summary>
+    /// Where a siege engine the hero aims fires (ADR-188 f, proposal): the gate while it stands (one hit breaks it and opens the bridged way in,
+    /// with no moat), then the keep and the towers (they shoot every round), then the wall sections, those beside the gate first.
+    /// </summary>
+    internal static SiegeStructure? AimedStructure(SiegeState siege)
+    {
+        var middle = (2 * SiegeRules.GateY) + SiegeRules.GateHeight;
+        return siege.Structures.Where(s => s.IsStanding)
+            .OrderBy(s => s.Kind switch { SiegeStructureKind.Gate => 0, SiegeStructureKind.Keep => 1, SiegeStructureKind.Tower => 2, _ => 3 })
+            .ThenBy(s => Math.Abs((2 * s.Rect.Y) + s.Rect.Height - middle)).ThenBy(s => s.Id)
+            .FirstOrDefault();
+    }
+
+    /// <summary>A besieger walks no nearer the way in than this many cells while its side's other walking stacks cannot follow (ADR-188 f, proposal).</summary>
+    public const int GatherGap = 3;
+
+    /// <summary>A stack that walks to fight and is not held in place: no war machine, shooter, flyer or stack in the keep.</summary>
+    private static bool Walks(BattleUnit unit) => !unit.IsMachine && unit.Creature.Shots == 0 && !unit.MovesFreely && !unit.IsFixed;
+
+    /// <summary>The way in a besieger makes for (ADR-188 f): the nearest open one (a breach, the broken gate), else the standing gate (to break it).</summary>
+    internal static CellRect WayIn(SiegeState siege, BattleUnit unit) =>
+        siege.Structures.Where(s => s.OnField && (!s.IsStanding || s.Kind == SiegeStructureKind.Gate))
+            .OrderBy(s => s.IsStanding ? 1 : 0).ThenBy(s => unit.Rect.GapTo(s.Rect)).ThenBy(s => s.Id)
+            .First().Rect;
+
+    /// <summary>
+    /// A besieger's walking stack with nothing to hit, still outside the walls, gathers with its side (ADR-188 f): while less than half of the
+    /// side's other walking stacks outside the walls (by Fight Value × count) can get within <see cref="GatherGap"/> of the way in on their next
+    /// move, it walks only that near (or defends), instead of reaching the way in, or the gate to break it, alone. True when it acted.
+    /// </summary>
+    private static bool Gathers(BattleState battle, BattleEngine engine, BattleUnit unit)
+    {
+        if (battle.Siege is not { } siege || unit.Side != BattleSide.Attacker || !Walks(unit) || unit.Rect.Right > SiegeRules.WallX)
+        {
+            return false;
+        }
+
+        var wayIn = WayIn(siege, unit);
+        var reach = BattleGrid.Reachable(battle, unit);
+        if (reach.Keys.Select(p => unit.RectAt(p).GapTo(wayIn)).DefaultIfEmpty(int.MaxValue).Min() > GatherGap || !AheadOfItsSide(battle, unit, wayIn))
+        {
+            return false; // it cannot get near this turn anyway, or the others can follow
+        }
+
+        var fearsMoat = SiegeRules.FearsMoat(battle, unit.Side);
+        var now = unit.Rect.GapTo(wayIn);
+        var spot = reach
+            .Where(r => unit.RectAt(r.Key).GapTo(wayIn) > GatherGap && (!fearsMoat || !siege.InMoat(unit.RectAt(r.Key))))
+            .Select(r => (Position: r.Key, Length: r.Value, Gap: unit.RectAt(r.Key).GapTo(wayIn)))
+            .OrderBy(r => r.Gap).ThenBy(r => r.Length).ThenBy(r => r.Position.Y).ThenBy(r => r.Position.X)
+            .Select(r => ((CellPosition Position, int Gap)?)(r.Position, r.Gap))
+            .FirstOrDefault();
+        if (spot is { } to && to.Gap < now && engine.Move(to.Position) is null)
+        {
+            return true;
+        }
+
+        return engine.Defend() is null;
+    }
+
+    /// <summary>
+    /// Whether less than half of the side's other walking stacks outside the walls that can move (by Fight Value × count) can get within
+    /// <see cref="GatherGap"/> of <paramref name="wayIn"/> on their next move (ADR-188 f).
+    /// </summary>
+    private static bool AheadOfItsSide(BattleState battle, BattleUnit unit, CellRect wayIn)
+    {
+        long total = 0, near = 0;
+        foreach (var other in battle.LivingUnitsOf(unit.Side).Where(u => u != unit && Walks(u) && u.Rect.Right <= SiegeRules.WallX))
+        {
+            var reach = BattleGrid.Reachable(battle, other);
+            if (reach.Count <= 1)
+            {
+                continue; // it cannot move: nobody waits for it
+            }
+
+            total += StackValue(other);
+            near += reach.Keys.Min(p => other.RectAt(p).GapTo(wayIn)) <= GatherGap ? StackValue(other) : 0;
+        }
+
+        return near * 2 < total;
+    }
+
+    /// <summary>
+    /// A defender's walking stack with nothing to hit blocks an open way in (ADR-188 f): it walks to the reachable placement inside the walls
+    /// (it may stand in the gap itself) nearest the breach or broken gate closest to the attackers' walking stacks, so they come in through it
+    /// under the defenders' fire. True when it moved; it stays where it is once it is as near as it gets, and with no way in open.
+    /// </summary>
+    private static bool BlocksWayIn(BattleState battle, BattleEngine engine, BattleUnit unit)
+    {
+        if (battle.Siege is not { } siege || unit.Side != BattleSide.Defender || !Walks(unit))
+        {
+            return false;
+        }
+
+        var attackers = battle.LivingUnitsOf(BattleSide.Attacker).Where(Walks).ToList();
+        var open = siege.Structures.Where(s => s.OnField && !s.IsStanding).ToList();
+        if (attackers.Count == 0 || open.Count == 0)
+        {
+            return false;
+        }
+
+        var gap = open.OrderBy(s => attackers.Min(a => a.Rect.GapTo(s.Rect))).ThenBy(s => s.Id).First().Rect;
+        var now = unit.Rect.GapTo(gap);
+        var best = BattleGrid.Reachable(battle, unit)
+            .Where(r => r.Key.X >= SiegeRules.WallX)
+            .Select(r => (Position: r.Key, Length: r.Value, Gap: unit.RectAt(r.Key).GapTo(gap)))
+            .OrderBy(r => r.Gap).ThenBy(r => r.Length).ThenBy(r => r.Position.Y).ThenBy(r => r.Position.X)
+            .Select(r => ((CellPosition Position, int Gap)?)(r.Position, r.Gap))
+            .FirstOrDefault();
+        return best is { } to && to.Gap < now && engine.Move(to.Position) is null;
     }
 
     /// <summary>The own stack a drain (ADR-151) does most for, with what that is worth (the creature value of the health it gives back); null when none gains.</summary>
