@@ -1,7 +1,7 @@
 # Adventure map
 
 > Part of the [game design](overview.md). Everything here is built unless tagged *(planned)*; numbers are drafts. Open items ❓:
-> [open-questions.md](../project/open-questions.md).
+> [open-questions.md](../../memory-bank/open-questions.md).
 
 ## Size and levels
 - Square presets **48, 72, 96, 128, 160, 192, 256** (max), each with an optional underground level; **up to 8 players** (ADR-020).

@@ -3,37 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{FBF56CC3-7AE6-AD2D-3F14-7F97FD322CD6}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{7FBD0232-A03B-5E01-A96D-03DFACDBA5FC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Core.Data", "src\Core\EternalWars.Core.Data\EternalWars.Core.Data.csproj", "{EA3FBF0D-58FA-4999-AF9F-9D5F6347C465}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{691F9EC4-CA8A-5B87-8739-027E55FD6616}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\ci.yml = .github\workflows\ci.yml
+	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Core.Domain", "src\Core\EternalWars.Core.Domain\EternalWars.Core.Domain.csproj", "{6481D37D-A6FE-488B-834B-D0B65F5A1878}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{FFE5D48A-3CA7-5425-A028-E9D1410A452B}"
+	ProjectSection(SolutionItems) = preProject
+		docs\README.md = docs\README.md
+	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Core.Events", "src\Core\EternalWars.Core.Events\EternalWars.Core.Events.csproj", "{CAA1D663-6C3D-4044-8E57-729A1FC5BA92}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Core.Tests", "tests\EternalWars.Core.Tests\EternalWars.Core.Tests.csproj", "{BB703545-AB0B-4029-A8F1-06AB856467AE}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Godot", "Godot", "{8D4FAABC-C56A-6D5C-8531-6A6B417F5DBA}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Godot.Shared", "src\Godot\EternalWars.Godot.Shared\EternalWars.Godot.Shared.csproj", "{865BD53B-831A-4C9F-9F64-4625DB6CE731}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Godot.UI", "src\Godot\EternalWars.Godot.UI\EternalWars.Godot.UI.csproj", "{A1455634-5B07-40E6-9008-E0CB1427B040}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Apps", "Apps", "{1787FE1D-075E-9E68-7218-25F1BD1BBEAB}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Game", "src\Apps\EternalWars.Game\EternalWars.Game.csproj", "{F0A07A06-D8B9-4716-AC74-55D844FAC84D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Harness2D", "src\Apps\EternalWars.Harness2D\EternalWars.Harness2D.csproj", "{AE802E48-6CB6-471D-9658-77342AF21F84}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.MapEditor", "src\Apps\EternalWars.MapEditor\EternalWars.MapEditor.csproj", "{21FD1308-9249-4E74-9201-07E642DB501F}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{07C2787E-EAC7-C090-1BA3-A61EC2A24D84}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Tools.Sim", "tools\EternalWars.Tools.Sim\EternalWars.Tools.Sim.csproj", "{57FA76F0-A971-4F9C-9F29-F4FB549824FD}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{3C9B6E2A-5D41-4F7E-9A08-B2E6C1D47F35}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "content", "content", "{C1E7D430-FE72-5271-9AD2-E31808AE46AE}"
 	ProjectSection(SolutionItems) = preProject
 		docs\content\artifacts.md = docs\content\artifacts.md
 		docs\content\hero-roster.md = docs\content\hero-roster.md
@@ -41,29 +23,142 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{3C9B6E2A-5
 		docs\content\skills.md = docs\content\skills.md
 		docs\content\spells.md = docs\content\spells.md
 		docs\content\town-buildings.md = docs\content\town-buildings.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "prompts", "prompts", "{57DDF79E-0060-5763-ACB9-16920E3921C6}"
+	ProjectSection(SolutionItems) = preProject
+		docs\content\prompts\cursor-prompts.md = docs\content\prompts\cursor-prompts.md
+		docs\content\prompts\icon-prompts.md = docs\content\prompts\icon-prompts.md
+		docs\content\prompts\terrain-texture-prompts.md = docs\content\prompts\terrain-texture-prompts.md
+		docs\content\prompts\town-model-prompts.md = docs\content\prompts\town-model-prompts.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "design", "design", "{7AE2387B-976A-56CB-846A-BDC250314985}"
+	ProjectSection(SolutionItems) = preProject
 		docs\design\adventure-map.md = docs\design\adventure-map.md
 		docs\design\combat.md = docs\design\combat.md
 		docs\design\departures.md = docs\design\departures.md
 		docs\design\factions.md = docs\design\factions.md
 		docs\design\heroes.md = docs\design\heroes.md
 		docs\design\magic.md = docs\design\magic.md
+		docs\design\missing-mechanics.md = docs\design\missing-mechanics.md
 		docs\design\overview.md = docs\design\overview.md
 		docs\design\presentation.md = docs\design\presentation.md
 		docs\design\random-maps.md = docs\design\random-maps.md
 		docs\design\tools.md = docs\design\tools.md
 		docs\design\towns-and-economy.md = docs\design\towns-and-economy.md
 		docs\design\victory-and-modes.md = docs\design\victory-and-modes.md
-		docs\project\decisions.md = docs\project\decisions.md
-		docs\project\decisions-archive.md = docs\project\decisions-archive.md
-		docs\project\ideas.md = docs\project\ideas.md
-		docs\project\open-questions.md = docs\project\open-questions.md
-		docs\project\roadmap.md = docs\project\roadmap.md
-		docs\README.md = docs\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "papers", "papers", "{76F5D712-0F9E-5D60-92C3-608C9F251C22}"
+	ProjectSection(SolutionItems) = preProject
+		docs\papers\code-review-2026-11.md = docs\papers\code-review-2026-11.md
+		docs\papers\refactoring-plan-2026-11.md = docs\papers\refactoring-plan-2026-11.md
+		docs\papers\relief-plan.md = docs\papers\relief-plan.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "technical", "technical", "{B7433253-AA29-5CFF-A641-E6AFA64ABFAB}"
+	ProjectSection(SolutionItems) = preProject
 		docs\technical\architecture.md = docs\technical\architecture.md
 		docs\technical\development.md = docs\technical\development.md
 		docs\technical\event-system.md = docs\technical\event-system.md
-		docs\design\missing-mechanics.md = docs\design\missing-mechanics.md
 	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "memory-bank", "memory-bank", "{9BB35012-8662-5FEB-8B49-DC55D2EF51BE}"
+	ProjectSection(SolutionItems) = preProject
+		memory-bank\README.md = memory-bank\README.md
+		memory-bank\active-context.md = memory-bank\active-context.md
+		memory-bank\ideas.md = memory-bank\ideas.md
+		memory-bank\open-questions.md = memory-bank\open-questions.md
+		memory-bank\project-brief.md = memory-bank\project-brief.md
+		memory-bank\roadmap.md = memory-bank\roadmap.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "decisions", "decisions", "{2C0BBF23-0C50-5657-8160-1D4D27A9C54A}"
+	ProjectSection(SolutionItems) = preProject
+		memory-bank\decisions\README.md = memory-bank\decisions\README.md
+		memory-bank\decisions\adventure-map.md = memory-bank\decisions\adventure-map.md
+		memory-bank\decisions\ai.md = memory-bank\decisions\ai.md
+		memory-bank\decisions\architecture.md = memory-bank\decisions\architecture.md
+		memory-bank\decisions\artifacts.md = memory-bank\decisions\artifacts.md
+		memory-bank\decisions\combat.md = memory-bank\decisions\combat.md
+		memory-bank\decisions\game-modes.md = memory-bank\decisions\game-modes.md
+		memory-bank\decisions\heroes.md = memory-bank\decisions\heroes.md
+		memory-bank\decisions\magic.md = memory-bank\decisions\magic.md
+		memory-bank\decisions\map-events.md = memory-bank\decisions\map-events.md
+		memory-bank\decisions\multiplayer.md = memory-bank\decisions\multiplayer.md
+		memory-bank\decisions\presentation.md = memory-bank\decisions\presentation.md
+		memory-bank\decisions\project-and-scope.md = memory-bank\decisions\project-and-scope.md
+		memory-bank\decisions\random-maps-and-editor.md = memory-bank\decisions\random-maps-and-editor.md
+		memory-bank\decisions\towns-and-economy.md = memory-bank\decisions\towns-and-economy.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{42686B31-F37D-5E3F-9648-9A08810D930F}"
+	ProjectSection(SolutionItems) = preProject
+		CLAUDE.md = CLAUDE.md
+		README.md = README.md
+		Directory.Build.props = Directory.Build.props
+		Directory.Build.targets = Directory.Build.targets
+		global.json = global.json
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{272F26FB-4CE2-5EB2-A676-53ECAF9E1021}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Apps", "Apps", "{85CC726A-718F-5939-9EF3-CD48ACBFD69A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{1537EFBF-619F-59E2-B8E3-C7ECCC497E8C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Godot", "Godot", "{0282BE8D-210F-51EF-ABAF-A3479A12A03E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0ABE43A6-B036-529A-A6D7-8F0AA11ACF9F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{D0660CBA-4B2D-5921-BAE5-53A3B1A802E8}"
+	ProjectSection(SolutionItems) = preProject
+		tools\link-shared-assets.ps1 = tools\link-shared-assets.ps1
+		tools\smoke-godot.ps1 = tools\smoke-godot.ps1
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "smoke", "smoke", "{B218A86E-EF47-5FDD-9296-76031BB6E447}"
+	ProjectSection(SolutionItems) = preProject
+		tools\smoke\arena.ewmap.json = tools\smoke\arena.ewmap.json
+		tools\smoke\battle.ewmap.json = tools\smoke\battle.ewmap.json
+		tools\smoke\caravan.ewmap.json = tools\smoke\caravan.ewmap.json
+		tools\smoke\connections.ewtemplate.json = tools\smoke\connections.ewtemplate.json
+		tools\smoke\exchange.ewmap.json = tools\smoke\exchange.ewmap.json
+		tools\smoke\grail.ewmap.json = tools\smoke\grail.ewmap.json
+		tools\smoke\magic.ewmap.json = tools\smoke\magic.ewmap.json
+		tools\smoke\necromancy.ewmap.json = tools\smoke\necromancy.ewmap.json
+		tools\smoke\placeholders.ewmap.json = tools\smoke\placeholders.ewmap.json
+		tools\smoke\quests.ewmap.json = tools\smoke\quests.ewmap.json
+		tools\smoke\siege-magic.ewmap.json = tools\smoke\siege-magic.ewmap.json
+		tools\smoke\siege.ewmap.json = tools\smoke\siege.ewmap.json
+		tools\smoke\sites.ewmap.json = tools\smoke\sites.ewmap.json
+		tools\smoke\towns.ewmap.json = tools\smoke\towns.ewmap.json
+		tools\smoke\turn-start.ewmap.json = tools\smoke\turn-start.ewmap.json
+		tools\smoke\unique-buildings.ewmap.json = tools\smoke\unique-buildings.ewmap.json
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Core.Data", "src\Core\EternalWars.Core.Data\EternalWars.Core.Data.csproj", "{EA3FBF0D-58FA-4999-AF9F-9D5F6347C465}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Core.Domain", "src\Core\EternalWars.Core.Domain\EternalWars.Core.Domain.csproj", "{6481D37D-A6FE-488B-834B-D0B65F5A1878}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Core.Events", "src\Core\EternalWars.Core.Events\EternalWars.Core.Events.csproj", "{CAA1D663-6C3D-4044-8E57-729A1FC5BA92}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Core.Tests", "tests\EternalWars.Core.Tests\EternalWars.Core.Tests.csproj", "{BB703545-AB0B-4029-A8F1-06AB856467AE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Godot.Shared", "src\Godot\EternalWars.Godot.Shared\EternalWars.Godot.Shared.csproj", "{865BD53B-831A-4C9F-9F64-4625DB6CE731}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Godot.UI", "src\Godot\EternalWars.Godot.UI\EternalWars.Godot.UI.csproj", "{A1455634-5B07-40E6-9008-E0CB1427B040}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Game", "src\Apps\EternalWars.Game\EternalWars.Game.csproj", "{F0A07A06-D8B9-4716-AC74-55D844FAC84D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Harness2D", "src\Apps\EternalWars.Harness2D\EternalWars.Harness2D.csproj", "{AE802E48-6CB6-471D-9658-77342AF21F84}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.MapEditor", "src\Apps\EternalWars.MapEditor\EternalWars.MapEditor.csproj", "{21FD1308-9249-4E74-9201-07E642DB501F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Tools.Sim", "tools\EternalWars.Tools.Sim\EternalWars.Tools.Sim.csproj", "{57FA76F0-A971-4F9C-9F29-F4FB549824FD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Core.Generation", "src\Core\EternalWars.Core.Generation\EternalWars.Core.Generation.csproj", "{C56E3387-323D-4072-8F17-02E5A642C886}"
 EndProject
@@ -228,17 +323,28 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{EA3FBF0D-58FA-4999-AF9F-9D5F6347C465} = {FBF56CC3-7AE6-AD2D-3F14-7F97FD322CD6}
-		{6481D37D-A6FE-488B-834B-D0B65F5A1878} = {FBF56CC3-7AE6-AD2D-3F14-7F97FD322CD6}
-		{CAA1D663-6C3D-4044-8E57-729A1FC5BA92} = {FBF56CC3-7AE6-AD2D-3F14-7F97FD322CD6}
-		{BB703545-AB0B-4029-A8F1-06AB856467AE} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
-		{865BD53B-831A-4C9F-9F64-4625DB6CE731} = {8D4FAABC-C56A-6D5C-8531-6A6B417F5DBA}
-		{A1455634-5B07-40E6-9008-E0CB1427B040} = {8D4FAABC-C56A-6D5C-8531-6A6B417F5DBA}
-		{F0A07A06-D8B9-4716-AC74-55D844FAC84D} = {1787FE1D-075E-9E68-7218-25F1BD1BBEAB}
-		{AE802E48-6CB6-471D-9658-77342AF21F84} = {1787FE1D-075E-9E68-7218-25F1BD1BBEAB}
-		{21FD1308-9249-4E74-9201-07E642DB501F} = {1787FE1D-075E-9E68-7218-25F1BD1BBEAB}
-		{57FA76F0-A971-4F9C-9F29-F4FB549824FD} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
-		{C56E3387-323D-4072-8F17-02E5A642C886} = {FBF56CC3-7AE6-AD2D-3F14-7F97FD322CD6}
-		{13474FA1-F4C9-4A74-B4DC-555011C75853} = {FBF56CC3-7AE6-AD2D-3F14-7F97FD322CD6}
+		{EA3FBF0D-58FA-4999-AF9F-9D5F6347C465} = {1537EFBF-619F-59E2-B8E3-C7ECCC497E8C}
+		{6481D37D-A6FE-488B-834B-D0B65F5A1878} = {1537EFBF-619F-59E2-B8E3-C7ECCC497E8C}
+		{CAA1D663-6C3D-4044-8E57-729A1FC5BA92} = {1537EFBF-619F-59E2-B8E3-C7ECCC497E8C}
+		{BB703545-AB0B-4029-A8F1-06AB856467AE} = {0ABE43A6-B036-529A-A6D7-8F0AA11ACF9F}
+		{865BD53B-831A-4C9F-9F64-4625DB6CE731} = {0282BE8D-210F-51EF-ABAF-A3479A12A03E}
+		{A1455634-5B07-40E6-9008-E0CB1427B040} = {0282BE8D-210F-51EF-ABAF-A3479A12A03E}
+		{F0A07A06-D8B9-4716-AC74-55D844FAC84D} = {85CC726A-718F-5939-9EF3-CD48ACBFD69A}
+		{AE802E48-6CB6-471D-9658-77342AF21F84} = {85CC726A-718F-5939-9EF3-CD48ACBFD69A}
+		{21FD1308-9249-4E74-9201-07E642DB501F} = {85CC726A-718F-5939-9EF3-CD48ACBFD69A}
+		{57FA76F0-A971-4F9C-9F29-F4FB549824FD} = {D0660CBA-4B2D-5921-BAE5-53A3B1A802E8}
+		{C56E3387-323D-4072-8F17-02E5A642C886} = {1537EFBF-619F-59E2-B8E3-C7ECCC497E8C}
+		{13474FA1-F4C9-4A74-B4DC-555011C75853} = {1537EFBF-619F-59E2-B8E3-C7ECCC497E8C}
+		{691F9EC4-CA8A-5B87-8739-027E55FD6616} = {7FBD0232-A03B-5E01-A96D-03DFACDBA5FC}
+		{C1E7D430-FE72-5271-9AD2-E31808AE46AE} = {FFE5D48A-3CA7-5425-A028-E9D1410A452B}
+		{57DDF79E-0060-5763-ACB9-16920E3921C6} = {C1E7D430-FE72-5271-9AD2-E31808AE46AE}
+		{7AE2387B-976A-56CB-846A-BDC250314985} = {FFE5D48A-3CA7-5425-A028-E9D1410A452B}
+		{76F5D712-0F9E-5D60-92C3-608C9F251C22} = {FFE5D48A-3CA7-5425-A028-E9D1410A452B}
+		{B7433253-AA29-5CFF-A641-E6AFA64ABFAB} = {FFE5D48A-3CA7-5425-A028-E9D1410A452B}
+		{2C0BBF23-0C50-5657-8160-1D4D27A9C54A} = {9BB35012-8662-5FEB-8B49-DC55D2EF51BE}
+		{85CC726A-718F-5939-9EF3-CD48ACBFD69A} = {272F26FB-4CE2-5EB2-A676-53ECAF9E1021}
+		{1537EFBF-619F-59E2-B8E3-C7ECCC497E8C} = {272F26FB-4CE2-5EB2-A676-53ECAF9E1021}
+		{0282BE8D-210F-51EF-ABAF-A3479A12A03E} = {272F26FB-4CE2-5EB2-A676-53ECAF9E1021}
+		{B218A86E-EF47-5FDD-9296-76031BB6E447} = {D0660CBA-4B2D-5921-BAE5-53A3B1A802E8}
 	EndGlobalSection
 EndGlobal

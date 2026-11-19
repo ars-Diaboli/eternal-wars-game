@@ -11,7 +11,7 @@ public enum TerrainClass
     Impassable,
 }
 
-/// <summary>Movement rules of one terrain (docs/project/decisions.md ADR-045).</summary>
+/// <summary>Movement rules of one terrain (ADR-045).</summary>
 /// <param name="Terrain">Which terrain.</param>
 /// <param name="Class">Passable or not.</param>
 /// <param name="Cost">Cost of leaving a tile of this terrain orthogonally for a non-native army (at least <see cref="TerrainCatalog.NativeCost"/>).</param>

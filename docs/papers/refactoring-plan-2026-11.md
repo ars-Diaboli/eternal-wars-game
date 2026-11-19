@@ -1,7 +1,7 @@
 # Eternal Wars codebase review and refactoring plan
 
 > **Archived (2026-11-19), read-only.** Phases 0–4 are done (ADR-202 … ADR-224); the closing review, its fixes and every item left
-> open are in ADR-226 (`docs/project/decisions.md`) and the "Code health" section of `docs/project/roadmap.md`. The plan below is kept
+> open are in ADR-226 (`memory-bank/decisions/project-and-scope.md`) and the "Code health" section of `memory-bank/roadmap.md`. The plan below is kept
 > as written; "Closing review" at the end records how each item was checked.
 
 The architecture is in good shape. What needs work is performance and the networking code, not the design.

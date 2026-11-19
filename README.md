@@ -27,8 +27,8 @@ of every app and saves screenshots to `.shots/`.
 Phases 0–2 are done: adventure map, editor, armies, tactical battles with a 3D battle scene, commands and replays.
 Phase 3 (towns, heroes, skills, artifacts, tavern, game flow, save/load, adventure AI) is mostly done. Phase 4 (random
 maps) is in progress: template format and validator, and the generator stages layout, terrain, connections, towns and mines.
-See [docs/project/roadmap.md](docs/project/roadmap.md).
+See [memory-bank/roadmap.md](memory-bank/roadmap.md).
 
 ## Documentation
-Start at [docs/README.md](docs/README.md): game design, content, architecture, event system, development guide,
-roadmap, decision log and open questions.
+Start at [docs/README.md](docs/README.md): game design, content, architecture, event system, development guide and papers.
+The roadmap, the decision log (ADRs by category) and the open questions are in [memory-bank/](memory-bank/README.md).

@@ -1,7 +1,7 @@
 # Code review: Eternal Wars
 
 > **Archived (2026-11-11), read-only.** Every item is addressed or closed by choice: see the Progress table and ADR-165 … ADR-175 in
-> `docs/project/decisions.md`. The review below is kept as written (its line numbers, counts and names are from before the work).
+> `memory-bank/decisions/`. The review below is kept as written (its line numbers, counts and names are from before the work).
 
 The codebase is in good shape: the build has 0 warnings, all 1693 tests pass, and the architecture rules are mostly followed. Changes go through `session.Execute`, randomness is deterministic, events are sealed records published after the change, and choices use `PendingDecision`.
 

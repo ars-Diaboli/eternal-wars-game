@@ -1,5 +1,8 @@
 # Eternal Wars documentation
 
+Documents for people: how the game plays, what is in it, how the code works, and papers on past work. The project's working memory
+for LLM agents (decisions, roadmap, open questions, the current focus) is in [memory-bank/](../memory-bank/README.md).
+
 ## Design: how the game plays (`design/`)
 The game design document, split by mechanic. Start at the overview.
 
@@ -19,7 +22,7 @@ The game design document, split by mechanic. Start at the overview.
 | [departures.md](design/departures.md) | Deliberate departures from HoMM3 |
 | [missing-mechanics.md](design/missing-mechanics.md) | HoMM3/HotA and HoMM5 mechanics we lack, with status and next candidates |
 
-## Content: catalogs and lore (`content/`)
+## Content: catalogs, lore and asset prompts (`content/`, `content/prompts/`)
 
 | Document | What it covers |
 |---|---|
@@ -29,9 +32,10 @@ The game design document, split by mechanic. Start at the overview.
 | [town-buildings.md](content/town-buildings.md) | Town buildings, the tech tree and every town's dwellings |
 | [spells.md](content/spells.md) | Spell catalog: six schools, four levels, three ranks |
 | [artifacts.md](content/artifacts.md) | Artifact catalog: slots, tiers, sets and lore |
-| [icon-prompts.md](content/icon-prompts.md) | Image-model prompts for the UI icons and the faction heraldry, as 2×2 and 2×3 sheets with shared style blocks |
-| [cursor-prompts.md](content/cursor-prompts.md) | Image-model prompts for the mouse cursors (menus, adventure map, battle), their hotspots and when each shows |
-| [town-model-prompts.md](content/town-model-prompts.md) | 3D-model prompts for the ten town types on the adventure map: format, style block, lore per town |
+| [icon-prompts.md](content/prompts/icon-prompts.md) | Image-model prompts for the UI icons and the faction heraldry, as 2×2 and 2×3 sheets with shared style blocks |
+| [cursor-prompts.md](content/prompts/cursor-prompts.md) | Image-model prompts for the mouse cursors (menus, adventure map, battle), their hotspots and when each shows |
+| [terrain-texture-prompts.md](content/prompts/terrain-texture-prompts.md) | Image-model prompts for the adventure map's terrain textures |
+| [town-model-prompts.md](content/prompts/town-model-prompts.md) | 3D-model prompts for the ten town types on the adventure map: format, style block, lore per town |
 
 ## Technical: how the code works (`technical/`)
 
@@ -41,19 +45,23 @@ The game design document, split by mechanic. Start at the overview.
 | [event-system.md](technical/event-system.md) | The custom pub/sub (event publisher / handler), conventions and event ordering |
 | [development.md](technical/development.md) | Toolchain, build/run/test commands, the simulator, smoke tests, coding conventions |
 
-## Project: plans and decisions (`project/`)
+## Papers: reports on past work (`papers/`, read-only)
 
 | Document | What it covers |
 |---|---|
-| [roadmap.md](project/roadmap.md) | Phased delivery plan with milestones and exit criteria |
-| [open-questions.md](project/open-questions.md) | Design questions still to answer; **🚧 blocking** ones first |
-| [decisions.md](project/decisions.md) | Architecture and design decision log (short ADRs), ADR-101 on |
-| [decisions-archive.md](project/decisions-archive.md) | ADR-001 … ADR-100, read-only; search for `### ADR-NNN` |
-| [ideas.md](project/ideas.md) | Owner's raw notes; each leaves once it becomes an ADR or an open question |
-| [archive/code-review-2026-11.md](project/archive/code-review-2026-11.md) | The November 2026 code review and what became of each item (ADR-165 … ADR-175), read-only |
-| [archive/relief-plan.md](project/archive/relief-plan.md) | How the adventure map's relief was built in five steps (ADR-181, ADR-182), read-only |
-| [archive/refactoring-plan-2026-11.md](project/archive/refactoring-plan-2026-11.md) | The November 2026 codebase review and refactoring plan, its baselines and how each item was checked (ADR-202 … ADR-226), read-only |
+| [code-review-2026-11.md](papers/code-review-2026-11.md) | The November 2026 code review and what became of each item (ADR-165 … ADR-175) |
+| [relief-plan.md](papers/relief-plan.md) | How the adventure map's relief was built in five steps (ADR-181, ADR-182) |
+| [refactoring-plan-2026-11.md](papers/refactoring-plan-2026-11.md) | The November 2026 codebase review and refactoring plan, its baselines and how each item was checked (ADR-202 … ADR-226) |
 
-Rules for keeping these in step: a decision goes into `decisions.md` and the matching design doc; an answered question
-moves to the Answered list of `open-questions.md`; roadmap checkboxes follow the code. Numbers that live in data files
-(`data/*.csv`) are quoted, not redefined, in the docs.
+## Project state (in `memory-bank/`)
+
+| Document | What it covers |
+|---|---|
+| [roadmap.md](../memory-bank/roadmap.md) | Phased delivery plan with milestones and exit criteria |
+| [open-questions.md](../memory-bank/open-questions.md) | Design questions still to answer; **🚧 blocking** ones first |
+| [decisions/](../memory-bank/decisions/README.md) | Every decision (short ADRs) by category, with one index |
+| [ideas.md](../memory-bank/ideas.md) | Owner's raw notes; each leaves once it becomes an ADR or an open question |
+
+Rules for keeping these in step: a decision becomes an ADR in its `memory-bank/decisions/` category and the matching design doc states
+the rule; an answered question moves to the Answered list of `open-questions.md`; roadmap checkboxes follow the code. Numbers that
+live in data files (`data/*.csv`) are quoted, not redefined, in the docs.

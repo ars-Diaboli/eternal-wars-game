@@ -23,7 +23,10 @@ HoMM3-like 3D turn-based strategy. Godot 4.7.2 .NET, C# on .NET 10. Read `docs/t
 - Editor changes go through `MapEditorSession` so they are undoable and publish events.
 - Bump `MapDocument.CurrentFormatVersion` when the map format changes, and keep older versions loading: add a sample in
   `tests/.../Data/FormatSamples`, and an `IMapMigration` step (`MapMigrations`) when older files need upgrading (ADR-174).
-- Record significant decisions in `docs/project/decisions.md` (append; ADR-001 … ADR-100 are in `decisions-archive.md`; search for
-  `### ADR-NNN` instead of reading either whole); update `docs/project/roadmap.md` checkboxes. Owner notes in `docs/project/ideas.md`
-  become an ADR or an `open-questions.md` question, then leave `ideas.md`.
+- Start at `memory-bank/README.md` (project brief, active context, then only what the task needs). Human docs are in `docs/`
+  (design, content, technical, papers); the memory bank points into them and never restates them.
+- Record significant decisions as ADRs in `memory-bank/decisions/<category>.md` (next free number and every ADR's file are in
+  `memory-bank/decisions/README.md`; read one entry, not whole files); update `memory-bank/roadmap.md` checkboxes and refresh
+  `memory-bank/active-context.md` when work lands. Owner notes in `memory-bank/ideas.md` become an ADR or an
+  `memory-bank/open-questions.md` question, then leave `ideas.md`. Code cites decisions by number (`ADR-024`), never by file.
 - Docs state the current rules once; no change history in them (ADRs and git keep it).

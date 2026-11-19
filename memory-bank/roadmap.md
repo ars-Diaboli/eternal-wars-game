@@ -4,7 +4,7 @@ Each phase ends with something **playable or usable** and a green test suite. It
 change each; `❓` marks items that wait for a design answer in [open-questions.md](open-questions.md). Core items come
 with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where a smoke scenario exists.
 
-Done items are summarised with their ADR numbers; the detail is in [decisions.md](decisions.md) and the design docs.
+Done items are summarised with their ADR numbers; the detail is in [the decision index](decisions/README.md) and the design docs.
 
 **Where we are (2026-11-12)**: Phases 0–2 are done; Phase 3 (ADR-114) and Phase 4 (ADR-117) are closed out in core, the apps and the
 editor, and the AI plays generated maps to the end (ADR-119). Phase 5 is in progress: magic is built (ADR-110, ADR-120, ADR-122, ADR-123)
@@ -66,7 +66,6 @@ minimap, editor UI, 2D harness.
       buildings ADR-072 / ADR-114, Capitol ADR-074, per-town buildings ADR-074 / ADR-112); map dwellings and caravans (ADR-054,
       ADR-073, ADR-075, ADR-079); flaggable providers and resource caravans (ADR-079); kingdom overview (ADR-084); town screen and its
       polish (ADR-050, ADR-114)
-- [ ] Caravan cost tuning
 - [x] Every town's unique building: the first set (ADR-126, ADR-138)
 - [ ] More unique buildings per town (TOWN-12)
 
@@ -83,7 +82,7 @@ Hiring and pools (ADR-060, ADR-070, ADR-081), surrender and AI retreat (ADR-081)
 ADR-112), tavern screen (ADR-114), Thieves' Guild (ADR-079).
 
 ### Artifacts
-Content draft: [artifacts.md](../content/artifacts.md).
+Content draft: [artifacts.md](../docs/content/artifacts.md).
 - [x] Built: artifact tables, paper doll and backpack, effects, pickups and loot, AI use (ADR-061, ADR-068); the re-draft (101 artifacts,
       ADR-099, ADR-100, ADR-111); assembled relics (ADR-108, ADR-121); editor rows (ADR-114)
 - [x] The Crown of the Waning Eye's +1 to the best magic skill (ADR-147)
@@ -124,7 +123,7 @@ Content draft: [artifacts.md](../content/artifacts.md).
 ### Adventure map objects ✅
 First catalogue (ADR-068), second catalogue (ADR-069, ADR-082, Shrines ADR-120), third catalogue (ADR-077, ADR-079, ADR-080), Pandora's
 Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer`) and AI use. See the
-[catalogue](../design/adventure-map.md#planned-objects-adr-068).
+[catalogue](../docs/design/adventure-map.md).
 
 ### Content for the slice
 - [x] Built: Ember March scenario; Haven and Inferno played to the end by the AI on both sides (ADR-114)
@@ -140,7 +139,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 
 ## Phase 5: Content and polish
 
-### Magic (ADR-047, ADR-063; [spells.md](../content/spells.md))
+### Magic (ADR-047, ADR-063; [spells.md](../docs/content/spells.md))
 - [x] Built: spell table, guild draw, spell books, rank I casting (ADR-106, ADR-110); summons, creature casters, adventure spells,
       shrines, spell books in the map (ADR-120); ranks II / III and mastery (ADR-122); the table follow-ups, control and resurrection
       spells, info adventure spells, guild spells fixed by the map (ADR-123); spell resistance, specialties, elements (ADR-071, ADR-072,
@@ -181,7 +180,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Campaign variables ("kept for the next map", "taken from the last map") recorded with the campaign (EVT-1 f, FLOW-1, ADR-131)
 - [x] Score: the campaign-like check counts map events (ADR-101, ADR-131)
 
-### Missing mechanics, the owner's picks (ADR-125, ADR-126; [missing-mechanics.md](../design/missing-mechanics.md))
+### Missing mechanics, the owner's picks (ADR-125, ADR-126; [missing-mechanics.md](../docs/design/missing-mechanics.md))
 - [x] Scouting reveals information: amount words with ranges for armies not owned, what each Scouting level shows, Veil against it,
       the AI reads only what it sees (ADR-125, ADR-142; the AI still reads enemy heroes' Attack and Defense)
 - [x] Map bans: heroes, artifacts, spells and skills in the map rules, read by every pool and roll; editor tab, validator warnings; map
@@ -220,7 +219,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] A status bar along the bottom of the adventure map (16:9 wide at most): tooltips and labels on the left, resources on the right (ADR-186)
 - [x] Decision prompts, notices and alerts in the centre of the screen (ADR-186)
 - [x] A bigger new-game screen with tabs: Scenarios, Random maps, Arenas, Campaign; map list, details and players, options (ADR-201)
-- [ ] The icons themselves (from [icon-prompts.md](../content/icon-prompts.md)), the difficulty icons (sheet 29) included
+- [ ] The icons themselves (from [icon-prompts.md](../docs/content/prompts/icon-prompts.md)), the difficulty icons (sheet 29) included
 - [x] Faction crests beside the faction's name across the UI (ADR-211)
 - [ ] The charges in the player's colour on town banners and map flags (ADR-211)
 - [x] Icon-only buttons (48 px in bars and panels, 32 px in windows), their label and hotkey on the status bar (ADR-204)
@@ -236,7 +235,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] An "×" at the top right closes the new-game screen (no Back); every window's "×" in its top-right corner (ADR-225)
 - [x] The calendar on the adventure map's status bar right of the resources; no "Turn: <player>" label (ADR-225)
 - [x] Cursors: the cursor for what is under the pointer (core resolvers, adventure map and battle), system cursors standing in (ADR-204)
-- [x] The cursor images for menus and the adventure map (sets 1–3 of [cursor-prompts.md](../content/cursor-prompts.md), ADR-204)
+- [x] The cursor images for menus and the adventure map (sets 1–3 of [cursor-prompts.md](../docs/content/prompts/cursor-prompts.md), ADR-204)
 - [ ] The battle cursor images (sets 4–7) and the days a move takes drawn on the move cursor (ADR-204)
 - [x] Melee direction in battle: the side to strike from by the pointer's place in the cell (8 sides), the stand cells highlighted (ADR-204)
 
@@ -248,7 +247,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       correctly (rendering only; the rules keep cell-by-cell visibility); a starry-void or cloud look, opening as the hero walks
 - [x] Terrain (ADR-183): heightmapped landscape, one mesh a level, with a splat shader and blended biome transitions (by height, ADR-200); the grid only as an
       overlay, a setting (off by default in the game, a "Grid" box in the editor)
-- [x] Relief in the map (ADR-181, ADR-182, [plan](archive/relief-plan.md) steps 1–2): per-corner heights in 1/8 cell widths, the terrain
+- [x] Relief in the map (ADR-181, ADR-182, [plan](../docs/papers/relief-plan.md) steps 1–2): per-corner heights in 1/8 cell widths, the terrain
       height table, map format v39; older and code-built maps get their terrains' blended heights; read by nothing in the rules
 - [x] Relief in the generator (plan step 3): terrain heights blended over ~3 tiles, seeded noise (none on shallow water and ice, dunes on
       sand), ground levelled under objects; generator version 10
@@ -288,7 +287,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [ ] Scenario chaining and hero carry-over (campaign variables: see Map events, FLOW-1, EVT-1)
 - [ ] Dialogue and campaign triggers, built on the map events and their editor "Events" tab (ADR-096)
 
-## Code health (ADR-226; what the refactoring plan left, [archive](archive/refactoring-plan-2026-11.md))
+## Code health (ADR-226; what the refactoring plan left, [archive](../docs/papers/refactoring-plan-2026-11.md))
 - [ ] LAN hardening: cap joined-but-unseated peers in the lobby (`LobbyHost.Join`) and rate-limit chat; host sends that cannot block a
       frame (no write timeout today: a client that stops reading freezes `GameHost.Poll`); the record limit per colour, not per link
 - [ ] Schema hash (ADR-218): stop the field walk at the first base type outside Domain (`Exception`, `Collection<T>` pull in runtime

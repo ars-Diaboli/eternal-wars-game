@@ -4,8 +4,8 @@ Prompts for the **adventure-map town models** of all ten town types, for a text-
 first, then image-to-3D). Paste the **style block** in front of every town prompt and the **negative prompt** where the tool takes one;
 change only the town part. The designs are original: the prompts never name or imitate another game's towns.
 
-Sources: the world and the towns' stance from [lore.md](lore.md) (a draft), art direction from
-[presentation.md](../design/presentation.md), the footprint from ADR-046, buildings from [town-buildings.md](town-buildings.md), the
+Sources: the world and the towns' stance from [lore.md](../lore.md) (a draft), art direction from
+[presentation.md](../../design/presentation.md), the footprint from ADR-046, buildings from [town-buildings.md](../town-buildings.md), the
 group colours as in [icon-prompts.md](icon-prompts.md). Numbers marked *(proposal)* are not decided yet.
 
 ## Format for every town

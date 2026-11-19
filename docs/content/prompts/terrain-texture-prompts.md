@@ -5,7 +5,7 @@ richer in detail, true to the world of Vael and believable as real ground. They 
 (or an image model, with the maps derived afterwards). Paste the **style block** in front of every terrain prompt and the **negative
 prompt** where the tool takes one; add the **adventure-map** or the **battlefield** block; change only the terrain part.
 
-Sources: the world from [lore.md](lore.md) (a draft), art direction from [presentation.md](../design/presentation.md), the native
+Sources: the world from [lore.md](../lore.md) (a draft), art direction from [presentation.md](../../design/presentation.md), the native
 terrains of the towns as in [town-model-prompts.md](town-model-prompts.md), the rendering from ADR-183 (`shaders/terrain_splat.gdshader`,
 `TerrainSplat`) and `BattleFieldBuilder`. The current textures and their licences are listed in
 `src/Godot/EternalWars.Godot.Assets/textures/terrain/CREDITS.md`. Numbers marked *(proposal)* are not decided yet.

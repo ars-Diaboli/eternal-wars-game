@@ -1,7 +1,7 @@
 # Game design: overview
 
-> Status: **living document**, split by mechanic into the files of this folder. Decisions: [decisions.md](../project/decisions.md) (the
-> ADR-n pointers); open items ❓: [open-questions.md](../project/open-questions.md); progress: [roadmap.md](../project/roadmap.md).
+> Status: **living document**, split by mechanic into the files of this folder. Decisions: [the decision index](../../memory-bank/decisions/README.md) (the
+> ADR-n pointers); open items ❓: [open-questions.md](../../memory-bank/open-questions.md); progress: [roadmap.md](../../memory-bank/roadmap.md).
 >
 > **Convention**: the docs describe the game as it plays now; a rule is built unless tagged *(planned, ADR-n)*. ❓ marks an open point.
 > Numbers that live in `src/Core/data/*.csv` are quoted, not restated; the content catalogs are in [docs/content](../content/).
