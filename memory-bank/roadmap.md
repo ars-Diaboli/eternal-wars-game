@@ -29,8 +29,8 @@ adventure map's relief and its splat-shaded ground are in, ADR-182, ADR-183); th
         screens (ADR-079, ADR-080, ADR-082), Pandora's Box (ADR-105)
       - Editor: hero limit setting on the conditions panel, town faction in the inspector (ADR-083)
       - New-game screen: user templates from the editor's `templates` folder
-- [ ] Still not seen in Godot (ADR-148): Resurrection; Grave Whisper, Ledger of Ages, Eavesdrop; the AI's buffs, curses and revives; setting
-      a guild spell by hand in the editor; a dug hole's drawing on the map; Meteor Shower III's rubble on the 3D field (ADR-177)
+- [x] Seen in Godot (ADR-235): Resurrection; Grave Whisper, Ledger of Ages, Eavesdrop; the AI's buffs, curses and revives; a guild spell
+      set by hand in the editor; a dug hole on the map; Meteor Shower III's rubble on the 3D field
 
 ## Bugs
 - [x] At game start the fog opens around the starting hero, not around the starting town (owner, 2026-11-06): towns now see from their
@@ -301,7 +301,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Main-menu "Continue" falls back to the newest save that loads and names the ones passed over (ADR-232)
 - [x] `EventsPanel` refreshes through a `RefreshScheduler`, once for a burst and not while its tab is hidden (`OnlyWhileShown`, ADR-232)
 - [ ] Smoke `game-battle-control` fails at frame 184 (no Surrender: the computer's stack is acting), before ADR-227 too; the smoke games draw
-      a random seed, so their battles differ between runs (a fixed seed per scenario would make them repeatable)
+      a random seed, so their battles differ between runs; an entry's `Seed = <n>` now fixes it (ADR-235), set only on the newest scenarios
 - [x] AI tuning numbers left inline are `AiWeights` (15 more, ADR-232); `AiWeights.With` refuses negative values
 - [ ] Switches on the map-event action type left in Domain (`MapEventState.Expressions`, `MapEventText`, `TargetValuer.Events`) into
       the handlers, and a test that a handler of an action with an amount overrides `Fix`

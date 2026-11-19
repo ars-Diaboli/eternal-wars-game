@@ -179,6 +179,36 @@ public class SmokeMapTests
         Assert.Contains(battle.Participant(BattleSide.Attacker).Caster!.Spells, s => s.Spell.Id == "nature.earthquake");
     }
 
+    [Fact]
+    public void SpellsMap_HasWhatTheChecksOfADR235Need()
+    {
+        var blue = new PlayerId(0);
+        var session = Started("spells.ewmap.json");
+
+        // Pyro: the town north raises Meteor Shower to rank III (rubble); two steps south the wolves attack.
+        session.Step(new HeroId(1), Direction.North);
+        Assert.Equal(3, Core.Domain.Magic.AdventureMagic.RankOf(session.State, session.State.GetHero(new HeroId(1)), "chaos.meteor-shower"));
+        session.Step(new HeroId(1), Direction.South);
+        session.Step(new HeroId(1), Direction.South);
+        Assert.NotNull(session.State.Battle);
+        session.Execute(new AutoResolveBattleCommand(blue)).ThrowIfRejected();
+
+        // Seer: Grave Whisper, Ledger of Ages, and Eavesdrop on the Red town north.
+        foreach (var (spell, target) in new (string, MapPosition?)[] { ("death.grave-whisper", null), ("death.ledger-of-ages", null), ("shadow.eavesdrop", new MapPosition(15, 6)) })
+        {
+            session.Execute(new CastAdventureSpellCommand(blue, new HeroId(2), spell, target)).ThrowIfRejected();
+        }
+
+        // Digger digs a hole; Medic steps east onto the computer's mage, whose book has a buff, a curse and a revive.
+        session.Execute(new DigCommand(blue, new HeroId(4))).ThrowIfRejected();
+        var warlock = session.State.GetHero(new HeroId(5));
+        Assert.Contains("light.bless", warlock.Spells.Keys);
+        Assert.Contains("arcana.slow", warlock.Spells.Keys);
+        Assert.Contains("light.resurrection", warlock.Spells.Keys);
+        session.Step(new HeroId(3), Direction.East);
+        Assert.Equal(new HeroId(5), session.State.Battle!.Defender.Hero);
+    }
+
     private static GameSession Started(string map)
     {
         var session = new GameSession(MapConverter.ToGameState(MapSerializer.Load(SmokeMap(map))));

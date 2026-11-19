@@ -97,9 +97,9 @@ public partial class AdventureIntelPanel : PanelContainer
     public void ShowLedger(LedgerReport report)
     {
         var state = _session.State;
-        var next = report.NextWeek.Kind == WeekEventKind.None ? "an ordinary week" : report.NextWeek.Describe(state.Creatures);
+        var next = report.NextWeek.Kind == WeekEventKind.None ? "an ordinary week." : report.NextWeek.Describe(state.Creatures); // a sentence, with its full stop
         Show("Ledger of Ages",
-            $"Next week: {next}.\n\n" + (report.Heroes.Count == 0
+            $"Next week: {next}\n\n" + (report.Heroes.Count == 0
                 ? "No enemy hero in sight."
                 : string.Join("\n\n", report.Heroes.Select(h => DescribeArmy(state, h)))));
     }

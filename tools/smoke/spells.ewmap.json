@@ -1,0 +1,232 @@
+{
+ "formatVersion": 41,
+ "name": "Spells",
+ "width": 30,
+ "height": 16,
+ "terrain": [
+  [
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg"
+  ]
+ ],
+ "players": [
+  {
+   "name": "Blue",
+   "isHuman": true
+  },
+  {
+   "name": "Red",
+   "isHuman": false
+  }
+ ],
+ "heroes": [
+  {
+   "id": 1,
+   "name": "Pyro",
+   "owner": 0,
+   "x": 4,
+   "y": 8,
+   "type": "inferno.belzra",
+   "knowledge": 10,
+   "spellPower": 3,
+   "skills": {
+    "magic.inferno.spells": "Expert",
+    "magic.inferno.mastery": "Advanced"
+   },
+   "spellBook": true,
+   "spells": [
+    "chaos.meteor-shower"
+   ],
+   "army": [
+    {
+     "slot": 0,
+     "creature": "inferno.hell-hound",
+     "count": 20
+    },
+    {
+     "slot": 1,
+     "creature": "inferno.horned-demon",
+     "count": 30
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "name": "Seer",
+   "owner": 0,
+   "x": 15,
+   "y": 9,
+   "type": "necropolis.lethe",
+   "knowledge": 10,
+   "spellPower": 2,
+   "skills": {
+    "magic.necropolis.spells": "Basic",
+    "magic.dungeon.spells": "Basic",
+    "magic.necropolis.attunement": "Basic"
+   },
+   "spellBook": true,
+   "spells": [
+    "death.grave-whisper",
+    "death.ledger-of-ages",
+    "shadow.eavesdrop"
+   ],
+   "army": [
+    {
+     "slot": 0,
+     "creature": "necropolis.skeleton",
+     "count": 20
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "name": "Medic",
+   "owner": 0,
+   "x": 5,
+   "y": 13,
+   "type": "haven.ansel",
+   "knowledge": 10,
+   "spellPower": 3,
+   "skills": {
+    "magic.haven.spells": "Advanced"
+   },
+   "spellBook": true,
+   "spells": [
+    "light.resurrection"
+   ],
+   "army": [
+    {
+     "slot": 0,
+     "creature": "haven.footman",
+     "count": 50
+    },
+    {
+     "slot": 1,
+     "creature": "haven.archer",
+     "count": 25
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "name": "Digger",
+   "owner": 0,
+   "x": 26,
+   "y": 13,
+   "type": "haven.aldric",
+   "army": [
+    {
+     "slot": 0,
+     "creature": "haven.footman",
+     "count": 10
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "name": "Warlock",
+   "owner": 1,
+   "x": 6,
+   "y": 13,
+   "type": "academy.aurelian",
+   "knowledge": 12,
+   "spellPower": 3,
+   "skills": {
+    "magic.haven.spells": "Advanced",
+    "magic.academy.spells": "Advanced",
+    "magic.necropolis.spells": "Advanced"
+   },
+   "spellBook": true,
+   "spells": [
+    "light.bless",
+    "arcana.haste",
+    "arcana.slow",
+    "light.resurrection"
+   ],
+   "army": [
+    {
+     "slot": 0,
+     "creature": "academy.gremlin",
+     "count": 50
+    },
+    {
+     "slot": 1,
+     "creature": "academy.dwarf",
+     "count": 20
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "name": "Raider",
+   "owner": 1,
+   "x": 19,
+   "y": 10,
+   "type": "necropolis.necrys",
+   "army": [
+    {
+     "slot": 0,
+     "creature": "necropolis.skeleton",
+     "count": 5
+    }
+   ]
+  }
+ ],
+ "objects": [
+  {
+   "kind": "town",
+   "id": 1,
+   "definition": "town.inferno",
+   "x": 1,
+   "y": 1,
+   "owner": 0,
+   "name": "Emberkeep",
+   "buildings": {
+    "town-hall": 1,
+    "fort": 1,
+    "mage-guild": 3
+   },
+   "guildSpells": [
+    "chaos.meteor-shower"
+   ]
+  },
+  {
+   "kind": "town",
+   "id": 2,
+   "definition": "town.necropolis",
+   "x": 12,
+   "y": 1,
+   "owner": 1,
+   "name": "Gloomhold",
+   "buildings": {
+    "town-hall": 1,
+    "fort": 1,
+    "mage-guild": 1
+   }
+  },
+  {
+   "kind": "monster",
+   "id": 3,
+   "definition": "monster",
+   "x": 4,
+   "y": 10,
+   "creature": "neutral.wolf",
+   "count": 70,
+   "neverFlees": true
+  }
+ ]
+}

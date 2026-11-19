@@ -8,10 +8,10 @@ the owner's missing-mechanics picks, the arena and LAN multiplayer are built. Th
 plan is in [docs/papers](../docs/papers/refactoring-plan-2026-11.md)). Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- ADR-235 (Godot check): what ADR-148 had not seen runs and was looked at (five smoke scenarios on `tools/smoke/spells.ewmap.json`);
+  `--seed=` / a smoke entry's `Seed` repeats a scenario's battles; the battle log goes to `godot.log` in scripted runs.
 - ADR-234 (save/load): replays measured (`sim replay` prints the time; 5 s for eight players to month 5); the replay viewer's forward jumps
   play on the watched game unheard (`GameSession.Unheard`, `Events` a bus of its own); no state snapshot yet.
-- ADR-233 (replay viewer): "Play from here" in a battle the core played in one command: a computer's battle starts again from its start
-  with a person on the attacker's side (`HandToPersonCommand`), one quick combat ended goes on from just before it; `sim record --computer`.
 
 ## Next
 1. A person's full game on Ember March (the Phase 3 exit's last check).
