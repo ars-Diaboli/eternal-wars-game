@@ -1,4 +1,4 @@
-# Map files (*.ewmap.json), format v40
+# Map files (*.ewmap.json), format v41
 object AllCondition
   conditions: IReadOnlyList<EventCondition>
 object AllyCondition
@@ -82,7 +82,6 @@ object CompareCondition
   op: CompareOp
   right: EventExpr
 enum CompareOp: Equal, NotEqual, Less, LessOrEqual, Greater, GreaterOrEqual
-enum Complexity: Beginner, Easy, Normal, Hard, Expert
 object ConditionDocument
   amount: Int32?
   artifact: String
@@ -119,6 +118,7 @@ object DepositDocument
   level: Int32
   x: Int32 (required)
   y: Int32 (required)
+enum Difficulty: Easy, Normal, Hard, Expert, Master
 object DwellingDocument
   available: Int32?
   creature: String (required)
@@ -563,7 +563,7 @@ object ScenarioRulesDocument
   arena: Boolean?
   bans: BansDocument
   defeat: IReadOnlyList<ConditionDocument>
-  difficulty: Complexity?
+  difficulty: Difficulty?
   elimination: Boolean
   graceDays: Int32?
   maxHeroes: Int32?
@@ -690,7 +690,7 @@ object WitchHutDocument
   x: Int32 (required)
   y: Int32 (required)
 
-# Saves and replays (*.ewsave.json, *.ewreplay.json), format v4
+# Saves and replays (*.ewsave.json, *.ewreplay.json), format v5
 object AllCondition
   conditions: IReadOnlyList<EventCondition>
 object AllyCondition
@@ -895,7 +895,6 @@ object CompareCondition
 enum CompareOp: Equal, NotEqual, Less, LessOrEqual, Greater, GreaterOrEqual
 object CompleteExchangeCommand
   player: PlayerId
-enum Complexity: Beginner, Easy, Normal, Hard, Expert
 object ConditionDocument
   amount: Int32?
   artifact: String
@@ -933,6 +932,7 @@ object DepositDocument
   level: Int32
   x: Int32 (required)
   y: Int32 (required)
+enum Difficulty: Easy, Normal, Hard, Expert, Master
 object DigCommand
   hero: HeroId
   player: PlayerId
@@ -1103,7 +1103,8 @@ object GameCommand
   player: PlayerId
 object GameOptions
   campaignVariables: IReadOnlyDictionary<String, Int32>
-  complexity: Complexity?
+  colours: IReadOnlyDictionary<Int32, Int32>
+  difficulty: Difficulty?
   fogMode: FogMode
   hostPlayer: PlayerId?
   refogMargin: Int32
@@ -1593,7 +1594,7 @@ object ScenarioRulesDocument
   arena: Boolean?
   bans: BansDocument
   defeat: IReadOnlyList<ConditionDocument>
-  difficulty: Complexity?
+  difficulty: Difficulty?
   elimination: Boolean
   graceDays: Int32?
   maxHeroes: Int32?

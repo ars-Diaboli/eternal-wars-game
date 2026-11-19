@@ -104,9 +104,7 @@ public partial class HeroPanel : PanelContainer
         var next = new Button { Text = "Next hero" }.WithIcon(UiIcon.ArrowRight);
         next.Pressed += () => Step(1);
         header.AddChild(next);
-        var close = new Button { Text = "Close" }.WithIcon(UiIcon.Close);
-        close.Pressed += Close;
-        header.AddChild(close);
+        header.AddCloseButton(Close);
 
         _stats.Badges.AddThemeConstantOverride("h_separation", UiSpacing.Section);
         box.AddChild(_stats.Badges);

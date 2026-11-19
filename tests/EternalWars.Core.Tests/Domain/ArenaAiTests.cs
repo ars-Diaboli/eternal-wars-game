@@ -20,7 +20,7 @@ public class ArenaAiTests
     private static (GameSession Session, Town Town, Mine Mine) Setup(bool arena)
     {
         var state = Create(
-            new GameOptions(Complexity: Complexity.Beginner),
+            new GameOptions(Difficulty: Difficulty.Easy),
             "..............#.",
             "............C.#.",
             "..............#.",

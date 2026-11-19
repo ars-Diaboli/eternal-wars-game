@@ -87,14 +87,14 @@ public sealed class SaveSlotTextTests : IDisposable
     [Fact]
     public void RankingRows_AreRankedFromOne_WithTheFactionAndMapInWords()
     {
-        var hand = new RankingEntry("Ann", TownIds.Haven, "Two Towns", null, null, true, Complexity.Hard, null, 30, 250, "Imp", "2026-10-29T12:30:00+00:00");
+        var hand = new RankingEntry("Ann", TownIds.Haven, "Two Towns", null, null, true, Difficulty.Expert, null, 30, 250, "Imp", "2026-10-29T12:30:00+00:00");
         var random = hand with { Template = "Ring", Size = 36, Custom = false, Faction = "no-such-town" };
         var rows = RankingText.Rows([hand, random], new HashSet<int> { 1 }, Utc);
 
         Assert.Equal("Maps", RankingText.TableName(RankingTable.Maps));
         Assert.Equal("Random maps", RankingText.TableName(RankingTable.RandomMaps));
         Assert.Equal(
-            new RankingRowText(1, "Ann", RankingText.FactionName(TownIds.Haven), "Two Towns (custom)", "Hard", 30, 250, "Imp", "2026-10-29 12:30", false),
+            new RankingRowText(1, "Ann", RankingText.FactionName(TownIds.Haven), "Two Towns (custom)", "Expert", 30, 250, "Imp", "2026-10-29 12:30", false),
             rows[0]);
         Assert.NotEqual(TownIds.Haven, rows[0].Faction); // the town's name, not its id
         Assert.Equal((2, "no-such-town", "Ring 36×36", true), (rows[1].Rank, rows[1].Faction, rows[1].Map, rows[1].Highlight));

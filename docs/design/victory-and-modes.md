@@ -62,7 +62,7 @@ In priority order:
    [map events](adventure-map.md#pandoras-box-and-map-events) with variables kept between maps; a prologue map first (ADR-118, CAMP-1).
 - **Arena** (ADR-097, ADR-100, ADR-158), as in HotA; the map's "Arena" switch (map format v38) turns it on:
   - **Day 1 is preparation**: heroes have nearly unlimited movement (1 000 000 points) and towns build any number of buildings, with the
-    usual starting resources (the complexity, or the map's own). The map's victory and defeat conditions, the last team standing and the
+    usual starting resources (the difficulty's, or the map's own). The map's victory and defeat conditions, the last team standing and the
     elimination do not count: nobody is out before the battle.
   - **Day 2 is the battle**, before anyone's turn. The **defender** is the first player in turn order with a hero on a
     [combat place](adventure-map.md#special-sites)'s entrance, and that place is the battlefield; the **attacker** is the first player in turn
@@ -133,7 +133,7 @@ player's **colour** (taking another's swaps them) and its town from a 2 × 4 pan
 right (or Esc).
 
 Chosen on the new-game screen and recorded in saves and replays (ADR-058): map or template (with size and players: human or computer, town,
-hero, team; ADR-086), fog mode ([adventure-map.md](adventure-map.md#fog-of-war)), complexity ([starting resources](towns-and-economy.md#starting-resources)),
+hero, team; ADR-086), fog mode ([adventure-map.md](adventure-map.md#fog-of-war)), difficulty ([starting resources](towns-and-economy.md#starting-resources)), the players' colours,
 seed, turn timer. For a map, a player whose faction the map leaves open (a random town, or a hero placeholder without a town) picks a town
 or "Random" ([random placeholders](adventure-map.md#map-bans-and-random-placeholders), ADR-133).
 - **Teams** (ADR-070): **2 to 8 teams** (8 = free for all; free for all when nothing is defined). The map or template sets defaults and may

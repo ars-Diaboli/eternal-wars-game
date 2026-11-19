@@ -7,11 +7,11 @@ namespace EternalWars.Core.Domain.Game;
 /// <param name="Player">The winner.</param>
 /// <param name="Faction">The town type the player started with (<see cref="Player.StartTown"/>).</param>
 /// <param name="Days">The day the game ended (<see cref="GameOutcome.Date"/>).</param>
-/// <param name="Difficulty">The complexity the score counts (<see cref="ScoreRules.Difficulty"/>).</param>
+/// <param name="Difficulty">The difficulty the score counts (<see cref="ScoreRules.DifficultyOf"/>).</param>
 /// <param name="TurnTimerMinutes">The game's turn timer; null is off.</param>
 /// <param name="Score">The points.</param>
 /// <param name="Title">The rank title: a creature id (<see cref="ScoreRules.Titles"/>).</param>
-public sealed record GameScore(PlayerId Player, string Faction, int Days, Complexity Difficulty, int? TurnTimerMinutes, int Score, string Title);
+public sealed record GameScore(PlayerId Player, string Faction, int Days, Difficulty Difficulty, int? TurnTimerMinutes, int Score, string Title);
 
 /// <summary>
 /// The victory screen's score (ADR-101, FLOW-4; HoMM3-like): max(10, 200 − days) × the difficulty factor × the turn timer factor, rounded down,
@@ -57,18 +57,18 @@ public static class ScoreRules
         && MapEvents.MapEventChecks.FavoursPeople(state.MapEvents.Set) is null;
 
     /// <summary>
-    /// The difficulty a game counts as: its complexity; with "Map default" (none chosen), the map's difficulty (<see cref="ScenarioRules.Difficulty"/>),
-    /// Normal when the map sets none.
+    /// The difficulty a game counts as (ADR-225): the one chosen for it; a game created without one (a tool's, a test's), the map's difficulty
+    /// (<see cref="ScenarioRules.Difficulty"/>), Normal when the map sets none.
     /// </summary>
-    public static Complexity Difficulty(GameState state) => state.Options.Complexity ?? state.Rules.Difficulty ?? Complexity.Normal;
+    public static Difficulty DifficultyOf(GameState state) => state.Options.Difficulty ?? state.Rules.Difficulty ?? Game.Difficulty.Normal;
 
-    /// <summary>The difficulty factor in percent (HoMM3's): Beginner 80, Easy 100, Normal 130, Hard 160, Expert 200.</summary>
-    public static int DifficultyPercent(Complexity difficulty) => difficulty switch
+    /// <summary>The difficulty factor in percent (HoMM3's): Easy 80, Normal 100, Hard 130, Expert 160, Master 200.</summary>
+    public static int DifficultyPercent(Difficulty difficulty) => difficulty switch
     {
-        Complexity.Beginner => 80,
-        Complexity.Easy => 100,
-        Complexity.Normal => 130,
-        Complexity.Hard => 160,
+        Difficulty.Easy => 80,
+        Difficulty.Normal => 100,
+        Difficulty.Hard => 130,
+        Difficulty.Expert => 160,
         _ => 200,
     };
 
@@ -82,7 +82,7 @@ public static class ScoreRules
     };
 
     /// <summary>The points for a game won on day <paramref name="days"/>.</summary>
-    public static int Score(int days, Complexity difficulty, int? turnTimerMinutes) =>
+    public static int Score(int days, Difficulty difficulty, int? turnTimerMinutes) =>
         Math.Max(MinimumBase, BaseDays - days) * DifficultyPercent(difficulty) * TurnTimerPercent(turnTimerMinutes) / 10_000;
 
     /// <summary>The rank title (a creature id) of a score.</summary>
@@ -99,7 +99,7 @@ public static class ScoreRules
             return [];
         }
 
-        var difficulty = Difficulty(state);
+        var difficulty = DifficultyOf(state);
         var timer = state.Options.TurnTimerMinutes;
         var days = outcome.Date.AbsoluteDay;
         var score = Score(days, difficulty, timer);

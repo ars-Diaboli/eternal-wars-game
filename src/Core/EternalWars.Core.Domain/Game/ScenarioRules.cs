@@ -132,10 +132,10 @@ public sealed record ScenarioRules(
     public Turns.WeekEventSettings WeekEvents { get; init; } = Turns.WeekEventSettings.Default;
 
     /// <summary>
-    /// The difficulty the map's own starting resources stand for (ADR-101): what a game with "Map default" complexity counts as in the ranking.
-    /// Null counts as Normal. It changes no rule (the AI plays the same at every difficulty).
+    /// The map's difficulty (ADR-101, ADR-225): the level the new-game screen preselects, and what a game created without one counts as in the
+    /// ranking. Null counts as Normal. It changes no rule (the AI plays the same at every difficulty).
     /// </summary>
-    public Complexity? Difficulty { get; init; }
+    public Difficulty? Difficulty { get; init; }
 
     /// <summary>The heroes, artifacts, spells and skills the map bans (ADR-126); none by default.</summary>
     public MapBans Bans { get; init; } = MapBans.None;

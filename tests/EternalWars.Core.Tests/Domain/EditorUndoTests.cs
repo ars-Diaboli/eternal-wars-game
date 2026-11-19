@@ -294,7 +294,7 @@ public class EditorUndoTests
             f.Editor.Map.SetProperties("Isles", "Two islands");
             return true;
         },
-        ["MapPropertiesEditor.SetRules"] = f => Ok(f.Editor.Map.SetRules(f.Editor.Scenario.Rules with { Difficulty = Complexity.Hard, MaxHeroes = 4 })),
+        ["MapPropertiesEditor.SetRules"] = f => Ok(f.Editor.Map.SetRules(f.Editor.Scenario.Rules with { Difficulty = Difficulty.Expert, MaxHeroes = 4 })),
         ["MapPropertiesEditor.SetGrail"] = f => Ok(f.Editor.Map.SetGrail(new MapPosition(20, 19))),
     };
 

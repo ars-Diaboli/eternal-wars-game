@@ -11,6 +11,19 @@ public sealed class Player(PlayerId id, string name, bool isHuman, TeamId? team 
 
     public bool IsHuman { get; internal set; } = isHuman;
 
+    /// <summary>How many player colours there are (blue, red, yellow, green, orange, purple, teal, pink).</summary>
+    public const int ColourCount = 8;
+
+    /// <summary>The colours' names, by colour; a player's default name is its number's colour's.</summary>
+    public static IReadOnlyList<string> ColourNames { get; } = ["Blue", "Red", "Yellow", "Green", "Orange", "Purple", "Teal", "Pink"];
+
+    /// <summary>
+    /// The colour the player is drawn in (ADR-225): 0 … <see cref="ColourCount"/> − 1, by default its number's. Chosen on the new-game screen
+    /// (<see cref="Game.GameOptions.Colours"/>) and set when the game is created; no rule reads it. A player named after its number's colour takes
+    /// the chosen colour's name.
+    /// </summary>
+    public int Colour { get; internal set; } = id.Value % ColourCount;
+
     /// <summary>Alliance; defaults to a team of its own (free-for-all).</summary>
     public TeamId Team { get; internal set; } = team ?? new TeamId(id.Value);
 

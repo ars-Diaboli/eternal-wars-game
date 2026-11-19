@@ -300,7 +300,7 @@ Rules: [shared object rules](#shared-object-rules).
     income, growth and the week's event; town events at the owner's turn start, neutral towns' at the start of the day. Several at one
     moment run in list order; who triggers is a condition.
   - **Conditions**: and / or / not, comparisons of expressions (numbers, variables, random numbers, + − × ÷, the player's resources, the
-    hero's army, stats, skills, artifacts, level, mana and movement, the date, the complexity, hero and town counts), the hero, its class,
+    hero's army, stats, skills, artifacts, level, mana and movement, the date, the difficulty (the game's, else the map's, else Normal; Easy 0 … Master 4), hero and town counts), the hero, its class,
     the player, human or computer, its faction, team and allies, a town's owner, and who beat a monster or hero an event names.
   - **Actions**: branches, stop, variables, enable or disable an event, remove the cell; messages (with reward lines, given once read) and
     questions with two or three answers; resources, creatures (a person's full army chooses what to keep, a computer keeps its strongest),

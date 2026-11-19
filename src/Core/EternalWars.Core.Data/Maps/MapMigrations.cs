@@ -26,7 +26,7 @@ internal static class MapMigrations
     public const int UnversionedFormatVersion = 1;
 
     /// <summary>The steps, oldest first.</summary>
-    public static IReadOnlyList<IMapMigration> Steps { get; } = [new SkillsReplaceTactics(), new GuardModePerMonster(), new RuinsAreTheCrypt(), new HeightsFromTerrain()];
+    public static IReadOnlyList<IMapMigration> Steps { get; } = [new SkillsReplaceTactics(), new GuardModePerMonster(), new RuinsAreTheCrypt(), new HeightsFromTerrain(), new DifficultyNamedHoMM3sWay()];
 
     private static readonly JsonNodeOptions NodeOptions = new() { PropertyNameCaseInsensitive = true };
 
@@ -205,6 +205,20 @@ internal static class MapMigrations
 
             ReliefShaper.FromTerrain(ground);
             map["heights"] = new JsonArray([.. MapConverter.WriteHeights(ground).Select(l => (JsonNode)new JsonArray([.. l.Select(r => (JsonNode)JsonValue.Create(r))]))]);
+        }
+    }
+
+    /// <summary>v41 (ADR-225): the map's difficulty (<c>rules.difficulty</c>) is named HoMM3's way, the old names one step up (Beginner → Easy … Expert → Master).</summary>
+    private sealed class DifficultyNamedHoMM3sWay : IMapMigration
+    {
+        public int Version => 41;
+
+        public void Apply(JsonObject map)
+        {
+            if (map["rules"] is JsonObject rules)
+            {
+                DifficultyNames.Upgrade(rules, "difficulty");
+            }
         }
     }
 }

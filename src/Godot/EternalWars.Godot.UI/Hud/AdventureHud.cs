@@ -95,7 +95,7 @@ public partial class AdventureHud : CanvasLayer
             BottomOffset = playing ? 0 : ReplayControlBar.ReservedHeight, // the menu button is one of the action buttons (ADR-210)
         };
         AddChild(StatusBar);
-        StatusBar.Bind(session, () => context.ListedPlayer);
+        StatusBar.Bind(session, () => context.ListedPlayer, calendar: true);
         Status.Text = playing
             ? "Click: route, click again: go. Tab: next hero  H: hero  C: spell book  L: level  K: kingdom  Q: quests  P: puzzle  G: dig  WASD/QE/wheel: camera"
             : "Watching. Space: play or pause  L: level  right click: information  WASD/QE/wheel: camera";
@@ -180,7 +180,7 @@ public partial class AdventureHud : CanvasLayer
     /// <summary>Places the parts as <paramref name="layout"/> says (the "Layout" tab changed).</summary>
     public void ApplyLayout(LayoutSettings layout)
     {
-        // With the side panel on, the calendar and End turn stand at its bottom (ADR-204); off, at the top of the map.
+        // With the side panel on, End turn stands with its actions (ADR-204); off, at the top of the map.
         _turn.InPanel = HudArrangement.PanelSide(layout) is not null;
         _layout.Apply(layout);
     }

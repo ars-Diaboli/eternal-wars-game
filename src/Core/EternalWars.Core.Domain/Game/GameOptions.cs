@@ -12,25 +12,29 @@ public enum FogMode
     ShroudWithRefog,
 }
 
-/// <summary>Scenario complexity (ADR-063): how rich the players start. Chosen when a game is configured.</summary>
-public enum Complexity
+/// <summary>
+/// The game's difficulty (ADR-063, ADR-225; HoMM3's five steps): how rich the players start and what the score counts. Chosen when a game is
+/// configured; a map may name its own (<see cref="ScenarioRules.Difficulty"/>). Before map v41, saves v5 and ranking v2 the levels were named one
+/// step lower (Beginner … Expert); the readers map the old names.
+/// </summary>
+public enum Difficulty
 {
-    Beginner,
     Easy,
     Normal,
     Hard,
     Expert,
+    Master,
 }
 
-/// <summary>Starting resources per <see cref="Complexity"/> (draft numbers; the hardest is the designer's, the rest are on a HoMM3-like scale).</summary>
+/// <summary>Starting resources per <see cref="Difficulty"/> (draft numbers; the hardest is the designer's, the rest are on a HoMM3-like scale).</summary>
 public static class StartingResources
 {
-    public static Economy.ResourceSet For(Complexity complexity) => complexity switch
+    public static Economy.ResourceSet For(Difficulty difficulty) => difficulty switch
     {
-        Complexity.Beginner => new(Gold: 10_000, Lumber: 30, Ore: 30, Crystal: 10, Mercury: 10, Sulfur: 10),
-        Complexity.Easy => new(Gold: 7_500, Lumber: 20, Ore: 20, Crystal: 6, Mercury: 6, Sulfur: 6),
-        Complexity.Normal => new(Gold: 5_000, Lumber: 15, Ore: 15, Crystal: 3, Mercury: 3, Sulfur: 3),
-        Complexity.Hard => new(Gold: 3_500, Lumber: 12, Ore: 12, Crystal: 1, Mercury: 1, Sulfur: 1),
+        Difficulty.Easy => new(Gold: 10_000, Lumber: 30, Ore: 30, Crystal: 10, Mercury: 10, Sulfur: 10),
+        Difficulty.Normal => new(Gold: 7_500, Lumber: 20, Ore: 20, Crystal: 6, Mercury: 6, Sulfur: 6),
+        Difficulty.Hard => new(Gold: 5_000, Lumber: 15, Ore: 15, Crystal: 3, Mercury: 3, Sulfur: 3),
+        Difficulty.Expert => new(Gold: 3_500, Lumber: 12, Ore: 12, Crystal: 1, Mercury: 1, Sulfur: 1),
         _ => new(Gold: 2_500, Lumber: 10, Ore: 10),
     };
 }
@@ -46,16 +50,16 @@ public static class StartingResources
 /// Seed of the game's <see cref="Common.GameRandom"/>. Together with the map and the command log it fully
 /// determines the game (replays). Front-ends pick a random seed; tests use the default.
 /// </param>
-/// <param name="Complexity">
-/// Every player starts with the <see cref="StartingResources"/> of this level instead of what the map gives; null keeps the
-/// map's own resources.
+/// <param name="Difficulty">
+/// Every player starts with the <see cref="StartingResources"/> of this level; null keeps what the players hold (a map file gives
+/// none; the new-game screen always sends a level, ADR-227).
 /// </param>
 /// <param name="TurnTimerMinutes">
 /// The turn timer (ADR-091): a human player's turn lasts this many minutes (1 to <see cref="Turns.TurnTimer.MaxMinutes"/>); null is off. The
 /// clock is the front-end's (<see cref="Turns.TurnTimer"/>); what it does is ordinary commands in the log, so replays need no clock.
 /// </param>
 public sealed record GameOptions(
-    FogMode FogMode = FogMode.PermanentReveal, int RefogMargin = 2, ulong Seed = 1, Complexity? Complexity = null, int? TurnTimerMinutes = null)
+    FogMode FogMode = FogMode.PermanentReveal, int RefogMargin = 2, ulong Seed = 1, Difficulty? Difficulty = null, int? TurnTimerMinutes = null)
 {
     public static GameOptions Default { get; } = new();
 
@@ -71,6 +75,12 @@ public sealed record GameOptions(
     /// of it. A player not listed (or with an unknown town id) gets a faction drawn when the game starts. Null = nobody chose.
     /// </summary>
     public IReadOnlyDictionary<int, string>? StartTowns { get; init; }
+
+    /// <summary>
+    /// The colour each player chose at setup, by player number (ADR-225): 0 … <see cref="Players.Player.ColourCount"/> − 1 (<see cref="Players.Player.Colour"/>).
+    /// A player not listed, or with a colour out of range, keeps its number's. Null = nobody chose.
+    /// </summary>
+    public IReadOnlyDictionary<int, int>? Colours { get; init; }
 
     /// <summary>
     /// The simultaneous first week (MP-2, ADR-098, ADR-197): on a map with a start zone for every person, the people play each day of the first

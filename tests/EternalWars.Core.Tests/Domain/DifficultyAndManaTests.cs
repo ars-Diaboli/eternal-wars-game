@@ -10,13 +10,13 @@ using static EternalWars.Core.Tests.TestWorld;
 
 namespace EternalWars.Core.Tests.Domain;
 
-/// <summary>Scenario complexity (starting resources) and daily mana (ADR-063).</summary>
-public class ComplexityAndManaTests
+/// <summary>The game's difficulty (starting resources) and daily mana (ADR-063, ADR-225).</summary>
+public class DifficultyAndManaTests
 {
     private static readonly string[] Rows = ["A..", "..B"];
 
     [Fact]
-    public void WithoutAComplexity_TheMapsResourcesStay()
+    public void WithoutADifficulty_TheMapsResourcesStay()
     {
         var state = Create(Rows);
         state.GetPlayer(Blue).Resources = new ResourceSet(Gold: 123);
@@ -27,41 +27,41 @@ public class ComplexityAndManaTests
     }
 
     [Theory]
-    [InlineData(Complexity.Beginner, 10_000)]
-    [InlineData(Complexity.Normal, 5_000)]
-    [InlineData(Complexity.Expert, 2_500)]
-    public void Complexity_GivesEveryPlayerItsStartingResources(Complexity complexity, int gold)
+    [InlineData(Difficulty.Easy, 10_000)]
+    [InlineData(Difficulty.Hard, 5_000)]
+    [InlineData(Difficulty.Master, 2_500)]
+    public void Difficulty_GivesEveryPlayerItsStartingResources(Difficulty difficulty, int gold)
     {
-        var state = Create(new GameOptions(Complexity: complexity), Rows);
+        var state = Create(new GameOptions(Difficulty: difficulty), Rows);
         state.GetPlayer(Blue).Resources = new ResourceSet(Gold: 123);
 
         Start(state);
 
-        Assert.Equal(StartingResources.For(complexity), state.GetPlayer(Blue).Resources);
-        Assert.Equal(StartingResources.For(complexity), state.GetPlayer(Red).Resources);
+        Assert.Equal(StartingResources.For(difficulty), state.GetPlayer(Blue).Resources);
+        Assert.Equal(StartingResources.For(difficulty), state.GetPlayer(Red).Resources);
         Assert.Equal(gold, state.GetPlayer(Red).Resources.Gold);
     }
 
     [Fact]
     public void Complexities_GetPoorerWithTheLevel_AndTheHardestIsTheDesignersSet()
     {
-        Assert.Equal(new ResourceSet(Gold: 2500, Lumber: 10, Ore: 10), StartingResources.For(Complexity.Expert));
-        var golds = Enum.GetValues<Complexity>().Select(c => StartingResources.For(c).Gold).ToList();
+        Assert.Equal(new ResourceSet(Gold: 2500, Lumber: 10, Ore: 10), StartingResources.For(Difficulty.Master));
+        var golds = Enum.GetValues<Difficulty>().Select(c => StartingResources.For(c).Gold).ToList();
         Assert.Equal(golds.OrderByDescending(g => g), golds);
     }
 
     [Fact]
-    public void Complexity_SurvivesTheReplayFile()
+    public void Difficulty_SurvivesTheReplayFile()
     {
         var map = MapConverter.ToDocument(DemoScenario.Create());
-        var session = new GameSession(MapConverter.ToGameState(map, options: new GameOptions(Seed: 3, Complexity: Complexity.Hard)));
+        var session = new GameSession(MapConverter.ToGameState(map, options: new GameOptions(Seed: 3, Difficulty: Difficulty.Expert)));
         session.Start();
 
         var json = GameRecordSerializer.Serialize(GameReplay.Record(map, session));
         var replayed = GameReplay.Replay(GameRecordSerializer.Deserialize(json));
 
-        Assert.Equal(Complexity.Hard, replayed.State.Options.Complexity);
-        Assert.Equal(StartingResources.For(Complexity.Hard), replayed.State.GetPlayer(Blue).Resources);
+        Assert.Equal(Difficulty.Expert, replayed.State.Options.Difficulty);
+        Assert.Equal(StartingResources.For(Difficulty.Expert), replayed.State.GetPlayer(Blue).Resources);
     }
 
     [Fact]

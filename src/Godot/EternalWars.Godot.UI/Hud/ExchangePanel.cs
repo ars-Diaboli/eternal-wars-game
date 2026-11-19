@@ -46,10 +46,8 @@ public partial class ExchangePanel : PanelContainer
         var header = new HBoxContainer();
         box.AddChild(header);
         header.AddChild(new Label { Text = "Exchange" });
-        var close = new Button { Text = "Close" }.WithIcon(UiIcon.Close);
-        close.Pressed += Close;
-        header.AddChild(close);
         header.AddChild(_split);
+        header.AddCloseButton(Close);
         box.AddChild(_hint);
         box.AddChild(_columns);
         box.AddChild(_status);

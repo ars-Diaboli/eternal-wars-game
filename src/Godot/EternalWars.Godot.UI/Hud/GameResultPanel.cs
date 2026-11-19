@@ -171,7 +171,14 @@ public partial class GameResultPanel : CenterContainer
         _names.Clear();
         foreach (var score in scores)
         {
-            _scores.AddChild(new Label { Text = Describe(state, score), HorizontalAlignment = HorizontalAlignment.Center });
+            var line = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
+            line.AddThemeConstantOverride("separation", UiSpacing.Gap);
+            if (DifficultyIcons.Get(score.Difficulty) is not null)
+            {
+                line.AddChild(DifficultyIcons.Badge(score.Difficulty, UiIcons.WindowSize)); // the difficulty's chess piece (ADR-225)
+            }
+            line.AddChild(new Label { Text = Describe(state, score), VerticalAlignment = VerticalAlignment.Center });
+            _scores.AddChild(line);
             var row = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
             row.AddChild(new Label { Text = "Name for the ranking:" });
             var name = new LineEdit { Text = state.GetPlayer(score.Player).Name, CustomMinimumSize = new Vector2(220, 0), MaxLength = 32 };

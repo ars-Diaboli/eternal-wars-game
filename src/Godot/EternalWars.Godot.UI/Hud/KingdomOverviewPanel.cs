@@ -31,9 +31,7 @@ public partial class KingdomOverviewPanel : PanelContainer
         var header = new HBoxContainer();
         box.AddChild(header);
         header.AddChild(_title);
-        var close = new Button { Text = "Close" }.WithIcon(UiIcon.Close);
-        close.Pressed += () => Visible = false;
-        header.AddChild(close);
+        header.AddCloseButton(() => Visible = false);
         var scroll = new ScrollContainer { CustomMinimumSize = new Vector2(760, 420) };
         box.AddChild(scroll);
         scroll.AddChild(_table);

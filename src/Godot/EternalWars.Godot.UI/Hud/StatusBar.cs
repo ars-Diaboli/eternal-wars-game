@@ -7,7 +7,7 @@ namespace EternalWars.Godot.UI.Hud;
 /// The status bar (ADR-186, ADR-204): a narrow stripe along the bottom of the screen, as wide as the screen up to 16:9 and a centred
 /// 16:9 width on a wider screen. On the left the status line (<see cref="Message"/>): the HUD's messages, and what the pointer is over (a HUD
 /// control's label and tooltip, <see cref="UiIcons.StatusText"/>, or the map's cell through <see cref="ShowHover"/>), whichever came last.
-/// On the right the <see cref="ResourceBar"/> (on the adventure map and the town screen), then <see cref="RightReserve"/> left free for the
+/// On the right the <see cref="ResourceBar"/> (on the adventure map and the town screen), the calendar (the adventure map's, ADR-225), then <see cref="RightReserve"/> left free for the
 /// app's menu button (<see cref="MenuSlot"/>). The adventure map, the battle and the screens before a game each have one.
 /// </summary>
 public partial class StatusBar : PanelContainer
@@ -68,7 +68,8 @@ public partial class StatusBar : PanelContainer
 
     /// <param name="session">The game, whose resources the bar shows; null for a bar without them (battle, the screens before a game).</param>
     /// <param name="listed">Whose resources are shown (<see cref="ResourceBar"/>): the current player's by default.</param>
-    public void Bind(GameSession? session, Func<Core.Domain.Common.PlayerId>? listed = null)
+    /// <param name="calendar">The calendar right of the resources (<see cref="CalendarLabel"/>, ADR-225): the adventure map's bar.</param>
+    public void Bind(GameSession? session, Func<Core.Domain.Common.PlayerId>? listed = null, bool calendar = false)
     {
         Name = "StatusBar";
         var style = UiTheme.Box(UiTheme.Background, UiTheme.Border, 2, borderWidth: 0);
@@ -84,6 +85,12 @@ public partial class StatusBar : PanelContainer
             var resources = new ResourceBar { Name = "Resources" };
             row.AddChild(resources);
             resources.Bind(session, listed);
+            if (calendar)
+            {
+                var date = new CalendarLabel();
+                row.AddChild(date);
+                date.Bind(session);
+            }
         }
         if (RightReserve > 0)
         {

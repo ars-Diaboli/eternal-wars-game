@@ -72,7 +72,7 @@ public partial class StartZonesView : Node3D
         {
             var tile = tiles[i];
             multi.SetInstanceTransform(i, Plate(tile));
-            multi.SetInstanceColor(i, Palette.ForPlayer(map.GetStartZone(tile)!.Value) with { A = 0.35f });
+            multi.SetInstanceColor(i, Palette.ForSlot(map.GetStartZone(tile)!.Value) with { A = 0.35f });
             _plateOf[tile] = i;
         }
 

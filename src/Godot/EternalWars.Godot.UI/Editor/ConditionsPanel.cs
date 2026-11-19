@@ -92,14 +92,14 @@ public partial class ConditionsPanel : VBoxContainer
         _maxHeroes.ValueChanged += v => Change(r => r with { MaxHeroes = (int)v });
         AddChild(_maxHeroes);
         _difficulty.AddItem("Difficulty: not set (Normal)", DifficultyNotSet);
-        foreach (var level in Enum.GetValues<Complexity>())
+        foreach (var level in Enum.GetValues<Difficulty>())
         {
             _difficulty.AddItem($"Difficulty: {level}", (int)level);
         }
 
         _difficulty.ItemSelected += index => Change(r => r with
         {
-            Difficulty = _difficulty.GetItemId((int)index) is var id and not DifficultyNotSet ? (Complexity)id : null,
+            Difficulty = _difficulty.GetItemId((int)index) is var id and not DifficultyNotSet ? (Difficulty)id : null,
         });
         AddChild(_difficulty);
         _weekEvents.Toggled += on => Change(r => r with { WeekEvents = r.WeekEvents with { Enabled = on } });

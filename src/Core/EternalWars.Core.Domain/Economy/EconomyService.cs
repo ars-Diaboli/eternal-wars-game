@@ -19,14 +19,14 @@ public sealed class EconomyService(GameState state, IEventPublisher events, IRea
     public ResourceSet DailyIncome(PlayerId playerId) =>
         _incomeSources.Aggregate(ResourceSet.Empty, (total, source) => total + source.DailyIncome(state, playerId));
 
-    /// <summary>The scenario's complexity sets every player's starting resources (when the game has one).</summary>
+    /// <summary>The game's difficulty sets every player's starting resources (when the game has one).</summary>
     void Turns.ITurnPhaseParticipant.SetUpGame()
     {
-        if (state.Options.Complexity is { } complexity)
+        if (state.Options.Difficulty is { } difficulty)
         {
             foreach (var player in state.Players)
             {
-                Set(player.Id, StartingResources.For(complexity));
+                Set(player.Id, StartingResources.For(difficulty));
             }
         }
     }

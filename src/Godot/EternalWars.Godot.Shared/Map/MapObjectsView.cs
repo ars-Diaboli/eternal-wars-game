@@ -181,7 +181,7 @@ public partial class MapObjectsView : Node3D
         var top = MapSpace.ToGround(map, known.Position) + new Vector3((known.Definition.Footprint.Width - 1) / 2f, 0.9f, 0);
         if (known.Definition.Kind is MapObjectKind.Mine or MapObjectKind.Town or MapObjectKind.Dwelling or MapObjectKind.ResourceProvider)
         {
-            Cell(new Vector3(0.3f, 0.3f, 0.05f), top, known.Owner is { } owner ? Palette.ForPlayer(owner) : Palette.Neutral);
+            Cell(new Vector3(0.3f, 0.3f, 0.05f), top, known.Owner is { } owner ? Palette.ForPlayer(_context.State, owner) : Palette.Neutral);
         }
 
         _cells[known.Id] = cells;

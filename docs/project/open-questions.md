@@ -46,7 +46,7 @@ the Behemoth line; whether a non-dragon line stays Large (Behemoths, Hydras or n
 **CONT-5 Primal Fury names.** One name for both towns, or a Swamp name? "Warcry" for Stronghold and "Spiritual Totems" for Swamp Bestiary, or one?
 
 ## Numbers to tune (not questions)
-Placeholders that wait for play-testing (kept as they are, ADR-118): caravan cost (ADR-054); complexity starting resources (ADR-063);
+Placeholders that wait for play-testing (kept as they are, ADR-118): caravan cost (ADR-054); the difficulty's starting resources (ADR-063, ADR-225);
 Stewardship and governor percentages (ADR-063); siege Ballistics (ADR-063); zone guard and garrison powers, `GuardPicker` ranges (ADR-064);
 building costs; the growth buildings (+5 / +2, ADR-071); war machine stats and prices (CMB-3); morale 2 % and luck 4 % per point (ADR-053);
 deposit prices and the map marketplace threshold (ADR-070); the AI's retreat threshold; the fairness tolerances and slacks (ADR-117);

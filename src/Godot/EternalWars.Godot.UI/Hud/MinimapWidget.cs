@@ -85,10 +85,10 @@ public partial class MinimapWidget : Control
         }
     }
 
-    private static Color ColorOf(MinimapCell cell) =>
+    private Color ColorOf(MinimapCell cell) =>
         !cell.Explored ? Unexplored
         : cell.Marker == MinimapMarker.None ? Palette.ForTerrain(cell.Terrain)
-        : cell.Owner is { } owner ? Palette.ForPlayer(owner)
+        : cell.Owner is { } owner ? Palette.ForPlayer(_context.State, owner)
         : cell.Marker == MinimapMarker.Object ? Palette.Neutral.Darkened(0.3f)
         : Palette.Neutral;
 

@@ -100,7 +100,7 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   game takes one record and no separate tables: the scenarios, `MapConverter.ToGameState(document, content, options)`,
   `GameSaves.Load` / `GameReplay.Replay` / `ReplayPlayer.Open`, `MapGenerator` and `EditorMapGenerator`. Each app builds one
   record (the Godot apps `GameContent.All` from the `--creatures=`-style flags, the Sim tool from `--creatures`) and passes it on.
-- **`GameState`** is plain data with `internal` setters. It carries `GameOptions` (fog mode, refog margin, seed; game
+- **`GameState`** is plain data with `internal` setters. It carries `GameOptions` (fog mode, refog margin, seed, difficulty, the players' colours; game
   rules, not map data, so passed to `MapConverter.ToGameState(document, content, options)`) and `GameState.Random`
   (`GameRandom`), the only randomness rules may use.
 - **Pending decisions**: outcomes needing a choice (chest, exchange, guard offer, level-up, battle, ...) set

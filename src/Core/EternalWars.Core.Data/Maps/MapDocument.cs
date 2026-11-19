@@ -49,12 +49,13 @@ namespace EternalWars.Core.Data.Maps;
 /// (<c>grail</c>: a cell; omitted = drawn when the game starts on a map with obelisks) and obelisks (<c>obelisk</c>; ADR-140). 38 = + the arena
 /// switch (<c>rules.arena</c>; omitted = off) and combat places (<c>combatPlace</c>; ADR-097, ADR-100). 39 = + the ground's height
 /// (<c>heights</c>, one character per tile corner, ADR-182; omitted = flat at 0; older maps get their terrain's heights). 40 = + start zones (<c>startZones</c>, one
-/// character per tile: <c>.</c> none, <c>0</c>–<c>7</c> the player's number; omitted = none; MP-4, ADR-197). Older versions still
+/// character per tile: <c>.</c> none, <c>0</c>–<c>7</c> the player's number; omitted = none; MP-4, ADR-197). 41 = the difficulty's names (<c>rules.difficulty</c>)
+/// are HoMM3's, Easy … Master; older maps' names move up one (ADR-225). Older versions still
 /// load: <see cref="MapSerializer"/> upgrades their JSON first (<see cref="MapMigrations"/>, ADR-174), so this record is the current format only.
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 40;
+    public const int CurrentFormatVersion = 41;
 
     /// <summary>The format the document is in; a file read through <see cref="MapSerializer"/> has been upgraded to the current one.</summary>
     public int FormatVersion { get; init; } = CurrentFormatVersion;
@@ -122,7 +123,7 @@ public sealed record CellDocument(int X, int Y, int Level = 0);
 /// <see cref="Elimination"/> (no towns and no heroes: out) are on unless set to false; <see cref="GraceDays"/> omitted = 7
 /// (the days a player that lost its last town has to own one again; 0 = no countdown). <see cref="MaxHeroes"/> (v15) omitted = 8
 /// (the most heroes a player may have at once). <see cref="WeekEvents"/> (v24) omitted = the default week and month events.
-/// <see cref="Difficulty"/> (v26) omitted = none (the ranking counts "Map default" as Normal). <see cref="Arena"/> (v38, ADR-097) true makes the map an
+/// <see cref="Difficulty"/> (v26) omitted = none (counts as Normal; names before v41 were one step lower, ADR-225). <see cref="Arena"/> (v38, ADR-097) true makes the map an
 /// arena (a day of preparation, then one battle decides the game; the conditions do not count); omitted = off.
 /// </summary>
 public sealed record ScenarioRulesDocument(
@@ -133,7 +134,7 @@ public sealed record ScenarioRulesDocument(
     int? GraceDays = null,
     int? MaxHeroes = null,
     WeekEventsDocument? WeekEvents = null,
-    Complexity? Difficulty = null,
+    Difficulty? Difficulty = null,
     BansDocument? Bans = null,
     bool? Arena = null);
 

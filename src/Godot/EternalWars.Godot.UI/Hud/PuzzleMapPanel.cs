@@ -29,9 +29,7 @@ public partial class PuzzleMapPanel : PanelContainer
         box.AddChild(header);
         _title.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         header.AddChild(_title);
-        var close = new Button { Text = "Close" }.WithIcon(UiIcon.Close);
-        close.Pressed += () => Visible = false;
-        header.AddChild(close);
+        header.AddCloseButton(() => Visible = false);
         _canvas.CustomMinimumSize = new Vector2(GrailRules.PuzzleSize * PuzzleCanvas.CellPixels, GrailRules.PuzzleSize * PuzzleCanvas.CellPixels);
         _canvas.SizeFlagsHorizontal = SizeFlags.ShrinkCenter; // the title can be wider than the puzzle; the parchment stays square
         box.AddChild(_canvas);

@@ -3148,7 +3148,7 @@ map format changes. Changes ADR-183's and ADR-207's mesh (a vertex per corner an
   order mark); the sim digests and the output of every command compared before and after (times aside).
 
 ### ADR-225: The new-game screen's options tidied; difficulty as five chess pieces; the calendar on the status bar (ADR-063, ADR-101, ADR-201, ADR-204, owner notes, 2026-11-19)
-**Status**: accepted (2026-11-19), not built. From the owner's notes in `ideas.md`; *(proposal)* marks the agent's fill-ins, for the owner
+**Status**: accepted and built (2026-11-19; ADR-227). From the owner's notes in `ideas.md`; *(proposal)* marks the agent's fill-ins, for the owner
 to change. Map format **v41** (difficulty names); saves and the ranking file read the old names too.
 
 - **Game difficulty** (replaces "Complexity" on the screen and in the code: `Complexity` → `Difficulty` *(proposal)*): the levels are
@@ -3208,3 +3208,30 @@ to change. Map format **v41** (difficulty names); saves and the ranking file rea
   still holds some policy (ADR-222, see Left); `EventsPanel` was not split (ADR-223); `ViewMirror` copies heroes and objects already in the
   view in place, by reflection, beside the sink (ADR-218).
 - **Left**: the roadmap's "Code health" section lists them.
+
+### ADR-227: Building ADR-225: old difficulty names, player colours and the new-game screen's players (ADR-225, 2026-11-19)
+**Status**: accepted (2026-11-19).
+
+- **The rename**: `Complexity` is `Difficulty` (Easy … Master) in the code, the files and the sim tool (`sim game --difficulty`). Each level
+  keeps its place, so its number, starting resources and score factor stay. Maps before **v41** (`MapMigrations`), saves and replays
+  before **v5** (`options.complexity` becomes `options.difficulty`) and ranking files without a `formatVersion` (now **2**) have their
+  names moved up one when read (`DifficultyNames`). `DifficultyText` describes a level for the status bar.
+- **The map's own level sets the start too** (changes ADR-225's proposal): a map file has no starting resources of its own, so a game sent
+  with no difficulty would start everyone with nothing. The old "Map default" never did that: its item had id −1, which Godot's
+  `OptionButton` replaces with the index, 0, so it sent Beginner. The screen now always sends the level pressed, the map's own difficulty
+  (else Normal) preselected. A game created without one (tools, tests) counts as the map's difficulty, else Normal, in the score and in a
+  map event's "difficulty" (now 1 for none).
+- **`Player.Colour`** (0–7, by default the number's) comes from `GameOptions.Colours` (player number → colour) when the game is created,
+  so saves, replays and a LAN client's copy have it. No rule and no digest reads it. A player still named after its number's colour
+  takes the chosen colour's name; a name the map gave stays. `Palette.ForPlayer(state, player)` draws it; `Palette.ForSlot` draws a slot
+  where no game has colours yet (the editor, a lobby's or a save's seats).
+- **A random map's players**: "−" removes that row, and the players after it move up a slot with their choices: controller where the slot
+  allows it, town, hero, dwelling, team, colour. "+" adds a row with the slot's defaults, the first colour nobody has and, if its team is
+  taken, the first free team.
+- **Smaller choices**:
+  - Ticking the turn timer focuses its minutes, selected, ready to type.
+  - A release build draws a new seed each time "Start" is pressed.
+  - The calendar reads `M1 W2 D3`; its hover text gives the full date and the week's event.
+  - The town and colour choices open a panel under their button, in the screen's own layer, so the status bar names what the pointer is over.
+  - Until the difficulty pieces are drawn, the level's name stands in on its button; the victory screen and the leaderboard then show the
+    name alone.

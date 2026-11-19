@@ -58,11 +58,15 @@ public sealed record RandomMapChoice(
 
 /// <summary>
 /// New-game setup (ADR-201: four tabs, Scenarios, Random maps, Arenas and Campaign, each a list of its maps on the left, sorted and filtered by
-/// size as the player chose (ADR-204), and the chosen one's details and players on the right, the game options under them):a map or a random map template, fog mode and refog margin, complexity, turn timer, seed. For a map: its players, with teams unless the map
-/// locks them (ADR-032); on an arena map a line on the mode and, per player, Human or Computer (ADR-159). For a template (ADR-086): the size, the number of players, the hero limit (the template's by default, ADR-068) and for each
-/// player human or computer, town, hero, the start town's tier-1 dwelling (a human player with a picked town, when the start zone gives none; RMG-7)
-/// and team (unless the template locks them); the map is generated on "Start" and, if it still has problems, shown so the player can start it anyway or
-/// change something. Raises <see cref="Started"/> with the ready state; the app then builds the session and the world. As a LAN host's lobby
+/// size as the player chose (ADR-204), and the chosen one's details and players on the right, the game options under them (ADR-225): fog of war
+/// (Permanent reveal or Refog) with the hero limit beside it, the difficulty as five chess-piece buttons, the turn timer as a checkbox with its
+/// minutes, and the seed in debug builds only (a release build draws one for every game). Each player has a colour (a swatch: picking another
+/// player's colour swaps the two). For a map: its players, with teams unless the map locks them (ADR-032), the town as a crest where the map
+/// leaves it open; on an arena map a line on the mode and, per player, Human or Computer (ADR-159); the map's own difficulty is preselected. For a
+/// template (ADR-086): the size, the hero limit (the template's by default, ADR-068) and the players, "+" adding one and each row's "−" removing it
+/// within the template's range, each human or computer, town (a crest), hero, the start town's tier-1 dwelling (a human player with a picked
+/// town, when the start zone gives none; RMG-7) and team (unless the template locks them); the map is generated on "Start" and, if it still has
+/// problems, shown so the player can start it anyway or change something. The "×" in the top-right corner (or Escape) closes the screen. Raises <see cref="Started"/> with the ready state; the app then builds the session and the world. As a LAN host's lobby
 /// (<see cref="Lan"/>, ADR-194) each colour a person may play is played here, by a LAN player or by the computer, and the chat sits beside it.
 /// </summary>
 public partial class NewGameScreen : PanelContainer
@@ -70,6 +74,12 @@ public partial class NewGameScreen : PanelContainer
     private const string Random = "Random";
 
     private const int LabelWidth = 120;
+
+    /// <summary>The turn timer's minutes when it is first ticked.</summary>
+    private const int FirstTimerMinutes = 5;
+
+    /// <summary>The seed is shown, and may be typed, only in a debug build (ADR-225); a release build draws one for every game.</summary>
+    private static bool ShowsSeed => OS.IsDebugBuild();
 
     private readonly Dictionary<MapTab, List<MapEntry>> _entries = Enum.GetValues<MapTab>().ToDictionary(t => t, _ => new List<MapEntry>());
     private readonly Dictionary<MapTab, Button> _tabButtons = [];
@@ -81,20 +91,24 @@ public partial class NewGameScreen : PanelContainer
     private readonly Label _playersHeading = new() { Text = "Players" };
     private readonly HSeparator _playersRule = new();
     private readonly OptionButton _size = new();
-    private readonly SpinBox _playerCount = new() { MinValue = 1, MaxValue = 8, Step = 1 };
     private readonly SpinBox _maxHeroes = new() { MinValue = 1, MaxValue = ScenarioRules.HeroLimit, Step = 1 };
+    private readonly HBoxContainer _heroLimit = new();
     private readonly OptionButton _fog = new();
-    private readonly OptionButton _complexity = new();
-    private readonly OptionButton _timer = new();
-    private readonly SpinBox _margin = new() { MinValue = 0, MaxValue = 6, Value = GameOptions.Default.RefogMargin };
+    private readonly DifficultyRow _difficulty = new();
+    private readonly CheckBox _timerOn = new() { Text = "Turn timer", FocusMode = FocusModeEnum.None };
+    private readonly SpinBox _timerMinutes = new() { MinValue = 1, MaxValue = TurnTimer.MaxMinutes, Step = 1, Value = FirstTimerMinutes, Suffix = "min", Visible = false };
     private readonly LineEdit _seed = new() { CustomMinimumSize = new Vector2(220, 0) };
     private readonly GridContainer _players = new() { Columns = 3 };
+    private readonly Button _addPlayer = new Button { Text = "Add a player", FocusMode = FocusModeEnum.None }.WithIcon(UiIcon.Plus);
+    private readonly Dictionary<PlayerId, ColourPicker> _colours = [];
+    private readonly Dictionary<PlayerId, (Label Label, string Name)> _names = [];
+    private int _randomCount;
     private readonly Button _start = new Button { Text = "Start" }.WithIcon(UiIcon.Confirm, keepText: true);
     private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart };
     private readonly Label _arena = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, Visible = false };
     private readonly Dictionary<PlayerId, SpinBox> _teams = [];
     private readonly Dictionary<PlayerId, OptionButton> _controllers = [];
-    private readonly Dictionary<int, OptionButton> _startTowns = [];
+    private readonly Dictionary<int, CrestPicker> _startTowns = [];
     private readonly List<RandomPlayerRow> _randomPlayers = [];
     private readonly List<Control> _randomRows = [];
     private Func<string, IReadOnlyList<HeroDefinition>> _heroesOf = _ => [];
@@ -119,7 +133,7 @@ public partial class NewGameScreen : PanelContainer
 
     public event Action<GameState>? Started;
 
-    /// <summary>The player asked to go back to the main menu (Back, or Escape, which the app maps).</summary>
+    /// <summary>The player closed the screen, back to the main menu (the "×", or Escape, which the app maps).</summary>
     public event Action? BackRequested;
 
     /// <summary>
@@ -159,7 +173,7 @@ public partial class NewGameScreen : PanelContainer
         AddChild(Lan is null ? box : WithChat(box));
         var heading = new Label { Text = Lan is null ? "New game" : "LAN game: you host", HorizontalAlignment = HorizontalAlignment.Center };
         heading.AddThemeFontSizeOverride("font_size", 26);
-        box.AddChild(heading);
+        box.AddChild(HeadingRow(heading));
         if (Lan is not null)
         {
             AddLanRows(box);
@@ -172,9 +186,7 @@ public partial class NewGameScreen : PanelContainer
         box.AddChild(new HSeparator());
 
         _start.Pressed += Start;
-        var back = new Button { Text = "Back (Esc)" }.WithIcon(UiIcon.ArrowLeft, keepText: true);
-        back.Pressed += () => BackRequested?.Invoke();
-        box.AddChild(Screens.ButtonRow(_start, back));
+        box.AddChild(Screens.ButtonRow(_start));
         _start.CallDeferred(Control.MethodName.GrabFocus); // Enter starts (and the smoke scripts need no coordinates)
         box.AddChild(_status);
 
@@ -187,6 +199,19 @@ public partial class NewGameScreen : PanelContainer
         }
 
         ShowTab(first);
+    }
+
+    /// <summary>The heading in the middle, the "×" that closes the screen in the top-right corner (ADR-225).</summary>
+    private HBoxContainer HeadingRow(Label heading)
+    {
+        var row = new HBoxContainer();
+        var close = new Button { Text = "Close (Esc)" }.WithIcon(UiIcon.Close);
+        close.Pressed += () => BackRequested?.Invoke();
+        row.AddChild(new Control { CustomMinimumSize = close.CustomMinimumSize, MouseFilter = MouseFilterEnum.Ignore }); // keeps the heading centred
+        heading.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        row.AddChild(heading);
+        row.AddChild(close);
+        return row;
     }
 
     /// <summary>One toggle button a tab, with its map count; an empty tab is still shown (it says how to get its maps).</summary>
@@ -313,12 +338,6 @@ public partial class NewGameScreen : PanelContainer
         settings.AddThemeConstantOverride("separation", UiSpacing.Section);
         settings.AddRow("Size", _size);
         _size.ItemSelected += _ => Changed();
-        settings.AddRow("Players", _playerCount);
-        _playerCount.ValueChanged += _ => ShowRandomPlayers();
-        _maxHeroes.TooltipText = "The most heroes a player may have on the map at once; the template sets the default.";
-        var heroLimit = settings.AddRow("Hero limit", _maxHeroes);
-        heroLimit.AddChild(new Label { Text = "heroes per player" });
-        _maxHeroes.ValueChanged += _ => Changed();
         details.AddChild(settings);
         _randomRows.Add(settings);
 
@@ -327,53 +346,81 @@ public partial class NewGameScreen : PanelContainer
         var playersScroll = new ScrollContainer { SizeFlagsVertical = SizeFlags.ExpandFill };
         _players.AddThemeConstantOverride("h_separation", Lan is null ? UiSpacing.Section : UiSpacing.Gap);
         _players.AddThemeConstantOverride("v_separation", UiSpacing.Row);
-        playersScroll.AddChild(_players);
+        var playersList = new VBoxContainer();
+        playersList.AddThemeConstantOverride("separation", UiSpacing.Row);
+        playersList.AddChild(_players);
+        _addPlayer.TooltipText = "Another player, up to the template's most.";
+        _addPlayer.Pressed += () => SetRandomCount(_randomCount + 1);
+        playersList.AddChild(_addPlayer);
+        playersScroll.AddChild(playersList);
         details.AddChild(playersScroll);
         area.AddChild(details);
         return area;
     }
 
-    /// <summary>The game options, in two columns: fog and its refog margin, complexity and turn timer, the seed.</summary>
+    /// <summary>
+    /// The game options (ADR-225), in two columns: fog of war with the hero limit beside it (a random map's), the difficulty; the turn timer, and
+    /// the seed in a debug build.
+    /// </summary>
     private GridContainer Options()
     {
         var grid = new GridContainer { Columns = 2 };
         grid.AddThemeConstantOverride("h_separation", UiSpacing.Section * 3);
         grid.AddThemeConstantOverride("v_separation", UiSpacing.Row);
 
-        _fog.AddItem("Permanent reveal (HoMM3)", (int)FogMode.PermanentReveal);
-        _fog.AddItem("Shroud + refog for units", (int)FogMode.ShroudWithRefog);
-        _fog.ItemSelected += _ => _margin.Editable = SelectedFog == FogMode.ShroudWithRefog;
-        grid.AddRow("Fog of war", _fog, LabelWidth);
-        _margin.Editable = false;
-        grid.AddRow("Refog margin", _margin, LabelWidth);
+        _fog.AddItem("Permanent reveal", (int)FogMode.PermanentReveal);
+        _fog.SetItemTooltip(0, "HoMM3's fog: once explored, the land and everything on it stays in view.");
+        _fog.AddItem("Refog", (int)FogMode.ShroudWithRefog);
+        _fog.SetItemTooltip(1, "Explored land stays in view, but other players' heroes are seen only while one of yours is near.");
+        _fog.TooltipText = "Permanent reveal: once explored, everything stays in view. Refog: other players' heroes only while yours are near.";
+        _fog.ItemSelected += _ => Changed();
+        var fogRow = grid.AddRow("Fog of war", _fog, LabelWidth);
+        fogRow.AddThemeConstantOverride("separation", UiSpacing.Section);
+        _maxHeroes.TooltipText = "The most heroes a player may have on the map at once; the template sets the default.";
+        _maxHeroes.ValueChanged += _ => Changed();
+        _heroLimit.AddRow("Hero limit", _maxHeroes);
+        _heroLimit.GetChild<HBoxContainer>(0).AddChild(new Label { Text = "heroes per player" });
+        fogRow.AddChild(_heroLimit);
+        _randomRows.Add(_heroLimit);
 
-        _complexity.AddItem("Map default", -1);
-        foreach (var level in Enum.GetValues<Complexity>())
+        _difficulty.Changed += Changed;
+        grid.AddRow("Difficulty", _difficulty, LabelWidth);
+
+        // The turn timer (ADR-091): ticked, a human player's turn lasts the minutes beside it.
+        _timerOn.TooltipText = "A human player's turn lasts the minutes set beside it; then it ends.";
+        _timerMinutes.SelectAllOnFocus = true;
+        _timerOn.Toggled += on =>
         {
-            _complexity.AddItem($"{level} ({StartingResources.For(level).Gold} gold)", (int)level);
-        }
+            _timerMinutes.Visible = on;
+            if (on)
+            {
+                _timerMinutes.GetLineEdit().CallDeferred(Control.MethodName.GrabFocus); // ready to type the minutes
+            }
 
-        grid.AddRow("Complexity", _complexity, LabelWidth);
-
-        // The turn timer (ADR-091): off, or 1 to 30 minutes a human player's turn.
-        _timer.AddItem("Off", 0);
-        for (var minutes = 1; minutes <= TurnTimer.MaxMinutes; minutes++)
-        {
-            _timer.AddItem($"{minutes} min", minutes);
-        }
-
-        grid.AddRow("Turn timer", _timer, LabelWidth);
-
-        _seed.Text = NewSeed();
-        _seed.TextChanged += _ => Changed();
-        var seedRow = grid.AddRow("Seed", _seed, LabelWidth);
-        var draw = new Button { Text = "New seed", FocusMode = FocusModeEnum.None, TooltipText = "Draw another seed." };
-        draw.Pressed += () =>
-        {
-            _seed.Text = NewSeed(); // setting the text from code raises no TextChanged
             Changed();
         };
-        seedRow.AddChild(draw);
+        _timerMinutes.TooltipText = $"Minutes a turn lasts, 1 to {TurnTimer.MaxMinutes}.";
+        _timerMinutes.ValueChanged += _ => Changed();
+        var timerRow = new HBoxContainer();
+        timerRow.AddThemeConstantOverride("separation", UiSpacing.Gap);
+        timerRow.AddChild(_timerOn);
+        timerRow.AddChild(_timerMinutes);
+        grid.AddRow("", timerRow, LabelWidth);
+
+        _seed.Text = NewSeed();
+        if (ShowsSeed)
+        {
+            _seed.TextChanged += _ => Changed();
+            var seedRow = grid.AddRow("Seed", _seed, LabelWidth);
+            var draw = new Button { Text = "New seed", FocusMode = FocusModeEnum.None, TooltipText = "Draw another seed." };
+            draw.Pressed += () =>
+            {
+                _seed.Text = NewSeed(); // setting the text from code raises no TextChanged
+                Changed();
+            };
+            seedRow.AddChild(draw);
+        }
+
         return grid;
     }
 
@@ -463,6 +510,7 @@ public partial class NewGameScreen : PanelContainer
         }
 
         _status.Text = "";
+        _addPlayer.Visible = false;
         Changed();
         ClearPlayers();
     }
@@ -500,6 +548,8 @@ public partial class NewGameScreen : PanelContainer
         _zoneOwners = null;
         _startTowns.Clear();
         _randomPlayers.Clear();
+        _colours.Clear();
+        _names.Clear();
     }
 
     /// <summary>Shows the selected map's player slots (team boxes disabled when the map locks its teams), or the selected template's setup.</summary>
@@ -527,14 +577,14 @@ public partial class NewGameScreen : PanelContainer
             }
 
             _size.Select(template.Sizes.Count / 2);
-            _playerCount.MinValue = template.MinPlayers;
-            _playerCount.MaxValue = template.Slots.Count;
-            _playerCount.SetValueNoSignal(template.Slots.Count);
+            _randomCount = template.Slots.Count;
             _maxHeroes.SetValueNoSignal(template.MaxHeroes);
-            ShowRandomPlayers();
+            _difficulty.Show(Difficulty.Normal);
+            ShowRandomPlayers([]);
             return;
         }
 
+        _addPlayer.Visible = false;
         Changed();
         ClearPlayers();
         _players.Columns = Lan is null ? 4 : 5;
@@ -560,6 +610,7 @@ public partial class NewGameScreen : PanelContainer
                         + TeamCounts(preview.MinTeams, preview.MaxTeams);
         _description.Text = preview.Map.Description;
         _description.Visible = preview.Map.Description.Length > 0;
+        _difficulty.Show(preview.Rules.Difficulty ?? Difficulty.Normal); // the map's own difficulty, preselected
 
         // An arena map (ADR-097, ADR-159): its mode said in one line, and each player played by a person (hot-seat) or the computer.
         _zoneOwners = [.. preview.Map.StartZoneOwners];
@@ -573,7 +624,7 @@ public partial class NewGameScreen : PanelContainer
         var firstHuman = preview.Players.FirstOrDefault(p => p.IsHuman)?.Id;
         foreach (var player in preview.Players)
         {
-            _players.AddChild(PlayerName(player.Name, player.Id));
+            _players.AddChild(PlayerCell(player.Id, player.Name, player.Colour));
             _seatNames.Add((player.Id, player.Name));
             if (Lan is not null && (player.IsHuman || preview.Rules.Arena))
             {
@@ -619,13 +670,8 @@ public partial class NewGameScreen : PanelContainer
             return towns.FirstOrDefault()?.TownType is { } type ? Heraldry.Titled(type, type) : new Label { Text = "—" };
         }
 
-        var choice = new OptionButton { TooltipText = "The faction of this player's random towns and hero placeholders" };
-        choice.AddItem(Random);
-        foreach (var town in BuiltInMapObjects.PlayableTowns)
-        {
-            choice.AddFaction(town);
-        }
-
+        var choice = new CrestPicker();
+        choice.Changed += Changed;
         _startTowns[player.Value] = choice;
         return choice;
     }
@@ -633,7 +679,15 @@ public partial class NewGameScreen : PanelContainer
     /// <summary>The factions chosen for the map's players (ADR-126); null when nobody chose one.</summary>
     private IReadOnlyDictionary<int, string>? ChosenTowns()
     {
-        var chosen = _startTowns.Where(c => c.Value.Selected > 0).ToDictionary(c => c.Key, c => BuiltInMapObjects.PlayableTowns[c.Value.Selected - 1]);
+        var chosen = _startTowns.Where(c => c.Value.Town is not null).ToDictionary(c => c.Key, c => c.Value.Town!);
+        return chosen.Count == 0 ? null : chosen;
+    }
+
+    /// <summary>The colours chosen for the players (ADR-225), by player number; null when every player keeps its own.</summary>
+    private IReadOnlyDictionary<int, int>? ChosenColours()
+    {
+        var chosen = _colours.Where(c => c.Value.Colour != c.Key.Value % Core.Domain.Players.Player.ColourCount)
+            .ToDictionary(c => c.Key.Value, c => c.Value.Colour);
         return chosen.Count == 0 ? null : chosen;
     }
 
@@ -647,15 +701,78 @@ public partial class NewGameScreen : PanelContainer
         ({ } a, { } b) => $" · {a} to {b} teams",
     };
 
-    private static Label PlayerName(string name, PlayerId id)
+    /// <summary>A player's colour swatch and name; picking another player's colour swaps the two (ADR-225).</summary>
+    private HBoxContainer PlayerCell(PlayerId id, string name, int colour)
     {
-        var label = new Label { Text = name };
-        label.AddThemeColorOverride("font_color", Palette.ForPlayer(id).Lightened(0.3f));
-        return label;
+        var cell = new HBoxContainer();
+        cell.AddThemeConstantOverride("separation", UiSpacing.Gap);
+        var picker = new ColourPicker(colour);
+        picker.Changed += picked => SwapColour(id, picked);
+        _colours[id] = picker;
+        cell.AddChild(picker);
+        var label = new Label { VerticalAlignment = VerticalAlignment.Center };
+        _names[id] = (label, name);
+        cell.AddChild(label);
+        ShowName(id);
+        return cell;
     }
 
-    /// <summary>The template's first slots, one row each: human or computer, town, hero (of that town), tier-1 dwelling (of that town), team.</summary>
-    private void ShowRandomPlayers()
+    /// <summary>Gives <paramref name="id"/> the colour <paramref name="colour"/>; the player that had it takes <paramref name="id"/>'s.</summary>
+    private void SwapColour(PlayerId id, int colour)
+    {
+        var mine = _colours[id].Colour;
+        foreach (var (other, picker) in _colours)
+        {
+            if (other != id && picker.Colour == colour)
+            {
+                picker.Colour = mine;
+                ShowName(other);
+            }
+        }
+
+        _colours[id].Colour = colour;
+        ShowName(id);
+        Changed();
+    }
+
+    /// <summary>
+    /// The player's name in its colour; a player named after its own colour takes the chosen one's name, as the game will call it
+    /// (<see cref="Core.Domain.Players.Player.Colour"/>).
+    /// </summary>
+    private void ShowName(PlayerId id)
+    {
+        var (label, name) = _names[id];
+        var colour = _colours[id].Colour;
+        var names = Core.Domain.Players.Player.ColourNames;
+        var shown = name == names[id.Value % names.Count] ? names[colour] : name;
+        label.Text = shown;
+        label.AddThemeColorOverride("font_color", Palette.ForColour(colour).Lightened(0.3f));
+        var seat = _seatNames.FindIndex(s => s.Id == id);
+        if (seat >= 0)
+        {
+            _seatNames[seat] = (id, shown);
+        }
+    }
+
+    /// <summary>
+    /// A random map's players: <paramref name="count"/> of the template's slots within its range ("+" and each row's "−", ADR-225), the choices
+    /// made so far kept by the players that stay.
+    /// </summary>
+    private void SetRandomCount(int count) => ShowRandomPlayers(_randomPlayers.Select(r => r.Choice(_colours[new PlayerId(r.Slot)].Colour)).Take(count).ToList(), count);
+
+    /// <summary>Removes the player in <paramref name="slot"/>: the players after it move up one slot, with their choices.</summary>
+    private void RemoveRandomPlayer(int slot)
+    {
+        var kept = _randomPlayers.Where(r => r.Slot != slot).Select(r => r.Choice(_colours[new PlayerId(r.Slot)].Colour)).ToList();
+        ShowRandomPlayers(kept, kept.Count);
+    }
+
+    /// <summary>
+    /// The template's first slots, one row each: colour, human or computer, town, hero (of that town), tier-1 dwelling (of that town), team, and
+    /// "−" while there are more than the template's fewest. Row i takes <paramref name="choices"/>[i] when given (a player that stays), else the
+    /// slot's defaults and the first colour nobody has.
+    /// </summary>
+    private void ShowRandomPlayers(IReadOnlyList<RandomPlayerChoice> choices, int? count = null)
     {
         Changed();
         ClearPlayers();
@@ -664,7 +781,10 @@ public partial class NewGameScreen : PanelContainer
             return;
         }
 
-        _players.Columns = Lan is null ? 6 : 7;
+        _randomCount = Math.Clamp(count ?? _randomCount, template.MinPlayers, template.Slots.Count);
+        var removable = _randomCount > template.MinPlayers;
+        _addPlayer.Visible = _randomCount < template.Slots.Count;
+        _players.Columns = (Lan is null ? 6 : 7) + (removable ? 1 : 0);
         _players.AddChild(new Label { Text = "Player" });
         _players.AddChild(new Label { Text = "Controlled by" });
         AddLanHeader();
@@ -672,12 +792,40 @@ public partial class NewGameScreen : PanelContainer
         _players.AddChild(new Label { Text = "Hero" });
         _players.AddChild(new Label { Text = "Tier-1 dwelling" });
         _players.AddChild(new Label { Text = template.TeamsLocked ? "Team (locked)" : "Team" });
-        for (var i = 0; i < (int)_playerCount.Value; i++)
+        if (removable)
+        {
+            _players.AddChild(new Control());
+        }
+
+        var colours = Enumerable.Range(0, _randomCount).Select(i => i < choices.Count ? choices[i].Colour : -1).ToList();
+        for (var i = 0; i < _randomCount; i++)
+        {
+            if (colours[i] < 0)
+            {
+                var own = i % Core.Domain.Players.Player.ColourCount;
+                colours[i] = !colours.Contains(own) ? own
+                    : Enumerable.Range(0, Core.Domain.Players.Player.ColourCount).First(c => !colours.Contains(c));
+            }
+        }
+
+        for (var i = 0; i < _randomCount; i++)
         {
             var slot = template.Slots[i];
             var row = new RandomPlayerRow(i, slot, template.TeamsLocked, Lan is not null);
-            _players.AddChild(PlayerName(slot.Name, new PlayerId(i)));
+            if (i < choices.Count)
+            {
+                row.Apply(choices[i], _heroesOf, _tier1Of);
+            }
+            else if (!template.TeamsLocked
+                     && choices.Take(_randomCount).Select(c => c.Team).Concat(_randomPlayers.Select(r => (int)r.Team.Value)).ToHashSet() is var taken
+                     && taken.Contains((int)row.Team.Value))
+            {
+                // A player added after others moved up a place: a team of its own, not one a moved player kept.
+                row.Team.Value = Enumerable.Range(0, GameState.MaxPlayers).First(t => !taken.Contains(t));
+            }
+
             _seatNames.Add((new PlayerId(i), slot.Name));
+            _players.AddChild(PlayerCell(new PlayerId(i), slot.Name, colours[i]));
             _players.AddChild(row.Control);
             _controllers[new PlayerId(i)] = row.Control; // for the LAN lobby; a random map's players are set in its request
             AddLanPlayer(new PlayerId(i));
@@ -685,12 +833,21 @@ public partial class NewGameScreen : PanelContainer
             _players.AddChild(row.Hero);
             _players.AddChild(row.Dwelling);
             _players.AddChild(row.Team);
+            if (removable)
+            {
+                var remove = new Button { Text = $"Remove {slot.Name}", FocusMode = FocusModeEnum.None }.WithIcon(UiIcon.Minus);
+                remove.TooltipText = "The players after this one move up a place.";
+                var removed = i;
+                remove.Pressed += () => RemoveRandomPlayer(removed);
+                _players.AddChild(remove);
+            }
+
             row.Control.ItemSelected += _ =>
             {
                 row.ShowDwellings(_tier1Of);
                 Changed();
             };
-            row.Town.ItemSelected += _ =>
+            row.Town.Changed += () =>
             {
                 row.ShowHeroes(_heroesOf);
                 row.ShowDwellings(_tier1Of);
@@ -718,6 +875,11 @@ public partial class NewGameScreen : PanelContainer
             return;
         }
 
+        if (!ShowsSeed)
+        {
+            _seed.Text = NewSeed(); // a release build plays every game on a new seed (ADR-225)
+        }
+
         if (!ulong.TryParse(_seed.Text, CultureInfo.InvariantCulture, out var seed))
         {
             _status.Text = "Enter a numeric seed.";
@@ -731,8 +893,10 @@ public partial class NewGameScreen : PanelContainer
         }
 
         var options = WithLan(new GameOptions(
-            SelectedFog, (int)_margin.Value, seed, _complexity.GetSelectedId() < 0 ? null : (Complexity)_complexity.GetSelectedId(),
-            _timer.GetSelectedId() > 0 ? _timer.GetSelectedId() : null));
+            SelectedFog, GameOptions.Default.RefogMargin, seed, _difficulty.Selected, _timerOn.ButtonPressed ? (int)_timerMinutes.Value : null)
+        {
+            Colours = ChosenColours(),
+        });
         if (SelectedTemplate is { } template)
         {
             StartRandom(template, options);
@@ -796,7 +960,7 @@ public partial class NewGameScreen : PanelContainer
 
             _generated = result;
             _start.SetLabel("Start anyway");
-            _status.Text = $"Every try of this seed left problems; the best map has: {string.Join(" ", result.Problems)} Start it anyway, or change the seed.";
+            _status.Text = $"Every try of this seed left problems; the best map has: {string.Join(" ", result.Problems)} Start it anyway, or {(ShowsSeed ? "change the seed" : "change a setting for another map")}.";
         }
         catch (Exception e) when (e is ArgumentException or InvalidOperationException)
         {
@@ -813,6 +977,9 @@ public partial class NewGameScreen : PanelContainer
     /// template's every supported size, none when unknown).
     /// </summary>
     private sealed record MapEntry(string Name, ScenarioChoice? Map, RandomMapChoice? Template, IReadOnlyList<int> Sizes);
+
+    /// <summary>What was chosen on a random map's player row, carried to another slot when a player before it is removed (ADR-225).</summary>
+    private sealed record RandomPlayerChoice(int Controller, string? Town, string? Hero, string? Dwelling, int Team, int Colour);
 
     /// <summary>The controls of one player of a random map.</summary>
     private sealed class RandomPlayerRow
@@ -836,12 +1003,6 @@ public partial class NewGameScreen : PanelContainer
                 Control.TooltipText = "This start is for computer players only.";
             }
 
-            Town.AddItem(Random);
-            foreach (var town in BuiltInMapObjects.PlayableTowns)
-            {
-                Town.AddItem(town);
-            }
-
             Hero.AddItem(Random);
             Hero.Disabled = true;
             Dwelling.AddItem(Random);
@@ -853,7 +1014,10 @@ public partial class NewGameScreen : PanelContainer
 
         public OptionButton Control { get; }
 
-        public OptionButton Town { get; } = new();
+        /// <summary>The player's slot (and player number) on the template.</summary>
+        public int Slot => _slot;
+
+        public CrestPicker Town { get; } = new();
 
         public OptionButton Hero { get; } = new() { CustomMinimumSize = new Vector2(150, 0) };
 
@@ -861,7 +1025,7 @@ public partial class NewGameScreen : PanelContainer
 
         public SpinBox Team { get; } = new() { MinValue = 0, MaxValue = GameState.MaxPlayers - 1, Step = 1 };
 
-        private string? SelectedTown => Town.Selected <= 0 ? null : BuiltInMapObjects.PlayableTowns[Town.Selected - 1];
+        private string? SelectedTown => Town.Town;
 
         public RandomMapPlayer Player => new(
             _slot,
@@ -875,8 +1039,42 @@ public partial class NewGameScreen : PanelContainer
 
         /// <summary>The town, hero and team chosen, in words (a LAN lobby's colour).</summary>
         public string Details =>
-            $"{Town.GetItemText(Town.Selected)} town, {(Hero.Selected <= 0 ? "random hero" : Hero.GetItemText(Hero.Selected))}"
+            $"{(SelectedTown is { } town ? CrestPicker.NameOf(town) : Random)} town, {(Hero.Selected <= 0 ? "random hero" : Hero.GetItemText(Hero.Selected))}"
             + (_teamsLocked ? "" : $", team {(int)Team.Value}");
+
+        /// <summary>The row's choices, with the player's <paramref name="colour"/>.</summary>
+        public RandomPlayerChoice Choice(int colour) => new(
+            Control.GetSelectedId(), SelectedTown, Player.Hero, Player.Tier1Dwelling, (int)Team.Value, colour);
+
+        /// <summary>
+        /// Takes another row's choices: the controller when this slot allows it, the town, then the hero and dwelling when this slot offers them, and
+        /// the team unless the template locks it.
+        /// </summary>
+        public void Apply(RandomPlayerChoice choice, Func<string, IReadOnlyList<HeroDefinition>> heroesOf, Func<string, IReadOnlyList<CreatureDefinition>> tier1Of)
+        {
+            if (Control.GetItemIndex(choice.Controller) is var index and >= 0 && !Control.IsItemDisabled(index))
+            {
+                Control.Select(index);
+            }
+
+            Town.Town = choice.Town;
+            ShowHeroes(heroesOf);
+            ShowDwellings(tier1Of);
+            if (choice.Hero is { } hero && _heroes.ToList().FindIndex(h => h.Id == hero) is var heroAt and >= 0)
+            {
+                Hero.Select(heroAt + 1);
+            }
+
+            if (choice.Dwelling is { } dwelling && _dwellings.ToList().FindIndex(d => d.Id == dwelling) is var dwellingAt and >= 0)
+            {
+                Dwelling.Select(dwellingAt + 1);
+            }
+
+            if (!_teamsLocked)
+            {
+                Team.Value = choice.Team;
+            }
+        }
 
         /// <summary>
         /// The dwelling choice (RMG-7): "Random" and the town's tier-1 dwellings, for a human player with a picked town whose start zone gives

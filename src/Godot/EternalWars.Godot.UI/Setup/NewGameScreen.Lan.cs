@@ -85,8 +85,9 @@ public partial class NewGameScreen
         }
 
         var fog = _fog.GetItemText(_fog.Selected);
-        settings.Add(SelectedFog == Core.Domain.Game.FogMode.ShroudWithRefog ? $"Fog of war: {fog}, refog margin {(int)_margin.Value}" : $"Fog of war: {fog}");
-        settings.Add($"Complexity: {_complexity.GetItemText(_complexity.Selected)}; turn timer: {_timer.GetItemText(_timer.Selected)}");
+        settings.Add($"Fog of war: {fog}");
+        var timer = _timerOn.ButtonPressed ? $"{(int)_timerMinutes.Value} min" : "off";
+        settings.Add($"Difficulty: {_difficulty.Selected}; turn timer: {timer}");
         settings.Add(SimultaneousLine());
 
         var seats = new List<LanSeat>();
@@ -101,7 +102,7 @@ public partial class NewGameScreen
 
             var town = _seatTowns.GetValueOrDefault(id) switch
             {
-                OptionButton choice => $"{choice.GetItemText(choice.Selected)} town",
+                CrestPicker choice => $"{(choice.Town is { } chosen ? CrestPicker.NameOf(chosen) : Random)} town",
                 Label { Text: not "—" } label => $"{label.Text} town",
                 _ => "no town",
             };

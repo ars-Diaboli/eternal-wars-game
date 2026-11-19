@@ -2,6 +2,9 @@
   "formatVersion": 40,
   "name": "Format sample",
   "description": "One object of every kind, for the format tests.",
+  "rules": {
+    "difficulty": "Expert"
+  },
   "width": 64,
   "height": 24,
   "terrain": [

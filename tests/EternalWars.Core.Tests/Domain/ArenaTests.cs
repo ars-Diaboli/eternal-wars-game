@@ -83,7 +83,7 @@ public class ArenaTests
     [InlineData(false, false)]
     public void OnThePreparationDay_ATownBuildsAsMuchAsItCanPay(bool arena, bool secondBuilds)
     {
-        var state = Create(new GameOptions(Complexity: Complexity.Beginner), "..........", "..........", "..........", "..........", "..........", "..........", "..........", "...A.....B");
+        var state = Create(new GameOptions(Difficulty: Difficulty.Easy), "..........", "..........", "..........", "..........", "..........", "..........", "..........", "...A.....B");
         if (arena)
         {
             state.SetRules(Arena);

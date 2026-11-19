@@ -56,7 +56,7 @@ public partial class HeroView : Node3D
         _queuedPosition = hero.Position;
         Name = $"Hero_{hero.Id.Value}";
         Position = OnGround(hero.Position);
-        var color = Palette.ForPlayer(hero.Owner);
+        var color = Palette.ForPlayer(context.State, hero.Owner);
         _body = new MeshInstance3D
         {
             Mesh = new CapsuleMesh { Radius = 0.25f, Height = 0.9f, Material = new StandardMaterial3D { AlbedoColor = color } },

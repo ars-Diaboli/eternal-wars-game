@@ -241,8 +241,8 @@ public partial class TemplateGraphView : Control
             var radius = Radius(zone);
             var fill = zone.Type switch
             {
-                ZoneType.PlayerStart when zone.Owner is { } owner => Palette.ForPlayer(new PlayerId(owner)),
-                ZoneType.AiStart when zone.Owner is { } owner => Palette.ForPlayer(new PlayerId(owner)).Darkened(0.4f),
+                ZoneType.PlayerStart when zone.Owner is { } owner => Palette.ForSlot(new PlayerId(owner)),
+                ZoneType.AiStart when zone.Owner is { } owner => Palette.ForSlot(new PlayerId(owner)).Darkened(0.4f),
                 ZoneType.Treasure => new Color(0.75f, 0.6f, 0.2f),
                 _ => new Color(0.4f, 0.42f, 0.45f),
             };

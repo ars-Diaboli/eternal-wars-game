@@ -92,9 +92,7 @@ public partial class TownPanel : PanelContainer
         header.AddChild(_header.Trade);
         _header.Guild.Pressed += () => ThievesGuildRequested?.Invoke();
         header.AddChild(_header.Guild);
-        var close = new Button { Text = "Close" }.WithIcon(UiIcon.Close);
-        close.Pressed += Close;
-        header.AddChild(close);
+        header.AddCloseButton(Close);
 
         box.AddHeading("Buildings (one a day; hover for cost and requirements)");
         box.AddChild(_buildings.BuiltToday);

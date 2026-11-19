@@ -19,7 +19,7 @@ public enum RankingTable
 /// <param name="Template">The template of a random map; null for a hand-made map.</param>
 /// <param name="Size">The size of a random map.</param>
 /// <param name="Custom">A map made in the editor, not shipped with the game (the maps table only).</param>
-/// <param name="Difficulty">The complexity the score counted.</param>
+/// <param name="Difficulty">The difficulty the score counted.</param>
 /// <param name="TurnTimerMinutes">The game's turn timer; null is off.</param>
 /// <param name="Days">The day the game was won.</param>
 /// <param name="Score">The points.</param>
@@ -33,7 +33,7 @@ public sealed record RankingEntry(
     string? Template,
     int? Size,
     bool Custom,
-    Complexity Difficulty,
+    Difficulty Difficulty,
     int? TurnTimerMinutes,
     int Days,
     int Score,
@@ -44,7 +44,14 @@ public sealed record RankingEntry(
 /// <summary>Both ranking tables, best first.</summary>
 public sealed record Ranking(IReadOnlyList<RankingEntry> RandomMaps, IReadOnlyList<RankingEntry> Maps)
 {
+    /// <summary>The file's format: 2 names the difficulty HoMM3's way (ADR-225); a file without a version is 1, its names one step lower.</summary>
+    public const int CurrentFormatVersion = 2;
+
     public static Ranking Empty { get; } = new([], []);
+
+    /// <summary>Written first in the file; a file read through <see cref="RankingFile.Read"/> is upgraded to the current one.</summary>
+    [System.Text.Json.Serialization.JsonPropertyOrder(-1)]
+    public int FormatVersion { get; init; } = CurrentFormatVersion;
 
     public IReadOnlyList<RankingEntry> this[RankingTable table] => table == RankingTable.RandomMaps ? RandomMaps : Maps;
 
@@ -90,12 +97,30 @@ public static class RankingFile
 
     public static string Write(Ranking ranking) => JsonSerializer.Serialize(ranking, JsonDefaults.Options);
 
-    /// <summary>The ranking in <paramref name="json"/>; an unreadable text is an empty ranking.</summary>
+    /// <summary>
+    /// The ranking in <paramref name="json"/>; an unreadable text is an empty ranking. A file before format 2 has its rows' difficulty names moved
+    /// up one (ADR-225).
+    /// </summary>
     public static Ranking Read(string json)
     {
         try
         {
-            var read = JsonSerializer.Deserialize<Ranking>(json, JsonDefaults.Options);
+            if (System.Text.Json.Nodes.JsonNode.Parse(json, new System.Text.Json.Nodes.JsonNodeOptions { PropertyNameCaseInsensitive = true })
+                is not System.Text.Json.Nodes.JsonObject root)
+            {
+                return Ranking.Empty;
+            }
+
+            if (root["formatVersion"] is null)
+            {
+                foreach (var row in new[] { "randomMaps", "maps" }.SelectMany(t => root[t] as System.Text.Json.Nodes.JsonArray ?? [])
+                    .OfType<System.Text.Json.Nodes.JsonObject>())
+                {
+                    DifficultyNames.Upgrade(row, "difficulty");
+                }
+            }
+
+            var read = root.Deserialize<Ranking>(JsonDefaults.Options);
             return read is null ? Ranking.Empty : new Ranking(read.RandomMaps ?? [], read.Maps ?? []);
         }
         catch (JsonException)

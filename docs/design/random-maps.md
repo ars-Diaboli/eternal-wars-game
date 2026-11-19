@@ -99,7 +99,7 @@ Core `MapGenerator` (`EternalWars.Core.Generation`, version 8). Shipped template
   - Neutral towns keep the default start; an untaken slot keeps its town, neutral, garrisoned by the zone's strength.
   - Each player's start zone (the template zone of its start town) is written into the map as its start zone (MP-4, ADR-197), for the
     simultaneous first week; an untaken slot's zone is nobody's.
-  - Standard rules; complexity and fog from the new-game screen; named "template size×size #seed".
+  - Standard rules; difficulty and fog from the new-game screen; named "template size×size #seed".
 - **Fairness** (RMG-8, ADR-117, `MapFairness.Check`): every start town reaches every other, and every town, mine and treasure item is
   reachable from some start (at step costs, through gates, portals, guards, pickups, garrisons). Each start gets **mine distance** (nearest
   mine per resource, summed), **treasure value** (each item split between starts by 1 / distance²) and **guard power** (least on the way to

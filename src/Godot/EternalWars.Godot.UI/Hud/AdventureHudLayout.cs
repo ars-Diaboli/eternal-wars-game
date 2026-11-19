@@ -10,7 +10,7 @@ namespace EternalWars.Godot.UI.Hud;
 /// fills that width. The turn block stands at the top left, beside the top-left stack. Horizontal lists run along the bottom between the
 /// bottom stacks. The bottom parts stand above <see cref="BottomReserve"/> (the status bar, ADR-186); without one, the bottom right leaves room
 /// for the menu button. With the side panel on (ADR-191) a framed column runs down that side from the top to the status bar, behind the
-/// minimap, the lists and the action panel, and takes the clicks on it; the turn block's calendar stands at its bottom (ADR-204). It re-places
+/// minimap, the lists and the action panel, and takes the clicks on it; the turn block stands at its bottom (ADR-204). It re-places
 /// the parts whenever one's size changes.
 /// </summary>
 public partial class AdventureHudLayout : Container

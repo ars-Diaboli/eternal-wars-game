@@ -41,6 +41,20 @@ public static class Screens
     }
 
     /// <summary>
+    /// A window's close button (ADR-225): the icon-only "×" (<see cref="UiIcon.Close"/>) at the end of its title row, which a spacer pushes to
+    /// the window's top-right corner. Escape still closes the window where it did.
+    /// </summary>
+    public static Button AddCloseButton(this HBoxContainer header, Action close)
+    {
+        header.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        header.AddChild(new Control { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, MouseFilter = Control.MouseFilterEnum.Ignore });
+        var button = new Button { Text = "Close" }.WithIcon(UiIcon.Close);
+        button.Pressed += close;
+        header.AddChild(button);
+        return button;
+    }
+
+    /// <summary>
     /// An opaque panel held in the middle of the screen. It grows to both sides as its content grows; with only the Center
     /// preset it grew right and down from the middle, past the screen's edge.
     /// </summary>
