@@ -19,6 +19,7 @@
 | [217](#adr-217-one-coordinator-for-the-simultaneous-days-adr-197-adr-214-2026-11-18) | One coordinator for the simultaneous days (ADR-197, ADR-214, 2026-11-18) | implemented |
 | [218](#adr-218-the-lan-code-changes-a-clients-game-through-a-view-sink-a-schema-hash-guards-the-join-adr-193-adr-203-2026-11-18) | The LAN code changes a client's game through a view sink; a schema hash guards the join (ADR-193, ADR-203, 2026-11-18) | implemented |
 | [221](#adr-221-gamehost-coordinates-seats-pause-chat-and-the-day-played-again-adr-192-adr-195-adr-197-2026-11-19) | `GameHost` coordinates seats, pause, chat and the day played again (ADR-192, ADR-195, ADR-197, 2026-11-19) | implemented |
+| [228](#adr-228-lan-hardening-sends-that-never-wait-the-chats-allowance-the-lobbys-waiting-players-the-record-per-colour-adr-203-adr-226-2026-11-19) | LAN hardening: sends that never wait, the chat's allowance, the lobby's waiting players, the record per colour (ADR-203, ADR-226, 2026-11-19) | implemented |
 
 
 ### ADR-098: LAN multiplayer: a host that hides the fog, saves, a simultaneous first week (MP-1, MP-2, 2026-10-29)
@@ -316,7 +317,7 @@ change; no protocol change.
   colours or factions in between.
 
 ### ADR-203: What a link may cost a LAN host (ADR-192, ADR-194, ADR-196, 2026-11-17)
-**Status**: implemented. No rule, save, map or protocol format changes.
+**Status**: implemented; extended by ADR-228 (sends that never wait, the chat's allowance, the lobby's waiting players), whose record interval per colour replaces the one per link here. No rule, save, map or protocol format changes.
 
 - **Why**: anyone on the network can connect to a host. A link read any length up to 64 MB and allocated it before the body came, could wait
   for ever without joining, any number could, a `Poll` read everything a link had sent, a message whose reading threw anything but a
@@ -384,3 +385,25 @@ change; no protocol change.
 - `GameHost` keeps the session, the command route, the turn clock, the views, record requests and the order in which `Poll` calls the
   parts. Its public API, wire messages, refusal texts and order of sends are unchanged.
 - **Checked**: `SeatManagerTests`, `PausePolicyTests`, `ChatRelayTests`, `SimultaneousDayRewinderTests` and the LAN tests.
+
+### ADR-228: LAN hardening: sends that never wait, the chat's allowance, the lobby's waiting players, the record per colour (ADR-203, ADR-226, 2026-11-19)
+**Status**: implemented (2026-11-19), the roadmap's "Code health" item; extends ADR-203 and replaces its record interval per link. No
+rule, save, map or protocol format change.
+
+- **Why** (the refactoring close-out, ADR-226): `TcpConnection.Send` wrote on the game's thread with no timeout, so a client that
+  stopped reading froze `GameHost.Poll` (and the lobby's) once the socket's buffers filled; a lobby took any number of joined players
+  without a colour; a player could write as many chat lines as `MaxMessagesPerPoll` let through, each sent to everyone; and the record
+  interval was the link's, so leaving and joining again asked for a new record at once.
+- **Sends** (`TcpConnection`, both ends): `Send` serialises the message and queues it; a background task writes the queue in 64 KB
+  pieces. The link closes when nothing of the queue goes out for **30 seconds** (`NetLimits.SendTimeout`, counted from the last piece),
+  or at once when more than **128 MB** wait (`MaxBytesWaitingToSend`, two of the biggest messages). `Close` still writes what waits for
+  up to **2 seconds** (`CloseLinger`), so a refusal's reason reaches the client, then drops the socket; `IsClosed` is true at once.
+- **Lobby**: a player joining when no colour is open and **8** players already wait for one (`MaxWaitingForColour`) gets `JoinRefused`
+  ("No colour is open and 8 players already wait for one."). Players the host's setup leaves without a colour are not turned away.
+- **Chat**: each link may write **5 lines in any 10 seconds** (`ChatLines`, `ChatWindow`; `ChatAllowance`), in the lobby and in the game
+  alike; a line beyond it is dropped and its writer gets one lobby line, "You write too fast: wait a moment.", until a line goes through
+  again. Lines that are empty once cleaned do not count. The host's own player has no allowance.
+- **Records**: the 5-second interval (`RecordInterval`) is the colour's (`GameHost`), not the link's.
+- **Checked** by `NetLimitsTests`: over TCP a client that never reads (the sends return at once, the link closes on the timeout), the
+  byte cap, a refusal sent just before `Close` still arriving; on loopback the chat allowance in the game and the lobby, the lobby's
+  waiting cap, the record interval surviving a new link. The per-`Poll` share is now checked with commands (chat would hit the allowance).

@@ -289,8 +289,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [ ] Dialogue and campaign triggers, built on the map events and their editor "Events" tab (ADR-096)
 
 ## Code health (ADR-226; what the refactoring plan left, [archive](../docs/papers/refactoring-plan-2026-11.md))
-- [ ] LAN hardening: cap joined-but-unseated peers in the lobby (`LobbyHost.Join`) and rate-limit chat; host sends that cannot block a
-      frame (no write timeout today: a client that stops reading freezes `GameHost.Poll`); the record limit per colour, not per link
+- [x] LAN hardening (ADR-228): at most 8 joined players wait in a lobby without a colour; 5 chat lines in 10 seconds a link; sends
+      queued and written in the background (closed after 30 seconds without progress or 128 MB waiting); the record interval per colour
 - [ ] Schema hash (ADR-218): stop the field walk at the first base type outside Domain (`Exception`, `Collection<T>` pull in runtime
       fields), and hash enum names and values (the codec sends enums as numbers)
 - [ ] `GameSession.ChangeStamp` misses a LAN client's view writes (the hover preview's last-route cache); `FogOfWar.SightOf` hands out

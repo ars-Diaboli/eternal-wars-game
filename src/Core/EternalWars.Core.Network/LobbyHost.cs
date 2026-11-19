@@ -10,8 +10,8 @@ namespace EternalWars.Core.Network;
 /// </summary>
 /// <remarks>
 /// A client that joins takes the first open colour, or waits without one when none is open; a colour the host takes back (to play it here or by
-/// the computer) leaves its player waiting, who takes the next open colour there is. Everything happens on the caller's thread in
-/// <see cref="Poll"/>.
+/// the computer) leaves its player waiting, who takes the next open colour there is. At most <see cref="NetLimits.MaxWaitingForColour"/> wait
+/// so; one more joining is turned away. Everything happens on the caller's thread in <see cref="Poll"/>.
 /// </remarks>
 public sealed class LobbyHost(string hostName) : IDisposable
 {
@@ -184,7 +184,7 @@ public sealed class LobbyHost(string hostName) : IDisposable
                 peer.Sent = null; // the lobby again, as it is
                 return false;
             case ChatSay say when peer.Name is not null:
-                if (ChatText.Clean(say.Text) is { } line)
+                if (ChatText.Clean(say.Text) is { } line && peer.Chat.Take(Time.GetUtcNow(), peer.Connection))
                 {
                     Tell(peer.Name, line);
                 }
@@ -202,6 +202,12 @@ public sealed class LobbyHost(string hostName) : IDisposable
         {
             peer.Connection.Send(new JoinRefused(reason));
             peer.Connection.Close(reason);
+            return false;
+        }
+
+        if (!Lobby.Open.Any() && Joined.Count(p => p.Seat is null) >= NetLimits.MaxWaitingForColour)
+        {
+            NetLimits.Refuse(peer.Connection, $"No colour is open and {NetLimits.MaxWaitingForColour} players already wait for one.");
             return false;
         }
 
@@ -277,6 +283,8 @@ public sealed class LobbyHost(string hostName) : IDisposable
 
         /// <summary>When the link came (it must join within <see cref="NetLimits.JoinTimeout"/>).</summary>
         public DateTimeOffset Arrived { get; init; }
+
+        public ChatAllowance Chat { get; } = new();
     }
 }
 
