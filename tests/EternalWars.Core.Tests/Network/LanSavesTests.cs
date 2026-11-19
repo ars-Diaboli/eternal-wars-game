@@ -91,7 +91,6 @@ public sealed class LanSavesTests : IDisposable
         var path = GameSaves.Save(_folder, "LAN", initial, original);
 
         var (loaded, record) = GameSaves.Load(path);
-        GameSession.CheckRefusals = true;
         using var host = new GameHost(loaded, [Red]) { RecordOf = name => GameReplay.Record(record.Map, loaded, name) };
         host.Poll();
         Assert.True(host.IsPaused); // Red's turn, and nobody plays it yet
@@ -141,7 +140,6 @@ public sealed class LanSavesTests : IDisposable
 
     private static (GameSession Session, GameHost Host, MapDocument Initial) HostGame(PlayerId[] remote)
     {
-        GameSession.CheckRefusals = true;
         var (session, initial) = NewGame();
         var host = new GameHost(session, remote) { RecordOf = name => GameReplay.Record(initial, session, name) };
         return (session, host, initial);

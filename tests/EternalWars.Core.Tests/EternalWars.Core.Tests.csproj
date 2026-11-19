@@ -14,6 +14,11 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <!-- Every game a test plays checks that each refused command left it as it was (GameSession.CheckRefusals, ADR-239). -->
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="EternalWars.CheckRefusals" Value="true" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\Core\EternalWars.Core.Events\EternalWars.Core.Events.csproj" />
     <ProjectReference Include="..\..\src\Core\EternalWars.Core.Domain\EternalWars.Core.Domain.csproj" />

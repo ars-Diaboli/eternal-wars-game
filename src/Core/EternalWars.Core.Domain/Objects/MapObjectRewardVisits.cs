@@ -325,7 +325,7 @@ internal sealed class MapObjectRewardVisits(
         if (!school.Lessons.TryGetValue(hero.Id, out var lessons))
         {
             lessons = SkillSchoolRules.Draw(hero, ProgressionService.TownOf(State, hero), school.TeachesMagic, State.Random, State.Rules.Bans);
-            school.Lessons[hero.Id] = lessons;
+            school.SetLessons(hero.Id, lessons);
             Events.Publish(new LessonsDrawn(school.Id, hero.Id, lessons));
         }
 

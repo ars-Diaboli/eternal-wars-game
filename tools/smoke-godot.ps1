@@ -19,7 +19,9 @@ param(
     # Skip the build (the solution is built already).
     [switch]$NoBuild,
     # Lossless PNG frames instead of JPEG ones: several times slower (compressing the PNGs takes most of a run), for comparing frames exactly.
-    [switch]$Png
+    [switch]$Png,
+    # Every scenario plays with this seed instead of its own (to look for a failure under other battles).
+    [Nullable[ulong]]$Seed
 )
 
 $ErrorActionPreference = 'Stop'
@@ -292,6 +294,16 @@ $scenarios = @(
        Input = '5:click:@Conditions;10:press:Grail;14:click:400,450;20:press:Select;24:click:720,560;28:click:@Inspector' }
 )
 
+# Every scenario has a seed of its own, so its games and battles are the same on every run (ADR-239): the entry's Seed, else one made from
+# its name (32-bit FNV-1a); -Seed overrides both. Scenarios without a new game (the main menu, a replay, the editor) pass it unused.
+foreach ($scenario in $scenarios) {
+    if ($null -ne $Seed) { $scenario.Seed = $Seed }
+    elseif (-not $scenario.ContainsKey('Seed')) {
+        [uint32]$hash = 2166136261
+        foreach ($byte in [Text.Encoding]::UTF8.GetBytes($scenario.Name)) { $hash = [uint32](([uint64]($hash -bxor $byte) * 16777619) % 4294967296) }
+        $scenario.Seed = $hash
+    }
+}
 $selected = @($scenarios | Where-Object { $_.Name -like $Only } | Sort-Object { -$_.Frames }) # the longest first, so they do not end the run alone
 $watch = [Diagnostics.Stopwatch]::StartNew()
 $results = $selected | ForEach-Object -ThrottleLimit ([Math]::Max(1, $Jobs)) -Parallel {
@@ -309,7 +321,7 @@ $results = $selected | ForEach-Object -ThrottleLimit ([Math]::Max(1, $Jobs)) -Pa
     Remove-Item $saves -Recurse -ErrorAction SilentlyContinue
     $userArgs = @("--autoinput=$($scenario.Input)", "--settings=$settings", "--saves=$saves")
     if ($scenario.Map) { $userArgs += "--map=$($scenario.Map)" }
-    if ($scenario.Seed) { $userArgs += "--seed=$($scenario.Seed)" }
+    $userArgs += "--seed=$($scenario.Seed)"
     if ($scenario.Replay) { $userArgs += "--replay=$($scenario.Replay)" }
     # The game opens on the main menu; the scenarios start on the new-game screen unless they test the menu.
     if ($scenario.App -eq 'EternalWars.Game' -and -not $scenario.MainMenu) { $userArgs += '--new-game' }
@@ -357,7 +369,7 @@ $results = $selected | ForEach-Object -ThrottleLimit ([Math]::Max(1, $Jobs)) -Pa
         Write-Host "ok    $seconds  $($scenario.Name)  ($dir)"
     }
     else {
-        Write-Host "FAIL  $seconds  $($scenario.Name)  (exit code $exit, $(Join-Path $dir 'godot.log'))"
+        Write-Host "FAIL  $seconds  $($scenario.Name)  (seed $($scenario.Seed), exit code $exit, $(Join-Path $dir 'godot.log'))"
         $errors | ForEach-Object { Write-Host "      $_" }
     }
 

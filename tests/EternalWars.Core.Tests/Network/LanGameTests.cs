@@ -461,7 +461,6 @@ public class LanGameTests
     /// <summary>Starts the game the way the game app does, and hosts it.</summary>
     private static (GameSession Session, GameHost Host) HostGame(GameState state, PlayerId[] remote)
     {
-        GameSession.CheckRefusals = true;
         var session = new GameSession(state);
         session.Start();
         return (session, new GameHost(session, remote));

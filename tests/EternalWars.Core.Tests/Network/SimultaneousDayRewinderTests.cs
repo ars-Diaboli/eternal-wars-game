@@ -67,7 +67,6 @@ public class SimultaneousDayRewinderTests
         }
 
         var initial = MapConverter.ToDocument(state);
-        GameSession.CheckRefusals = true;
         var session = new GameSession(state);
         session.Start();
         return (session, name => GameReplay.Record(initial, session, name));
