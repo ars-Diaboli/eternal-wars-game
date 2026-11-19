@@ -7,7 +7,9 @@
 creatures and buildings, heraldic player colours, iconic map objects).
 - **Lighting**: physically based, low sun angles, volumetric fog, strong shadows; Godot Forward+ with SDFGI / VoxelGI or baked lightmaps, to
   be decided by a perf spike. Day / night tint per in-game day ❓.
-- **Palette**: desaturated earth tones; player colours and interactive objects stay saturated so the map reads in a dark scene.
+- **Palette**: desaturated earth tones on screen; player colours and interactive objects stay saturated so the map reads in a dark
+  scene. The ground textures themselves are saturated, each terrain with its own colour and structure, and the light, fog and grading
+  make the mood (ADR-244).
 - **Materials**: PBR (albedo / normal / roughness), weathered and worn. **Post**: subtle grading, bloom on magic only, vignette.
 - **Terrain** (ADR-011, ADR-183) *(placeholder textures, objects and units)*: a smooth heightmapped landscape; the terrains' textures
   run into each other where biomes meet, over about two thirds of a tile (ADR-212), along wandering lines that do not follow the tile

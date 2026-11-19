@@ -28,6 +28,7 @@
 | [211](#adr-211-faction-crests-stand-beside-a-faction-wherever-the-ui-names-one-owners-heraldry-sheets-2026-11-18) | Faction crests stand beside a faction wherever the UI names one (owner's heraldry sheets, 2026-11-18) | — |
 | [212](#adr-212-terrain-borders-blend-over-two-thirds-of-a-tile-a-picture-repeats-every-16-tiles-with-the-repeat-hidden-owner-2026-11-18) | Terrain borders blend over two thirds of a tile; a picture repeats every 16 tiles with the repeat hidden (owner, 2026-11-18) | — |
 | [240](#adr-240-the-splat-reads-adventure-only-pictures-and-normal-roughness-and-occlusion-maps-owner-adr-183-2026-11-19) | The splat reads adventure-only pictures and normal, roughness and occlusion maps (owner, ADR-183, 2026-11-19) | implemented |
+| [244](#adr-244-ground-textures-each-terrain-its-own-saturated-colour-and-structure-at-a-30-m-scale-the-mood-comes-from-light-and-grading-owner-adr-183-2026-11-20) | Ground textures: each terrain its own saturated colour and structure, at a 30 m scale; the mood comes from light and grading (owner, ADR-183, 2026-11-20) | accepted |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -461,3 +462,21 @@ map format changes. Changes ADR-183's and ADR-207's mesh (a vertex per corner an
   the occlusion also darkens direct light (`occlusion_light_affect` 1) and is deepened (`occlusion_power` 2); the normal map is bent
   harder (`normal_strength` 2.5), because a high sun shows little of a gentle one. *(placeholders, tune by eye)*
 - A metallic map is not read: ground is not metal, and the shader's default is 0.
+
+### ADR-244: Ground textures: each terrain its own saturated colour and structure, at a 30 m scale; the mood comes from light and grading (owner, ADR-183, 2026-11-20)
+**Status**: accepted. Art direction for the terrain textures; no code, rule or format change. The prompts are in
+[terrain-texture-prompts.md](../../docs/content/prompts/terrain-texture-prompts.md).
+
+- **Why** (owner): the first generated set (made from the "desaturated, grim, 6 m patch" prompts) came out faded, grey-brown and nearly
+  alike, with plants as large as a hero on the map.
+- **Distinct grounds**: every terrain owns a signature colour and a signature surface structure that no other terrain shares (the
+  prompts' "Tell them apart" table); stones only on the stony grounds. Grass is dense and green, dirt is wet churned mud, highlands are
+  blue-green with flowering heather, and so on.
+- **Saturated textures, mood in the game**: the textures are rich in colour and fairly bright; the dim, cold world comes from the
+  light, fog, the splat's patches and the post grading, which can take colour away. *(choice: a faded texture cannot be made to read
+  again; a vivid one can be toned down.)* This narrows presentation.md's "desaturated earth tones" to the final image, not the
+  textures.
+- **Scale**: one texture shows about **30 × 30 m** on the adventure map (it repeats every 16 tiles, so a tile is about 2 m, a hero's
+  height) and about **12 × 12 m** on the battlefield (8 cells). The prompts size plants and stones to that.
+- If the new set looks too loud on the map, a saturation and brightness control in the grading or the splat comes next; it is not
+  built.

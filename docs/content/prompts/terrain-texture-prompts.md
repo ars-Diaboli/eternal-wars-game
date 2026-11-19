@@ -1,8 +1,16 @@
 # Terrain texture prompts (for an image- or material-generating model)
 
-Prompts to **replace the placeholder ground textures** of the adventure map and the battlefield with original, seamless PBR materials:
-richer in detail, true to the world of Vael and believable as real ground. They are for a text-to-texture / text-to-material model
-(or an image model, with the maps derived afterwards).
+Prompts to **replace the placeholder ground textures** of the adventure map and the battlefield with original, seamless PBR materials.
+They are for a text-to-texture / text-to-material model (or an image model, with the maps derived afterwards).
+
+Three rules carry every prompt (ADR-244):
+
+1. **Each terrain is recognisable at a glance**: its own colour and its own surface structure (see [Tell them apart](#tell-them-apart)).
+   Two terrains that differ only in a few details are a failed result, however good each looks alone.
+2. **Rich, saturated, fairly bright colour in the texture.** The world's dim, cold mood comes from the game's light, fog and grading,
+   which can always take colour away; a faded texture cannot be made to read again.
+3. **The real scale of the map**: one texture covers about **30 × 30 m** of ground on the adventure map, so a tile is about 2 m, a
+   hero's height. Plants read as dense masses and clumps, never as single big leaves or blades.
 
 ## Compose a prompt
 
@@ -11,13 +19,14 @@ copying each block's text exactly and joining them with a space:
 
 ```text
 Adventure map:  TERRAIN-STYLE + TERRAIN-MAP    + TERRAIN-<id>
-Battlefield:    TERRAIN-STYLE + TERRAIN-BATTLE + TERRAIN-<id> + TERRAIN-BATTLE-CLOSE
+Battlefield:    TERRAIN-STYLE + TERRAIN-BATTLE + TERRAIN-<id>
 NEGATIVE:       TERRAIN-NEG   (only where the tool takes a negative prompt)
 OUTPUT:         the sizes, maps and names under "Output for every terrain"
 ```
 
-The **Look**, **Lore** and **Avoid** notes in each section explain the block and are for checking the result; they are not pasted.
-If a result shows something on the Avoid list, add those words to the negative prompt for that terrain. Do not paraphrase the blocks.
+The **Signature**, **Look** and **Avoid** notes in each section explain the block and are for checking the result; they are not pasted.
+The terrain's block starts with its signature on purpose: the model weighs the first words most. If a result shows something on the
+Avoid list, add those words to the negative prompt for that terrain. Do not paraphrase the blocks.
 
 ## Blocks
 
@@ -25,40 +34,33 @@ If a result shows something on the Avoid list, add those words to the negative p
 
 ```text
 Seamless tileable PBR ground material, perfectly top-down orthographic view, evenly lit with flat ambient light, no shadows, no
-perspective. Grim dark fantasy world, photorealistic natural ground, weathered, desaturated earth tones, high-frequency natural detail,
-believable geology and plant growth, no repeating standout features. Albedo without lighting, with matching normal, roughness, ambient
-occlusion and height maps.
+perspective. Rich saturated natural colour, vivid and clean, bright and clear like a sunny high-resolution aerial survey photo,
+strong colour identity, crisp detail. Albedo without lighting, with matching normal, roughness, ambient occlusion and height maps.
 ```
 
 **`TERRAIN-MAP`** (scale, adventure-map textures):
 
 ```text
-Covers about 6 by 6 metres of ground, seen from high above; medium detail that still reads when small on screen, natural variation in
-soft clusters, low large-scale contrast so it blends with neighbouring terrains, light-coloured raised parts (stones, tufts, crests)
-standing out a little from darker hollows.
+Covers a large area of about 30 by 30 metres of ground, seen from high above like a drone photo; the ground's typical plants, stones
+and cracks are small at this scale, many hundreds of them, forming dense natural clusters and drifts; a single grass tuft or pebble is
+only a few pixels; clear medium-scale pattern of patches and clumps that defines the surface, bright raised parts and darker hollows.
 ```
 
 **`TERRAIN-BATTLE`** (scale, battlefield textures):
 
 ```text
-Covers about 4 by 4 metres of ground, seen up close from a low aerial view; crisp fine detail of individual stones, blades, cracks and
-debris; no straight lines, no grid-like or tile-like pattern; calm enough at the middle scale that small armies stand out on it.
+Covers about 12 by 12 metres of ground, seen from a low aerial view; individual tufts, stones, cracks and leaves visible but small, no
+single feature larger than about 1 metre; no straight lines, no grid-like or tile-like pattern; the colour as strong as on the map.
 ```
 
 **`TERRAIN-NEG`** (negative prompt, every terrain):
 
 ```text
-perspective, horizon, sky, cast shadows, sun glare, specular highlights, vignette, visible seams, tiled pattern, repeated identical
-objects, single large standout object, text, logos, signatures, watermark, people, animals, footprints in a line, man-made modern
-objects, plastic, cartoon, painterly, stylized, cel shading, pixel art, low resolution, blurry, oversaturated colours, neon, pure black,
-pure white, another game's art.
-```
-
-**`TERRAIN-BATTLE-CLOSE`** (detail, battlefield textures, after the terrain's own block):
-
-```text
-Same ground as before, closer: individual grains, blades and pebbles visible, two to three scales of detail, no feature larger than
-about 40 centimetres.
+dull, faded, washed out, desaturated, greyish cast, brownish haze, sepia, low contrast, muddy colours, overcast, perspective, horizon,
+sky, cast shadows, sun glare, specular highlights, vignette, visible seams, tiled pattern, repeated identical objects, single large
+standout object, oversized plants, close-up macro, text, logos, signatures, watermark, people, animals, footprints in a line, man-made
+modern objects, plastic, cartoon outlines, cel shading, pixel art, low resolution, blurry, neon, pure black, pure white, another game's
+art.
 ```
 
 Sources: the world from [lore.md](../lore.md) (a draft), art direction from [presentation.md](../../design/presentation.md), the native
@@ -69,20 +71,53 @@ terrains of the towns as in [town-model-prompts.md](town-model-prompts.md), the 
 ## How the game uses them
 
 - **Adventure map** (ADR-183): one splat-shaded mesh a level. Each terrain is one layer of a texture array (**1024 px a layer**; other
-  sizes are resized), projected from above in world space and repeated every **3 tiles** (`uv_scale = 0.333`; 1 tile = 1 Godot unit).
-  Neighbouring terrains blend along rounded, wandering lines **by height** (ADR-200): each ground's **raised parts win first**, so its
-  stones, tufts and crests poke into its neighbour and the neighbour fills its hollows. The height is `<terrain>_height.png`, or the
-  albedo's brightness when there is none. Steep ground (cliffs) is textured from the sides as well (triplanar). Broad
-  lighter and darker patches are added by the shader, so the texture itself should be **evenly lit, with no large-scale gradient**.
+  sizes are resized), projected from above in world space and repeated every **16 tiles** (`AdventureMapView.TilesPerTextureRepeat`;
+  1 tile = 1 Godot unit), its repeat hidden by shifted cells. So one tile gets only **64 px** of the layer: anything smaller than about
+  a tenth of a tile is a speck, and a feature that should read needs to span several pixels. Neighbouring terrains blend along rounded,
+  wandering lines **by height** (ADR-200): each ground's **raised parts win first**, so its stones, tufts and crests poke into its
+  neighbour and the neighbour fills its hollows. The height is `<terrain>_height.png`, or the albedo's brightness when there is none.
+  Steep ground (cliffs) is textured from the sides as well (triplanar). Broad lighter and darker patches are added by the shader, so the
+  texture itself should be **evenly lit, with no large-scale gradient**.
 - **Battlefield** (`BattleFieldBuilder.Ground`): one plane of the battle terrain, **24 cells deep** (a cell is 0.5 units, so 12 units)
-  inside a darker 6-unit band of the same ground, triplanar in world space, repeated every **4 units = 8 cells**. The camera is much
-  closer than on the map, so the same 1024 px covers more of the screen: battle textures need **finer detail and twice the resolution**.
-  A thin white cell grid (12 % alpha) is drawn on top, so the ground must not have strong straight lines or a cell-sized pattern.
-- **Today only the albedo and the height map are read.** The normal, roughness and AO maps are asked for now so the PBR pass (ADR-183's "not
-  changed" note) does not need the textures made again.
+  inside a darker 6-unit band of the same ground, triplanar in world space, repeated every **4 units = 8 cells**. A creature stands on
+  about a cell, so 8 cells are about 12 m. The camera is much closer than on the map: battle textures need **finer detail and twice the
+  resolution**. A thin white cell grid (12 % alpha) is drawn on top, so the ground must not have strong straight lines or a cell-sized
+  pattern.
+- **Mood is the game's job**: light, fog, the shader's patches and the post grading darken and cool the ground. A texture that already
+  looks dim ends up grey-brown on screen, and every terrain looks alike. Keep the colour in the texture.
+- **Today the albedo, the height map and (adventure only) the normal, roughness and AO maps are read** (ADR-240).
 - **Borrowed textures**: shallow water borrows water's, rocky ground rough's, cursed lands wasteland's, ice snow's (`AdventureMapView.TextureOf`,
   told apart by a tint). **Snow and ice have no texture yet** (palette colour). Each terrain below gets its own texture; when they exist,
   `TextureOf` and `Tint` drop the borrowing.
+
+## Tell them apart
+
+Every terrain owns a hue and a structure no neighbour shares. Check a new texture against this table and against the textures already
+made, side by side at thumbnail size (64 px): each must still be named correctly.
+
+| Terrain | Signature colour | Signature structure | Value |
+|---|---|---|---|
+| grass | lush emerald and spring green | dense unbroken carpet of grass clumps, nothing else | medium-bright |
+| highlands | cool blue-green turf, magenta-purple heather | heather cushions in patches, flat grey stone slabs | medium |
+| forest floor | russet, copper and orange leaves, bright moss green | leaf litter with moss mats and curving roots | medium-dark |
+| dirt | rich chocolate and reddish-brown, wet | churned mud with ruts, hoof prints and glossy puddles | medium-dark |
+| rough | warm ochre and tan, orange lichen | angular broken stones packed edge to edge | medium |
+| wasteland | pale bone-yellow and cream, white salt | flat hardpan in big polygon cracks, nearly bare | bright |
+| cursed lands | violet-black, sickly pale green-white | ashen soil, black dead stalks, mould blooms | dark |
+| sand | golden yellow and orange | smooth wind ripples, nothing else | bright |
+| beach | pale grey-beige and slate | rounded shingle, wet dark sand, wrack lines | medium-bright |
+| swamp | dark olive mud, vivid lime duckweed | duckweed mats on black water, reed clumps | dark |
+| water | deep teal and blue | near-uniform depth, soft murk | dark |
+| shallow water | clear amber and green over golden sand | sand bottom with pebbles and weed under clear water | medium |
+| snow | white with soft blue shade | wind ripples and drifts | brightest |
+| ice | pale cyan-blue | smooth sheets with a white crack web | bright |
+| lava | black crust, vivid orange-red seams | cracked plates with glowing cracks | dark, hot accents |
+| subterranean | blue-grey slate, violet minerals | smooth wet flowstone, mineral veins | dark |
+| rock | dark slate grey | fractured blocks and ledges | medium-dark |
+| rocky ground | terracotta and salmon-pink sandstone | wide smooth slabs with grit joints | medium-bright |
+
+Stones belong to rough, rocky ground, rock, beach (shingle) and highlands (slabs) only; grass, forest floor, dirt, sand and swamp show
+none or almost none. Grey stones scattered on every ground are what made the first set look alike.
 
 ## Output for every terrain
 
@@ -92,294 +127,293 @@ terrains of the towns as in [town-model-prompts.md](town-model-prompts.md), the 
   no vignette. Soft ambient occlusion in crevices only.
 - **Sizes**: adventure map **2048 px**, downsampled to the 1024 px layer *(proposal: keeps detail sharp at 1024)*; battlefield
   **2048 px** used as is, or 4096 px for the closest terrains (grass, dirt, sand) *(proposal)*.
-- **Real-world scale** (what one texture covers): adventure map about **6 × 6 m** *(proposal: a tile reads as about 2 m of ground, so
-  a hero's figure stays in scale)*, battlefield about **4 × 4 m** *(proposal: a cell reads as about 0.5 m)*. State it in the prompt;
-  pebbles, tufts and cracks must be sized to it.
+- **Real-world scale** (what one texture covers): adventure map about **30 × 30 m** (16 tiles of about 2 m), battlefield about
+  **12 × 12 m** (8 cells of about 1.5 m). State it in the prompt; tufts, stones and cracks must be sized to it. A result in which one
+  plant is as large as a tenth of the picture is at the wrong scale.
+- **Colour**: the dominant tone clearly coloured (saturation roughly 35–70 % for the living and earthy grounds; snow, ice and rock are
+  allowed to be paler), not grey-brown. The game takes colour away; it does not add it.
+- **Value range**: albedo between about **30 and 225 of 255** (snow and ice up to 240), each terrain at its row's value in the table, so
+  the light, dark and middle grounds stay apart. Clear contrast at the medium scale (the clumps and patches); no large-scale gradient.
 - **Maps**: albedo (sRGB, no lighting), normal (OpenGL, Y+, as Godot expects), roughness, ambient occlusion, height (16-bit grey,
   **bright = raised**: the splat's height blend reads it, and the albedo's brightness stands in for it until it exists, so keep the
-  albedo's light parts on the height map's raised parts). Packed
-  ORM (R occlusion, G roughness, B metallic = 0) is fine.
-- **Value range**: albedo between about **40 and 200 of 255** in the dominant tone (no pure black, no blown-out white except snow and
-  ice, kept under 235), so the dark grading and fog still read. Low to medium contrast at the large scale, rich contrast in the small.
+  albedo's light parts on the height map's raised parts). Packed ORM (R occlusion, G roughness, B metallic = 0) is fine.
 - **Names**: `<terrain>.png` as today (`forest_floor.png`, `cursed_lands.png`, `shallow_water.png`, `rocky_ground.png`, `snow.png`,
-  `ice.png`); the other maps as `<terrain>_normal.png`, `<terrain>_orm.png`, `<terrain>_height.png`; battlefield variants as
-  `battle_<terrain>.png` *(proposal: the game does not load them yet; until it does, the map texture serves both)*.
+  `ice.png`); the other maps as `<terrain>_normal.png`, `<terrain>_roughness.png`, `<terrain>_ao.png`, `<terrain>_height.png`; a
+  picture for the adventure map only in `textures/terrain/adventure/` (ADR-240); battlefield variants as `battle_<terrain>.png`
+  *(proposal: the game does not load them yet; until it does, the map texture serves both)*.
 - **Licence**: every new texture gets a line in `CREDITS.md` with the tool and its licence terms; the three placeholders marked
   "check before release" are the first to replace (grass, highlands, forest floor).
 
-**The world in one breath** (keep it in mind for every terrain): *Vael* is dying under a dimming sun, the **Waning Eye**; every age ends
-when the **Wheel of Ash** turns and kingdoms burn. So the ground is **old and tired**: light is weak and cool, plants are a little
-starved, and **traces of earlier ages** show through in places (a pale ash film, charcoal flecks, a sherd of fired clay, a weathered
-worked stone, a rusted nail). Keep those traces **rare and small** (at most a few per texture, never the subject), or they repeat
-visibly. Colours stay muted; the only strong colours on the map are the players' and the magic's.
+**The world** (for the Look notes, not the colour): *Vael* is dying under a dimming sun, the **Waning Eye**; every age ends when the
+**Wheel of Ash** turns and kingdoms burn. The game shows that through its light, fog and grading, and through objects on the map. The
+textures carry it only lightly, in each terrain's own way (the forest's grey rot, the cursed lands' ash, the wasteland's burn scars);
+no ash film, charcoal or sherds on every ground.
 
-| Group | Native ground | Ground's mood |
-|---|---|---|
-| Dawn Covenant | highlands, grass (Haven), forest floor (Sylvan), snow and ice (Academy) | holding on: alive but thinning |
-| Ashen Court | cursed lands (Necropolis), lava (Inferno), subterranean (Dungeon) | already past the turning: ash, slag, darkness |
-| Unbound | rough, wasteland (Stronghold), swamp, shallow water (Swamp Bestiary) | harsh, raw, survivable |
-| Firstborn | rocky ground (Dragon Utopia) | older than any age: worn bedrock |
+| Group | Native ground |
+|---|---|
+| Dawn Covenant | highlands, grass (Haven), forest floor (Sylvan), snow and ice (Academy) |
+| Ashen Court | cursed lands (Necropolis), lava (Inferno), subterranean (Dungeon) |
+| Unbound | rough, wasteland (Stronghold), swamp, shallow water (Swamp Bestiary) |
+| Firstborn | rocky ground (Dragon Utopia) |
 
 ## Grass (`grass`)
 
-The common lowland of the living kingdoms. Today a stock image of bright green lawn: far too clean and too green.
+The common lowland of the living kingdoms; the ground seen most, so it sets the map's tone.
 
-- **Look**: a meadow gone tired: mixed grasses, olive and grey-green with straw-yellow dead stems through it, a few clover and low
-  weeds, small patches of bare earth showing, scattered pebbles. Not mown, not lush.
-- **Lore**: the weak sun leaves the green **dull and cool**; a faint grey ash film in places; a rare sherd or charcoal fleck in the soil.
-- **Avoid**: lawn, golf-course green, flowers in bright colours, a uniform carpet.
+- **Signature**: lush saturated green, dense and unbroken.
+- **Look**: a thick wild meadow seen from high above: grass clumps packed so close no soil shows, in several greens (emerald, spring
+  green, a little yellow-green on the tops), scattered tiny white and yellow flower specks, darker green in the hollows between clumps.
+- **Avoid**: bare earth, stones, straw-yellow dead grass, single large leaves or blades, a mown lawn's stripes.
 
 **`TERRAIN-grass`** (subject):
 
 ```text
-Grass: a tired wild meadow, mixed coarse grasses in muted olive and grey-green with straw-yellow dead stems woven through, small
-clover and low weeds, little patches of bare brown earth between the tufts, scattered small pebbles, a faint film of grey ash on some
-blades, a rare charcoal fleck in the soil.
+Grass: lush saturated emerald and spring green, a dense thick wild meadow, countless grass clumps packed tightly together so no soil
+shows, yellow-green sunlit tops and deep green hollows between the clumps, tiny scattered white and yellow flower specks, healthy and
+vivid.
 ```
 
 ## Dirt (`dirt`)
 
-Trodden earth: tracks, fields left fallow, the ground around camps.
+Trodden earth: tracks, fallow fields and the ground around camps, softened by rain.
 
-- **Look**: compacted brown soil with fine cracks where it dried, small stones and grit pressed in, a few dry roots and straw bits,
-  shallow ruts softened by rain (no straight lines).
-- **Lore**: ash mixed into the soil in grey streaks; a rare bone splinter or sherd.
-- **Avoid**: wet mud (that is swamp's), clay that looks orange, tyre-like tracks.
+- **Signature**: rich wet brown mud, churned.
+- **Look**: chocolate to reddish-brown soil, wet and soft, churned by hooves, boots and wheels into irregular ruts and ridges, glossy
+  puddles in the low spots (roughness low there), clods and a little trampled straw. Lighter dry crests, dark wet hollows.
+- **Avoid**: dry cracked earth (wasteland's), stones, grass tufts, a black swamp (swamp's), orange clay, straight tyre tracks.
 
 **`TERRAIN-dirt`** (subject):
 
 ```text
-Dirt: compacted brown earth of an old trodden field, fine drying cracks, small grey stones and grit pressed into the surface, dry
-root fibres and bits of straw, shallow soft hollows from old rain, faint grey streaks of ash worked into the soil, a rare small sherd
-of fired clay.
+Dirt: rich wet chocolate and reddish-brown mud, soft churned earth of a busy track, irregular ruts, ridges and hoof prints going every
+way, glossy brown puddles in the low spots, wet clods and a little trampled straw, lighter drying crests and dark wet hollows, no
+grass and no stones.
 ```
 
 ## Rough (`rough`)
 
 Broken stony ground of the badlands; Stronghold's home.
 
-- **Look**: a mix of angular stones from fist to head size, gravel between them, wiry dry grass and thorny scrub in the gaps, lichen
-  on the larger stones. Clearly walkable, not a cliff.
-- **Lore**: the scree of old fortifications: now and then a stone with a worked face or a mortar trace.
-- **Avoid**: a solid rock face (that is rock's), round river pebbles.
+- **Signature**: warm ochre broken stones, packed edge to edge.
+- **Look**: angular stones from fist to boulder size in warm ochre, tan and rust tones, packed close with coarse gravel between, orange
+  and yellow lichen crusts on the larger stones, a few wiry dry shrubs. Clearly walkable, not a cliff.
+- **Avoid**: grey stones (rock's), round river pebbles, a solid rock face, green grass.
 
 **`TERRAIN-rough`** (subject):
 
 ```text
-Rough: broken stony badland ground, angular grey-brown stones of mixed sizes half sunk in coarse gravel, wiry dry grass and small
-thorny scrub in the gaps, crusts of pale lichen on the larger stones, an occasional stone with a flat worked face from a long-fallen
-wall, dusty and harsh.
+Rough: warm ochre, tan and rust-coloured broken stony ground, countless angular stones from fist to boulder size packed edge to edge,
+coarse golden gravel between them, bright orange and yellow lichen crusts on the larger stones, a few wiry dry shrubs, harsh and sunny.
 ```
 
 ## Highlands (`highlands`)
 
-Upland moor and hill pasture; Haven's heartland. Today a stock grass photo, nearly the same as grass.
+Upland moor and hill pasture; Haven's heartland. Must never be mistaken for grass.
 
-- **Look**: short wind-pressed turf with heather and moss, bedrock breaking through in flat grey slabs, small cushion plants; cooler
-  and greyer than grass, clearly a different ground from it.
-- **Lore**: thin soil, worn by wind; a faint soot film from Haven's braziers carried on the wind is enough.
-- **Avoid**: a lawn; purple heather in bloom everywhere (keep it brown and rust).
+- **Signature**: cool blue-green turf with magenta-purple heather.
+- **Look**: short cool blue-green turf, large soft cushions of heather in bloom (magenta, purple, a little rust), pale green moss,
+  flat light-grey stone slabs breaking through here and there.
+- **Avoid**: warm yellow-green (grass's), a uniform carpet, brown dead heather everywhere.
 
 **`TERRAIN-highlands`** (subject):
 
 ```text
-Highlands: windswept upland moor, short wind-flattened turf in grey-green, brown and rust heather, cushions of moss, flat slabs of
-grey bedrock breaking through the thin soil, small stones, cool muted colours, a faint film of soot on the moss.
+Highlands: cool blue-green moorland turf with large patches of magenta and purple flowering heather, soft cushions of pale green
+moss, flat light-grey stone slabs breaking through the thin turf here and there, fresh windswept upland colours.
 ```
 
 ## Forest floor (`forest_floor`)
 
 The floor of the old forests; Sylvan's home. Its forest is dying from the root.
 
-- **Look**: a deep litter of fallen leaves in brown and dull gold, needles, twigs, moss mats, small ferns, exposed roots as soft
-  curves (no straight lines), patches of dark humus.
-- **Lore**: the **grey rot**: patches of pale grey decay on leaves and roots, a thin web of grey fungal threads; small carved tablets or
-  ribbons belong to the town, not the ground.
-- **Avoid**: big mushrooms (Dungeon's), a uniform leaf carpet, bright autumn orange.
+- **Signature**: russet and copper leaf litter with bright moss.
+- **Look**: a deep litter of fallen leaves in russet, copper, orange and dark red, needles and twigs, mats of bright green moss in
+  between, small fern fronds, soft curving roots, patches of dark humus; here and there pale grey rot on leaves and roots.
+- **Avoid**: stones, big mushrooms (Dungeon's), a uniform leaf carpet, plain brown.
 
 **`TERRAIN-forest_floor`** (subject):
 
 ```text
-Forest floor: the floor of an ancient dying forest, deep litter of fallen leaves in brown, umber and dull gold, needles and small
-twigs, mats of green moss, a few small ferns, soft curving exposed roots, dark humus showing between, patches of pale grey rot on
-leaves and roots with fine grey fungal threads.
+Forest floor: deep litter of fallen leaves in russet, copper, orange and dark red, with mats of bright green moss between them, pine
+needles and small twigs, small fern fronds, soft curving tree roots, patches of dark humus, a few patches of pale grey rot with fine
+grey fungal threads on leaves and roots.
 ```
 
 ## Wasteland (`wasteland`)
 
-Burned-out land between the kingdoms; Stronghold's second home. Today a lichen rock, close to rough.
+Burned-out land between the kingdoms; Stronghold's second home.
 
-- **Look**: cracked hardpan of grey-tan earth, crusts of salt and dust, dead grass stubble, charred stumps cut down to their roots,
-  grit; flat and exhausted.
-- **Lore**: the scar of a war of the last age: charcoal, ash drifts in the cracks, a rare rusted iron scrap.
-- **Avoid**: a desert of dunes (sand's), a rocky field (rough's).
+- **Signature**: pale bone-yellow hardpan in big polygon cracks.
+- **Look**: flat, almost bare cracked earth in pale bone, cream and straw-yellow, large polygon cracks with darker edges, crusts of
+  white salt, orange dust drifts, a few black burn scars and dead stubble. The brightest dry ground.
+- **Avoid**: brown soil (dirt's), stones (rough's), sand dunes (sand's), grass.
 
 **`TERRAIN-wasteland`** (subject):
 
 ```text
-Wasteland: exhausted burned-out plain, cracked grey-tan hardpan with dust and white salt crust, dead grass stubble, small charred
-root stumps, grey ash drifted into the cracks, scattered charcoal and grit, a rare fragment of rusted iron, flat and lifeless.
+Wasteland: pale bone-yellow and cream cracked hardpan, a flat sun-baked plain split into large polygon cracks with darker edges,
+crusts of bright white salt, drifts of orange dust, a few black burn scars and dead stubble, almost bare, dry and glaring.
 ```
 
 ## Cursed lands (`cursed_lands`)
 
-Necropolis' ground, where the dead rule. Today wasteland's texture tinted violet.
+Necropolis' ground, where the dead rule.
 
-- **Look**: dead black-grey soil, a cold grey-violet cast, bone-dry, with withered black stalks, thin pale fungus and a frost-like
-  bloom of white mould; small bone fragments and grave dust.
-- **Lore**: the ground **remembers every age**: thin layers of old ash, a sherd of black pottery, a few bone fragments, all small.
-- **Avoid**: green slime, glowing ground (glow is the town's), Halloween purple, cartoon skulls.
+- **Signature**: violet-black ashen soil with pale mould.
+- **Look**: dark soil with a strong cold violet and indigo cast, drifts of pale grey-lilac ash, withered black stalks, blooms of sickly
+  pale green-white mould and fungus, small splinters of bleached bone.
+- **Avoid**: glowing ground (the town's), bright green slime, cartoon skulls, plain black.
 
 **`TERRAIN-cursed_lands`** (subject):
 
 ```text
-Cursed lands: dead ground where the dead rule, dry black-grey soil with a cold grey-violet tint, layers of old pale ash, withered
-blackened plant stalks, thin pale fungus and a frost-like bloom of white mould, small splinters of old bleached bone and grave dust,
-a rare sherd of black pottery, silent and cold.
+Cursed lands: dark soil with a strong cold violet and indigo tint, drifts of pale grey-lilac ash, withered black plant stalks, blooms
+of sickly pale green-white mould and fungus, small splinters of bleached bone, eerie and cold.
 ```
 
 ## Snow (`snow`)
 
 Academy's peaks. No texture yet.
 
-- **Look**: wind-packed snow with sastrugi ripples (soft, not straight), a crust that breaks in places, grit and small dark stones
-  blown on top, a few dry grass tips showing through.
-- **Lore**: the dim sun makes it **blue-grey, not white**; a fine grey dusting of ash on the windward faces.
-- **Value**: the brightest ground in the game, keep it under about 235 of 255 so it still shows relief.
+- **Signature**: white with soft blue shade, wind ripples.
+- **Look**: clean wind-packed snow in soft curving ripples and drifts, blue in the hollows, a broken crust here and there, a few dark
+  grass tips poking through.
+- **Value**: the brightest ground in the game, under about 240 of 255 so it still shows relief.
 
 **`TERRAIN-snow`** (subject):
 
 ```text
-Snow: wind-packed mountain snow, soft wind ripples and drifts, a broken crust in places, scattered grit and small dark stones blown on
-top, a few dry grass tips poking through, cool blue-grey tone under a dim sky, a faint grey dusting of ash on the windward faces.
+Snow: clean bright wind-packed mountain snow, soft curving wind ripples and drifts, light blue shade in the hollows, a broken crust in
+places, a few dark grass tips poking through, crisp and cold.
 ```
 
 ## Ice (`ice`)
 
 Frozen lakes and glacier tongues. No texture yet; today snow's palette colour.
 
-- **Look**: cloudy blue-grey ice with trapped bubbles and pressure cracks in a natural web, a thin snow dust gathered in the cracks,
-  frosted rough patches between polished ones (roughness map: polished low, frosted high).
-- **Lore**: dark lines of ash and grit frozen in layers inside the ice, like the rings of past ages.
-- **Avoid**: a glass-clear ice rink, bright cyan.
+- **Signature**: pale cyan-blue sheets with a white crack web.
+- **Look**: smooth ice in pale cyan and blue, deeper blue where it is thick, trapped bubbles, a natural web of white pressure cracks,
+  frosted matte patches between polished ones (roughness map: polished low, frosted high), snow dust in the cracks.
+- **Avoid**: white like snow, a glass-clear rink, neon cyan.
 
 **`TERRAIN-ice`** (subject):
 
 ```text
-Ice: thick cloudy lake ice in blue-grey, trapped air bubbles, a natural web of white pressure cracks, thin snow dust caught in the
-cracks, frosted matte patches between smoother polished ones, faint dark layers of ash and grit frozen inside the ice.
+Ice: smooth frozen lake ice in pale cyan and clear blue, deeper blue where it is thick, trapped air bubbles, a natural web of white
+pressure cracks with snow dust in them, frosted matte patches between polished ones.
 ```
 
 ## Lava (`lava`)
 
-Inferno's ground: cooled flows of slag over the ash of burned cities. Today a laterite soil darkened red.
+Inferno's ground: cooled flows of slag over the ash of burned cities.
 
-- **Look**: black and dark-grey **cooled basalt crust**, ropy and cracked in plates, with **ember-red to orange molten seams** in the
-  cracks only (a small share of the area), yellow sulphur crust around vents, cinders.
-- **Lore**: melted remains of masonry and a twisted bit of bronze fused into the crust, rarely.
-- **Emissive**: the molten seams also as an emissive map (`lava_emissive.png`) *(proposal: the shader does not read it yet)*; keep the
-  glow in the cracks, the albedo of the crust dark.
-- **Avoid**: a lake of bright orange lava (it must be walkable ground), flames, bright red everywhere.
+- **Signature**: black crust, vivid orange-red glowing seams.
+- **Look**: black and charcoal basalt crust, ropy and cracked in plates, with **vivid orange to yellow-red molten seams** in the cracks
+  (about a fifth of the area), bright yellow sulphur crust around vents, cinders.
+- **Emissive**: the molten seams also as an emissive map (`lava_emissive.png`) *(proposal: the shader does not read it yet)*.
+- **Avoid**: a lake of lava (it must be walkable ground), flames, smoke.
 
 **`TERRAIN-lava`** (subject):
 
 ```text
-Lava: walkable cooled lava field, black and dark-grey basalt crust in ropy wrinkles and cracked plates, thin glowing ember-red and
-orange molten seams only in the deepest cracks, yellow sulphur crust around small vents, scattered black cinders, a rare fused
-lump of melted brick fixed in the crust, hot and harsh.
+Lava: walkable cooled lava field, black and charcoal basalt crust in ropy wrinkles and cracked plates, vivid glowing orange and
+yellow-red molten seams in the cracks, bright yellow sulphur crust around small vents, scattered black cinders, hot and intense.
 ```
 
 ## Subterranean (`subterranean`)
 
 The cavern floors of the underground level; Dungeon's home.
 
-- **Look**: damp dark rock floor, flowstone and small stalagmite stumps worn flat, wet sheen in hollows (roughness: wet low), mineral
-  streaks, cave silt, pale small fungus clusters.
-- **Lore**: lightless, never touched by the sun; faint violet mineral veins (not glowing).
-- **Avoid**: big mushrooms, glow, lava.
+- **Signature**: wet blue-grey slate with violet mineral veins.
+- **Look**: smooth wet flowstone and worn rock in blue-grey and slate, a wet sheen in the hollows (roughness: wet low), veins and
+  streaks of violet and teal minerals, pale cave silt, small clusters of pale fungus.
+- **Avoid**: brown or warm tones, big mushrooms, glow, lava.
 
 **`TERRAIN-subterranean`** (subject):
 
 ```text
-Subterranean: a damp dark cavern floor, grey-black rock with smooth flowstone and worn stalagmite stumps, fine cave silt in the
-hollows with a wet sheen, pale mineral streaks and faint dark-violet veins, small clusters of pale cave fungus, cold and lightless.
+Subterranean: a wet cavern floor of smooth blue-grey and slate flowstone, worn flat stalagmite stumps, a wet sheen in the hollows,
+veins and streaks of violet and teal minerals, pale cave silt, small clusters of pale cave fungus, cold and deep.
 ```
 
 ## Sand (`sand`)
 
-Dunes and sandy flats. Today a rocky trail.
+Dunes and sandy flats.
 
-- **Look**: fine wind-rippled sand in pale ochre-grey, soft ripples (curved, irregular), coarse grains and small shells and pebbles
-  sorted into the troughs, a few dry grass blades.
-- **Lore**: the sand of a sea that dried in an earlier age: tiny shell bits, a sun-bleached splinter of wood, a dark streak of ash.
-- **Avoid**: bright yellow, perfectly parallel ripples, a beach (beach's).
+- **Signature**: golden yellow-orange wind ripples.
+- **Look**: fine sand in golden yellow and warm orange, soft irregular curving ripples with lighter crests and darker troughs, almost
+  nothing else (a few shell bits in the troughs).
+- **Avoid**: pale grey sand (beach's), stones, grass, perfectly parallel ripples.
 
 **`TERRAIN-sand`** (subject):
 
 ```text
-Sand: fine wind-rippled desert sand in pale ochre-grey, soft irregular curved ripples, coarse grains, tiny shell fragments and small
-pebbles collected in the troughs, a few dry grass blades, a bleached wood splinter, faint dark streaks of wind-blown ash.
+Sand: fine golden yellow and warm orange desert sand, soft irregular curving wind ripples with bright crests and deeper orange
+troughs, a few tiny shell fragments in the troughs, clean and sunlit.
 ```
 
 ## Beach (`beach`)
 
 The strip between land and water.
 
-- **Look**: damp grey-brown sand and shingle, a band of wet darker sand (no shore line in the texture: the blend makes it), seaweed
-  wrack, shell bits, driftwood twigs, rounded pebbles.
-- **Lore**: wrack and driftwood with the odd blackened plank from a burned boat.
-- **Avoid**: a tropical white beach, foam lines, a straight tide line.
+- **Signature**: pale grey-beige rounded shingle, wet slate sand.
+- **Look**: rounded pebbles and shingle in pale grey, beige and white, patches of wet dark slate-grey sand (no shore line in the
+  texture: the blend makes it), dark green-brown seaweed wrack, white shell bits, bleached driftwood twigs.
+- **Avoid**: golden sand (sand's), a tropical white beach, foam lines, a straight tide line.
 
 **`TERRAIN-beach`** (subject):
 
 ```text
-Beach: a cold northern shore, damp grey-brown sand mixed with rounded shingle and pebbles, patches of darker wet sand, dark tangles
-of dried seaweed wrack, broken shells, driftwood twigs, a rare blackened plank fragment, muted and grey.
+Beach: a northern shore of rounded pebbles and shingle in pale grey, beige and white, patches of wet dark slate-grey sand, tangles of
+dark green-brown seaweed wrack, white shell bits, bleached driftwood twigs, fresh and bright.
 ```
 
 ## Swamp (`swamp`)
 
-The drowned lowlands; Swamp Bestiary's home. Today a coastal sand.
+The drowned lowlands; Swamp Bestiary's home.
 
-- **Look**: black-brown mud with standing water in shallow puddles (wet sheen, low roughness), mats of algae and duckweed, reeds and
-  sedge bent over, rotting wood, bubbles of marsh gas.
-- **Lore**: an algae-green fragment of worked stone from the sunken city, once.
-- **Avoid**: bright green slime, clear blue water.
+- **Signature**: vivid lime duckweed on black water, reed clumps.
+- **Look**: black water and dark olive mud, large mats of vivid lime-green duckweed and algae floating on it, clumps of reeds and
+  sedge in olive and yellow-green, rotting logs, a few marsh-gas bubbles. Wet sheen everywhere (roughness low).
+- **Avoid**: brown mud without plants (dirt's), clear blue water, neon slime.
 
 **`TERRAIN-swamp`** (subject):
 
 ```text
-Swamp: a drowned marsh, black-brown sucking mud with shallow puddles of dark water, mats of algae and duckweed, bent reeds and sedge,
-rotting waterlogged wood, small marsh-gas bubbles, an algae-green fragment of old worked stone half sunk in the mud.
+Swamp: a drowned marsh, black water and dark olive mud covered in large mats of vivid lime-green duckweed and algae, clumps of olive
+and yellow-green reeds and sedge, rotting waterlogged logs, small marsh-gas bubbles, wet and glossy.
 ```
 
 ## Water (`water`)
 
-Deep water: impassable to walkers, crossed by boats. Today river pebbles tinted blue.
+Deep water: impassable to walkers, crossed by boats.
 
-- **Look**: the **water's depth**, not its surface: a dark blue-green to near-black field with soft depth variation and faint
-  suspended silt; no waves, no reflections (the PBR pass will add a surface).
-- **Avoid**: a visible bottom of pebbles, foam, sky reflections, bright cyan.
+- **Signature**: deep teal and blue.
+- **Look**: the **water's depth**, not its surface: a deep teal to sapphire blue field with soft depth variation and faint drifting
+  silt; no waves, no reflections (the PBR pass will add a surface).
+- **Avoid**: a visible bottom, foam, sky reflections, near-black.
 
 **`TERRAIN-water`** (subject):
 
 ```text
-Water: deep dark water seen from above, a near-black blue-green depth with soft variation in tone, faint drifting silt and murk,
-calm, no waves, no reflections, no visible bottom.
+Water: deep clear water seen from above, rich teal and sapphire blue depth with soft variation in tone, faint drifting silt, calm, no
+waves, no reflections, no visible bottom.
 ```
 
 ## Shallow water (`shallow_water`)
 
-Fords and shoals: walkable water. Today water's texture tinted lighter.
+Fords and shoals: walkable water.
 
-- **Look**: a visible bottom of silt, pebbles and water plants under a thin brown-green water layer; ripple caustics only very faint.
-- **Avoid**: a tropical lagoon, clear turquoise.
+- **Signature**: clear amber-green water over golden sand.
+- **Look**: a visible bottom of golden sand, rounded pebbles and green water weed under a thin clear layer of amber-green water, soft
+  ripple caustics.
+- **Avoid**: deep blue (water's), murky brown, a tropical turquoise lagoon.
 
 **`TERRAIN-shallow_water`** (subject):
 
 ```text
-Shallow water: a shallow ford seen from above, a visible bottom of brown silt, rounded pebbles and waving water plants under a thin
-layer of brown-green water, faint soft ripples, murky and cold.
+Shallow water: a shallow ford seen from above, a visible bottom of golden sand, rounded pebbles and green waving water weed under a
+thin layer of clear amber-green water, soft ripple light patterns, fresh and clear.
 ```
 
 ## Rock (`rock`)
@@ -387,45 +421,45 @@ layer of brown-green water, faint soft ripples, murky and cold.
 The impassable cliffs: the walkable ground's highest rim and the shader's **cliff sides** (triplanar), so it is seen from above and
 from the side.
 
-- **Look**: dark grey bedrock in fractured blocks and ledges, strata lines in irregular waves, lichen and moss in the cracks, scree in
-  the hollows. Must work from the side as well as from above (no top-down-only features such as puddles).
-- **Avoid**: a pebble field, round boulders, a man-made wall.
+- **Signature**: dark slate-grey fractured blocks.
+- **Look**: dark slate-grey bedrock in fractured blocks and ledges, wavy strata, green moss and yellow-green lichen in the cracks,
+  scree in the hollows. Must work from the side as well as from above (no top-down-only features such as puddles).
+- **Avoid**: warm sandstone (rocky ground's), a pebble field, round boulders, a man-made wall.
 
 **`TERRAIN-rock`** (subject):
 
 ```text
-Rock: dark grey fractured mountain bedrock, irregular blocks and ledges, wavy strata lines, crusts of lichen and dark moss in the
-cracks, loose scree in the hollows, reads as a cliff face from any side, heavy and ancient.
+Rock: dark slate-grey fractured mountain bedrock, irregular blocks and ledges, wavy strata lines, green moss and yellow-green lichen
+in the cracks, loose scree in the hollows, reads as a cliff face from any side, heavy and ancient.
 ```
 
 ## Rocky ground (`rocky_ground`)
 
-Walkable bare rock; Dragon Utopia's ground. Today rough's texture greyed.
+Walkable bare rock; Dragon Utopia's ground.
 
-- **Look**: wide worn bedrock slabs, smoothed and pitted by ages of wind, grit in the joints, sparse hardy tufts; warm sandstone and
-  granite tones, unlike rough's broken stones.
-- **Lore**: older than the Wheel: **deep claw scratches** in a few slabs, a scorched patch, a glint of old bronze in a crack (rare).
-- **Avoid**: a cliff, loose scree.
+- **Signature**: terracotta and salmon-pink sandstone slabs.
+- **Look**: wide smooth slabs of terracotta, salmon-pink and warm cream sandstone, worn and pitted by wind, grit in the joints, sparse
+  hardy tufts; a few deep old claw scratches and a scorched patch.
+- **Avoid**: grey stone (rock's), broken stones (rough's), loose scree, a cliff.
 
 **`TERRAIN-rocky_ground`** (subject):
 
 ```text
-Rocky ground: ancient worn bedrock plateau, wide smooth slabs of weathered sandstone and granite pitted by wind, grit and dust in the
-joints, sparse hardy grass tufts, a few deep old claw scratches across the stone, a small scorched dark patch, a rare glint of old
-bronze in a crack.
+Rocky ground: ancient bedrock plateau of wide smooth slabs of terracotta, salmon-pink and warm cream sandstone, worn and pitted by
+wind, fine grit in the joints, sparse hardy green tufts, a few deep old claw scratches across the stone, one small scorched patch.
 ```
 
 ## Battlefield variants
 
 The battlefield uses the terrain the battle is fought on (`BattleState.Terrain`; a map object can set it). Use the same terrain prompt
-with `TERRAIN-BATTLE` instead of `TERRAIN-MAP`, and `TERRAIN-BATTLE-CLOSE` after the terrain's own block (see
-[Compose a prompt](#compose-a-prompt)).
+with `TERRAIN-BATTLE` instead of `TERRAIN-MAP` (see [Compose a prompt](#compose-a-prompt)).
 
 Points to keep in mind:
 
-- **The cell grid and the units read on top**: no high-contrast speckle at cell size (0.5 m), no lines; the middle scale calm.
+- **The cell grid and the units read on top**: no high-contrast speckle at cell size (0.5 units), no lines.
 - **One texture fills the whole field** (12 units deep, plus the 6-unit band): variation must come from small clusters, not from a
   single large feature; the battlefield has no splat mixing or patch noise.
+- **Same colour as the map**: a battle on grass must look like the grass the hero stood on.
 - **Water and deep lava** are not battle grounds in the rules' sense of standing on them; when a battle is fought "on water" (a boat
   object), use shallow water's battlefield texture *(proposal)*.
 - **Obstacles** are separate meshes (stones, trees, craters, cliffs); keep them out of the ground texture.
@@ -433,8 +467,13 @@ Points to keep in mind:
 ## After generating
 
 1. Check the 3 × 3 repeat for seams and repeating features; regenerate rather than paint over seams.
-2. Check the value range (about 40–200 of 255) and that the light parts match the raised parts of the height map.
-3. Put the file in `src/Godot/EternalWars.Godot.Assets/textures/terrain/` under the name above, add its line to `CREDITS.md`, and run
-   the `game-weeks` and `game-battle-3d` smoke scenarios to see it on the map and the battlefield.
-4. For a terrain that had a borrowed texture (shallow water, rocky ground, cursed lands, ice), remove it from
+2. Put all the terrains made so far side by side at 64 px: each must still be named at a glance (see [Tell them apart](#tell-them-apart)).
+   Regenerate the one that is closest to another.
+3. Check the scale: a single plant or stone should be a speck at 64 px per 2 m, not a shape.
+4. Check the colour and value range (about 30–225 of 255, clearly coloured) and that the light parts match the raised parts of the
+   height map.
+5. Put the file in `src/Godot/EternalWars.Godot.Assets/textures/terrain/` under the name above, add its line to `CREDITS.md`, and run
+   the `game-weeks` and `game-battle-3d` smoke scenarios to see it on the map and the battlefield. If the map then looks too loud,
+   tone it down in the game's light and grading, not in the texture.
+6. For a terrain that had a borrowed texture (shallow water, rocky ground, cursed lands, ice), remove it from
    `AdventureMapView.TextureOf` and its `Tint` so its own texture shows untinted.
