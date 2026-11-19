@@ -74,23 +74,58 @@ internal sealed class StateCodec(GameState catalogs)
 
     private static string ComputeSchema()
     {
+        var digest = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(SchemaText()));
+        return Convert.ToHexString(digest, 0, 8);
+    }
+
+    /// <summary>
+    /// What <see cref="SchemaHash"/> hashes, one line per Domain type (ADR-218, ADR-229). An enum lists its names and numbers (the codec writes
+    /// an enum as its number). Any other type lists the fields its Domain types declare, then the first base type outside Domain by name only
+    /// (<c>Collection`1[ActiveSpell]</c>): that base's own fields belong to the runtime and differ between versions of it.
+    /// </summary>
+    internal static string SchemaText()
+    {
         var text = new System.Text.StringBuilder();
         foreach (var type in DomainAssembly.GetTypes()
                      .Where(t => !t.IsGenericTypeDefinition && !t.IsInterface && t.FullName is { } n && !n.Contains('<', StringComparison.Ordinal))
                      .OrderBy(t => t.FullName, StringComparer.Ordinal))
         {
-            var shape = ShapeOf(type);
             text.Append(type.FullName).Append('{');
-            for (var i = 0; i < shape.Fields.Length; i++)
+            if (type.IsEnum)
             {
-                text.Append(shape.Keys[i]).Append(':').Append(SchemaName(shape.Fields[i].FieldType)).Append(';');
+                foreach (var name in Enum.GetNames(type))
+                {
+                    var number = Convert.ToInt64(Enum.Parse(type, name), System.Globalization.CultureInfo.InvariantCulture);
+                    text.Append(name).Append('=').Append(number.ToString(System.Globalization.CultureInfo.InvariantCulture)).Append(';');
+                }
+            }
+            else
+            {
+                var shape = ShapeOf(type);
+                for (var i = 0; i < shape.Fields.Length; i++)
+                {
+                    if (shape.Fields[i].DeclaringType!.Assembly == DomainAssembly)
+                    {
+                        text.Append(shape.Keys[i]).Append(':').Append(SchemaName(shape.Fields[i].FieldType)).Append(';');
+                    }
+                }
+
+                var outside = type.BaseType;
+                while (outside is not null && outside.Assembly == DomainAssembly)
+                {
+                    outside = outside.BaseType;
+                }
+
+                if (outside is not null && outside != typeof(object) && outside != typeof(ValueType))
+                {
+                    text.Append(':').Append(SchemaName(outside));
+                }
             }
 
             text.Append("}\n");
         }
 
-        var digest = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(text.ToString()));
-        return Convert.ToHexString(digest, 0, 8);
+        return text.ToString();
     }
 
     /// <summary>A type's name without its assembly's version, so two computers on different runtimes agree: <c>List`1[Hero]</c>.</summary>

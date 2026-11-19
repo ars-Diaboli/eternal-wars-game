@@ -20,6 +20,8 @@
 | [218](#adr-218-the-lan-code-changes-a-clients-game-through-a-view-sink-a-schema-hash-guards-the-join-adr-193-adr-203-2026-11-18) | The LAN code changes a client's game through a view sink; a schema hash guards the join (ADR-193, ADR-203, 2026-11-18) | implemented |
 | [221](#adr-221-gamehost-coordinates-seats-pause-chat-and-the-day-played-again-adr-192-adr-195-adr-197-2026-11-19) | `GameHost` coordinates seats, pause, chat and the day played again (ADR-192, ADR-195, ADR-197, 2026-11-19) | implemented |
 | [228](#adr-228-lan-hardening-sends-that-never-wait-the-chats-allowance-the-lobbys-waiting-players-the-record-per-colour-adr-203-adr-226-2026-11-19) | LAN hardening: sends that never wait, the chat's allowance, the lobby's waiting players, the record per colour (ADR-203, ADR-226, 2026-11-19) | implemented |
+| [229](#adr-229-the-schema-hash-leaves-out-the-runtimes-fields-and-carries-enum-numbers-adr-218-adr-226-2026-11-19) | The schema hash leaves out the runtime's fields and carries enum numbers (ADR-218, ADR-226, 2026-11-19) | implemented |
+| [230](#adr-230-a-tcp-link-reads-and-writes-on-threads-of-its-own-adr-228-2026-11-19) | A TCP link reads and writes on threads of its own (ADR-228, 2026-11-19) | implemented |
 
 
 ### ADR-098: LAN multiplayer: a host that hides the fog, saves, a simultaneous first week (MP-1, MP-2, 2026-10-29)
@@ -355,7 +357,8 @@ change; no protocol change.
   `A0F1FADCC6D8DEE4`, sim self-test `82AE941CD62212E2`).
 
 ### ADR-218: The LAN code changes a client's game through a view sink; a schema hash guards the join (ADR-193, ADR-203, 2026-11-18)
-**Status**: implemented. LAN protocol 7 (`JoinRequest.Schema`); no rule, save or map format change.
+**Status**: implemented; extended by ADR-229 (the hash leaves out the runtime's fields and carries enum numbers). LAN protocol 7
+(`JoinRequest.Schema`); no rule, save or map format change.
 
 - **Why**: Domain declared `InternalsVisibleTo` for Core.Network, so the client's `ViewMirror` set the game's date, players, heroes, objects,
   memory and fog through any internal member it liked, and nothing kept Network from calling rule internals on a host. Two builds with the
@@ -387,8 +390,8 @@ change; no protocol change.
 - **Checked**: `SeatManagerTests`, `PausePolicyTests`, `ChatRelayTests`, `SimultaneousDayRewinderTests` and the LAN tests.
 
 ### ADR-228: LAN hardening: sends that never wait, the chat's allowance, the lobby's waiting players, the record per colour (ADR-203, ADR-226, 2026-11-19)
-**Status**: implemented (2026-11-19), the roadmap's "Code health" item; extends ADR-203 and replaces its record interval per link. No
-rule, save, map or protocol format change.
+**Status**: implemented (2026-11-19), the roadmap's "Code health" item; extends ADR-203 and replaces its record interval per link; its
+background task for sends is replaced by ADR-230 (threads of the link's own). No rule, save, map or protocol format change.
 
 - **Why** (the refactoring close-out, ADR-226): `TcpConnection.Send` wrote on the game's thread with no timeout, so a client that
   stopped reading froze `GameHost.Poll` (and the lobby's) once the socket's buffers filled; a lobby took any number of joined players
@@ -407,3 +410,32 @@ rule, save, map or protocol format change.
 - **Checked** by `NetLimitsTests`: over TCP a client that never reads (the sends return at once, the link closes on the timeout), the
   byte cap, a refusal sent just before `Close` still arriving; on loopback the chat allowance in the game and the lobby, the lobby's
   waiting cap, the record interval surviving a new link. The per-`Poll` share is now checked with commands (chat would hit the allowance).
+
+### ADR-229: The schema hash leaves out the runtime's fields and carries enum numbers (ADR-218, ADR-226, 2026-11-19)
+**Status**: implemented (2026-11-19), the roadmap's "Code health" item; extends ADR-218. The hash's value changes, so builds from before
+it and after it refuse each other's joins; no rule, save, map or protocol format change.
+
+- **Why** (the refactoring close-out, ADR-226): `StateCodec.SchemaHash` walked every field down to `object`, so a Domain type built on a
+  runtime type (`ActiveSpellList` on `Collection<T>`, `CommandRefusedException` on `InvalidOperationException`) hashed that type's
+  private fields, which differ between .NET versions: two machines on different runtimes could disagree on a hash their views share.
+  And an enum hashed only its number field, while the codec sends an enum as its number: renumbering or reordering one kept the hash and
+  misread the views.
+- **Hash**: per Domain type, its line (`StateCodec.SchemaText`) lists the fields its Domain types declare, then the first base type
+  outside Domain by name only (`` Collection`1[ActiveSpell] ``, namespaces left out here); an enum lists each name with its number.
+  The codec itself still writes every field, the runtime base type's included.
+- **Checked** by `NetworkAccessTests`: an enum's line is its names and numbers; `ActiveSpellList` and `CommandRefusedException` name their
+  runtime base type and none of its fields.
+
+### ADR-230: A TCP link reads and writes on threads of its own (ADR-228, 2026-11-19)
+**Status**: implemented (2026-11-19); replaces ADR-228's background task for sends. No rule, save, map or protocol format change.
+
+- **Why**: ADR-228's writer was a thread-pool task with a cancellation timer counted from each piece, and the timer was never stopped
+  once a piece went out, so a link idle for longer than `SendTimeout` (30 seconds, a normal pause in a game) was dropped on its next send.
+  Its close linger was a timer that dropped the socket on its own, so with a busy thread pool it could run before the writer and lose a
+  refusal's reason; reads, also on the thread pool, came late the same way (the TCP tests failed now and then in a full test run).
+- **Threads**: each `TcpConnection` has two background threads, one reading with blocking reads and one writing the queue
+  (`BlockingCollection`) with blocking writes. A piece of 64 KB that does not go out within the socket's send timeout (`SendTimeout`;
+  `CloseLinger` for a message begun after `Close`) drops the link; an idle link is never timed. `Send` still never waits, and the
+  128 MB cap is unchanged.
+- **Checked** by `NetLimitsTests` (a link idle for three send timeouts still sends, besides ADR-228's tests); five full test runs in a row
+  pass.

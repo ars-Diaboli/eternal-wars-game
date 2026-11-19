@@ -291,8 +291,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 ## Code health (ADR-226; what the refactoring plan left, [archive](../docs/papers/refactoring-plan-2026-11.md))
 - [x] LAN hardening (ADR-228): at most 8 joined players wait in a lobby without a colour; 5 chat lines in 10 seconds a link; sends
       queued and written in the background (closed after 30 seconds without progress or 128 MB waiting); the record interval per colour
-- [ ] Schema hash (ADR-218): stop the field walk at the first base type outside Domain (`Exception`, `Collection<T>` pull in runtime
-      fields), and hash enum names and values (the codec sends enums as numbers)
+- [x] Schema hash (ADR-229): the field walk stops at the first base type outside Domain, named only; enums hash their names and numbers.
+      Found on the way: a TCP link idle for 30 seconds was dropped on its next send; a link now reads and writes on threads of its own (ADR-230)
 - [ ] `GameSession.ChangeStamp` misses a LAN client's view writes (the hover preview's last-route cache); `FogOfWar.SightOf` hands out
       its live set
 - [ ] Game app `Main` policy to move out (ADR-222): when to autosave, the rematch (its seed from `System.Random.Shared`), loading a save's

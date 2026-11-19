@@ -191,6 +191,32 @@ public class NetLimitsTests
     }
 
     [Fact]
+    public void OverTcp_ALinkIdleForLongerThanTheSendTimeout_StillSends()
+    {
+        var server = new TcpListener(IPAddress.Loopback, 0);
+        server.Start();
+        try
+        {
+            using var client = TcpConnection.Connect("127.0.0.1", ((IPEndPoint)server.LocalEndpoint).Port, TimeSpan.FromSeconds(5));
+            using var sender = new TcpConnection(server.AcceptTcpClient(), sendTimeout: TimeSpan.FromMilliseconds(200));
+
+            sender.Send(new ChatLine("", "first"));
+            NetMessage? got = null;
+            Until(() => client.TryReceive(out got));
+            Thread.Sleep(600); // three send timeouts with nothing to send
+
+            sender.Send(new ChatLine("", "second"));
+            Until(() => client.TryReceive(out got) || sender.IsClosed);
+            Assert.False(sender.IsClosed, sender.CloseReason);
+            Assert.Equal(new ChatLine("", "second"), got);
+        }
+        finally
+        {
+            server.Stop();
+        }
+    }
+
+    [Fact]
     public void OverTcp_MoreWaitingToSendThanTheCap_ClosesTheLinkAtOnce()
     {
         var server = new TcpListener(IPAddress.Loopback, 0);

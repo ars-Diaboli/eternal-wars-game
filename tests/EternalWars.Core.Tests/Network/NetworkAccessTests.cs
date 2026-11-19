@@ -29,6 +29,32 @@ public class NetworkAccessTests
     }
 
     [Fact]
+    public void TheSchema_ListsAnEnumsNamesAndNumbers_AsTheCodecSendsAnEnumAsItsNumber()
+    {
+        var line = SchemaLineOf(typeof(EternalWars.Core.Domain.Artifacts.ArtifactSlot));
+        var expected = string.Concat(Enum.GetValues<EternalWars.Core.Domain.Artifacts.ArtifactSlot>().Select(v => $"{v}={(long)v};"));
+
+        Assert.Equal($"{typeof(EternalWars.Core.Domain.Artifacts.ArtifactSlot).FullName}{{{expected}}}", line);
+        Assert.DoesNotContain("value__", StateCodec.SchemaText(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TheSchema_LeavesOutTheRuntimesFields_NamingTheFirstBaseTypeOutsideTheDomainInstead()
+    {
+        // ActiveSpellList is a Collection<ActiveSpell>, CommandRefusedException an InvalidOperationException: what those keep inside is the
+        // runtime's and differs between its versions, so two computers on different runtimes would not agree on the hash.
+        var spells = SchemaLineOf(typeof(GameState).Assembly.GetType("EternalWars.Core.Domain.Battles.ActiveSpellList")!);
+        var refused = SchemaLineOf(typeof(EternalWars.Core.Domain.Commands.CommandRefusedException));
+
+        Assert.EndsWith(";:System.Collections.ObjectModel.Collection`1[EternalWars.Core.Domain.Battles.ActiveSpell]}", spells);
+        Assert.DoesNotContain("items:", spells, StringComparison.Ordinal);
+        Assert.EndsWith("{:System.InvalidOperationException}", refused);
+    }
+
+    private static string SchemaLineOf(Type type) =>
+        StateCodec.SchemaText().Split('\n').Single(l => l.StartsWith(type.FullName + "{", StringComparison.Ordinal));
+
+    [Fact]
     public void TheSchema_IsOneShortHash_ThatTheClientSendsWhenItJoins()
     {
         Assert.Matches("^[0-9A-F]{16}$", NetSerializer.Schema);
