@@ -1,3 +1,5 @@
+using EternalWars.Core.Domain.MapEvents.Actions;
+
 namespace EternalWars.Core.Domain.MapEvents;
 
 /// <summary>
@@ -21,24 +23,9 @@ public static class MapEventTreeEdit
         definition.Kind == MapEventKind.Quest ? [.. definition.Stages.Select((_, i) => $"Stage {i + 1}")] : ["Actions"];
 
     /// <summary>The action lists an action holds (none for most).</summary>
-    public static IReadOnlyList<IReadOnlyList<EventAction>> Lists(EventAction action) => action switch
-    {
-        IfAction branch => [branch.Then, branch.Else],
-        RepeatAction repeat => [repeat.Actions],
-        WhileAction loop => [loop.Actions],
-        QuestionAction question => [.. question.Answers.Select(a => a.Actions)],
-        MessageAction message => [message.Rewards],
-        _ => [],
-    };
+    public static IReadOnlyList<IReadOnlyList<EventAction>> Lists(EventAction action) => MapEventActionHandlers.For(action).Lists(action);
 
-    public static IReadOnlyList<string> ListNames(EventAction action) => action switch
-    {
-        IfAction => ["Then", "Else"],
-        RepeatAction or WhileAction => ["Do"],
-        QuestionAction question => [.. question.Answers.Select(a => $"Answer \"{a.Text}\"")],
-        MessageAction => ["Rewards (given once it is read)"],
-        _ => [],
-    };
+    public static IReadOnlyList<string> ListNames(EventAction action) => MapEventActionHandlers.For(action).ListNames(action);
 
     /// <summary>The action at the path, or null when it leads nowhere (or is empty).</summary>
     public static EventAction? Get(MapEventDefinition definition, IReadOnlyList<EventStep> path)
@@ -158,13 +145,6 @@ public static class MapEventTreeEdit
         return [.. actions.Select((a, i) => i == index ? changed : a)];
     }
 
-    private static EventAction With(EventAction action, IReadOnlyList<IReadOnlyList<EventAction>> lists) => action switch
-    {
-        IfAction branch => branch with { Then = lists[0], Else = lists[1] },
-        RepeatAction repeat => repeat with { Actions = lists[0] },
-        WhileAction loop => loop with { Actions = lists[0] },
-        QuestionAction question => question with { Answers = [.. question.Answers.Select((a, i) => a with { Actions = lists[i] })] },
-        MessageAction message => message with { Rewards = lists[0] },
-        _ => action,
-    };
+    private static EventAction With(EventAction action, IReadOnlyList<IReadOnlyList<EventAction>> lists) =>
+        MapEventActionHandlers.For(action).WithLists(action, lists);
 }

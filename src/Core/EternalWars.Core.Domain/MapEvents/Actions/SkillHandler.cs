@@ -25,4 +25,12 @@ internal sealed class SkillHandler : HeroActionHandler<SkillAction>
 
     protected override string Describe(GameState state, SkillAction action) =>
         $"{(BuiltInSkills.Contains(action.Skill) ? BuiltInSkills.Get(action.Skill).Name : action.Skill)} ({action.Level})";
+
+    protected override string Line(SkillAction action, GameState? state) =>
+        $"Raise {(BuiltInSkills.Contains(action.Skill) ? BuiltInSkills.Get(action.Skill).Name : action.Skill)} to {action.Level}";
+
+    protected override EventWorth Worth(IMapEventValuer valuer, SkillAction action) =>
+        valuer.Hero is { } hero && BuiltInSkills.Contains(action.Skill) && BuiltInSkills.Resolve(action.Skill) is var id && hero.Skills.CanRaise(id)
+            ? EventWorth.Gain(1000 * Math.Max(0, (int)action.Level - (int)hero.Skills.Level(id)))
+            : EventWorth.Nothing;
 }

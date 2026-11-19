@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Events;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Towns;
 
 namespace EternalWars.Core.Domain.MapEvents.Actions;
@@ -19,4 +20,11 @@ internal sealed class AvailableCreaturesHandler : MapEventActionHandler<Availabl
 
     protected override EventAction Fix(MapEventActionContext context, AvailableCreaturesAction action) =>
         action with { Count = new NumberExpr(context.Evaluate(action.Count)) };
+
+    protected override IEnumerable<EventExpr> Expressions(AvailableCreaturesAction action) => [action.Count];
+
+    protected override string Line(AvailableCreaturesAction action, GameState? state) => $"{Expr(action.Count)} more {CreatureName(state, action.Line)} to hire";
+
+    protected override EventWorth Worth(IMapEventValuer valuer, AvailableCreaturesAction action) =>
+        valuer.Town is null ? EventWorth.Nothing : EventWorth.Gain(0.4 * valuer.Average(action.Count) * CreatureValue(valuer.State, action.Line));
 }

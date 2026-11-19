@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
+using EternalWars.Core.Domain.Game;
 
 namespace EternalWars.Core.Domain.MapEvents.Actions;
 
@@ -20,4 +21,10 @@ internal sealed class RevealHandler : MapEventActionHandler<RevealAction>
     }
 
     protected override MapPosition? Place(RevealAction action) => new MapPosition(action.X, action.Y, action.Level);
+
+    protected override string Line(RevealAction action, GameState? state) =>
+        $"Reveal radius {action.Radius} around ({action.X}, {action.Y}{(action.Level > 0 ? $", level {action.Level + 1}" : "")})";
+
+    protected override EventWorth Worth(IMapEventValuer valuer, RevealAction action) =>
+        valuer.Scope.Player is null ? EventWorth.Nothing : EventWorth.Gain(100);
 }

@@ -8,15 +8,15 @@ the owner's missing-mechanics picks, the arena and LAN multiplayer are built. Th
 plan is in [docs/papers](../docs/papers/refactoring-plan-2026-11.md)). Detail: [roadmap.md](roadmap.md).
 
 ## Last work
-- ADR-235 (Godot check): what ADR-148 had not seen runs and was looked at (five smoke scenarios on `tools/smoke/spells.ewmap.json`);
-  `--seed=` / a smoke entry's `Seed` repeats a scenario's battles; the battle log goes to `godot.log` in scripted runs.
-- ADR-234 (save/load): replays measured (`sim replay` prints the time; 5 s for eight players to month 5); the replay viewer's forward jumps
-  play on the watched game unheard (`GameSession.Unheard`, `Events` a bus of its own); no state snapshot yet.
+- ADR-237 (code health): a map event action's handler tells what it holds (lists, conditions, expressions), its editor line and its AI
+  worth (`IMapEventValuer`); no switch on the action type left in `MapEventTree`, `MapEventText` or `TargetValuer`.
+- ADR-236 (code health): a LAN client's view writes move `GameSession.ChangeStamp`, so a cached route is planned again after one;
+  `FogOfWar.SightOf` returns a copy.
 
 ## Next
 1. A person's full game on Ember March (the Phase 3 exit's last check).
 2. The remaining Phase 5 items in [roadmap.md](roadmap.md) ("Presentation and UI", "Platform and art", "Roster").
-3. The "Code health" list in [roadmap.md](roadmap.md): `ChangeStamp` and `SightOf`, the map-event action switches and requests, the
+3. The "Code health" list in [roadmap.md](roadmap.md): the map-event requests, the
    review's leftovers, fixed seeds for the smoke games (ADR-226).
 
 ## Known problems

@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Decisions;
+using EternalWars.Core.Domain.Game;
 
 namespace EternalWars.Core.Domain.MapEvents.Actions;
 
@@ -8,6 +9,8 @@ namespace EternalWars.Core.Domain.MapEvents.Actions;
 /// </summary>
 internal sealed class MessageHandler : MapEventActionHandler<MessageAction>
 {
+    public override bool IsReward => false;
+
     protected override bool Apply(MapEventActionContext context, MessageAction action)
     {
         var (service, run) = (context.Service, context.Run);
@@ -24,4 +27,14 @@ internal sealed class MessageHandler : MapEventActionHandler<MessageAction>
 
         return true;
     }
+
+    protected override IReadOnlyList<IReadOnlyList<EventAction>> Lists(MessageAction action) => [action.Rewards];
+
+    protected override IReadOnlyList<string> ListNames(MessageAction action) => ["Rewards (given once it is read)"];
+
+    protected override EventAction WithLists(MessageAction action, IReadOnlyList<IReadOnlyList<EventAction>> lists) => action with { Rewards = lists[0] };
+
+    protected override string Line(MessageAction action, GameState? state) => $"Message: \"{MapEventText.Short(action.Text)}\"";
+
+    protected override EventWorth Worth(IMapEventValuer valuer, MessageAction action) => valuer.Worth(action.Rewards);
 }

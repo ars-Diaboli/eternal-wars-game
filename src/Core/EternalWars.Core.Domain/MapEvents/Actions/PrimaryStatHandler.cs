@@ -18,4 +18,11 @@ internal sealed class PrimaryStatHandler : HeroActionHandler<PrimaryStatAction>
         action with { Amount = new NumberExpr(context.Evaluate(action.Amount)) };
 
     protected override string Describe(GameState state, PrimaryStatAction action) => $"{Signed(Amount(action.Amount))} {action.Stat}";
+
+    protected override IEnumerable<EventExpr> Expressions(PrimaryStatAction action) => [action.Amount];
+
+    protected override string Line(PrimaryStatAction action, GameState? state) => $"Give {Expr(action.Amount)} {action.Stat}";
+
+    protected override EventWorth Worth(IMapEventValuer valuer, PrimaryStatAction action) =>
+        valuer.Hero is null ? EventWorth.Nothing : EventWorth.Gain(750 * Math.Max(0, valuer.Average(action.Amount)));
 }

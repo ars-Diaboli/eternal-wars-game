@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Towns;
 
 namespace EternalWars.Core.Domain.MapEvents.Actions;
@@ -69,4 +70,9 @@ internal sealed class BuildHandler : MapEventActionHandler<BuildAction>
             Build(context, town, requirement.Building, requirement.Level, depth + 1);
         }
     }
+
+    protected override string Line(BuildAction action, GameState? state) => $"Build {action.Building}{(action.Level > 1 ? $" up to level {action.Level}" : "")}";
+
+    protected override EventWorth Worth(IMapEventValuer valuer, BuildAction action) =>
+        valuer.Town is { } town && town.Level(action.Building) < action.Level ? EventWorth.Gain(1000) : EventWorth.Nothing;
 }

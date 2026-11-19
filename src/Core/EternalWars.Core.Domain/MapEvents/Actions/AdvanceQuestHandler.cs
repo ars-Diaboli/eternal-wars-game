@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
 
@@ -11,6 +12,8 @@ namespace EternalWars.Core.Domain.MapEvents.Actions;
 /// </summary>
 internal sealed class AdvanceQuestHandler : MapEventActionHandler<MapEventService.AdvanceQuestAction>
 {
+    public override bool IsReward => false;
+
     protected override bool Apply(MapEventActionContext context, MapEventService.AdvanceQuestAction action)
     {
         if (context.Hero is { } hero && context.Run.Player is { } completer)
@@ -49,4 +52,6 @@ internal sealed class AdvanceQuestHandler : MapEventActionHandler<MapEventServic
             service.Steps.RemoveObject(site);
         }
     }
+
+    protected override string Line(MapEventService.AdvanceQuestAction action, GameState? state) => $"Move quest {action.Site.Value} past stage {action.Stage + 1}";
 }

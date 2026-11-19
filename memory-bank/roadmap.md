@@ -294,8 +294,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       queued and written in the background (closed after 30 seconds without progress or 128 MB waiting); the record interval per colour
 - [x] Schema hash (ADR-229): the field walk stops at the first base type outside Domain, named only; enums hash their names and numbers.
       Found on the way: a TCP link idle for 30 seconds was dropped on its next send; a link now reads and writes on threads of its own (ADR-230)
-- [ ] `GameSession.ChangeStamp` misses a LAN client's view writes (the hover preview's last-route cache); `FogOfWar.SightOf` hands out
-      its live set
+- [x] `GameSession.ChangeStamp` counts a LAN client's view writes; `FogOfWar.SightOf` hands out a copy (ADR-236)
 - [x] Game app `Main` policy moved out (ADR-231): `AutosaveSchedule`, `GameRematch` (the seed a parameter), `SavedGameStart`,
       `LanAddress` / `LanListing` / `LanAccept`, `ReplayViews` and the diverged replay's recovery in `ReplayController`, `MapFocus`
 - [x] Main-menu "Continue" falls back to the newest save that loads and names the ones passed over (ADR-232)
@@ -303,8 +302,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [ ] Smoke `game-battle-control` fails at frame 184 (no Surrender: the computer's stack is acting), before ADR-227 too; the smoke games draw
       a random seed, so their battles differ between runs; an entry's `Seed = <n>` now fixes it (ADR-235), set only on the newest scenarios
 - [x] AI tuning numbers left inline are `AiWeights` (15 more, ADR-232); `AiWeights.With` refuses negative values
-- [ ] Switches on the map-event action type left in Domain (`MapEventState.Expressions`, `MapEventText`, `TargetValuer.Events`) into
-      the handlers, and a test that a handler of an action with an amount overrides `Fix`
+- [x] The map-event action type switches in Domain moved into the handlers; a test checks a reward with an amount overrides `Fix` (ADR-237)
 - [ ] Map-event `Answer` / `ChooseArmy` through `DecisionSteps.TakeDecision`; `PandorasBoxOpened` no longer carries the box's event
       for `MapEventService` to run (an event used as a request, ADR-214)
 - [ ] From the review, never planned: typed content ids; `InfoSheets` returning structured lines, not English text; `CheckRefusals`

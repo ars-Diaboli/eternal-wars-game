@@ -17,4 +17,9 @@ internal sealed class SpellBookHandler : HeroActionHandler<SpellBookAction>
     }
 
     protected override string Describe(GameState state, SpellBookAction action) => "+ spell book";
+
+    protected override string Line(SpellBookAction action, GameState? state) => "Give a spell book";
+
+    protected override EventWorth Worth(IMapEventValuer valuer, SpellBookAction action) =>
+        valuer.Hero is { HasSpellBook: false } ? EventWorth.Gain(500) : EventWorth.Nothing;
 }

@@ -118,7 +118,7 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   `BattleService`.
 - **Routes**: `PathFinder.FindPath` is A* (a distance estimate that never counts more than the cheapest steps, so routes are the cheapest),
   plain Dijkstra once a gate links two tiles. `HeroMovementService.FindPath` gives its last route again while
-  `GameSession.ChangeStamp` (commands accepted + events published + hero moves) stays the same, so a move right after a check does not search
+  `GameSession.ChangeStamp` (commands accepted + events published + hero moves + a LAN client's view writes) stays the same, so a move right after a check does not search
   again. For many targets at once, `PathFinder.CostsFrom` (from one tile) and `CostsTo` (to one tile, from many) are Dijkstra searches that
   run only as far as the questions need and answer exactly what `FindPath` would give as the route's cost; the AI weighs its targets, its
   exploring and its Dimension Door landings with them and searches the full route only for the target it picks (by moving).
@@ -178,7 +178,8 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   shared frames (`OnReach`: resisting stacks, Earthquake, wake-ups; Raise Dead's `Rise`); `BattleAi` only dispatches. A new effect
   kind is its head in `Magic/Parsing/SpellEffectHeads` (and any new words in `SpellEffectWords`) plus one handler class registered in
   `SpellEffectHandlers` (`SpellEffectHandlersTests` checks every kind has exactly one). The same pattern (ADR-219) holds map event actions
-  (`MapEvents/Actions/MapEventActionHandlers`), adventure spells (`Magic/AdventureSpells/AdventureSpellHandlers`), scenario conditions
+  (`MapEvents/Actions/MapEventActionHandlers`: running, a message's reward, what the action holds, its editor line and its worth to the AI,
+  ADR-237), adventure spells (`Magic/AdventureSpells/AdventureSpellHandlers`), scenario conditions
   (`Game/Conditions/ScenarioConditionHandlers`) and the editor's checks (`Editing/Checks/MapChecks`, run in order); a test per registry
   fails while one is missing or doubled.
 - Creature special rules are data (`CreatureCapability`, max `CreatureDefinition.MaxCapabilities` = 5, ADR-042); code

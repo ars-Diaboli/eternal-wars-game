@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Events;
+using EternalWars.Core.Domain.Game;
 
 namespace EternalWars.Core.Domain.MapEvents.Actions;
 
@@ -8,6 +9,8 @@ namespace EternalWars.Core.Domain.MapEvents.Actions;
 /// </summary>
 internal sealed class RunEventHandler : MapEventActionHandler<RunEventAction>
 {
+    public override bool IsReward => false;
+
     protected override bool Apply(MapEventActionContext context, RunEventAction action)
     {
         var run = context.Run;
@@ -20,4 +23,11 @@ internal sealed class RunEventHandler : MapEventActionHandler<RunEventAction>
 
         return true;
     }
+
+    protected override string Line(RunEventAction action, GameState? state) => $"Run the event '{action.Event}'";
+
+    protected override EventWorth Worth(IMapEventValuer valuer, RunEventAction action) =>
+        valuer.State.MapEvents.Set.Find(action.Event) is { Kind: not MapEventKind.Quest } other && valuer.State.MapEvents.IsEnabled(other.Name)
+            ? EventWorth.Gain(valuer.RunWorth(other.Actions))
+            : EventWorth.Nothing;
 }

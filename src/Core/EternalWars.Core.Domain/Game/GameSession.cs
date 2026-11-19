@@ -27,6 +27,7 @@ public sealed class GameSession
     private long _published;
     private readonly EventBus _outside = new(); // Events: everyone outside the rules
     private int _unheard;
+    private readonly ViewSink? _viewSink;
 
     /// <summary>
     /// Checks that a refused command left the game as it was (its digest text unchanged) and fails loudly otherwise. The tests turn it on for
@@ -44,7 +45,7 @@ public sealed class GameSession
         State = state ?? throw new ArgumentNullException(nameof(state));
         Bus = bus ?? new EventBus();
         FollowsHost = followsHost;
-        ViewSink = followsHost ? new ViewSink(State) : null;
+        _viewSink = followsHost ? new ViewSink(State) : null;
         Bus.Subscribe<Core.Events.IEvent>(_ => _published++);
 
         // Core handlers subscribe first so their follow-up events are queued before views react. A LAN client's session runs no rules, so
@@ -144,7 +145,7 @@ public sealed class GameSession
     /// Where a LAN client puts what the host sent (ADR-218): only a session that follows the host has one (<see cref="FollowingHost"/>); null
     /// otherwise.
     /// </summary>
-    public IViewSink? ViewSink { get; }
+    public IViewSink? ViewSink => _viewSink;
 
     /// <summary>Whether this is a LAN client's session (<see cref="FollowingHost"/>): it runs no rules.</summary>
     public bool FollowsHost { get; }
@@ -172,10 +173,11 @@ public sealed class GameSession
     public IReadOnlyList<GameCommand> CommandLog => _log;
 
     /// <summary>
-    /// A number that grows whenever the game may have changed: a command accepted, an event published or a hero moved (any game's, so it may
-    /// also grow when this one did not). While it stays the same, what was worked out from the state still holds (route caches).
+    /// A number that grows whenever the game may have changed: a command accepted, an event published, a hero moved (any game's, so it may
+    /// also grow when this one did not), or, on a LAN client, the host's view written in (ADR-236). While it stays the same, what was worked
+    /// out from the state still holds (route caches).
     /// </summary>
-    internal long ChangeStamp => _log.Count + _published + Hero.Moves;
+    internal long ChangeStamp => _log.Count + _published + Hero.Moves + (_viewSink?.Writes ?? 0);
 
     /// <summary>Queries: daily income.</summary>
     public EconomyService Economy { get; }
