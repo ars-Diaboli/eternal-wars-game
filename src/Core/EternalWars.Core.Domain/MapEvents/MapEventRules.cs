@@ -30,9 +30,9 @@ public static class MapEventRules
                 problems.Add(new($"Event '{definition.Name}' needs a name of its own.", definition.Name));
             }
 
-            if (definition.Kind != MapEventKind.Town && definition.Towns.Count > 0)
+            if (definition.Kind is not (MapEventKind.Town or MapEventKind.Captured) && definition.Towns.Count > 0)
             {
-                problems.Add(new($"Only a town event names towns ('{definition.Name}').", definition.Name));
+                problems.Add(new($"Only a town or captured event names towns ('{definition.Name}').", definition.Name));
             }
 
             foreach (var town in definition.Towns.Where(t => state.FindObject(new Common.MapObjectId(t)) is not Town))

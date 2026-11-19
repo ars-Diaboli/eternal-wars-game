@@ -286,8 +286,10 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 
 ## Phase 6: Story campaign
 - [ ] Prologue / tutorial: one small map, Haven against neutrals and a Necropolis vanguard, hints through the map events, a "Hints" setting; playable from the main menu as "Prologue" (ADR-116, ADR-118)
-- [ ] Scenario chaining and hero carry-over (campaign variables: see Map events, FLOW-1, EVT-1)
-- [ ] Dialogue and campaign triggers, built on the map events and their editor "Events" tab (ADR-096)
+- [x] Scenario chaining and hero carry-over (ADR-241): campaigns of maps won one after another, carried heroes and campaign variables, campaign
+      files, saves that go on with their campaign, the sample campaign Border Watch
+- [x] Dialogue and campaign triggers (ADR-242): dialogues, ending the game from an event, captured and battle events (map format v42)
+- [ ] A campaign editor (campaign files are written by hand), cutscenes, per-map starting bonuses (ADR-241)
 
 ## Code health (ADR-226; what the refactoring plan left, [archive](../docs/papers/refactoring-plan-2026-11.md))
 - [x] LAN hardening (ADR-228): at most 8 joined players wait in a lobby without a colour; 5 chat lines in 10 seconds a link; sends

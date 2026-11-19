@@ -373,6 +373,17 @@ public sealed class Hero(
         }
     }
 
+    /// <summary>A carried hero's spell book and spells with their ranks (ADR-241): replaces what it knows; without a book it knows nothing.</summary>
+    internal void SetSpells(bool book, IReadOnlyDictionary<string, int> spells)
+    {
+        HasSpellBook = book;
+        _spells.Clear();
+        foreach (var (spell, rank) in book ? spells : new Dictionary<string, int>())
+        {
+            _spells[spell] = Math.Max(1, rank);
+        }
+    }
+
     /// <summary>
     /// Takes over a roster entry: identity, class, preferred creature, specialty, and its starting stats and skills. A mage of a magic town starts
     /// with a spell book (ADR-071; Primal Fury mages have no spells, ADR-072) holding its specialty spell, if it has one (assumed).

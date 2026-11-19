@@ -157,6 +157,18 @@ public sealed class GameState
     /// </summary>
     public IReadOnlyList<Hero> RetiredHeroes => _retiredHeroes;
 
+    /// <summary>
+    /// The carried heroes this campaign map had no place for (ADR-241): they wait for a later map. Set when the game starts, from the options and
+    /// the map, so a replay sets it the same; not part of the digest.
+    /// </summary>
+    internal IReadOnlyList<Campaigns.CarriedHero> CarriedWaiting { get; set; } = [];
+
+    /// <summary>
+    /// A map event's end of the game (<see cref="MapEvents.EndGameAction"/>, ADR-242), waiting for the game flow to settle it after the command; no
+    /// event runs meanwhile. Never outlives the command.
+    /// </summary>
+    internal ScriptedEnd? ScriptedEnd { get; set; }
+
     public IEnumerable<Hero> RetiredHeroesOf(PlayerId owner) => _retiredHeroes.Where(h => h.Owner == owner);
 
     public IReadOnlyList<MapObject> Objects => _objects;

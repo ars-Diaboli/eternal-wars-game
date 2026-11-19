@@ -30,7 +30,8 @@ is used instead).
 | What | Format / where |
 |---|---|
 | Maps | `*.ewmap.json`, `MapDocument` (version history in its doc comment); editor saves to `user://maps/` (`%APPDATA%\Godot\app_userdata\Eternal Wars Map Editor\maps`) |
-| Saves | `*.ewsave.json` (ADR-058) in `user://saves` (`%APPDATA%\Godot\app_userdata\Eternal Wars\saves`): game record + label; load replays commands and checks the digest |
+| Saves | `*.ewsave.json` (ADR-058) in `user://saves` (`%APPDATA%\Godot\app_userdata\Eternal Wars\saves`): game record + label (+ the campaign, ADR-241); load replays commands and checks the digest |
+| Campaigns | `*.ewcampaign.json` (ADR-241) in `user://campaigns` or beside their maps in the map editor's `maps` folder; each map names a map file in the campaign file's folder |
 | Replays | `*.ewreplay.json` (`GameRecord`) |
 | Ranking (ADR-101) | `ranking.json` in the user data folder (`RankingFile`), each row's record in `ranking/*.ewreplay.json` |
 | Templates | `*.ewtemplate.json`; shipped ones in `src/Core/data/templates` |

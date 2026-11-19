@@ -28,6 +28,7 @@ internal static class MapEventJson
         [
             (typeof(IfAction), "if"), (typeof(StopAction), "stop"), (typeof(SetVariableAction), "setVariable"), (typeof(EnableEventAction), "enable"),
             (typeof(RemoveCellAction), "removeCell"), (typeof(MessageAction), "message"), (typeof(QuestionAction), "question"),
+            (typeof(DialogueAction), "dialogue"), (typeof(EndGameAction), "endGame"),
             (typeof(ResourceAction), "resource"), (typeof(ExperienceAction), "experience"), (typeof(PrimaryStatAction), "stat"),
             (typeof(SkillAction), "skill"), (typeof(ArtifactAction), "artifact"), (typeof(WarMachineAction), "warMachine"),
             (typeof(SpellBookAction), "spellBook"), (typeof(SpellAction), "spell"), (typeof(ManaAction), "mana"), (typeof(MovementAction), "movement"),

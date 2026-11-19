@@ -51,14 +51,15 @@ public static class GameSaves
     /// <summary>
     /// Autosave at the start of a turn, with two slots: the new save becomes the current one and the one that was current
     /// becomes the previous one, so the start of this turn and of the turn before are always there. The new save is written
-    /// completely before the slots are rotated. <paramref name="generated"/> is how a random map was made (null for a hand-made map).
+    /// completely before the slots are rotated. <paramref name="generated"/> is how a random map was made (null for a hand-made map),
+    /// <paramref name="campaign"/> the campaign the game is a map of (ADR-241; null for a single game).
     /// </summary>
-    public static void Autosave(string folder, MapDocument initialMap, GameSession session, GenerationInfo? generated = null)
+    public static void Autosave(string folder, MapDocument initialMap, GameSession session, GenerationInfo? generated = null, CampaignRecord? campaign = null)
     {
         Directory.CreateDirectory(folder);
         var current = PathFor(folder, AutosaveCurrentName);
         var temp = current + ".tmp";
-        GameRecordSerializer.Save(GameReplay.Record(initialMap, session, "Autosave", generated), temp);
+        GameRecordSerializer.Save(GameReplay.Record(initialMap, session, "Autosave", generated, campaign), temp);
         if (File.Exists(current))
         {
             File.Move(current, PathFor(folder, AutosavePreviousName), overwrite: true);
@@ -80,10 +81,11 @@ public static class GameSaves
     /// <summary>
     /// Writes the session as <paramref name="name"/> in <paramref name="folder"/>, replacing a save of that name; the old
     /// file stays until the new one is complete. <paramref name="initialMap"/> is the map the game started from, <paramref name="generated"/>
-    /// how it was generated (null for a hand-made map).
+    /// how it was generated (null for a hand-made map), <paramref name="campaign"/> the campaign it is a map of (ADR-241).
     /// </summary>
-    public static string Save(string folder, string name, MapDocument initialMap, GameSession session, GenerationInfo? generated = null) =>
-        SaveRecord(folder, name, GameReplay.Record(initialMap, session, name.Trim(), generated));
+    public static string Save(
+        string folder, string name, MapDocument initialMap, GameSession session, GenerationInfo? generated = null, CampaignRecord? campaign = null) =>
+        SaveRecord(folder, name, GameReplay.Record(initialMap, session, name.Trim(), generated, campaign));
 
     /// <summary>
     /// Writes a game's record as the save <paramref name="name"/> in <paramref name="folder"/>, like <see cref="Save"/>: a LAN client's save is the
@@ -108,8 +110,9 @@ public static class GameSaves
     /// Writes the session's replay (ADR-101: "Save replay" on an end screen) as <paramref name="name"/><c>.ewreplay.json</c> in
     /// <paramref name="folder"/>, replacing one of that name; the same record as a save, without the save label.
     /// </summary>
-    public static string SaveReplay(string folder, string name, MapDocument initialMap, GameSession session, GenerationInfo? generated = null) =>
-        SaveReplayRecord(folder, name, GameReplay.Record(initialMap, session, generated: generated));
+    public static string SaveReplay(
+        string folder, string name, MapDocument initialMap, GameSession session, GenerationInfo? generated = null, CampaignRecord? campaign = null) =>
+        SaveReplayRecord(folder, name, GameReplay.Record(initialMap, session, generated: generated, campaign: campaign));
 
     /// <summary>Writes a game's record as the replay <paramref name="name"/>, like <see cref="SaveReplay"/> (a LAN client's is the host's, ADR-196).</summary>
     public static string SaveReplayRecord(string folder, string name, GameRecordDocument record)

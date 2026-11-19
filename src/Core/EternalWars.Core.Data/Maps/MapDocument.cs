@@ -50,12 +50,13 @@ namespace EternalWars.Core.Data.Maps;
 /// switch (<c>rules.arena</c>; omitted = off) and combat places (<c>combatPlace</c>; ADR-097, ADR-100). 39 = + the ground's height
 /// (<c>heights</c>, one character per tile corner, ADR-182; omitted = flat at 0; older maps get their terrain's heights). 40 = + start zones (<c>startZones</c>, one
 /// character per tile: <c>.</c> none, <c>0</c>–<c>7</c> the player's number; omitted = none; MP-4, ADR-197). 41 = the difficulty's names (<c>rules.difficulty</c>)
-/// are HoMM3's, Easy … Master; older maps' names move up one (ADR-225). Older versions still
+/// are HoMM3's, Easy … Master; older maps' names move up one (ADR-225). 42 = + the map events' captured and battle events, dialogues and
+/// the end of the game (<c>dialogue</c>, <c>endGame</c>; ADR-242). Older versions still
 /// load: <see cref="MapSerializer"/> upgrades their JSON first (<see cref="MapMigrations"/>, ADR-174), so this record is the current format only.
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 41;
+    public const int CurrentFormatVersion = 42;
 
     /// <summary>The format the document is in; a file read through <see cref="MapSerializer"/> has been upgraded to the current one.</summary>
     public int FormatVersion { get; init; } = CurrentFormatVersion;

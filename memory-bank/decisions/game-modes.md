@@ -28,6 +28,7 @@
 | [227](#adr-227-building-adr-225-old-difficulty-names-player-colours-and-the-new-game-screens-players-adr-225-2026-11-19) | Building ADR-225: old difficulty names, player colours and the new-game screen's players (ADR-225, 2026-11-19) | accepted |
 | [233](#adr-233-the-replay-viewer-takes-over-a-battle-played-in-one-command-the-computers-from-its-start-quick-combat-from-just-before-it-adr-164-adr-185-2026-11-19) | The replay viewer takes over a battle played in one command: the computer's from its start, quick combat from just before it (ADR-164, ADR-185, 2026-11-19) | implemented |
 | [234](#adr-234-replays-measured-the-viewers-forward-jumps-play-on-unheard-instead-of-a-state-snapshot-adr-058-adr-164-2026-11-19) | Replays measured; the viewer's forward jumps play on unheard instead of a state snapshot (ADR-058, ADR-164, 2026-11-19) | implemented |
+| [241](#adr-241-campaigns-maps-played-one-after-another-heroes-and-campaign-variables-carried-the-sample-campaign-border-watch-flow-1-adr-131-adr-126-2026-11-19) | Campaigns: maps played one after another, heroes and campaign variables carried, the sample campaign Border Watch (FLOW-1, ADR-131, ADR-126, 2026-11-19) | implemented |
 
 
 ### ADR-057: Victory and defeat
@@ -608,3 +609,39 @@ measurement and the owner's choice. No rule, save or map format change.
   (scopes nest); the rules still hear everything, so the game moves on exactly as when heard.
 - Tests: `UnheardEventsTests` (nothing heard outside while the rules still move the fog; nesting), `ReplayPlayerTests` (a jump forward keeps
   the watched session, is unheard and reaches the recorded state; a jump back and `Reload` replay to the same state).
+
+### ADR-241: Campaigns: maps played one after another, heroes and campaign variables carried, the sample campaign Border Watch (FLOW-1, ADR-131, ADR-126, 2026-11-19)
+**Status**: implemented. Answers FLOW-1. Save format v6 (`campaign`, the options' `carriedHeroes`); older saves load. Points marked *(choice)* are
+the agent's and stand unless the owner changes them.
+
+- **A campaign** (`Campaigns/Campaign`): a name, a description and its maps in order (`CampaignMap`: the map, a title, an intro shown before it,
+  an outro shown once it is won). Played by one person: the map's first human player (`CampaignRules.PlayerOf`). The difficulty is chosen when
+  the campaign begins and kept for every map.
+- **Victory and defeat** (FLOW-1): a campaign map ends by its own conditions, or by a map event (ADR-242). The person's team winning goes on to
+  the next map; any other end offers "Try again", the map from its start with what was carried in and a new seed, or the main menu.
+  *(choice: no "best of" or branching maps; a campaign is a straight line.)*
+- **Carried heroes**: the next map chooses which heroes come in: the roster heroes it names (`CarryHeroes`, when the person still has them),
+  then its `CarryStrongest` strongest others (level, then experience), with or without their armies (`KeepArmy`, default off) and artifacts
+  (`KeepArtifacts`, default on). A hero keeps its level, experience, primary stats, skills, spell book and spells with their ranks, and war
+  machines (`CarriedHero`, captured by `CampaignRules.Capture`). Only roster heroes carry. *(choice: what HoMM3 lets a campaign choose, without
+  its per-map bonus choice.)*
+- **Where a carried hero goes** (`CarriedHeroService`, before the hero placeholders of ADR-126): the person's hero of the same roster hero, else
+  the person's first hero placeholder not yet used. A carried hero the map has no place for, or whose roster hero is another player's or in a
+  prison, waits (`GameState.CarriedWaiting`) and can come into a later map. Carried in through `GameOptions.CarriedHeroes`, so a save or replay
+  of the map starts the same.
+- **Campaign variables** (ADR-131): a won map's kept variables are written over those carried so far, so a later map can take a value set
+  several maps before.
+- **Never ranked**: a game whose options carry campaign variables or heroes is a campaign map (`CampaignRules.InCampaign`) and is not ranked.
+- **Saves** (record v6): a campaign map's save keeps the campaign (`CampaignRecord`: where it comes from, and the progress when the map began),
+  so a loaded save goes on with its campaign once the map is won; a campaign file that is gone leaves the map playing on its own.
+- **Campaign files** (`*.ewcampaign.json`, version 1, `CampaignSerializer`): the campaign's fields, each map naming a map file in the campaign
+  file's folder. The game lists the shipped campaign, then the files in its `user://campaigns` and in the map editor's maps folder.
+  *(choice: written by hand for now; no campaign editor.)*
+- **Border Watch** (`Scenarios/BorderWatchCampaign`, placeholder story): two small maps, Haven against a Necropolis vanguard. Maren Holt holds
+  the Grey Ford, may tend wounded scouts (the kept variable `scouts`) and takes the undead outpost (a captured event ends the map); she is
+  carried with her army into the Ashen Gate through a hero placeholder, where the scouts bring archers on day 1 and taking the gate wins.
+  Each map also plays on its own.
+- **Game app**: Campaign in the main menu opens `CampaignScreen` (the campaigns, the chosen one's maps, the difficulty); `CampaignStoryScreen`
+  shows the intro before each map, the outro after it and the days each map took at the end; the result screen offers "Next map", "Finish the
+  campaign" or "Try again" (`GameResultPanel.Campaign`). Smoke scenario `game-campaign`.
+- **Not done**: a campaign editor, cutscenes, per-map starting bonuses, the prologue map (CAMP-1, its own roadmap item).

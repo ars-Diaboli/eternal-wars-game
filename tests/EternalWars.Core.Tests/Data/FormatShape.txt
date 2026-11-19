@@ -1,4 +1,4 @@
-# Map files (*.ewmap.json), format v41
+# Map files (*.ewmap.json), format v42
 object AllCondition
   conditions: IReadOnlyList<EventCondition>
 object AllyCondition
@@ -118,6 +118,11 @@ object DepositDocument
   level: Int32
   x: Int32 (required)
   y: Int32 (required)
+object DialogueAction
+  lines: IReadOnlyList<DialogueLine>
+object DialogueLine
+  speaker: String
+  text: String
 enum Difficulty: Easy, Normal, Hard, Expert, Master
 object DwellingDocument
   available: Int32?
@@ -131,13 +136,18 @@ object DwellingDocument
 object EnableEventAction
   enabled: Boolean
   event: String
+object EndGameAction
+  text: String
+  won: Boolean
 object EventAction
   type=artifact -> ArtifactAction
   type=available -> AvailableCreaturesAction
   type=battle -> BattleAction
   type=build -> BuildAction
   type=creatures -> CreaturesAction
+  type=dialogue -> DialogueAction
   type=enable -> EnableEventAction
+  type=endGame -> EndGameAction
   type=experience -> ExperienceAction
   type=giveHero -> GiveHeroAction
   type=if -> IfAction
@@ -326,7 +336,7 @@ object MapEventDefinition
   name: String
   stages: IReadOnlyList<QuestStage>
   towns: IReadOnlyList<Int32>
-enum MapEventKind: Hero, Player, Town, Quest
+enum MapEventKind: Hero, Player, Town, Quest, Captured, Battle
 object MapEventSet
   cells: IReadOnlyList<EventCell>
   events: IReadOnlyList<MapEventDefinition>
@@ -690,7 +700,7 @@ object WitchHutDocument
   x: Int32 (required)
   y: Int32 (required)
 
-# Saves and replays (*.ewsave.json, *.ewreplay.json), format v5
+# Saves and replays (*.ewsave.json, *.ewreplay.json), format v6
 object AllCondition
   conditions: IReadOnlyList<EventCondition>
 object AllyCondition
@@ -846,6 +856,35 @@ object BuyWarMachineCommand
   player: PlayerId
   slot: WarMachineSlot
   town: MapObjectId
+object CampaignProgress
+  days: IReadOnlyList<Int32>
+  difficulty: Difficulty
+  heroes: IReadOnlyList<CarriedHero>
+  map: Int32
+  variables: IReadOnlyDictionary<String, Int32>
+object CampaignRecord
+  progress: CampaignProgress
+  source: String
+object CarriedHero
+  army: IReadOnlyList<CarriedStack>
+  artifacts: IReadOnlyList<String>
+  attack: Int32
+  backpack: IReadOnlyList<String>
+  defense: Int32
+  experience: Int32
+  hero: String
+  knowledge: Int32
+  level: Int32
+  name: String
+  skills: IReadOnlyDictionary<String, SkillLevel>
+  spellBook: Boolean
+  spellPower: Int32
+  spells: IReadOnlyDictionary<String, Int32>
+  warMachines: IReadOnlyList<WarMachineSlot>
+object CarriedStack
+  count: Int32
+  creature: String
+  slot: Int32
 object CartographerDocument
   definition: String (required)
   id: Int32 (required)
@@ -932,6 +971,11 @@ object DepositDocument
   level: Int32
   x: Int32 (required)
   y: Int32 (required)
+object DialogueAction
+  lines: IReadOnlyList<DialogueLine>
+object DialogueLine
+  speaker: String
+  text: String
 enum Difficulty: Easy, Normal, Hard, Expert, Master
 object DigCommand
   hero: HeroId
@@ -952,6 +996,9 @@ object DwellingDocument
 object EnableEventAction
   enabled: Boolean
   event: String
+object EndGameAction
+  text: String
+  won: Boolean
 object EndTurnCommand
   player: PlayerId
 object EnterGarrisonCommand
@@ -967,7 +1014,9 @@ object EventAction
   type=battle -> BattleAction
   type=build -> BuildAction
   type=creatures -> CreaturesAction
+  type=dialogue -> DialogueAction
   type=enable -> EnableEventAction
+  type=endGame -> EndGameAction
   type=experience -> ExperienceAction
   type=giveHero -> GiveHeroAction
   type=if -> IfAction
@@ -1104,6 +1153,7 @@ object GameCommand
   player: PlayerId
 object GameOptions
   campaignVariables: IReadOnlyDictionary<String, Int32>
+  carriedHeroes: IReadOnlyList<CarriedHero>
   colours: IReadOnlyDictionary<Int32, Int32>
   difficulty: Difficulty?
   fogMode: FogMode
@@ -1114,6 +1164,7 @@ object GameOptions
   startTowns: IReadOnlyDictionary<Int32, String>
   turnTimerMinutes: Int32?
 object GameRecordDocument
+  campaign: CampaignRecord
   commands: IReadOnlyList<GameCommand> (required)
   digestVersion: Int32
   finalDigest: String
@@ -1290,7 +1341,7 @@ object MapEventDefinition
   name: String
   stages: IReadOnlyList<QuestStage>
   towns: IReadOnlyList<Int32>
-enum MapEventKind: Hero, Player, Town, Quest
+enum MapEventKind: Hero, Player, Town, Quest, Captured, Battle
 object MapEventSet
   cells: IReadOnlyList<EventCell>
   events: IReadOnlyList<MapEventDefinition>
