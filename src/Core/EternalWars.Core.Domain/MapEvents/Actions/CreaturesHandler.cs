@@ -102,4 +102,23 @@ internal sealed class CreaturesHandler : MapEventActionHandler<CreaturesAction>
 
         return taken;
     }
+
+    protected override IEnumerable<EventExpr> Expressions(CreaturesAction action) => [action.Count];
+
+    protected override string Line(CreaturesAction action, GameState? state) => Gain(action.Count, CreatureName(state, action.Creature));
+
+    /// <summary>A hero's, if its army takes them (taken: down to what it has); a garrison's, at a smaller share.</summary>
+    protected override EventWorth Worth(IMapEventValuer valuer, CreaturesAction action)
+    {
+        var count = valuer.Average(action.Count);
+        var value = CreatureValue(valuer.State, action.Creature);
+        if (valuer.Hero is { } hero)
+        {
+            return EventWorth.Gain(count >= 0
+                ? hero.Army.CanAccept(action.Creature) ? 0.85 * count * value : 0
+                : -Math.Min(-count, hero.Army.Stacks.Where(s => s.Stack.Creature == action.Creature).Sum(s => s.Stack.Count)) * value);
+        }
+
+        return valuer.Town is null ? EventWorth.Nothing : EventWorth.Gain(0.6 * count * value);
+    }
 }

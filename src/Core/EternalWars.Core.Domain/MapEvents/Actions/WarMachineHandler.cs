@@ -20,4 +20,11 @@ internal sealed class WarMachineHandler : HeroActionHandler<WarMachineAction>
     }
 
     protected override string Describe(GameState state, WarMachineAction action) => $"{(action.Take ? "−" : "+")} {action.Slot}";
+
+    protected override string Line(WarMachineAction action, GameState? state) => $"{(action.Take ? "Take" : "Give")} the {action.Slot}";
+
+    protected override EventWorth Worth(IMapEventValuer valuer, WarMachineAction action) =>
+        valuer.Hero is not { } hero ? EventWorth.Nothing
+        : hero.WarMachines.Contains(action.Slot) == action.Take ? EventWorth.Gain(action.Take ? -300 : 300)
+        : EventWorth.Nothing;
 }

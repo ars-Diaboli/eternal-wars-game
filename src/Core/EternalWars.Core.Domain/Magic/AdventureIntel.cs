@@ -290,9 +290,7 @@ public static partial class AdventureIntel
                 return [];
         }
 
-        static bool IsReward(MapEvents.EventAction action) => action is not (MapEvents.MessageAction or MapEvents.QuestionAction or MapEvents.IfAction
-            or MapEvents.StopAction or MapEvents.RepeatAction or MapEvents.WhileAction or MapEvents.SetVariableAction or MapEvents.EnableEventAction
-            or MapEvents.RemoveCellAction or MapEvents.RunEventAction);
+        static bool IsReward(MapEvents.EventAction action) => MapEvents.Actions.MapEventActionHandlers.For(action).IsReward;
     }
 
     private static IEnumerable<string> BoxLines(BoxContents contents, Func<string, string> artifact, Func<CreatureStack, string> stack)

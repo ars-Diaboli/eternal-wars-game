@@ -18,4 +18,11 @@ internal sealed class ExperienceHandler : HeroActionHandler<ExperienceAction>
         action with { Amount = new NumberExpr(context.Evaluate(action.Amount)) };
 
     protected override string Describe(GameState state, ExperienceAction action) => $"{Signed(Amount(action.Amount))} experience";
+
+    protected override IEnumerable<EventExpr> Expressions(ExperienceAction action) => [action.Amount];
+
+    protected override string Line(ExperienceAction action, GameState? state) => $"Give {Expr(action.Amount)} experience";
+
+    protected override EventWorth Worth(IMapEventValuer valuer, ExperienceAction action) =>
+        valuer.Hero is null ? EventWorth.Nothing : EventWorth.Gain(Math.Max(0, valuer.Average(action.Amount)));
 }

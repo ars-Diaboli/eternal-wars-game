@@ -34,4 +34,21 @@ internal sealed class ResourceHandler : MapEventActionHandler<ResourceAction>
             economy.Set(player, context.State.GetPlayer(player).Resources - ResourceSet.Of(resource, taken));
         }
     }
+
+    protected override IEnumerable<EventExpr> Expressions(ResourceAction action) => [action.Amount];
+
+    protected override string Line(ResourceAction action, GameState? state) => Gain(action.Amount, action.Resource.ToString());
+
+    /// <summary>What is taken counts only down to what the player has.</summary>
+    protected override EventWorth Worth(IMapEventValuer valuer, ResourceAction action)
+    {
+        if (valuer.Scope.Player is not { } player)
+        {
+            return EventWorth.Nothing;
+        }
+
+        var amount = valuer.Average(action.Amount);
+        var gold = AI.AiContext.GoldValue(action.Resource, 1);
+        return EventWorth.Gain(amount >= 0 ? amount * gold : -Math.Min(-amount, valuer.State.GetPlayer(player).Resources[action.Resource]) * gold);
+    }
 }

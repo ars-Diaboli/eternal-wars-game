@@ -17,4 +17,12 @@ internal sealed class SpellHandler : HeroActionHandler<SpellAction>
 
     protected override string Describe(GameState state, SpellAction action) =>
         $"+ {(state.Spells.TryGet(action.Spell, out var spell) ? spell.Name : action.Spell)}";
+
+    protected override string Line(SpellAction action, GameState? state) =>
+        $"Teach {(state is not null && state.Spells.TryGet(action.Spell, out var taught) ? taught.Name : action.Spell)}";
+
+    protected override EventWorth Worth(IMapEventValuer valuer, SpellAction action) =>
+        valuer.Hero is { HasSpellBook: true } hero && !hero.Spells.ContainsKey(action.Spell) && valuer.State.Spells.TryGet(action.Spell, out var taught)
+            ? EventWorth.Gain(400 * taught.Level)
+            : EventWorth.Nothing;
 }

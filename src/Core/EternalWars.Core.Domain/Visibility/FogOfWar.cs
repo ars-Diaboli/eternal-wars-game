@@ -242,8 +242,11 @@ public sealed class FogOfWar(AdventureMap map, FogMode mode)
         }
     }
 
-    /// <summary>The tiles <paramref name="player"/> has in sight (meaningful under refog; see <see cref="IsInSight"/>).</summary>
-    public IReadOnlyCollection<MapPosition> SightOf(PlayerId player) => _inSight.GetValueOrDefault(player) ?? [];
+    /// <summary>
+    /// The tiles <paramref name="player"/> has in sight now (meaningful under refog; see <see cref="IsInSight"/>): a copy, which later sight
+    /// changes leave as it is (ADR-236).
+    /// </summary>
+    public IReadOnlyCollection<MapPosition> SightOf(PlayerId player) => _inSight.TryGetValue(player, out var sight) ? [.. sight] : [];
 
     /// <summary>A LAN client (ADR-193): tiles the host says the player has explored.</summary>
     internal void MarkExplored(PlayerId player, IEnumerable<MapPosition> positions)

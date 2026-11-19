@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.MapEvents.Actions;
 
 namespace EternalWars.Core.Domain.MapEvents;
 
@@ -190,16 +191,7 @@ public static class MapEventTree
         foreach (var action in actions)
         {
             yield return action;
-            var nested = action switch
-            {
-                IfAction branch => branch.Then.Concat(branch.Else),
-                RepeatAction repeat => repeat.Actions,
-                WhileAction loop => loop.Actions,
-                QuestionAction question => question.Answers.SelectMany(a => a.Actions),
-                MessageAction message => message.Rewards,
-                _ => [],
-            };
-            foreach (var inner in Actions(nested.ToList()))
+            foreach (var inner in MapEventActionHandlers.For(action).Lists(action).SelectMany(Actions))
             {
                 yield return inner;
             }
@@ -224,28 +216,11 @@ public static class MapEventTree
 
     /// <summary>Every condition of the actions, nested ones included.</summary>
     public static IEnumerable<EventCondition> Conditions(IReadOnlyList<EventAction> actions) =>
-        Actions(actions).SelectMany(a => a switch
-        {
-            IfAction branch => Flatten(branch.Condition),
-            WhileAction loop => Flatten(loop.Condition),
-            _ => [],
-        });
+        Actions(actions).SelectMany(a => MapEventActionHandlers.For(a).Conditions(a)).SelectMany(Flatten);
 
     /// <summary>Every expression of the actions and their conditions, nested ones included.</summary>
     public static IEnumerable<EventExpr> Expressions(IReadOnlyList<EventAction> actions) =>
-        Actions(actions).SelectMany(a => a switch
-            {
-                SetVariableAction set => [set.Value],
-                ResourceAction resource => [resource.Amount],
-                ExperienceAction experience => [experience.Amount],
-                PrimaryStatAction stat => [stat.Amount],
-                ManaAction mana => [mana.Amount],
-                MovementAction movement => [movement.Amount],
-                CreaturesAction creatures => [creatures.Count],
-                AvailableCreaturesAction available => [available.Count],
-                RepeatAction repeat => [repeat.Times],
-                _ => Array.Empty<EventExpr>(),
-            })
+        Actions(actions).SelectMany(a => MapEventActionHandlers.For(a).Expressions(a))
             .Concat(Conditions(actions).OfType<CompareCondition>().SelectMany(c => new[] { c.Left, c.Right }))
             .SelectMany(Flatten);
 

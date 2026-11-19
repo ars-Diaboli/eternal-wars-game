@@ -94,10 +94,10 @@ internal sealed class PlayerViewFeed(GameState state, PlayerId viewer)
         Put(changes, "caravans", 0, state.Caravans.Where(c => c.Owner == viewer).ToList());
 
         IReadOnlyList<MapPosition>? sight = null;
-        if (state.Fog.Mode != FogMode.PermanentReveal && !_sight.SetEquals(state.Fog.SightOf(viewer)))
+        if (state.Fog.Mode != FogMode.PermanentReveal && state.Fog.SightOf(viewer) is var now && !_sight.SetEquals(now))
         {
-            _sight = [.. state.Fog.SightOf(viewer)];
-            sight = [.. _sight];
+            _sight = [.. now];
+            sight = [.. now];
         }
 
         if (changes.Count == 0 && _explored.Count == 0 && sight is null && _events.Count == 0)

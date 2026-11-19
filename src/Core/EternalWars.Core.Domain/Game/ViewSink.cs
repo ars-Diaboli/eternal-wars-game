@@ -61,8 +61,12 @@ public interface IViewSink
 /// <summary>The sink of a session that follows the host: it writes straight into its state.</summary>
 internal sealed class ViewSink(GameState state) : IViewSink
 {
+    /// <summary>How many writes the host's view made: part of <see cref="GameSession.ChangeStamp"/>, so a route cached before one is planned again.</summary>
+    public long Writes { get; private set; }
+
     public void ShowGame(GameView game)
     {
+        Writes++;
         state.Date = game.Date;
         state.WeekEvent = game.WeekEvent;
         state.CurrentPlayerIndex = game.CurrentPlayerIndex;
@@ -75,6 +79,7 @@ internal sealed class ViewSink(GameState state) : IViewSink
 
     public void ShowPlayer(PlayerId player, PlayerView view)
     {
+        Writes++;
         var shown = state.GetPlayer(player);
         shown.Name = view.Name;
         shown.IsHuman = view.IsHuman;
@@ -87,22 +92,51 @@ internal sealed class ViewSink(GameState state) : IViewSink
         shown.AutoCombat = view.AutoCombat;
     }
 
-    public void AddHero(Hero hero) => state.AddHero(hero);
+    public void AddHero(Hero hero)
+    {
+        Writes++;
+        state.AddHero(hero);
+    }
 
-    public void RemoveHero(Hero hero) => state.RemoveHero(hero);
+    public void RemoveHero(Hero hero)
+    {
+        Writes++;
+        state.RemoveHero(hero);
+    }
 
-    public void HeroChanged(Hero hero) => state.ForgetHeroPlaces();
+    public void HeroChanged(Hero hero)
+    {
+        Writes++;
+        state.ForgetHeroPlaces();
+    }
 
-    public void AddObject(MapObject mapObject, int? index) => state.AddObject(mapObject, index);
+    public void AddObject(MapObject mapObject, int? index)
+    {
+        Writes++;
+        state.AddObject(mapObject, index);
+    }
 
-    public int RemoveObject(MapObject mapObject) => state.RemoveObject(mapObject);
+    public int RemoveObject(MapObject mapObject)
+    {
+        Writes++;
+        return state.RemoveObject(mapObject);
+    }
 
-    public void Remember(PlayerId player, KnownObject known) => state.Memory.Set(player, known);
+    public void Remember(PlayerId player, KnownObject known)
+    {
+        Writes++;
+        state.Memory.Set(player, known);
+    }
 
-    public void Forget(PlayerId player, MapObjectId mapObject) => state.Memory.Forget(player, mapObject);
+    public void Forget(PlayerId player, MapObjectId mapObject)
+    {
+        Writes++;
+        state.Memory.Forget(player, mapObject);
+    }
 
     public void ReplaceRetiredHeroes(PlayerId player, IEnumerable<Hero> heroes)
     {
+        Writes++;
         state.RemoveRetiredHeroesOf(player);
         foreach (var hero in heroes)
         {
@@ -112,6 +146,7 @@ internal sealed class ViewSink(GameState state) : IViewSink
 
     public void ReplaceCaravans(PlayerId player, IEnumerable<Caravan> caravans)
     {
+        Writes++;
         state.RemoveCaravansOf(player);
         foreach (var caravan in caravans)
         {
@@ -119,9 +154,17 @@ internal sealed class ViewSink(GameState state) : IViewSink
         }
     }
 
-    public void MarkExplored(PlayerId player, IEnumerable<MapPosition> positions) => state.Fog.MarkExplored(player, positions);
+    public void MarkExplored(PlayerId player, IEnumerable<MapPosition> positions)
+    {
+        Writes++;
+        state.Fog.MarkExplored(player, positions);
+    }
 
-    public void SetSight(PlayerId player, IEnumerable<MapPosition> positions) => state.Fog.SetSight(player, positions);
+    public void SetSight(PlayerId player, IEnumerable<MapPosition> positions)
+    {
+        Writes++;
+        state.Fog.SetSight(player, positions);
+    }
 }
 
 /// <summary>The game as a whole, as one player may see it (ADR-193).</summary>

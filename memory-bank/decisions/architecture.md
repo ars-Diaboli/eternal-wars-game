@@ -36,6 +36,8 @@
 | [224](#adr-224-the-sim-tools-commands-are-classes-with-strict-options-saves-stream-to-disk-and-list-from-their-label-adr-034-adr-058-2026-11-19) | The sim tool's commands are classes with strict options; saves stream to disk and list from their label (ADR-034, ADR-058, 2026-11-19) | implemented |
 | [231](#adr-231-the-game-apps-remaining-policy-moves-to-core-autosave-rematch-a-saves-seats-lan-rules-replay-recovery-the-maps-focus-adr-222-adr-226-2026-11-19) | The game app's remaining policy moves to core: autosave, rematch, a save's seats, LAN rules, replay recovery, the map's focus (ADR-222, ADR-226, 2026-11-19) | implemented |
 | [232](#adr-232-code-health-continue-falls-back-to-a-save-that-loads-the-events-panel-refreshes-once-and-while-shown-every-ai-tuning-number-is-a-weight-leftover-cleanups-adr-220-adr-224-adr-226-2026-11-19) | Code health: Continue falls back to a save that loads, the events panel refreshes once and while shown, every AI tuning number is a weight, leftover cleanups (ADR-220, ADR-224, ADR-226, 2026-11-19) | implemented |
+| [236](#adr-236-a-lan-clients-view-writes-move-the-change-stamp-a-players-sight-is-handed-out-as-a-copy-adr-205-adr-218-adr-226-2026-11-19) | A LAN client's view writes move the change stamp; a player's sight is handed out as a copy (ADR-205, ADR-218, ADR-226, 2026-11-19) | implemented |
+| [237](#adr-237-a-map-event-actions-handler-tells-what-the-action-holds-its-editor-line-and-its-worth-to-the-ai-adr-219-adr-226-2026-11-19) | A map event action's handler tells what the action holds, its editor line and its worth to the AI (ADR-219, ADR-226, 2026-11-19) | implemented |
 
 
 ### ADR-001: Godot 4.7.2 (.NET) + C# on .NET 10
@@ -425,7 +427,7 @@ keep their values as fixed values, and their heroes start without an army.
   (`All`, `For`) that throws on a kind it does not know, and a test per registry that fails while any kind is missing or doubled.
   - Battle effect grammar: `Magic/Parsing/SpellEffectHeads` (per `SpellEffectKind`) and `SpellEffectWords` (the keyword table; a
     kind-bound word comes before the general one); `SpellEffectReader` keeps the cross-word checks.
-  - Map event actions: `MapEvents/Actions/MapEventActionHandlers`, keyed by action type (`Apply`, `Fix`, `Describe`, `Place`).
+  - Map event actions: `MapEvents/Actions/MapEventActionHandlers`, keyed by action type (`Apply`, `Fix`, `Describe`, `Place`; more in ADR-237).
     `AdvanceQuestAction` stays nested in `MapEventService` so its saved type name does not change.
   - Adventure spells: `Magic/AdventureSpells/AdventureSpellHandlers`, keyed by spell id; `AdventureCast` carries the cast.
   - Scenario conditions: `Game/Conditions/ScenarioConditionHandlers`, one class per kind with what it means for the game's end, its
@@ -559,3 +561,34 @@ the AI plays as before.
   `GameFlowService`; the handler interface's comment names the validator's rules check. The game app's views and handlers hold the game's
   `GameDirector` itself, so a callback after `LeaveGame` no longer dereferences the cleared field. The map chat's place and ground are
   `UiTheme` tokens, set by `ChatPanel.OverTheMap`.
+
+### ADR-236: A LAN client's view writes move the change stamp; a player's sight is handed out as a copy (ADR-205, ADR-218, ADR-226, 2026-11-19)
+**Status**: implemented
+
+- **Change stamp**: `GameSession.ChangeStamp` (ADR-205) counted commands, events and hero moves, but a LAN client's state changes through
+  its `IViewSink` (ADR-218), which does none of these. A route cached by `HeroMovementService.FindPath` could then outlive the host's write
+  that changed the map (the hover preview showing a route through a hero that just arrived). The sink now counts its writes, and the stamp
+  adds them.
+- **Sight**: `FogOfWar.SightOf` returns a copy of the player's tiles in sight, not the live set, so no reader can see it change under it
+  or cast it back and change the fog. Its one hot reader, `PlayerViewFeed`, reads it once a send.
+- Tests: `ViewWritesTests`.
+
+### ADR-237: A map event action's handler tells what the action holds, its editor line and its worth to the AI (ADR-219, ADR-226, 2026-11-19)
+**Status**: implemented. No rule, save, map format or protocol change.
+
+- Domain switched on the map event action type outside its handlers (ADR-219) in three places: `MapEventTree` (the lists, conditions and
+  expressions an action holds), `MapEventText` (the editor's line) and the AI's event worth (`TargetValuer`). A new action had to be added
+  to each, and nothing failed when one was missed. They are now members of `IMapEventActionHandler`:
+  - `Lists`, `ListNames`, `WithLists`: the action lists an action holds, their names in the editor, and the action with them replaced
+    (`MapEventTree.Actions` and `MapEventTreeEdit` use them).
+  - `Conditions`, `Expressions`: the action's own conditions and expressions (the tree walks flatten them).
+  - `Line`: the editor's line (`MapEventText.Describe(action)`), abstract, so every handler has one.
+  - `Worth`: the action's worth to the AI in gold and whether it ends the event. The handler prices it through `IMapEventValuer` (the
+    event's hero, town and player, expressions at their averages, conditions, the worth of nested actions, a battle's estimate and an
+    artifact's value), which the target valuer implements. The numbers are as before.
+  - `IsReward`: whether the action gives or takes something (else it steers the event); the arena's preparation-day look at a quest lists only rewards.
+- `MapEventActionHandlersTests` checks every handler against its action's fields: a reward with an amount draws it in `Fix` (a
+  message's line would otherwise show the formula); a handler overrides `Expressions`, `Conditions` and the list members exactly when its
+  action holds an expression, a condition or action lists.
+- The checks that look for particular actions (`MapEventChecks`, `MapEventRules.Problem`, the editor's event rename) stay where they are:
+  they ask about a few actions, not every type.

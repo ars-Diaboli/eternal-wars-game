@@ -21,4 +21,11 @@ internal sealed class MovementHandler : HeroActionHandler<MovementAction>
         action with { Amount = new NumberExpr(context.Evaluate(action.Amount)) };
 
     protected override string Describe(GameState state, MovementAction action) => $"{Signed(Amount(action.Amount))} movement";
+
+    protected override IEnumerable<EventExpr> Expressions(MovementAction action) => [action.Amount];
+
+    protected override string Line(MovementAction action, GameState? state) => Gain(action.Amount, "movement");
+
+    protected override EventWorth Worth(IMapEventValuer valuer, MovementAction action) =>
+        valuer.Hero is { } hero ? EventWorth.Gain(Math.Max(-hero.MovementPoints, valuer.Average(action.Amount))) : EventWorth.Nothing;
 }

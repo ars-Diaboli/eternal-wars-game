@@ -27,4 +27,11 @@ internal sealed class ManaHandler : HeroActionHandler<ManaAction>
         action with { Amount = new NumberExpr(context.Evaluate(action.Amount)) };
 
     protected override string Describe(GameState state, ManaAction action) => $"{Signed(Amount(action.Amount))} mana";
+
+    protected override IEnumerable<EventExpr> Expressions(ManaAction action) => [action.Amount];
+
+    protected override string Line(ManaAction action, GameState? state) => Gain(action.Amount, "mana");
+
+    protected override EventWorth Worth(IMapEventValuer valuer, ManaAction action) =>
+        valuer.Hero is { } hero ? EventWorth.Gain(2 * Math.Max(-hero.Mana, valuer.Average(action.Amount))) : EventWorth.Nothing;
 }

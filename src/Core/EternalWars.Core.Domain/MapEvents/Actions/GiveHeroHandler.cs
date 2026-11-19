@@ -50,4 +50,12 @@ internal sealed class GiveHeroHandler : MapEventActionHandler<GiveHeroAction>
         new[] { around }.Concat(DirectionExtensions.All.Select(around.Step))
             .Cast<MapPosition?>()
             .FirstOrDefault(p => MovementRules.CheckTile(state, p!.Value) == MoveResult.Moved && state.HeroAt(p.Value) is null && state.ObjectCellAt(p.Value) is null);
+
+    protected override string Line(GiveHeroAction action, GameState? state) =>
+        $"Give the hero {(state is not null && state.HeroRoster.Contains(action.Hero) ? state.HeroRoster.Get(action.Hero).Name : action.Hero)}";
+
+    protected override EventWorth Worth(IMapEventValuer valuer, GiveHeroAction action) =>
+        valuer.Scope.Player is { } owner && valuer.State.HeroRoster.Contains(action.Hero) && !valuer.State.HeroLimitReached(owner)
+            ? EventWorth.Gain(2500)
+            : EventWorth.Nothing;
 }

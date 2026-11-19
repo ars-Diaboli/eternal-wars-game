@@ -23,4 +23,17 @@ internal sealed class ArtifactHandler : HeroActionHandler<ArtifactAction>
 
     protected override string Describe(GameState state, ArtifactAction action) =>
         $"{(action.Take ? "−" : "+")} {(state.Artifacts.TryGet(action.Artifact, out var artifact) ? artifact.Name : action.Artifact)}";
+
+    protected override string Line(ArtifactAction action, GameState? state) =>
+        $"{(action.Take ? "Take" : "Give")} {(state is not null && state.Artifacts.TryGet(action.Artifact, out var artifact) ? artifact.Name : action.Artifact)}";
+
+    /// <summary>Given, if the backpack has room; taken, if the hero has it.</summary>
+    protected override EventWorth Worth(IMapEventValuer valuer, ArtifactAction action) => valuer.Hero switch
+    {
+        null => EventWorth.Nothing,
+        { Artifacts.BackpackFull: false } when !action.Take => EventWorth.Gain(valuer.ArtifactWorth(action.Artifact)),
+        { } hero when action.Take && (hero.Artifacts.IsWorn(action.Artifact) || hero.Artifacts.Backpack.Contains(action.Artifact)) =>
+            EventWorth.Gain(-valuer.ArtifactWorth(action.Artifact)),
+        _ => EventWorth.Nothing,
+    };
 }

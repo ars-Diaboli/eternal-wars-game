@@ -1,6 +1,8 @@
 using EternalWars.Core.Domain.Armies;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.MapEvents;
+using EternalWars.Core.Domain.MapEvents.Actions;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
 
@@ -31,107 +33,11 @@ internal sealed partial class TargetValuer
         return site.Kind == MapObjectKind.QuestGuard ? worth + _weights.GuardOpened + OpensTheWay(hero.Owner, site.VisitPosition) : worth;
     }
 
-    /// <summary>The actions' worth in gold, and whether they end the event (a stop, or a battle the hero would lose).</summary>
-    public (double Value, bool Stops) Worth(IReadOnlyList<EventAction> actions, EventScope scope, int depth)
-    {
-        var total = 0.0;
-        foreach (var action in actions)
-        {
-            var (value, stops) = Worth(action, scope, depth);
-            total += value;
-            if (stops)
-            {
-                return (total, true);
-            }
-        }
-
-        return (total, false);
-    }
-
-    /// <summary>One action's worth by the AI's usual values (those of <see cref="BoxValue"/>); a battle is played out by the estimator.</summary>
-    private (double Value, bool Stops) Worth(EventAction action, EventScope scope, int depth)
-    {
-        var hero = scope.Hero;
-        var town = scope.Town is { } townId ? _state.FindObject(townId) as Town : null;
-        switch (action)
-        {
-            case StopAction:
-                return (0, true);
-            case IfAction branch:
-                return Worth(EventHolds(branch.Condition, scope) ? branch.Then : branch.Else, scope, depth);
-            case RepeatAction repeat:
-                var times = (int)Math.Clamp(Math.Round(Average(repeat.Times, scope)), 0, MapEventService.MaxLoopRounds);
-                if (times == 0)
-                {
-                    return (0, false);
-                }
-
-                var round = Worth(repeat.Actions, scope, depth);
-                return round.Stops ? round : (times * round.Value, false);
-            case WhileAction loop:
-                return EventHolds(loop.Condition, scope) ? Worth(loop.Actions, scope, depth) : (0, false); // one round: what changes is not followed
-            case RunEventAction run:
-                // A stop in the run event ends only it.
-                return depth < EventWorthDepth && _state.MapEvents.Set.Find(run.Event) is { Kind: not MapEventKind.Quest } other && _state.MapEvents.IsEnabled(other.Name)
-                    ? (Worth(other.Actions, scope, depth + 1).Value, false)
-                    : (0, false);
-            case MessageAction message:
-                return Worth(message.Rewards, scope, depth);
-            case QuestionAction question when question.Answers.Count > 0:
-                return question.Answers.Select(a => Worth(a.Actions, scope, depth)).MaxBy(w => w.Value);
-            case BattleAction fight when hero is not null:
-                if (hero.Army.IsEmpty || fight.Army.Count == 0)
-                {
-                    return (0, true);
-                }
-
-                var enemy = Army.Of([.. fight.Army.Take(Army.SlotCount)]);
-                return _ai.Estimator.Fight(hero, enemy).IsSafe(_weights.MonsterLoss)
-                    ? (_weights.GuardArmyShare * _ai.ArmyPower(enemy), false)
-                    : (-(_ai.ArmyPower(hero.Army) + 5000.0), true); // the hero would be lost
-        }
-
-        return (Gain(action, scope, hero, town), false);
-    }
-
-    /// <summary>The worth of an action that gives or takes something (0 for one the event cannot do, or that gives nothing the AI values).</summary>
-    private double Gain(EventAction action, EventScope scope, Hero? hero, Town? town)
-    {
-        double Amount(EventExpr expr) => Average(expr, scope);
-        double CreatureValue(string id) => _state.Creatures.TryGet(id, out var creature) ? creature.FightValue : 0;
-        double ArtifactGain(string id) => hero is not null && _state.Artifacts.TryGet(id, out var artifact) ? ArtifactWorth(hero, artifact) : 0;
-        return action switch
-        {
-            ResourceAction resource when scope.Player is { } player => Amount(resource.Amount) is var amount && amount >= 0
-                ? amount * AiContext.GoldValue(resource.Resource, 1)
-                : -Math.Min(-amount, _state.GetPlayer(player).Resources[resource.Resource]) * AiContext.GoldValue(resource.Resource, 1),
-            ExperienceAction experience when hero is not null => Math.Max(0, Amount(experience.Amount)),
-            PrimaryStatAction stat when hero is not null => 750 * Math.Max(0, Amount(stat.Amount)),
-            SkillAction skill when hero is not null && BuiltInSkills.Contains(skill.Skill) && BuiltInSkills.Resolve(skill.Skill) is var id && hero.Skills.CanRaise(id) =>
-                1000 * Math.Max(0, (int)skill.Level - (int)hero.Skills.Level(id)),
-            ArtifactAction { Take: false } artifact => hero is { Artifacts.BackpackFull: false } ? ArtifactGain(artifact.Artifact) : 0,
-            ArtifactAction artifact when hero is not null && (hero.Artifacts.IsWorn(artifact.Artifact) || hero.Artifacts.Backpack.Contains(artifact.Artifact)) =>
-                -ArtifactGain(artifact.Artifact),
-            WarMachineAction machine when hero is not null => machine.Take
-                ? hero.WarMachines.Contains(machine.Slot) ? -300 : 0
-                : hero.WarMachines.Contains(machine.Slot) ? 0 : 300,
-            SpellBookAction => hero is { HasSpellBook: false } ? 500 : 0,
-            SpellAction spell when hero is { HasSpellBook: true } && !hero.Spells.ContainsKey(spell.Spell) && _state.Spells.TryGet(spell.Spell, out var taught) =>
-                400 * taught.Level,
-            ManaAction mana when hero is not null => 2 * Math.Max(-hero.Mana, Amount(mana.Amount)),
-            MovementAction movement when hero is not null => Math.Max(-hero.MovementPoints, Amount(movement.Amount)),
-            MoraleAction morale when hero is not null => 150 * (Math.Clamp(morale.Morale, -3, 3) + Math.Clamp(morale.Luck, -3, 3)),
-            CreaturesAction creatures when hero is not null => Amount(creatures.Count) is var count && count >= 0
-                ? hero.Army.CanAccept(creatures.Creature) ? 0.85 * count * CreatureValue(creatures.Creature) : 0
-                : -Math.Min(-count, hero.Army.Stacks.Where(s => s.Stack.Creature == creatures.Creature).Sum(s => s.Stack.Count)) * CreatureValue(creatures.Creature),
-            CreaturesAction creatures when town is not null => 0.6 * Amount(creatures.Count) * CreatureValue(creatures.Creature),
-            AvailableCreaturesAction available when town is not null => 0.4 * Amount(available.Count) * CreatureValue(available.Line),
-            BuildAction build when town is not null => town.Level(build.Building) >= build.Level ? 0 : 1000,
-            RevealAction when scope.Player is not null => 100,
-            GiveHeroAction give when scope.Player is { } owner && _state.HeroRoster.Contains(give.Hero) && !_state.HeroLimitReached(owner) => 2500,
-            _ => 0,
-        };
-    }
+    /// <summary>
+    /// The actions' worth in gold, and whether they end the event (a stop, or a battle the hero would lose): each action's handler prices it
+    /// (ADR-237) by the AI's usual values (those of <see cref="BoxValue"/>), through <see cref="EventValuer"/>.
+    /// </summary>
+    public EventWorth Worth(IReadOnlyList<EventAction> actions, EventScope scope, int depth) => new EventValuer(this, scope, depth).Worth(actions);
 
     /// <summary>An expression's value with every random number at its average (the AI draws none).</summary>
     private double Average(EventExpr expr, EventScope scope) => expr switch
@@ -164,4 +70,51 @@ internal sealed partial class TargetValuer
         },
         _ => MapEventEvaluator.Test(_state, scope, condition),
     };
+
+    /// <summary>What the action handlers price an event's actions with: this valuer's averages and values, for one scope, at one depth.</summary>
+    private sealed class EventValuer(TargetValuer owner, EventScope scope, int depth) : IMapEventValuer
+    {
+        public GameState State => owner._state;
+
+        public EventScope Scope => scope;
+
+        public Hero? Hero => scope.Hero;
+
+        public Town? Town { get; } = scope.Town is { } town ? owner._state.FindObject(town) as Town : null;
+
+        public double Average(EventExpr expr) => owner.Average(expr, scope);
+
+        public bool Holds(EventCondition condition) => owner.EventHolds(condition, scope);
+
+        public EventWorth Worth(IReadOnlyList<EventAction> actions)
+        {
+            var total = 0.0;
+            foreach (var action in actions)
+            {
+                var worth = MapEventActionHandlers.For(action).Worth(this, action);
+                total += worth.Value;
+                if (worth.Stops)
+                {
+                    return new EventWorth(total, true);
+                }
+            }
+
+            return EventWorth.Gain(total);
+        }
+
+        public double RunWorth(IReadOnlyList<EventAction> actions) =>
+            depth < EventWorthDepth ? new EventValuer(owner, scope, depth + 1).Worth(actions).Value : 0;
+
+        public EventWorth Fight(IReadOnlyList<CreatureStack> army)
+        {
+            var hero = scope.Hero!;
+            var enemy = Army.Of([.. army.Take(Army.SlotCount)]);
+            return owner._ai.Estimator.Fight(hero, enemy).IsSafe(owner._weights.MonsterLoss)
+                ? EventWorth.Gain(owner._weights.GuardArmyShare * owner._ai.ArmyPower(enemy))
+                : EventWorth.Stop with { Value = -(owner._ai.ArmyPower(hero.Army) + 5000.0) }; // the hero would be lost
+        }
+
+        public double ArtifactWorth(string artifact) =>
+            scope.Hero is { } hero && owner._state.Artifacts.TryGet(artifact, out var definition) ? owner.ArtifactWorth(hero, definition) : 0;
+    }
 }
