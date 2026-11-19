@@ -48,10 +48,15 @@ public partial class Main : Node3D
     /// <summary>Which screen is shown: the screens before a game, the menu, the map or the battle scene (ADR-222).</summary>
     private GameScreens _screens = null!;
     private string _saveFolder = "";
-    private bool _turnBegan;
+
+    /// <summary>When the game shown is autosaved (ADR-231); null outside a game.</summary>
+    private AutosaveSchedule? _autosave;
 
     /// <summary>The game's computer players, turn timer and the colours played here (ADR-222); null outside a game.</summary>
     private GameDirector? _director;
+
+    /// <summary>Where the map's camera goes and which hero is selected (ADR-231); null outside a game.</summary>
+    private MapFocus _focus = null!;
     private MapViewContext _context = null!;
     private AdventureWorldView _world = null!;
     private StrategyCamera _camera = null!;
@@ -78,9 +83,6 @@ public partial class Main : Node3D
 
     /// <summary>The right-click information window (ADR-154), above every screen, for the whole run.</summary>
     private readonly InfoWindow _info = new();
-
-    /// <summary>The computer hero the camera last followed (ADR-090).</summary>
-    private HeroId? _followed;
 
     public override void _ExitTree() => GameCursors.Release();
 
@@ -206,11 +208,12 @@ public partial class Main : Node3D
         _context = null!;
         _status = null!;
         _director = null;
+        _focus = null!;
+        _autosave = null;
         _timerPanel = null;
         _autoCombat = null;
         _chat = null;
         _pause = null;
-        _followed = null;
     }
 
     /// <summary>
@@ -260,13 +263,13 @@ public partial class Main : Node3D
     /// <summary>Hot-seat: the map is drawn through the eyes of whoever plays now, with their first hero selected.</summary>
     private void ShowTurn(PlayerId player)
     {
-        if (_session.State.CurrentPlayer.Id != player)
+        if (!_focus.StillTheTurnOf(player))
         {
             return; // the turn has passed on meanwhile
         }
 
         _context.SetViewer(player);
-        _mapInput.Select(_session.State.HeroesOf(player).FirstOrDefault()?.Id, focus: true);
+        _mapInput.Select(_focus.FirstHeroOf(player), focus: true);
         FocusOnEventPlace(_session.State.PendingDecision);
     }
 
@@ -276,7 +279,7 @@ public partial class Main : Node3D
     /// </summary>
     private void FocusOnEventPlace(PendingDecision? decision)
     {
-        if (decision is MapEventDecision { Place: { } place } && !ShowingComputerMoves && PlaysHere(_session.State.CurrentPlayer.Id))
+        if (_focus.EventPlace(decision, ShowingComputerMoves) is { } place)
         {
             _context.SetLevel(place.Level);
             _camera.FocusOn(MapSpace.ToWorld(place));
@@ -375,6 +378,8 @@ public partial class Main : Node3D
 
         // The computer players and the clock are a LAN host's; a client only shows them (ADR-198).
         _director = new GameDirector(session, _host is not null ? LanSeats.Of(_host) : _client is not null ? LanSeats.Of(_client) : null, watching: !playing);
+        _focus = new MapFocus(session, _director, watching: Watching);
+        _autosave = new AutosaveSchedule(session, watching: !playing);
         _menu.CanSave = playing; // a LAN client saves the host's record of the game (ADR-196)
         var state = session.State;
         _context = new MapViewContext(state, _session.Events, playing ? _director.Viewer() : _replay!.Viewer(state))
@@ -407,22 +412,18 @@ public partial class Main : Node3D
             BuildReplayBar(); // the viewer's controls; no ranking, end screen, clock or autosave (ADR-164)
         }
 
-        _followed = null;
         ApplySpeeds();
 
         // Autosave once the command that began a turn is logged and settled (ADR-058).
-        _turnBegan = false;
-        if (playing)
+        var autosave = _autosave;
+        _game.SubscribeWhileInTree<TurnStarted>(_session.Events, _ => autosave.TurnStarted());
+        _game.SubscribeWhileInTree<CommandExecuted>(_session.Events, _ =>
         {
-            _game.SubscribeWhileInTree<TurnStarted>(_session.Events, _ => _turnBegan = true);
-            _game.SubscribeWhileInTree<CommandExecuted>(_session.Events, _ =>
+            if (autosave.CommandExecuted())
             {
-                if (_turnBegan)
-                {
-                    Autosave();
-                }
-            });
-        }
+                Autosave();
+            }
+        });
 
         // The simultaneous first week of a LAN game (ADR-197): the status line says how today is played.
         _game.SubscribeWhileInTree<SimultaneousDayStarted>(_session.Events, e =>
@@ -432,7 +433,7 @@ public partial class Main : Node3D
         _game.SubscribeWhileInTree<TurnStarted>(_session.Events, e =>
         {
             _hud.CloseScreens(); // the turn may have ended on the timer with a screen open
-            _followed = null;
+            _focus.TurnStarted();
             if (!playing)
             {
                 ReplayTurnStarted(); // the viewer keeps its own eyes on the map
@@ -450,23 +451,23 @@ public partial class Main : Node3D
         _context.HeroStepShown += FollowStep;
         _game.SubscribeWhileInTree<HeroDefeated>(_session.Events, e =>
         {
-            if (e.Hero == _mapInput.SelectedHero)
+            if (_focus.Reselects(e, _mapInput.SelectedHero, out var next))
             {
-                _mapInput.Select(_session.State.HeroesOf(_session.State.CurrentPlayer.Id).FirstOrDefault()?.Id, focus: false);
+                _mapInput.Select(next, focus: false);
             }
         });
         _game.SubscribeWhileInTree<HeroTeleported>(_session.Events, e =>
         {
-            if (e.Hero == _mapInput.SelectedHero && e.To.Level != _context.Level)
+            if (MapFocus.AfterTeleport(e, _mapInput.SelectedHero, _context.Level) is { } to)
             {
-                _context.SetLevel(e.To.Level);
-                _camera.FocusOn(MapSpace.ToWorld(e.To));
+                _context.SetLevel(to.Level);
+                _camera.FocusOn(MapSpace.ToWorld(to));
             }
         });
 
         if (resume)
         {
-            _mapInput.Select(state.HeroesOf(_context.Viewer ?? state.CurrentPlayer.Id).FirstOrDefault()?.Id, focus: true);
+            _mapInput.Select(_focus.FirstHeroOf(_context.Viewer ?? state.CurrentPlayer.Id), focus: true);
             _battle.Restore();
             if (playing)
             {
@@ -476,7 +477,10 @@ public partial class Main : Node3D
         else
         {
             _session.Start();
-            Autosave();
+            if (_autosave.Started())
+            {
+                Autosave();
+            }
         }
     }
 
@@ -503,17 +507,11 @@ public partial class Main : Node3D
         }
     }
 
-    /// <summary>
-    /// Follows a computer hero with the camera when it starts walking where the player can see it (ADR-090), unless computer heroes are not
-    /// shown.
-    /// </summary>
+    /// <summary>The camera follows a hero starting to walk where the player can see it, when <see cref="MapFocus"/> says (ADR-090, ADR-164).</summary>
     private void FollowStep(Core.Domain.Heroes.Hero hero, MapPosition to)
     {
-        var watching = Watching; // the viewer follows every hero it can see, on either level (ADR-164)
-        if ((watching || (_speeds.ShowComputerHeroes && !_session.State.GetPlayer(hero.Owner).IsHuman)) && hero.Id != _followed
-            && (watching || to.Level == _context.Level) && _context.IsInSight(to))
+        if (_focus.Follows(hero, to, _speeds.ShowComputerHeroes, _context.Level, _context.IsInSight))
         {
-            _followed = hero.Id;
             _context.SetLevel(to.Level);
             _camera.FocusOn(MapSpace.ToWorld(to));
         }
@@ -594,11 +592,10 @@ public partial class Main : Node3D
     /// </summary>
     private void PlayAgain()
     {
-        var options = _session.State.Options with { Seed = (ulong)System.Random.Shared.NextInt64() };
-        var state = MapConverter.ToGameState(_initialMap, GameContent.All, options);
+        var seed = (ulong)System.Random.Shared.NextInt64(); // a new game's seed, as the new-game screen draws one
+        var state = GameRematch.State(_initialMap, _session.State, GameContent.All, seed, keepControllers: _host is not null);
         if (_host is { } host)
         {
-            state.AssignControllers(_session.State.Players.ToDictionary(p => p.Id, p => p.IsHuman)); // a colour handed to the computer stays its
             var session = new GameSession(state);
             session.Start();
             if (host.PlayAgain(session) is { IsAccepted: false, Error: var error })
@@ -614,7 +611,7 @@ public partial class Main : Node3D
             StartGame(state);
         }
 
-        _status.Text = $"{_initialMap.Name}: a new game, seed {options.Seed}.";
+        _status.Text = $"{_initialMap.Name}: a new game, seed {seed}.";
     }
 
     private void ShowResult()

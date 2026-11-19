@@ -21,7 +21,7 @@ public class ReplayControllerTests
         Assert.True(replay.IsPlaying);
 
         var frames = 0;
-        while (replay.Advance(0.1, held: false, resultShown: false).Kind == ReplayAdvance.Stepped)
+        while (replay.Advance(0.1, default).Kind == ReplayAdvance.Stepped)
         {
             frames++;
         }
@@ -31,7 +31,7 @@ public class ReplayControllerTests
         Assert.False(replay.IsPlaying);
         replay.Toggle(); // nothing to play
         Assert.False(replay.IsPlaying);
-        Assert.Equal(ReplayAdvance.Waited, replay.Advance(0.1, held: false, resultShown: false).Kind);
+        Assert.Equal(ReplayAdvance.Waited, replay.Advance(0.1, default).Kind);
     }
 
     [Fact]
@@ -39,14 +39,14 @@ public class ReplayControllerTests
     {
         var replay = Open();
 
-        Assert.Equal(ReplayAdvance.Waited, replay.Advance(1, held: true, resultShown: false).Kind);
+        Assert.Equal(ReplayAdvance.Waited, replay.Advance(1, new ReplayViews(MenuOpen: true)).Kind);
         replay.Toggle();
         Assert.False(replay.IsPlaying);
-        Assert.Equal(ReplayAdvance.Waited, replay.Advance(1, held: false, resultShown: false).Kind);
+        Assert.Equal(ReplayAdvance.Waited, replay.Advance(1, default).Kind);
         Assert.Equal(0, replay.Player.Position);
 
         replay.Toggle();
-        Assert.Equal(ReplayAdvance.Stepped, replay.Advance(1, held: false, resultShown: false).Kind);
+        Assert.Equal(ReplayAdvance.Stepped, replay.Advance(1, default).Kind);
         Assert.Equal(1, replay.Player.Position);
     }
 
@@ -55,13 +55,13 @@ public class ReplayControllerTests
     {
         var normal = Open();
         normal.TurnStarted(); // half a second at normal speed
-        Assert.Equal(ReplayAdvance.Waited, normal.Advance(0.3, held: false, resultShown: false).Kind);
-        Assert.Equal(ReplayAdvance.Waited, normal.Advance(0.3, held: false, resultShown: false).Kind);
-        Assert.Equal(ReplayAdvance.Stepped, normal.Advance(0.3, held: false, resultShown: false).Kind);
+        Assert.Equal(ReplayAdvance.Waited, normal.Advance(0.3, default).Kind);
+        Assert.Equal(ReplayAdvance.Waited, normal.Advance(0.3, default).Kind);
+        Assert.Equal(ReplayAdvance.Stepped, normal.Advance(0.3, default).Kind);
 
         var instant = Open(AnimationSpeed.Instant);
         instant.TurnStarted();
-        Assert.Equal(ReplayAdvance.Stepped, instant.Advance(0, held: false, resultShown: false).Kind);
+        Assert.Equal(ReplayAdvance.Stepped, instant.Advance(0, default).Kind);
     }
 
     [Fact]
@@ -69,9 +69,9 @@ public class ReplayControllerTests
     {
         var replay = Open();
 
-        Assert.Equal(ReplayAdvance.Waited, replay.Advance(1, held: false, resultShown: true).Kind);
-        Assert.Equal(ReplayAdvance.LeaveResult, replay.Advance(0.5, held: false, resultShown: true).Kind);
-        Assert.Equal(ReplayAdvance.Waited, replay.Advance(1, held: false, resultShown: true).Kind); // a new moment
+        Assert.Equal(ReplayAdvance.Waited, replay.Advance(1, new ReplayViews(ResultShown: true)).Kind);
+        Assert.Equal(ReplayAdvance.LeaveResult, replay.Advance(0.5, new ReplayViews(ResultShown: true)).Kind);
+        Assert.Equal(ReplayAdvance.Waited, replay.Advance(1, new ReplayViews(ResultShown: true)).Kind); // a new moment
         Assert.Equal(0, replay.Player.Position);
     }
 
@@ -80,15 +80,15 @@ public class ReplayControllerTests
     {
         var replay = Open();
         replay.TurnStarted();
-        replay.Advance(1, held: false, resultShown: true);
+        replay.Advance(1, new ReplayViews(ResultShown: true));
 
         replay.Seek(replay.Player.DayPosition(2));
 
         Assert.Equal(2, replay.Player.Position);
-        Assert.Equal(ReplayAdvance.Stepped, replay.Advance(0, held: false, resultShown: false).Kind);
-        replay.Advance(1, held: false, resultShown: true);
+        Assert.Equal(ReplayAdvance.Stepped, replay.Advance(0, default).Kind);
+        replay.Advance(1, new ReplayViews(ResultShown: true));
         replay.Seek(0);
-        Assert.Equal(ReplayAdvance.Waited, replay.Advance(1, held: false, resultShown: true).Kind); // the result's moment starts again
+        Assert.Equal(ReplayAdvance.Waited, replay.Advance(1, new ReplayViews(ResultShown: true)).Kind); // the result's moment starts again
     }
 
     [Fact]
@@ -127,18 +127,47 @@ public class ReplayControllerTests
     }
 
     [Fact]
-    public void AGameThatDiffersFromItsRecord_PausesTheReplay()
+    public void AGameThatDiffersFromItsRecord_PausesTheReplay_AndIsPutBackWhereItWas()
     {
         var replay = Open();
-        var state = replay.Player.Session.State;
-        replay.Player.Session.Execute(new EndTurnCommand(state.CurrentPlayer.Id)).ThrowIfRejected(); // from outside the record
+        var diverged = replay.Player.Session;
+        diverged.Execute(new EndTurnCommand(diverged.State.CurrentPlayer.Id)).ThrowIfRejected(); // from outside the record
 
-        var frame = replay.Advance(0, held: false, resultShown: false);
+        var frame = replay.Advance(0, default);
 
         Assert.Equal(ReplayAdvance.Diverged, frame.Kind);
         Assert.Contains("diverged", frame.Problem);
         Assert.False(replay.IsPlaying);
         Assert.Equal(0, replay.Player.Position);
+        Assert.NotSame(diverged, replay.Player.Session); // a new session, as the record has it
+        Assert.Empty(replay.Player.Session.CommandLog);
+    }
+
+    [Theory]
+    [InlineData(true, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(false, false, true)]
+    public void TheMenu_HeroesSteps_AndABattlesAnimations_EachHoldTheReplay(bool menu, bool steps, bool battle)
+    {
+        var replay = Open(AnimationSpeed.Instant);
+        var views = new ReplayViews(MenuOpen: menu, StepsPlaying: steps, BattleAnimating: battle);
+
+        Assert.True(views.Hold);
+        Assert.Equal(ReplayAdvance.Waited, replay.Advance(1, views).Kind);
+        Assert.Equal(ReplayAdvance.Stepped, replay.Advance(1, default).Kind);
+        Assert.False(new ReplayViews(ResultShown: true).Hold); // a result stays its moment, then is left
+    }
+
+    [Fact]
+    public void PlayFromHere_IsTheBattlesOnInABattle_AndTheGamesOnTheMap()
+    {
+        var replay = Open();
+
+        Assert.Equal(replay.Player.CanPlayOn, replay.CanPlayFromHere(battleShown: false));
+        Assert.Equal(replay.Player.CanTakeOver, replay.CanPlayFromHere(battleShown: true));
+        replay.Seek(5); // in the battle with the trolls
+        Assert.Equal(replay.Player.CanTakeOver, replay.CanPlayFromHere(battleShown: true));
+        Assert.True(replay.CanPlayFromHere(battleShown: true));
     }
 
     [Fact]

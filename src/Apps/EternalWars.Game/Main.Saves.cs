@@ -62,15 +62,9 @@ public partial class Main
         _menu.ShowInterface(_interface);
     }
 
-    /// <summary>The start of a turn goes into the two autosave slots: this turn's and the previous turn's.</summary>
+    /// <summary>The start of a turn goes into the two autosave slots, this turn's and the previous turn's, when <see cref="AutosaveSchedule"/> says.</summary>
     private void Autosave()
     {
-        _turnBegan = false;
-        if (_session.FollowsHost)
-        {
-            return; // a LAN client holds its player's view, not the game: the host autosaves (ADR-193); the client saves the host's record (ADR-196)
-        }
-
         try
         {
             GameSaves.Autosave(_saveFolder, _initialMap, _session, _generated);
@@ -236,7 +230,7 @@ public partial class Main
             return;
         }
 
-        if (ask && GameSaves.People(loaded.Session.State).Count > 1)
+        if (ask && SavedGameStart.AsksWhoPlays(loaded.Session.State))
         {
             ShowSavedGame(lan: null, loaded);
             return;
@@ -339,16 +333,7 @@ public partial class Main
         _menu.Close();
         StopWatching();
         StopNetwork(keep: null, listening: lobby is not null);
-        foreach (var seat in seats.Where(s => s.Kind == LanSeatKind.Computer && session.State.GetPlayer(s.Id).IsHuman))
-        {
-            session.Execute(new HandToComputerCommand(seat.Id)).ThrowIfRejected(); // the screen keeps a colour here
-        }
-
-        // On one computer nobody's day can be hidden from another's: a save made during a simultaneous day goes on turn by turn (ADR-197).
-        if (lobby is null && session.State.IsSimultaneous)
-        {
-            session.Execute(new PlayTurnByTurnCommand(session.State.CurrentPlayer.Id, "The game goes on on one computer.")).ThrowIfRejected();
-        }
+        SavedGameStart.GoOn(session, seats.Where(s => s.Kind == LanSeatKind.Computer).Select(s => s.Id), lan: lobby is not null);
 
         _generated = record.Generated;
         HostLobbyGame(session, lobby);

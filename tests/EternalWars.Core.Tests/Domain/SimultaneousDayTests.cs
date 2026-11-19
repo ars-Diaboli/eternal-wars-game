@@ -361,7 +361,7 @@ public class SimultaneousDayTests
     /// Blue's hero A on the left, Red's B on the right, <paramref name="gap"/> tiles between their zones, each <paramref name="zoneWidth"/> tiles
     /// wide; the heroes stand at their zones' outer ends.
     /// </summary>
-    private static GameState Duel(GameOptions options, int zoneWidth = 3, int gap = 20)
+    internal static GameState Duel(GameOptions options, int zoneWidth = 3, int gap = 20)
     {
         var width = (2 * zoneWidth) + gap;
         var row = "A" + new string('.', width - 2) + "B";
@@ -392,7 +392,7 @@ public class SimultaneousDayTests
 
     private static bool Moved(CommandResult result) => result is { IsAccepted: true, Outcome: MoveResult.Moved };
 
-    private static GameSession Started(GameState state)
+    internal static GameSession Started(GameState state)
     {
         GameSession.CheckRefusals = true;
         var session = new GameSession(state);

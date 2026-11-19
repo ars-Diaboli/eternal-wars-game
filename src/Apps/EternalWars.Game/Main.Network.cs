@@ -191,10 +191,7 @@ public partial class Main
         ShowSetup(screen, back: ShowMultiplayer);
         screen.BackRequested += ShowMultiplayer;
 
-        var colon = address.LastIndexOf(':');
-        var (hostName, port) = colon > 0 && int.TryParse(address[(colon + 1)..], out var given)
-            ? (address[..colon], given)
-            : (address, TcpGameListener.DefaultPort);
+        var (hostName, port) = LanAddress.Parse(address);
         TcpConnection connection;
         try
         {
@@ -250,14 +247,9 @@ public partial class Main
             .. lobby.Seats.Select(s => new LobbySeatView(
                 s.Id,
                 s.Colour,
-                s.Kind switch
-                {
-                    SeatKind.Host => $"{s.Player} (host)",
-                    SeatKind.Computer => "computer",
-                    _ => s.Player ?? "open",
-                },
+                LanListing.WhoPlays(s),
                 s.Details,
-                CanTake: s.Kind == SeatKind.Remote && s.Player is null,
+                CanTake: LanListing.CanTake(s),
                 IsYours: s.Id == mine)),
         ],
         lobby.Waiting);
@@ -329,19 +321,7 @@ public partial class Main
     {
         while (_listener is not null && _listener.TryAccept(out var connection))
         {
-            if (_lobby is not null)
-            {
-                _lobby.Accept(connection);
-            }
-            else if (_host is not null)
-            {
-                _host.Accept(connection);
-            }
-            else
-            {
-                connection.Send(new JoinRefused("The host has not started a game yet."));
-                connection.Close("No game yet.");
-            }
+            LanAccept.Route(connection, _lobby, _host);
         }
 
         _lobby?.Poll();
@@ -369,20 +349,7 @@ public partial class Main
         }
     }
 
-    private static LanGameListing Listing(LanGameFound game)
-    {
-        var info = game.Info;
-        var state = info.Started ? "playing" : "in the lobby";
-        var open = info.OpenColours switch
-        {
-            0 => "no open colour",
-            1 => "1 open colour",
-            var n => $"{n} open colours",
-        };
-        return info.Protocol != NetSerializer.ProtocolVersion
-            ? new LanGameListing(game.Address, $"{info.Host}: another version of the game ({game.Address})", CanJoin: false)
-            : new LanGameListing(game.Address, $"{info.Host}: {info.Game}, {state}, {open} ({game.Address})", info.OpenColours > 0);
-    }
+    private static LanGameListing Listing(LanGameFound game) => new(game.Address, LanListing.Describe(game), LanListing.CanJoin(game));
 
     /// <summary>
     /// Leaves the LAN game, unless it is <paramref name="keep"/>'s (a game shown again keeps its host or its link); the lobby, the search for
