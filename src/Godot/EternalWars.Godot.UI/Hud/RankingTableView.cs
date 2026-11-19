@@ -60,6 +60,12 @@ public partial class RankingTableView : VBoxContainer
                     continue;
                 }
 
+                if (Headings[i] == "Difficulty" && Enum.TryParse<Core.Domain.Game.Difficulty>(cell, out var level))
+                {
+                    _grid.AddChild(DifficultyIcons.Titled(level, color)); // its chess piece (ADR-225)
+                    continue;
+                }
+
                 var label = new Label { Text = cell };
                 if (color is { } font)
                 {

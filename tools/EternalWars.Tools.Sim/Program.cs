@@ -12,7 +12,7 @@ namespace EternalWars.Tools.Sim;
 /// sim battle haven.pikeman:20,haven.archer:10 inferno.hell-hound:12 [--runs 200] [--seed 1]
 /// sim record demo.ewreplay.json [--days 7] [--seed 1]
 /// sim replay demo.ewreplay.json
-/// sim game [--map towns|demo|ember|file.ewmap.json] [--days 40] [--seed 1] [--runs 1] [--record file] [--complexity normal] [--fog refog] [--profile]  (the adventure AI plays every slot; --fog refog: shroud with refog instead of permanent reveal; --profile: time per turn, path searches, battles)
+/// sim game [--map towns|demo|ember|file.ewmap.json] [--days 40] [--seed 1] [--runs 1] [--record file] [--difficulty normal] [--fog refog] [--profile]  (the adventure AI plays every slot; --fog refog: shroud with refog instead of permanent reveal; --profile: time per turn, path searches, battles)
 /// sim game --template duel|file.ewtemplate.json [--size N] [--players N] [...]  (the same on a map generated per run, random towns)
 /// sim maps [--template name] [--maps 3] [--days 14] [--seed 1]  (CI: generates maps of every shipped template and checks they are playable)
 /// sim towns [--runs 32] [--upgraded]  (round robin of one-week town armies, for roster balance)
@@ -116,7 +116,7 @@ public static class Program
 
     private static int Usage()
     {
-        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | game [--map towns|demo|file | --template T [--size N] [--players N]] [--days D] [--seed S] [--runs N] [--record F] [--complexity C] [--fog refog] [--profile] [--weight Name=value]... | maps [--template T] [--maps N] [--days D] [--seed S] | towns [--runs N] [--upgraded] | ai [--runs N] [--upgraded] [--level L] | creatures [--write F] | lines [--runs N] [--upgraded] | layout <template> [--size N] [--seed S] [--rects] [--terrain] [--seeds N] | generate <template> --out <file> [--size N] [--seed S] [--players N] | selftest");
+        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | game [--map towns|demo|file | --template T [--size N] [--players N]] [--days D] [--seed S] [--runs N] [--record F] [--difficulty C] [--fog refog] [--profile] [--weight Name=value]... | maps [--template T] [--maps N] [--days D] [--seed S] | towns [--runs N] [--upgraded] | ai [--runs N] [--upgraded] [--level L] | creatures [--write F] | lines [--runs N] [--upgraded] | layout <template> [--size N] [--seed S] [--rects] [--terrain] [--seeds N] | generate <template> --out <file> [--size N] [--seed S] [--players N] | selftest");
         Console.Error.WriteLine("       [--creatures table.csv] with any command uses that creature table");
         Console.Error.WriteLine($"       [--weight Name=value]... plays the adventure AI with those weights ({string.Join(", ", AiWeights.Names)})");
         Console.Error.WriteLine("       army = creature:count[,creature:count...], e.g. haven.pikeman:20,haven.archer:10");

@@ -80,7 +80,7 @@ public partial class HeroListPanel : BoxContainer
                 CustomMinimumSize = new Vector2(Horizontal ? 180 : 270, 0),
                 SizeFlagsHorizontal = Horizontal ? SizeFlags.Fill : SizeFlags.ExpandFill,
             };
-            button.AddThemeColorOverride("font_color", Palette.ForPlayer(hero.Owner).Lightened(0.4f));
+            button.AddThemeColorOverride("font_color", Palette.ForPlayer(_session.State, hero.Owner).Lightened(0.4f));
             var id = hero.Id;
             button.Pressed += () => HeroSelected?.Invoke(id);
             AddChild(button);

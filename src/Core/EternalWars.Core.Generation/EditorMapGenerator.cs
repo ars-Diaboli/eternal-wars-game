@@ -29,7 +29,7 @@ public sealed record EditorMap(GameState Scenario, GenerationResult Generation, 
 public static class EditorMapGenerator
 {
     /// <summary>Player names by slot, in the order of the editor's player colours.</summary>
-    public static IReadOnlyList<string> PlayerNames { get; } = ["Blue", "Red", "Yellow", "Green", "Orange", "Purple", "Teal", "Pink"];
+    public static IReadOnlyList<string> PlayerNames => Domain.Players.Player.ColourNames;
 
     /// <summary>The players the editor generates for: <paramref name="players"/> start slots from slot 0 (null = every slot of the template).</summary>
     public static IReadOnlyList<PlayerSetup> Players(MapTemplate template, int? players = null, IReadOnlyDictionary<int, string>? towns = null)

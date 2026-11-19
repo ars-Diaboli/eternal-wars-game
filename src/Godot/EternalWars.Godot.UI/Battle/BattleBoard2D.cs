@@ -136,7 +136,7 @@ public partial class BattleBoard2D : Control
         {
             var rect = ToRect(unit.Rect).Grow(-2);
             var owner = battle.Participant(unit.Side).Owner;
-            DrawRect(rect, owner is { } player ? Palette.ForPlayer(player) : Neutral);
+            DrawRect(rect, owner is { } player ? Palette.ForPlayer(_session.State, player) : Neutral);
             if (unit == battle.ActiveUnit)
             {
                 DrawRect(rect.Grow(2), Colors.White, filled: false, width: 2);

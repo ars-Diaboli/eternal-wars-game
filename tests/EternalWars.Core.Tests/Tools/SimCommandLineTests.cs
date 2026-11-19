@@ -13,13 +13,13 @@ public sealed class SimCommandLineTests
     [Fact]
     public void Parse_ValidOptions_GivesTheirValues()
     {
-        var line = Parse("game", "--days", "5", "--profile", "--fog", "Refog", "--complexity", "hard", "--seed", "18446744073709551615");
+        var line = Parse("game", "--days", "5", "--profile", "--fog", "Refog", "--difficulty", "hard", "--seed", "18446744073709551615");
 
         Assert.Equal(5, line.Number("--days", 40));
         Assert.Equal(1, line.Number("--runs", 1));
         Assert.True(line.Has("--profile"));
         Assert.Equal("refog", line.Text("--fog"));
-        Assert.Equal("hard", line.Text("--complexity"));
+        Assert.Equal("hard", line.Text("--difficulty"));
         Assert.Equal(ulong.MaxValue, line.Seed("--seed", 1));
         Assert.Null(line.Text("--record"));
     }

@@ -73,7 +73,7 @@ public partial class TownListPanel : BoxContainer
                 ClipText = true,
                 CustomMinimumSize = new Vector2(Horizontal ? 200 : 320, 0),
             }.WithCrest(town.TownType);
-            button.AddThemeColorOverride("font_color", Palette.ForPlayer(town.Owner!.Value).Lightened(0.4f));
+            button.AddThemeColorOverride("font_color", Palette.ForPlayer(state, town.Owner!.Value).Lightened(0.4f));
             var id = town.Id;
             button.Pressed += () => TownSelected?.Invoke(id);
             AddChild(button);

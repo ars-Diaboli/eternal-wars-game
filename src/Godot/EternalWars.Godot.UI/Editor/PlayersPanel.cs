@@ -47,7 +47,7 @@ public partial class PlayersPanel : VBoxContainer
         {
             var id = player.Id;
             var name = new LineEdit { Text = player.Name, CustomMinimumSize = new Vector2(150, 0) };
-            name.AddThemeColorOverride("font_color", Palette.ForPlayer(id).Lightened(0.3f));
+            name.AddThemeColorOverride("font_color", Palette.ForSlot(id).Lightened(0.3f));
             name.TextSubmitted += text => _editor.Players.Update(id, text.Trim(), _editor.Scenario.GetPlayer(id).IsHuman);
             _rows.AddChild(name);
 

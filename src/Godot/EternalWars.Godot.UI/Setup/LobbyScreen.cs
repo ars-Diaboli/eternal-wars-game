@@ -76,7 +76,7 @@ public partial class LobbyScreen : PanelContainer
         foreach (var seat in lobby.Seats)
         {
             var colour = new Label { Text = seat.Colour };
-            colour.AddThemeColorOverride("font_color", Palette.ForPlayer(seat.Id).Lightened(0.3f));
+            colour.AddThemeColorOverride("font_color", Palette.ForSlot(seat.Id).Lightened(0.3f));
             _seats.AddChild(colour);
             _seats.AddChild(new Label { Text = seat.IsYours ? $"{seat.Who} (you)" : seat.Who });
             _seats.AddChild(new Label { Text = seat.Details });

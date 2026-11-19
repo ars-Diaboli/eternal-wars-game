@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using Godot;
@@ -43,7 +44,14 @@ public static class Palette
         _ => Colors.Magenta,
     };
 
-    public static Color ForPlayer(PlayerId player) => PlayerColors[player.Value % PlayerColors.Length];
+    /// <summary>One of the eight player colours (<see cref="Core.Domain.Players.Player.Colour"/>).</summary>
+    public static Color ForColour(int colour) => PlayerColors[((colour % PlayerColors.Length) + PlayerColors.Length) % PlayerColors.Length];
+
+    /// <summary>The colour <paramref name="player"/> plays in (its <see cref="Core.Domain.Players.Player.Colour"/>, ADR-225).</summary>
+    public static Color ForPlayer(GameState state, PlayerId player) => ForColour(state.HasPlayer(player) ? state.GetPlayer(player).Colour : player.Value);
+
+    /// <summary>A player slot's own colour, where no game has set one yet (the editor, a lobby's or a save's seats).</summary>
+    public static Color ForSlot(PlayerId player) => ForColour(player.Value);
 
     public static Color Neutral { get; } = new(0.6f, 0.6f, 0.6f);
 

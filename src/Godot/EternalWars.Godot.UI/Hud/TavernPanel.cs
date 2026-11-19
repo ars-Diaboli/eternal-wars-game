@@ -43,9 +43,7 @@ public partial class TavernPanel : PanelContainer
         var guild = new Button { Text = "Thieves' guild", TooltipText = "How you rank against the other players; more taverns show more" }.WithIcon(UiIcon.ThievesGuild);
         guild.Pressed += () => ThievesGuildRequested?.Invoke();
         header.AddChild(guild);
-        var close = new Button { Text = "Close" }.WithIcon(UiIcon.Close);
-        close.Pressed += Close;
-        header.AddChild(close);
+        header.AddCloseButton(Close);
         box.AddChild(_cards);
         box.AddChild(_status);
         Visible = false;

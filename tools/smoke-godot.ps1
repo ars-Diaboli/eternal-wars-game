@@ -116,10 +116,10 @@ $scenarios = @(
     # the hero screen from its button; the game menu from its button. Bookless selected, the spell book button is disabled.
     @{ Name = 'game-action-buttons'; App = 'EternalWars.Game'; Frames = 62; Map = $magicMap
        Input = '3:key:Enter;8:press:Magus;12:press:Spell book (C);20:key:Escape;24:key:C;31:key:C;36:press:Hero screen (H);42:key:Escape;46:press:Menu (F10);52:key:Escape;56:press:Bookless' },
-    # The turn timer (ADR-091): pick 1 minute on the new-game screen, start, open the hero screen and wait. The warnings come, the turn passes
-    # to Red with the full time and the hero screen closes. At 2 frames a second, so the minute takes 120 frames instead of 600.
+    # The turn timer (ADR-091, ADR-225): tick it on the new-game screen and type 1 minute, start, open the hero screen and wait. The warnings come,
+    # the turn passes to Red with the full time and the hero screen closes. At 2 frames a second, so the minute takes 120 frames instead of 600.
     @{ Name = 'game-turn-timer'; App = 'EternalWars.Game'; Frames = 140; Fps = 2
-       Input = '2:click:@Off;4:choose:1 min;6:click:@Start;10:key:H' },
+       Input = '2:press:Turn timer;6:text:1;8:key:Enter;10:click:@Start;14:key:H' },
     # The screens over the map on the towns map, each opened, closed with Escape, opened again and closed: the town screen (ADR-050) with T,
     # the kingdom overview (ADR-084) with K, the hero screen (ADR-050) with H. Then a garrison hero (ADR-112): step into the own town,
     # "Orrin into the garrison", "Lead Orrin out", close the town screen.
@@ -133,14 +133,19 @@ $scenarios = @(
     # event's message for Castlebridge moves the camera to the town; OK closes each.
     @{ Name = 'game-turn-start-camera'; App = 'EternalWars.Game'; Frames = 40; Map = $turnStartMap
        Input = '3:key:Enter;16:click:@OK;30:click:@OK' },
-    # Random placeholders and bans (ADR-126): the new-game screen offers Blue a faction for its random town (Dungeon is picked);
-    # the game starts with Castlebridge a Dungeon town, Blue's hero a Dungeon hero and the random monsters drawn.
+    # Random placeholders and bans (ADR-126): the new-game screen offers Blue a faction for its random town, its crest "?" (ADR-225); the 2 × 4
+    # crest panel opens and Dungeon is picked; the game starts with Castlebridge a Dungeon town, Blue's hero a Dungeon hero and the random monsters drawn.
     @{ Name = 'game-placeholders'; App = 'EternalWars.Game'; Frames = 30; Map = $placeholdersMap
-       Input = '5:click:@Random;9:choose:dungeon;13:click:@Start' },
+       Input = '5:click:@?;9:click:@Dungeon;13:click:@Start' },
     # A random map (ADR-086, ADR-201): the Random maps tab, Duel, Necropolis, its first hero and the Skeleton tier-1 dwelling for Blue, hero limit 7,
     # Start (Red is a computer player), K, end the turn so the computer plays its turn.
     @{ Name = 'game-random-map'; App = 'EternalWars.Game'; Frames = 105
-       Input = '4:press:Random maps;8:click:@Duel;12:click:@Random;16:choose:necropolis;20:click:@Random;24:choose:Morthal (warrior);28:click:@Random;32:choose:Skeleton;36:click:1008,291;40:click:@Start;58:key:K;68:key:Escape;74:click:@End turn' },
+       Input = '4:press:Random maps;8:click:@Duel;12:click:@?;16:click:@Necropolis;20:click:@Random;24:choose:Morthal (warrior);28:click:@Random;32:choose:Skeleton;36:click:676,651;40:click:@Start;58:key:K;68:key:Escape;74:click:@End turn' },
+    # The players of a random map (ADR-225): Free for all's four, Red removed with its "−" (Yellow and Green move up a place with their colours),
+    # Blue's swatch swapped with Green's, "+" adds a fourth player in the first free colour (Red); Hard pressed, then Start: the first player plays
+    # in green and is called Green.
+    @{ Name = 'game-new-game-players'; App = 'EternalWars.Game'; Frames = 60
+       Input = '4:press:Random maps;8:click:@Free for all;12:press:Remove Red;16:click:@Colour Blue;20:click:@Green;24:press:Add a player;28:click:@Hard;32:click:@Start' },
     # The main menu (ADR-101, ADR-163) over its picture: Leaderboard opens, Escape returns; "Watch a replay" (ADR-164) opens the Replays and
     # Saves tabs, Saves, Escape back to the main menu; New game, Enter on Start. Pressed by name: Continue has the focus when there is a
     # save, New game when not. The only game scenario without --new-game.

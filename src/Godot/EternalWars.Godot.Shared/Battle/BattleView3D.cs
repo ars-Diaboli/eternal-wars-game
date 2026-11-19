@@ -398,7 +398,7 @@ public partial class BattleView3D : Node3D
         var opening = _stage.Line(e);
         foreach (var side in new[] { BattleSide.Attacker, BattleSide.Defender })
         {
-            _sideColors[side] = battle.Participant(side).Owner is { } owner ? Palette.ForPlayer(owner) : Palette.Neutral;
+            _sideColors[side] = battle.Participant(side).Owner is { } owner ? Palette.ForPlayer(state, owner) : Palette.Neutral;
         }
 
         _stage.Build(e, battle);

@@ -39,9 +39,7 @@ public partial class MarketplacePanel : PanelContainer
         var header = new HBoxContainer();
         box.AddChild(header);
         header.AddChild(_title);
-        var close = new Button { Text = "Close" }.WithIcon(UiIcon.Close);
-        close.Pressed += Close;
-        header.AddChild(close);
+        header.AddCloseButton(Close);
         box.AddChild(_info);
         var amount = new HBoxContainer();
         box.AddChild(amount);

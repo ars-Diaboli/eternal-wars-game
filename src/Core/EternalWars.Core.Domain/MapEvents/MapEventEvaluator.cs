@@ -98,7 +98,7 @@ internal static class MapEventEvaluator
             Quantity.DayOfWeek => state.Date.Day,
             Quantity.Week => state.Date.Week,
             Quantity.Month => state.Date.Month,
-            Quantity.Difficulty => (int)(state.Options.Complexity ?? Complexity.Normal),
+            Quantity.Difficulty => (int)ScoreRules.DifficultyOf(state),
             Quantity.Heroes => player is null ? 0 : state.HeroesOf(player.Id).Count(),
             Quantity.Towns => player is null ? 0 : state.ObjectsOf<Town>().Count(t => t.Owner == player.Id),
             _ => 0,

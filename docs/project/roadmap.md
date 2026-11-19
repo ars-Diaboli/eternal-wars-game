@@ -226,14 +226,15 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Icon-only buttons (48 px in bars and panels, 32 px in windows), their label and hotkey on the status bar (ADR-204)
 - [x] A status bar on the battle, town and hero screens and the screens before a game (ADR-204)
 - [x] Map lists on the new-game screen sorted by name or size and filtered by size, kept in the settings (ADR-204)
-- [ ] The difficulty as a row of five chess-piece buttons on the new-game screen, the icon on the victory screen and the leaderboard (ADR-204, ADR-225)
-- [ ] Difficulty levels renamed Easy … Master (old names moved up one; map v41 migration, saves and ranking read old names), no "Map
-      default": the map's own difficulty or Normal preselected, its description on the status bar (ADR-225)
-- [ ] New-game options tidied: fog "Permanent reveal" / "Refog", no refog margin, turn timer checkbox with minutes, seed only in debug
+- [x] The difficulty as a row of five chess-piece buttons on the new-game screen, the piece on the victory screen and the leaderboard; the level's
+      name stands in until the pieces are drawn (ADR-204, ADR-225, ADR-227)
+- [x] Difficulty levels renamed Easy … Master (old names moved up one; map v41, saves v5 and ranking v2 read old names), no "Map
+      default": the map's own difficulty or Normal preselected, its description on the status bar (ADR-225, ADR-227)
+- [x] New-game options tidied: fog "Permanent reveal" / "Refog", no refog margin, turn timer checkbox with minutes, seed only in debug
       builds, hero limit beside the fog (ADR-225)
-- [ ] New-game players: "+" / "−" for a random map's players, a colour choice per player (`Player.Colour`), the town as a 2 × 4 crest panel (ADR-225)
-- [ ] An "×" at the top right closes the new-game screen (no Back); every window's "×" in its top-right corner (ADR-225)
-- [ ] The calendar on the adventure map's status bar right of the resources; no "Turn: <player>" label (ADR-225)
+- [x] New-game players: "+" / "−" for a random map's players, a colour choice per player (`Player.Colour`), the town as a 2 × 4 crest panel (ADR-225, ADR-227)
+- [x] An "×" at the top right closes the new-game screen (no Back); every window's "×" in its top-right corner (ADR-225)
+- [x] The calendar on the adventure map's status bar right of the resources; no "Turn: <player>" label (ADR-225)
 - [x] Cursors: the cursor for what is under the pointer (core resolvers, adventure map and battle), system cursors standing in (ADR-204)
 - [x] The cursor images for menus and the adventure map (sets 1–3 of [cursor-prompts.md](../content/cursor-prompts.md), ADR-204)
 - [ ] The battle cursor images (sets 4–7) and the days a move takes drawn on the move cursor (ADR-204)
@@ -298,6 +299,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       seats (`HandToComputer`, `PlayTurnByTurn`), lobby seat and join-listing rules, replay hold and recovery, camera and focus rules
 - [ ] Main-menu "Continue" offers a save whose commands no longer load (labels are read alone since ADR-224); fall back to the next one
 - [ ] `EventsPanel` rebuilds whole on every `UndoHistoryChanged`, unmerged; give it a `RefreshScheduler` or sections
+- [ ] Smoke `game-battle-control` fails at frame 184 (no Surrender: the computer's stack is acting), before ADR-227 too; the smoke games draw
+      a random seed, so their battles differ between runs (a fixed seed per scenario would make them repeatable)
 - [ ] AI tuning numbers still inline (`TargetValuer`, `TownManager`, `DecisionResponder`, `AiContext`: 0.85 creature share, the 0.7
       power share, the +3000 gold cushion, the third of the gold kept, …) into `AiWeights`; `AiWeights.With` to refuse negative values
 - [ ] Switches on the map-event action type left in Domain (`MapEventState.Expressions`, `MapEventText`, `TargetValuer.Events`) into

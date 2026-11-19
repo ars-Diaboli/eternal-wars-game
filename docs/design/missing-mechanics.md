@@ -70,6 +70,6 @@ A planning list (ADR-116), not a plan; updated 2026-11-04. Rows leave when built
 |---|---|---|---|
 | Campaigns with cutscenes and carried-over heroes | HoMM3, HoMM5 | Planned | Phase 6; FLOW-1 open |
 | Tutorial | HoMM5 | Planned | The prologue (CAMP-1, ADR-118) |
-| AI difficulty levels (how well it plays) | HoMM3, HoMM5 | Missing | Complexity sets resources only (ADR-063) |
+| AI difficulty levels (how well it plays) | HoMM3, HoMM5 | Missing | The difficulty sets resources and the score only (ADR-063, ADR-225) |
 | Duel mode / arena | HoMM5, HotA | Planned | Before 1.0 (ADR-097, ADR-100) |
 | Online lobby | HotA, HoMM5 | Planned | LAN before 1.0 (ADR-098); online later |

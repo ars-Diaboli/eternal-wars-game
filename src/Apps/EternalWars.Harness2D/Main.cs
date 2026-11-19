@@ -108,7 +108,7 @@ public partial class Main : Node2D
             foreach (var cell in known.Cells().Where(c => c.Level == 0))
             {
                 var color = known.Definition.Kind == MapObjectKind.Monster ? new Color(0.85f, 0.1f, 0.1f)
-                    : known.Owner is { } owner ? Palette.ForPlayer(owner)
+                    : known.Owner is { } owner ? Palette.ForPlayer(state, owner)
                     : new Color(0.9f, 0.85f, 0.6f);
                 DrawRect(TileRect(cell).Grow(known.Definition.Kind == MapObjectKind.Town ? -2 : -6), color);
             }
@@ -117,7 +117,7 @@ public partial class Main : Node2D
         foreach (var hero in state.Heroes.Where(h => h.Position.Level == 0 && state.CanSee(state.CurrentPlayer.Id, h)))
         {
             var rect = TileRect(hero.Position);
-            DrawCircle(rect.GetCenter(), TileSize * 0.35f, Palette.ForPlayer(hero.Owner));
+            DrawCircle(rect.GetCenter(), TileSize * 0.35f, Palette.ForPlayer(state, hero.Owner));
             if (hero.Id == _selectedHero)
             {
                 DrawRect(rect, Colors.White, filled: false, width: 2);
@@ -310,6 +310,9 @@ public partial class Main : Node2D
         var turnPanel = new TurnPanel();
         top.AddChild(turnPanel);
         turnPanel.Bind(_session);
+        var calendar = new CalendarLabel();
+        top.AddChild(calendar);
+        calendar.Bind(_session);
         var resources = new ResourceBar();
         top.AddChild(resources);
         resources.Bind(_session);

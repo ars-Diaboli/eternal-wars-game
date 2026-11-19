@@ -7,7 +7,7 @@ using EternalWars.Core.Domain.Towns;
 namespace EternalWars.Tools.Sim.Commands;
 
 /// <summary>
-/// <c>sim game [--map M | --template T [--size N] [--players N]] [--days D] [--seed S] [--runs N] [--record F] [--complexity C] [--fog reveal|refog]
+/// <c>sim game [--map M | --template T [--size N] [--players N]] [--days D] [--seed S] [--runs N] [--record F] [--difficulty C] [--fog reveal|refog]
 /// [--profile]</c>: the adventure AI plays every slot of a map to the end or the day limit; prints how each game went.
 /// </summary>
 internal sealed class PlayGameCommand : SimCommand
@@ -18,7 +18,7 @@ internal sealed class PlayGameCommand : SimCommand
     [
         OptionSpec.Text("--map"), OptionSpec.Text("--template"), OptionSpec.Number("--size", min: 1), OptionSpec.Number("--players", min: 1),
         OptionSpec.Number("--days", min: 0), OptionSpec.Seed("--seed"), OptionSpec.Number("--runs", min: 1), OptionSpec.Text("--record"),
-        OptionSpec.Choice("--complexity", [.. Enum.GetNames<Complexity>().Select(n => n.ToLowerInvariant())]), OptionSpec.Choice("--fog", "reveal", "refog"),
+        OptionSpec.Choice("--difficulty", [.. Enum.GetNames<Difficulty>().Select(n => n.ToLowerInvariant())]), OptionSpec.Choice("--fog", "reveal", "refog"),
         OptionSpec.Flag("--profile"),
     ];
 
@@ -86,7 +86,7 @@ internal sealed class PlayGameCommand : SimCommand
     /// <summary>The games to play: a map generated from <c>--template</c> per seed, else the <c>--map</c> (default <c>towns</c>).</summary>
     private static Func<ulong, SimGame> GameMaker(SimContext sim, CommandLine line)
     {
-        Complexity? complexity = line.Text("--complexity") is { } level ? Enum.Parse<Complexity>(level, ignoreCase: true) : null;
+        Difficulty? difficulty = line.Text("--difficulty") is { } level ? Enum.Parse<Difficulty>(level, ignoreCase: true) : null;
         var fog = line.Text("--fog") == "refog" ? FogMode.ShroudWithRefog : FogMode.PermanentReveal;
         if (line.Text("--template") is not { } name)
         {
@@ -96,7 +96,7 @@ internal sealed class PlayGameCommand : SimCommand
             }
 
             var map = line.Text("--map") ?? "towns";
-            return seed => SimGames.HandMadeGame(sim, map, seed, complexity, fog);
+            return seed => SimGames.HandMadeGame(sim, map, seed, difficulty, fog);
         }
 
         if (line.Has("--map"))
@@ -107,6 +107,6 @@ internal sealed class PlayGameCommand : SimCommand
         var template = SimContext.LoadTemplate(name);
         var size = line.Number("--size", template.Sizes[0]);
         var players = line.Number("--players", template.MaxPlayers);
-        return seed => SimGames.GeneratedGame(sim, template, size, players, seed, complexity, fog);
+        return seed => SimGames.GeneratedGame(sim, template, size, players, seed, difficulty, fog);
     }
 }

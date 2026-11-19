@@ -39,39 +39,39 @@ public class ScoreRulesTests
     }
 
     [Theory]
-    [InlineData(1, Complexity.Normal, null, 258)] // 199 × 1.3
-    [InlineData(50, Complexity.Normal, null, 195)]
-    [InlineData(195, Complexity.Beginner, null, 8)] // the minimum base 10 × 0.8
-    [InlineData(10, Complexity.Expert, 1, 456)] // 190 × 2 × 1.2
-    [InlineData(100, Complexity.Hard, 5, 176)] // 100 × 1.6 × 1.1
-    [InlineData(100, Complexity.Easy, 10, 105)]
-    [InlineData(100, Complexity.Easy, 11, 100)]
-    public void TheScore_IsHoMM3sDaysTimesTheDifficultyAndTheTurnTimer(int days, Complexity difficulty, int? timer, int expected) =>
+    [InlineData(1, Difficulty.Hard, null, 258)] // 199 × 1.3
+    [InlineData(50, Difficulty.Hard, null, 195)]
+    [InlineData(195, Difficulty.Easy, null, 8)] // the minimum base 10 × 0.8
+    [InlineData(10, Difficulty.Master, 1, 456)] // 190 × 2 × 1.2
+    [InlineData(100, Difficulty.Expert, 5, 176)] // 100 × 1.6 × 1.1
+    [InlineData(100, Difficulty.Normal, 10, 105)]
+    [InlineData(100, Difficulty.Normal, 11, 100)]
+    public void TheScore_IsHoMM3sDaysTimesTheDifficultyAndTheTurnTimer(int days, Difficulty difficulty, int? timer, int expected) =>
         Assert.Equal(expected, ScoreRules.Score(days, difficulty, timer));
 
     [Fact]
     public void MapDefault_CountsAsTheMapsDifficultyOrNormal()
     {
-        Assert.Equal(Complexity.Normal, ScoreRules.Difficulty(Duel()));
-        Assert.Equal(Complexity.Hard, ScoreRules.Difficulty(Duel(new GameOptions(Complexity: Complexity.Hard))));
-        Assert.Equal(Complexity.Expert, ScoreRules.Difficulty(Duel(adjust: s => s.SetRules(s.Rules with { Difficulty = Complexity.Expert }))));
+        Assert.Equal(Difficulty.Normal, ScoreRules.DifficultyOf(Duel()));
+        Assert.Equal(Difficulty.Expert, ScoreRules.DifficultyOf(Duel(new GameOptions(Difficulty: Difficulty.Expert))));
+        Assert.Equal(Difficulty.Master, ScoreRules.DifficultyOf(Duel(adjust: s => s.SetRules(s.Rules with { Difficulty = Difficulty.Master }))));
     }
 
     [Fact]
-    public void AChosenComplexity_OverridesTheMapsDifficulty()
+    public void AChosenDifficulty_OverridesTheMapsDifficulty()
     {
-        var state = Duel(new GameOptions(Complexity: Complexity.Easy), s => s.SetRules(s.Rules with { Difficulty = Complexity.Expert }));
+        var state = Duel(new GameOptions(Difficulty: Difficulty.Normal), s => s.SetRules(s.Rules with { Difficulty = Difficulty.Master }));
 
-        Assert.Equal(Complexity.Easy, ScoreRules.Difficulty(state));
+        Assert.Equal(Difficulty.Normal, ScoreRules.DifficultyOf(state));
     }
 
     [Fact]
     public void TheMapsDifficulty_CountsInTheScore()
     {
-        var state = Won(Duel(adjust: s => s.SetRules(s.Rules with { Difficulty = Complexity.Beginner })));
+        var state = Won(Duel(adjust: s => s.SetRules(s.Rules with { Difficulty = Difficulty.Easy })));
 
         var score = Assert.Single(ScoreRules.Scores(state));
-        Assert.Equal(Complexity.Beginner, score.Difficulty);
+        Assert.Equal(Difficulty.Easy, score.Difficulty);
         Assert.Equal(159, score.Score); // 199 × 0.8
     }
 
@@ -99,18 +99,18 @@ public class ScoreRulesTests
         Assert.Equal(Blue, score.Player);
         Assert.Equal(TownIds.Haven, score.Faction);
         Assert.Equal(1, score.Days);
-        Assert.Equal(Complexity.Normal, score.Difficulty);
-        Assert.Equal(258, score.Score);
-        Assert.Equal("inferno.pit-lord", score.Title);
+        Assert.Equal(Difficulty.Normal, score.Difficulty);
+        Assert.Equal(199, score.Score);
+        Assert.Equal("stronghold.ogre", score.Title);
     }
 
     [Fact]
-    public void TheComplexityAndTheTurnTimer_CountInTheScore()
+    public void TheDifficultyAndTheTurnTimer_CountInTheScore()
     {
-        var state = Won(Duel(new GameOptions(Complexity: Complexity.Expert, TurnTimerMinutes: 2)));
+        var state = Won(Duel(new GameOptions(Difficulty: Difficulty.Master, TurnTimerMinutes: 2)));
 
         var score = Assert.Single(ScoreRules.Scores(state));
-        Assert.Equal(Complexity.Expert, score.Difficulty);
+        Assert.Equal(Difficulty.Master, score.Difficulty);
         Assert.Equal(2, score.TurnTimerMinutes);
         Assert.Equal(477, score.Score); // 199 × 2 × 1.2
         Assert.Equal("dragon-utopia.black-dragon", score.Title);

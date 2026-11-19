@@ -24,7 +24,7 @@ public sealed class RankingFileTests : IDisposable
     }
 
     private static RankingEntry Row(int score, string player = "P") =>
-        new(player, TownIds.Haven, "Map", null, null, false, Complexity.Normal, null, 10, score, "Imp", "2026-10-29");
+        new(player, TownIds.Haven, "Map", null, null, false, Difficulty.Hard, null, 10, score, "Imp", "2026-10-29");
 
     /// <summary>Blue wins on day 1 with its Haven town against a computer Red; the record is the game's.</summary>
     private static (GameRecordDocument Record, GameState Finished) WonGame(GenerationInfo? generated = null)
@@ -103,8 +103,8 @@ public sealed class RankingFileTests : IDisposable
         Assert.Null(entry.Template);
         Assert.True(entry.Custom);
         Assert.Equal(1, entry.Days);
-        Assert.Equal(258, entry.Score);
-        Assert.Equal("Pit Lord", entry.Title);
+        Assert.Equal(199, entry.Score); // a map without a difficulty counts as Normal
+        Assert.Equal("Ogre", entry.Title);
         Assert.Equal("2026-10-29T12:00:00.0000000+00:00", entry.Date);
         Assert.Equal(RankingTable.Maps, RankingFile.TableOf(record));
     }

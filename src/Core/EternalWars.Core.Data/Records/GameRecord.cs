@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using EternalWars.Core.Data.Maps;
@@ -16,12 +17,15 @@ namespace EternalWars.Core.Data.Records;
 /// <summary>
 /// A replayable game (<c>*.ewreplay.json</c>) or a saved game (<c>*.ewsave.json</c>, ADR-058): the map as it was at the
 /// start, the game options (incl. the seed) and every accepted command. <see cref="FinalDigest"/> lets a replay prove it
-/// reached the same state. Version 2 adds <see cref="Save"/>, version 3 <see cref="Generated"/>, version 4 <see cref="DigestVersion"/>; older files
-/// still load.
+/// reached the same state. Version 2 adds <see cref="Save"/>, version 3 <see cref="Generated"/>, version 4 <see cref="DigestVersion"/>, version 5
+/// names the options' <c>difficulty</c> HoMM3's way (was <c>complexity</c>, one step lower; ADR-225); older files still load.
 /// </summary>
 public sealed record GameRecordDocument
 {
-    public const int CurrentFormatVersion = 4;
+    public const int CurrentFormatVersion = 5;
+
+    /// <summary>The first version whose options name the difficulty <c>difficulty</c>, Easy … Master (ADR-225).</summary>
+    internal const int DifficultyVersion = 5;
 
     public int FormatVersion { get; init; } = CurrentFormatVersion;
 
@@ -242,12 +246,66 @@ public static class GameRecordSerializer
 
     public static string Serialize(GameRecordDocument record) => JsonSerializer.Serialize(record, Options);
 
-    /// <summary>Reads a replay or a save; its map, when older, is upgraded to the current format first (<see cref="MapMigrations"/>, ADR-174).</summary>
+    /// <summary>
+    /// Reads a replay or a save; its map, when older, is upgraded to the current format first (<see cref="MapMigrations"/>, ADR-174), and so are
+    /// the options of a record before <see cref="GameRecordDocument.DifficultyVersion"/>.
+    /// </summary>
     public static GameRecordDocument Deserialize(string json) =>
-        (MapMigrations.Upgrade(json, "map") is { } upgraded
+        (Upgrade(json) is { } upgraded
             ? upgraded.Deserialize<GameRecordDocument>(Options)
             : JsonSerializer.Deserialize<GameRecordDocument>(json, Options))
         ?? throw new FormatException("Replay file is empty.");
+
+    /// <summary>The record's JSON upgraded to the current format; null when it needs nothing (it is then read as it is).</summary>
+    private static JsonNode? Upgrade(string json)
+    {
+        var upgraded = MapMigrations.Upgrade(json, "map");
+        if (VersionOf(json) is not { } version || version >= GameRecordDocument.DifficultyVersion)
+        {
+            return upgraded;
+        }
+
+        var root = upgraded ?? JsonNode.Parse(json, new JsonNodeOptions { PropertyNameCaseInsensitive = true });
+        if (root is JsonObject record && record["options"] is JsonObject options && options["complexity"] is { } complexity)
+        {
+            options.Remove("complexity");
+            options["difficulty"] = complexity;
+            DifficultyNames.Upgrade(options, "difficulty");
+        }
+
+        return root;
+    }
+
+    /// <summary>The record's top-level <c>formatVersion</c> (1 when it names none), read without parsing the rest; null when the text is no record.</summary>
+    private static int? VersionOf(string json)
+    {
+        try
+        {
+            var reader = new Utf8JsonReader(System.Text.Encoding.UTF8.GetBytes(json));
+            if (!reader.Read() || reader.TokenType != JsonTokenType.StartObject)
+            {
+                return null;
+            }
+
+            while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
+            {
+                var isVersion = string.Equals(reader.GetString(), "formatVersion", StringComparison.OrdinalIgnoreCase);
+                reader.Read();
+                if (isVersion)
+                {
+                    return reader.TokenType == JsonTokenType.Number && reader.TryGetInt32(out var version) ? version : null;
+                }
+
+                reader.Skip();
+            }
+
+            return 1;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
 
     /// <summary>Writes the record to a file (replacing it) as it serializes, without the whole text in memory first (<see cref="Write"/>).</summary>
     public static void Save(GameRecordDocument record, string path)

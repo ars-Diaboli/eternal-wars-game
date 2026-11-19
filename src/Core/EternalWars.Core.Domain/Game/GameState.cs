@@ -75,6 +75,19 @@ public sealed class GameState
             throw new ArgumentException($"A game needs 1 to {MaxPlayers} players.", nameof(players));
         }
 
+        foreach (var player in _players)
+        {
+            if (Options.Colours?.GetValueOrDefault(player.Id.Value, -1) is int colour and >= 0 and < Player.ColourCount && colour != player.Colour)
+            {
+                if (player.Name == Player.ColourNames[player.Colour])
+                {
+                    player.Name = Player.ColourNames[colour];
+                }
+
+                player.Colour = colour;
+            }
+        }
+
         foreach (var hero in heroes)
         {
             AddHero(hero);

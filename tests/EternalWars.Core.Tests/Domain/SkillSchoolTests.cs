@@ -202,7 +202,7 @@ public class SkillSchoolTests
         Assert.Contains("\"skillSchool\"", json, StringComparison.Ordinal);
         Assert.Equal([true, false], restored.ObjectsOf<SkillSchool>().OrderBy(s => s.Id.Value).Select(s => s.TeachesMagic));
 
-        var session = new GameSession(MapConverter.ToGameState(map, options: new GameOptions(Seed: 4, Complexity: Complexity.Beginner)));
+        var session = new GameSession(MapConverter.ToGameState(map, options: new GameOptions(Seed: 4, Difficulty: Difficulty.Easy)));
         session.Start();
         session.Step(A, Direction.North);
         var school = session.State.ObjectsOf<SkillSchool>().Single(s => s.TeachesMagic);

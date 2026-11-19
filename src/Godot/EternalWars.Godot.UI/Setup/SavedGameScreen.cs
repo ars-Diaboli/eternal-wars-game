@@ -139,7 +139,7 @@ public partial class SavedGameScreen : PanelContainer
         foreach (var seat in game.Seats)
         {
             var colour = new Label { Text = seat.Colour, CustomMinimumSize = new Vector2(80, 0) };
-            colour.AddThemeColorOverride("font_color", Palette.ForPlayer(seat.Id).Lightened(0.3f));
+            colour.AddThemeColorOverride("font_color", Palette.ForSlot(seat.Id).Lightened(0.3f));
             _seats.AddChild(colour);
             if (seat.IsPerson)
             {

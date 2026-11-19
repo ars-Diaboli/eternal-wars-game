@@ -43,9 +43,7 @@ public partial class SpellBookPanel : PanelContainer
         box.AddChild(header);
         _title.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         header.AddChild(_title);
-        var close = new Button { Text = "Close" }.WithIcon(UiIcon.Close);
-        close.Pressed += Close;
-        header.AddChild(close);
+        header.AddCloseButton(Close);
         box.AddChild(_body);
         box.AddChild(_status);
         Visible = false;
