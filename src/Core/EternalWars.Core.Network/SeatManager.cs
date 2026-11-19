@@ -152,6 +152,6 @@ internal sealed class HostPeer(INetConnection connection)
     /// <summary>When the link came (it must join within <see cref="NetLimits.JoinTimeout"/>).</summary>
     public DateTimeOffset Arrived { get; init; }
 
-    /// <summary>When the host last sent this client the game's record.</summary>
-    public DateTimeOffset? LastRecord { get; set; }
+    /// <summary>What the client may still write in the chat.</summary>
+    public ChatAllowance Chat { get; } = new();
 }

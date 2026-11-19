@@ -56,6 +56,9 @@ public sealed class GameHost : ICommandRoute, IDisposable
     /// <summary>Who fights the current battle, or fought the last one: they see its events.</summary>
     private IReadOnlyCollection<PlayerId> _battleSides = [];
 
+    /// <summary>When each colour was last sent the game's record (ADR-203): the colour's, not the link's, so a new link does not start it over.</summary>
+    private readonly Dictionary<PlayerId, DateTimeOffset> _recordSent = [];
+
     /// <param name="session">The game, started or about to start.</param>
     /// <param name="remoteSeats">The human colours played on other computers.</param>
     /// <param name="hostName">The host's player, in the chat.</param>
@@ -352,7 +355,11 @@ public sealed class GameHost : ICommandRoute, IDisposable
                 Run(peer, seat, send);
                 break;
             case ChatSay say when peer.Seat is not null:
-                _chat.Say(peer.Name, say.Text);
+                if (ChatText.Clean(say.Text) is not null && peer.Chat.Take(Time.GetUtcNow(), peer.Connection))
+                {
+                    _chat.Say(peer.Name, say.Text);
+                }
+
                 break;
             case TakeSeat:
                 break; // asked in the lobby just before the game started
@@ -417,7 +424,7 @@ public sealed class GameHost : ICommandRoute, IDisposable
         }
     }
 
-    /// <summary>The answer to a client's request for the game's record: at most one record per <see cref="NetLimits.RecordInterval"/>.</summary>
+    /// <summary>The answer to a client's request for the game's record: at most one record per <see cref="NetLimits.RecordInterval"/> a colour.</summary>
     private RecordSent RecordFor(HostPeer peer, RecordRequest ask)
     {
         if (RecordOf is null)
@@ -426,12 +433,13 @@ public sealed class GameHost : ICommandRoute, IDisposable
         }
 
         var now = Time.GetUtcNow();
-        if (peer.LastRecord is { } last && now - last < NetLimits.RecordInterval)
+        var seat = peer.Seat!.Value;
+        if (_recordSent.TryGetValue(seat, out var last) && now - last < NetLimits.RecordInterval)
         {
             return new RecordSent(ask.Request, null, $"The game was saved moments ago: wait {NetLimits.RecordInterval.TotalSeconds:0} seconds between saves.");
         }
 
-        peer.LastRecord = now;
+        _recordSent[seat] = now;
         var name = ask.SaveName is null ? null : ChatText.Clean(ask.SaveName) ?? "save";
         return new RecordSent(ask.Request, RecordOf(name), null);
     }

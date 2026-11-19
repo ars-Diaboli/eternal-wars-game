@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-228.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-229.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -254,3 +254,4 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [225](game-modes.md#adr-225-the-new-game-screens-options-tidied-difficulty-as-five-chess-pieces-the-calendar-on-the-status-bar-adr-063-adr-101-adr-201-adr-204-owner-notes-2026-11-19) | game-modes | The new-game screen's options tidied; difficulty as five chess pieces; the calendar on the status bar (ADR-063, ADR-101, ADR-201, ADR-204, owner notes, 2026-11-19) | accepted |
 | [226](project-and-scope.md#adr-226-closing-the-refactoring-plan-adr-202--adr-224-2026-11-19) | project-and-scope | Closing the refactoring plan (ADR-202 … ADR-224, 2026-11-19) | implemented |
 | [227](game-modes.md#adr-227-building-adr-225-old-difficulty-names-player-colours-and-the-new-game-screens-players-adr-225-2026-11-19) | game-modes | Building ADR-225: old difficulty names, player colours and the new-game screen's players (ADR-225, 2026-11-19) | accepted |
+| [228](multiplayer.md#adr-228-lan-hardening-sends-that-never-wait-the-chats-allowance-the-lobbys-waiting-players-the-record-per-colour-adr-203-adr-226-2026-11-19) | multiplayer | LAN hardening: sends that never wait, the chat's allowance, the lobby's waiting players, the record per colour (ADR-203, ADR-226, 2026-11-19) | implemented |

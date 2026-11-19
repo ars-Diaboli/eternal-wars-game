@@ -2,6 +2,7 @@ using System.Buffers.Binary;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Channels;
 
 namespace EternalWars.Core.Network;
 
@@ -20,19 +21,25 @@ public interface INetConnection : IDisposable
     /// <summary>Why the link went down; null while it is up.</summary>
     string? CloseReason { get; }
 
-    /// <summary>Sends a message; nothing happens once the link is down.</summary>
+    /// <summary>Sends a message without waiting for the other side; nothing happens once the link is down.</summary>
     void Send(NetMessage message);
 
     /// <summary>The next message that has arrived, if any.</summary>
     bool TryReceive(out NetMessage message);
 
-    /// <summary>Takes the link down for both ends.</summary>
+    /// <summary>Takes the link down for both ends; what was sent before still goes out, for a moment.</summary>
     void Close(string reason);
 }
 
 /// <summary>
 /// A link over TCP: each message is its length (4 bytes, big-endian) and its UTF-8 JSON (<see cref="NetSerializer"/>).
 /// </summary>
+/// <remarks>
+/// <see cref="Send"/> never waits for the other side (ADR-203): the message waits in a queue that a background task writes. A link whose other side
+/// stops reading is closed once nothing of the queue has gone out for <see cref="NetLimits.SendTimeout"/>, or at once when the queue holds more
+/// than <see cref="NetLimits.MaxBytesWaitingToSend"/>. A closed link still writes what waits for <see cref="NetLimits.CloseLinger"/> (a refusal's
+/// reason), then drops the socket.
+/// </remarks>
 public sealed class TcpConnection : INetConnection
 {
     /// <summary>The biggest message read; a whole game's record on a big map is a few megabytes.</summary>
@@ -40,31 +47,44 @@ public sealed class TcpConnection : INetConnection
 
     private readonly TcpClient _client;
     private readonly NetworkStream _stream;
+    /// <summary>How much of a message one write hands the socket: the send timeout counts from the last piece that went out.</summary>
+    private const int WritePiece = 64 * 1024;
+
     private readonly ConcurrentQueue<NetMessage> _received = new();
-    private readonly Lock _sending = new();
+    private readonly Channel<byte[]> _outgoing = Channel.CreateUnbounded<byte[]>(new UnboundedChannelOptions { SingleReader = true });
     private readonly int _maxMessageBytes;
     private readonly int _maxWaiting;
-    private volatile string? _closeReason;
+    private readonly TimeSpan _sendTimeout;
+    private readonly long _maxBytesWaitingToSend;
+    private long _bytesWaitingToSend;
+    private string? _closeReason;
 
     /// <param name="client">The connected socket.</param>
     /// <param name="maxMessageBytes">The biggest message read; a longer one closes the link before anything is allocated for it.</param>
     /// <param name="maxWaiting">The messages that may wait for <see cref="TryReceive"/>; one more closes the link.</param>
-    public TcpConnection(TcpClient client, int maxMessageBytes = MaxMessageBytes, int maxWaiting = int.MaxValue)
+    /// <param name="sendTimeout">How long nothing may go out of what waits to be sent (<see cref="NetLimits.SendTimeout"/> unless set).</param>
+    /// <param name="maxBytesWaitingToSend">The bytes that may wait to be sent; one more closes the link.</param>
+    public TcpConnection(
+        TcpClient client, int maxMessageBytes = MaxMessageBytes, int maxWaiting = int.MaxValue, TimeSpan? sendTimeout = null,
+        long maxBytesWaitingToSend = NetLimits.MaxBytesWaitingToSend)
     {
         _maxMessageBytes = Math.Clamp(maxMessageBytes, 1, MaxMessageBytes);
         _maxWaiting = maxWaiting;
+        _sendTimeout = sendTimeout ?? NetLimits.SendTimeout;
+        _maxBytesWaitingToSend = maxBytesWaitingToSend;
         _client = client;
         _client.NoDelay = true;
         _stream = client.GetStream();
         Remote = client.Client.RemoteEndPoint?.ToString() ?? "?";
         _ = Task.Run(ReadAsync);
+        _ = Task.Run(WriteAsync);
     }
 
     public string Remote { get; }
 
-    public bool IsClosed => _closeReason is not null;
+    public bool IsClosed => Volatile.Read(ref _closeReason) is not null;
 
-    public string? CloseReason => _closeReason;
+    public string? CloseReason => Volatile.Read(ref _closeReason);
 
     /// <summary>Connects to a host; throws <see cref="SocketException"/> or <see cref="TimeoutException"/> when no host answers.</summary>
     public static TcpConnection Connect(string host, int port, TimeSpan timeout)
@@ -99,36 +119,71 @@ public sealed class TcpConnection : INetConnection
         }
 
         var body = NetSerializer.Serialize(message);
-        Span<byte> header = stackalloc byte[4];
-        BinaryPrimitives.WriteInt32BigEndian(header, body.Length);
-        try
+        var frame = new byte[4 + body.Length];
+        BinaryPrimitives.WriteInt32BigEndian(frame, body.Length);
+        body.CopyTo(frame.AsSpan(4));
+        if (Interlocked.Add(ref _bytesWaitingToSend, frame.Length) > _maxBytesWaitingToSend)
         {
-            lock (_sending)
-            {
-                _stream.Write(header);
-                _stream.Write(body);
-            }
+            Drop($"More than {_maxBytesWaitingToSend} bytes wait to be sent: the other side stopped reading.");
+            return;
         }
-        catch (Exception e) when (e is IOException or SocketException or ObjectDisposedException)
-        {
-            Close(e.Message);
-        }
+
+        _outgoing.Writer.TryWrite(frame);
     }
 
     public bool TryReceive(out NetMessage message) => _received.TryDequeue(out message!);
 
     public void Close(string reason)
     {
-        if (_closeReason is not null)
+        if (!MarkClosed(reason))
         {
             return;
         }
 
-        _closeReason = reason;
-        _client.Dispose();
+        // What waits still goes out (the writer drops the socket once it has), but not for longer than the linger.
+        _outgoing.Writer.TryComplete();
+        _ = Task.Delay(NetLimits.CloseLinger).ContinueWith(_ => _client.Dispose(), TaskScheduler.Default);
     }
 
     public void Dispose() => Close("Closed.");
+
+    /// <summary>Takes the link down at once, dropping what waits to be sent.</summary>
+    private void Drop(string reason)
+    {
+        MarkClosed(reason);
+        _outgoing.Writer.TryComplete();
+        _client.Dispose();
+    }
+
+    private bool MarkClosed(string reason) => Interlocked.CompareExchange(ref _closeReason, reason, null) is null;
+
+    private async Task WriteAsync()
+    {
+        using var stalled = new CancellationTokenSource();
+        try
+        {
+            await foreach (var frame in _outgoing.Reader.ReadAllAsync())
+            {
+                for (var at = 0; at < frame.Length; at += WritePiece)
+                {
+                    stalled.CancelAfter(_sendTimeout);
+                    await _stream.WriteAsync(frame.AsMemory(at, Math.Min(WritePiece, frame.Length - at)), stalled.Token);
+                }
+
+                Interlocked.Add(ref _bytesWaitingToSend, -frame.Length);
+            }
+
+            _client.Dispose();
+        }
+        catch (OperationCanceledException)
+        {
+            Drop($"Nothing could be sent for {_sendTimeout.TotalSeconds:0.#} seconds: the other side stopped reading.");
+        }
+        catch (Exception e)
+        {
+            Drop(e.Message);
+        }
+    }
 
     private async Task ReadAsync()
     {

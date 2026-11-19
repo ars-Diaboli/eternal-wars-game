@@ -8,17 +8,18 @@ the owner's missing-mechanics picks, the arena and LAN multiplayer are built. Th
 plan is in [docs/papers](../docs/papers/refactoring-plan-2026-11.md)). Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- ADR-228, LAN hardening (roadmap "Code health"): `TcpConnection.Send` queues and a background task writes (a client that stops reading
+  is cut off after 30 seconds or 128 MB, never freezing `Poll`); the chat allows 5 lines in 10 seconds a link; a lobby turns away a
+  ninth player waiting for a colour; the record interval is the colour's.
 - ADR-188 finished: the battle AI's last steps. (e) `CastAhead`: the hero casts on its side's first turn of a round, choosing between its
   three best spells and nothing by playing each out on a copy of the battle to the end of the next round. (f) `Sieges`: an aimed siege
   engine breaks the gate first, besiegers go in together, defenders block an open way in. `Latest` is `Sieges`. `sim ai`/`sim battle`
   take `--spells` and `--siege`, `sim battle` also `--trace`. Only the gate-first aim measurably pays in AI-against-AI sieges (ADR-188).
-- ADR-225 / ADR-227: the new-game screen's options tidied; difficulty renamed Easy … Master with five chess-piece buttons (map
-  format v41 migrates the old names); a colour per player and the crest picker; "×" on every window; the calendar on the status bar.
 
 ## Next
 1. A person's full game on Ember March (the Phase 3 exit's last check).
 2. The remaining Phase 5 items in [roadmap.md](roadmap.md) ("Presentation and UI", "Platform and art", "Roster").
-3. The "Code health" list in [roadmap.md](roadmap.md): LAN hardening, the schema hash, AI weights, `Main`'s policy (ADR-226).
+3. The "Code health" list in [roadmap.md](roadmap.md): the schema hash, AI weights, `Main`'s policy (ADR-226).
 
 ## Known problems
 - Smoke scenario `game-battle-control` fails at frame 184 (no Surrender while the computer's stack acts); it failed before ADR-227 too.
