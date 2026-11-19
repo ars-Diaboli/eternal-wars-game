@@ -1,6 +1,6 @@
 # Active context
 
-**As of 2026-11-19.** Refresh this file at the end of every piece of work: replace, do not append.
+**As of 2026-11-20.** Refresh this file at the end of every piece of work: replace, do not append.
 
 ## Where the project is
 Phases 0–4 are done and closed out (ADR-114, ADR-117). Phase 5 (content and polish) is in progress: magic, sieges, relics, map events,
@@ -9,11 +9,12 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- ADR-244 (presentation): new terrain texture prompts: each terrain its own saturated colour and structure, a texture shows
+  about 30 m of map; the mood comes from light and grading.
 - ADR-243 (code health): creature, spell, artifact and building ids are types of their own (`CreatureId`, `SpellId`, `ArtifactId`,
   `BuildingId`); the file formats are unchanged.
 - ADR-241 (game modes): campaigns: maps won one after another, heroes and campaign variables carried, campaign files, saves keep their
   campaign (save v6), the sample campaign Border Watch; Campaign in the main menu (smoke `game-campaign`).
-- ADR-242 (map events): dialogues, ending the game from an event, captured and battle events (map format v42).
 
 ## Next
 1. A person's full game on Ember March (the Phase 3 exit's last check).
