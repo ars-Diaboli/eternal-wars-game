@@ -25,6 +25,8 @@ public sealed class GameSession
     private readonly List<GameCommand> _log = [];
     private readonly CommandHandlers _handlers = new();
     private long _published;
+    private readonly EventBus _outside = new(); // Events: everyone outside the rules
+    private int _unheard;
 
     /// <summary>
     /// Checks that a refused command left the game as it was (its digest text unchanged) and fails loudly otherwise. The tests turn it on for
@@ -109,6 +111,16 @@ public sealed class GameSession
         });
         _handlers.Add<HandToPersonCommand>(c => Flow.HandToPerson(c.Player));
         _handlers.Add<PlayTurnByTurnCommand>(c => Turns.PlayTurnByTurn(c.Reason));
+
+        // Everyone outside the rules (views, tools, a LAN host) hears the rules' events after the rules have, on a bus of their own, so they can be
+        // left out while the game is moved on unheard (Unheard, ADR-234). Last, so each event reaches them after every rule, as before.
+        Bus.Subscribe<Core.Events.IEvent>(e =>
+        {
+            if (_unheard == 0)
+            {
+                _outside.Publish(e);
+            }
+        });
     }
 
     /// <summary>
@@ -137,7 +149,18 @@ public sealed class GameSession
     /// <summary>Whether this is a LAN client's session (<see cref="FollowingHost"/>): it runs no rules.</summary>
     public bool FollowsHost { get; }
 
-    public IEventSubscriber Events => Bus;
+    /// <summary>The game's events, for everyone outside the rules: views, tools, a LAN host. The rules hear them first.</summary>
+    public IEventSubscriber Events => _outside;
+
+    /// <summary>
+    /// Until the returned scope is disposed, the game's events reach only the rules, not <see cref="Events"/>' subscribers: the replay viewer moves
+    /// its game on by many commands at once without its views reacting to each, then builds them again on the state (ADR-234). Nests.
+    /// </summary>
+    public IDisposable Unheard()
+    {
+        _unheard++;
+        return new UnheardScope(this);
+    }
 
     /// <summary>
     /// Where a command goes once it is authorized, before it runs (ADR-192): null runs every command here. A LAN host refuses the commands of a
@@ -201,6 +224,20 @@ public sealed class GameSession
     private Magic.AdventureMagicService AdventureMagic { get; }
 
     private IEventBus Bus { get; }
+
+    private sealed class UnheardScope(GameSession session) : IDisposable
+    {
+        private bool _disposed;
+
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                _disposed = true;
+                session._unheard--;
+            }
+        }
+    }
 
     /// <summary>Starts the game: day 1, the first player's turn. Part of every game, so it is not a command.</summary>
     public void Start()

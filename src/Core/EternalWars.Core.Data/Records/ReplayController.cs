@@ -88,7 +88,7 @@ public sealed class ReplayController(ReplayPlayer player, AnimationSpeed speed =
     /// <summary>A turn started in the replay: a short pause before its first command.</summary>
     public void TurnStarted() => _turnWait = SpeedSettings.Seconds(Speed, TurnSeconds);
 
-    /// <summary>Jumps to <paramref name="position"/> (a turn's or day's start), back or forward, on a new watched session.</summary>
+    /// <summary>Jumps to <paramref name="position"/> (a turn's or day's start), back or forward (<see cref="ReplayPlayer.Seek"/>).</summary>
     public void Seek(int position)
     {
         Player.Seek(position);
@@ -139,7 +139,8 @@ public sealed class ReplayController(ReplayPlayer player, AnimationSpeed speed =
         {
             // Only a command from outside the record could make the watched game differ: it is rebuilt from the record where it was, paused.
             _playing = false;
-            Seek(Player.Position);
+            Player.Reload();
+            (_turnWait, _resultWait) = (0, 0);
             return new ReplayFrame(ReplayAdvance.Diverged, e.Message);
         }
     }

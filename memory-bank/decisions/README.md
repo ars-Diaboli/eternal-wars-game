@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-234.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-235.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -260,3 +260,4 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [231](architecture.md#adr-231-the-game-apps-remaining-policy-moves-to-core-autosave-rematch-a-saves-seats-lan-rules-replay-recovery-the-maps-focus-adr-222-adr-226-2026-11-19) | architecture | The game app's remaining policy moves to core: autosave, rematch, a save's seats, LAN rules, replay recovery, the map's focus (ADR-222, ADR-226, 2026-11-19) | implemented |
 | [232](architecture.md#adr-232-code-health-continue-falls-back-to-a-save-that-loads-the-events-panel-refreshes-once-and-while-shown-every-ai-tuning-number-is-a-weight-leftover-cleanups-adr-220-adr-224-adr-226-2026-11-19) | architecture | Code health: Continue falls back to a save that loads, the events panel refreshes once and while shown, every AI tuning number is a weight, leftover cleanups (ADR-220, ADR-224, ADR-226, 2026-11-19) | implemented |
 | [233](game-modes.md#adr-233-the-replay-viewer-takes-over-a-battle-played-in-one-command-the-computers-from-its-start-quick-combat-from-just-before-it-adr-164-adr-185-2026-11-19) | game-modes | The replay viewer takes over a battle played in one command: the computer's from its start, quick combat from just before it (ADR-164, ADR-185, 2026-11-19) | implemented |
+| [234](game-modes.md#adr-234-replays-measured-the-viewers-forward-jumps-play-on-unheard-instead-of-a-state-snapshot-adr-058-adr-164-2026-11-19) | game-modes | Replays measured; the viewer's forward jumps play on unheard instead of a state snapshot (ADR-058, ADR-164, 2026-11-19) | implemented |

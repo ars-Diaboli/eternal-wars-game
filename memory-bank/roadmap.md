@@ -96,7 +96,8 @@ Content draft: [artifacts.md](../docs/content/artifacts.md).
       with "skip to the result"; "Play from here" in battles (ADR-101, UI-2, ADR-164)
 - [x] Replay viewer: "Play from here" on the adventure map, the game played on as the player's own (ADR-185)
 - [x] Replay viewer: a battle where only the computer fights taken over by the viewer, from its start (ADR-233)
-- [ ] Save/load: a state snapshot if replays get too slow
+- [x] Save/load: replay times measured (5 s for eight players to month 5); the viewer's forward jumps play on instead of replaying, no state
+      snapshot until loading itself is too slow (ADR-234)
 
 ### Arena mode (ADR-097, ADR-100; before 1.0, after the Phase 3 exit)
 - [x] Core: the arena switch in the map (no victory or loss conditions), combat places; day 1 with unlimited movement and building (the

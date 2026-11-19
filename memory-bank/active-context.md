@@ -8,11 +8,10 @@ the owner's missing-mechanics picks, the arena and LAN multiplayer are built. Th
 plan is in [docs/papers](../docs/papers/refactoring-plan-2026-11.md)). Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- ADR-234 (save/load): replays measured (`sim replay` prints the time; 5 s for eight players to month 5); the replay viewer's forward jumps
+  play on the watched game unheard (`GameSession.Unheard`, `Events` a bus of its own); no state snapshot yet.
 - ADR-233 (replay viewer): "Play from here" in a battle the core played in one command: a computer's battle starts again from its start
   with a person on the attacker's side (`HandToPersonCommand`), one quick combat ended goes on from just before it; `sim record --computer`.
-- ADR-232 (roadmap "Code health"): Continue loads the newest save that loads (`GameSaves.LoadNewest`); the events panel refreshes
-  once and only while shown (`RefreshScheduler.OnlyWhileShown`); 15 more `AiWeights`, none negative; a prison tracked by its condition's
-  handler; the views hold the game's `GameDirector`; the map chat's place as `UiTheme` tokens.
 
 ## Next
 1. A person's full game on Ember March (the Phase 3 exit's last check).

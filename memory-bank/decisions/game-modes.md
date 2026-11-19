@@ -27,6 +27,7 @@
 | [225](#adr-225-the-new-game-screens-options-tidied-difficulty-as-five-chess-pieces-the-calendar-on-the-status-bar-adr-063-adr-101-adr-201-adr-204-owner-notes-2026-11-19) | The new-game screen's options tidied; difficulty as five chess pieces; the calendar on the status bar (ADR-063, ADR-101, ADR-201, ADR-204, owner notes, 2026-11-19) | accepted |
 | [227](#adr-227-building-adr-225-old-difficulty-names-player-colours-and-the-new-game-screens-players-adr-225-2026-11-19) | Building ADR-225: old difficulty names, player colours and the new-game screen's players (ADR-225, 2026-11-19) | accepted |
 | [233](#adr-233-the-replay-viewer-takes-over-a-battle-played-in-one-command-the-computers-from-its-start-quick-combat-from-just-before-it-adr-164-adr-185-2026-11-19) | The replay viewer takes over a battle played in one command: the computer's from its start, quick combat from just before it (ADR-164, ADR-185, 2026-11-19) | implemented |
+| [234](#adr-234-replays-measured-the-viewers-forward-jumps-play-on-unheard-instead-of-a-state-snapshot-adr-058-adr-164-2026-11-19) | Replays measured; the viewer's forward jumps play on unheard instead of a state snapshot (ADR-058, ADR-164, 2026-11-19) | implemented |
 
 
 ### ADR-057: Victory and defeat
@@ -66,7 +67,7 @@ dwellings also turn neutral and its caravans vanish (ADR-054)
 
 ### ADR-058: Saved games
 **Status**: accepted (2026-10-16), from the roadmap's save/load item and a user requirement: saving and loading must also
-work during combat
+work during combat; replay times measured and the snapshot put off in ADR-234
 - **A save is a game record** (ADR-036): the map as it was when the game started, the options (seed, fog) and every
   accepted command, plus a label (`SaveInfo`: name, UTC time, calendar date, whose turn, in battle, map name). The record
   document is version 2 (`GameRecordDocument.Save`; version 1 replays still load); saves use the extension
@@ -384,7 +385,7 @@ ADR-158).
 
 ### ADR-164: The replay viewer (ADR-101, UI-2, 2026-11-10)
 **Status**: implemented (2026-11-10); core tested, the Godot parts run in two smoke scenarios; a battle only the computer fights is taken over
-since ADR-233. Carries out ADR-101's viewer. *(choice)* marks the
+since ADR-233; forward jumps play on the watched game since ADR-234. Carries out ADR-101's viewer. *(choice)* marks the
 agent's choices.
 
 - **Core** (`ReplayPlayer`, Core.Data): `Open` replays the whole record once, so a record that does not replay (a refused command, another
@@ -585,3 +586,25 @@ to change. Map format **v41** (difficulty names); saves and the ranking file rea
 - Tests: `ReplayPlayerTests` (a computer's battle taken over from its start with the person on the attacker's side, the replay unchanged,
   only right after its command; a battle quick combat ended taken over from just before it; `HandToPersonCommand` and its refusals; the
   controller's status line).
+
+### ADR-234: Replays measured; the viewer's forward jumps play on unheard instead of a state snapshot (ADR-058, ADR-164, 2026-11-19)
+**Status**: implemented (2026-11-19); core tested. Answers the roadmap's "a state snapshot if replays get too slow" (ADR-058) with a
+measurement and the owner's choice. No rule, save or map format change.
+
+- **Measured** (Release, `sim replay`, which now prints the time to read and to replay): a duel to month 3 (1013 commands) replays in
+  1.6 s; eight computer players on the largest map (Eight kingdoms, 192 with underground) to month 5 (6596 commands) in 5.0 s, plus 0.4 s to
+  read the file. The time grows with the game's length (about 10 s at month 10). Loading a save pays it once; the replay viewer paid it on
+  opening and again on **every jump**, each replayed from day 1.
+- **Chosen** (owner): make the viewer's jumps fast; no state snapshot in saves for now. A snapshot means writing and reading back every
+  piece of the game exactly, the random numbers included, with its own format version: it waits until loading itself is too slow.
+- **A jump forward plays on the watched game**, with its events unheard by the views (`ReplayPlayer.Seek`), so it costs only the commands it
+  skips: in the eight-player game at day 100, "Next day" takes about 0.15 s and "Next turn" 0.05 s where each took the whole replay (changes
+  ADR-164's choice to rebuild forward jumps too). The views are built again on the state afterwards, as before. A jump **back** still
+  replays from the start to that point (its cost grows with the day jumped to, not the record's length) *(choice: a checkpoint kept in
+  memory needs a copy of the game state, which is the snapshot work)*. `ReplayPlayer.Reload` puts the record's game back when the watched
+  one differs from it.
+- **`GameSession.Events` is a bus of its own** for everyone outside the rules (views, tools, a LAN host), fed by the rules' bus after every
+  rule has heard an event, so the order of events is unchanged. `GameSession.Unheard()` leaves those subscribers out until its scope ends
+  (scopes nest); the rules still hear everything, so the game moves on exactly as when heard.
+- Tests: `UnheardEventsTests` (nothing heard outside while the rules still move the fog; nesting), `ReplayPlayerTests` (a jump forward keeps
+  the watched session, is unheard and reaches the recorded state; a jump back and `Reload` replay to the same state).

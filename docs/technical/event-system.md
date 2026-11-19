@@ -47,7 +47,9 @@ publish/subscribe layer.
 - **Core handlers use the event's data, not current state** (`VisibilityService` reveals around `HeroMoved.To`, not
   the hero's position): with breadth-first queuing the state may have moved on by the time they run.
 - Core handlers (`VisibilityService`) are subscribed **before** any view, so their follow-ups (`TilesRevealed`) are
-  queued before views react to the original event.
+  queued before views react to the original event. `GameSession.Events` is a bus of its own for everyone outside the rules (views,
+  tools, a LAN host), fed by the rules' bus after every rule has heard each event; `GameSession.Unheard()` leaves those subscribers
+  out for a while (the replay viewer's jumps, ADR-234) while the rules still hear everything.
 - Animation gating (delaying presentation until an animation ends) belongs in a Tier 2 queue (as in `BattleView3D`),
   never in the core bus.
 
