@@ -89,14 +89,10 @@ public sealed record SphinxAnswered(MapObjectId Sphinx, HeroId Hero, bool Right,
 
 /// <summary>
 /// A hero opened a Pandora's Box (ADR-100): <paramref name="Received"/> is what it got (skills it had no room for, artifacts for a full backpack and
-/// creatures without a slot left out); the box was removed just before, and the experience follows. <see cref="Event"/> is the hero event the box
-/// runs next (null: none).
+/// creatures without a slot left out); the box was removed just before, and the experience follows.
 /// </summary>
 [SeenBy(Audience.Witnesses)]
-public sealed record PandorasBoxOpened(MapObjectId Box, HeroId Hero, Objects.BoxContents Received, string? Message) : IEvent
-{
-    public string? Event { get; init; }
-}
+public sealed record PandorasBoxOpened(MapObjectId Box, HeroId Hero, Objects.BoxContents Received, string? Message) : IEvent;
 
 /// <summary>A hero learned or improved a skill at a witch hut (ADR-079).</summary>
 /// <summary>A University or War Academy drew a hero's lessons on its first visit (ADR-139).</summary>

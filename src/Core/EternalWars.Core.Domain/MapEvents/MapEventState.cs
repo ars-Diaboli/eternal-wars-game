@@ -37,6 +37,21 @@ public sealed class MapEventState
     /// <summary>The events waiting to run, in order.</summary>
     internal Queue<MapEventRun> Runs { get; } = new();
 
+    /// <summary>
+    /// Queues the hero event <paramref name="name"/> for the hero (a step onto its <paramref name="cell"/>, or an opened Pandora's Box, MAP-35);
+    /// it runs once nothing is pending. A name that is no hero event queues nothing; false then.
+    /// </summary>
+    internal bool QueueHeroEvent(string name, Heroes.Hero hero, MapPosition? cell = null)
+    {
+        if (Set.Find(name) is not { Kind: MapEventKind.Hero } definition)
+        {
+            return false;
+        }
+
+        Runs.Enqueue(new MapEventRun(definition, hero.Owner, hero.Id, null, cell, startOfTurn: false));
+        return true;
+    }
+
     /// <summary>The event running now (perhaps waiting for an answer or a battle), or null.</summary>
     internal MapEventRun? Current { get; set; }
 
