@@ -368,8 +368,8 @@ public class LastSpellTests
 
         BattleAi.Act(battle.State, battle.Engine);
 
-        Assert.Contains(battle.Events, e => e is BattleSpellCast { Spell: "death.raise-dead" });
-        Assert.DoesNotContain(battle.Events, e => e is BattleSpellCast { Spell: "chaos.blood-price" });
+        Assert.Contains(battle.Events, e => e is BattleSpellCast { Spell.Value: "death.raise-dead" });
+        Assert.DoesNotContain(battle.Events, e => e is BattleSpellCast { Spell.Value: "chaos.blood-price" });
     }
 
     private static CreatureDefinition Sturdy(string id) => TestBattle.Fixed(id, 10, health: 1000);

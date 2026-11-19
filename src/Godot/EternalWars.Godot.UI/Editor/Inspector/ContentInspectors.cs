@@ -48,10 +48,10 @@ internal sealed class ArtifactPickupInspector : InspectorSection<ArtifactPickup>
         var row = new HBoxContainer();
         form.Box.AddChild(row);
         var artifacts = new[] { ($"Random ({pickup.Definition.Name}, drawn at start)", (string?)null) }
-            .Concat(form.Scenario.Artifacts.All.OrderBy(a => a.Tier).ThenBy(a => a.Name).Select(a => ($"{a.Name} ({a.Tier})", (string?)a.Id)));
+            .Concat(form.Scenario.Artifacts.All.OrderBy(a => a.Tier).ThenBy(a => a.Name).Select(a => ($"{a.Name} ({a.Tier})", (string?)a.Id.Value)));
         var catalog = form.Scenario.Artifacts;
-        var artifact = row.AddChoice("Artifact", artifacts, pickup.Artifact is { } current ? ArtifactCatalog.BaseOf(current) : null);
-        artifact.Button.ItemSelected += _ => form.Edit(() => form.Editor.Contents.SetArtifactPickup(pickup.Id, artifact.Value()));
+        var artifact = row.AddChoice("Artifact", artifacts, pickup.Artifact is { } current ? ArtifactCatalog.BaseOf(current).Value : null);
+        artifact.Button.ItemSelected += _ => form.Edit(() => form.Editor.Contents.SetArtifactPickup(pickup.Id, artifact.Value() is { } picked ? new Core.Domain.Common.ArtifactId(picked) : (Core.Domain.Common.ArtifactId?)null));
 
         // A spell scroll (ADR-136): the spell written on it, or a random one of its level drawn at game start.
         if (pickup.Artifact is { } chosen && catalog.TryGet(chosen, out var scroll) && scroll.ScrollLevel is { } level)
@@ -59,8 +59,8 @@ internal sealed class ArtifactPickupInspector : InspectorSection<ArtifactPickup>
             var spellRow = new HBoxContainer();
             form.Box.AddChild(spellRow);
             var spells = new[] { ($"Random level {level} spell (drawn at start)", (string?)null) }
-                .Concat(catalog.ScrollSpells(level).Select(id => catalog.Spells.Get(id)).OrderBy(s => s.Name).Select(s => ($"{s.Name} ({s.School})", (string?)s.Id)));
-            var spell = spellRow.AddChoice("Spell", spells, scroll.Spell);
+                .Concat(catalog.ScrollSpells(level).Select(id => catalog.Spells.Get(id)).OrderBy(s => s.Name).Select(s => ($"{s.Name} ({s.School})", (string?)s.Id.Value)));
+            var spell = spellRow.AddChoice("Spell", spells, scroll.Spell?.Value);
             spell.Button.ItemSelected += _ => form.Edit(() => form.Editor.Contents.SetArtifactPickup(pickup.Id,
                 spell.Value() is { } written ? ArtifactCatalog.WithSpell(chosen, written) : ArtifactCatalog.BaseOf(chosen)));
         }
@@ -100,9 +100,9 @@ internal sealed class ShrineInspector : InspectorSection<Shrine>
         var row = new HBoxContainer();
         form.Box.AddChild(row);
         var spells = new[] { ("Drawn at start", (string?)null) }
-            .Concat(ShrineRules.Candidates(form.Scenario.Spells, shrine.SpellLevel).Select(s => ($"{s.Name} ({s.School})", (string?)s.Id)));
-        var spell = row.AddChoice("Spell", spells, shrine.Spell);
-        spell.Button.ItemSelected += _ => form.Edit(() => form.Editor.Contents.SetShrineSpell(shrine.Id, spell.Value()));
+            .Concat(ShrineRules.Candidates(form.Scenario.Spells, shrine.SpellLevel).Select(s => ($"{s.Name} ({s.School})", (string?)s.Id.Value)));
+        var spell = row.AddChoice("Spell", spells, shrine.Spell?.Value);
+        spell.Button.ItemSelected += _ => form.Edit(() => form.Editor.Contents.SetShrineSpell(shrine.Id, spell.Value() is { } id ? new EternalWars.Core.Domain.Common.SpellId(id) : (EternalWars.Core.Domain.Common.SpellId?)null));
     }
 }
 

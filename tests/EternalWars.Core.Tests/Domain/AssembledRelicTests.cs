@@ -20,13 +20,13 @@ namespace EternalWars.Core.Tests.Domain;
 public class AssembledRelicTests
 {
     private const string Magi = "ring-of-the-magi";
-    private static readonly string[] MagiPieces = ["ring-of-conjuring", "collar-of-conjuring", "cape-of-conjuring"];
+    private static readonly ArtifactId[] MagiPieces = ["ring-of-conjuring", "collar-of-conjuring", "cape-of-conjuring"];
     private const string Well = "wizards-well";
     private static readonly string[] WellPieces = ["talisman-of-mana", "mystic-orb-of-mana", "charm-of-mana"];
     private const string Alliance = "angelic-alliance";
-    private static readonly string[] AlliancePieces = ["sword-of-judgement", "lions-shield-of-courage", "celestial-necklace-of-bliss"];
+    private static readonly ArtifactId[] AlliancePieces = ["sword-of-judgement", "lions-shield-of-courage", "celestial-necklace-of-bliss"];
 
-    private static Hero Outfit(GameState state, HeroId id, string[]? worn = null, string[]? backpack = null)
+    private static Hero Outfit(GameState state, HeroId id, ArtifactId[]? worn = null, ArtifactId[]? backpack = null)
     {
         var hero = state.GetHero(id);
         hero.Artifacts.ReplaceWith(worn ?? [], backpack ?? [], state.Artifacts);
@@ -100,7 +100,7 @@ public class AssembledRelicTests
         var session = Start(state);
 
         session.Execute(new TakeRelicApartCommand(Blue, A, Magi)).ThrowIfRejected();
-        Assert.Equal(MagiPieces.Order(StringComparer.Ordinal), hero.Artifacts.AllWorn.Select(w => w.Id).Order(StringComparer.Ordinal));
+        Assert.Equal(MagiPieces.Order(), hero.Artifacts.AllWorn.Select(w => w.Id).Order());
         Assert.Empty(hero.Artifacts.AllBlocked);
 
         session.Execute(new AssembleRelicCommand(Blue, A, Magi)).ThrowIfRejected();
@@ -135,7 +135,7 @@ public class AssembledRelicTests
         Assert.Equal(MagiPieces, BeatTheRelicsWearer(worn: ["badge-of-courage"]).Artifacts.Backpack);
 
         // Alpha, wearing `worn` and leading a big army, attacks and defeats Bravo, who wears the Ring of the Magi.
-        static Hero BeatTheRelicsWearer(string[] worn)
+        static Hero BeatTheRelicsWearer(ArtifactId[] worn)
         {
             var state = Create("AB.", "...");
             Outfit(state, B, [Magi]);

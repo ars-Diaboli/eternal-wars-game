@@ -61,7 +61,7 @@ public partial class BattleUnitView : Node3D
             Position = new Vector3(0, 0.02f, 0),
         });
 
-        BaseColor = machine is null ? ColorOf(creature.Id) : new Color(0.50f, 0.36f, 0.22f);
+        BaseColor = machine is null ? ColorOf(creature.Id.Value) : new Color(0.50f, 0.36f, 0.22f);
         _bodyMaterial = new StandardMaterial3D { AlbedoColor = BaseColor, Roughness = 0.8f };
         var scale = extent / (2 * BattleSpace.CellSize); // 1 for small, 1.5 medium, 2 large
         var (mesh, bodyHeight) = machine is not null

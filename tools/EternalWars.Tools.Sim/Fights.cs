@@ -56,7 +56,7 @@ internal static class Fights
         var objects = new List<MapObject>();
         if (setup.Siege)
         {
-            var buildings = new Dictionary<string, int>(BuiltInBuildings.DefaultStart, StringComparer.Ordinal) { [BuiltInBuildings.Fort] = 3 };
+            var buildings = new Dictionary<EternalWars.Core.Domain.Common.BuildingId, int>(BuiltInBuildings.DefaultStart) { [BuiltInBuildings.Fort] = 3 };
             objects.Add(new Town(new MapObjectId(1), sim.Content.Objects.Get(BuiltInMapObjects.TownId(SimContext.PlayableTowns[0])), new MapPosition(0, 0),
                 players[1].Id, buildings: buildings));
         }
@@ -80,7 +80,7 @@ internal static class Fights
             Core.Domain.Heroes.Hero.Create(
                 new HeroId(id), owner, at, new Army(army.Slots), definition: null, name: owner.Value == 0 ? "Attacker" : "Defender",
                 spellPower: known is null ? null : FightSetup.SpellPower, knowledge: known is null ? null : FightSetup.Knowledge, warMachines: machines,
-                spellBook: known is not null, spells: known, spellCatalog: sim.Content.Spells,
+                spellBook: known is not null, spells: known?.Select(s => new EternalWars.Core.Domain.Common.SpellId(s)), spellCatalog: sim.Content.Spells,
                 skills: machines is null ? null : new Dictionary<string, SkillLevel>(StringComparer.Ordinal) { [BuiltInSkills.Ballistics] = SkillLevel.Basic });
     }
 
@@ -91,13 +91,13 @@ internal static class Fights
     /// <summary>The battle spells both heroes know in the battle with <paramref name="seed"/>: <see cref="FightSetup.SpellCount"/> of levels 1–3.</summary>
     private static List<string> SpellsFor(SimContext sim, ulong seed)
     {
-        var pool = sim.Content.Spells.All.Where(s => s.Effect is not null && s.Level <= 3).OrderBy(s => s.Id, StringComparer.Ordinal).ToList();
+        var pool = sim.Content.Spells.All.Where(s => s.Effect is not null && s.Level <= 3).OrderBy(s => s.Id).ToList();
         var random = new GameRandom(seed * 7919 + 17);
         var picked = new List<string>();
         while (picked.Count < FightSetup.SpellCount && pool.Count > 0)
         {
             var at = random.Next(pool.Count);
-            picked.Add(pool[at].Id);
+            picked.Add(pool[at].Id.Value);
             pool.RemoveAt(at);
         }
 

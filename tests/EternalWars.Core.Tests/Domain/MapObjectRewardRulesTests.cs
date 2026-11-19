@@ -216,14 +216,14 @@ public class MapObjectRewardRulesTests
     {
         var state = World();
         var session = Start(state);
-        var relics = state.Artifacts.OfTier(ArtifactTier.Relic).Select(a => a.Id).ToHashSet(StringComparer.Ordinal);
+        var relics = state.Artifacts.OfTier(ArtifactTier.Relic).Select(a => a.Id).ToHashSet();
 
         // A drawn scroll comes with its spell written (ADR-136); the pool holds the blank one.
-        var firstRound = Enumerable.Range(0, relics.Count).Select(_ => ArtifactCatalog.BaseOf(session.Artifacts.Draw(ArtifactTier.Relic)!)).ToList();
-        Assert.Equal(relics.Order(StringComparer.Ordinal), firstRound.Order(StringComparer.Ordinal));
+        var firstRound = Enumerable.Range(0, relics.Count).Select(_ => ArtifactCatalog.BaseOf(session.Artifacts.Draw(ArtifactTier.Relic)!.Value)).ToList();
+        Assert.Equal(relics.Order(), firstRound.Order());
         Assert.Contains("relics drawn", GameStateDigest.Describe(state), StringComparison.Ordinal);
 
-        var next = ArtifactCatalog.BaseOf(session.Artifacts.Draw(ArtifactTier.Relic)!); // the pool refilled and the draw starts anew
+        var next = ArtifactCatalog.BaseOf(session.Artifacts.Draw(ArtifactTier.Relic)!.Value); // the pool refilled and the draw starts anew
         Assert.Contains(next, relics);
         Assert.Equal(new[] { next }, state.DrawnRelics);
     }
@@ -232,16 +232,16 @@ public class MapObjectRewardRulesTests
     public void Draw_Relics_SkipThoseOnTheMapOrCarried_AndOtherTiersMayRepeat()
     {
         var state = World();
-        var relics = state.Artifacts.OfTier(ArtifactTier.Relic).Select(a => a.Id).Order(StringComparer.Ordinal).ToList();
+        var relics = state.Artifacts.OfTier(ArtifactTier.Relic).Select(a => a.Id).Order().ToList();
         state.GetHero(A).Artifacts.AddToBackpack(relics[0]);
         var session = Start(state);
 
-        var drawn = Enumerable.Range(0, relics.Count - 1).Select(_ => ArtifactCatalog.BaseOf(session.Artifacts.Draw(ArtifactTier.Relic)!)).ToList();
+        var drawn = Enumerable.Range(0, relics.Count - 1).Select(_ => ArtifactCatalog.BaseOf(session.Artifacts.Draw(ArtifactTier.Relic)!.Value)).ToList();
         Assert.DoesNotContain(relics[0], drawn);
         Assert.Equal(relics.Count - 1, drawn.Distinct().Count());
 
-        var minors = state.Artifacts.OfTier(ArtifactTier.Minor).Select(a => a.Id).ToHashSet(StringComparer.Ordinal);
-        var many = Enumerable.Range(0, minors.Count * 3).Select(_ => ArtifactCatalog.BaseOf(session.Artifacts.Draw(ArtifactTier.Minor)!)).ToList();
+        var minors = state.Artifacts.OfTier(ArtifactTier.Minor).Select(a => a.Id).ToHashSet();
+        var many = Enumerable.Range(0, minors.Count * 3).Select(_ => ArtifactCatalog.BaseOf(session.Artifacts.Draw(ArtifactTier.Minor)!.Value)).ToList();
         Assert.All(many, id => Assert.Contains(id, minors));
         Assert.True(many.Distinct().Count() < many.Count); // repeats are allowed
         Assert.Empty(state.DrawnRelics.Intersect(minors));

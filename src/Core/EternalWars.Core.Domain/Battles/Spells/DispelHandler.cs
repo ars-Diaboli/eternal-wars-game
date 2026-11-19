@@ -45,7 +45,7 @@ internal sealed class DispelHandler : StackByStackHandler
 
     protected override void ApplyTo(CastContext cast, BattleSpellResolver resolver, BattleUnit unit)
     {
-        TakeOff(resolver, unit, BattleMagic.Dispelled(cast.Side, cast.Effect, unit), cast.Known.Spell.Id);
+        TakeOff(resolver, unit, BattleMagic.Dispelled(cast.Side, cast.Effect, unit), cast.Known.Spell.Id.Value);
         if (Heals(cast, unit) is > 0 and var health)
         {
             resolver.Wounds.HealTop(unit, health);

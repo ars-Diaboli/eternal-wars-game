@@ -31,9 +31,9 @@ internal sealed class CreaturesHandler : MapEventActionHandler<CreaturesAction>
         action with { Count = new NumberExpr(context.Evaluate(action.Count)) };
 
     protected override string Describe(GameState state, CreaturesAction action) =>
-        $"{Signed(Amount(action.Count))} {(state.Creatures.TryGet(action.Creature, out var c) ? c.Name : action.Creature)}";
+        $"{Signed(Amount(action.Count))} {(state.Creatures.TryGet(action.Creature, out var c) ? c.Name : action.Creature.Value)}";
 
-    private static void GiveHero(MapEventActionContext context, Hero hero, string creature, int count)
+    private static void GiveHero(MapEventActionContext context, Hero hero, Common.CreatureId creature, int count)
     {
         var (state, events) = (context.State, context.Events);
         if (!state.Creatures.Contains(creature) || count == 0)
@@ -69,7 +69,7 @@ internal sealed class CreaturesHandler : MapEventActionHandler<CreaturesAction>
         events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
     }
 
-    private static void GiveGarrison(MapEventActionContext context, Town town, string creature, int count)
+    private static void GiveGarrison(MapEventActionContext context, Town town, Common.CreatureId creature, int count)
     {
         var changed = count switch
         {
@@ -84,7 +84,7 @@ internal sealed class CreaturesHandler : MapEventActionHandler<CreaturesAction>
     }
 
     /// <summary>Takes up to <paramref name="count"/> of the creature from the army, last stack first; false when it has none.</summary>
-    private static bool Take(Army army, string creature, int count)
+    private static bool Take(Army army, Common.CreatureId creature, int count)
     {
         var taken = false;
         foreach (var (slot, stack) in army.Stacks.Where(s => s.Stack.Creature == creature).Reverse().ToList())

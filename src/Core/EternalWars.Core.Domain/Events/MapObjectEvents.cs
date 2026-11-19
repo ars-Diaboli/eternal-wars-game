@@ -36,7 +36,7 @@ public sealed record SurroundingsRevealed(HeroId Hero, MapObjectId Object, Playe
 
 /// <summary>A hero beat a creature bank's guard and took its reward (ADR-068); <paramref name="Artifact"/> null: none, or lost to a full backpack.</summary>
 [SeenBy(Audience.Witnesses)]
-public sealed record CreatureBankPlundered(MapObjectId Bank, HeroId Hero, ResourceSet Resources, string? Artifact) : IEvent;
+public sealed record CreatureBankPlundered(MapObjectId Bank, HeroId Hero, ResourceSet Resources, Common.ArtifactId? Artifact) : IEvent;
 
 /// <summary>A plundered creature bank filled again with a newly rolled guard and reward (ADR-068).</summary>
 [SeenBy(Audience.Witnesses)]
@@ -44,7 +44,7 @@ public sealed record CreatureBankRefilled(MapObjectId Bank) : IEvent;
 
 /// <summary>A hero upgraded a stack at a hill fort for 150 % of the upgrade price (ADR-068).</summary>
 [SeenBy(Audience.Witnesses)]
-public sealed record HillFortUpgraded(MapObjectId Fort, HeroId Hero, int Slot, string From, string To, int Count) : IEvent;
+public sealed record HillFortUpgraded(MapObjectId Fort, HeroId Hero, int Slot, CreatureId From, CreatureId To, int Count) : IEvent;
 
 /// <summary>A hero received resources from a resource provider (ADR-068, ADR-079); <see cref="ResourcesChanged"/> came just before.</summary>
 [SeenBy(Audience.Witnesses)]
@@ -55,7 +55,7 @@ public sealed record ResourcesFound(HeroId Hero, MapObjectId Object, ResourceSet
 /// lost to a full backpack, see <c>ArtifactBackpackFull</c>). Nothing at all is a possible outcome. Vanishing sites are removed just before.
 /// </summary>
 [SeenBy(Audience.Witnesses)]
-public sealed record LootFound(HeroId Hero, MapObjectId Object, ResourceSet Resources, string? Artifact) : IEvent;
+public sealed record LootFound(HeroId Hero, MapObjectId Object, ResourceSet Resources, Common.ArtifactId? Artifact) : IEvent;
 
 [SeenBy(Audience.Witnesses)]
 public sealed record ResourcePileCollected(HeroId Hero, MapObjectId Object, ResourceType Resource, int Amount) : IEvent;
@@ -69,23 +69,23 @@ public sealed record MapBought(MapObjectId Cartographer, HeroId Hero, PlayerId O
 
 /// <summary>An artifact merchant laid out new stock (game start, first day of a month; ADR-079).</summary>
 [SeenBy(Audience.Witnesses)]
-public sealed record MerchantRestocked(MapObjectId Merchant, IReadOnlyList<string?> Stock) : IEvent;
+public sealed record MerchantRestocked(MapObjectId Merchant, IReadOnlyList<ArtifactId?> Stock) : IEvent;
 
 /// <summary>A hero bought an artifact from a merchant (ADR-079); <c>ArtifactGained</c> came just before.</summary>
 [SeenBy(Audience.Witnesses)]
-public sealed record ArtifactBought(MapObjectId Merchant, HeroId Hero, int Slot, string Artifact, ResourceSet Price) : IEvent;
+public sealed record ArtifactBought(MapObjectId Merchant, HeroId Hero, int Slot, Common.ArtifactId Artifact, ResourceSet Price) : IEvent;
 
 /// <summary>A refugee camp's week: <paramref name="Available"/> creatures of <paramref name="Creature"/> to buy (ADR-079).</summary>
 [SeenBy(Audience.Witnesses)]
-public sealed record RefugeesArrived(MapObjectId Camp, string Creature, int Available) : IEvent;
+public sealed record RefugeesArrived(MapObjectId Camp, CreatureId Creature, int Available) : IEvent;
 
 /// <summary>A hero sacrificed creatures or an artifact at an altar (ADR-079); the experience follows.</summary>
 [SeenBy(Audience.Witnesses)]
-public sealed record SacrificeMade(MapObjectId Altar, HeroId Hero, int Experience, string? Creature = null, int Count = 0, string? Artifact = null) : IEvent;
+public sealed record SacrificeMade(MapObjectId Altar, HeroId Hero, int Experience, CreatureId? Creature = null, int Count = 0, Common.ArtifactId? Artifact = null) : IEvent;
 
 /// <summary>A hero answered a sphinx (ADR-079): right brings an artifact or experience, wrong costs the day's movement and morale.</summary>
 [SeenBy(Audience.Witnesses)]
-public sealed record SphinxAnswered(MapObjectId Sphinx, HeroId Hero, bool Right, string? Artifact = null, int Experience = 0) : IEvent;
+public sealed record SphinxAnswered(MapObjectId Sphinx, HeroId Hero, bool Right, Common.ArtifactId? Artifact = null, int Experience = 0) : IEvent;
 
 /// <summary>
 /// A hero opened a Pandora's Box (ADR-100): <paramref name="Received"/> is what it got (skills it had no room for, artifacts for a full backpack and
@@ -132,7 +132,7 @@ public sealed record DwellingCreaturesGrew(MapObjectId Dwelling, int Available) 
 
 /// <summary>Creatures were bought from a map dwelling by a hero (<paramref name="Hero"/>) or for a caravan (null); <paramref name="Available"/> is what is left.</summary>
 [SeenBy(Audience.Witnesses)]
-public sealed record DwellingRecruited(MapObjectId Dwelling, HeroId? Hero, string Creature, int Count, int Available) : IEvent;
+public sealed record DwellingRecruited(MapObjectId Dwelling, HeroId? Hero, CreatureId Creature, int Count, int Available) : IEvent;
 
 /// <summary>An object appeared on the map (editor placement or undo of a removal).</summary>
 [SeenBy(Audience.Witnesses)]
@@ -147,7 +147,7 @@ public sealed record GateLinkChanged(MapObjectId Gate, MapObjectId? LinkedGate) 
 
 /// <summary>A neutral guard accepted the hero's offer and joined its army.</summary>
 [SeenBy(Audience.Witnesses)]
-public sealed record GuardJoined(HeroId Hero, MapObjectId Guard, string Creature, int Count) : IEvent;
+public sealed record GuardJoined(HeroId Hero, MapObjectId Guard, CreatureId Creature, int Count) : IEvent;
 
 /// <summary>The hero let a fleeing neutral guard go; it left the map (no experience).</summary>
 [SeenBy(Audience.Witnesses)]
@@ -186,4 +186,4 @@ public sealed record ObeliskVisited(HeroId Hero, MapObjectId Obelisk, PlayerId P
 /// and the hero took it, else null.
 /// </summary>
 [SeenBy(Audience.Witnesses)]
-public sealed record HoleDug(HeroId Hero, MapPosition Position, string? Grail) : IEvent;
+public sealed record HoleDug(HeroId Hero, MapPosition Position, ArtifactId? Grail) : IEvent;

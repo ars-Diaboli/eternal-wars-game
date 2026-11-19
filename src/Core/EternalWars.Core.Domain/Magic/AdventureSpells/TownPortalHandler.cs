@@ -10,7 +10,7 @@ namespace EternalWars.Core.Domain.Magic.AdventureSpells;
 /// </summary>
 internal sealed class TownPortalHandler : AdventureSpellHandler
 {
-    public override string Spell => AdventureMagic.TownPortal;
+    public override Common.SpellId Spell => AdventureMagic.TownPortal;
 
     public override bool NeedsTarget(GameState state, Hero hero) => AdventureMagic.RankOf(state, hero, Spell) >= 2;
 

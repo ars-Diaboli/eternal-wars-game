@@ -68,7 +68,7 @@ public partial class HeroListPanel : BoxContainer
         AddChild(new Label { Text = $"{player.Name}'s heroes" });
         foreach (var hero in _session.State.HeroesOf(player.Id))
         {
-            var stacks = string.Join(", ", hero.Army.Stacks.Select(s => $"{s.Stack.Count} {s.Stack.Creature.Split('.')[^1]}"));
+            var stacks = string.Join(", ", hero.Army.Stacks.Select(s => $"{s.Stack.Count} {s.Stack.Creature.Value.Split('.')[^1]}"));
             var button = new Button
             {
                 Text = $"{hero.Name}  {hero.MovementPoints}/{hero.MaxMovementPoints} MP",

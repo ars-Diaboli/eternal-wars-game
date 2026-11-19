@@ -282,7 +282,7 @@ public partial class Main : Node2D
 
         var spells = caster.Spells.Where(s => s.Effect is not null).ToList();
         var next = _armedSpell is null ? 0 : spells.FindIndex(s => s.Spell.Id == _armedSpell) + 1;
-        _armedSpell = next < spells.Count ? spells[next].Spell.Id : null;
+        _armedSpell = next < spells.Count ? spells[next].Spell.Id.Value : null;
         if (_armedSpell is not null && spells[next].Effect!.Reach is Core.Domain.Magic.SpellReach.Side or Core.Domain.Magic.SpellReach.All)
         {
             _armedSpell = null;

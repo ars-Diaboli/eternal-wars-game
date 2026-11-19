@@ -16,7 +16,7 @@ internal sealed class HealHandler : StackByStackHandler
     {
         if (cast.Effect.Cures)
         {
-            DispelHandler.TakeOff(resolver, unit, Cured(cast, unit), cast.Known.Spell.Id);
+            DispelHandler.TakeOff(resolver, unit, Cured(cast, unit), cast.Known.Spell.Id.Value);
         }
 
         var amount = BattleMagic.Amount(cast.Battle, cast.Side, cast.Known, cast.CreaturePower);

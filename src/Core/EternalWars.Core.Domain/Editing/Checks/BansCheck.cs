@@ -21,7 +21,7 @@ internal sealed class BansCheck : IMapCheck
 
         foreach (var (kind, ids, known) in new (string, IReadOnlyList<string>, Func<string, bool>)[]
                  {
-                     ("hero", bans.Heroes, scenario.HeroRoster.Contains), ("artifact", bans.Artifacts, scenario.Artifacts.Contains),
+                     ("hero", bans.Heroes, scenario.HeroRoster.Contains), ("artifact", bans.Artifacts, id => scenario.Artifacts.Contains(id)),
                      ("spell", bans.Spells, id => scenario.Spells.TryGet(id, out _)), ("skill", bans.Skills, Heroes.BuiltInSkills.Contains),
                  })
         {
@@ -64,8 +64,8 @@ internal sealed class BansCheck : IMapCheck
                 ArtifactPickup { Artifact: { } artifact } when bans.BansArtifact(artifact) => $"is the banned artifact '{artifact}'",
                 Shrine { Spell: { } spell } when bans.BansSpell(spell) => $"teaches the banned spell '{spell}'",
                 WitchHut hut when hut.Skills.FirstOrDefault(bans.BansSkill) is { } skill => $"teaches the banned skill '{skill}'",
-                Town town when town.FixedGuildSpells.FirstOrDefault(bans.BansSpell) is { } spell => $"has the banned spell '{spell}' fixed in its guild",
-                PandorasBox box when box.Contents.Artifacts.FirstOrDefault(bans.BansArtifact) is { } artifact => $"holds the banned artifact '{artifact}'",
+                Town town when town.FixedGuildSpells.Where(bans.BansSpell).Select(s => (Common.SpellId?)s).FirstOrDefault() is { } spell => $"has the banned spell '{spell}' fixed in its guild",
+                PandorasBox box when box.Contents.Artifacts.Where(bans.BansArtifact).Select(a => (Common.ArtifactId?)a).FirstOrDefault() is { } artifact => $"holds the banned artifact '{artifact}'",
                 _ => null,
             };
             if (banned is not null)

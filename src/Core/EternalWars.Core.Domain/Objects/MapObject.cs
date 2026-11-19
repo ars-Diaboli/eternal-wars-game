@@ -161,7 +161,7 @@ public sealed class Mine(MapObjectId id, MapObjectDefinition definition, MapPosi
 }
 
 /// <summary>A guarding creature stack; a null <see cref="Count"/> is rolled from the tier range at game start.</summary>
-public sealed record GuardStack(string Creature, int? Count = null);
+public sealed record GuardStack(Common.CreatureId Creature, int? Count = null);
 
 /// <summary>Gold or experience a chest offers.</summary>
 public sealed record ChestValues(int Gold, int Experience);
@@ -194,7 +194,7 @@ public sealed class TreasureChest(MapObjectId id, MapObjectDefinition definition
 /// An artifact lying on the map (ADR-061). A hero that steps on it puts it in its backpack (nothing happens when that is
 /// full). <see cref="Artifact"/> null is rolled from the definition's tier when the game starts.
 /// </summary>
-public sealed class ArtifactPickup(MapObjectId id, MapObjectDefinition definition, MapPosition position, string? artifact = null)
+public sealed class ArtifactPickup(MapObjectId id, MapObjectDefinition definition, MapPosition position, Common.ArtifactId? artifact = null)
     : MapObject(id, definition, position, MapObjectKind.Artifact)
 {
     /// <inheritdoc/>
@@ -203,7 +203,7 @@ public sealed class ArtifactPickup(MapObjectId id, MapObjectDefinition definitio
     /// <inheritdoc/>
     public override bool IsPickup => true;
 
-    public string? Artifact { get; internal set; } = artifact;
+    public Common.ArtifactId? Artifact { get; internal set; } = artifact;
 
     public Artifacts.ArtifactTier Tier => Definition.ArtifactTier ?? Artifacts.ArtifactTier.Minor;
 }
@@ -227,7 +227,7 @@ public static class DwellingGuards
 /// </summary>
 public sealed class CreatureDwelling(
     MapObjectId id, MapObjectDefinition definition, MapPosition position,
-    string creature = MonsterGuard.DefaultCreature, PlayerId? owner = null, int? available = null)
+    Common.CreatureId? creature = null, PlayerId? owner = null, int? available = null)
     : MapObject(id, definition, position, MapObjectKind.Dwelling), IFlaggable, IBattleGuard
 {
     /// <inheritdoc/>
@@ -248,7 +248,7 @@ public sealed class CreatureDwelling(
     public int ScoutingRadius => DwellingScoutingRadius;
 
     /// <summary>Id of the creature recruited here (the base creature of its line).</summary>
-    public string Creature { get; internal set; } = creature;
+    public Common.CreatureId Creature { get; internal set; } = creature ?? MonsterGuard.DefaultCreature;
 
     public PlayerId? Owner { get; internal set; } = owner;
 
@@ -300,7 +300,7 @@ public sealed class MonsterGuard(
     MapObjectId id,
     MapObjectDefinition definition,
     MapPosition position,
-    string creature = MonsterGuard.DefaultCreature,
+    Common.CreatureId? creature = null,
     int? count = null,
     GuardDisposition disposition = GuardDisposition.Aggressive,
     bool neverFlees = false,
@@ -319,7 +319,7 @@ public sealed class MonsterGuard(
 
     public const string DefaultCreature = Creatures.BuiltInCreatures.Wolf;
 
-    public string Creature { get; internal set; } = creature;
+    public Common.CreatureId Creature { get; internal set; } = creature ?? MonsterGuard.DefaultCreature;
 
     /// <summary>Null until rolled at game start from the creature's tier range.</summary>
     public int? Count { get; internal set; } = count;

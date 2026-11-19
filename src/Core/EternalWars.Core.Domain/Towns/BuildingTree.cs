@@ -35,7 +35,7 @@ public sealed record RequirementState(BuildingRequirement Requirement, string Na
 /// requirements below it (0 for a building that needs nothing).
 /// </summary>
 public sealed record BuildingNode(
-    string Building, string Name, int Level, int MaxLevel, BuildingLevel? Next, ResourceSet? Cost, IReadOnlyList<RequirementState> Requires,
+    Common.BuildingId Building, string Name, int Level, int MaxLevel, BuildingLevel? Next, ResourceSet? Cost, IReadOnlyList<RequirementState> Requires,
     BuildingStatus Status, string? Refusal, int Depth);
 
 /// <summary>A dwelling the town could still build, and the tiers that building it would leave without room (the 7-of-9 rule, ADR-030).</summary>
@@ -48,7 +48,7 @@ public static class BuildingTree
     public static IReadOnlyList<BuildingNode> For(GameState state, Town town)
     {
         var catalog = TownRules.Buildings(state, town);
-        var depths = new Dictionary<string, int>(StringComparer.Ordinal);
+        var depths = new Dictionary<Common.BuildingId, int>();
         var nodes = new List<BuildingNode>();
         foreach (var building in catalog.TownBuildings)
         {
@@ -85,7 +85,7 @@ public static class BuildingTree
     /// The longest requirement chain under the building's first level (where it enters the tree; upgrades needing more stay in its column); a
     /// dwelling requirement counts the dwellings' own requirements.
     /// </summary>
-    private static int Depth(BuildingCatalog catalog, string building, Dictionary<string, int> known, HashSet<string> visiting)
+    private static int Depth(BuildingCatalog catalog, Common.BuildingId building, Dictionary<Common.BuildingId, int> known, HashSet<Common.BuildingId> visiting)
     {
         if (known.TryGetValue(building, out var depth))
         {

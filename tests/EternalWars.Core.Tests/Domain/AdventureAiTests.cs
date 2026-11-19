@@ -265,7 +265,7 @@ public class AdventureAiTests
 
     private static IReadOnlyList<CreatureDefinition> LinesOf(GameState state, Town town) => TownRules.Lines(state, town);
 
-    private static string Shooter => CreatureCatalog.Default.All.First(c => c.Town == TownIds.Haven && c.Shots > 0 && c.UpgradesTo is not null).Id;
+    private static string Shooter => CreatureCatalog.Default.All.First(c => c.Town == TownIds.Haven && c.Shots > 0 && c.UpgradesTo is not null).Id.Value;
 
     [Fact]
     public void ItBuysATentAndACartForShooters_AndItsOffensiveMachineBackOnlyWithAdvancedBallistics()

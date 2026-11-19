@@ -118,7 +118,7 @@ public class SummonAndCasterTests
         Assert.Equal(1000 - (35 * (10 + 5) / 10), enemy.TopHealth); // Fireball 35 at Spell Power 10 / 2
         Assert.Equal(0, casters.CastsLeft["chaos.fireball"]);
         Assert.NotEqual(casters, battle.State.ActiveUnit); // it was the stack's action
-        Assert.Contains(battle.Events, e => e is BattleCreatureCast { Spell: "chaos.fireball", CastsLeft: 0 });
+        Assert.Contains(battle.Events, e => e is BattleCreatureCast { Spell.Value: "chaos.fireball", CastsLeft: 0 });
 
         battle.StartWith(casters);
         Assert.NotNull(battle.Engine.CreatureCast(null, new CellPosition(20, 10))); // no cast left

@@ -17,7 +17,7 @@ public class ShrineAndSpellBookTests
     private static SpellDefinition FirstOfLevel(GameState state, int level) => ShrineRules.Candidates(state.Spells, level).First();
 
     // The shrine's entrance is at (3, 1) when placed at (2, 0); hero A starts below it.
-    private static (GameSession Session, Shrine Shrine, Hero Hero) World(int level, string? spell, Action<Hero>? setUp = null)
+    private static (GameSession Session, Shrine Shrine, Hero Hero) World(int level, SpellId? spell, Action<Hero>? setUp = null)
     {
         var state = Create(".............", ".............", "...A.........", ".............", "C...........B");
         var shrine = Add<Shrine>(state, BuiltInMapObjects.ShrineId(level), 2, 0);
@@ -76,7 +76,7 @@ public class ShrineAndSpellBookTests
         {
             var (session, shrine, _) = World(level, null);
             Assert.NotNull(shrine.Spell);
-            Assert.Equal(level, session.State.Spells.Get(shrine.Spell!).Level);
+            Assert.Equal(level, session.State.Spells.Get(shrine.Spell!.Value).Level);
         }
     }
 
@@ -140,7 +140,7 @@ public class ShrineAndSpellBookTests
         Assert.Equal(EditResult.InvalidValue, scenarioEditor.Heroes.SetSpells(A, true, [levelOne, levelOne]));
         Assert.Equal(EditResult.Ok, scenarioEditor.Heroes.SetSpells(A, true, [levelOne, levelTwo]));
         Assert.True(hero.HasSpellBook);
-        Assert.Equal(new[] { levelOne, levelTwo }.Order(StringComparer.Ordinal), hero.Spells.Keys.Order(StringComparer.Ordinal));
+        Assert.Equal(new[] { levelOne, levelTwo }.Order(), hero.Spells.Keys.Order());
         scenarioEditor.Undo();
         Assert.Equal(hadBook, hero.HasSpellBook);
         Assert.Empty(hero.Spells);

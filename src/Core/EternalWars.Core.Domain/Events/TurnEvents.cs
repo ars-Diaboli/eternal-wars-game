@@ -18,7 +18,7 @@ public sealed record WeekEventAnnounced(GameDate Date, Turns.WeekEvent Event) : 
 
 /// <summary>A month of a creature put new stacks of it on the map, next to map objects (ADR-073); each also has its <c>MapObjectPlaced</c>.</summary>
 [SeenBy(Audience.Witnesses)]
-public sealed record MonstersSpawned(string Creature, IReadOnlyList<MapObjectId> Monsters) : IEvent;
+public sealed record MonstersSpawned(CreatureId Creature, IReadOnlyList<MapObjectId> Monsters) : IEvent;
 
 [SeenBy(Audience.Everyone)]
 public sealed record TurnStarted(PlayerId Player, GameDate Date) : IEvent;

@@ -17,13 +17,13 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
 {
     /// <summary>The artifacts of a tier the rolls may give, by id: without the map's bans, unless they ban the whole tier (ADR-126).</summary>
     private IReadOnlyList<ArtifactDefinition> OfTier(ArtifactTier tier) =>
-        MapBans.Allowed(state.Artifacts.OfTier(tier).OrderBy(a => a.Id, StringComparer.Ordinal).ToList(), a => state.Rules.Bans.BansArtifact(a.Id));
+        MapBans.Allowed(state.Artifacts.OfTier(tier).OrderBy(a => a.Id).ToList(), a => state.Rules.Bans.BansArtifact(a.Id));
 
     /// <summary>
     /// A blank spell scroll with a spell written on it (ADR-136): a random spell of its level from the game's random source, without the map's
     /// banned spells unless they ban the whole level. Any other artifact, or a written scroll, comes back as it is.
     /// </summary>
-    internal string Inscribe(string artifact)
+    internal Common.ArtifactId Inscribe(Common.ArtifactId artifact)
     {
         if (!IsBlankScroll(artifact) || state.Artifacts.Get(artifact).ScrollLevel is not { } level)
         {
@@ -42,8 +42,8 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
     internal void RollUnsetPickups()
     {
         var taken = state.Heroes.SelectMany(h => h.Artifacts.AllWorn.Select(w => w.Id).Concat(h.Artifacts.Backpack))
-            .Concat(state.ObjectsOf<ArtifactPickup>().Select(p => p.Artifact).OfType<string>())
-            .ToHashSet(StringComparer.Ordinal);
+            .Concat(state.ObjectsOf<ArtifactPickup>().Select(p => p.Artifact).OfType<Common.ArtifactId>())
+            .ToHashSet();
         foreach (var pickup in state.ObjectsOf<ArtifactPickup>().Where(p => p.Artifact is null).OrderBy(p => p.Id.Value).ToList())
         {
             var tier = OfTier(pickup.Tier);
@@ -54,13 +54,14 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
                 continue;
             }
 
-            pickup.Artifact = ArtifactRolls.Pick(pool, state.Random).Id;
-            taken.Add(pickup.Artifact);
+            var rolled = ArtifactRolls.Pick(pool, state.Random).Id;
+            pickup.Artifact = rolled;
+            taken.Add(rolled);
         }
 
         foreach (var pickup in state.ObjectsOf<ArtifactPickup>().Where(p => p.Artifact is not null).OrderBy(p => p.Id.Value))
         {
-            pickup.Artifact = Inscribe(pickup.Artifact!);
+            pickup.Artifact = Inscribe(pickup.Artifact!.Value);
         }
 
         foreach (var hero in state.Heroes.OrderBy(h => h.Id.Value))
@@ -69,7 +70,7 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
         }
     }
 
-    private bool IsBlankScroll(string artifact) => state.Artifacts.TryGet(artifact, out var definition) && definition is { IsScroll: true, Spell: null };
+    private bool IsBlankScroll(Common.ArtifactId artifact) => state.Artifacts.TryGet(artifact, out var definition) && definition is { IsScroll: true, Spell: null };
 
     /// <summary>Writes the spells of the blank scrolls the hero wears and carries.</summary>
     private void InscribeCarried(Hero hero)
@@ -95,7 +96,7 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
     /// before nor one lying on the map or carried by a hero; when none is left, the pool is refilled and the draw starts anew, so a hero may end
     /// up with two of one relic. Null only when the catalog has no artifact of the tier.
     /// </summary>
-    internal string? Draw(ArtifactTier tier)
+    internal Common.ArtifactId? Draw(ArtifactTier tier)
     {
         var all = OfTier(tier);
         if (all.Count == 0)
@@ -109,8 +110,8 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
         }
 
         var present = state.Heroes.SelectMany(h => h.Artifacts.AllWorn.Select(w => w.Id).Concat(h.Artifacts.Backpack))
-            .Concat(state.ObjectsOf<ArtifactPickup>().Select(p => p.Artifact).OfType<string>())
-            .ToHashSet(StringComparer.Ordinal);
+            .Concat(state.ObjectsOf<ArtifactPickup>().Select(p => p.Artifact).OfType<Common.ArtifactId>())
+            .ToHashSet();
         var pool = all.Where(a => !state.DrawnRelics.Contains(a.Id) && !present.Contains(a.Id)).ToList();
         if (pool.Count == 0)
         {
@@ -128,7 +129,7 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
     /// Puts a found artifact in the hero's backpack, a blank scroll (a map event's, a Pandora's Box's) with its spell written (ADR-136); false when the
     /// backpack is full (nothing happens).
     /// </summary>
-    internal bool Grant(Hero hero, string artifact, ArtifactSource source)
+    internal bool Grant(Hero hero, Common.ArtifactId artifact, ArtifactSource source)
     {
         artifact = Inscribe(artifact);
         if (!hero.Artifacts.AddToBackpack(artifact))
@@ -145,7 +146,7 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
     /// Takes an artifact away from the hero (given up or taken by the map): from the backpack, else off the body, or the other way round with
     /// <paramref name="wornFirst"/>. False when the hero has none. The caller publishes what it means.
     /// </summary>
-    internal bool Remove(Hero hero, string artifact, bool wornFirst = false)
+    internal bool Remove(Hero hero, Common.ArtifactId artifact, bool wornFirst = false)
     {
         var removed = wornFirst
             ? hero.Artifacts.RemoveWorn(artifact) || hero.Artifacts.RemoveFromBackpack(artifact)
@@ -190,7 +191,7 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
             Take(artifact);
         }
 
-        void Take(string artifact)
+        void Take(Common.ArtifactId artifact)
         {
             if (to.Artifacts.AddToBackpack(artifact))
             {
@@ -208,7 +209,7 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
         catalog.Relics.Where(r => r.Pieces.All(hero.Artifacts.IsWorn));
 
     /// <summary>Joins the worn pieces into the relic (ADR-121): the pieces go, the relic sits in the first piece's slot and blocks the others'.</summary>
-    internal void Assemble(PlayerId player, HeroId heroId, string relic)
+    internal void Assemble(PlayerId player, HeroId heroId, Common.ArtifactId relic)
     {
         var hero = Own(player, heroId, exchangeAllowed: true);
         var definition = state.Artifacts.Get(relic);
@@ -217,7 +218,7 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
             throw new CommandRefusedException($"{definition.Name} is not an assembled relic.");
         }
 
-        if (definition.Pieces.FirstOrDefault(p => !hero.Artifacts.IsWorn(p)) is { } missing)
+        if (definition.Pieces.Where(p => !hero.Artifacts.IsWorn(p)).Select(p => (Common.ArtifactId?)p).FirstOrDefault() is { } missing)
         {
             throw new CommandRefusedException($"{hero.Name} must wear {state.Artifacts.Get(missing).Name} to assemble {definition.Name}.");
         }
@@ -236,7 +237,7 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
     /// Takes the relic apart (ADR-121): a worn one into its pieces, worn in their slots again; a carried one into pieces in the backpack, which needs
     /// the room.
     /// </summary>
-    internal void TakeApart(PlayerId player, HeroId heroId, string relic)
+    internal void TakeApart(PlayerId player, HeroId heroId, Common.ArtifactId relic)
     {
         var hero = Own(player, heroId, exchangeAllowed: true);
         var definition = state.Artifacts.Get(relic);
@@ -277,7 +278,7 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
         events.Publish(new RelicTakenApart(hero.Id, relic, definition.Pieces, Worn: false));
     }
 
-    internal void Equip(PlayerId player, HeroId heroId, string artifact)
+    internal void Equip(PlayerId player, HeroId heroId, Common.ArtifactId artifact)
     {
         var hero = Own(player, heroId, exchangeAllowed: true);
         var definition = state.Artifacts.Get(artifact);
@@ -336,7 +337,7 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
         }
     }
 
-    internal void Unequip(PlayerId player, HeroId heroId, string artifact)
+    internal void Unequip(PlayerId player, HeroId heroId, Common.ArtifactId artifact)
     {
         var hero = Own(player, heroId, exchangeAllowed: true);
         if (!hero.Artifacts.IsWorn(artifact))
@@ -360,7 +361,7 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
     /// off the body. It goes into the receiver's backpack, or with <paramref name="wear"/> onto its body (the one worn in a full slot goes to its
     /// backpack); nothing changes when it cannot.
     /// </summary>
-    internal void Give(PlayerId player, HeroId fromId, string artifact, HeroId toId, bool worn = false, bool wear = false)
+    internal void Give(PlayerId player, HeroId fromId, Common.ArtifactId artifact, HeroId toId, bool worn = false, bool wear = false)
     {
         var from = Own(player, fromId, exchangeAllowed: true);
         var to = Own(player, toId, exchangeAllowed: true);

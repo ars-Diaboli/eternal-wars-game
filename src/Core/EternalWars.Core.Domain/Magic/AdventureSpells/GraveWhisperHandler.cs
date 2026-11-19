@@ -8,13 +8,13 @@ namespace EternalWars.Core.Domain.Magic.AdventureSpells;
 /// </summary>
 internal sealed class GraveWhisperHandler : AdventureSpellHandler
 {
-    public override string Spell => AdventureMagic.GraveWhisper;
+    public override Common.SpellId Spell => AdventureMagic.GraveWhisper;
 
     public override void Cast(AdventureCast cast)
     {
         var hero = cast.Hero;
         var percent = AdventureMagic.GraveWhisperPercent(cast.Rank);
-        cast.Mark(new HeroStatus(cast.Spell, HeroStatusKind.Necromancy, percent, StatusExpiry.EndOfWeek));
+        cast.Mark(new HeroStatus(cast.Spell.Value, HeroStatusKind.Necromancy, percent, StatusExpiry.EndOfWeek));
         cast.Events.Publish(new GravesMarked(hero.Id, hero.Owner, percent,
             cast.Rank >= 3 ? AdventureIntel.MonstersAround(cast.State, hero.Owner, hero.Position, AdventureMagic.GraveWhisperRadius) : []));
     }

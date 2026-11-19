@@ -9,7 +9,7 @@ namespace EternalWars.Core.Domain.Magic.AdventureSpells;
 
 /// <summary>One paid adventure spell cast: who casts what at which rank and where, and what the cast works with.</summary>
 internal sealed class AdventureCast(
-    GameState state, IEventPublisher events, Visibility.IFogRevealer fog, TownVisitService towns, Hero hero, string spell, int rank, MapPosition? target)
+    GameState state, IEventPublisher events, Visibility.IFogRevealer fog, TownVisitService towns, Hero hero, Common.SpellId spell, int rank, MapPosition? target)
 {
     public GameState State { get; } = state;
 
@@ -21,7 +21,7 @@ internal sealed class AdventureCast(
 
     public Hero Hero { get; } = hero;
 
-    public string Spell { get; } = spell;
+    public Common.SpellId Spell { get; } = spell;
 
     public int Rank { get; } = rank;
 

@@ -80,7 +80,7 @@ internal sealed class TownArmiesSection(TownPanel panel) : TownSection(panel)
             var target = (which, slot);
             var button = new Button
             {
-                Text = stack is null ? "—" : $"{stack.Count}\n{stack.Creature.Split('.')[^1]}",
+                Text = stack is null ? "—" : $"{stack.Count}\n{stack.Creature.Value.Split('.')[^1]}",
                 CustomMinimumSize = UiTheme.TownSlotSize,
                 ToggleMode = true,
                 ButtonPressed = Panel.Picked == target,

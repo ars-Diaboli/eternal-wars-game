@@ -255,7 +255,7 @@ public sealed class ObjectEditor
     /// Edits a map dwelling (ADR-054): its creature, its owner and the creatures waiting in it (null = one week's growth when
     /// the game starts). Map dwellings sell base creatures only (ADR-073).
     /// </summary>
-    public EditResult SetDwelling(MapObjectId id, string creature, PlayerId? owner, int? available)
+    public EditResult SetDwelling(MapObjectId id, Common.CreatureId creature, PlayerId? owner, int? available)
     {
         if (_context.Object<CreatureDwelling>(id) is not { } dwelling)
         {
@@ -282,7 +282,7 @@ public sealed class ObjectEditor
             return EditResult.InvalidValue;
         }
 
-        _context.Edit<(string Creature, PlayerId? Owner, int? Available)>("Edit dwelling", () => (dwelling.Creature, dwelling.Owner, dwelling.Available), value =>
+        _context.Edit<(Common.CreatureId Creature, PlayerId? Owner, int? Available)>("Edit dwelling", () => (dwelling.Creature, dwelling.Owner, dwelling.Available), value =>
         {
             var before = dwelling.Owner;
             (dwelling.Creature, dwelling.Owner, dwelling.Available) = value;

@@ -46,6 +46,6 @@ internal sealed class LinesCommand : SimCommand
 
         return 0;
 
-        Army Week(CreatureDefinition creature) => Army.Of(new CreatureStack(upgraded ? creature.UpgradesTo! : creature.Id, creature.WeeklyGrowth));
+        Army Week(CreatureDefinition creature) => Army.Of(new CreatureStack(upgraded ? creature.UpgradesTo!.Value : creature.Id, creature.WeeklyGrowth));
     }
 }

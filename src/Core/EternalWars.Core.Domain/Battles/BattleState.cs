@@ -91,7 +91,7 @@ public sealed class BattleUnit
     /// <summary>The last round a copy fights in, and the spell that made it.</summary>
     public int CopyUntilRound { get; internal init; }
 
-    public string? CopySpell { get; internal init; }
+    public Common.SpellId? CopySpell { get; internal init; }
 
     /// <summary>Skeletons Raise Dead raised from a destroyed stack (ADR-152): they join the caster's army when its hero wins.</summary>
     public bool IsRaised { get; internal init; }
@@ -209,7 +209,7 @@ public sealed class BattleUnit
 /// <c>TurnsLeft</c> of the stack's turns to go as well. Martyrdom (ADR-152) names the stack that takes the blows (<c>Martyr</c>); the martyr's own
 /// share of it (its Defense, rank III) is marked <c>IsMartyr</c>.
 /// </summary>
-public sealed record ActiveSpell(string Spell, BattleSide Caster, Magic.SpellModifiers Modifiers, int UntilRound, int? TurnsLeft = null)
+public sealed record ActiveSpell(Common.SpellId Spell, BattleSide Caster, Magic.SpellModifiers Modifiers, int UntilRound, int? TurnsLeft = null)
 {
     public int? Martyr { get; init; }
 
@@ -217,7 +217,7 @@ public sealed record ActiveSpell(string Spell, BattleSide Caster, Magic.SpellMod
 }
 
 /// <summary>Raise Dead on a side (ADR-152): the spell, the percent of the slain health raised after the battle, and its raises during it.</summary>
-internal sealed record RaiseDead(string Spell, int Percent, Magic.SpellRises Rises);
+internal sealed record RaiseDead(Common.SpellId Spell, int Percent, Magic.SpellRises Rises);
 
 /// <summary>
 /// A battle in progress or just finished (the current one is <c>GameState.Battle</c>). Its random generator

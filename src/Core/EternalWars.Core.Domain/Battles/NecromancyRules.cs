@@ -7,7 +7,7 @@ using EternalWars.Core.Domain.Towns;
 namespace EternalWars.Core.Domain.Battles;
 
 /// <summary>Creatures Necromancy raised after a victory, as they joined the army.</summary>
-public sealed record RaisedUndead(string Creature, int Count);
+public sealed record RaisedUndead(Common.CreatureId Creature, int Count);
 
 /// <summary>
 /// Necromancy (ADR-069, ADR-072, MAG-7, draft numbers): after a victory, a hero with Death attunement raises 5 / 10 / 15 / 20 % of the hit

@@ -105,7 +105,7 @@ public static class TreasurePlacer
         }
 
         var streams = new SeedStreams(seed);
-        var relics = new HashSet<string>(map.Objects.OfType<ArtifactPickup>().Select(p => p.Artifact).OfType<string>().Select(ArtifactCatalog.BaseOf), StringComparer.Ordinal);
+        var relics = new HashSet<Domain.Common.ArtifactId>(map.Objects.OfType<ArtifactPickup>().Select(p => p.Artifact).OfType<Domain.Common.ArtifactId>().Select(ArtifactCatalog.BaseOf));
         var mapSites = new Dictionary<string, int>(StringComparer.Ordinal);
         for (var zone = 0; zone < template.Zones.Count; zone++)
         {
@@ -199,7 +199,7 @@ public static class TreasurePlacer
     }
 
     private static bool Item(GeneratedMap map, TemplateZone spec, List<MapPosition> tiles, List<MapPosition> placed, int value, bool isStart, GameRandom random,
-        CreatureCatalog creatures, ArtifactCatalog artifacts, HashSet<string> relics, Sites sites, ref bool marketplacePlaced)
+        CreatureCatalog creatures, ArtifactCatalog artifacts, HashSet<Domain.Common.ArtifactId> relics, Sites sites, ref bool marketplacePlaced)
     {
         var roll = random.Next(4);
         var guarded = spec.Monsters != MonsterStrength.None; // the spot leaves a free cell by the entrance for a guard
@@ -337,11 +337,11 @@ public static class TreasurePlacer
     /// An artifact of the best tier the value reaches; a relic only once per map, else the tier below. A scroll gets its spell here, a random one of
     /// its level (ADR-136).
     /// </summary>
-    private static ArtifactDefinition? PickArtifact(ArtifactCatalog artifacts, int value, GameRandom random, HashSet<string> relics)
+    private static ArtifactDefinition? PickArtifact(ArtifactCatalog artifacts, int value, GameRandom random, HashSet<Domain.Common.ArtifactId> relics)
     {
         foreach (var tier in new[] { ArtifactTier.Relic, ArtifactTier.Major, ArtifactTier.Minor }.Where(t => ArtifactValue(t) <= value))
         {
-            var choices = artifacts.OfTier(tier).Where(a => tier != ArtifactTier.Relic || !relics.Contains(a.Id)).OrderBy(a => a.Id, StringComparer.Ordinal).ToList();
+            var choices = artifacts.OfTier(tier).Where(a => tier != ArtifactTier.Relic || !relics.Contains(a.Id)).OrderBy(a => a.Id).ToList();
             if (choices.Count > 0)
             {
                 var picked = ArtifactRolls.Pick(choices, random);

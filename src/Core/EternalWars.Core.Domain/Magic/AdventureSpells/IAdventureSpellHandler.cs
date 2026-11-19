@@ -12,7 +12,7 @@ namespace EternalWars.Core.Domain.Magic.AdventureSpells;
 internal interface IAdventureSpellHandler
 {
     /// <summary>The spell id this handler casts.</summary>
-    string Spell { get; }
+    Common.SpellId Spell { get; }
 
     /// <summary>Whether the cast needs a cell picked on the map at the hero's rank.</summary>
     bool NeedsTarget(GameState state, Hero hero);

@@ -37,7 +37,7 @@ public sealed record MapEventSpellBookGained(HeroId Hero) : IEvent;
 
 /// <summary>A map event taught a hero a spell.</summary>
 [SeenBy(Audience.Witnesses)]
-public sealed record MapEventSpellLearned(HeroId Hero, string Spell) : IEvent;
+public sealed record MapEventSpellLearned(HeroId Hero, Common.SpellId Spell) : IEvent;
 
 /// <summary>A map event gave a hero a war machine (taking one publishes <see cref="WarMachineLost"/>).</summary>
 [SeenBy(Audience.Witnesses)]

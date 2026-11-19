@@ -27,7 +27,7 @@ public class ArmyMoraleTests
     public void EveryFactionBeyondTheFirst_CostsOneMorale_NeutralsCountAsOne()
     {
         var creatures = CreatureCatalog.Default;
-        CreatureDefinition[] Of(params string[] ids) => ids.Select(creatures.Get).ToArray();
+        CreatureDefinition[] Of(params string[] ids) => ids.Select(id => creatures.Get(id)).ToArray();
 
         Assert.Equal(0, MoraleAndLuck.MixedFactions([]));
         Assert.Equal(0, MoraleAndLuck.MixedFactions(Of(BuiltInCreatures.Footman, BuiltInCreatures.Footman)));

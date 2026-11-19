@@ -62,7 +62,7 @@ public class NecromancyTests
         var wolf = CreatureCatalog.Default.Get(BuiltInCreatures.Wolf); // neutral, tier 1, 14 hit points
         var raised = Raise(SkillLevel.Master, seed, (wolf, 100)); // 1400 × 20 % = 280
 
-        Assert.All(raised, r => Assert.Contains(r.Creature, new[] { Skeleton, PlagueBearer }));
+        Assert.All(raised, r => Assert.Contains(r.Creature.Value, new[] { Skeleton, PlagueBearer }));
         var health = raised.Sum(r => r.Count * CreatureCatalog.Default.Get(r.Creature).Health);
         Assert.InRange(health, 280 - 11 - 20 + 2, 280); // each part rounded down
     }
@@ -162,7 +162,7 @@ public class NecromancyTests
 
         // Footmen (class A) raise Skeletons, which go to the Skeleton Warriors (3/4); no Plague Bearers rise.
         Assert.All(raised.SelectMany(r => r.Raised), r => Assert.Equal("necropolis.skeleton-warrior", r.Creature));
-        Assert.DoesNotContain(army.Stacks, s => s.Stack.Creature is Skeleton or PlagueBearer);
+        Assert.DoesNotContain(army.Stacks, s => s.Stack.Creature.Value is Skeleton or PlagueBearer);
     }
 
     [Fact]

@@ -38,7 +38,7 @@ internal interface IMapEventValuer
     EventWorth Fight(IReadOnlyList<CreatureStack> army);
 
     /// <summary>What the artifact is worth to the hero (0 without a hero or for an unknown one).</summary>
-    double ArtifactWorth(string artifact);
+    double ArtifactWorth(Common.ArtifactId artifact);
 }
 
 /// <summary>What actions are worth to the AI in gold, and whether they end the event.</summary>

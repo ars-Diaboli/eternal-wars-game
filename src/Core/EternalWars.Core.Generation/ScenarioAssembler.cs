@@ -14,7 +14,7 @@ namespace EternalWars.Core.Generation;
 /// (<see cref="RandomTown"/> = drawn from the seed), the hero it picked (roster id of a hero of that town; null = drawn from the town's heroes) and
 /// the tier-1 dwelling its start town begins with when the template gives none (base creature id of a tier-1 line of the town; null = drawn).
 /// </summary>
-public sealed record PlayerSetup(int Slot, string Name, bool IsHuman, string TownType, string? Hero = null, int? Team = null, string? Tier1Dwelling = null)
+public sealed record PlayerSetup(int Slot, string Name, bool IsHuman, string TownType, string? Hero = null, int? Team = null, Domain.Common.CreatureId? Tier1Dwelling = null)
 {
     /// <summary>The town type of a player who chose "Random": resolved from the seed before the map is generated (RMG-7).</summary>
     public const string RandomTown = "random";
@@ -220,7 +220,7 @@ public static class ScenarioAssembler
     /// <summary>A player's start town:the player's type and ownership, the default start plus the zone's start buildings and dwellings.</summary>
     private static Town StartTown(GeneratedMap map, Town town, TemplateZone zone, PlayerSetup setup, PlayerId owner, CreatureCatalog creatures, BuildingCatalog catalog, GameRandom random)
     {
-        var buildings = new Dictionary<string, int>(BuiltInBuildings.DefaultStart, StringComparer.Ordinal);
+        var buildings = new Dictionary<Domain.Common.BuildingId, int>(BuiltInBuildings.DefaultStart);
         // A start building the player's town type lacks (a mage guild in Stronghold, ADR-071) is left out.
         var own = catalog.For(setup.TownType);
         foreach (var (building, level) in (zone.StartBuildings ?? new Dictionary<string, int>()).Where(b => own.Contains(b.Key)))
@@ -228,15 +228,15 @@ public static class ScenarioAssembler
             buildings[building] = Math.Min(own.MaxLevel(building), Math.Max(level, buildings.GetValueOrDefault(building)));
         }
 
-        var lines = creatures.BaseCreaturesOf(setup.TownType).OrderBy(c => c.Id, StringComparer.Ordinal).ToList();
-        var dwellings = new Dictionary<string, int>(StringComparer.Ordinal);
+        var lines = creatures.BaseCreaturesOf(setup.TownType).OrderBy(c => c.Id).ToList();
+        var dwellings = new Dictionary<Domain.Common.CreatureId, int>();
         var tiers = zone.StartDwellings ?? [];
         if (!tiers.Contains(1))
         {
             var tier1 = setup.Tier1Dwelling ?? Choose(lines.Where(l => l.Tier == 1).ToList(), random)?.Id;
-            if (tier1 is not null)
+            if (tier1 is { } chosen)
             {
-                dwellings[tier1] = 1;
+                dwellings[chosen] = 1;
             }
         }
 
@@ -250,7 +250,7 @@ public static class ScenarioAssembler
 
         // A week of creatures waits in every start dwelling, with the fort's growth bonus (ADR-066).
         var probe = new Town(town.Id, map.Definition(BuiltInMapObjects.TownId(setup.TownType)), town.Position, buildings: buildings);
-        var available = dwellings.Keys.ToDictionary(l => l, l => TownRules.WeeklyGrowth(catalog, probe, creatures.Get(l)), StringComparer.Ordinal);
+        var available = dwellings.Keys.ToDictionary(l => l, l => TownRules.WeeklyGrowth(catalog, probe, creatures.Get(l)));
         return map.Replace(town, setup.TownType, owner, buildings, dwellings, available);
     }
 
@@ -272,7 +272,7 @@ public static class ScenarioAssembler
     /// </summary>
     private static Army StarterArmy(HeroDefinition hero, string town, CreatureCatalog creatures, GameRandom random)
     {
-        var pool = creatures.BaseCreaturesOf(town).Where(c => c.Tier <= 2).OrderBy(c => c.Tier).ThenBy(c => c.Id, StringComparer.Ordinal).ToList();
+        var pool = creatures.BaseCreaturesOf(town).Where(c => c.Tier <= 2).OrderBy(c => c.Tier).ThenBy(c => c.Id).ToList();
         if (pool.Count == 0)
         {
             return new Army();

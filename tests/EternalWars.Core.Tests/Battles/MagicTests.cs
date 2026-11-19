@@ -98,7 +98,7 @@ public class MagicTests
             var state = Create(GameOptionsWithSeed(seed), WideMap);
             var town = AddTown(state, TownIds.Academy, 0, 0, Blue);
             Start(state);
-            return town.GuildSpells;
+            return town.GuildSpells.ToDictionary(l => l.Key, l => (IReadOnlyList<string>)[.. l.Value.Select(s => s.Value)]);
         }
 
         Assert.Equal(Draw(11).SelectMany(l => l.Value), Draw(11).SelectMany(l => l.Value));
@@ -119,7 +119,7 @@ public class MagicTests
         session.Step(A, Direction.North);
 
         Assert.Equal(town.GuildSpells[1], Assert.Single(learned).Spells);
-        Assert.Equal(town.GuildSpells[1].Order(StringComparer.Ordinal), hero.Spells.Keys); // level 2 needs Advanced
+        Assert.Equal(town.GuildSpells[1].Order(), hero.Spells.Keys); // level 2 needs Advanced
         Assert.Equal(1, hero.Mana); // only a night there refills it
     }
 
@@ -167,7 +167,7 @@ public class MagicTests
 
         Assert.True(hero.HasSpellBook);
         Assert.Equal(100, state.GetPlayer(Blue).Resources.Gold);
-        Assert.Equal(town.GuildSpells[1].Order(StringComparer.Ordinal), hero.Spells.Keys);
+        Assert.Equal(town.GuildSpells[1].Order(), hero.Spells.Keys);
         Assert.False(session.Execute(new BuySpellBookCommand(Blue, town.Id)).IsAccepted);
     }
 
@@ -240,7 +240,7 @@ public class MagicTests
 
         session.Execute(new BuildCommand(Blue, town.Id, BuiltInBuildings.SpellSchool(TownIds.Sylvan))).ThrowIfRejected();
 
-        Assert.Equal(MagicRules.SchoolSpells(state, town, TownIds.Sylvan).Take(2).Order(StringComparer.Ordinal), hero.Spells.Keys.Where(s => state.Spells.Get(s).School == TownIds.Sylvan));
+        Assert.Equal(MagicRules.SchoolSpells(state, town, TownIds.Sylvan).Take(2).Order(), hero.Spells.Keys.Where(s => state.Spells.Get(s).School == TownIds.Sylvan));
         Assert.Equal(new EternalWars.Core.Domain.Economy.ResourceSet(Gold: 3000), state.GetPlayer(Blue).Resources);
     }
 
@@ -252,7 +252,7 @@ public class MagicTests
             var state = Create(GameOptionsWithSeed(seed), WideMap);
             var town = AddTown(state, TownIds.Haven, 0, 0, Blue);
             Start(state);
-            return MagicRules.SchoolSpells(state, town, TownIds.Sylvan);
+            return [.. MagicRules.SchoolSpells(state, town, TownIds.Sylvan).Select(s => s.Value)];
         }
 
         Assert.Equal(Draw(5), Draw(5));

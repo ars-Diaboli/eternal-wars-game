@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Game;
@@ -20,7 +21,7 @@ public class BuildingTreeTests
 
     private static readonly ResourceSet Rich = new(Gold: 100000, Lumber: 100, Ore: 100, Crystal: 100, Mercury: 100, Sulfur: 100);
 
-    private static BuildingNode Node(GameSession session, Town town, string building) =>
+    private static BuildingNode Node(GameSession session, Town town, BuildingId building) =>
         BuildingTree.For(session.State, town).Single(n => n.Building == building);
 
     [Fact]
@@ -29,7 +30,7 @@ public class BuildingTreeTests
         var (session, town) = Haven(Rich);
         var tree = BuildingTree.For(session.State, town);
 
-        Assert.Equal(TownRules.Buildings(session.State, town).TownBuildings.Order(StringComparer.Ordinal), tree.Select(n => n.Building).Order(StringComparer.Ordinal));
+        Assert.Equal(TownRules.Buildings(session.State, town).TownBuildings.Order(), tree.Select(n => n.Building).Order());
         Assert.Equal(tree.Select(n => n.Depth).Order(), tree.Select(n => n.Depth));
         Assert.Equal(0, Node(session, town, BuiltInBuildings.Tavern).Depth);
         Assert.Equal(1, Node(session, town, BuiltInBuildings.Fort).Depth); // needs the tavern
@@ -99,7 +100,7 @@ public class BuildingTreeTests
 
         var choices = BuildingTree.DwellingChoices(session.State, town).ToDictionary(c => c.Line.Id);
 
-        Assert.Equal(["haven.griffin", "haven.lancer", "haven.paladin", "haven.radiant-spirit"], choices.Keys.Order(StringComparer.Ordinal));
+        Assert.Equal(["haven.griffin", "haven.lancer", "haven.paladin", "haven.radiant-spirit"], choices.Keys.Select(k => k.Value).Order(StringComparer.Ordinal));
         Assert.Equal([5], choices["haven.griffin"].TiersLeftOut); // refused: it leaves no room for tier 5
         Assert.NotNull(TownRules.CheckDwelling(session.State, town, "haven.griffin"));
         Assert.Empty(choices["haven.lancer"].TiersLeftOut);

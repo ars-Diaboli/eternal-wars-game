@@ -23,12 +23,12 @@ internal static class AdventureSpellHandlers
         new EavesdropHandler(),
     ];
 
-    private static readonly Dictionary<string, IAdventureSpellHandler> BySpell = All.ToDictionary(h => h.Spell, StringComparer.Ordinal);
+    private static readonly Dictionary<Common.SpellId, IAdventureSpellHandler> BySpell = All.ToDictionary(h => h.Spell);
 
     /// <summary>The handler of the spell, or null when it is not a built adventure spell.</summary>
-    public static IAdventureSpellHandler? Find(string spell) => BySpell.GetValueOrDefault(spell);
+    public static IAdventureSpellHandler? Find(Common.SpellId spell) => BySpell.GetValueOrDefault(spell);
 
     /// <summary>The handler of the spell.</summary>
-    public static IAdventureSpellHandler For(string spell) =>
+    public static IAdventureSpellHandler For(Common.SpellId spell) =>
         Find(spell) ?? throw new ArgumentOutOfRangeException(nameof(spell), spell, "Unregistered adventure spell.");
 }

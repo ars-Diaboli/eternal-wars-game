@@ -48,11 +48,11 @@ internal sealed class HeroArtifactsSection(HeroPanel panel) : HeroSection(panel)
                     ClipText = true,
                 };
                 var id = artifact?.Id;
-                button.WithArtifactDrag(id is null ? null : new ArtifactInHand(hero.Id, id, Worn: true), artifact?.Name, onDoll, Drop);
-                if (id is not null)
+                button.WithArtifactDrag(id is { } held ? new ArtifactInHand(hero.Id, held, Worn: true) : null, artifact?.Name, onDoll, Drop);
+                if (id is { } wearing)
                 {
-                    button.Pressed += () => Run(new UnequipArtifactCommand(State.CurrentPlayer.Id, hero.Id, id));
-                    button.WithInfo(detailed => InfoSheets.Artifact(State, id, detailed));
+                    button.Pressed += () => Run(new UnequipArtifactCommand(State.CurrentPlayer.Id, hero.Id, wearing));
+                    button.WithInfo(detailed => InfoSheets.Artifact(State, wearing, detailed));
                 }
 
                 Doll.AddChild(button);

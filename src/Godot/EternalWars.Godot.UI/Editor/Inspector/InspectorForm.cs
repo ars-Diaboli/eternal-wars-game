@@ -26,7 +26,7 @@ internal sealed class InspectorForm(VBoxContainer box, MapEditorSession editor, 
 
     /// <summary>The creatures by town and tier, as drop-down items.</summary>
     public List<(string Text, string Id)> Creatures() =>
-        [.. Scenario.Creatures.All.OrderBy(c => c.Town ?? "~").ThenBy(c => c.Tier).Select(c => ($"{c.Name} (T{c.Tier})", c.Id))];
+        [.. Scenario.Creatures.All.OrderBy(c => c.Town ?? "~").ThenBy(c => c.Tier).Select(c => ($"{c.Name} (T{c.Tier})", c.Id.Value))];
 
     /// <summary>Applies an edit unless the form is just filling its fields.</summary>
     public void Edit(Func<EditResult> edit)
@@ -93,7 +93,7 @@ internal sealed class InspectorForm(VBoxContainer box, MapEditorSession editor, 
             var slotRow = new HBoxContainer();
             box.AddChild(slotRow);
             var stack = troops[slot];
-            var creature = slotRow.AddChoice($"{slot + 1}", creatures, stack?.Creature ?? "");
+            var creature = slotRow.AddChoice($"{slot + 1}", creatures, stack?.Creature.Value ?? "");
             var count = slotRow.AddSpin("×", stack?.Count ?? 1, 1, 9999);
             var index = slot;
             void ApplySlot() => Edit(() => editor.Towns.SetGarrisonSlot(

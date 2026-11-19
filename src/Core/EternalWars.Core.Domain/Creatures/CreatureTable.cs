@@ -60,7 +60,7 @@ public static class CreatureTable
     public static string Format(IEnumerable<CreatureDefinition> definitions, Func<CreatureDefinition, string?>? notes = null) =>
         CsvTable.Format(Columns, definitions.Select(d => (IReadOnlyList<string>)
         [
-            d.Id, d.Name, d.Town ?? "", N(d.Tier), d.Size.ToString(), d.UpgradesTo ?? "", d.Category == CreatureCategory.None ? "" : d.Category.ToString(),
+            d.Id.Value, d.Name, d.Town ?? "", N(d.Tier), d.Size.ToString(), d.UpgradesTo?.Value ?? "", d.Category == CreatureCategory.None ? "" : d.Category.ToString(),
             N(d.Attack), N(d.Defense), N(d.MinDamage), N(d.MaxDamage), N(d.Health), N(d.Speed), N(d.MapSpeed), N(d.Initiative),
             d.Shots == 0 ? "" : N(d.Shots), d.Morale == 0 ? "" : N(d.Morale), d.Luck == 0 ? "" : N(d.Luck), d.HasOwnFightValue ? N(d.FightValue) : "", N(d.WeeklyGrowth), N(d.Cost.Gold), FormatResources(d.Cost),
             string.Join("; ", d.Tags), string.Join("; ", d.Capabilities.Select(FormatCapability)), notes?.Invoke(d) ?? "",
@@ -105,7 +105,7 @@ public static class CreatureTable
         var definition = new CreatureDefinition(id, row.Text(Name), row.Int(Tier), row.Enum<CreatureSize>(Size))
         {
             Town = row.Optional(Town),
-            UpgradesTo = row.Optional(Upgrade),
+            UpgradesTo = row.Optional(Upgrade) is { } upgrade ? new Common.CreatureId(upgrade) : (Common.CreatureId?)null,
             Category = row.Optional(Category) is null ? CreatureCategory.None : row.Enum<CreatureCategory>(Category),
             Attack = row.Int(Attack),
             Defense = row.Int(Defense),

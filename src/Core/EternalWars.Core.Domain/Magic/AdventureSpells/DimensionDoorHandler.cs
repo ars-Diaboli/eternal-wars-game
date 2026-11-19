@@ -11,7 +11,7 @@ namespace EternalWars.Core.Domain.Magic.AdventureSpells;
 /// </summary>
 internal sealed class DimensionDoorHandler : AdventureSpellHandler
 {
-    public override string Spell => AdventureMagic.DimensionDoor;
+    public override Common.SpellId Spell => AdventureMagic.DimensionDoor;
 
     public override bool NeedsTarget(GameState state, Hero hero) => true;
 
@@ -32,7 +32,7 @@ internal sealed class DimensionDoorHandler : AdventureSpellHandler
     {
         var used = cast.Hero.Statuses.FirstOrDefault(s => s.Source == cast.Spell && s.Kind == HeroStatusKind.Cast)?.Value ?? 0;
         cast.Relocate(cast.Target!.Value);
-        cast.Mark(new HeroStatus(cast.Spell, HeroStatusKind.Cast, used + 1, StatusExpiry.EndOfDay));
+        cast.Mark(new HeroStatus(cast.Spell.Value, HeroStatusKind.Cast, used + 1, StatusExpiry.EndOfDay));
     }
 
     private static string? DoorRefusal(GameState state, Hero hero, MapPosition? target, int range)

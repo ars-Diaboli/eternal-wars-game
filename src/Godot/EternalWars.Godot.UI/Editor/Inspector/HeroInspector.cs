@@ -86,7 +86,7 @@ internal static class HeroInspector
             var row = new HBoxContainer();
             panel.AddChild(row);
             var stack = hero.Army[slot];
-            var creature = row.AddChoice($"{slot + 1}", creatures, stack?.Creature ?? "");
+            var creature = row.AddChoice($"{slot + 1}", creatures, stack?.Creature.Value ?? "");
             var count = row.AddSpin("×", stack?.Count ?? 1, 1, 9999);
             var index = slot;
             void ApplySlot() => form.Edit(() => heroes.SetArmySlot(
@@ -105,11 +105,11 @@ internal static class HeroInspector
         var book = new CheckBox { Text = "Spell book", ButtonPressed = hero.HasSpellBook };
         form.Box.AddChild(book);
         var items = new[] { ("— none —", "") }
-            .Concat(form.Scenario.Spells.All.OrderBy(s => s.Level).ThenBy(s => s.Name).Select(s => ($"{s.Name} (L{s.Level}, {s.School})", s.Id)))
+            .Concat(form.Scenario.Spells.All.OrderBy(s => s.Level).ThenBy(s => s.Name).Select(s => ($"{s.Name} (L{s.Level}, {s.School})", s.Id.Value)))
             .ToList();
         var rows = new HFlowContainer();
         form.Box.AddChild(rows);
-        var choices = hero.Spells.Keys.Append("").Select(id => rows.AddChoice("", items, id)).ToList();
+        var choices = hero.Spells.Keys.Select(k => k.Value).Append("").Select(id => rows.AddChoice("", items, id)).ToList();
         rows.Visible = hero.HasSpellBook;
         void Apply() => form.Edit(() => form.Editor.Heroes.SetSpells(
             hero.Id, book.ButtonPressed, book.ButtonPressed ? [.. choices.Select(c => c.Value()).Where(s => s.Length > 0).Distinct()] : []));
@@ -128,11 +128,11 @@ internal static class HeroInspector
     {
         var scenario = form.Scenario;
         var items = new[] { ("— none —", "") }
-            .Concat(scenario.Artifacts.All.OrderBy(a => a.Slot).ThenBy(a => a.Tier).ThenBy(a => a.Name).Select(a => ($"{a.Name} ({a.Slot}, {a.Tier})", a.Id)))
+            .Concat(scenario.Artifacts.All.OrderBy(a => a.Slot).ThenBy(a => a.Tier).ThenBy(a => a.Name).Select(a => ($"{a.Name} ({a.Slot}, {a.Tier})", a.Id.Value)))
             .ToList();
 
         // Written scrolls the hero has (ADR-136) are not catalog rows; list them so an edit keeps them. A blank scroll gets its spell at game start.
-        foreach (var id in hero.Artifacts.AllWorn.Select(w => w.Id).Concat(hero.Artifacts.Backpack).Where(id => items.All(i => i.Item2 != id)).Distinct())
+        foreach (var id in hero.Artifacts.AllWorn.Select(w => w.Id).Concat(hero.Artifacts.Backpack).Select(a => a.Value).Where(id => items.All(i => i.Item2 != id)).Distinct())
         {
             items.Add((scenario.Artifacts.TryGet(id, out var written) ? $"{written.Name} ({written.Slot}, {written.Tier})" : id, id));
         }
@@ -151,8 +151,8 @@ internal static class HeroInspector
             }).ToList();
         }
 
-        var worn = Rows("Worn artifacts", hero.Artifacts.AllWorn.Select(w => w.Id));
-        var backpack = Rows("Backpack", hero.Artifacts.Backpack);
+        var worn = Rows("Worn artifacts", hero.Artifacts.AllWorn.Select(w => w.Id.Value));
+        var backpack = Rows("Backpack", hero.Artifacts.Backpack.Select(a => a.Value));
         void Apply() => form.Edit(() => form.Editor.Heroes.SetArtifacts(
             hero.Id,
             [.. worn.Select(w => w.Value()).Where(a => a.Length > 0)],

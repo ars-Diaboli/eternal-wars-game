@@ -144,7 +144,7 @@ public class LootTests
     public void TheWarriorsTomb_GivesItsFirstVisitorAnArtifact_AndEveryVisitorMinusThreeMoraleForTheNextBattle()
     {
         var all = Searches(BuiltInMapObjects.WarriorsTomb, 300);
-        var tiers = all.Select(f => ArtifactCatalog.Default.Get(f.Artifact!).Tier).ToList();
+        var tiers = all.Select(f => ArtifactCatalog.Default.Get(f.Artifact!.Value).Tier).ToList();
         Assert.Equal(300, tiers.Count); // always an artifact for the first visitor
         Assert.InRange(tiers.Count(t => t == ArtifactTier.Minor), 210, 270);
         Assert.InRange(tiers.Count(t => t == ArtifactTier.Major), 25, 75);
@@ -230,7 +230,7 @@ public class LootTests
 
         Assert.Equal(300, offers.Count + artifacts.Count);
         Assert.InRange(artifacts.Count, 5, 30); // 5 %
-        Assert.All(artifacts, f => Assert.Equal(ArtifactTier.Minor, ArtifactCatalog.Default.Get(f.Artifact!).Tier));
+        Assert.All(artifacts, f => Assert.Equal(ArtifactTier.Minor, ArtifactCatalog.Default.Get(f.Artifact!.Value).Tier));
         Assert.Contains(offers, o => o.Gold == 2500 && o.Experience == 2000);
         Assert.All(offers, o => Assert.Contains(new ChestValues(o.Gold, o.Experience), TreasureChest.RollTable));
     }

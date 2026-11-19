@@ -100,7 +100,7 @@ public static class KingdomOverviews
             .Where(b => b.Value > 0 && buildings.Contains(b.Key))
             .Select(b => buildings.Get(b.Key, Math.Min(b.Value, buildings.MaxLevel(b.Key))))
             .Where(level => level.Income != ResourceSet.Empty)
-            .OrderBy(level => level.Building, StringComparer.Ordinal)
+            .OrderBy(level => level.Building)
             .Select(level => level.Name));
     }
 }

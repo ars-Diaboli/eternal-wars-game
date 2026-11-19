@@ -33,7 +33,7 @@ public class AdventureAiSpellTests
     }
 
     private static IEnumerable<string> Casts(GameSession session) =>
-        session.CommandLog.OfType<CastAdventureSpellCommand>().Select(c => c.Spell);
+        session.CommandLog.OfType<CastAdventureSpellCommand>().Select(c => c.Spell.Value);
 
     [Fact]
     public void DimensionDoor_JumpsAWallTheWalkAroundWouldTakeDaysFor()

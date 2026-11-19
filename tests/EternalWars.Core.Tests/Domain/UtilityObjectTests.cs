@@ -81,7 +81,7 @@ public class UtilityObjectTests
         session.Step(A, Direction.North);
 
         var footman = state.Creatures.Get("haven.footman");
-        var crusader = state.Creatures.Get(footman.UpgradesTo!);
+        var crusader = state.Creatures.Get(footman.UpgradesTo!.Value);
         var expected = (int)Math.Ceiling((crusader.Cost.Gold - footman.Cost.Gold) * 10 * 1.5);
         var gold = state.GetPlayer(Blue).Resources.Gold;
 

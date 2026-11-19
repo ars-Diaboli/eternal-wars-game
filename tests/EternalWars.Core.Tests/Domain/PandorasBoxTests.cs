@@ -23,7 +23,7 @@ namespace EternalWars.Core.Tests.Domain;
 /// <summary>Pandora's Box (ADR-100, MAP-35): "open?", an optional guard, the author's contents (gains only), then it vanishes.</summary>
 public class PandorasBoxTests
 {
-    private static readonly string Minor = ArtifactCatalog.Default.OfTier(ArtifactTier.Minor).OrderBy(a => a.Id, StringComparer.Ordinal).First().Id;
+    private static readonly string Minor = ArtifactCatalog.Default.OfTier(ArtifactTier.Minor).OrderBy(a => a.Id).First().Id.Value;
 
     private static readonly BoxContents Everything = new()
     {

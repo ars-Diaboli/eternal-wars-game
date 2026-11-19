@@ -26,7 +26,7 @@ public class CreatureTests
         Assert.All(lines, line =>
         {
             Assert.NotNull(line.UpgradesTo);
-            var upgrade = catalog.Get(line.UpgradesTo!);
+            var upgrade = catalog.Get(line.UpgradesTo!.Value);
             Assert.Equal((line.Tier, line.Town, line.Size), (upgrade.Tier, upgrade.Town, upgrade.Size));
             Assert.True(upgrade.FightValue > line.FightValue, $"{upgrade.Id} should be stronger than {line.Id}");
         });
@@ -117,12 +117,12 @@ public class CreatureTests
         var wyvern = catalog.Get(BuiltInCreatures.Wyvern);
 
         Assert.Equal((TownIds.SwampBestiary, 4, "swamp-bestiary.wyvern-monarch"), (wyvern.Town, wyvern.Tier, wyvern.UpgradesTo));
-        Assert.True(catalog.Get(wyvern.UpgradesTo!).FightValue > wyvern.FightValue);
+        Assert.True(catalog.Get(wyvern.UpgradesTo!.Value).FightValue > wyvern.FightValue);
         Assert.Equal((TownIds.DragonUtopia, "dragon-utopia.royal-haspid"), (catalog.Get("dragon-utopia.haspid").Town, catalog.Get("dragon-utopia.haspid").UpgradesTo));
         Assert.Equal((2, 3), (catalog.Get("necropolis.wight").Tier, catalog.Get("necropolis.death-weaver").Tier));
         Assert.Equal(["Moon Doe", "Unicorn", "Dwarf", "Dwarf Defender", "Serpent Fly"],
             new[] { "sylvan.moon-doe", "sylvan.unicorn", "academy.dwarf", "academy.dwarf-defender", "swamp-bestiary.serpent-fly" }.Select(id => catalog.Get(id).Name));
-        Assert.DoesNotContain(catalog.All, c => c.Id.StartsWith("neutral.", StringComparison.Ordinal) && c.Name.Contains("Dwarf", StringComparison.Ordinal));
+        Assert.DoesNotContain(catalog.All, c => c.Id.Value.StartsWith("neutral.", StringComparison.Ordinal) && c.Name.Contains("Dwarf", StringComparison.Ordinal));
         Assert.Equal([CapabilityKind.Cleave], catalog.Get("dragon-utopia.dragonyte").Capabilities.Select(c => c.Kind));
         Assert.Null(catalog.Get("neutral.efreet").Town);
         Assert.Null(catalog.Get("neutral.golden-golem").Town);
@@ -154,7 +154,7 @@ public class CreatureTests
         }
 
         Assert.All(lines.Where(l => l.Tier == 5), l => Assert.Equal(CreatureCategory.None, l.Category));
-        Assert.All(lines, l => Assert.Equal(l.Category, catalog.Get(l.UpgradesTo!).Category));
+        Assert.All(lines, l => Assert.Equal(l.Category, catalog.Get(l.UpgradesTo!.Value).Category));
     }
 
     [Fact]

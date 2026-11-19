@@ -15,11 +15,11 @@ internal sealed class TownConstruction(GameState state, IEventPublisher events, 
     /// The building stands at <paramref name="level"/>. One that teaches or gives the heroes in the town something (the mage guild, the war lodge, a
     /// school, a unique building) lets them take it at once (<see cref="TownVisitService.VisitBy"/>).
     /// </summary>
-    public void Raise(Town town, string building, int level)
+    public void Raise(Town town, Common.BuildingId building, int level)
     {
         town.SetLevel(building, level);
         events.Publish(new TownBuilt(town.Id, building, level));
-        if (building is BuiltInBuildings.MageGuild or BuiltInBuildings.WarLodge || BuiltInBuildings.SchoolOf(building) is not null
+        if (building.Value is BuiltInBuildings.MageGuild or BuiltInBuildings.WarLodge || BuiltInBuildings.SchoolOf(building) is not null
             || UniqueBuildings.Get(building) is not null)
         {
             visits.VisitBy(town);

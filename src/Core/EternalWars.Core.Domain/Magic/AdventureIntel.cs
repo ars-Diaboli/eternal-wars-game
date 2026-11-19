@@ -16,7 +16,7 @@ namespace EternalWars.Core.Domain.Magic;
 /// Scouting does not show it), and then only the range <paramref name="Min"/>–<paramref name="Max"/> of its amount word is known
 /// (<paramref name="Max"/> null: open-ended, a legion).
 /// </summary>
-public sealed record ShownStack(string Creature, int? Count, int Min, int? Max)
+public sealed record ShownStack(Common.CreatureId Creature, int? Count, int Min, int? Max)
 {
     /// <summary>The amount word with its range, such as "a pack (10–19)" or "a legion (1000+)".</summary>
     public string Amount => AdventureIntel.AmountText(Min);
@@ -32,7 +32,7 @@ public sealed record ShownStack(string Creature, int? Count, int Min, int? Max)
 /// </summary>
 public sealed record ShownArmy(
     MapPosition Position, string Name, HeroId? Hero, PlayerId? Owner, MapObjectId? Monster, IReadOnlyList<ShownStack> Stacks,
-    IReadOnlyList<string> Artifacts, bool Veiled, bool ArtifactsHidden, ScoutedHero? Details = null);
+    IReadOnlyList<Common.ArtifactId> Artifacts, bool Veiled, bool ArtifactsHidden, ScoutedHero? Details = null);
 
 /// <summary>What Detect Magic found in a map object: its name, where it is, and one line per thing it holds.</summary>
 public sealed record DetectedObject(MapObjectId Object, string Name, MapPosition Position, IReadOnlyList<string> Contents);
@@ -93,7 +93,7 @@ public static partial class AdventureIntel
     };
 
     /// <summary>One stack as shown: exact, or only its amount's range.</summary>
-    public static ShownStack Shown(string creature, int count, bool hidden)
+    public static ShownStack Shown(Common.CreatureId creature, int count, bool hidden)
     {
         var (min, max) = AmountRange(count);
         return new ShownStack(creature, hidden ? null : count, min, max);
@@ -118,7 +118,7 @@ public static partial class AdventureIntel
 
     /// <summary>A neutral map stack as shown: always exact.</summary>
     public static ShownArmy ShowMonster(GameState state, MonsterGuard monster) =>
-        new(monster.Position, state.Creatures.TryGet(monster.Creature, out var creature) ? creature.Name : monster.Creature, null, null, monster.Id,
+        new(monster.Position, state.Creatures.TryGet(monster.Creature, out var creature) ? creature.Name : monster.Creature.Value, null, null, monster.Id,
             monster.Count is { } count ? [Shown(monster.Creature, count, hidden: false)] : [], [], false, false);
 
     /// <summary>
@@ -164,10 +164,10 @@ public static partial class AdventureIntel
     public static TownIntel Town(GameState state, Town town, PlayerId viewer)
     {
         var catalog = state.Buildings.For(town.TownType);
-        var buildings = town.Buildings.Where(b => b.Value > 0).OrderBy(b => b.Key, StringComparer.Ordinal)
+        var buildings = town.Buildings.Where(b => b.Value > 0).OrderBy(b => b.Key)
             .Select(b => catalog.MaxLevel(b.Key) >= b.Value ? $"{catalog.Get(b.Key, b.Value).Name} ({b.Value})" : $"{b.Key} ({b.Value})")
             .ToList();
-        var available = town.Available.Where(a => a.Value > 0).OrderBy(a => a.Key, StringComparer.Ordinal)
+        var available = town.Available.Where(a => a.Value > 0).OrderBy(a => a.Key)
             .Select(a => Shown(a.Key, a.Value, hidden: false)).ToList();
         var veiledInside = town.GarrisonHero is { } inside && inside.Owner != viewer && AdventureMagic.VeilRank(inside) >= 1;
         return new TownIntel(
@@ -191,8 +191,8 @@ public static partial class AdventureIntel
     /// <summary>What a map object holds, one line per thing; empty for objects that hold nothing worth showing (gates, signs, scenery …).</summary>
     public static IReadOnlyList<string> Contents(GameState state, MapObject mapObject, bool bankRewards)
     {
-        string Creature(string id) => state.Creatures.TryGet(id, out var creature) ? creature.Name : id;
-        string Artifact(string id) => state.Artifacts.TryGet(id, out var artifact) ? artifact.Name : id;
+        string Creature(Common.CreatureId id) => state.Creatures.TryGet(id, out var creature) ? creature.Name : id.Value;
+        string Artifact(Common.ArtifactId id) => state.Artifacts.TryGet(id, out var artifact) ? artifact.Name : id.Value;
         string Stack(CreatureStack s) => string.Create(CultureInfo.InvariantCulture, $"{s.Count} {Creature(s.Creature)}");
         string Guard(IEnumerable<CreatureStack> stacks) => $"guard: {string.Join(", ", stacks.Select(Stack))}";
         var lines = new List<string>();
@@ -293,7 +293,7 @@ public static partial class AdventureIntel
         static bool IsReward(MapEvents.EventAction action) => MapEvents.Actions.MapEventActionHandlers.For(action).IsReward;
     }
 
-    private static IEnumerable<string> BoxLines(BoxContents contents, Func<string, string> artifact, Func<CreatureStack, string> stack)
+    private static IEnumerable<string> BoxLines(BoxContents contents, Func<Common.ArtifactId, string> artifact, Func<CreatureStack, string> stack)
     {
         if (contents.IsEmpty)
         {

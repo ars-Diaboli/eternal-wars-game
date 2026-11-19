@@ -256,7 +256,7 @@ public partial class MapObjectsView : Node3D
         MonsterGuard monster => _context.Viewer is null && monster.Count is { } count ? $"{CreatureName(monster)} ×{count}" : CreatureName(monster),
         Core.Domain.Towns.Town { IsRandom: true } town => $"{town.Name} (random town)",
         Core.Domain.Towns.Town town => town.Name,
-        CreatureDwelling dwelling => _context.State.Creatures.TryGet(dwelling.Creature, out var dwelt) ? $"{dwelt.Name} dwelling" : dwelling.Creature,
+        CreatureDwelling dwelling => _context.State.Creatures.TryGet(dwelling.Creature, out var dwelt) ? $"{dwelt.Name} dwelling" : dwelling.Creature.Value,
         Marketplace => "Marketplace",
         ResourceProvider provider => provider.Definition.Name,
         LootSite { Vanishes: false } site => site.Definition.Name,
@@ -267,7 +267,7 @@ public partial class MapObjectsView : Node3D
     };
 
     private string CreatureName(MonsterGuard monster) =>
-        _context.State.Creatures.TryGet(monster.Creature, out var creature) ? creature.Name : monster.Creature;
+        _context.State.Creatures.TryGet(monster.Creature, out var creature) ? creature.Name : monster.Creature.Value;
 
     /// <summary>
     /// Placeholder shapes that tell the quest objects apart (EVT-5) until there are models: a Seer's Hut gets a pointed roof over its building, a

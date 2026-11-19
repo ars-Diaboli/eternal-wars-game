@@ -30,7 +30,7 @@ public static partial class InfoSheets
     // Creatures ---------------------------------------------------------------------------------------------------------------
 
     /// <summary>A creature type, with a known count or the amount Scouting shows (<paramref name="shown"/>) when it is one of an army's stacks.</summary>
-    public static InfoSheet Creature(GameState state, string creature, bool detailed, ShownStack? shown = null)
+    public static InfoSheet Creature(GameState state, Common.CreatureId creature, bool detailed, ShownStack? shown = null)
     {
         var c = state.Creatures.Get(creature);
         var lines = new List<string>();
@@ -251,7 +251,7 @@ public static partial class InfoSheets
     }
 
     /// <summary>A spell at a rank (1–3), with the hero who would cast it: the cost and, detailed, its numbers at the hero's Spell Power.</summary>
-    public static InfoSheet Spell(GameState state, string spell, int rank, bool detailed, Hero? hero = null)
+    public static InfoSheet Spell(GameState state, Common.SpellId spell, int rank, bool detailed, Hero? hero = null)
     {
         var definition = state.Spells.Get(spell);
         var lines = new List<string>
@@ -314,7 +314,7 @@ public static partial class InfoSheets
     }
 
     /// <summary>An artifact: its tier and slot, what it gives, its relic and set.</summary>
-    public static InfoSheet Artifact(GameState state, string artifact, bool detailed)
+    public static InfoSheet Artifact(GameState state, Common.ArtifactId artifact, bool detailed)
     {
         var a = state.Artifacts.Get(artifact);
         var effects = state.Artifacts.EffectsOf(a);
@@ -351,7 +351,7 @@ public static partial class InfoSheets
     // Buildings ---------------------------------------------------------------------------------------------------------------
 
     /// <summary>A town building: what is built of it, and each level with its cost, what it needs and what it gives.</summary>
-    public static InfoSheet Building(GameState state, Town town, string building, bool detailed)
+    public static InfoSheet Building(GameState state, Town town, Common.BuildingId building, bool detailed)
     {
         var catalog = TownRules.Buildings(state, town);
         var built = town.Level(building);

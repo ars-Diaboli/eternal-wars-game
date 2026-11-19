@@ -35,7 +35,7 @@ public enum BankRule
 /// One row of a bank's table: how likely it is, the guard, and the reward for beating it. With <paramref name="Upgraded"/>, half the time a fifth
 /// of the first guard stack (its base creature) is the upgraded creature instead.
 /// </summary>
-public sealed record BankTier(int Weight, IReadOnlyList<CreatureStack> Guard, ResourceSet Reward, ArtifactTier? Artifact = null, string? Upgraded = null)
+public sealed record BankTier(int Weight, IReadOnlyList<CreatureStack> Guard, ResourceSet Reward, ArtifactTier? Artifact = null, Common.CreatureId? Upgraded = null)
 {
     /// <summary>Artifacts the reward brings besides <see cref="Artifact"/> (Dragon City's Major artifacts, ADR-069).</summary>
     public IReadOnlyList<ArtifactTier> MoreArtifacts { get; init; } = [];
@@ -143,7 +143,7 @@ public static class CreatureBankRules
     };
 
     /// <summary>A bank's four rows: the counts go with <paramref name="creatures"/> (0 leaves a type out of that row).</summary>
-    private static IReadOnlyList<BankTier> Bank(string[] creatures, (int[] Counts, ResourceSet Reward, ArtifactTier? Artifact)[] rows, string? upgraded = null) =>
+    private static IReadOnlyList<BankTier> Bank(Common.CreatureId[] creatures, (int[] Counts, ResourceSet Reward, ArtifactTier? Artifact)[] rows, Common.CreatureId? upgraded = null) =>
         [.. rows.Select((r, i) => new BankTier(Usual[i], [.. creatures.Zip(r.Counts).Where(c => c.Second > 0).Select(c => new CreatureStack(c.First, c.Second))], r.Reward, r.Artifact, upgraded))];
 
     /// <summary>

@@ -97,7 +97,7 @@ public sealed record RecruitAtRefugeeCampCommand(PlayerId Player, MapObjectId Ca
 public sealed record SacrificeCreaturesCommand(PlayerId Player, MapObjectId Altar, int Slot, int Count) : GameCommand(Player);
 
 /// <summary>The hero on a sacrificial altar's entrance sacrifices an artifact it wears or carries (ADR-079).</summary>
-public sealed record SacrificeArtifactCommand(PlayerId Player, MapObjectId Altar, string Artifact) : GameCommand(Player);
+public sealed record SacrificeArtifactCommand(PlayerId Player, MapObjectId Altar, Common.ArtifactId Artifact) : GameCommand(Player);
 
 /// <summary>Answers a <c>TrainingDecision</c>: one of its options, or null to leave without training when the site allows it (ADR-068).</summary>
 public sealed record ChooseTrainingCommand(PlayerId Player, Objects.TrainingOption? Option) : GameCommand(Player);
@@ -134,16 +134,16 @@ public sealed record RespondToGuardCommand(PlayerId Player, bool Accept) : GameC
 // Towns (the owner's turn, ADR-046) --------------------------------------------------------------------
 
 /// <summary>Builds the next level of a town building (<c>Towns.BuiltInBuildings</c>); one build per town per day.</summary>
-public sealed record BuildCommand(PlayerId Player, MapObjectId Town, string Building) : GameCommand(Player);
+public sealed record BuildCommand(PlayerId Player, MapObjectId Town, Common.BuildingId Building) : GameCommand(Player);
 
 /// <summary>Builds the dwelling of a creature line (its base creature id), or upgrades it once built (ADR-030).</summary>
-public sealed record BuildDwellingCommand(PlayerId Player, MapObjectId Town, string Line) : GameCommand(Player);
+public sealed record BuildDwellingCommand(PlayerId Player, MapObjectId Town, CreatureId Line) : GameCommand(Player);
 
 /// <summary>
 /// Buys <paramref name="Count"/> creatures from a dwelling (the base creature, or the upgraded one from an upgraded
 /// dwelling) into the garrison, or into the visiting hero <paramref name="Hero"/>.
 /// </summary>
-public sealed record RecruitCommand(PlayerId Player, MapObjectId Town, string Creature, int Count, HeroId? Hero = null) : GameCommand(Player);
+public sealed record RecruitCommand(PlayerId Player, MapObjectId Town, CreatureId Creature, int Count, HeroId? Hero = null) : GameCommand(Player);
 
 /// <summary>A hero standing on a map dwelling's entrance buys <paramref name="Count"/> of its creatures into its army (ADR-054).</summary>
 public sealed record RecruitAtDwellingCommand(PlayerId Player, MapObjectId Dwelling, int Count) : GameCommand(Player);
@@ -203,22 +203,22 @@ public sealed record LeaveGarrisonCommand(PlayerId Player, MapObjectId Town) : G
 // Artifacts (the owner's turn; no movement points; ADR-061) -------------------------------------------
 
 /// <summary>Puts an artifact from the hero's backpack on; one worn in that slot goes to the backpack when none is free.</summary>
-public sealed record EquipArtifactCommand(PlayerId Player, HeroId Hero, string Artifact) : GameCommand(Player);
+public sealed record EquipArtifactCommand(PlayerId Player, HeroId Hero, Common.ArtifactId Artifact) : GameCommand(Player);
 
 /// <summary>Takes a worn artifact off into the backpack (which must have room).</summary>
-public sealed record UnequipArtifactCommand(PlayerId Player, HeroId Hero, string Artifact) : GameCommand(Player);
+public sealed record UnequipArtifactCommand(PlayerId Player, HeroId Hero, Common.ArtifactId Artifact) : GameCommand(Player);
 
 /// <summary>Joins the pieces the hero wears into the assembled relic (ADR-121); free, any time on the owner's turn.</summary>
-public sealed record AssembleRelicCommand(PlayerId Player, HeroId Hero, string Relic) : GameCommand(Player);
+public sealed record AssembleRelicCommand(PlayerId Player, HeroId Hero, Common.ArtifactId Relic) : GameCommand(Player);
 
 /// <summary>Takes an assembled relic the hero wears or carries apart into its pieces (ADR-121); free, any time on the owner's turn.</summary>
-public sealed record TakeRelicApartCommand(PlayerId Player, HeroId Hero, string Relic) : GameCommand(Player);
+public sealed record TakeRelicApartCommand(PlayerId Player, HeroId Hero, Common.ArtifactId Relic) : GameCommand(Player);
 
 /// <summary>
 /// Gives an artifact to another own hero while their exchange is open: the worn one when <paramref name="Worn"/>, else from the backpack first,
 /// else off the body. It goes into the receiver's backpack, or with <paramref name="Wear"/> onto its body (the exchange screen, ADR-153).
 /// </summary>
-public sealed record GiveArtifactCommand(PlayerId Player, HeroId FromHero, string Artifact, HeroId ToHero, bool Worn = false, bool Wear = false) : GameCommand(Player);
+public sealed record GiveArtifactCommand(PlayerId Player, HeroId FromHero, Common.ArtifactId Artifact, HeroId ToHero, bool Worn = false, bool Wear = false) : GameCommand(Player);
 
 /// <summary>Hands a war machine to another own hero that has none in that slot, while their exchange is open (ADR-070, CMB-3).</summary>
 public sealed record GiveWarMachineCommand(PlayerId Player, HeroId FromHero, Battles.WarMachineSlot Slot, HeroId ToHero) : GameCommand(Player);
@@ -272,7 +272,7 @@ public sealed record BattleWarcryCommand(PlayerId Player, Battles.Warcry Warcry)
 /// The hero casts a spell at a stack or a cell, as the spell needs (ADR-110); the active unit keeps its action. A move (ADR-151) takes the stack
 /// <paramref name="Target"/> to <paramref name="Cell"/> (its footprint's top-left); a drain heals the own stack <paramref name="Second"/>.
 /// </summary>
-public sealed record BattleCastCommand(PlayerId Player, string Spell, int? Target = null, CellPosition? Cell = null, int? Second = null) : GameCommand(Player), IBattleCommand;
+public sealed record BattleCastCommand(PlayerId Player, Common.SpellId Spell, int? Target = null, CellPosition? Cell = null, int? Second = null) : GameCommand(Player), IBattleCommand;
 
 public sealed record BattleWaitCommand(PlayerId Player) : GameCommand(Player), IBattleCommand;
 
@@ -317,4 +317,4 @@ public sealed record CommandResult(bool IsAccepted, string? Error = null, object
 }
 
 /// <summary>A hero casts an adventure spell (ADR-120); <paramref name="Target"/> is the tile for Dimension Door.</summary>
-public sealed record CastAdventureSpellCommand(PlayerId Player, HeroId Hero, string Spell, MapPosition? Target = null) : GameCommand(Player), IHeroCommand;
+public sealed record CastAdventureSpellCommand(PlayerId Player, HeroId Hero, Common.SpellId Spell, MapPosition? Target = null) : GameCommand(Player), IHeroCommand;

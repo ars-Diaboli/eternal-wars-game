@@ -20,7 +20,7 @@ public class SpellScrollTests
 {
     private static readonly string[] Map = ["A.......", "........", ".......B"];
 
-    private static Hero Outfit(GameState state, HeroId id, string[] worn, string[]? backpack = null)
+    private static Hero Outfit(GameState state, HeroId id, ArtifactId[] worn, ArtifactId[]? backpack = null)
     {
         var hero = state.GetHero(id);
         hero.Artifacts.ReplaceWith(worn, backpack ?? [], state.Artifacts);
@@ -29,16 +29,16 @@ public class SpellScrollTests
     }
 
     private static SpellDefinition Unknown(Hero hero, int level) =>
-        SpellCatalog.Default.All.Where(s => s.Level == level && !hero.Spells.ContainsKey(s.Id)).OrderBy(s => s.Id, StringComparer.Ordinal).First();
+        SpellCatalog.Default.All.Where(s => s.Level == level && !hero.Spells.ContainsKey(s.Id)).OrderBy(s => s.Id).First();
 
-    private static string Scroll(int level) => $"spell-scroll-{level}";
+    private static ArtifactId Scroll(int level) => $"spell-scroll-{level}";
 
-    private static void AssertWritten(ArtifactCatalog catalog, string id, int level)
+    private static void AssertWritten(ArtifactCatalog catalog, ArtifactId id, int level)
     {
         var scroll = catalog.Get(id);
         Assert.Equal(Scroll(level), ArtifactCatalog.BaseOf(id));
         Assert.NotNull(scroll.Spell);
-        Assert.Equal(level, SpellCatalog.Default.Get(scroll.Spell!).Level);
+        Assert.Equal(level, SpellCatalog.Default.Get(scroll.Spell!.Value).Level);
     }
 
     [Fact]
@@ -142,18 +142,18 @@ public class SpellScrollTests
     [Fact]
     public void Draws_GiveTheTiersScrollInAFewPercent_WrittenWithAnUnbannedSpellOfItsLevel()
     {
-        var levelOne = SpellCatalog.Default.All.Where(s => s.Level == 1).Select(s => s.Id).Order(StringComparer.Ordinal).ToList();
+        var levelOne = SpellCatalog.Default.All.Where(s => s.Level == 1).Select(s => s.Id).Order().ToList();
         var kept = levelOne[0];
         var state = Create(Map);
-        state.SetRules(state.Rules with { Bans = levelOne.Skip(1).Aggregate(MapBans.None, (b, id) => b.With(MapBanKind.Spell, id, banned: true)) });
+        state.SetRules(state.Rules with { Bans = levelOne.Skip(1).Aggregate(MapBans.None, (b, id) => b.With(MapBanKind.Spell, id.Value, banned: true)) });
         var session = Start(state);
 
-        var drawn = Enumerable.Range(0, 2000).Select(_ => session.Artifacts.Draw(ArtifactTier.Minor)!).ToList();
+        var drawn = Enumerable.Range(0, 2000).Select(_ => session.Artifacts.Draw(ArtifactTier.Minor)!.Value).ToList();
         var scrolls = drawn.Where(id => state.Artifacts.Get(id).IsScroll).ToList();
 
         Assert.InRange(scrolls.Count, 60, 140); // 5 % of 2000
         Assert.All(scrolls, id => Assert.Equal(ArtifactCatalog.WithSpell(Scroll(1), kept), id));
-        Assert.DoesNotContain(Enumerable.Range(0, 300).Select(_ => session.Artifacts.Draw(ArtifactTier.Relic)!), id => ArtifactCatalog.BaseOf(id) == Scroll(4));
+        Assert.DoesNotContain(Enumerable.Range(0, 300).Select(_ => session.Artifacts.Draw(ArtifactTier.Relic)!.Value), id => ArtifactCatalog.BaseOf(id) == Scroll(4));
     }
 
     [Fact]
@@ -168,7 +168,7 @@ public class SpellScrollTests
 
         Start(state);
 
-        AssertWritten(state.Artifacts, blank.Artifact!, 2);
+        AssertWritten(state.Artifacts, blank.Artifact!.Value, 2);
         Assert.Equal(ArtifactCatalog.WithSpell(Scroll(1), "light.bless"), chosen.Artifact);
         var hero = state.GetHero(A);
         AssertWritten(state.Artifacts, hero.Artifacts.Worn(ArtifactSlot.Misc).Single(), 3);

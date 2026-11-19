@@ -121,7 +121,7 @@ internal sealed class BattleCommandHandler(GameState state, IEventPublisher even
     /// The player's hero casts a spell (ADR-110) while one of the player's units is up, at a stack or a cell as the spell needs; the unit keeps
     /// its action.
     /// </summary>
-    public void Cast(PlayerId player, string spell, int? target, CellPosition? cell, int? second = null)
+    public void Cast(PlayerId player, Common.SpellId spell, int? target, CellPosition? cell, int? second = null)
     {
         var battle = flow.Current(BattlePhase.Fighting);
         var unit = battle.ActiveUnit ?? throw new CommandRefusedException("No unit is active.");

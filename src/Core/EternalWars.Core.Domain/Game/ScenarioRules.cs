@@ -58,7 +58,7 @@ public sealed record ScenarioCondition(
     int Amount = 0,
     int Day = 0,
     MapObjectId? Target = null,
-    string? Artifact = null,
+    Common.ArtifactId? Artifact = null,
     int? Deadline = null)
 {
     /// <summary>Whether it is a victory condition (its kind's handler, <see cref="ScenarioConditionHandlers"/>).</summary>
@@ -84,11 +84,11 @@ public sealed record ScenarioCondition(
 
     public static ScenarioCondition CaptureObject(MapObjectId target, PlayerId? player = null) => new(ConditionKind.CaptureObject, player, Target: target);
 
-    public static ScenarioCondition ObtainArtifact(string artifact, PlayerId? player = null) => new(ConditionKind.ObtainArtifact, player, Artifact: artifact);
+    public static ScenarioCondition ObtainArtifact(Common.ArtifactId artifact, PlayerId? player = null) => new(ConditionKind.ObtainArtifact, player, Artifact: artifact);
 
     public static ScenarioCondition ReleaseHero(MapObjectId prison, PlayerId? player = null) => new(ConditionKind.ReleaseHero, player, Target: prison);
 
-    public static ScenarioCondition LoseArtifact(string artifact, PlayerId player) => new(ConditionKind.LoseArtifact, player, Artifact: artifact);
+    public static ScenarioCondition LoseArtifact(Common.ArtifactId artifact, PlayerId player) => new(ConditionKind.LoseArtifact, player, Artifact: artifact);
 
     /// <summary>The same condition, to be met by absolute day <paramref name="day"/>.</summary>
     public ScenarioCondition By(int day) => this with { Deadline = day };

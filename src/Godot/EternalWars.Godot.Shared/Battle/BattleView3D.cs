@@ -294,7 +294,7 @@ public partial class BattleView3D : Node3D
             units, battle.Obstacles.ToList(), battle.Siege is { } siege ? SiegeLayout.Of(siege) : null));
         foreach (var zone in battle.Zones)
         {
-            _stage.AddZone(zone.Id, zone.Spell, zone.Rect);
+            _stage.AddZone(zone.Id, zone.Spell.Value, zone.Rect);
         }
 
         SetActive(battle.ActiveUnit?.Id);

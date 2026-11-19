@@ -19,7 +19,7 @@ public class ScenarioAssemblerTests
 
     private static string HeroOf(string town) => HeroCatalog.Default.All.Where(h => h.Town == town).OrderBy(h => h.Id, StringComparer.Ordinal).First().Id;
 
-    private static List<CreatureDefinition> Tier1(string town) => Creatures.BaseCreaturesOf(town).Where(c => c.Tier == 1).OrderBy(c => c.Id, StringComparer.Ordinal).ToList();
+    private static List<CreatureDefinition> Tier1(string town) => Creatures.BaseCreaturesOf(town).Where(c => c.Tier == 1).OrderBy(c => c.Id).ToList();
 
     private static GameState Game(MapTemplate template, ulong seed, params PlayerSetup[] players) => MapGenerator.Build(template, 72, seed, players).State;
 
@@ -46,7 +46,7 @@ public class ScenarioAssemblerTests
             Assert.InRange(stacks.Count, 2, 3);
             Assert.All(stacks, s => Assert.Contains(Creatures.Get(s.Creature), Creatures.BaseCreaturesOf(town.TownType).Where(c => c.Tier <= 2)));
             Assert.InRange(stacks.Sum(s => s.Count * Creatures.Get(s.Creature).FightValue), ScenarioAssembler.StarterArmyMin * 0.8, ScenarioAssembler.StarterArmyMax * 1.25);
-            if (Creatures.Get(hero.PreferredCreature!).Tier <= 2)
+            if (Creatures.Get(hero.PreferredCreature!.Value).Tier <= 2)
             {
                 Assert.Equal(hero.PreferredCreature, stacks[0].Creature);
             }
@@ -145,7 +145,7 @@ public class ScenarioAssemblerTests
     public void BadSetups_AreRefused()
     {
         var ai = Duel() with { MaxHumans = 1, Zones = [.. Duel().Zones.Select(z => z.Id == "start-2" ? z with { Type = ZoneType.AiStart } : z)] };
-        PlayerSetup Haven(int slot, string? hero = null, bool human = true, string? dwelling = null) => new(slot, $"P{slot}", human, TownIds.Haven, hero, Tier1Dwelling: dwelling);
+        PlayerSetup Haven(int slot, string? hero = null, bool human = true, CreatureId? dwelling = null) => new(slot, $"P{slot}", human, TownIds.Haven, hero, Tier1Dwelling: dwelling);
 
         Assert.Throws<ArgumentException>(() => Game(Duel(), 1));
         Assert.Throws<ArgumentException>(() => Game(Duel(), 1, Haven(0), Haven(0)));

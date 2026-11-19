@@ -8,9 +8,9 @@ namespace EternalWars.Core.Domain.Magic.AdventureSpells;
 /// Pathfinder's Call and Ashwalk: <see cref="Terrains"/> (every terrain from rank II) are native to the hero's army for the rest of the day; rank III
 /// adds <see cref="AdventureMagic.NativeWalkMovementPercent"/> % of the day's movement allowance.
 /// </summary>
-internal sealed class NativeWalkHandler(string spell, IReadOnlyList<TerrainType> terrains) : AdventureSpellHandler
+internal sealed class NativeWalkHandler(Common.SpellId spell, IReadOnlyList<TerrainType> terrains) : AdventureSpellHandler
 {
-    public override string Spell { get; } = spell;
+    public override Common.SpellId Spell { get; } = spell;
 
     /// <summary>The terrains the spell makes native at rank I.</summary>
     public IReadOnlyList<TerrainType> Terrains { get; } = terrains;
@@ -19,7 +19,7 @@ internal sealed class NativeWalkHandler(string spell, IReadOnlyList<TerrainType>
     {
         var hero = cast.Hero;
         cast.Mark(new HeroStatus(
-            cast.Spell, HeroStatusKind.NativeTerrain, AdventureMagic.TerrainMask(AdventureMagic.NativeTerrains(cast.Spell, cast.Rank)), StatusExpiry.EndOfDay));
+            cast.Spell.Value, HeroStatusKind.NativeTerrain, AdventureMagic.TerrainMask(AdventureMagic.NativeTerrains(cast.Spell, cast.Rank)), StatusExpiry.EndOfDay));
         if (cast.Rank >= 3 && hero.MaxMovementPoints * AdventureMagic.NativeWalkMovementPercent / 100 is var extra and > 0)
         {
             hero.MovementPoints += extra;

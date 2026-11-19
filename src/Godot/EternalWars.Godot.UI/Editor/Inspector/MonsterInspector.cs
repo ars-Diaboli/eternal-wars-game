@@ -12,7 +12,7 @@ internal sealed class MonsterInspector : InspectorSection<MonsterGuard>
     {
         var row = new HBoxContainer();
         form.Box.AddChild(row);
-        var creature = row.AddChoice("Creature", form.Creatures(), monster.Creature);
+        var creature = row.AddChoice("Creature", form.Creatures(), monster.Creature.Value);
         var count = row.AddSpin("Count (0 = rolled)", monster.Count ?? 0, 0, 999);
         var row2 = new HBoxContainer();
         form.Box.AddChild(row2);

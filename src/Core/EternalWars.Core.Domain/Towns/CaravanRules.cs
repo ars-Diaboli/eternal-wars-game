@@ -16,7 +16,7 @@ namespace EternalWars.Core.Domain.Towns;
 /// provider to the owner's treasury instead; its <see cref="Creature"/> is empty and <see cref="Count"/> 0.
 /// </summary>
 public sealed record Caravan(
-    int Id, PlayerId Owner, MapObjectId Source, MapObjectId Destination, string Creature, int Count, int DaysLeft, ResourceSet Paid, ResourceSet? Cargo = null)
+    int Id, PlayerId Owner, MapObjectId Source, MapObjectId Destination, Common.CreatureId Creature, int Count, int DaysLeft, ResourceSet Paid, ResourceSet? Cargo = null)
 {
     public bool CarriesResources => Cargo is not null;
 }

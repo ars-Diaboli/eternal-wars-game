@@ -33,7 +33,7 @@ public static class BattleMagic
     /// needs the cell its stack goes to (<paramref name="cell"/>, the footprint's top-left); a drain may name the own stack it heals
     /// (<paramref name="second"/>).
     /// </summary>
-    public static string? CastRefusal(BattleState battle, BattleSide side, string spellId, int? target, CellPosition? cell, int? second = null)
+    public static string? CastRefusal(BattleState battle, BattleSide side, Common.SpellId spellId, int? target, CellPosition? cell, int? second = null)
     {
         if (battle.Participant(side).Caster is not { } caster)
         {
@@ -410,14 +410,14 @@ public static class BattleMagic
     /// A damage, healing or summoned amount from the side's hero: base × (10 + Spell Power) / 10, with its specialty and its elemental orbs' percent
     /// (ADR-111); from a creature caster (<paramref name="creaturePower"/>) its own Spell Power and nothing else.
     /// </summary>
-    public static int Amount(BattleState battle, BattleSide side, KnownSpell known, int? creaturePower = null, string? bound = null) =>
+    public static int Amount(BattleState battle, BattleSide side, KnownSpell known, int? creaturePower = null, Common.CreatureId? bound = null) =>
         Scaled(battle, side, known, known.Effect!.Amount, creaturePower, bound);
 
     /// <summary>
     /// A base number scaled like a spell's amount: × (10 + Spell Power) / 10, the hero's specialty and elemental orbs (the bound kind's element for
     /// Bind Elemental, <paramref name="bound"/>); a creature caster only its own Spell Power.
     /// </summary>
-    public static int Scaled(BattleState battle, BattleSide side, KnownSpell known, int baseAmount, int? creaturePower = null, string? bound = null)
+    public static int Scaled(BattleState battle, BattleSide side, KnownSpell known, int baseAmount, int? creaturePower = null, Common.CreatureId? bound = null)
     {
         var amount = (long)baseAmount * (10 + (creaturePower ?? SpellPower(battle, side))) / 10;
         if (creaturePower is null && battle.Participant(side).Caster is { } caster)
@@ -566,7 +566,7 @@ public static class BattleMagic
         BattleState battle, BattleSide side, KnownSpell known, int? creaturePower = null)
     {
         var effect = known.Effect!;
-        var summoned = battle.Units.Where(u => u.Side == side && u.IsSummoned && !u.IsCopy).Select(u => u.Creature.Id).ToHashSet(StringComparer.Ordinal);
+        var summoned = battle.Units.Where(u => u.Side == side && u.IsSummoned && !u.IsCopy).Select(u => u.Creature.Id).ToHashSet();
         var id = effect.Summons.FirstOrDefault(c => !summoned.Contains(c)) ?? effect.Summons.FirstOrDefault();
         if (id is null || !battle.Creatures.TryGet(id, out var creature))
         {

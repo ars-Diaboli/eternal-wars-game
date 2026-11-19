@@ -31,9 +31,9 @@ public sealed class Town : MapObject, IFlaggable, Battles.IBattleGuard
     /// <summary>The Academy's Observatory (ADR-143): its town sees <see cref="ObservatoryScoutingRadius"/> cells.</summary>
     public const string Observatory = "observatory";
 
-    private readonly Dictionary<string, int> _buildings;
-    private readonly Dictionary<string, int> _dwellings;
-    private readonly Dictionary<string, int> _available;
+    private readonly Dictionary<Common.BuildingId, int> _buildings;
+    private readonly Dictionary<Common.CreatureId, int> _dwellings;
+    private readonly Dictionary<Common.CreatureId, int> _available;
 
     public Town(
         MapObjectId id,
@@ -41,12 +41,12 @@ public sealed class Town : MapObject, IFlaggable, Battles.IBattleGuard
         MapPosition position,
         PlayerId? owner = null,
         string? name = null,
-        IReadOnlyDictionary<string, int>? buildings = null,
-        IReadOnlyDictionary<string, int>? dwellings = null,
-        IReadOnlyDictionary<string, int>? available = null,
+        IReadOnlyDictionary<Common.BuildingId, int>? buildings = null,
+        IReadOnlyDictionary<Common.CreatureId, int>? dwellings = null,
+        IReadOnlyDictionary<Common.CreatureId, int>? available = null,
         Army? garrison = null,
         GameDate? lastBuilt = null,
-        IReadOnlyList<string>? fixedGuildSpells = null,
+        IReadOnlyList<Common.SpellId>? fixedGuildSpells = null,
         bool isRandom = false)
         : base(id, definition, position, MapObjectKind.Town)
     {
@@ -93,13 +93,13 @@ public sealed class Town : MapObject, IFlaggable, Battles.IBattleGuard
     public string Name { get; internal set; }
 
     /// <summary>Built level per building id (dwellings are in <see cref="Dwellings"/>); absent = not built.</summary>
-    public IReadOnlyDictionary<string, int> Buildings => _buildings;
+    public IReadOnlyDictionary<Common.BuildingId, int> Buildings => _buildings;
 
     /// <summary>Dwelling level per creature line (base creature id): 1 built, 2 upgraded.</summary>
-    public IReadOnlyDictionary<string, int> Dwellings => _dwellings;
+    public IReadOnlyDictionary<Common.CreatureId, int> Dwellings => _dwellings;
 
     /// <summary>Creatures waiting to be recruited per creature line; they accumulate week by week.</summary>
-    public IReadOnlyDictionary<string, int> Available => _available;
+    public IReadOnlyDictionary<Common.CreatureId, int> Available => _available;
 
     public Army Garrison { get; }
 
@@ -122,37 +122,38 @@ public sealed class Town : MapObject, IFlaggable, Battles.IBattleGuard
     /// The spells its mage guild teaches, per spell level (ADR-110): drawn once at game start from the town's school, whether the guild is built
     /// or not; a guild of level L teaches levels 1 to L.
     /// </summary>
-    public IReadOnlyDictionary<int, IReadOnlyList<string>> GuildSpells { get; private set; } = new Dictionary<int, IReadOnlyList<string>>();
+    public IReadOnlyDictionary<int, IReadOnlyList<Common.SpellId>> GuildSpells { get; private set; } = new Dictionary<int, IReadOnlyList<Common.SpellId>>();
 
-    internal void SetGuildSpells(IReadOnlyDictionary<int, IReadOnlyList<string>> spells) => GuildSpells = spells;
+    internal void SetGuildSpells(IReadOnlyDictionary<int, IReadOnlyList<Common.SpellId>> spells) => GuildSpells = spells;
 
     /// <summary>
     /// The guild spells the map fixes (map format v30): spells of the town's school, at most as many per spell level as the guild offers
     /// (<see cref="Magic.MagicRules.GuildSpellsPerLevel"/>); the game-start draw fills the rest. Empty = everything drawn.
     /// </summary>
-    public IReadOnlyList<string> FixedGuildSpells { get; internal set; }
+    public IReadOnlyList<Common.SpellId> FixedGuildSpells { get; internal set; }
 
     /// <summary>
     /// The spells each spell building of another school adds here, by school (ADR-072): one per spell level 1 to 4 in level order, drawn once at
     /// game start for every spell building the town type has, built or not; a guild of level L teaches the first L.
     /// </summary>
-    public IReadOnlyDictionary<string, IReadOnlyList<string>> SchoolSpells { get; private set; } = new Dictionary<string, IReadOnlyList<string>>();
+    public IReadOnlyDictionary<string, IReadOnlyList<Common.SpellId>> SchoolSpells { get; private set; } = new Dictionary<string, IReadOnlyList<Common.SpellId>>();
 
-    internal void SetSchoolSpells(IReadOnlyDictionary<string, IReadOnlyList<string>> spells) => SchoolSpells = spells;
+    internal void SetSchoolSpells(IReadOnlyDictionary<string, IReadOnlyList<Common.SpellId>> spells) => SchoolSpells = spells;
 
-    public int Level(string building) => _buildings.GetValueOrDefault(building);
+    public int Level(Common.BuildingId building) => _buildings.GetValueOrDefault(building);
 
-    public int DwellingLevel(string line) => _dwellings.GetValueOrDefault(line);
+    public int DwellingLevel(Common.CreatureId line) => _dwellings.GetValueOrDefault(line);
 
-    public int AvailableOf(string line) => _available.GetValueOrDefault(line);
+    public int AvailableOf(Common.CreatureId line) => _available.GetValueOrDefault(line);
 
-    internal void SetLevel(string building, int level) => Set(_buildings, building, level);
+    internal void SetLevel(Common.BuildingId building, int level) => Set(_buildings, building, level);
 
-    internal void SetDwelling(string line, int level) => Set(_dwellings, line, level);
+    internal void SetDwelling(Common.CreatureId line, int level) => Set(_dwellings, line, level);
 
-    internal void SetAvailable(string line, int count) => Set(_available, line, count);
+    internal void SetAvailable(Common.CreatureId line, int count) => Set(_available, line, count);
 
-    private static void Set(Dictionary<string, int> values, string key, int value)
+    private static void Set<TKey>(Dictionary<TKey, int> values, TKey key, int value)
+        where TKey : notnull
     {
         if (value <= 0)
         {
@@ -167,4 +168,8 @@ public sealed class Town : MapObject, IFlaggable, Battles.IBattleGuard
     private static Dictionary<string, int> Copy(IReadOnlyDictionary<string, int>? values) =>
         values?.Where(v => v.Value > 0).ToDictionary(v => v.Key, v => v.Value, StringComparer.Ordinal)
         ?? new Dictionary<string, int>(StringComparer.Ordinal);
+
+    private static Dictionary<TId, int> Copy<TId>(IReadOnlyDictionary<TId, int>? values)
+        where TId : struct, Common.IContentId<TId> =>
+        values?.Where(v => v.Value > 0).ToDictionary(v => v.Key, v => v.Value) ?? [];
 }

@@ -9,7 +9,7 @@ namespace EternalWars.Core.Domain.Battles;
 /// </summary>
 public sealed record BattleZone(int Id, KnownSpell Known, BattleSide Caster, CellRect Rect, int UntilRound, ZoneEffect Amounts)
 {
-    public string Spell => Known.Spell.Id;
+    public Common.SpellId Spell => Known.Spell.Id;
 
     public SpellEffect Effect => Known.Effect!;
 

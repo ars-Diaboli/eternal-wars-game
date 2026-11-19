@@ -169,7 +169,7 @@ public sealed record ConditionDocument(
     int? Amount = null,
     int? Day = null,
     int? Target = null,
-    string? Artifact = null,
+    Domain.Common.ArtifactId? Artifact = null,
     int? Deadline = null);
 
 /// <param name="Name">Player name.</param>
@@ -206,17 +206,17 @@ public sealed record HeroPlacementDocument(
     int? SpellPower = null,
     int? Knowledge = null,
     IReadOnlyList<WarMachineSlot>? WarMachines = null,
-    IReadOnlyList<string>? Artifacts = null,
-    IReadOnlyList<string>? Backpack = null,
+    IReadOnlyList<Domain.Common.ArtifactId>? Artifacts = null,
+    IReadOnlyList<Domain.Common.ArtifactId>? Backpack = null,
     bool? SpellBook = null,
-    IReadOnlyList<string>? Spells = null,
+    IReadOnlyList<Domain.Common.SpellId>? Spells = null,
     bool? Placeholder = null);
 
 /// <summary>One occupied army slot (0–6).</summary>
-public sealed record ArmySlotDocument(int Slot, string Creature, int Count);
+public sealed record ArmySlotDocument(int Slot, Domain.Common.CreatureId Creature, int Count);
 
 /// <summary>A guard stack; <see cref="Count"/> omitted = rolled from the creature tier at game start.</summary>
-public sealed record GuardDocument(string Creature, int? Count = null);
+public sealed record GuardDocument(Domain.Common.CreatureId Creature, int? Count = null);
 
 /// <summary>
 /// A placed object. <see cref="Definition"/> refers to a <c>MapObjectDefinition</c> id; the
@@ -239,7 +239,7 @@ public abstract record MapObjectDocument
 /// <summary>A creature dwelling on the map (v12); <see cref="Available"/> omitted = one week's growth when the game starts.</summary>
 public sealed record DwellingDocument : MapObjectDocument
 {
-    public required string Creature { get; init; }
+    public required Domain.Common.CreatureId Creature { get; init; }
 
     public int? Owner { get; init; }
 
@@ -334,7 +334,7 @@ public sealed record PandorasBoxDocument : MapObjectDocument
 
     public IReadOnlyDictionary<string, SkillLevel>? Skills { get; init; }
 
-    public IReadOnlyList<string>? Artifacts { get; init; }
+    public IReadOnlyList<Domain.Common.ArtifactId>? Artifacts { get; init; }
 
     public IReadOnlyList<StackDocument>? Creatures { get; init; }
 
@@ -344,7 +344,7 @@ public sealed record PandorasBoxDocument : MapObjectDocument
 }
 
 /// <summary>A creature stack outside an army's slots (a Pandora's Box's creatures and guard, v27).</summary>
-public sealed record StackDocument(string Creature, int Count);
+public sealed record StackDocument(Domain.Common.CreatureId Creature, int Count);
 
 /// <summary>A Den of Thieves (v22, ADR-079).</summary>
 public sealed record DenOfThievesDocument : MapObjectDocument;
@@ -385,7 +385,7 @@ public sealed record SphinxDocument : MapObjectDocument
 /// <summary>A shrine (v29, ADR-120); <see cref="Spell"/> omitted = one of its level drawn when the game starts.</summary>
 public sealed record ShrineDocument : MapObjectDocument
 {
-    public string? Spell { get; init; }
+    public Domain.Common.SpellId? Spell { get; init; }
 }
 
 /// <summary>A University or War Academy (v36, ADR-139; which one comes from its definition); the lessons are drawn in the game.</summary>
@@ -426,7 +426,7 @@ public sealed record PrisonDocument : MapObjectDocument
 /// <summary>An artifact on the map (v11); <see cref="Artifact"/> omitted = rolled from the definition's tier at game start.</summary>
 public sealed record ArtifactPickupDocument : MapObjectDocument
 {
-    public string? Artifact { get; init; }
+    public Domain.Common.ArtifactId? Artifact { get; init; }
 }
 
 public sealed record ResourcePileDocument : MapObjectDocument
@@ -466,7 +466,7 @@ public sealed record GateExitDocument : MapObjectDocument;
 /// <summary>A neutral monster (v4).</summary>
 public sealed record MonsterDocument : MapObjectDocument
 {
-    public required string Creature { get; init; }
+    public required Domain.Common.CreatureId Creature { get; init; }
 
     /// <summary>Omitted = rolled from the creature tier at game start.</summary>
     public int? Count { get; init; }
@@ -496,11 +496,11 @@ public sealed record TownDocument : MapObjectDocument
     /// <summary>Omitted = the definition's name.</summary>
     public string? Name { get; init; }
 
-    public IReadOnlyDictionary<string, int>? Buildings { get; init; }
+    public IReadOnlyDictionary<Domain.Common.BuildingId, int>? Buildings { get; init; }
 
-    public IReadOnlyDictionary<string, int>? Dwellings { get; init; }
+    public IReadOnlyDictionary<Domain.Common.CreatureId, int>? Dwellings { get; init; }
 
-    public IReadOnlyDictionary<string, int>? Available { get; init; }
+    public IReadOnlyDictionary<Domain.Common.CreatureId, int>? Available { get; init; }
 
     public IReadOnlyList<ArmySlotDocument>? Garrison { get; init; }
 
@@ -511,7 +511,7 @@ public sealed record TownDocument : MapObjectDocument
     /// The spells the town's mage guild is fixed to teach (v30): spell ids of the town's school, at most 3 / 3 / 2 / 2 per spell level; the rest of
     /// each level is drawn when the game starts. Omitted = everything drawn. The spell buildings of other schools always draw theirs.
     /// </summary>
-    public IReadOnlyList<string>? GuildSpells { get; init; }
+    public IReadOnlyList<Domain.Common.SpellId>? GuildSpells { get; init; }
 
     /// <summary>
     /// A random town (v35, ADR-126): its faction is drawn when the game starts (an owned town takes its owner's chosen faction); the definition

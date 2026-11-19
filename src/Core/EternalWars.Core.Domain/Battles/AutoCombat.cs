@@ -26,4 +26,4 @@ public sealed record AutoCombatPreview(
     IReadOnlyList<BattleCasualty> Casualties,
     int Experience,
     IReadOnlyList<RaisedUndead> Raised,
-    IReadOnlyList<string> Artifacts);
+    IReadOnlyList<Common.ArtifactId> Artifacts);

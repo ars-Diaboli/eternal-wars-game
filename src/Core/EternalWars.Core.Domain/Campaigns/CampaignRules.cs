@@ -87,7 +87,7 @@ public static class CampaignRules
             Knowledge = hero.Knowledge,
             Skills = hero.Skills.Levels.ToDictionary(StringComparer.Ordinal),
             SpellBook = hero.HasSpellBook,
-            Spells = hero.Spells.ToDictionary(StringComparer.Ordinal),
+            Spells = hero.Spells.ToDictionary(),
             WarMachines = [.. hero.WarMachines.Order()],
             Artifacts = artifacts ? [.. hero.Artifacts.AllWorn.Select(w => w.Id)] : null,
             Backpack = artifacts ? [.. hero.Artifacts.Backpack] : null,

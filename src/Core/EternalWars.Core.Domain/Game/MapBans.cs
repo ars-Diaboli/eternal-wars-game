@@ -22,9 +22,9 @@ public sealed record MapBans
 
     public bool BansHero(string id) => Heroes.Contains(id, StringComparer.Ordinal);
 
-    public bool BansArtifact(string id) => Artifacts.Contains(id, StringComparer.Ordinal);
+    public bool BansArtifact(Common.ArtifactId id) => Artifacts.Contains(id.Value, StringComparer.Ordinal);
 
-    public bool BansSpell(string id) => Spells.Contains(id, StringComparer.Ordinal);
+    public bool BansSpell(Common.SpellId id) => Spells.Contains(id.Value, StringComparer.Ordinal);
 
     public bool BansSkill(string id) => Skills.Contains(id, StringComparer.Ordinal);
 

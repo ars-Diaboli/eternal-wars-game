@@ -140,7 +140,7 @@ public class EditorUndoTests
         /// <summary>A raised bump of ground, for the tools that need one (smooth, heights from terrain).</summary>
         public static MapPosition Hill { get; } = new(35, 27);
 
-        public string Spell(int level) => ShrineRules.Candidates(Editor.Scenario.Spells, level).First().Id;
+        public string Spell(int level) => ShrineRules.Candidates(Editor.Scenario.Spells, level).First().Id.Value;
 
         /// <summary>Places the object at the first free place, row by row from the top (the bottom rows stay free for the cases).</summary>
         private MapObjectId Put(string definitionId)
@@ -160,7 +160,7 @@ public class EditorUndoTests
         }
     }
 
-    private static IReadOnlyList<string> HavenSpells(int level) => [.. SpellCatalog.Default.Of(TownIds.Haven, level).Select(s => s.Id)];
+    private static IReadOnlyList<string> HavenSpells(int level) => [.. SpellCatalog.Default.Of(TownIds.Haven, level).Select(s => s.Id.Value)];
 
     private static bool Ok(EditResult result) => result == EditResult.Ok;
 

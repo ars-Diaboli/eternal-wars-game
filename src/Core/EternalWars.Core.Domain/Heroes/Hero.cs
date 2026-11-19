@@ -87,13 +87,13 @@ public sealed class Hero(
 
     public int MaxMana => ManaRules.MaxMana(this);
 
-    private readonly SortedDictionary<string, int> _spells = new(StringComparer.Ordinal);
+    private readonly SortedDictionary<Common.SpellId, int> _spells = new();
 
     /// <summary>Whether the hero has a spell book (ADR-071): mages of the magic towns start with one, others buy it in a mage guild.</summary>
     public bool HasSpellBook { get; internal set; }
 
     /// <summary>Spells in the hero's book with their rank (1–3, ADR-072): learned at rank 1, raised by Mastery in guilds (ADR-122).</summary>
-    public IReadOnlyDictionary<string, int> Spells => _spells;
+    public IReadOnlyDictionary<Common.SpellId, int> Spells => _spells;
 
     /// <summary>
     /// The highest war lodge level the hero has visited (0–3, ADR-071; placeholder): it may use the warcries up to that level
@@ -102,10 +102,10 @@ public sealed class Hero(
     public int WarcriesLearned { get; internal set; }
 
     /// <summary>Puts a spell in the book at rank 1; false when the hero already knows it.</summary>
-    internal bool Learn(string spell) => _spells.TryAdd(spell, 1);
+    internal bool Learn(Common.SpellId spell) => _spells.TryAdd(spell, 1);
 
     /// <summary>Raises a known spell to <paramref name="rank"/>; false when the hero does not know it or knows it at that rank or higher.</summary>
-    internal bool RaiseSpell(string spell, int rank)
+    internal bool RaiseSpell(Common.SpellId spell, int rank)
     {
         if (!_spells.TryGetValue(spell, out var now) || now >= rank)
         {
@@ -256,7 +256,7 @@ public sealed class Hero(
     public HeroClass Class { get; internal set; }
 
     /// <summary>Base id of the creature line (base and upgrade) that gets the preferred-creature bonus in battle.</summary>
-    public string? PreferredCreature { get; internal set; }
+    public Common.CreatureId? PreferredCreature { get; internal set; }
 
     public HeroSpecialty? Specialty { get; internal set; }
 
@@ -304,8 +304,8 @@ public sealed class Hero(
         string? name = null, int? attack = null, int? defense = null, IReadOnlyDictionary<string, SkillLevel>? skills = null,
         int morale = 0, int luck = 0, int? spellPower = null, int? knowledge = null,
         IEnumerable<Battles.WarMachineSlot>? warMachines = null,
-        IEnumerable<string>? artifacts = null, IEnumerable<string>? backpack = null, ArtifactCatalog? catalog = null,
-        bool? spellBook = null, IEnumerable<string>? spells = null, Magic.SpellCatalog? spellCatalog = null, bool placeholder = false)
+        IEnumerable<Common.ArtifactId>? artifacts = null, IEnumerable<Common.ArtifactId>? backpack = null, ArtifactCatalog? catalog = null,
+        bool? spellBook = null, IEnumerable<Common.SpellId>? spells = null, Magic.SpellCatalog? spellCatalog = null, bool placeholder = false)
     {
         if (spellPower < 0 || knowledge < 0)
         {
@@ -363,7 +363,7 @@ public sealed class Hero(
     }
 
     /// <summary>The editor's spell book and spells for a map hero (ADR-120): replaces what it knows; without a book it knows nothing.</summary>
-    internal void SetSpellBook(bool book, IEnumerable<string> spells)
+    internal void SetSpellBook(bool book, IEnumerable<Common.SpellId> spells)
     {
         HasSpellBook = book;
         _spells.Clear();
@@ -374,11 +374,11 @@ public sealed class Hero(
     }
 
     /// <summary>A carried hero's spell book and spells with their ranks (ADR-241): replaces what it knows; without a book it knows nothing.</summary>
-    internal void SetSpells(bool book, IReadOnlyDictionary<string, int> spells)
+    internal void SetSpells(bool book, IReadOnlyDictionary<Common.SpellId, int> spells)
     {
         HasSpellBook = book;
         _spells.Clear();
-        foreach (var (spell, rank) in book ? spells : new Dictionary<string, int>())
+        foreach (var (spell, rank) in book ? spells : new Dictionary<Common.SpellId, int>())
         {
             _spells[spell] = Math.Max(1, rank);
         }

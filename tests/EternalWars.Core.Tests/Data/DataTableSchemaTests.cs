@@ -31,7 +31,7 @@ public class DataTableSchemaTests
         // The catalog rejects duplicate ids and upgrades to unknown creatures or across tiers and towns.
         var catalog = new CreatureCatalog(CreatureTable.Parse(text));
         Assert.All(catalog.All, c => Assert.True(c.Town is null || Towns.Contains(c.Town), $"{c.Id}: unknown town '{c.Town}'"));
-        Assert.All(catalog.All.Where(c => c.Town is not null), c => Assert.StartsWith($"{c.Town}.", c.Id, StringComparison.Ordinal));
+        Assert.All(catalog.All.Where(c => c.Town is not null), c => Assert.StartsWith($"{c.Town}.", c.Id.Value, StringComparison.Ordinal));
     }
 
     [Fact]

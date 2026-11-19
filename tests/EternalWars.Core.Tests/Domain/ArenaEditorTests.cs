@@ -164,7 +164,7 @@ public class ArenaEditorTests
         Assert.Contains("2500 gold", Text(box), StringComparison.Ordinal);
         Assert.Contains("+2 Attack", Text(box), StringComparison.Ordinal);
         Assert.Contains("Teaches Logistics or Archery", Text(hut), StringComparison.Ordinal);
-        Assert.Contains($"Teaches {state.Spells.Get(shrine.Spell!).Name}", Text(shrine), StringComparison.Ordinal);
+        Assert.Contains($"Teaches {state.Spells.Get(shrine.Spell!.Value).Name}", Text(shrine), StringComparison.Ordinal);
         var quest = Text(seer);
         Assert.Contains("Quest: Grow a little.", quest, StringComparison.Ordinal);
         Assert.Contains("Wants: hero level ≥ 3", quest, StringComparison.Ordinal);

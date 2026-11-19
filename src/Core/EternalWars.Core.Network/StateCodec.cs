@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Nodes;
+using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Objects;
@@ -150,7 +151,11 @@ internal sealed class StateCodec(GameState catalogs)
     }
 
     private static bool IsScalar(Type type) =>
-        type.IsPrimitive || type.IsEnum || type == typeof(string) || type == typeof(decimal);
+        type.IsPrimitive || type.IsEnum || type == typeof(string) || type == typeof(decimal) || IsContentId(type);
+
+    /// <summary>A content id (ADR-243): written as its string, like a string.</summary>
+    private static bool IsContentId(Type type) =>
+        type.IsValueType && type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IContentId<>));
 
     private static Type? ElementOfSequence(Type type)
     {
@@ -261,7 +266,7 @@ internal sealed class StateCodec(GameState catalogs)
                 case MapObjectDefinition definition when catalogs.ObjectCatalog.TryGet(definition.Id, out var known) && ReferenceEquals(known, definition):
                     return new JsonObject { [DefinitionKey] = definition.Id };
                 case CreatureDefinition creature when catalogs.Creatures.TryGet(creature.Id, out var known) && ReferenceEquals(known, creature):
-                    return new JsonObject { [DefinitionKey] = creature.Id };
+                    return new JsonObject { [DefinitionKey] = creature.Id.Value };
                 case GameState or IEventBus or Type:
                     return null;
             }
@@ -307,6 +312,7 @@ internal sealed class StateCodec(GameState catalogs)
         {
             _ when type.IsEnum => JsonValue.Create(Convert.ToInt64(value, System.Globalization.CultureInfo.InvariantCulture)),
             _ when type == typeof(string) => JsonValue.Create((string)value),
+            _ when IsContentId(type) => JsonValue.Create(value.ToString()!),
             _ when type == typeof(bool) => JsonValue.Create((bool)value),
             _ when type == typeof(char) => JsonValue.Create((int)(char)value),
             _ when type == typeof(ulong) => JsonValue.Create(((ulong)value).ToString(System.Globalization.CultureInfo.InvariantCulture)),
@@ -476,6 +482,7 @@ internal sealed class StateCodec(GameState catalogs)
         {
             _ when type.IsEnum => Enum.ToObject(type, node.GetValue<long>()),
             _ when type == typeof(string) => node.GetValue<string>(),
+            _ when IsContentId(type) => Activator.CreateInstance(type, node.GetValue<string>())!,
             _ when type == typeof(bool) => node.GetValue<bool>(),
             _ when type == typeof(char) => (char)node.GetValue<int>(),
             _ when type == typeof(ulong) => ulong.Parse(node.GetValue<string>(), System.Globalization.CultureInfo.InvariantCulture),

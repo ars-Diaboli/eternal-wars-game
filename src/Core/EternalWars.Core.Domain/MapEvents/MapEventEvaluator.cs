@@ -83,7 +83,7 @@ internal static class MapEventEvaluator
         {
             Quantity.Resource => player is not null && Enum.TryParse<ResourceType>(quantity.Id, ignoreCase: true, out var resource) ? player.Resources[resource] : 0,
             Quantity.Creatures => (hero?.Army ?? (scope.Town is { } town && state.FindObject(town) is Town t ? t.Garrison : null))?.Stacks
-                .Where(s => s.Stack.Creature == quantity.Id).Sum(s => s.Stack.Count) ?? 0,
+                .Where(s => s.Stack.Creature.Value == quantity.Id).Sum(s => s.Stack.Count) ?? 0,
             Quantity.HeroLevel => hero?.Level ?? 0,
             Quantity.Experience => hero?.Experience ?? 0,
             Quantity.Attack => hero?.Attack ?? 0,
@@ -93,7 +93,7 @@ internal static class MapEventEvaluator
             Quantity.Mana => hero?.Mana ?? 0,
             Quantity.MovementPoints => hero?.MovementPoints ?? 0,
             Quantity.SkillLevel => hero is not null && quantity.Id is { } skill ? (int)hero.Skills.Level(skill) : 0,
-            Quantity.Artifacts => hero is null ? 0 : hero.Artifacts.AllWorn.Count(w => w.Id == quantity.Id) + hero.Artifacts.Backpack.Count(a => a == quantity.Id),
+            Quantity.Artifacts => hero is null ? 0 : hero.Artifacts.AllWorn.Count(w => w.Id.Value == quantity.Id) + hero.Artifacts.Backpack.Count(a => a.Value == quantity.Id),
             Quantity.Day => state.Date.AbsoluteDay,
             Quantity.DayOfWeek => state.Date.Day,
             Quantity.Week => state.Date.Week,

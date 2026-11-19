@@ -309,8 +309,10 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       for `MapEventService` to run (an event used as a request, ADR-214; ADR-238)
 - [x] `CheckRefusals` read once from a runtime switch; `Cartographer.Buyers`, `ArtifactMerchant.Stock`, `SkillSchool.Lessons` read-only,
       and a test for every map object (ADR-239)
-- [ ] From the review, never planned: typed content ids (its own job); `InfoSheets` returning structured lines, not English text (needs a
-      localisation decision first: keys, the English table, plurals)
+- [x] Typed content ids (ADR-243): creature, spell, artifact and building ids are types of their own; the file formats are unchanged
+- [ ] Skills, roster heroes and town types as typed ids too (the pattern of ADR-243)
+- [ ] From the review, never planned: `InfoSheets` returning structured lines, not English text (needs a localisation decision first: keys,
+      the English table, plurals)
 - [x] Small (ADR-232): the views hold the game's `GameDirector`; the map chat's place as `UiTheme` tokens; a prison tracked by the
       "release hero" handler (`Track`); `IScenarioConditionHandler`'s comment
 

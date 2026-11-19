@@ -242,7 +242,7 @@ public class HeroProgressionTests
     {
         var footman = TestBattle.Fixed("haven.footman-test", damage: 10, attack: 10, defense: 10);
         var plain = TestBattle.Create();
-        var preferred = new HeroBattleBonuses(0, 0, 0, 0, new HashSet<string> { footman.Id });
+        var preferred = new HeroBattleBonuses(0, 0, 0, 0, new HashSet<CreatureId> { footman.Id });
         var skilled = TestBattle.Create(
             attackerBonuses: preferred with { MeleePercent = 20 },
             defenderBonuses: HeroBattleBonuses.None with { DamageTakenReductionPercent = 10, SpeedBonus = 3 });

@@ -144,4 +144,9 @@ public static class GameStateDigest
 
     internal static string Pairs(IReadOnlyDictionary<string, int> values) =>
         string.Join(",", values.OrderBy(v => v.Key, StringComparer.Ordinal).Select(v => FormattableString.Invariant($"{v.Key}:{v.Value}")));
+
+    /// <summary>The pairs of a dictionary keyed by content ids (ADR-243), written as one keyed by their strings.</summary>
+    internal static string Pairs<TId>(IReadOnlyDictionary<TId, int> values)
+        where TId : struct, Common.IContentId<TId> =>
+        Pairs(values.ToDictionary(v => v.Key.Value, v => v.Value, StringComparer.Ordinal));
 }

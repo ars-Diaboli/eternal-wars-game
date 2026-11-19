@@ -169,9 +169,9 @@ public sealed record KnownSpell(Magic.SpellDefinition Spell, int Rank, int Cost)
 /// spells of their element.
 /// </summary>
 public sealed record BattleCaster(
-    int SpellPower, int Level, IReadOnlyList<KnownSpell> Spells, string? Specialty, int Mana, IReadOnlyDictionary<Magic.SpellElement, int>? ElementPercent = null)
+    int SpellPower, int Level, IReadOnlyList<KnownSpell> Spells, Common.SpellId? Specialty, int Mana, IReadOnlyDictionary<Magic.SpellElement, int>? ElementPercent = null)
 {
-    public KnownSpell? Find(string spell) => Spells.FirstOrDefault(s => s.Spell.Id == spell);
+    public KnownSpell? Find(Common.SpellId spell) => Spells.FirstOrDefault(s => s.Spell.Id == spell);
 
     /// <summary>Mana in <see cref="Mana"/> lent for this battle only (a siege's Knowledge, ADR-138): spent first, the rest gone afterwards.</summary>
     public int LentMana { get; init; }
@@ -180,7 +180,7 @@ public sealed record BattleCaster(
     /// The percent the hero's artifacts (the elemental orbs) add to the effect of the spell's element; for Magic Arrow the best of the four, for
     /// Bind Elemental that of the bound kind's element (ADR-123).
     /// </summary>
-    public int ElementBonus(Magic.SpellDefinition spell, string? creature = null) =>
+    public int ElementBonus(Magic.SpellDefinition spell, Common.CreatureId? creature = null) =>
         ElementPercent is { Count: > 0 } percent ? spell.ElementsFor(creature).Select(e => percent.GetValueOrDefault(e)).DefaultIfEmpty(0).Max() : 0;
 
     public static BattleCaster? For(Heroes.Hero hero, Magic.SpellCatalog spells)
@@ -193,7 +193,7 @@ public sealed record BattleCaster(
         var known = Magic.MagicRules.Known(hero, spells)
             .Select(s => new KnownSpell(s.Spell, s.Rank, Heroes.ManaRules.SpellCost(hero, s.Spell.Mana)))
             .ToList();
-        var specialty = hero.Specialty is { Kind: Heroes.SpecialtyKind.Spell } special ? special.Target : null;
+        var specialty = hero.Specialty is { Kind: Heroes.SpecialtyKind.Spell } special ? new Common.SpellId(special.Target) : (Common.SpellId?)null;
         var elements = new[] { Magic.SpellElement.Air, Magic.SpellElement.Earth, Magic.SpellElement.Fire, Magic.SpellElement.Water }.Where(e => hero.Bonus.ElementBonus(e) != 0).ToDictionary(e => e, hero.Bonus.ElementBonus);
         return new BattleCaster(hero.TotalSpellPower, hero.Level, known, specialty, hero.Mana, elements);
     }
@@ -207,14 +207,14 @@ public sealed record BattleCaster(
 /// Artifacts (ADR-111) make the army immune to spells with some tags, forbid retreat and surrender to both sides, and cap the spell level both sides may cast.
 /// </summary>
 public sealed record HeroBattleBonuses(
-    int MeleePercent, int RangedPercent, int DamageTakenReductionPercent, int SpeedBonus, IReadOnlySet<string> Preferred, int Morale = 0, int Luck = 0,
+    int MeleePercent, int RangedPercent, int DamageTakenReductionPercent, int SpeedBonus, IReadOnlySet<Common.CreatureId> Preferred, int Morale = 0, int Luck = 0,
     Heroes.SkillLevel Ballistics = Heroes.SkillLevel.None, Heroes.SkillLevel Healing = Heroes.SkillLevel.None,
     Heroes.SkillLevel AmmoSupply = Heroes.SkillLevel.None, int RangedDamageTakenReductionPercent = 0,
     int Initiative = 0, Heroes.SkillLevel BloodRage = Heroes.SkillLevel.None, Heroes.SkillLevel Warcry = Heroes.SkillLevel.None,
     int EnemySpellPowerPenalty = 0, int EnemySpellCostPenalty = 0, int MarksmanshipEighths = 0, int SpellResistancePercent = 0,
     IReadOnlySet<string>? Immunities = null, bool NoRetreat = false, int? SpellLevelCap = null)
 {
-    public static HeroBattleBonuses None { get; } = new(0, 0, 0, 0, new HashSet<string>());
+    public static HeroBattleBonuses None { get; } = new(0, 0, 0, 0, new HashSet<Common.CreatureId>());
 
     public bool Prefers(Creatures.CreatureDefinition creature) => Preferred.Contains(creature.Id);
 
@@ -223,7 +223,7 @@ public sealed record HeroBattleBonuses(
 
     public static HeroBattleBonuses For(Heroes.Hero hero, Creatures.CreatureCatalog creatures)
     {
-        var preferred = new HashSet<string>(StringComparer.Ordinal);
+        var preferred = new HashSet<Common.CreatureId>();
         if (hero.PreferredCreature is { } line && creatures.TryGet(line, out var creature))
         {
             preferred.Add(creature.Id);

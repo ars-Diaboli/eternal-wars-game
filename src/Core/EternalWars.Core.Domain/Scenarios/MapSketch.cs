@@ -102,7 +102,7 @@ internal sealed class MapSketch
 
     public void Pile(ResourceType resource, int x, int y, int amount) => ((ResourcePile)Place(BuiltInMapObjects.PileId(resource), x, y)).Amount = amount;
 
-    public void Monster(string creature, int count, int x, int y, GuardDisposition disposition = GuardDisposition.Hostile)
+    public void Monster(Common.CreatureId creature, int count, int x, int y, GuardDisposition disposition = GuardDisposition.Hostile)
     {
         var monster = (MonsterGuard)Place(BuiltInMapObjects.Monster, x, y);
         (monster.Creature, monster.Count, monster.Disposition) = (creature, count, disposition);
@@ -116,7 +116,7 @@ internal sealed class MapSketch
 
     public void WitchHut(int x, int y, string first, string second) => ((WitchHut)Place(BuiltInMapObjects.WitchHut, x, y)).Skills = [first, second];
 
-    public void Dwelling(string creature, int x, int y) => ((CreatureDwelling)Place(BuiltInMapObjects.Dwelling, x, y)).Creature = creature;
+    public void Dwelling(Common.CreatureId creature, int x, int y) => ((CreatureDwelling)Place(BuiltInMapObjects.Dwelling, x, y)).Creature = creature;
 
     /// <summary>
     /// A hero placeholder (ADR-126): a random hero of its owner's faction. It keeps <paramref name="army"/> rather than its own starter

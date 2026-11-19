@@ -56,7 +56,7 @@ public class GuardPickerTests
             var creature = GuardPicker.Pick(Creatures, 300 + (int)(seed * 400), new GameRandom(seed)).Creature;
 
             Assert.DoesNotContain(creature.Id, upgrades);
-            Assert.True(creature.Town is null || BuiltInMapObjects.PlayableTowns.Contains(creature.Town), creature.Id);
+            Assert.True(creature.Town is null || BuiltInMapObjects.PlayableTowns.Contains(creature.Town), creature.Id.Value);
         }
     }
 

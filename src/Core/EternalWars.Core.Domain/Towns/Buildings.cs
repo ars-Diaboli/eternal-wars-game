@@ -6,7 +6,7 @@ using EternalWars.Core.Domain.Economy;
 namespace EternalWars.Core.Domain.Towns;
 
 /// <summary>Another building a level needs first: <see cref="Building"/> at <see cref="Level"/> or higher.</summary>
-public sealed record BuildingRequirement(string Building, int Level)
+public sealed record BuildingRequirement(Common.BuildingId Building, int Level)
 {
     public override string ToString() => $"{Building} {Level.ToString(CultureInfo.InvariantCulture)}";
 }
@@ -17,7 +17,7 @@ public sealed record BuildingRequirement(string Building, int Level)
 /// shared by every creature line of that tier; their level 2 is the dwelling upgrade. <see cref="Town"/> is the town type a
 /// row belongs to, or null for a row every town shares (ADR-070, TOWN-3).
 /// </summary>
-public sealed record BuildingLevel(string Building, int Level, string Name)
+public sealed record BuildingLevel(Common.BuildingId Building, int Level, string Name)
 {
     public string? Town { get; init; }
 
@@ -68,14 +68,14 @@ public static class BuiltInBuildings
     /// The spell building of another school (ADR-072, MAG-12): <c>school-inferno</c> adds one Inferno spell per mage guild level. Each town on
     /// the ring has the two of its ring neighbours' schools (rows of its own in <c>buildings.csv</c>).
     /// </summary>
-    public static string SpellSchool(string school) => $"school-{school}";
+    public static Common.BuildingId SpellSchool(string school) => $"school-{school}";
 
     /// <summary>The school a <see cref="SpellSchool"/> building adds, or null for other buildings.</summary>
-    public static string? SchoolOf(string building) =>
-        building.StartsWith("school-", StringComparison.Ordinal) && building.Length > "school-".Length ? building["school-".Length..] : null;
+    public static string? SchoolOf(Common.BuildingId building) =>
+        building.Value.StartsWith("school-", StringComparison.Ordinal) && building.Value.Length > "school-".Length ? building.Value["school-".Length..] : null;
 
     /// <summary>The growth building of a dwelling tier (ADR-071, TOWN-1): <c>growth-1</c>, <c>growth-2</c>; each town names its own.</summary>
-    public static string Growth(int tier) => $"growth-{tier.ToString(CultureInfo.InvariantCulture)}";
+    public static Common.BuildingId Growth(int tier) => $"growth-{tier.ToString(CultureInfo.InvariantCulture)}";
 
     /// <summary>The town hall level that is the Capitol: one per player (ADR-070, TOWN-3).</summary>
     public const int CapitolLevel = 4;
@@ -84,16 +84,16 @@ public static class BuiltInBuildings
     public const string ResourceName = "EternalWars.Buildings.csv";
 
     /// <summary>What a newly placed town has built (user decision): town hall 1, fort 1 and the tavern the fort needs.</summary>
-    public static IReadOnlyDictionary<string, int> DefaultStart { get; } =
-        new Dictionary<string, int>(StringComparer.Ordinal) { [TownHall] = 1, [Fort] = 1, [Tavern] = 1 };
+    public static IReadOnlyDictionary<Common.BuildingId, int> DefaultStart { get; } =
+        new Dictionary<Common.BuildingId, int> { [TownHall] = 1, [Fort] = 1, [Tavern] = 1 };
 
     /// <summary>The building whose levels price the dwellings of a tier.</summary>
-    public static string Dwelling(int tier) => $"dwelling-{tier.ToString(CultureInfo.InvariantCulture)}";
+    public static Common.BuildingId Dwelling(int tier) => $"dwelling-{tier.ToString(CultureInfo.InvariantCulture)}";
 
     /// <summary>The tier of a <see cref="Dwelling"/> id, or null for other buildings.</summary>
-    public static int? DwellingTier(string building) =>
-        building.StartsWith("dwelling-", StringComparison.Ordinal)
-        && int.TryParse(building.AsSpan("dwelling-".Length), NumberStyles.Integer, CultureInfo.InvariantCulture, out var tier)
+    public static int? DwellingTier(Common.BuildingId building) =>
+        building.Value.StartsWith("dwelling-", StringComparison.Ordinal)
+        && int.TryParse(building.Value.AsSpan("dwelling-".Length), NumberStyles.Integer, CultureInfo.InvariantCulture, out var tier)
             ? tier
             : null;
 
@@ -170,7 +170,7 @@ public static class BuildingTable
 /// </summary>
 public sealed class BuildingCatalog
 {
-    private readonly Dictionary<string, List<BuildingLevel>> _buildings;
+    private readonly Dictionary<Common.BuildingId, List<BuildingLevel>> _buildings;
     private readonly Dictionary<string, BuildingCatalog> _towns = new(StringComparer.Ordinal);
 
     public BuildingCatalog(IEnumerable<BuildingLevel> levels)
@@ -180,9 +180,9 @@ public sealed class BuildingCatalog
         Validate(_buildings, "");
         foreach (var town in all.Select(l => l.Town).OfType<string>().Distinct(StringComparer.Ordinal))
         {
-            var removed = all.Where(l => l.Town == town && l.Level == 0).Select(l => l.Building).ToHashSet(StringComparer.Ordinal);
+            var removed = all.Where(l => l.Town == town && l.Level == 0).Select(l => l.Building).ToHashSet();
             var own = Group(all.Where(l => l.Town == town && l.Level != 0));
-            var merged = new Dictionary<string, List<BuildingLevel>>(StringComparer.Ordinal);
+            var merged = new Dictionary<Common.BuildingId, List<BuildingLevel>>();
             foreach (var (id, list) in _buildings.Where(b => !removed.Contains(b.Key)))
             {
                 merged[id] = own.TryGetValue(id, out var replaced) ? replaced : list;
@@ -198,7 +198,7 @@ public sealed class BuildingCatalog
         }
     }
 
-    private BuildingCatalog(Dictionary<string, List<BuildingLevel>> buildings, string town)
+    private BuildingCatalog(Dictionary<Common.BuildingId, List<BuildingLevel>> buildings, string town)
     {
         _buildings = buildings;
         Town = town;
@@ -216,24 +216,24 @@ public sealed class BuildingCatalog
     public BuildingCatalog For(string? town) => town is not null && _towns.TryGetValue(town, out var own) ? own : this;
 
     /// <summary>Every building id in table order, dwellings included.</summary>
-    public IEnumerable<string> Buildings => _buildings.Keys;
+    public IEnumerable<Common.BuildingId> Buildings => _buildings.Keys;
 
     /// <summary>The buildings a town builds by id (everything except the per-tier dwellings).</summary>
-    public IEnumerable<string> TownBuildings => _buildings.Keys.Where(b => BuiltInBuildings.DwellingTier(b) is null);
+    public IEnumerable<Common.BuildingId> TownBuildings => _buildings.Keys.Where(b => BuiltInBuildings.DwellingTier(b) is null);
 
-    public bool Contains(string building) => _buildings.ContainsKey(building);
+    public bool Contains(Common.BuildingId building) => _buildings.ContainsKey(building);
 
     /// <summary>Highest level of a building; 0 for unknown ids.</summary>
-    public int MaxLevel(string building) => _buildings.TryGetValue(building, out var list) ? list.Count : 0;
+    public int MaxLevel(Common.BuildingId building) => _buildings.TryGetValue(building, out var list) ? list.Count : 0;
 
-    public BuildingLevel Get(string building, int level) =>
+    public BuildingLevel Get(Common.BuildingId building, int level) =>
         _buildings.TryGetValue(building, out var list) && level >= 1 && level <= list.Count
             ? list[level - 1]
             : throw new KeyNotFoundException($"Unknown building level '{building} {level}'.");
 
-    private static Dictionary<string, List<BuildingLevel>> Group(IEnumerable<BuildingLevel> levels)
+    private static Dictionary<Common.BuildingId, List<BuildingLevel>> Group(IEnumerable<BuildingLevel> levels)
     {
-        var buildings = new Dictionary<string, List<BuildingLevel>>(StringComparer.Ordinal);
+        var buildings = new Dictionary<Common.BuildingId, List<BuildingLevel>>();
         foreach (var level in levels)
         {
             if (!buildings.TryGetValue(level.Building, out var list))
@@ -253,9 +253,9 @@ public sealed class BuildingCatalog
         return buildings;
     }
 
-    private static void Validate(Dictionary<string, List<BuildingLevel>> buildings, string where)
+    private static void Validate(Dictionary<Common.BuildingId, List<BuildingLevel>> buildings, string where)
     {
-        int MaxLevel(string building) => buildings.TryGetValue(building, out var list) ? list.Count : 0;
+        int MaxLevel(Common.BuildingId building) => buildings.TryGetValue(building, out var list) ? list.Count : 0;
 
         foreach (var (id, list) in buildings)
         {

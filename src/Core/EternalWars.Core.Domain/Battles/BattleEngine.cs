@@ -429,7 +429,7 @@ internal sealed class BattleEngine
     /// <summary>
     /// The side's hero casts a spell (ADR-110, <see cref="BattleSpellResolver.Cast"/>). The active unit keeps its action, unless the spell killed it.
     /// </summary>
-    public string? Cast(BattleSide side, string spellId, int? targetId, CellPosition? cell, int? second = null)
+    public string? Cast(BattleSide side, Common.SpellId spellId, int? targetId, CellPosition? cell, int? second = null)
     {
         if (spells.Cast(side, spellId, targetId, cell, second) is { } refusal)
         {

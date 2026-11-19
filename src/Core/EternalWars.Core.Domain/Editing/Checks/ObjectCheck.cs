@@ -160,7 +160,7 @@ internal sealed class ObjectCheck : IMapCheck
             }
         }
 
-        if (town.Dwellings.Keys.FirstOrDefault() is { } any && TownRules.CheckDwellingChoice(scenario, town, any, town.DwellingLevel(any)) is { } choice)
+        if (town.Dwellings.Count > 0 && town.Dwellings.Keys.First() is var any && TownRules.CheckDwellingChoice(scenario, town, any, town.DwellingLevel(any)) is { } choice)
         {
             yield return $"breaks the dwelling rule: {choice}";
         }

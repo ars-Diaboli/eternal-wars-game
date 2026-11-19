@@ -15,7 +15,7 @@ internal sealed class BattleSpellResolver(BattleState battle, IEventPublisher ev
     /// The side's hero casts a spell (ADR-110): it pays the mana, then the spell works on every stack in its reach it affects, by id; a stack it
     /// does not affect is reported as resisting. Null on success, else why it was refused (nothing changed then).
     /// </summary>
-    public string? Cast(BattleSide side, string spellId, int? targetId, CellPosition? cell, int? second)
+    public string? Cast(BattleSide side, Common.SpellId spellId, int? targetId, CellPosition? cell, int? second)
     {
         if (BattleMagic.CastRefusal(battle, side, spellId, targetId, cell, second) is { } refusal)
         {
@@ -45,8 +45,8 @@ internal sealed class BattleSpellResolver(BattleState battle, IEventPublisher ev
         }
 
         var known = BattleMagic.CreatureSpell(battle, unit)!;
-        unit.MutableCastsLeft[known.Spell.Id]--;
-        events.Publish(new BattleCreatureCast(unit.Id, known.Spell.Id, targetId, cell, unit.CastsLeft[known.Spell.Id]));
+        unit.MutableCastsLeft[known.Spell.Id.Value]--;
+        events.Publish(new BattleCreatureCast(unit.Id, known.Spell.Id, targetId, cell, unit.CastsLeft[known.Spell.Id.Value]));
         Work(unit.Side, known, targetId, cell, BattleMagic.CreatureSpellPower(unit));
         return null;
     }
@@ -110,7 +110,7 @@ internal sealed class BattleSpellResolver(BattleState battle, IEventPublisher ev
     }
 
     /// <summary>Earthquake (ADR-120): <paramref name="sections"/> standing wall sections, drawn at random, take 1 damage each.</summary>
-    private void Quake(string spell, int sections)
+    private void Quake(Common.SpellId spell, int sections)
     {
         if (battle.Siege is not { } siege)
         {

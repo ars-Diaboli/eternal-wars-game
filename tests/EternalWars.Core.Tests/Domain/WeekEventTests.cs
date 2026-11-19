@@ -40,7 +40,7 @@ public class WeekEventTests
         Assert.InRange(monthly.Count(e => e.Kind == WeekEventKind.Starvation), 230, 370);
         Assert.InRange(monthly.Count(e => e.Kind == WeekEventKind.WeekOfCreature), 290, 460);
         Assert.All(monthly.Where(e => e.Kind is WeekEventKind.WeekOfCreature or WeekEventKind.MonthOfCreature),
-            e => Assert.Contains(CreatureCatalog.Default.Get(e.Creature!).Town, BuiltInMapObjects.PlayableTowns));
+            e => Assert.Contains(CreatureCatalog.Default.Get(e.Creature!.Value).Town, BuiltInMapObjects.PlayableTowns));
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public class WeekEventTests
         var settings = new WeekEventSettings(WeeklyFactions: [TownIds.Conflux]);
         var random = new GameRandom(11);
         var rolled = Enumerable.Range(0, 200).Select(_ => WeekEventRules.Roll(settings, CreatureCatalog.Default, SecondWeek, random)).Where(e => e.Creature is not null);
-        Assert.All(rolled, e => Assert.Equal(TownIds.Conflux, CreatureCatalog.Default.Get(e.Creature!).Town));
+        Assert.All(rolled, e => Assert.Equal(TownIds.Conflux, CreatureCatalog.Default.Get(e.Creature!.Value).Town));
     }
 
     [Fact]
@@ -224,7 +224,7 @@ public class WeekEventTests
             state.GetPlayer(Blue).Resources = new ResourceSet(Gold: 100_000, Lumber: 50, Ore: 50, Crystal: 50, Mercury: 50, Sulfur: 50);
             state.WeekEvent = week;
             new AdventureAi(session, controlHumanSlots: true).PlayTurn();
-            return session.CommandLog.OfType<RecruitCommand>().FirstOrDefault()?.Creature;
+            return session.CommandLog.OfType<RecruitCommand>().FirstOrDefault()?.Creature.Value;
         }
 
         Assert.NotEqual(BuiltInCreatures.Footman, FirstRecruit(WeekEvent.None)); // higher tiers first

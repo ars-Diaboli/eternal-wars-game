@@ -57,7 +57,7 @@ public class CampaignTests
         Knowledge = 3,
         Skills = new Dictionary<string, SkillLevel> { [BuiltInSkills.Logistics] = SkillLevel.Expert, ["defense.armor"] = SkillLevel.Advanced },
         SpellBook = true,
-        Spells = new Dictionary<string, int> { ["light.bless"] = 2 },
+        Spells = new Dictionary<SpellId, int> { ["light.bless"] = 2 },
         Artifacts = [],
         Backpack = [],
         Army = army ?? [new CarriedStack(0, "haven.pikeman", 40), new CarriedStack(2, "haven.archer", 15)],

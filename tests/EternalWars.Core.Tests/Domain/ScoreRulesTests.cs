@@ -81,8 +81,8 @@ public class ScoreRulesTests
         Assert.Equal(14, ScoreRules.Titles.Count);
         Assert.Equal(0, ScoreRules.Titles[0].MinScore);
         Assert.True(ScoreRules.Titles.Zip(ScoreRules.Titles.Skip(1)).All(p => p.First.MinScore < p.Second.MinScore));
-        Assert.All(ScoreRules.Titles, t => Assert.True(CreatureCatalog.Default.Contains(t.Creature), t.Creature));
-        Assert.Contains("dragon", ScoreRules.Titles[^1].Creature);
+        Assert.All(ScoreRules.Titles, t => Assert.True(CreatureCatalog.Default.Contains(t.Creature), t.Creature.Value));
+        Assert.Contains("dragon", ScoreRules.Titles[^1].Creature.Value);
 
         Assert.Equal("inferno.imp", ScoreRules.Title(0));
         Assert.Equal("inferno.imp", ScoreRules.Title(19));

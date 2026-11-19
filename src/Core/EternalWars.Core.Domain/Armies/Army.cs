@@ -1,22 +1,24 @@
+using EternalWars.Core.Domain.Common;
+
 namespace EternalWars.Core.Domain.Armies;
 
 /// <summary>A number of creatures of one type occupying one army slot.</summary>
 public sealed record CreatureStack
 {
-    public CreatureStack(string creature, int count)
+    public CreatureStack(CreatureId creature, int count)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(creature);
+        ArgumentException.ThrowIfNullOrWhiteSpace(creature.Value, nameof(creature));
         ArgumentOutOfRangeException.ThrowIfLessThan(count, 1);
         Creature = creature;
         Count = count;
     }
 
     /// <summary>Creature definition id.</summary>
-    public string Creature { get; }
+    public CreatureId Creature { get; }
 
     public int Count { get; }
 
-    public void Deconstruct(out string creature, out int count) => (creature, count) = (Creature, Count);
+    public void Deconstruct(out CreatureId creature, out int count) => (creature, count) = (Creature, Count);
 
     public override string ToString() => $"{Count}× {Creature}";
 }
@@ -58,7 +60,7 @@ public sealed class Army
     public bool IsEmpty => StackCount == 0;
 
     /// <summary>Whether a stack of <paramref name="creature"/> could be added (an equal stack or a free slot).</summary>
-    public bool CanAccept(string creature) => _slots.Any(s => s is null || s.Creature == creature);
+    public bool CanAccept(CreatureId creature) => _slots.Any(s => s is null || s.Creature == creature);
 
     public static bool IsValidSlot(int slot) => slot is >= 0 and < SlotCount;
 

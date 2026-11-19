@@ -4,7 +4,7 @@ using EternalWars.Core.Domain.Heroes;
 namespace EternalWars.Core.Domain.Campaigns;
 
 /// <summary>One stack of a carried hero's army, by army slot (0–6).</summary>
-public sealed record CarriedStack(int Slot, string Creature, int Count);
+public sealed record CarriedStack(int Slot, Common.CreatureId Creature, int Count);
 
 /// <summary>
 /// A hero as a campaign carries it from one map to the next (ADR-241): the roster hero <see cref="Hero"/> with what it gained. <see cref="Army"/>
@@ -30,15 +30,15 @@ public sealed record CarriedHero(string Hero, string Name)
     public bool SpellBook { get; init; }
 
     /// <summary>The spells it knows, each with its rank (ADR-122).</summary>
-    public IReadOnlyDictionary<string, int> Spells { get; init; } = new Dictionary<string, int>();
+    public IReadOnlyDictionary<Common.SpellId, int> Spells { get; init; } = new Dictionary<Common.SpellId, int>();
 
     public IReadOnlyList<WarMachineSlot> WarMachines { get; init; } = [];
 
     /// <summary>The artifacts it wears (each goes to the slot its definition names); null: not carried.</summary>
-    public IReadOnlyList<string>? Artifacts { get; init; }
+    public IReadOnlyList<Common.ArtifactId>? Artifacts { get; init; }
 
     /// <summary>The artifacts in its backpack; null: not carried.</summary>
-    public IReadOnlyList<string>? Backpack { get; init; }
+    public IReadOnlyList<Common.ArtifactId>? Backpack { get; init; }
 
     /// <summary>Its army; null: not carried.</summary>
     public IReadOnlyList<CarriedStack>? Army { get; init; }
@@ -53,6 +53,7 @@ public sealed record CarriedHero(string Hero, string Name)
 
     private static bool Same<T>(IReadOnlyList<T>? a, IReadOnlyList<T>? b) => a is null ? b is null : b is not null && a.SequenceEqual(b);
 
-    private static bool Same<TValue>(IReadOnlyDictionary<string, TValue> a, IReadOnlyDictionary<string, TValue> b) =>
+    private static bool Same<TKey, TValue>(IReadOnlyDictionary<TKey, TValue> a, IReadOnlyDictionary<TKey, TValue> b)
+        where TKey : notnull =>
         a.Count == b.Count && a.All(p => b.TryGetValue(p.Key, out var v) && EqualityComparer<TValue>.Default.Equals(p.Value, v));
 }

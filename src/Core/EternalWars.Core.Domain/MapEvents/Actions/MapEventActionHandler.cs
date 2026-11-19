@@ -66,10 +66,10 @@ internal abstract class MapEventActionHandler<TAction> : IMapEventActionHandler
         amount is NumberExpr { Value: < 0 } taken ? $"Take {-taken.Value} {what}" : $"Give {Expr(amount)} {what}";
 
     /// <summary>A creature's name, its id without a state or when unknown.</summary>
-    protected static string CreatureName(GameState? state, string id) => state is not null && state.Creatures.TryGet(id, out var creature) ? creature.Name : id;
+    protected static string CreatureName(GameState? state, Common.CreatureId id) => state is not null && state.Creatures.TryGet(id, out var creature) ? creature.Name : id.Value;
 
     /// <summary>A creature's fight value, 0 when unknown.</summary>
-    protected static double CreatureValue(GameState state, string id) => state.Creatures.TryGet(id, out var creature) ? creature.FightValue : 0;
+    protected static double CreatureValue(GameState state, Common.CreatureId id) => state.Creatures.TryGet(id, out var creature) ? creature.FightValue : 0;
 
     /// <summary>A number with its sign, as a message's line shows it.</summary>
     protected static string Signed(int value) => value >= 0 ? $"+{value}" : $"{value}";

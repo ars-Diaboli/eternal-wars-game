@@ -25,7 +25,7 @@ public class ControlSpellTests
         Assert.Null(battle.Engine.Cast(Attacker, "shadow.blind", enemy.Id, null));
         Assert.Null(battle.Engine.Defend());
 
-        Assert.Contains(battle.Events, e => e is BattleUnitSpellbound { Spell: "shadow.blind" } s && s.Unit == enemy.Id);
+        Assert.Contains(battle.Events, e => e is BattleUnitSpellbound { Spell.Value: "shadow.blind" } s && s.Unit == enemy.Id);
         Assert.Same(own, battle.State.ActiveUnit); // the enemy's turn passed, a new round began
     }
 
@@ -42,7 +42,7 @@ public class ControlSpellTests
 
         Assert.Equal(995, own.TopHealth); // 10 at half
         Assert.Empty(enemy.Spells);
-        Assert.Contains(battle.Events, e => e is BattleSpellExpired { Spell: "shadow.blind" });
+        Assert.Contains(battle.Events, e => e is BattleSpellExpired { Spell.Value: "shadow.blind" });
     }
 
     [Fact]
@@ -152,7 +152,7 @@ public class ControlSpellTests
         Assert.Null(battle.Engine.Cast(Attacker, "light.purge", own.Id, null));
 
         Assert.Equal("light.bless", Assert.Single(own.Spells).Spell);
-        Assert.Contains(battle.Events, e => e is BattleSpellDispelled { Spell: "death.weakness", By: "light.purge" });
+        Assert.Contains(battle.Events, e => e is BattleSpellDispelled { Spell.Value: "death.weakness", By: "light.purge" });
     }
 
     [Fact]

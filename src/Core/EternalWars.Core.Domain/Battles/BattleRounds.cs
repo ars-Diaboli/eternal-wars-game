@@ -173,7 +173,7 @@ internal sealed class BattleRounds(BattleState battle, IEventPublisher events, B
         }
 
         // Spells that ran out go before this round's morale and order are decided (ADR-110).
-        var expired = new List<(int Unit, string Spell)>();
+        var expired = new List<(int Unit, Common.SpellId Spell)>();
         var freed = new List<BattleUnit>();
         foreach (var unit in battle.LivingUnits.Where(u => u.Spells.Count > 0).OrderBy(u => u.Id))
         {

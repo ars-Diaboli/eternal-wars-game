@@ -34,7 +34,7 @@ public partial class CalendarLabel : Label
     {
         var week = state.WeekEvent.Kind switch
         {
-            WeekEventKind.WeekOfCreature or WeekEventKind.MonthOfCreature when state.Creatures.TryGet(state.WeekEvent.Creature!, out var creature) =>
+            WeekEventKind.WeekOfCreature or WeekEventKind.MonthOfCreature when state.WeekEvent.Creature is { } shown && state.Creatures.TryGet(shown, out var creature) =>
                 $"{(state.WeekEvent.IsMonthly ? "month" : "week")} of the {creature.Name}",
             WeekEventKind.Plague => "plague",
             WeekEventKind.Starvation => "starvation",

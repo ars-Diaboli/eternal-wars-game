@@ -89,7 +89,7 @@ public sealed record HeroSpecialty(SpecialtyKind Kind, string Target, int Amount
 /// A hero of the roster (ADR-048): 16 per playable town, a mage and a warrior for each of its eight tier 1–4 creature
 /// lines, which is their preferred creature (flat bonus in battle, <see cref="SkillEffects"/>).
 /// </summary>
-public sealed record HeroDefinition(string Id, string Name, string Town, HeroClass Class, string PreferredCreature, HeroSpecialty Specialty)
+public sealed record HeroDefinition(string Id, string Name, string Town, HeroClass Class, Common.CreatureId PreferredCreature, HeroSpecialty Specialty)
 {
     public IReadOnlyDictionary<string, SkillLevel> StartingSkills { get; init; } = new Dictionary<string, SkillLevel>();
 
@@ -129,7 +129,7 @@ public static class HeroTable
     public static string Format(IEnumerable<HeroDefinition> heroes, Func<HeroDefinition, string?>? notes = null) =>
         CsvTable.Format(Columns, heroes.Select(h => (IReadOnlyList<string>)
         [
-            h.Id, h.Name, h.Town, h.Class.ToString(), h.PreferredCreature, h.Specialty.ToString(),
+            h.Id, h.Name, h.Town, h.Class.ToString(), h.PreferredCreature.Value, h.Specialty.ToString(),
             FormatSkills(h.StartingSkills), CsvTable.Number(h.Attack), CsvTable.Number(h.Defense),
             CsvTable.Number(h.SpellPower), CsvTable.Number(h.Knowledge), notes?.Invoke(h) ?? "",
         ]));

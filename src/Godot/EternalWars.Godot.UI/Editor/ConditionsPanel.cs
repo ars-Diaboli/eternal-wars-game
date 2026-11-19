@@ -232,7 +232,7 @@ public partial class ConditionsPanel : VBoxContainer
             .Select(o => (o.Id.Value, $"{o.Definition.Name} ({o.Position.X}, {o.Position.Y})")));
         Fill(_prison, Scenario.ObjectsOf<Prison>()
             .Select(p => (p.Id.Value, $"{(p.Hero is { } h && Scenario.HeroRoster.Contains(h) ? Scenario.HeroRoster.Get(h).Name : "Drawn prisoner")} ({p.Position.X}, {p.Position.Y})")));
-        _artifactIds = Scenario.Artifacts.All.OrderBy(a => a.Name, StringComparer.Ordinal).Select(a => a.Id).ToList();
+        _artifactIds = Scenario.Artifacts.All.OrderBy(a => a.Name, StringComparer.Ordinal).Select(a => a.Id.Value).ToList();
         Fill(_artifact, _artifactIds.Select((id, i) => (i, Scenario.Artifacts.Get(id).Name)));
     }
 

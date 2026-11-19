@@ -25,7 +25,7 @@ public class SpellRankTests
         {
             if (spell.Effect is null)
             {
-                Assert.True(spell.Rank2 is null && spell.Rank3 is null, spell.Id);
+                Assert.True(spell.Rank2 is null && spell.Rank3 is null, spell.Id.Value);
                 continue;
             }
 

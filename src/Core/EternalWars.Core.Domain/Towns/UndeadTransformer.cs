@@ -4,7 +4,7 @@ using EternalWars.Core.Domain.Game;
 namespace EternalWars.Core.Domain.Towns;
 
 /// <summary>What one stack becomes at the Undead Transformer: <paramref name="Count"/> of <paramref name="From"/> into <paramref name="Result"/> of <paramref name="To"/>.</summary>
-public sealed record UndeadTransform(string From, int Count, string To, int Result);
+public sealed record UndeadTransform(Common.CreatureId From, int Count, Common.CreatureId To, int Result);
 
 /// <summary>
 /// The Necropolis's Undead Transformer (ADR-137). A living creature of tier 1–2 becomes the tier-1 undead of its class (ADR-135: A to Skeletons,
@@ -25,7 +25,7 @@ public static class UndeadTransformer
         !creature.HasTag(CreatureTags.Undead) && !creature.HasTag(CreatureTags.Construct) && !creature.HasTag(CreatureTags.Elemental);
 
     /// <summary>Whether the creature has to be told which line to become (a living tier 1–4 creature without a class).</summary>
-    public static bool NeedsLine(GameState state, string creature)
+    public static bool NeedsLine(GameState state, Common.CreatureId creature)
     {
         var definition = state.Creatures.Get(state.Creatures.BaseOf(creature));
         return IsLiving(definition) && definition.Tier <= 4 && definition.Category == CreatureCategory.None;
@@ -35,7 +35,7 @@ public static class UndeadTransformer
     /// What <paramref name="count"/> of <paramref name="creature"/> become in <paramref name="town"/>, along <paramref name="line"/> for a creature
     /// without a class (ignored for the others); the refusal when it cannot be transformed.
     /// </summary>
-    public static (UndeadTransform? Transform, string? Refusal) Of(GameState state, Town town, string creature, int count, CreatureCategory line = CreatureCategory.None)
+    public static (UndeadTransform? Transform, string? Refusal) Of(GameState state, Town town, Common.CreatureId creature, int count, CreatureCategory line = CreatureCategory.None)
     {
         var definition = state.Creatures.Get(state.Creatures.BaseOf(creature));
         int tier;

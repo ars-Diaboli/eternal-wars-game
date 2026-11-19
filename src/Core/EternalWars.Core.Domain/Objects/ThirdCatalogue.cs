@@ -39,17 +39,17 @@ public sealed class ArtifactMerchant(MapObjectId id, MapObjectDefinition definit
     : MapObject(id, definition, position, MapObjectKind.ArtifactMerchant)
 {
     /// <inheritdoc/>
-    internal override string DigestState() => $"stock {string.Join(',', Stock.Select(a => a ?? "-"))}";
+    internal override string DigestState() => $"stock {string.Join(',', Stock.Select(a => a?.Value ?? "-"))}";
 
     public const int StockSize = 7;
 
-    private readonly List<string?> _stock = [];
+    private readonly List<Common.ArtifactId?> _stock = [];
 
     /// <summary>What is for sale, slot by slot (null: sold).</summary>
-    public IReadOnlyList<string?> Stock => _stock;
+    public IReadOnlyList<Common.ArtifactId?> Stock => _stock;
 
     /// <summary>The month's artifacts take every slot.</summary>
-    internal void Restock(IEnumerable<string?> artifacts)
+    internal void Restock(IEnumerable<Common.ArtifactId?> artifacts)
     {
         _stock.Clear();
         _stock.AddRange(artifacts);
@@ -84,7 +84,7 @@ public sealed class RefugeeCamp(MapObjectId id, MapObjectDefinition definition, 
     /// <inheritdoc/>
     internal override string DigestState() => $"{Creature} available {Available}";
 
-    public string? Creature { get; internal set; }
+    public Common.CreatureId? Creature { get; internal set; }
 
     public int Available { get; internal set; }
 }
@@ -100,7 +100,7 @@ public static class RefugeeCampRules
     public static IReadOnlyList<CreatureDefinition> Candidates(CreatureCatalog creatures) =>
         creatures.All.Where(c => c.Tier is >= MinTier and <= MaxTier && c.Town is { } town && BuiltInMapObjects.PlayableTowns.Contains(town)
                                  && creatures.BaseOf(c.Id) == c.Id)
-            .OrderBy(c => c.Id, StringComparer.Ordinal).ToList();
+            .OrderBy(c => c.Id).ToList();
 }
 
 /// <summary>What a hero may lay on a Sacrificial Altar (ADR-079, MAP-29), by its town's alignment.</summary>
@@ -182,7 +182,7 @@ public sealed class WitchHut(MapObjectId id, MapObjectDefinition definition, Map
 /// A shrine (ADR-068, ADR-120): one spell of its level (1–3), set by the map or drawn when the game starts; a visiting hero with a spell book and
 /// the spell's school Magic at the spell's level learns it. Visits are unlimited.
 /// </summary>
-public sealed class Shrine(MapObjectId id, MapObjectDefinition definition, MapPosition position, string? spell = null)
+public sealed class Shrine(MapObjectId id, MapObjectDefinition definition, MapPosition position, Common.SpellId? spell = null)
     : MapObject(id, definition, position, MapObjectKind.Shrine)
 {
     /// <inheritdoc/>
@@ -192,7 +192,7 @@ public sealed class Shrine(MapObjectId id, MapObjectDefinition definition, MapPo
     public int SpellLevel => Definition.Amount;
 
     /// <summary>Its spell; null until drawn when the map leaves it open.</summary>
-    public string? Spell { get; internal set; } = spell;
+    public Common.SpellId? Spell { get; internal set; } = spell;
 }
 
 public static class ShrineRules
@@ -202,19 +202,19 @@ public static class ShrineRules
 
     /// <summary>The spells a shrine of the level may hold: every school's spells of that level (the Primal Fury towns have none).</summary>
     public static IEnumerable<Magic.SpellDefinition> Candidates(Magic.SpellCatalog spells, int level) =>
-        spells.All.Where(s => s.Level == level).OrderBy(s => s.Id, StringComparer.Ordinal);
+        spells.All.Where(s => s.Level == level).OrderBy(s => s.Id);
 
     /// <summary>A spell of the shrine's level, drawn for a shrine the map left open; never a banned one unless the level has no other (ADR-126).</summary>
-    public static string Roll(GameRandom random, Magic.SpellCatalog spells, int level, MapBans? bans = null)
+    public static Common.SpellId Roll(GameRandom random, Magic.SpellCatalog spells, int level, MapBans? bans = null)
     {
         var candidates = MapBans.Allowed(Candidates(spells, level).ToList(), s => bans?.BansSpell(s.Id) == true);
         return candidates[random.Next(candidates.Count)].Id;
     }
 
     /// <summary>Why the map's spell does not fit the shrine, or null: a known spell of the shrine's level (none = drawn at start).</summary>
-    public static string? SpellRefusal(Magic.SpellCatalog spells, int level, string? spell) =>
+    public static string? SpellRefusal(Magic.SpellCatalog spells, int level, Common.SpellId? spell) =>
         spell is null ? null
-        : !spells.TryGet(spell, out var definition) ? $"'{spell}' is not a spell."
+        : !spells.TryGet(spell.Value, out var definition) ? $"'{spell}' is not a spell."
         : definition.Level != level ? $"{definition.Name} is a level {definition.Level} spell, not level {level}."
         : null;
 }

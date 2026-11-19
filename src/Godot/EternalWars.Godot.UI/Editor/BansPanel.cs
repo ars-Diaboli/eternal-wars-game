@@ -67,8 +67,8 @@ public partial class BansPanel : VBoxContainer
         return Kind switch
         {
             MapBanKind.Hero => scenario.HeroRoster.All.Select(h => (h.Id, $"{h.Name} ({h.Town}, {h.Class})")),
-            MapBanKind.Artifact => scenario.Artifacts.All.Select(a => (a.Id, $"{a.Name} ({a.Slot}, {a.Tier})")),
-            MapBanKind.Spell => scenario.Spells.All.Select(s => (s.Id, $"{s.Name} (level {s.Level}, {s.School})")),
+            MapBanKind.Artifact => scenario.Artifacts.All.Select(a => (a.Id.Value, $"{a.Name} ({a.Slot}, {a.Tier})")),
+            MapBanKind.Spell => scenario.Spells.All.Select(s => (s.Id.Value, $"{s.Name} (level {s.Level}, {s.School})")),
             _ => BuiltInSkills.All.Select(s => (s.Id, $"{s.Name} ({s.Group})")),
         };
     }

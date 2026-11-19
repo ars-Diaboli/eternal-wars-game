@@ -8,7 +8,7 @@ namespace EternalWars.Core.Domain.Magic.AdventureSpells;
 /// <summary>Distant Vision: the armies around a cell in sight; rank III also sees under the fog.</summary>
 internal sealed class DistantVisionHandler : AdventureSpellHandler
 {
-    public override string Spell => AdventureMagic.DistantVision;
+    public override Common.SpellId Spell => AdventureMagic.DistantVision;
 
     public override bool NeedsTarget(GameState state, Hero hero) => true;
 

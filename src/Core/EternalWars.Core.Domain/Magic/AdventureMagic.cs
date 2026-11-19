@@ -45,7 +45,7 @@ public static class AdventureMagic
     public const int NativeWalkMovementPercent = 10;
 
     /// <summary>The adventure spells that can be cast now: those with a handler (<see cref="AdventureSpellHandlers"/>), all of them.</summary>
-    public static IReadOnlySet<string> Built { get; } = AdventureSpellHandlers.All.Select(h => h.Spell).ToHashSet(StringComparer.Ordinal);
+    public static IReadOnlySet<Common.SpellId> Built { get; } = AdventureSpellHandlers.All.Select(h => h.Spell).ToHashSet();
 
     private static int AtRank(int rank, int one, int two, int three) => rank >= 3 ? three : rank == 2 ? two : one;
 
@@ -68,21 +68,21 @@ public static class AdventureMagic
     public static int GraveWhisperPercent(int rank) => AtRank(rank, 10, 15, 15);
 
     /// <summary>The rank the hero casts the spell at (1–3); 1 when it does not know it.</summary>
-    public static int RankOf(GameState state, Hero hero, string spell) =>
+    public static int RankOf(GameState state, Hero hero, Common.SpellId spell) =>
         Math.Max(1, MagicRules.Known(hero, state.Spells).Where(k => k.Spell.Id == spell).Select(k => k.Rank).DefaultIfEmpty(1).Max());
 
     /// <summary>
     /// Whether the cast needs a cell picked on the map: Dimension Door (the tile), Distant Vision (the cell looked at), Eavesdrop (a cell of the
     /// town) and Town Portal from rank II (a cell of the own town to go to; without one it takes the nearest).
     /// </summary>
-    public static bool NeedsTarget(GameState state, Hero hero, string spell) => AdventureSpellHandlers.Find(spell)?.NeedsTarget(state, hero) ?? false;
+    public static bool NeedsTarget(GameState state, Hero hero, Common.SpellId spell) => AdventureSpellHandlers.Find(spell)?.NeedsTarget(state, hero) ?? false;
 
     /// <summary>The terrains a spell makes native for the rest of the day at rank I (Pathfinder's Call: forest floor, grass, swamp; Ashwalk: lava, wasteland, cursed lands).</summary>
-    public static IReadOnlySet<TerrainType> NativeTerrains(string spell) =>
+    public static IReadOnlySet<TerrainType> NativeTerrains(Common.SpellId spell) =>
         AdventureSpellHandlers.Find(spell) is NativeWalkHandler walk ? new HashSet<TerrainType>(walk.Terrains) : new HashSet<TerrainType>();
 
     /// <summary>The terrains the spell makes native at <paramref name="rank"/>: its three at rank I, every terrain from rank II.</summary>
-    public static IReadOnlySet<TerrainType> NativeTerrains(string spell, int rank) =>
+    public static IReadOnlySet<TerrainType> NativeTerrains(Common.SpellId spell, int rank) =>
         rank >= 2 ? Enum.GetValues<TerrainType>().ToHashSet() : NativeTerrains(spell);
 
     /// <summary>A terrain set as a status value: one bit per <see cref="TerrainType"/>.</summary>
@@ -143,10 +143,10 @@ public static class AdventureMagic
     /// <summary>The adventure spells the hero could cast (it knows them, from its book or its artifacts, and they are built), whether or not it can pay now.</summary>
     public static IEnumerable<SpellDefinition> Known(GameState state, Hero hero) =>
         MagicRules.Known(hero, state.Spells).Select(k => k.Spell).Where(s => s.IsAdventure && Built.Contains(s.Id))
-            .OrderBy(s => s.Level).ThenBy(s => s.Id, StringComparer.Ordinal);
+            .OrderBy(s => s.Level).ThenBy(s => s.Id);
 
     /// <summary>What casting the spell costs the hero in mana (its attunement lowers it, <see cref="ManaRules.SpellCost"/>).</summary>
-    public static int Cost(GameState state, Hero hero, string spell) => ManaRules.SpellCost(hero, state.Spells.Get(spell).Mana);
+    public static int Cost(GameState state, Hero hero, Common.SpellId spell) => ManaRules.SpellCost(hero, state.Spells.Get(spell).Mana);
 
     /// <summary>
     /// Why the hero cannot cast the adventure spell now (aimed at <paramref name="target"/>), or null: a spell book that holds it, a built
@@ -156,7 +156,7 @@ public static class AdventureMagic
     /// nearest). Distant Vision: a cell in sight. Eavesdrop: a town of another player, not an ally, or a neutral one, in sight (rank I) or
     /// explored (from rank II).
     /// </summary>
-    public static string? Refusal(GameState state, Hero hero, string spell, MapPosition? target, bool aimed = true)
+    public static string? Refusal(GameState state, Hero hero, Common.SpellId spell, MapPosition? target, bool aimed = true)
     {
         if (!hero.HasSpellBook)
         {
@@ -199,7 +199,7 @@ internal sealed class AdventureMagicService(GameState state, IEventPublisher eve
     /// <summary>Subscribes to raised undead (Grave Whisper is used up).</summary>
     internal void SubscribeTo(IEventSubscriber bus) => bus.Subscribe<UndeadRaised>(this);
 
-    internal void Cast(PlayerId player, HeroId heroId, string spell, MapPosition? target)
+    internal void Cast(PlayerId player, HeroId heroId, Common.SpellId spell, MapPosition? target)
     {
         var hero = state.Heroes.FirstOrDefault(h => h.Id == heroId && h.Owner == player) ?? throw new CommandRefusedException($"{heroId} is not an own hero on the map.");
         if (AdventureMagic.Refusal(state, hero, spell, target) is { } refusal)

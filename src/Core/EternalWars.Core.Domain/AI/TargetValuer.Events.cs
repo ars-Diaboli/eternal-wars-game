@@ -114,7 +114,7 @@ internal sealed partial class TargetValuer
                 : EventWorth.Stop with { Value = -(owner._ai.ArmyPower(hero.Army) + 5000.0) }; // the hero would be lost
         }
 
-        public double ArtifactWorth(string artifact) =>
+        public double ArtifactWorth(Common.ArtifactId artifact) =>
             scope.Hero is { } hero && owner._state.Artifacts.TryGet(artifact, out var definition) ? owner.ArtifactWorth(hero, definition) : 0;
     }
 }

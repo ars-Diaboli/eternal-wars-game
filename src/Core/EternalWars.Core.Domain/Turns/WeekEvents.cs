@@ -23,7 +23,7 @@ public enum WeekEventKind
 }
 
 /// <summary>The event of one week (<see cref="Game.GameState.WeekEvent"/>); <see cref="Creature"/> names the creature of a week or month of a creature.</summary>
-public sealed record WeekEvent(WeekEventKind Kind, string? Creature = null)
+public sealed record WeekEvent(WeekEventKind Kind, Common.CreatureId? Creature = null)
 {
     public static WeekEvent None { get; } = new(WeekEventKind.None);
 
@@ -36,7 +36,7 @@ public sealed record WeekEvent(WeekEventKind Kind, string? Creature = null)
     /// What a dwelling of <paramref name="line"/> adds this week instead of <paramref name="normal"/>: nothing under plague and starvation, twice as
     /// much in the week or month of a creature of its line (base or upgrade named, the line counts).
     /// </summary>
-    public int Growth(CreatureCatalog creatures, string line, int normal)
+    public int Growth(CreatureCatalog creatures, Common.CreatureId line, int normal)
     {
         ArgumentNullException.ThrowIfNull(creatures);
         if (StopsGrowth)
@@ -51,7 +51,7 @@ public sealed record WeekEvent(WeekEventKind Kind, string? Creature = null)
     public string Describe(CreatureCatalog creatures)
     {
         ArgumentNullException.ThrowIfNull(creatures);
-        var name = Creature is { } id && creatures.TryGet(id, out var creature) ? creature.Name : Creature;
+        var name = Creature is { } id && creatures.TryGet(id, out var creature) ? creature.Name : Creature?.Value;
         return Kind switch
         {
             WeekEventKind.WeekOfCreature => $"Week of the {name}: its growth doubles.",
@@ -181,7 +181,7 @@ public static class WeekEventRules
     {
         ArgumentNullException.ThrowIfNull(creatures);
         return creatures.All.Where(c => c.WeeklyGrowth > 0 && factions.Contains(c.Town ?? WeekEventSettings.Neutral))
-            .OrderBy(c => c.Id, StringComparer.Ordinal)
+            .OrderBy(c => c.Id)
             .ToList();
     }
 

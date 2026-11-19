@@ -131,7 +131,7 @@ internal sealed partial class TownManager(AiContext ai, ThreatMap threats)
     {
         var lines = TownRules.Lines(_state, town);
         IEnumerable<CreatureDefinition> Best(int tier) =>
-            lines.Where(l => l.Tier == tier).OrderByDescending(l => (long)l.FightValue * TownRules.WeeklyGrowth(_state, town, l)).ThenBy(l => l.Id, StringComparer.Ordinal);
+            lines.Where(l => l.Tier == tier).OrderByDescending(l => (long)l.FightValue * TownRules.WeeklyGrowth(_state, town, l)).ThenBy(l => l.Id);
         bool TierBuilt(int tier) => lines.Any(l => l.Tier == tier && town.DwellingLevel(l.Id) > 0);
 
         if (town.Level(BuiltInBuildings.Fort) < 1)
@@ -148,7 +148,7 @@ internal sealed partial class TownManager(AiContext ai, ThreatMap threats)
         {
             if (Best(tier).FirstOrDefault() is { } line)
             {
-                yield return (true, line.Id);
+                yield return (true, line.Id.Value);
             }
         }
 
@@ -164,11 +164,11 @@ internal sealed partial class TownManager(AiContext ai, ThreatMap threats)
         yield return (false, BuiltInBuildings.TownHall);
         foreach (var line in lines.Where(l => town.DwellingLevel(l.Id) == 1 && l.UpgradesTo is not null).OrderBy(l => l.Tier))
         {
-            yield return (true, line.Id);
+            yield return (true, line.Id.Value);
         }
 
-        yield return (false, BuiltInBuildings.Growth(1)); // the growth buildings (ADR-071), once their tier has a dwelling
-        yield return (false, BuiltInBuildings.Growth(2));
+        yield return (false, BuiltInBuildings.Growth(1).Value); // the growth buildings (ADR-071), once their tier has a dwelling
+        yield return (false, BuiltInBuildings.Growth(2).Value);
         foreach (var unique in UniqueBuildings.All.Where(b => b.Town == town.TownType))
         {
             yield return (false, unique.Id); // the town's unique building (ADR-138): its heroes take the bonus when they pass through
@@ -182,7 +182,7 @@ internal sealed partial class TownManager(AiContext ai, ThreatMap threats)
         yield return (false, BuiltInBuildings.Marketplace);
         foreach (var line in Enumerable.Range(1, 4).SelectMany(Best).Where(l => town.DwellingLevel(l.Id) == 0))
         {
-            yield return (true, line.Id);
+            yield return (true, line.Id.Value);
         }
 
         yield return (false, BuiltInBuildings.Fort);
@@ -312,7 +312,7 @@ internal sealed partial class TownManager(AiContext ai, ThreatMap threats)
                 continue;
             }
 
-            var creature = town.DwellingLevel(line.Id) >= 2 ? line.UpgradesTo! : line.Id;
+            var creature = town.DwellingLevel(line.Id) >= 2 ? line.UpgradesTo!.Value : line.Id;
             var target = hero is not null && hero.Army.CanAccept(creature) ? hero.Id : (HeroId?)null;
             if (target is null && !town.Garrison.CanAccept(creature))
             {
@@ -325,7 +325,7 @@ internal sealed partial class TownManager(AiContext ai, ThreatMap threats)
 
     private void Buy(PlayerId player, Town town, CreatureDefinition line, HeroId? hero, int reserve, int limit)
     {
-        var creature = town.DwellingLevel(line.Id) >= 2 ? line.UpgradesTo! : line.Id;
+        var creature = town.DwellingLevel(line.Id) >= 2 ? line.UpgradesTo!.Value : line.Id;
         var spare = _state.GetPlayer(player).Resources - new ResourceSet(Gold: reserve);
         var count = TownRules.MaxAffordable(spare, TownRules.CreatureCost(_state, town, _state.Creatures.Get(creature)), Math.Min(limit, town.AvailableOf(line.Id)));
         if (count > 0)

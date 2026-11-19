@@ -57,7 +57,7 @@ internal sealed class SimContext(ContentCatalogs content, AiWeights weights, IRe
             .. from third in lines.Where(c => c.Tier == 3)
                from fourth in lines.Where(c => c.Tier == 4)
                select Army.Of(lines.Where(c => c.Tier is 1 or 2 or 5).Append(third).Append(fourth).OrderBy(c => c.Tier)
-                   .Select(c => new CreatureStack(upgraded ? c.UpgradesTo! : c.Id, c.WeeklyGrowth)).ToArray()),
+                   .Select(c => new CreatureStack(upgraded ? c.UpgradesTo!.Value : c.Id, c.WeeklyGrowth)).ToArray()),
         ];
     }
 }

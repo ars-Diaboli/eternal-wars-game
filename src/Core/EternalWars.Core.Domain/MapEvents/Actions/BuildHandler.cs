@@ -43,9 +43,9 @@ internal sealed class BuildHandler : MapEventActionHandler<BuildAction>
         if (BuiltInBuildings.DwellingTier(building) is { } tier)
         {
             // A requirement on a tier ("dwelling-3"): the town's first line of that tier.
-            if (TownRules.Lines(state, town).Where(l => l.Tier == tier).OrderBy(l => l.Id, StringComparer.Ordinal).FirstOrDefault() is { } first)
+            if (TownRules.Lines(state, town).Where(l => l.Tier == tier).OrderBy(l => l.Id).FirstOrDefault() is { } first)
             {
-                Build(context, town, first.Id, level, depth + 1);
+                Build(context, town, first.Id.Value, level, depth + 1);
             }
 
             return;
@@ -67,7 +67,7 @@ internal sealed class BuildHandler : MapEventActionHandler<BuildAction>
     {
         foreach (var requirement in level.Requires.Where(r => TownRules.Level(context.State, town, r.Building) < r.Level))
         {
-            Build(context, town, requirement.Building, requirement.Level, depth + 1);
+            Build(context, town, requirement.Building.Value, requirement.Level, depth + 1);
         }
     }
 

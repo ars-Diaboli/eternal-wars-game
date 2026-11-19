@@ -225,7 +225,7 @@ public class MapEventEditorTests
             Events =
             [
                 SimpleEventForms.Town("fair", [town.Id.Value], "", 1, 0, EventTriggers.Anyone, SimpleRewards.None, [BuiltInBuildings.Tavern],
-                    new Dictionary<string, int> { [line.Id] = 7 }),
+                    new Dictionary<string, int> { [line.Id.Value] = 7 }),
             ],
         });
         var before = town.AvailableOf(line.Id);

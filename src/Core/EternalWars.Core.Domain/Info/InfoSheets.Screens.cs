@@ -78,7 +78,7 @@ public static partial class InfoSheets
             lines.Add(BuiltInSkills.Contains(skill) ? $"{BuiltInSkills.Get(skill).Name} {level}: {BuiltInSkills.Get(skill).Description}" : $"{skill} {level}");
         }
 
-        var preferred = state.Creatures.TryGet(offer.PreferredCreature, out var creature) ? creature.Name : offer.PreferredCreature;
+        var preferred = state.Creatures.TryGet(offer.PreferredCreature, out var creature) ? creature.Name : offer.PreferredCreature.Value;
         lines.Add($"Prefers {preferred}: they get +{N(SkillEffects.PreferredAttack)} Attack, +{N(SkillEffects.PreferredDefense)} Defense and "
                   + $"+{N(SkillEffects.PreferredSpeed)} speed in its army.");
         lines.Add(TavernRules.StarterStack(state, offer) is { } stack ? $"Brings {N(stack.Count)} {state.Creatures.Get(stack.Creature).Name}." : "Comes without an army.");
