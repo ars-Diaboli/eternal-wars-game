@@ -2,8 +2,47 @@
 
 Prompts for the mouse cursors (owner's note, ADR-204). The cursors change with what the pointer would do, as in HoMM3 and HoMM5: a plain
 arrow on menus and screens, a horse on the adventure map, and one cursor per action in battle. They are generated like the icons
-([icon-prompts.md](icon-prompts.md)): **sheets of 4 (2 × 2) or 6 (2 × 3)**, cut into one file per cursor. Each prompt is: the **cursor style
-block** + the icons' **sheet block** (from icon-prompts.md) + the sheet's numbered cells, as written below.
+([icon-prompts.md](icon-prompts.md)): **sheets of 4 (2 × 2) or 6 (2 × 3)**, cut into one file per cursor.
+
+## Compose a prompt
+
+Every sheet below has a **Compose** line naming its blocks. Build the prompt from it, copying each block's text exactly. `CURSOR-*`
+blocks are in [Blocks](#blocks) below; `ICON-SHEET-4`, `ICON-SHEET-6` and `ICON-NEG` are in [icon-prompts.md](icon-prompts.md#blocks).
+
+```text
+PROMPT   = CURSOR-STYLE + " " + <sheet block> + " " + CELLS
+CELLS    = "1 <subject 1>; 2 <subject 2>; …"   the sheet table's Subject column, in its # order, spare cell included
+NEGATIVE = ICON-NEG + ", " + CURSOR-NEG   (only where the model takes a negative prompt)
+SIZE     = the size on the Compose line; then cut the sheet and save each cell under the File column's name + ".png"
+```
+
+The Hotspot column is not part of the prompt: it is where the pointing part must land, checked after cutting (and kept in
+`GameCursors.Definition`). Sheets 4–5 give a **Cell rule** instead of full subjects: apply it to each row. Do not paraphrase blocks
+or subjects.
+
+## Blocks
+
+**`CURSOR-STYLE`** (style, every cursor sheet):
+
+```text
+Game mouse cursor sheet, hand-painted dark-fantasy style, simple bold shapes with light painted shading, old bronze, steel, wood and
+leather, light from the top left, a thick dark outline around each subject and a thin light edge just inside it so it reads on dark and
+on light ground, flat front or side view as each cell says, no cast shadow, no background. No photo realism, no 3D render look, no pixel
+art.
+```
+
+**`CURSOR-NEG`** (negative prompt, added to `ICON-NEG` on every cursor sheet):
+
+```text
+text, letters, numbers, frames, drop shadows, thin lines, scenery, background, extra objects
+```
+
+**`CURSOR-HORSE`** (after `CURSOR-STYLE` on sheet 2, the horse sheet):
+
+```text
+Every horse is the same horse in the same colours, a dark bay with a bronze bridle, in pure side profile facing right unless the cell
+says otherwise.
+```
 
 ## Format
 
@@ -17,18 +56,11 @@ block** + the icons' **sheet block** (from icon-prompts.md) + the sheet's number
   light inner edge, no thin lines, no text, letters or numbers. Where a cursor needs a number (the days a move takes) the game draws it.
 - **Spare cell**: as for the icons, a second take of the hardest cursor on the sheet.
 
-**Cursor style block**:
-
-> Game mouse cursor sheet, hand-painted dark-fantasy style, simple bold shapes with light painted shading, old bronze, steel, wood and
-> leather, light from the top left, a thick dark outline around each subject and a thin light edge just inside it so it reads on dark and
-> on light ground, flat front or side view as each cell says, no cast shadow, no background. No photo realism, no 3D render look, no pixel
-> art.
-
-Add to the negative prompt: "text, letters, numbers, frames, drop shadows, thin lines, scenery, background, extra objects".
-
 ## Menus and screens
 
 ### 1 · Pointers (2 × 2) — menus, town and hero screens, panels, the battle's bar
+
+**Compose**: `CURSOR-STYLE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `CURSOR-NEG` · 1024 × 1024
 
 | # | File | Subject | Hotspot |
 |---|---|---|---|
@@ -43,9 +75,11 @@ cell no stack can reach).
 
 ## Adventure map
 
-All horses face **right**, in pure side profile, the same horse in the same colours on every cell (dark bay with a bronze bridle).
+All horses face **right**, in pure side profile, the same horse in the same colours on every cell (`CURSOR-HORSE`).
 
 ### 2 · Moving and visiting (2 × 3)
+
+**Compose**: `CURSOR-STYLE` + `CURSOR-HORSE` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `CURSOR-NEG` · 1536 × 1024
 
 | # | File | Subject | Hotspot |
 |---|---|---|---|
@@ -57,6 +91,8 @@ All horses face **right**, in pure side profile, the same horse in the same colo
 | 6 | `cursor_adv_spell` | a violet swirl of sparks around a small bright star at the centre | `4,4` |
 
 ### 3 · Selecting and digging (2 × 2)
+
+**Compose**: `CURSOR-STYLE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `CURSOR-NEG` · 1024 × 1024
 
 | # | File | Subject | Hotspot |
 |---|---|---|---|
@@ -85,9 +121,14 @@ Without a chosen hero the map shows the pointer, `select-hero` and `select-town`
 
 ### 4–5 · Melee attack, by side (2 × 2 each)
 
+**Compose**: `CURSOR-STYLE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `CURSOR-NEG` · 1024 × 1024
+
 One sword, the same on all eight cells, a straight steel blade with a bronze cross-guard, **its point at the cell's centre** and the hilt
 towards the side the attacker strikes from. Each cell names the **direction the sword points** (where the blow goes); the file names the
 side the attacker stands on.
+
+**Cell rule**: subject = "a straight steel sword with a bronze cross-guard, its point at the cell's centre, " + Sword; sheet 4 takes
+the rows marked 4, sheet 5 those marked 5.
 
 | Sheet | # | File | Sword | Hotspot |
 |---|---|---|---|---|
@@ -105,6 +146,8 @@ with them, which is acceptable at 32–64 px).
 
 ### 6 · Shooting, spells and machines (2 × 3)
 
+**Compose**: `CURSOR-STYLE` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `CURSOR-NEG` · 1536 × 1024
+
 | # | File | Subject | Hotspot |
 |---|---|---|---|
 | 1 | `cursor_bat_shoot` | a drawn short bow seen from the front, an arrow nocked and pointing up-left, **mirror-symmetric arms** | `0,0` (the arrow's tip, up-left) |
@@ -115,6 +158,8 @@ with them, which is acceptable at 32–64 px).
 | 6 | — | spare: a second take of the siege cursor | |
 
 ### 7 · Moving in battle (2 × 2)
+
+**Compose**: `CURSOR-STYLE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `CURSOR-NEG` · 1024 × 1024
 
 | # | File | Subject | Hotspot |
 |---|---|---|---|
