@@ -48,6 +48,7 @@ $grailMap = Join-Path $PSScriptRoot 'smoke/grail.ewmap.json'
 $magicMap = Join-Path $PSScriptRoot 'smoke/magic.ewmap.json'
 $necromancyMap = Join-Path $PSScriptRoot 'smoke/necromancy.ewmap.json'
 $siegeMagicMap = Join-Path $PSScriptRoot 'smoke/siege-magic.ewmap.json'
+$spellsMap = Join-Path $PSScriptRoot 'smoke/spells.ewmap.json'
 $arenaMap = Join-Path $PSScriptRoot 'smoke/arena.ewmap.json'
 # Made by the simulator, side by side: a map generated from the v7 connection options (ADR-112: garrison, border guard and gate with
 # keymasters, portal, optional connection); the shipped two-player map (ADR-114) as a file, for the game and the editor; a short computer
@@ -262,6 +263,24 @@ $scenarios = @(
     # its place at 68); Start, quick combat, the result, then the Necromancy screen (ADR-078).
     @{ Name = 'game-necromancy'; App = 'EternalWars.Game'; Frames = 128; Map = $necromancyMap
        Input = '3:key:Enter;10:key:Right;40:press:32;60:drag:425,305,360,600;66:drag:370,480,900,480;76:key:Enter;90:key:Q;118:key:Enter' },
+    # What ADR-148 had not seen, on the spells map (ADR-235), each with a fixed seed so its battle is the same every run.
+    # Meteor Shower III's rubble: Pyro visits Emberkeep (the guild raises the spell to rank III), walks into the wolves and casts it on the
+    # second wolf stack; stones lie on the free cells it hit.
+    @{ Name = 'game-meteor-rubble'; App = 'EternalWars.Game'; Frames = 100; Map = $spellsMap; Seed = 1
+       Input = '3:key:Enter;8:press:Pyro;12:key:Up;24:key:Escape;28:key:Down;36:key:Down;62:press:Meteor Shower III (18);66:click:1205,300' },
+    # Grave Whisper (its window), Ledger of Ages (next week, the Red heroes' armies), then Eavesdrop on Gloomhold (its buildings and garrison).
+    @{ Name = 'game-adventure-intel'; App = 'EternalWars.Game'; Frames = 76; Map = $spellsMap; Seed = 1
+       Input = '3:key:Enter;8:press:Seer;12:key:H;18:press:Grave Whisper (5 mana);28:press:Ledger of Ages (10 mana);38:press:Close;42:press:Eavesdrop (8 mana);50:click:800,330' },
+    # The computer's battle magic: Medic attacks Warlock and defends; Warlock casts Bless, Slow, Resurrection and Haste (the godot.log's
+    # "battle log:" lines); Medic casts Resurrection on the archers in round 3.
+    @{ Name = 'game-ai-spells'; App = 'EternalWars.Game'; Frames = 310; Map = $spellsMap; Seed = 1
+       Input = '3:key:Enter;8:press:Medic;12:key:Right;36:key:D;46:key:D;56:key:D;66:key:D;76:key:D;86:key:D;96:key:D;106:key:D;116:key:D;120:press:Resurrection (25);124:click:335,490;136:key:D;146:key:D;156:key:D;166:key:D;176:key:D;186:key:D;196:key:D;206:key:D;216:key:D;226:key:D;236:key:D;246:key:D;256:key:D;266:key:D;276:key:D;286:key:D;296:key:D' },
+    # A dug hole on the map: Digger digs (G), the turn ends, and on day 2 Digger steps west off the hole.
+    @{ Name = 'game-dug-hole'; App = 'EternalWars.Game'; Frames = 70; Map = $spellsMap; Seed = 1
+       Input = '3:key:Enter;8:press:Digger;12:key:G;20:press:End turn;44:press:Digger;50:key:Left' },
+    # A guild spell set by hand in the editor: select Emberkeep, open the inspector, pick Brand for the first level-1 slot.
+    @{ Name = 'editor-guild-spell'; App = 'EternalWars.MapEditor'; Frames = 40; Map = $spellsMap
+       Input = '5:press:Select;10:click:400,300;16:click:@Inspector;22:click:1137,828;26:choose:Brand' },
     # The siege's gate, keep and towers and Earthquake (ADR-120): the ballista breaks the gate; a second run casts Earthquake.
     @{ Name = 'game-siege-gate'; App = 'EternalWars.Game'; Frames = 104; Map = $siegeMagicMap
        Input = '3:key:Enter;10:key:Up;62:key:D;72:click:958,432' },
@@ -290,6 +309,7 @@ $results = $selected | ForEach-Object -ThrottleLimit ([Math]::Max(1, $Jobs)) -Pa
     Remove-Item $saves -Recurse -ErrorAction SilentlyContinue
     $userArgs = @("--autoinput=$($scenario.Input)", "--settings=$settings", "--saves=$saves")
     if ($scenario.Map) { $userArgs += "--map=$($scenario.Map)" }
+    if ($scenario.Seed) { $userArgs += "--seed=$($scenario.Seed)" }
     if ($scenario.Replay) { $userArgs += "--replay=$($scenario.Replay)" }
     # The game opens on the main menu; the scenarios start on the new-game screen unless they test the menu.
     if ($scenario.App -eq 'EternalWars.Game' -and -not $scenario.MainMenu) { $userArgs += '--new-game' }

@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-235.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-236.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -261,3 +261,4 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [232](architecture.md#adr-232-code-health-continue-falls-back-to-a-save-that-loads-the-events-panel-refreshes-once-and-while-shown-every-ai-tuning-number-is-a-weight-leftover-cleanups-adr-220-adr-224-adr-226-2026-11-19) | architecture | Code health: Continue falls back to a save that loads, the events panel refreshes once and while shown, every AI tuning number is a weight, leftover cleanups (ADR-220, ADR-224, ADR-226, 2026-11-19) | implemented |
 | [233](game-modes.md#adr-233-the-replay-viewer-takes-over-a-battle-played-in-one-command-the-computers-from-its-start-quick-combat-from-just-before-it-adr-164-adr-185-2026-11-19) | game-modes | The replay viewer takes over a battle played in one command: the computer's from its start, quick combat from just before it (ADR-164, ADR-185, 2026-11-19) | implemented |
 | [234](game-modes.md#adr-234-replays-measured-the-viewers-forward-jumps-play-on-unheard-instead-of-a-state-snapshot-adr-058-adr-164-2026-11-19) | game-modes | Replays measured; the viewer's forward jumps play on unheard instead of a state snapshot (ADR-058, ADR-164, 2026-11-19) | implemented |
+| [235](project-and-scope.md#adr-235-the-godot-check-of-what-adr-148-had-not-seen-resurrection-the-intel-spells-the-ais-battle-magic-a-hand-set-guild-spell-a-dug-hole-meteor-showers-rubble-adr-148-adr-177-2026-11-19) | project-and-scope | The Godot check of what ADR-148 had not seen: Resurrection, the intel spells, the AI's battle magic, a hand-set guild spell, a dug hole, Meteor Shower's rubble (ADR-148, ADR-177, 2026-11-19) | done |

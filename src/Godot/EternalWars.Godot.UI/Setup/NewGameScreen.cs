@@ -424,7 +424,9 @@ public partial class NewGameScreen : PanelContainer
         return grid;
     }
 
-    private static string NewSeed() => ((ulong)System.Random.Shared.NextInt64()).ToString(CultureInfo.InvariantCulture);
+    /// <summary>A new seed; the one given with <c>--seed=</c> instead, so a scripted run plays the same game every time (ADR-235).</summary>
+    private static string NewSeed() =>
+        (Shared.LaunchArguments.Seed ?? (ulong)System.Random.Shared.NextInt64()).ToString(CultureInfo.InvariantCulture);
 
     private static MapTab TabOf(MapKind kind) => kind switch
     {

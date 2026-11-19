@@ -76,7 +76,10 @@ the script under Movie Maker and saves frames to `.shots/<scenario>/`. **A pass 
 - Script entries are `frame:kind:argument`: `click` / `rclick` (`x,y`), `key` (Godot key name), `hold` (`Key,frames`),
   `wheel` (`up|down,count`), `drag` / `rdrag` (`x1,y1,x2,y2`, over three frames). Replayed by `AutoInput`.
 - Game scenarios start with `--new-game` and `key:Enter` (Start has focus), so they do not depend on the screen layout;
-  all start from default settings.
+  all start from default settings. `Seed = <n>` in an entry passes `--seed=<n>`, which the new-game screen uses instead of a new seed,
+  so the scenario's battles are the same every run.
+- In a scripted run the battle log's lines also go to the scenario's `godot.log` as `battle log: …`; search them rather than reading
+  the log off the frames.
 - Maps live in `tools/smoke/` (or come from `sim generate` / `sim export`); `SmokeMapTests` checks they still do what
   the scripts expect.
 

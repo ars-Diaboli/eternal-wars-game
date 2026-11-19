@@ -26,6 +26,7 @@
 | [148](#adr-148-the-godot-check-of-what-was-built-but-never-run-magic-sieges-the-grail-unique-buildings-map-sites-game-flow-adr-113-2026-11-09) | The Godot check of what was built but never run: magic, sieges, the Grail, unique buildings, map sites, game flow (ADR-113, 2026-11-09) | done |
 | [175](#adr-175-closing-the-code-review-adr-165--adr-174-2026-11-11) | Closing the code review (ADR-165 … ADR-174, 2026-11-11) | implemented |
 | [226](#adr-226-closing-the-refactoring-plan-adr-202--adr-224-2026-11-19) | Closing the refactoring plan (ADR-202 … ADR-224, 2026-11-19) | implemented |
+| [235](#adr-235-the-godot-check-of-what-adr-148-had-not-seen-resurrection-the-intel-spells-the-ais-battle-magic-a-hand-set-guild-spell-a-dug-hole-meteor-showers-rubble-adr-148-adr-177-2026-11-19) | The Godot check of what ADR-148 had not seen: Resurrection, the intel spells, the AI's battle magic, a hand-set guild spell, a dug hole, Meteor Shower's rubble (ADR-148, ADR-177, 2026-11-19) | done |
 
 
 ### ADR-034: Scope: slice towns, platforms, modding, tooling, random-map features
@@ -570,7 +571,7 @@ buildings: ADR-130.
   - *(proposal)* Cost 2000 gold, 5 ore and 5 of the town's rare resource; needs Fort 1 (Stables: town hall 2). `buildings.csv` rows per town.
 
 ### ADR-148: The Godot check of what was built but never run: magic, sieges, the Grail, unique buildings, map sites, game flow (ADR-113, 2026-11-09)
-**Status**: done; closes the "Open checks in Godot" list of Phase 3 apart from the items under "Still not seen".
+**Status**: done; closes the "Open checks in Godot" list of Phase 3 apart from the items under "Still not seen", which ADR-235 saw.
 
 Thirteen new smoke scenarios in `tools/smoke-godot.ps1` (run in Godot 4.7.2; frames under `.shots/`), their maps checked by `SmokeMapTests`:
 `game-unique-buildings` and `game-stables-market` (`tools/smoke/unique-buildings.ewmap.json`), `game-map-sites` and `game-map-sites-red`
@@ -653,3 +654,29 @@ Thirteen new smoke scenarios in `tools/smoke-godot.ps1` (run in Godot 4.7.2; fra
   still holds some policy (ADR-222, see Left); `EventsPanel` was not split (ADR-223); `ViewMirror` copies heroes and objects already in the
   view in place, by reflection, beside the sink (ADR-218).
 - **Left**: the roadmap's "Code health" section lists them.
+
+### ADR-235: The Godot check of what ADR-148 had not seen: Resurrection, the intel spells, the AI's battle magic, a hand-set guild spell, a dug hole, Meteor Shower's rubble (ADR-148, ADR-177, 2026-11-19)
+**Status**: done (2026-11-19); closes ADR-148's "Still not seen" list. Run in Godot 4.7.2 and looked at frame by frame. No rule change.
+
+- **Five new smoke scenarios** on a new map, `tools/smoke/spells.ewmap.json` (`SmokeMapTests` checks it): `game-meteor-rubble`,
+  `game-adventure-intel`, `game-ai-spells`, `game-dug-hole`, `editor-guild-spell`.
+- **Seen working**:
+  - **Meteor Shower III's rubble**: Pyro learns the spell at rank III in a guild that teaches it, then casts it on a wolf stack. Small
+    stones lie on the free cells of the area ("leaves rubble on 11 cell(s)").
+  - **Grave Whisper**: its window ("the next victory this week raises 10 % more").
+  - **Ledger of Ages**: next week's event and the armies of the Red heroes in sight.
+  - **Eavesdrop**: a cell of Gloomhold picked on the map opens its buildings, recruits and garrison, read-only. It is a window of text,
+    not the town screen.
+  - **Resurrection**: cast by a person on archers who had lost men ("regain 195 health, 20 of them now"); a stack with no dead refuses it
+    ("has nothing to revive").
+  - **The AI's battle magic**: buffs (Bless, Haste), curses (Slow, and with a fuller book Curse and Weakness), and revives (Resurrection on
+    its own stacks, several times).
+  - **A guild spell set by hand** in the editor's town inspector: the level-1 slot shows the spell picked.
+  - **A dug hole** is drawn on the map once its hero steps off: a dark round mark.
+- **Fixed**: Ledger of Ages' window ended the week's event with two full stops.
+- **Tooling**:
+  - `--seed=<n>` makes the new-game screen use that seed, and a smoke entry's `Seed = <n>` passes it, so the scenario's battles repeat
+    exactly. Two runs of `game-ai-spells` gave the same battle log. Only the new scenarios set one; the others still draw a seed (the
+    roadmap's "fixed seeds for the smoke games").
+  - During a scripted run the battle log's lines also go to `godot.log` (`battle log: …`), so what a battle did can be searched for
+    instead of read off frames.

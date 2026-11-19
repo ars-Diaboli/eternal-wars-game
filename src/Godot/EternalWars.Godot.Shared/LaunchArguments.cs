@@ -51,6 +51,12 @@ public static class LaunchArguments
     /// <summary><c>--name=&lt;name&gt;</c>: the player's name in LAN games (the Multiplayer screen starts with it); the computer's user name when not given.</summary>
     public static string? PlayerName => Value("--name=");
 
+    /// <summary>
+    /// <c>--seed=&lt;number&gt;</c>: the new-game screen's games use this seed instead of a new one each, so a smoke scenario plays the same battles every
+    /// run (ADR-235); null when not given or not a number.
+    /// </summary>
+    public static ulong? Seed => ulong.TryParse(Value("--seed="), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var seed) ? seed : null;
+
     /// <summary>Scripted input for smoke tests (<see cref="Controls.AutoInput"/>).</summary>
     public static string? AutoInput => Value("--autoinput=");
 

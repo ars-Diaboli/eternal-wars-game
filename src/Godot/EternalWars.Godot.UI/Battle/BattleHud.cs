@@ -199,6 +199,10 @@ public partial class BattleHud : Control
             }
 
             _log.Text = string.Join('\n', _lines);
+            if (Shared.LaunchArguments.AutoInput is not null)
+            {
+                GD.Print($"battle log: {line}"); // a scripted run's log can be searched for what the battle did (ADR-235)
+            }
         };
         view.Finished += ShowResult;
         view.Closed += () => Visible = false;
