@@ -157,19 +157,20 @@ generate it on its own and expect to roll it several times.
 - **If it still fails**: generate the one icon alone (1 × 1 at 1024 px); or sketch it (a few boxes and cylinders in Blender or Godot, a
   screenshot is enough) and give it to the model as the image input at medium strength; or fix the wheel by hand with a circle.
 
-### 29 · Difficulty (2 × 3) — the new-game screen's difficulty row, the victory screen, the leaderboard
+### 29 · Difficulty (2 × 3) — the new-game screen's difficulty row, the victory screen, the leaderboard (ADR-225)
 
-Five steps of one subject, from humble to grand, so the row reads as a climb at a glance: the **same helmet shape and size** in every cell,
-**three-quarter view facing left**, each richer than the last. Generate the five on one sheet so they match.
+Five chess pieces, from humble to grand, so the row reads as a climb at a glance: **carved wood and brass**, each piece standing
+upright on its own round base, **the same height and lighting** in every cell, three-quarter view facing left, each richer than the last.
+Generate the five on one sheet so they match.
 
 | # | File | Subject |
 |---|---|---|
-| 1 | `icon_difficulty_beginner` | a plain brown leather cap with ear flaps and a chin strap, worn and patched |
-| 2 | `icon_difficulty_easy` | a round iron kettle helmet with a wide brim, dull grey, a few dents |
-| 3 | `icon_difficulty_normal` | a polished steel helm with a closed visor and a narrow eye slit, plain, rivets along the rim |
-| 4 | `icon_difficulty_hard` | the same closed steel helm with bronze trim round the eye slit and a tall dark-red plume |
-| 5 | `icon_difficulty_expert` | the same closed helm in blackened steel, a gold crown band round the brow with one ember-red gem, a dark-red plume |
-| 6 | — | spare: a second take of the expert helm |
+| 1 | `icon_difficulty_easy` | a pawn of plain pale wood, a few nicks in the base |
+| 2 | `icon_difficulty_normal` | a knight of polished light wood, a horse's head with a carved mane |
+| 3 | `icon_difficulty_hard` | a bishop of dark walnut with a thin brass band round its waist |
+| 4 | `icon_difficulty_expert` | a rook of dark walnut, its battlements capped in brass, a brass ring at the base |
+| 5 | `icon_difficulty_master` | a queen of blackened wood, a gold crown with one ember-red gem, gold rings at the waist and base |
+| 6 | — | spare: a second take of the queen |
 
 ## Tier B · Emblems
 

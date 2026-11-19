@@ -27,8 +27,9 @@ ADR-092, ADR-101, built ADR-102 … ADR-104, the viewer ADR-164.
   or one won only by computers, has no score.
 - **Not ranked**: campaign-like maps (a human starts without a town, or map events give something only to humans; the editor's
   validator warns) and arena maps. No editor switch.
-- **Difficulty** = the complexity; "Map default" counts as Normal unless the author sets the map's difficulty. It never changes the AI.
-- **Score** = max(10, 200 − days) × difficulty (Beginner 80 %, Easy 100 %, Normal 130 %, Hard 160 %, Expert 200 %) × turn timer (off or over
+- **Difficulty** (Easy, Normal, Hard, Expert, Master; ADR-225): chosen on the new-game screen, the map's own difficulty (Normal when not
+  set) preselected. It never changes the AI.
+- **Score** = max(10, 200 − days) × difficulty (Easy 80 %, Normal 100 %, Hard 130 %, Expert 160 %, Master 200 %) × turn timer (off or over
   10 min ×1.0, 6–10 ×1.05, 3–5 ×1.10, 1–2 ×1.20; placeholders). Nothing else counts. **14 rank titles** named after our creatures, weakest to
   a dragon.
 - **Ranking table** (top 20, per computer): separate tables for random and shipped maps (editor maps join the shipped one as "custom"). Every
@@ -124,7 +125,12 @@ map keeps or takes campaign variables; `MapKinds`). Each tab lists its maps on t
 description and player setup on the right; the options below are shared by every tab. Every list sorts by **Name** (A–Z, the default) or
 **Size** (small first), a second press reversing it, and filters by **Size** (All or one preset, 48 … 256; a map counts as the smallest
 preset holding its larger side, a template under every size it supports); the choice is kept in `settings.json` for all tabs (ADR-204).
-The difficulty is a row of five icons (Beginner … Expert) after "Map default".
+The options (ADR-225): **Game difficulty**, a row of five square chess-piece buttons (Easy … Master; a map's own difficulty, else Normal,
+preselected; the hovered one's name, starting resources and score factor on the status bar); **Fog of war** (Permanent reveal or Refog)
+with the **hero limit** beside it; a **turn timer** checkbox with the minutes beside it when ticked; the **seed** only in debug builds. On a
+random map "+" under the players adds one and "−" on a player's row removes it, within the template's range. Each player row picks the
+player's **colour** (taking another's swaps them) and its town from a 2 × 4 panel of crests. The screen closes with an "×" at its top
+right (or Esc).
 
 Chosen on the new-game screen and recorded in saves and replays (ADR-058): map or template (with size and players: human or computer, town,
 hero, team; ADR-086), fog mode ([adventure-map.md](adventure-map.md#fog-of-war)), complexity ([starting resources](towns-and-economy.md#starting-resources)),
