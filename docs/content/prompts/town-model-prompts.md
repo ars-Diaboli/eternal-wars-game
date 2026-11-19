@@ -1,8 +1,41 @@
 # Town model prompts (for a 3D-generating model)
 
 Prompts for the **adventure-map town models** of all ten town types, for a text-to-3D or image-to-3D model (or a concept-art pass
-first, then image-to-3D). Paste the **style block** in front of every town prompt and the **negative prompt** where the tool takes one;
-change only the town part. The designs are original: the prompts never name or imitate another game's towns.
+first, then image-to-3D). The designs are original: the prompts never name or imitate another game's towns.
+
+## Compose a prompt
+
+Each town section below ends with its own block, `TOWN-<id>`. Build the prompt from blocks, copying each block's text exactly and
+joining them with a space:
+
+```text
+PROMPT   = TOWN-STYLE + TOWN-<id> (+ one STAGE-<n> line from "Optional: stages by fort level", only for a staged variant)
+NEGATIVE = TOWN-NEG   (only where the tool takes a negative prompt)
+OUTPUT   = town_<id>.glb (town_<id>_<n>.glb for a stage), to the footprint, size and triangle budget under "Format for every town"
+```
+
+The **Silhouette**, **Materials**, **Telling details** and **Avoid** notes in each section explain the block and are for checking the
+result; they are not pasted. If a result shows something on the Avoid list, add those words to the negative prompt for that town. Do not
+paraphrase the blocks.
+
+## Blocks
+
+**`TOWN-STYLE`** (style, first in every prompt):
+
+```text
+Game-ready 3D model of a fortified fantasy town for a turn-based strategy game, seen from above at a steep angle. Grim dark fantasy,
+realistic PBR materials, weathered and worn, desaturated earth tones. Compact, fits a square base with the corners cut off, main gate
+centred on the front edge at ground level. Clear silhouette from above, chunky readable shapes, one tall landmark toward the back.
+Flat bottom, no ground plane, no lights, no characters. Light-grey cloth banners for player colour.
+```
+
+**`TOWN-NEG`** (negative prompt, every town):
+
+```text
+photo of a real place, real-world landmark, modern buildings, text, logos, people, cartoon, toy, chibi, low-poly flat shading, pixel
+art, bright saturated colours everywhere, floating debris, terrain around the base, thin spindly spires, cluttered tiny details,
+another game's design.
+```
 
 Sources: the world and the towns' stance from [lore.md](../lore.md) (a draft), art direction from
 [presentation.md](../../design/presentation.md), the footprint from ADR-046, buildings from [town-buildings.md](../town-buildings.md), the
@@ -39,19 +72,6 @@ group colours as in [icon-prompts.md](icon-prompts.md). Numbers marked *(proposa
   *(proposal)*; PBR metal-roughness, one 2048 px texture set (albedo, normal, ORM, emissive), real-world scale as above; no animation
   (flags, smoke and fire are added by the game).
 
-**Style block** (start of every prompt):
-
-> Game-ready 3D model of a fortified fantasy town for a turn-based strategy game, seen from above at a steep angle. Grim dark fantasy,
-> realistic PBR materials, weathered and worn, desaturated earth tones. Compact, fits a square base with the corners cut off, main gate
-> centred on the front edge at ground level. Clear silhouette from above, chunky readable shapes, one tall landmark toward the back.
-> Flat bottom, no ground plane, no lights, no characters. Light-grey cloth banners for player colour.
-
-**Negative prompt**:
-
-> photo of a real place, real-world landmark, modern buildings, text, logos, people, cartoon, toy, chibi, low-poly flat shading, pixel
-> art, bright saturated colours everywhere, floating debris, terrain around the base, thin spindly spires, cluttered tiny details,
-> another game's design.
-
 **The world in one breath** (keep it in mind for every town): *Vael* is dying under a dimming sun, the **Waning Eye**. Every age ends
 when the **Wheel of Ash** turns: kingdoms burn and a new age grows from the ashes. No faction is clean: the light is desperate and
 zealous, the dark often tells the truth. So every town is **old, patched and scarred**: built on the ruins of earlier ages, repaired
@@ -76,10 +96,14 @@ light". Native ground: highlands and grass.
   scaffolding and fresh stone patching an old breach, a stable yard (the Stables), a drill yard with wooden dummies.
 - **Avoid**: a fairy-tale white castle; clean gold; blue-and-white heraldry of a real order.
 
-> Haven: a grim human theocracy's hill-town in tiers, pale limestone stained with soot, steep dark slate roofs, black iron and worn
-> brass trim, square towers with ballista platforms, a tall cathedral keep at the back crowned by a great iron cage holding a burning
-> sun-brazier, braziers on every tower casting warm light, a pyre platform beside the gate, scaffolding over a patched breach in the
-> wall, a stable yard and a drill yard inside. Zealous, desperate, last light in a dying world.
+**`TOWN-haven`** (subject):
+
+```text
+Haven: a grim human theocracy's hill-town in tiers, pale limestone stained with soot, steep dark slate roofs, black iron and worn
+brass trim, square towers with ballista platforms, a tall cathedral keep at the back crowned by a great iron cage holding a burning
+sun-brazier, braziers on every tower casting warm light, a pyre platform beside the gate, scaffolding over a patched breach in the
+wall, a stable yard and a drill yard inside. Zealous, desperate, last light in a dying world.
+```
 
 ## Sylvan (`town_sylvan`)
 
@@ -94,10 +118,14 @@ Native ground: forest floor and grass.
   offerings (ribbons, carved tablets) tied to the roots, dead branches propped and braced.
 - **Avoid**: candy-coloured fairy forest; mushrooms everywhere (those are Dungeon's); a lush healthy look.
 
-> Sylvan: an elven forest town grown from a ring of colossal living trees whose trunks form the walls, graceful halls and archery
-> galleries on platforms among the branches, a vast ancient tree at the back with a half-bare dying crown, grey rot creeping up from
-> the roots, pale green lanterns, ribbons and carved memory tablets tied around the roots, a moonlit glade with standing stones,
-> braced and propped dead limbs. Beautiful and failing.
+**`TOWN-sylvan`** (subject):
+
+```text
+Sylvan: an elven forest town grown from a ring of colossal living trees whose trunks form the walls, graceful halls and archery
+galleries on platforms among the branches, a vast ancient tree at the back with a half-bare dying crown, grey rot creeping up from
+the roots, pale green lanterns, ribbons and carved memory tablets tied around the roots, a moonlit glade with standing stones,
+braced and propped dead limbs. Beautiful and failing.
+```
 
 ## Academy (`town_academy`)
 
@@ -111,10 +139,14 @@ turning. Native ground: snow and ice.
   crust on the walls, steam vents, a hall of records with tall narrow windows.
 - **Avoid**: a desert or Arabian palace; bright sapphire everywhere; floating islands.
 
-> Academy: a mage citadel on a frozen rock spur, blue-grey granite with snow on every ledge and icicles under the eaves, slender towers
-> with verdigris bronze domes, a large domed observatory at the back holding a giant bronze orrery of nested rotating rings, dark glass
-> windows with faint pale-blue rune light, two chained stone golems flanking the gate, a workshop yard with cranes and a half-assembled
-> construct, steam rising from vents. Cold, scholarly, ambitious.
+**`TOWN-academy`** (subject):
+
+```text
+Academy: a mage citadel on a frozen rock spur, blue-grey granite with snow on every ledge and icicles under the eaves, slender towers
+with verdigris bronze domes, a large domed observatory at the back holding a giant bronze orrery of nested rotating rings, dark glass
+windows with faint pale-blue rune light, two chained stone golems flanking the gate, a workshop yard with cranes and a half-assembled
+construct, steam rising from vents. Cold, scholarly, ambitious.
+```
 
 ## Necropolis (`town_necropolis`)
 
@@ -127,10 +159,14 @@ The dead who remember every earlier age and know the Wheel cannot be stopped, on
   a stone vat, tattered banners, gaunt dead trees, spikes, a faint cold-green glow (emissive) in windows only.
 - **Avoid**: cartoon skulls; purple-and-green Halloween colours; slime.
 
-> Necropolis: an undead city built from the stacked ruins of many fallen ages, each layer a different older architecture, grey-black
-> basalt and bleached bone set into the walls, ossuary walls of neatly stacked skulls, rusted iron spikes, a crooked black spire at the
-> back with a cold green light at its tip, open graves and a charnel pit inside the walls, a vaulted crypt with a great stone vat, dead
-> trees, ash covering everything, faint cold-green light only in windows. Ancient, patient, inevitable.
+**`TOWN-necropolis`** (subject):
+
+```text
+Necropolis: an undead city built from the stacked ruins of many fallen ages, each layer a different older architecture, grey-black
+basalt and bleached bone set into the walls, ossuary walls of neatly stacked skulls, rusted iron spikes, a crooked black spire at the
+back with a cold green light at its tip, open graves and a charnel pit inside the walls, a vaulted crypt with a great stone vat, dead
+trees, ash covering everything, faint cold-green light only in windows. Ancient, patient, inevitable.
+```
 
 ## Inferno (`town_inferno`)
 
@@ -144,10 +180,14 @@ Demons of the ash beneath the world, born from each burned age; they see every w
   around vents, chimneys.
 - **Avoid**: a cartoon hell with pitchforks and flames on every surface; bright orange everywhere (keep the glow to cracks and pools).
 
-> Inferno: a demonic fortress risen from cooled slag and fused rubble of burned human cities, black obsidian and charred stone with
-> half-melted towers and arches caught inside the walls, curved sickle-shaped spires, glowing ember-red lava cracks and channels, a
-> narrow lava moat before the gate, birthing pools of molten rock inside, iron cages hanging from chains, a great altar-furnace at the
-> back venting black smoke, yellow brimstone crust around the vents. A place that harvests the dead world.
+**`TOWN-inferno`** (subject):
+
+```text
+Inferno: a demonic fortress risen from cooled slag and fused rubble of burned human cities, black obsidian and charred stone with
+half-melted towers and arches caught inside the walls, curved sickle-shaped spires, glowing ember-red lava cracks and channels, a
+narrow lava moat before the gate, birthing pools of molten rock inside, iron cages hanging from chains, a great altar-furnace at the
+back venting black smoke, yellow brimstone crust around the vents. A place that harvests the dead world.
+```
 
 ## Dungeon (`town_dungeon`)
 
@@ -161,10 +201,14 @@ Dark elves and the lightless things they serve, untouched by the dying sun and r
   spires, spiked bridges.
 - **Avoid**: green goblin caves; red lava (that is Inferno); a bright purple glow over everything.
 
-> Dungeon: a dark-elf town sunk into a cavern sinkhole, angular black and dark-violet stone, terraced stepped pyramids and sharp
-> towers, a tall stalactite-shaped spire at the back topped by a glowing violet crystal over a luminous pool, rings of giant pale
-> mushrooms with faint violet glow, open labyrinth walls inside, spiked bridges and webs between spires, polished stone with thin
-> silver inlay, slick wet rock. Cold, elegant, patient, lightless.
+**`TOWN-dungeon`** (subject):
+
+```text
+Dungeon: a dark-elf town sunk into a cavern sinkhole, angular black and dark-violet stone, terraced stepped pyramids and sharp
+towers, a tall stalactite-shaped spire at the back topped by a glowing violet crystal over a luminous pool, rings of giant pale
+mushrooms with faint violet glow, open labyrinth walls inside, spiked bridges and webs between spires, polished stone with thin
+silver inlay, slick wet rock. Cold, elegant, patient, lightless.
+```
 
 ## Stronghold (`town_stronghold`)
 
@@ -178,10 +222,14 @@ Orc clans who have survived several turnings by **never building anything worth 
 - **Avoid**: stone keeps; neat carpentry; tribal stereotypes of real peoples (no real-world motifs, no war bonnets, no totem poles of a
   real culture).
 
-> Stronghold: a fortified orc war camp that could be packed up and moved, a log palisade with crude battlements, hide yurts and long
-> leather tents with smoke holes, a great lodge under a huge horned beast skull on a pole frame, a dirt fighting arena ringed by stakes,
-> giant war drums on a raised platform, carts and sledges by the gate, rope, rusted scrap iron, bones, red-ochre paint, dust. Built
-> to survive, never to last.
+**`TOWN-stronghold`** (subject):
+
+```text
+Stronghold: a fortified orc war camp that could be packed up and moved, a log palisade with crude battlements, hide yurts and long
+leather tents with smoke holes, a great lodge under a huge horned beast skull on a pole frame, a dirt fighting arena ringed by stakes,
+giant war drums on a raised platform, carts and sledges by the gate, rope, rusted scrap iron, bones, red-ochre paint, dust. Built
+to survive, never to last.
+```
 
 ## Swamp Bestiary (`town_swamp-bestiary`)
 
@@ -195,10 +243,14 @@ Beast-cults of the drowned lowlands, where ruins of an old age sink into the mir
   over water, a toppled statue's head sinking in the mud.
 - **Avoid**: jungle temple of a real culture; bright tropical colours.
 
-> Swamp Bestiary: a beast-cult town in a drowned marsh, half-sunken tilted ruins of an ancient stone city green with algae, stilt huts
-> and reed lodges built on and between the ruins, boardwalks over black shallow water, a rampart of giant shells, scales and bones
-> instead of a wall, spawning pools with clusters of eggs, a tall carved totem of coiled beasts at the back, a toppled statue head
-> sinking in the mud, driftwood, rope, moss and mist-grey reeds.
+**`TOWN-swamp-bestiary`** (subject):
+
+```text
+Swamp Bestiary: a beast-cult town in a drowned marsh, half-sunken tilted ruins of an ancient stone city green with algae, stilt huts
+and reed lodges built on and between the ruins, boardwalks over black shallow water, a rampart of giant shells, scales and bones
+instead of a wall, spawning pools with clusters of eggs, a tall carved totem of coiled beasts at the back, a toppled statue head
+sinking in the mud, driftwood, rope, moss and mist-grey reeds.
+```
 
 ## Conflux (`town_conflux`, not playable)
 
@@ -210,9 +262,13 @@ Elemental wardens of the Wheel's mechanism; neutral guardians. Campaign and neut
   (emissive) in the crystals only.
 - **Telling details**: one shrine iced, one scorched, one wind-carved, one overgrown; rune channels converging on the gear.
 
-> Conflux: an ancient elemental sanctuary built in a ring around a colossal half-buried gear of stone and old green bronze, four small
-> domed shrines on its rim, one frosted, one scorched black, one wind-carved, one overgrown with roots, glowing rune channels running
-> to the gear, a few crystal shards hovering just above the stones with a soft shimmer. Older than any kingdom, silent, watchful.
+**`TOWN-conflux`** (subject):
+
+```text
+Conflux: an ancient elemental sanctuary built in a ring around a colossal half-buried gear of stone and old green bronze, four small
+domed shrines on its rim, one frosted, one scorched black, one wind-carved, one overgrown with roots, glowing rune channels running
+to the gear, a few crystal shards hovering just above the stones with a soft shimmer. Older than any kingdom, silent, watchful.
+```
 
 ## Dragon Utopia (`town_dragon-utopia`, not playable)
 
@@ -224,20 +280,24 @@ The last dragons, who remember the world *before* the Wheel. Campaign and neutra
 - **Telling details**: carvings of a bright, young sun (the world before the Wheel), scorched ledges, enormous bones of fallen dragons
   used as arches.
 
-> Dragon Utopia: an ancient dragon eyrie carved into a rocky crag as a stepped pyramid, huge open perches and ledges scorched black,
-> weathered sandstone and old bronze, deep claw marks in the rock, arches made from enormous dragon bones, glints of a gold hoard in
-> dark openings, worn reliefs of a bright young sun from before the world began to die, a broken colossal dragon statue at the back.
+**`TOWN-dragon-utopia`** (subject):
+
+```text
+Dragon Utopia: an ancient dragon eyrie carved into a rocky crag as a stepped pyramid, huge open perches and ledges scorched black,
+weathered sandstone and old bronze, deep claw marks in the rock, arches made from enormous dragon bones, glints of a gold hoard in
+dark openings, worn reliefs of a bright young sun from before the world began to die, a broken colossal dragon statue at the back.
+```
 
 ## Optional: stages by fort level
 
 If the map is to show a town's growth (not decided ❓), make three variants from the same base: **Fort** (`town_<id>_1`), **Citadel**
 (`_2`), **Castle** (`_3`), same footprint and gate. Add to the town prompt:
 
-| Stage | Add to the prompt |
-|---|---|
-| Fort | "early stage: a low wall, few buildings, the landmark not built yet, open ground inside" |
-| Citadel | "middle stage: a full wall, a central keep, the landmark half built under scaffolding" |
-| Castle | "final stage: high walls with towers, dense buildings, the landmark complete" |
+| Stage | Block | Add to the prompt |
+|---|---|---|
+| Fort | `STAGE-1` | "early stage: a low wall, few buildings, the landmark not built yet, open ground inside" |
+| Citadel | `STAGE-2` | "middle stage: a full wall, a central keep, the landmark half built under scaffolding" |
+| Castle | `STAGE-3` | "final stage: high walls with towers, dense buildings, the landmark complete" |
 
 Stronghold and Swamp Bestiary grow outward and taller, not into stone: "more lodges and a higher palisade" / "more stilt huts and a
 higher shell wall".
