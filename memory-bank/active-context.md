@@ -9,12 +9,13 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- ADR-245 (presentation): every prompt file in `docs/content/prompts/` has one layout; cursors in grey iron (sets 1–3 to regenerate);
+  new prompt files for spell icons, creature portraits (a file a faction), hero portraits and town icons, UI pieces, roads and rivers,
+  the puzzle map and the environment.
 - ADR-244 (presentation): new terrain texture prompts: each terrain its own saturated colour and structure, a texture shows
   about 30 m of map; the mood comes from light and grading.
 - ADR-243 (code health): creature, spell, artifact and building ids are types of their own (`CreatureId`, `SpellId`, `ArtifactId`,
   `BuildingId`); the file formats are unchanged.
-- ADR-241 (game modes): campaigns: maps won one after another, heroes and campaign variables carried, campaign files, saves keep their
-  campaign (save v6), the sample campaign Border Watch; Campaign in the main menu (smoke `game-campaign`).
 
 ## Next
 1. A person's full game on Ember March (the Phase 3 exit's last check).

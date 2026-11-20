@@ -239,6 +239,9 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Cursors: the cursor for what is under the pointer (core resolvers, adventure map and battle), system cursors standing in (ADR-204)
 - [x] The cursor images for menus and the adventure map (sets 1–3 of [cursor-prompts.md](../docs/content/prompts/cursor-prompts.md), ADR-204)
 - [ ] The battle cursor images (sets 4–7) and the days a move takes drawn on the move cursor (ADR-204)
+- [ ] The cursor images of sets 1–3 again, in grey iron instead of brown and bronze (ADR-245)
+- [ ] The art from the new prompt files: spell, creature and hero portraits, town icons, UI frames and backgrounds, roads and rivers,
+      puzzle pictures, scenery and obstacles (ADR-245); then the views that use them
 - [x] Melee direction in battle: the side to strike from by the pointer's place in the cell (8 sides), the stand cells highlighted (ADR-204)
 
 ### Platform and art

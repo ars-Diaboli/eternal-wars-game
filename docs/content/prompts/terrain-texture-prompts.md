@@ -1,16 +1,14 @@
 # Terrain texture prompts (for an image- or material-generating model)
 
-Prompts to **replace the placeholder ground textures** of the adventure map and the battlefield with original, seamless PBR materials.
-They are for a text-to-texture / text-to-material model (or an image model, with the maps derived afterwards).
-
+Prompts for the **ground textures** of the adventure map and the battlefield: original, seamless PBR materials, one per terrain.
 Three rules carry every prompt (ADR-244):
 
 1. **Each terrain is recognisable at a glance**: its own colour and its own surface structure (see [Tell them apart](#tell-them-apart)).
    Two terrains that differ only in a few details are a failed result, however good each looks alone.
-2. **Rich, saturated, fairly bright colour in the texture.** The world's dim, cold mood comes from the game's light, fog and grading,
-   which can always take colour away; a faded texture cannot be made to read again.
-3. **The real scale of the map**: one texture covers about **30 × 30 m** of ground on the adventure map, so a tile is about 2 m, a
-   hero's height. Plants read as dense masses and clumps, never as single big leaves or blades.
+2. **Rich, saturated, fairly bright colour in the texture.** The game's light, fog and grading make the dim mood and can always take
+   colour away; a faded texture cannot be made to read again.
+3. **The real scale of the map**: one texture covers about **30 × 30 m** of ground on the adventure map (a tile is about 2 m).
+   Plants read as dense masses and clumps, never as single big leaves or blades.
 
 ## Compose a prompt
 
@@ -18,10 +16,10 @@ Each terrain section below ends with its own block, `TERRAIN-<id>` (the id is th
 copying each block's text exactly and joining them with a space:
 
 ```text
-Adventure map:  TERRAIN-STYLE + TERRAIN-MAP    + TERRAIN-<id>
-Battlefield:    TERRAIN-STYLE + TERRAIN-BATTLE + TERRAIN-<id>
-NEGATIVE:       TERRAIN-NEG   (only where the tool takes a negative prompt)
-OUTPUT:         the sizes, maps and names under "Output for every terrain"
+PROMPT   = TERRAIN-STYLE + TERRAIN-MAP + TERRAIN-<id>      (adventure map)
+         = TERRAIN-STYLE + TERRAIN-BATTLE + TERRAIN-<id>   (battlefield)
+NEGATIVE = TERRAIN-NEG   (only where the tool takes a negative prompt)
+OUTPUT   = <id>.png and its maps, as under "Output for every terrain"
 ```
 
 The **Signature**, **Look** and **Avoid** notes in each section explain the block and are for checking the result; they are not pasted.
@@ -63,33 +61,6 @@ modern objects, plastic, cartoon outlines, cel shading, pixel art, low resolutio
 art.
 ```
 
-Sources: the world from [lore.md](../lore.md) (a draft), art direction from [presentation.md](../../design/presentation.md), the native
-terrains of the towns as in [town-model-prompts.md](town-model-prompts.md), the rendering from ADR-183 (`shaders/terrain_splat.gdshader`,
-`TerrainSplat`) and `BattleFieldBuilder`. The current textures and their licences are listed in
-`src/Godot/EternalWars.Godot.Assets/textures/terrain/CREDITS.md`. Numbers marked *(proposal)* are not decided yet.
-
-## How the game uses them
-
-- **Adventure map** (ADR-183): one splat-shaded mesh a level. Each terrain is one layer of a texture array (**1024 px a layer**; other
-  sizes are resized), projected from above in world space and repeated every **16 tiles** (`AdventureMapView.TilesPerTextureRepeat`;
-  1 tile = 1 Godot unit), its repeat hidden by shifted cells. So one tile gets only **64 px** of the layer: anything smaller than about
-  a tenth of a tile is a speck, and a feature that should read needs to span several pixels. Neighbouring terrains blend along rounded,
-  wandering lines **by height** (ADR-200): each ground's **raised parts win first**, so its stones, tufts and crests poke into its
-  neighbour and the neighbour fills its hollows. The height is `<terrain>_height.png`, or the albedo's brightness when there is none.
-  Steep ground (cliffs) is textured from the sides as well (triplanar). Broad lighter and darker patches are added by the shader, so the
-  texture itself should be **evenly lit, with no large-scale gradient**.
-- **Battlefield** (`BattleFieldBuilder.Ground`): one plane of the battle terrain, **24 cells deep** (a cell is 0.5 units, so 12 units)
-  inside a darker 6-unit band of the same ground, triplanar in world space, repeated every **4 units = 8 cells**. A creature stands on
-  about a cell, so 8 cells are about 12 m. The camera is much closer than on the map: battle textures need **finer detail and twice the
-  resolution**. A thin white cell grid (12 % alpha) is drawn on top, so the ground must not have strong straight lines or a cell-sized
-  pattern.
-- **Mood is the game's job**: light, fog, the shader's patches and the post grading darken and cool the ground. A texture that already
-  looks dim ends up grey-brown on screen, and every terrain looks alike. Keep the colour in the texture.
-- **Today the albedo, the height map and (adventure only) the normal, roughness and AO maps are read** (ADR-240).
-- **Borrowed textures**: shallow water borrows water's, rocky ground rough's, cursed lands wasteland's, ice snow's (`AdventureMapView.TextureOf`,
-  told apart by a tint). **Snow and ice have no texture yet** (palette colour). Each terrain below gets its own texture; when they exist,
-  `TextureOf` and `Tint` drop the borrowing.
-
 ## Tell them apart
 
 Every terrain owns a hue and a structure no neighbour shares. Check a new texture against this table and against the textures already
@@ -123,38 +94,23 @@ none or almost none. Grey stones scattered on every ground are what made the fir
 
 - **Seamless and tileable** on both axes, square; verify with a 3 × 3 repeat: no visible seam, no single feature that repeats as a
   pattern (one big skull, one odd stone, one dark puddle are the usual giveaways).
-- **Straight top-down, orthographic**: no perspective, no horizon, no cast shadows of a low sun, no baked highlight or specular glint,
-  no vignette. Soft ambient occlusion in crevices only.
-- **Sizes**: adventure map **2048 px**, downsampled to the 1024 px layer *(proposal: keeps detail sharp at 1024)*; battlefield
-  **2048 px** used as is, or 4096 px for the closest terrains (grass, dirt, sand) *(proposal)*.
-- **Real-world scale** (what one texture covers): adventure map about **30 × 30 m** (16 tiles of about 2 m), battlefield about
-  **12 × 12 m** (8 cells of about 1.5 m). State it in the prompt; tufts, stones and cracks must be sized to it. A result in which one
-  plant is as large as a tenth of the picture is at the wrong scale.
-- **Colour**: the dominant tone clearly coloured (saturation roughly 35–70 % for the living and earthy grounds; snow, ice and rock are
-  allowed to be paler), not grey-brown. The game takes colour away; it does not add it.
-- **Value range**: albedo between about **30 and 225 of 255** (snow and ice up to 240), each terrain at its row's value in the table, so
-  the light, dark and middle grounds stay apart. Clear contrast at the medium scale (the clumps and patches); no large-scale gradient.
-- **Maps**: albedo (sRGB, no lighting), normal (OpenGL, Y+, as Godot expects), roughness, ambient occlusion, height (16-bit grey,
-  **bright = raised**: the splat's height blend reads it, and the albedo's brightness stands in for it until it exists, so keep the
-  albedo's light parts on the height map's raised parts). Packed ORM (R occlusion, G roughness, B metallic = 0) is fine.
-- **Names**: `<terrain>.png` as today (`forest_floor.png`, `cursed_lands.png`, `shallow_water.png`, `rocky_ground.png`, `snow.png`,
-  `ice.png`); the other maps as `<terrain>_normal.png`, `<terrain>_roughness.png`, `<terrain>_ao.png`, `<terrain>_height.png`; a
-  picture for the adventure map only in `textures/terrain/adventure/` (ADR-240); battlefield variants as `battle_<terrain>.png`
-  *(proposal: the game does not load them yet; until it does, the map texture serves both)*.
-- **Licence**: every new texture gets a line in `CREDITS.md` with the tool and its licence terms; the three placeholders marked
-  "check before release" are the first to replace (grass, highlands, forest floor).
-
-**The world** (for the Look notes, not the colour): *Vael* is dying under a dimming sun, the **Waning Eye**; every age ends when the
-**Wheel of Ash** turns and kingdoms burn. The game shows that through its light, fog and grading, and through objects on the map. The
-textures carry it only lightly, in each terrain's own way (the forest's grey rot, the cursed lands' ash, the wasteland's burn scars);
-no ash film, charcoal or sherds on every ground.
-
-| Group | Native ground |
-|---|---|
-| Dawn Covenant | highlands, grass (Haven), forest floor (Sylvan), snow and ice (Academy) |
-| Ashen Court | cursed lands (Necropolis), lava (Inferno), subterranean (Dungeon) |
-| Unbound | rough, wasteland (Stronghold), swamp, shallow water (Swamp Bestiary) |
-| Firstborn | rocky ground (Dragon Utopia) |
+- **Straight top-down, orthographic**: no perspective, no horizon, no cast shadows, no baked highlight or specular glint, no vignette.
+  Soft ambient occlusion in crevices only. **Evenly lit, no large-scale gradient**: the game adds its own broad light and dark patches.
+- **Sizes**: adventure map **2048 px** (the game uses a 1024 px layer, so one tile gets about 64 px: a feature that should read must span
+  several pixels); battlefield **2048 px**, or 4096 px for the closest terrains (grass, dirt, sand) *(proposal)*.
+- **Real-world scale**: adventure map about **30 × 30 m**, battlefield about **12 × 12 m**. A result in which one plant is as large as a
+  tenth of the picture is at the wrong scale.
+- **Colour**: the dominant tone clearly coloured (saturation roughly 35–70 % for the living and earthy grounds; snow, ice and rock may be
+  paler), not grey-brown.
+- **Value range**: albedo between about **30 and 225 of 255** (snow and ice up to 240), each terrain at its row's value in the table.
+  Clear contrast at the medium scale (the clumps and patches).
+- **Maps**: albedo (sRGB, no lighting), normal (OpenGL, Y+), roughness, ambient occlusion, height (16-bit grey, **bright = raised**;
+  neighbouring terrains blend by height, raised parts first, and the albedo's brightness stands in for a missing height map, so keep the
+  albedo's light parts on the raised parts). Packed ORM (R occlusion, G roughness, B metallic = 0) is fine.
+- **Names**: `<id>.png` (`forest_floor.png`, `cursed_lands.png`, `shallow_water.png`, `rocky_ground.png`, ...); the other maps
+  `<id>_normal.png`, `<id>_roughness.png`, `<id>_ao.png`, `<id>_height.png`; battlefield variants `battle_<id>.png` *(proposal)*.
+- **Light motifs only**: the world is dying (the Waning Eye, the Wheel of Ash), but the texture carries it only in each terrain's own way
+  (the forest's grey rot, the cursed lands' ash, the wasteland's burn scars); no ash film, charcoal or sherds on every ground.
 
 ## Grass (`grass`)
 
@@ -273,7 +229,7 @@ of sickly pale green-white mould and fungus, small splinters of bleached bone, e
 
 ## Snow (`snow`)
 
-Academy's peaks. No texture yet.
+Academy's peaks.
 
 - **Signature**: white with soft blue shade, wind ripples.
 - **Look**: clean wind-packed snow in soft curving ripples and drifts, blue in the hollows, a broken crust here and there, a few dark
@@ -289,7 +245,7 @@ places, a few dark grass tips poking through, crisp and cold.
 
 ## Ice (`ice`)
 
-Frozen lakes and glacier tongues. No texture yet; today snow's palette colour.
+Frozen lakes and glacier tongues.
 
 - **Signature**: pale cyan-blue sheets with a white crack web.
 - **Look**: smooth ice in pale cyan and blue, deeper blue where it is thick, trapped bubbles, a natural web of white pressure cracks,
@@ -451,29 +407,20 @@ wind, fine grit in the joints, sparse hardy green tufts, a few deep old claw scr
 
 ## Battlefield variants
 
-The battlefield uses the terrain the battle is fought on (`BattleState.Terrain`; a map object can set it). Use the same terrain prompt
-with `TERRAIN-BATTLE` instead of `TERRAIN-MAP` (see [Compose a prompt](#compose-a-prompt)).
+Same terrain block, with `TERRAIN-BATTLE` instead of `TERRAIN-MAP`. A thin white cell grid and the units are drawn on top, and one texture
+fills the whole field, so:
 
-Points to keep in mind:
-
-- **The cell grid and the units read on top**: no high-contrast speckle at cell size (0.5 units), no lines.
-- **One texture fills the whole field** (12 units deep, plus the 6-unit band): variation must come from small clusters, not from a
-  single large feature; the battlefield has no splat mixing or patch noise.
-- **Same colour as the map**: a battle on grass must look like the grass the hero stood on.
-- **Water and deep lava** are not battle grounds in the rules' sense of standing on them; when a battle is fought "on water" (a boat
-  object), use shallow water's battlefield texture *(proposal)*.
-- **Obstacles** are separate meshes (stones, trees, craters, cliffs); keep them out of the ground texture.
+- **No high-contrast speckle at cell size** (a cell is about 1.5 m) and no straight lines.
+- **Variation from small clusters**, never from one large feature.
+- **The same colour as the map**: a battle on grass looks like the grass the hero stood on.
+- **No obstacles** in the texture: stones, trees and craters are separate models ([environment-prompts.md](environment-prompts.md)).
 
 ## After generating
 
 1. Check the 3 × 3 repeat for seams and repeating features; regenerate rather than paint over seams.
-2. Put all the terrains made so far side by side at 64 px: each must still be named at a glance (see [Tell them apart](#tell-them-apart)).
-   Regenerate the one that is closest to another.
-3. Check the scale: a single plant or stone should be a speck at 64 px per 2 m, not a shape.
-4. Check the colour and value range (about 30–225 of 255, clearly coloured) and that the light parts match the raised parts of the
-   height map.
-5. Put the file in `src/Godot/EternalWars.Godot.Assets/textures/terrain/` under the name above, add its line to `CREDITS.md`, and run
-   the `game-weeks` and `game-battle-3d` smoke scenarios to see it on the map and the battlefield. If the map then looks too loud,
-   tone it down in the game's light and grading, not in the texture.
-6. For a terrain that had a borrowed texture (shallow water, rocky ground, cursed lands, ice), remove it from
-   `AdventureMapView.TextureOf` and its `Tint` so its own texture shows untinted.
+2. Put all the terrains made so far side by side at 64 px: each must still be named at a glance. Regenerate the one closest to another.
+3. Check the scale (a plant or stone is a speck at 64 px per 2 m), the colour and value range, and that the light parts match the height
+   map's raised parts.
+4. Put the files in `src/Godot/EternalWars.Godot.Assets/textures/terrain/` (adventure-only pictures in `textures/terrain/adventure/`,
+   ADR-240), add a line to `CREDITS.md` with the tool and its licence terms, and look at them in the `game-weeks` and `game-battle-3d`
+   smoke scenarios. If the map then looks too loud, tone it down in the game's light and grading, not in the texture.

@@ -1,81 +1,83 @@
 # Cursor prompts (for an image-generating model)
 
-Prompts for the mouse cursors (owner's note, ADR-204). The cursors change with what the pointer would do, as in HoMM3 and HoMM5: a plain
-arrow on menus and screens, a horse on the adventure map, and one cursor per action in battle. They are generated like the icons
-([icon-prompts.md](icon-prompts.md)): **sheets of 4 (2 × 2) or 6 (2 × 3)**, cut into one file per cursor.
+Prompts for the **mouse cursors** (ADR-204): a plain arrow on menus and screens, a horse on the adventure map, one cursor per action in
+battle. They are generated like the icons ([icon-prompts.md](icon-prompts.md)): **sheets of 4 (2 × 2) or 6 (2 × 3)**, cut into one file
+per cursor. Every cursor is **cold grey iron and steel**: no brown, no bronze, no gold, so it stands apart from the warm bronze UI and
+from the ground under it.
 
 ## Compose a prompt
 
-Every sheet below has a **Compose** line naming its blocks. Build the prompt from it, copying each block's text exactly. `CURSOR-*`
-blocks are in [Blocks](#blocks) below; `ICON-SHEET-4`, `ICON-SHEET-6` and `ICON-NEG` are in [icon-prompts.md](icon-prompts.md#blocks).
+Every sheet below has a **Compose** line naming its blocks. Build the prompt from blocks, copying each block's text exactly and joining
+them with a space:
 
 ```text
-PROMPT   = CURSOR-STYLE + " " + <sheet block> + " " + CELLS
+PROMPT   = CURSOR-STYLE (+ CURSOR-HORSE on sheet 2) + ICON-SHEET-4 or ICON-SHEET-6 + CELLS
 CELLS    = "1 <subject 1>; 2 <subject 2>; …"   the sheet table's Subject column, in its # order, spare cell included
 NEGATIVE = ICON-NEG + ", " + CURSOR-NEG   (only where the model takes a negative prompt)
-SIZE     = the size on the Compose line; then cut the sheet and save each cell under the File column's name + ".png"
+OUTPUT   = the size on the Compose line; cut the sheet and save each cell as <File>.png
 ```
 
-The Hotspot column is not part of the prompt: it is where the pointing part must land, checked after cutting (and kept in
-`GameCursors.Definition`). Sheets 4–5 give a **Cell rule** instead of full subjects: apply it to each row. Do not paraphrase blocks
-or subjects.
+`CURSOR-*` blocks are below; `ICON-SHEET-4`, `ICON-SHEET-6` and `ICON-NEG` are in [icon-prompts.md](icon-prompts.md#blocks). The
+**Hotspot** column is not pasted: it is where the pointing part must land, checked after cutting. Sheets 4–5 give a **Cell rule** instead
+of full subjects: apply it to each row. If a result comes out brown or bronze, add the colour words to the negative prompt again and
+regenerate; do not paraphrase blocks or subjects.
 
 ## Blocks
 
-**`CURSOR-STYLE`** (style, every cursor sheet):
+**`CURSOR-STYLE`** (style, first in every prompt):
 
 ```text
-Game mouse cursor sheet, hand-painted dark-fantasy style, simple bold shapes with light painted shading, old bronze, steel, wood and
-leather, light from the top left, a thick dark outline around each subject and a thin light edge just inside it so it reads on dark and
-on light ground, flat front or side view as each cell says, no cast shadow, no background. No photo realism, no 3D render look, no pixel
+Game mouse cursor sheet, hand-painted dark-fantasy style, simple bold shapes with light painted shading, cold grey palette: dark
+gunmetal iron, polished pale steel and blackened iron, cool blue-grey highlights, no warm colours except where a cell names one. Light
+from the top left, a thick near-black outline around each subject and a thin pale silver edge just inside it so it reads on dark and on
+light ground, flat front or side view as each cell says, no cast shadow, no background. No photo realism, no 3D render look, no pixel
 art.
 ```
 
-**`CURSOR-NEG`** (negative prompt, added to `ICON-NEG` on every cursor sheet):
+**`CURSOR-HORSE`** (after `CURSOR-STYLE` on sheet 2):
 
 ```text
-text, letters, numbers, frames, drop shadows, thin lines, scenery, background, extra objects
+Every horse is the same horse: a war horse forged from dark grey iron like a polished steel statuette, a cool gunmetal sheen with pale
+steel highlights on the muscles, a black iron mane and tail, a plain steel bridle, never brown; in pure side profile facing right
+unless the cell says otherwise.
 ```
 
-**`CURSOR-HORSE`** (after `CURSOR-STYLE` on sheet 2, the horse sheet):
+**`CURSOR-NEG`** (negative prompt, after `ICON-NEG` on every cursor sheet):
 
 ```text
-Every horse is the same horse in the same colours, a dark bay with a bronze bridle, in pure side profile facing right unless the cell
-says otherwise.
+text, letters, numbers, frames, drop shadows, thin lines, scenery, background, extra objects, brown, bronze, brass, copper, gold, warm
+tones, sepia, bay horse, chestnut horse, brown horse, leather brown, wood brown
 ```
 
-## Format
+## Output for every cursor
 
-- **Sheet**: as the icons: 2 × 2 at 1024 × 1024, 2 × 3 at 1536 × 1024, every cell 512 × 512, transparent background; cut the same way.
-- **Cursor**: each cell becomes `cursor_<group>_<id>.png`, 32-bit RGBA, kept at 512 px as the master. The game ships it at **64 px** and
-  scales it to 48 and 32 px for smaller UI scales; one still image a cursor, no animation.
-- **Hotspot**: the pixel that points, given per cursor below as where it is in the cell (in 1/8 of the cell from the top left, so `1,1` is
-  64 px in at 512 px and 8 px in at 64 px). The game keeps the same table in `GameCursors.Definition`; a redrawn cursor with a moved hotspot
-  needs its row changed there. Put the files in `src/Godot/EternalWars.Godot.Assets/textures/ui/cursors/`. The **pointing part touches the hotspot**: the arrow's tip, the sword's point, the centre of a target ring.
-- **Shape**: every cursor must read at 32 px over a busy 3D map: one clear silhouette, a **thick dark outline (about 5 % of the cell)**, a
-  light inner edge, no thin lines, no text, letters or numbers. Where a cursor needs a number (the days a move takes) the game draws it.
-- **Spare cell**: as for the icons, a second take of the hardest cursor on the sheet.
+- **Sheet**: 2 × 2 at 1024 × 1024, 2 × 3 at 1536 × 1024, every cell 512 × 512, transparent background; cut as the icons.
+- **File**: `cursor_<group>_<id>.png`, 32-bit RGBA, kept at 512 px as the master; the game ships 64 px and scales to 48 and 32. One still
+  image a cursor, no animation.
+- **Hotspot**: given per cursor in 1/8 of the cell from the top left (`1,1` is 64 px in at 512 px). The **pointing part touches the
+  hotspot**: the arrow's tip, the sword's point, the centre of a ring. A cursor redrawn with a moved hotspot needs its row changed in
+  `GameCursors.Definition`.
+- **Shape**: reads at 32 px over a busy 3D map: one clear silhouette, a **thick dark outline (about 5 % of the cell)**, a light inner edge,
+  no thin lines, no text or numbers (the game draws the days a move takes).
+- **Colour**: grey iron and steel; the only colours are those a subject names (the violet of spells, the dark red of the blocked sign).
+- **Spare cell**: a second take of the hardest cursor on the sheet.
 
 ## Menus and screens
 
-### 1 · Pointers (2 × 2) — menus, town and hero screens, panels, the battle's bar
+### 1 · Pointers (2 × 2)
 
 **Compose**: `CURSOR-STYLE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `CURSOR-NEG` · 1024 × 1024
 
+Shown on menus, the town and hero screens and panels; busy while a computer turn plays or a game loads; blocked where a click does nothing.
+
 | # | File | Subject | Hotspot |
 |---|---|---|---|
-| 1 | `cursor_ui_pointer` | the standard computer arrow pointer shape, tip at the top left, tilted about 30°, with a short tail; old bronze with a dark outline | `0,0` (the tip) |
-| 2 | `cursor_ui_busy` | a small upright hourglass in a bronze frame, the sand running into the lower bulb | `4,4` (centre) |
-| 3 | `cursor_ui_blocked` | a round bronze ring with one diagonal bar from top left to bottom right, dark red inside the ring | `4,4` |
+| 1 | `cursor_ui_pointer` | the standard computer arrow pointer shape, tip at the top left, tilted about 30°, with a short tail; dark polished steel with a pale steel bevel | `0,0` (the tip) |
+| 2 | `cursor_ui_busy` | a small upright hourglass in a blackened iron frame, pale grey sand running into the lower bulb | `4,4` (centre) |
+| 3 | `cursor_ui_blocked` | a round steel ring with one diagonal bar from top left to bottom right, dark red inside the ring | `4,4` |
 | 4 | — | spare: a second take of the pointer | |
 
-**Use**: the pointer everywhere off the map and the battlefield, and over the side panel, the status bar and the pop-ups on them. Busy while a
-computer turn plays and while a game loads. Blocked where the pointer can do nothing on the map or the battlefield (an unreachable tile, a
-cell no stack can reach).
-
 ## Adventure map
-
-All horses face **right**, in pure side profile, the same horse in the same colours on every cell (`CURSOR-HORSE`).
 
 ### 2 · Moving and visiting (2 × 3)
 
@@ -83,12 +85,12 @@ All horses face **right**, in pure side profile, the same horse in the same colo
 
 | # | File | Subject | Hotspot |
 |---|---|---|---|
-| 1 | `cursor_adv_move` | a horse galloping to the right, all four legs off the ground | `4,7` (under its hooves) |
-| 2 | `cursor_adv_visit` | a horse rearing up, front hooves raised high, facing right | `4,7` |
-| 3 | `cursor_adv_attack` | a horse's head and neck facing right, two crossed swords behind it | `4,4` |
-| 4 | `cursor_adv_exchange` | two horse heads facing each other, a curved bronze double-headed arrow between them | `4,4` |
-| 5 | `cursor_adv_enter-town` | a horse walking right towards a small stone gate arch, its rump at the left edge | `4,7` |
-| 6 | `cursor_adv_spell` | a violet swirl of sparks around a small bright star at the centre | `4,4` |
+| 1 | `cursor_adv_move` | the iron horse galloping to the right, all four legs off the ground | `4,7` (under its hooves) |
+| 2 | `cursor_adv_visit` | the iron horse rearing up, front hooves raised high, facing right | `4,7` |
+| 3 | `cursor_adv_attack` | the iron horse's head and neck facing right, two crossed steel swords behind it | `4,4` |
+| 4 | `cursor_adv_exchange` | two iron horse heads facing each other, a curved steel double-headed arrow between them | `4,4` |
+| 5 | `cursor_adv_enter-town` | the iron horse walking right towards a small grey stone gate arch, its rump at the left edge | `4,7` |
+| 6 | `cursor_adv_spell` | a violet swirl of sparks around a small bright white star at the centre | `4,4` |
 
 ### 3 · Selecting and digging (2 × 2)
 
@@ -96,26 +98,10 @@ All horses face **right**, in pure side profile, the same horse in the same colo
 
 | # | File | Subject | Hotspot |
 |---|---|---|---|
-| 1 | `cursor_adv_select-hero` | a plain steel knight's helmet in three-quarter view, a small bronze plume | `4,4` |
-| 2 | `cursor_adv_select-town` | a small stone keep with one tower and a dark-red conical roof, seen from the front | `4,4` |
-| 3 | `cursor_adv_dig` | a short iron shovel stuck in the ground at an angle, a little heap of earth beside it | `4,7` (the blade's tip) |
+| 1 | `cursor_adv_select-hero` | a plain steel knight's helmet in three-quarter view, a small pale grey plume | `4,4` |
+| 2 | `cursor_adv_select-town` | a small grey stone keep with one tower and a dark slate-blue conical roof, seen from the front | `4,4` |
+| 3 | `cursor_adv_dig` | a short iron shovel with an iron shaft stuck in the ground at an angle, a little heap of dark grey earth beside it | `4,7` (the blade's tip) |
 | 4 | — | spare: a second take of the exchange cursor | |
-
-**Use on the adventure map** (for the chosen hero; the first that applies):
-
-| Pointer over | Cursor |
-|---|---|
-| an own hero (not the chosen one) | `select-hero`; `exchange` when the chosen hero can reach it this turn or later |
-| an own town | `enter-town` when the chosen hero can reach it; else `select-town` |
-| an enemy hero, town or a guarded tile / neutral stack | `attack` |
-| an object the hero can visit (a mine, a dwelling, a chest, a teleporter) | `visit` |
-| an empty tile it can reach | `move`; the game draws the number of days in its corner from the 2nd day on (2, 3, 4+) |
-| a tile it cannot reach | `ui_blocked` |
-| a target while an adventure spell waits for one (Dimension Door, Town Portal's map pick, …) | `spell` |
-| the tile under the hero while digging is offered (the Grail, ADR-140) | `dig` |
-
-Without a chosen hero the map shows the pointer, `select-hero` and `select-town`. An ally's hero or town counts as an own one for
-`select-*`, never for `exchange` or `enter-town`.
 
 ## Battle
 
@@ -123,12 +109,11 @@ Without a chosen hero the map shows the pointer, `select-hero` and `select-town`
 
 **Compose**: `CURSOR-STYLE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `CURSOR-NEG` · 1024 × 1024
 
-One sword, the same on all eight cells, a straight steel blade with a bronze cross-guard, **its point at the cell's centre** and the hilt
-towards the side the attacker strikes from. Each cell names the **direction the sword points** (where the blow goes); the file names the
-side the attacker stands on.
+One sword, the same on all eight cells, its point at the cell's centre and the hilt towards the side the attacker strikes from; the
+file names that side.
 
-**Cell rule**: subject = "a straight steel sword with a bronze cross-guard, its point at the cell's centre, " + Sword; sheet 4 takes
-the rows marked 4, sheet 5 those marked 5.
+**Cell rule**: subject = "a straight steel sword with a blackened iron cross-guard and grip, its point at the cell's centre, " + Sword;
+sheet 4 takes the rows marked 4, sheet 5 those marked 5.
 
 | Sheet | # | File | Sword | Hotspot |
 |---|---|---|---|---|
@@ -141,20 +126,19 @@ the rows marked 4, sheet 5 those marked 5.
 | 5 | 3 | `cursor_bat_melee_from-w` | points right, hilt at the left | `4,4` |
 | 5 | 4 | `cursor_bat_melee_from-nw` | points down-right, hilt at the top left | `4,4` |
 
-If the model cannot keep the eight swords alike, generate `from-n` and `from-ne` alone and rotate them by 90° steps (the light then turns
-with them, which is acceptable at 32–64 px).
+If the model cannot keep the eight swords alike, generate `from-n` and `from-ne` alone and rotate them by 90° steps.
 
 ### 6 · Shooting, spells and machines (2 × 3)
 
-**Compose**: `CURSOR-STYLE` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `CURSOR-NEG` · 1536 × 1024
+**Compose**: `CURSOR-STYLE` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `CURSOR-NEG` + `ICON-NEG-MECH` · 1536 × 1024
 
 | # | File | Subject | Hotspot |
 |---|---|---|---|
-| 1 | `cursor_bat_shoot` | a drawn short bow seen from the front, an arrow nocked and pointing up-left, **mirror-symmetric arms** | `0,0` (the arrow's tip, up-left) |
+| 1 | `cursor_bat_shoot` | a drawn short bow of blackened iron seen from the front, a steel-tipped arrow nocked and pointing up-left, **mirror-symmetric arms** | `0,0` (the arrow's tip, up-left) |
 | 2 | `cursor_bat_shoot-weak` | the same arrow without the bow, snapped in the middle, the two halves slightly apart | `0,0` |
-| 3 | `cursor_bat_spell` | a short wooden wand with a bronze tip pointing up-left, a small bright violet star at its tip | `0,0` (the star) |
+| 3 | `cursor_bat_spell` | a short iron wand pointing up-left, a small bright violet star at its tip | `0,0` (the star) |
 | 4 | `cursor_bat_spell-area` | a round target ring of violet light with four short marks at the top, bottom, left and right, a spark at the centre | `4,4` |
-| 5 | `cursor_bat_siege` | a round stone boulder flying into a broken piece of stone wall, chips flying | `4,4` |
+| 5 | `cursor_bat_siege` | a round grey stone boulder flying into a broken piece of grey stone wall, chips flying | `4,4` |
 | 6 | — | spare: a second take of the siege cursor | |
 
 ### 7 · Moving in battle (2 × 2)
@@ -163,25 +147,15 @@ with them, which is acceptable at 32–64 px).
 
 | # | File | Subject | Hotspot |
 |---|---|---|---|
-| 1 | `cursor_bat_walk` | a worn leather boot in side profile, facing right, mid-step | `4,7` (the sole) |
-| 2 | `cursor_bat_fly` | one spread feathered wing, white and bronze, rising to the right | `4,4` |
+| 1 | `cursor_bat_walk` | an armoured steel sabaton (a knight's iron boot) in side profile, facing right, mid-step | `4,7` (the sole) |
+| 2 | `cursor_bat_fly` | one spread feathered wing of pale silver and steel-grey feathers, rising to the right | `4,4` |
 | 3 | `cursor_bat_teleport` | a violet ring of sparks around an empty dark centre, like a small portal seen from the front | `4,4` |
 | 4 | — | spare: a second take of the wing | |
 
-**Use in battle** (for the stack whose turn it is; the first that applies):
+## After generating
 
-| Pointer over | Cursor |
-|---|---|
-| a target while a spell waits for one | `spell` (one target) or `spell-area` (an area spell: the cells it hits are highlighted) |
-| an enemy stack the stack can shoot at | `shoot`; `shoot-weak` when the shot deals half or less (range, walls, obstacles: `BattleGrid.RangedPenaltyEighths` ≥ 4) |
-| an enemy stack it can reach in melee | `melee_from-<side>` (below) |
-| a wall section, the gate, the keep or a tower, on the siege engine's turn when the hero controls it (Ballistics, combat.md) | `siege` |
-| a free cell it can reach | `walk`, `fly` or `teleport` by how the stack moves (combat.md's capabilities) |
-| anything else on the field | `ui_blocked`; the battle bar and windows show the pointer |
-
-**Melee direction** (the owner's note): over an enemy stack, the pointer's place picks one of **eight sides**: the space round the
-target's centre (its whole footprint, 1 × 1 or 2 × 2) is split into eight 45° sectors, and the sector the pointer is in names the side the
-attacker strikes from (north, north-east, east, …). The sword cursor shows that side, and the cells the attacker would **stand on** (its whole footprint, 1 × 1 or 2 × 2)
-are highlighted on the grid. If the attacker cannot stand on that side (blocked, out of reach, off the field) the nearest side it can reach
-(by angle) is used instead; with none, the cursor is `ui_blocked`. A click attacks from the shown side. A shooter next to an enemy (which
-must strike in melee) uses the same rule.
+1. Look at every cursor at 32 px on a dark and on a light background: one clear shape, no brown or bronze cast. Recolour by hand only
+   a slight warm tint; regenerate a brown one.
+2. Check the hotspot: the pointing part lands on the cell given in the table.
+3. Put the files in `src/Godot/EternalWars.Godot.Assets/textures/ui/cursors/` and add a line to its `CREDITS.md`. The cursors already
+   there (sheets 1–3) are the earlier brown and bronze takes: regenerate them with these blocks.
