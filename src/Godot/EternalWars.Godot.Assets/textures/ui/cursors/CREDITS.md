@@ -1,13 +1,15 @@
 # Cursors
 
-Mouse cursors, 64 × 64 with transparency (shown at 43 × 43; the pointer, busy and blocked ones at 32 × 32), generated for this project by the owner (2026-11-18) from sets 1–3 of
-[cursor-prompts.md](../../../../../../docs/content/prompts/cursor-prompts.md) and cut one per file. Loaded by `EternalWars.Godot.UI.GameCursors`
-with the hotspots from its `Definition` table; each image is placed so its pointing part is on that hotspot (the arrow's tip in the top
-left corner, the hooves and the shovel's blade at 7/8 down, the others centred). A missing file leaves the system cursor in its place.
+Mouse cursors, 64 × 64 with transparency (shown at 43 × 43; the pointer, busy and blocked ones at 32 × 32), in grey iron and steel,
+generated for this project by the owner (2026-11-20) from sets 1–4, 6 and 7 of
+[cursor-prompts.md](../../../../../../docs/content/prompts/cursor-prompts.md) and cut one per file; the swords of set 5 are those of
+set 4 mirrored. Loaded by `EternalWars.Godot.UI.GameCursors` with the hotspots from its `Definition` table; each image is placed so its
+pointing part is on that hotspot (the arrow's, bow's and wand's tip in the top left corner, the hooves, boot and shovel at 7/8 down, the
+swords' points one eighth in from the edges they point at, the others centred). A missing file leaves the system cursor in its place.
 
 | File | Shown |
 |---|---|
-| cursor_ui_pointer.png (bronze arrow) | over menus, screens, panels and controls; on the map with nothing to do |
+| cursor_ui_pointer.png (steel arrow) | over menus, screens, panels and controls; on the map with nothing to do |
 | cursor_ui_busy.png (hourglass) | while the computer plays or a game loads |
 | cursor_ui_blocked.png (barred ring) | where a click can do nothing on the map or the battlefield |
 | cursor_adv_move.png (galloping horse) | a tile the hero can reach |
@@ -19,5 +21,12 @@ left corner, the hooves and the shovel's blade at 7/8 down, the others centred).
 | cursor_adv_select-hero.png (helmet) | an own hero to select |
 | cursor_adv_select-town.png (keep) | an own town to select |
 | cursor_adv_dig.png (shovel) | the tile under the hero when digging is offered |
-
-The battle cursors (sets 4–7: the swords, bow, wand, boot, wing, portal) are not drawn yet; the system cursors stand in for them.
+| cursor_bat_melee_from-n/ne/e/se/s/sw/w/nw.png (sword) | an enemy to strike, from the side the file names |
+| cursor_bat_shoot.png (bow and arrow) | an enemy to shoot |
+| cursor_bat_shoot-weak.png (broken arrow) | a shot that deals half or less (range, walls, obstacles) |
+| cursor_bat_spell.png (wand) | a battle spell's single target |
+| cursor_bat_spell-area.png (violet target ring) | a battle spell's area |
+| cursor_bat_siege.png (boulder and wall) | a fortification the controlled siege engine can fire at |
+| cursor_bat_walk.png (iron boot) | a hex a walking stack can reach |
+| cursor_bat_fly.png (wing) | a hex a flying stack can reach |
+| cursor_bat_teleport.png (violet portal) | a hex a teleporting stack can reach |

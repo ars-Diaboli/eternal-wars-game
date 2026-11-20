@@ -7,7 +7,7 @@ namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
 /// The puzzle map's cells (<see cref="PuzzleMapPanel"/>, ADR-140): open pieces show the terrain, darker under the objects that stay
-/// (<see cref="GrailRules.ShowsOnPuzzle"/>), never their owners; closed pieces stay parchment.
+/// (<see cref="GrailRules.ShowsOnPuzzle"/>), never their owners; closed pieces show the player's faction picture, or parchment without one.
 /// </summary>
 public partial class PuzzleCanvas : Control
 {
@@ -15,16 +15,27 @@ public partial class PuzzleCanvas : Control
     private static readonly Color Parchment = new(0.78f, 0.69f, 0.50f);
     private GameState? _state;
     private PuzzleMap? _puzzle;
+    private Texture2D? _picture;
 
-    public void Display(GameState state, PuzzleMap? puzzle)
+    /// <summary>Shows <paramref name="puzzle"/>; <paramref name="picture"/> covers the closed pieces (parchment when null).</summary>
+    public void Display(GameState state, PuzzleMap? puzzle, Texture2D? picture)
     {
-        (_state, _puzzle) = (state, puzzle);
+        (_state, _puzzle, _picture) = (state, puzzle, picture);
         QueueRedraw();
     }
 
     public override void _Draw()
     {
-        DrawRect(new Rect2(Vector2.Zero, Size), Parchment);
+        var whole = new Rect2(Vector2.Zero, Size);
+        if (_picture is { } picture)
+        {
+            DrawTextureRect(picture, whole, tile: false);
+        }
+        else
+        {
+            DrawRect(whole, Parchment);
+        }
+
         if (_state is null || _puzzle is not { } puzzle)
         {
             return;

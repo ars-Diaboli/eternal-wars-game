@@ -238,12 +238,14 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] The calendar on the adventure map's status bar right of the resources; no "Turn: <player>" label (ADR-225)
 - [x] Cursors: the cursor for what is under the pointer (core resolvers, adventure map and battle), system cursors standing in (ADR-204)
 - [x] The cursor images for menus and the adventure map (sets 1–3 of [cursor-prompts.md](../docs/content/prompts/cursor-prompts.md), ADR-204)
-- [ ] The battle cursor images (sets 4–7) and the days a move takes drawn on the move cursor (ADR-204)
-- [ ] The cursor images of sets 1–3 again, in grey iron instead of brown and bronze, and drawn realistically (ADR-245, ADR-248)
+- [x] The battle cursor images (sets 4–7; set 5 mirrors set 4) (ADR-204)
+- [ ] The days a move takes drawn on the move cursor (ADR-204)
+- [x] The cursor images of sets 1–3 again, in grey iron instead of brown and bronze, and drawn realistically (ADR-245, ADR-248)
 - [ ] The icons and crests already generated (tiers A and B, the heraldry crests) again, painted realistically instead of as
       cartoons (ADR-248)
+- [x] The puzzle map's pictures (the eight playable factions) and its frame, shown on the closed pieces (ADR-140, ADR-245)
 - [ ] The art from the new prompt files: spell, creature and hero portraits, town icons, UI frames and backgrounds, roads and rivers,
-      puzzle pictures, scenery and obstacles (ADR-245); then the views that use them
+      scenery and obstacles (ADR-245); then the views that use them
 - [x] Melee direction in battle: the side to strike from by the pointer's place in the cell (8 sides), the stand cells highlighted (ADR-204)
 
 ### Town screen overhaul (ADR-246; [plan](../docs/papers/town-screen-plan.md), questions TOWN-14 … TOWN-23)
