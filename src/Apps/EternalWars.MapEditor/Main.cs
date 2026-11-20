@@ -16,14 +16,15 @@ using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.Shared.Map;
 using EternalWars.Godot.UI;
 using EternalWars.Godot.UI.Editor;
+using EternalWars.Godot.UI.Editor.Shell;
 using Godot;
 
 namespace EternalWars.MapEditor;
 
 /// <summary>
 /// Map editor entry point. Editing operations, undo/redo and validation live in core (<see cref="MapEditorSession"/>);
-/// the views and panels live in the libraries; this class composes them, maps mouse and keys to the active
-/// tool, and does file I/O. Alt+Enter switches the window mode (ADR-186), kept in the editor's own settings file.
+/// the views and panels live in the libraries (the window layout is <see cref="EditorWorkspace"/>); this class composes them, maps mouse
+/// and keys to the active tool, and does file I/O. Alt+Enter switches the window mode (ADR-186), kept in the editor's own settings file.
 /// </summary>
 public partial class Main : Node3D
 {
@@ -51,7 +52,8 @@ public partial class Main : Node3D
     private int _levelTo;
     private MapObjectId? _linkFrom;
     private GenerateRequest? _lastGenerate;
-    private TabContainer _tabs = null!;
+    private EditorWorkspace _workspace = null!;
+    private GeneratePanel _generate = null!;
 
     /// <summary>The template being edited: kept while maps are opened and generated (the editor itself is rebuilt with the UI).</summary>
     private readonly TemplateEditorSession _templates = new(content: GameContent.All);
@@ -102,6 +104,11 @@ public partial class Main : Node3D
     /// <summary>The editor's settings file (only the window mode is used here), or the one the launch arguments name.</summary>
     private static string SettingsPath =>
         LaunchArguments.SettingsPath ?? Path.Combine(ProjectSettings.GlobalizePath("user://"), SettingsFile.FileName);
+
+    /// <summary>The editor's own settings file (the workspace layout), beside the settings file the launch arguments name when they name one.</summary>
+    private static string LayoutPath => Path.Combine(
+        LaunchArguments.SettingsPath is { } settings ? Path.GetDirectoryName(Path.GetFullPath(settings))! : ProjectSettings.GlobalizePath("user://"),
+        EditorWorkspace.SettingsFileName);
 
     public override void _UnhandledInput(InputEvent @event)
     {
@@ -307,21 +314,17 @@ public partial class Main : Node3D
     {
         _ui = new CanvasLayer { Name = "Ui" };
         AddChild(_ui);
-        var rows = new VBoxContainer { Position = new Vector2(UiSpacing.ScreenEdge, UiSpacing.ScreenEdge) };
-        _ui.AddChild(rows);
-
-        _tools = new ToolPalette();
-        rows.AddChild(_tools);
-        _tools.Bind(_editor);
-        _tools.ToolChanged += _ => _linkFrom = null;
+        _workspace = new EditorWorkspace { Name = "Workspace" };
+        _ui.AddChild(_workspace);
+        _workspace.Bind(LayoutPath);
 
         var fileRow = new HBoxContainer();
-        rows.AddChild(fileRow);
+        _workspace.TopBar.AddChild(fileRow);
         _fileName = new LineEdit { CustomMinimumSize = new Vector2(240, 0) };
         fileRow.AddChild(_fileName);
         AddButton(fileRow, "New", () => Open(BlankScenario.Create(36, 36, content: GameContent.All)));
         AddButton(fileRow, "New (2 levels)", () => Open(BlankScenario.Create(36, 36, levels: 2, content: GameContent.All)));
-        AddButton(fileRow, "From template", () => _tabs.CurrentTab = _tabs.GetTabCount() - 1);
+        AddButton(fileRow, "From template", () => _workspace.ShowTab(_generate));
         AddButton(fileRow, "Templates", () => _templateEditor.Open());
         AddButton(fileRow, "Save", Save);
         AddButton(fileRow, "Load", Load);
@@ -332,52 +335,56 @@ public partial class Main : Node3D
         grid.Toggled += on => _context.ShowGrid = _showGrid = on;
         fileRow.AddChild(grid);
 
-        _status = new Label();
-        rows.AddChild(_status);
+        var statusRow = new HBoxContainer();
+        _workspace.TopBar.AddChild(statusRow);
+        _status = new Label { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, ClipText = true };
+        statusRow.AddChild(_status);
         _history = new Label();
-        rows.AddChild(_history);
-        rows.AddChild(new Label { Text = "LMB: use tool   Ctrl+Z / Ctrl+Y: undo / redo   L: level   WASD/QE/wheel: camera" });
+        statusRow.AddChild(_history);
+        _workspace.TopBar.AddChild(new Label { Text = "LMB: use tool   Ctrl+Z / Ctrl+Y: undo / redo   L: level   WASD/QE/wheel: camera   F11: panels" });
 
-        // Below the tool rows: a tool's second row (terrains, objects) runs under the right-hand side.
-        var tabs = new TabContainer { AnchorLeft = 1, AnchorRight = 1, OffsetLeft = -560, OffsetTop = 84, OffsetRight = -UiSpacing.ScreenEdge, OffsetBottom = 700 };
-        _tabs = tabs;
-        _ui.AddChild(tabs);
+        // Left: the tools and the options of the one in use, which wrap to the region's width.
+        _tools = new ToolPalette { Name = "Tools" };
+        _workspace.AddTab(EditorRegion.Left, _tools);
+        _tools.Bind(_editor);
+        _tools.ToolChanged += _ => _linkFrom = null;
+
+        // Right: the map's settings and the inspector.
         var properties = new MapPropertiesPanel { Name = "Map" };
-        tabs.AddChild(properties);
+        _workspace.AddTab(EditorRegion.Right, properties);
         properties.Bind(_editor);
         var players = new PlayersPanel { Name = "Players" };
-        tabs.AddChild(players);
+        _workspace.AddTab(EditorRegion.Right, players);
         players.Bind(_editor);
         var conditions = new ConditionsPanel { Name = "Conditions" };
-        tabs.AddChild(conditions);
+        _workspace.AddTab(EditorRegion.Right, conditions);
         conditions.Bind(_editor);
         _inspector = new InspectorPanel { Name = "Inspector" };
-        tabs.AddChild(_inspector);
+        _workspace.AddTab(EditorRegion.Right, _inspector);
         _inspector.Bind(_editor);
-        var validation = new ValidationPanel { Name = "Validation" };
-        tabs.AddChild(validation);
-        validation.Bind(_editor);
-        validation.IssueSelected += ShowTile;
         _events = new EventsPanel { Name = "Events" };
-        tabs.AddChild(_events);
-        tabs.MoveChild(_events, validation.GetIndex()); // before Validation; Generate stays last
+        _workspace.AddTab(EditorRegion.Right, _events);
         _events.Bind(_editor, MapEventNodeJson.Instance);
-        var bans = new BansPanel { Name = "Bans" }; // the map's bans (ADR-126), after Events
-        tabs.AddChild(bans);
-        tabs.MoveChild(bans, validation.GetIndex());
-        tabs.WithTabIcon(bans.GetIndex(), UiIcon.Ban);
+        var bans = new BansPanel { Name = "Bans" }; // the map's bans (ADR-126)
+        _workspace.AddTab(EditorRegion.Right, bans, UiIcon.Ban);
         bans.Bind(_editor);
-        _events.SelectionChanged += name => _eventCells.Highlighted = name;
-        _events.ShowRequested += ShowTile;
-        _inspector.EventRequested += OpenEvent;
-        validation.EventSelected += OpenEvent;
-        var generate = new GeneratePanel { Name = "Generate" }; // the last tab ("From template" opens it)
-        tabs.AddChild(generate);
+        _generate = new GeneratePanel { Name = "Generate" }; // "From template" opens it
+        _workspace.AddTab(EditorRegion.Right, _generate);
         _generatorTemplates = [.. BuiltInTemplates.All, .. UserTemplates().Select(u => u.Template).Where(t => TemplateValidator.IsValid(t))];
-        generate.Bind(
+        _generate.Bind(
             _generatorTemplates.Select(t => new GeneratorTemplate(t.Name, t.Description, t.Sizes, t.MinPlayers, t.MaxHeroes, StartSlots.Of(t).Select(s => s.Name).ToList())).ToList(),
             Generate,
             _lastGenerate);
+
+        // Bottom: the map's problems.
+        var validation = new ValidationPanel { Name = "Validation" };
+        _workspace.AddTab(EditorRegion.Bottom, validation, scroll: false); // a list: it scrolls by itself
+        validation.Bind(_editor);
+        validation.IssueSelected += ShowTile;
+        validation.EventSelected += OpenEvent;
+        _events.SelectionChanged += name => _eventCells.Highlighted = name;
+        _events.ShowRequested += ShowTile;
+        _inspector.EventRequested += OpenEvent;
 
         // The template editor (ADR-117): over everything, hidden until "Templates".
         _templateEditor = new TemplateEditorPanel { Name = "TemplateEditor", Visible = false };
@@ -394,7 +401,7 @@ public partial class Main : Node3D
     /// <summary>An event link (inspector, validation): the "Events" tab with that event open.</summary>
     private void OpenEvent(string name)
     {
-        _tabs.CurrentTab = _events.GetIndex();
+        _workspace.ShowTab(_events);
         _events.Select(name);
     }
 

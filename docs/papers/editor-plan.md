@@ -488,7 +488,7 @@ The tasks of each step in build order. A task is one reviewable change that leav
 1. **Regions**: `EditorWorkspace` built from nested `SplitContainer`s with tab boxes; collapse per region, F11 hides all; the
    splitter positions and the open tabs kept in an editor settings file (`user://editor-settings.cfg`). Today's 560 px tab box goes:
    Map, Players, Conditions, Inspector, Events, Bans and Generate move unchanged to the right region, Validation to the bottom, the
-   `ToolPalette` to the left. Smoke `editor-shell`.
+   `ToolPalette` to the left. Smoke `editor-shell`. *Done.*
 2. **Tools as classes**: `IEditorTool` (activate, hover, press, drag, release, cancel, options panel) in `Editor/Tools/`. Move one tool
    at a time out of `Main.cs` (`Paint`, `Click`, `Link`, the height tools, start zones, the Grail) with no change in behaviour; the
    app only routes input to the active tool. `Main.cs` ends at composition and input mapping. The `editor-tools`, `editor-heights`
