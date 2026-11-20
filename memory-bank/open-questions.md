@@ -7,8 +7,8 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-11-16**: CMB-13 (a cleverer battle AI) answered: Fight Value × the stack's count where it fits, the proposals for the rest
-(ADR-188).
+**Updated 2026-11-20**: TOWN-14 … TOWN-23 asked, for the town screen overhaul (ADR-246); EDIT-1 … EDIT-12 for the editor overhaul
+(ADR-247).
 
 ## 🚧 Blocking now
 
@@ -26,6 +26,118 @@ Nothing blocking.
 faction-specific buildings does each town get (HoMM3 has 2–4 a town)?
 
 **Proposal**: open; the owner adds them here.
+
+<a id="town-14"></a>
+**TOWN-14 The town camera** (ADR-246): fixed hero shot, orbit or drift; does a click wait for the camera?
+
+**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-14).
+
+<a id="town-15"></a>
+**TOWN-15 What plots show** (ADR-246): a plot for both dwelling alternatives; the look before building and once a line is closed
+
+**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-15).
+
+<a id="town-16"></a>
+**TOWN-16 A 2D fallback** (ADR-246): keep a 2D main screen for weak hardware or as a setting?
+
+**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-16).
+
+<a id="town-17"></a>
+**TOWN-17 Town mechanics to add** (ADR-246): recruit all, upgrade all, any-pair trade, artifact and creature selling, resources to allies, spell research, rumours, dismissing a stack, renaming, a goal building
+
+**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-17).
+
+<a id="town-18"></a>
+**TOWN-18 Light and weather in the town** (ADR-246): one mood per faction or a time of day and weather?
+
+**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-18).
+
+<a id="town-19"></a>
+**TOWN-19 How much the town grows in the scene** (ADR-246): walls by fort level, streets by town hall level?
+
+**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-19).
+
+<a id="town-20"></a>
+**TOWN-20 Creatures in the scene** (ADR-246): an idle creature at each built dwelling?
+
+**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-20).
+
+<a id="town-21"></a>
+**TOWN-21 How the town art is made** (ADR-246): about 320 models: image-to-3D, kitbash, commissioned; which factions first?
+
+**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-21).
+
+<a id="town-22"></a>
+**TOWN-22 Heroes in the scene** (ADR-246): the visiting and garrison heroes shown?
+
+**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-22).
+
+<a id="town-23"></a>
+**TOWN-23 Entering and leaving** (ADR-246): the transition from the map
+
+**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-23).
+
+## Tools and editor
+
+<a id="edit-1"></a>
+**EDIT-1 The workspace layout** (ADR-247): free docking or fixed regions?
+
+**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-1).
+
+<a id="edit-2"></a>
+**EDIT-2 Undo in the template editor** (ADR-247): reverse ADR-117's "no undo"?
+
+**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-2).
+
+<a id="edit-3"></a>
+**EDIT-3 Where the template editor lives** (ADR-247): an overlay, a workspace tab or its own app?
+
+**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-3).
+
+<a id="edit-4"></a>
+**EDIT-4 Several maps open at once** (ADR-247): document tabs?
+
+**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-4).
+
+<a id="edit-5"></a>
+**EDIT-5 Play-test** (ADR-247): a separate game process or inside the editor; which options?
+
+**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-5).
+
+<a id="edit-6"></a>
+**EDIT-6 Decoration off the grid** (ADR-247): rotation, mirroring or free placement for scenery (a format change)?
+
+**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-6).
+
+<a id="edit-7"></a>
+**EDIT-7 Scripting** (ADR-247): a scripting language, or the event tree only?
+
+**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-7).
+
+<a id="edit-8"></a>
+**EDIT-8 Map resize** (ADR-247): anchor, objects outside, which sizes?
+
+**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-8).
+
+<a id="edit-9"></a>
+**EDIT-9 What the fairness report measures** (ADR-247): which numbers per start, which spread warns?
+
+**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-9).
+
+<a id="edit-10"></a>
+**EDIT-10 Importing HoMM3 or HotA maps and templates** (ADR-247): for 1.0 or after?
+
+**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-10).
+
+<a id="edit-11"></a>
+**EDIT-11 Map text in several languages** (ADR-247): per-language map texts?
+
+**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-11).
+
+<a id="edit-12"></a>
+**EDIT-12 Map content the editor lacks** (ADR-247): custom heroes, rumours, AI style, allowed factions, named objects?
+
+**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-12).
 
 ## Game flow and content
 

@@ -21,7 +21,7 @@ deep old forest of grey trunks, pale green light through thin leaves, falling le
 
 ## Portraits
 
-**Compose**: `CREATURE-STYLE` + `CREATURE-sylvan` + `ICON-SHEET-6` + cells (Cell rule) · negative `ICON-NEG` + `CREATURE-NEG` · 1536 × 1024
+**Compose**: `CREATURE-STYLE` + `CREATURE-sylvan` + `ICON-SHEET-6` + cells (Cell rule) · negative `ICON-NEG` + `ICON-NEG-TOON` + `CREATURE-NEG` · 1536 × 1024
 
 | Sheet | Base | Base subject | Upgrade | Upgrade adds |
 |---|---|---|---|---|

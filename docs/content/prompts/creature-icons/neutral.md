@@ -20,7 +20,7 @@ a plain grey-green wilderness of rolling hills and distant mountains under an ov
 
 ## Portraits
 
-**Compose**: `CREATURE-STYLE` + `CREATURE-neutral` + `ICON-SHEET-6` + cells (Cell rule, X1–X2) or `ICON-SHEET-4` + cells (X3) · negative `ICON-NEG` + `CREATURE-NEG` · 1536 × 1024 (X1–X2), 1024 × 1024 (X3)
+**Compose**: `CREATURE-STYLE` + `CREATURE-neutral` + `ICON-SHEET-6` + cells (Cell rule, X1–X2) or `ICON-SHEET-4` + cells (X3) · negative `ICON-NEG` + `ICON-NEG-TOON` + `CREATURE-NEG` · 1536 × 1024 (X1–X2), 1024 × 1024 (X3)
 
 | Sheet | Base | Base subject | Upgrade | Upgrade adds |
 |---|---|---|---|---|

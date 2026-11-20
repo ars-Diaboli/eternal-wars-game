@@ -9,18 +9,18 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
-- ADR-245 (presentation): every prompt file in `docs/content/prompts/` has one layout; cursors in grey iron (sets 1–3 to regenerate);
-  new prompt files for spell icons, creature portraits (a file a faction), hero portraits and town icons, UI pieces, roads and rivers,
-  the puzzle map and the environment.
-- ADR-244 (presentation): new terrain texture prompts: each terrain its own saturated colour and structure, a texture shows
-  about 30 m of map; the mood comes from light and grading.
-- ADR-243 (code health): creature, spell, artifact and building ids are types of their own (`CreatureId`, `SpellId`, `ArtifactId`,
-  `BuildingId`); the file formats are unchanged.
+- ADR-248 (presentation): icon and portrait prompts painted realistically, not as cartoons: new style blocks, `ICON-NEG-TOON` on every
+  painted sheet; the icons and crests already generated and cursor sets 1–3 are to be regenerated.
+- ADR-247 (random maps and editor): the map and template editor overhaul is planned: one creator-app workspace, seven steps;
+  [docs/papers/editor-plan.md](../docs/papers/editor-plan.md); questions EDIT-1 … EDIT-12 asked; nothing built.
+- ADR-246 (presentation): the town screen overhaul is planned: a 3D town scene per faction with full town windows, six steps;
+  [docs/papers/town-screen-plan.md](../docs/papers/town-screen-plan.md); questions TOWN-14 … TOWN-23 asked; nothing built.
 
 ## Next
 1. A person's full game on Ember March (the Phase 3 exit's last check).
 2. The prologue map (CAMP-1), as the first map of a campaign; Border Watch's story is a placeholder.
-3. The remaining Phase 5 items in [roadmap.md](roadmap.md) ("Presentation and UI", "Platform and art", "Roster").
+3. The remaining Phase 5 items in [roadmap.md](roadmap.md) ("Presentation and UI", "Town screen overhaul", "Editor overhaul",
+   "Platform and art", "Roster"); both overhauls start with the owner's answers (TOWN-14 … TOWN-23, EDIT-1 … EDIT-12).
 4. The "Code health" list in [roadmap.md](roadmap.md): skills, heroes and town types as typed ids; `InfoSheets` as data once localisation
    is decided (ADR-239).
 

@@ -30,6 +30,8 @@
 | [240](#adr-240-the-splat-reads-adventure-only-pictures-and-normal-roughness-and-occlusion-maps-owner-adr-183-2026-11-19) | The splat reads adventure-only pictures and normal, roughness and occlusion maps (owner, ADR-183, 2026-11-19) | implemented |
 | [244](#adr-244-ground-textures-each-terrain-its-own-saturated-colour-and-structure-at-a-30-m-scale-the-mood-comes-from-light-and-grading-owner-adr-183-2026-11-20) | Ground textures: each terrain its own saturated colour and structure, at a 30 m scale; the mood comes from light and grading (owner, ADR-183, 2026-11-20) | accepted |
 | [245](#adr-245-asset-prompts-for-spells-creatures-heroes-and-towns-ui-pieces-roads-and-rivers-the-puzzle-map-and-the-environment-cursors-in-grey-iron-one-layout-for-every-prompt-file-owner-adr-116-adr-204-adr-244-2026-11-20) | Asset prompts for spells, creatures, heroes and towns, UI pieces, roads and rivers, the puzzle map and the environment; cursors in grey iron; one layout for every prompt file (owner, ADR-116, ADR-204, ADR-244, 2026-11-20) | accepted |
+| [246](#adr-246-town-screen-overhaul-a-3d-town-scene-with-full-town-windows-planned-in-six-steps-owner-adr-050-adr-114-adr-223-2026-11-20) | Town screen overhaul: a 3D town scene with full town windows, planned in six steps (owner, ADR-050, ADR-114, ADR-223, 2026-11-20) | accepted |
+| [248](#adr-248-icons-and-portraits-painted-realistically-not-as-cartoons-new-style-blocks-and-an-anti-cartoon-negative-owner-adr-116-adr-245-2026-11-20) | Icons and portraits painted realistically, not as cartoons: new style blocks and an anti-cartoon negative (owner, ADR-116, ADR-245, 2026-11-20) | accepted |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -505,3 +507,39 @@ nine-slice UI frames) need view work once the art exists.
   family, battle obstacles, scatter debris, shared materials).
 - **Portraits** face right and keep the face and weapon in the middle band of the cell, so the wide army slots can crop them.
 
+### ADR-246: Town screen overhaul: a 3D town scene with full town windows, planned in six steps (owner, ADR-050, ADR-114, ADR-223, 2026-11-20)
+**Status**: accepted (the direction and the plan); nothing built. Supersedes ADR-050's "the town screen is 2D, also in the 3D game"
+once step 3 of the plan lands. Plan, study and questions: [town-screen-plan.md](../../docs/papers/town-screen-plan.md).
+
+- **Owner**: the town screen is to be overhauled to the quality of a current commercial strategy game, its main screen a **3D town
+  scene**, and in function on the level of HoMM3 with HotA and HoMM5: a main screen, a building tree, recruitment, the tavern, the
+  marketplace, the blacksmith and the other town windows.
+- **Shape**: a 3D diorama per playable faction with a **plot** per building and dwelling (a model per level), hovered and clicked to
+  open the building's window; the HoMM bottom bar (garrison and visiting hero, seven slots each) kept; 2D windows over the scene
+  (Hall, Recruitment, Mage guild, Tavern, Marketplace, Blacksmith, Fort, Caravan and the rest). Every action stays a command
+  (ADR-036); the scene and windows only read state.
+- **Order**: six steps, each leaving a working game: decisions and wireframes; the UI foundation (fonts, frames, shared widgets);
+  the windows over a 2D main screen; the 3D scene in greybox for all eight playable towns; Haven and Inferno in full art (ADR-034);
+  the other six; polish and the adopted extras.
+- **Open**: TOWN-14 … TOWN-23 (camera, plots, a 2D fallback, new town mechanics, mood, growth in the scene, creatures and heroes in
+  it, the art method, the arrival); the plan follows their proposals until answered. New rules among them (Recruit all, Upgrade all,
+  trading any pair, …) each get their own ADR and tests.
+
+### ADR-248: Icons and portraits painted realistically, not as cartoons: new style blocks and an anti-cartoon negative (owner, ADR-116, ADR-245, 2026-11-20)
+**Status**: accepted. Art direction and asset prompts only; no code, rule or format change.
+
+- **Owner**: the generated icons come out too cartoonish; the prompts, including those of icons already generated, are to make them
+  less so.
+- **Style blocks** (`ICON-STYLE-A`, `ICON-STYLE-B`, `ICON-STYLE-CREST`, `SPELL-STYLE`, `CREATURE-STYLE`, `BACKDROP-STYLE`, `HERO-STYLE`,
+  `TOWNICON-STYLE`, `CURSOR-STYLE`): a realistic painterly style like a detailed oil painting or concept-art study; true proportions and
+  anatomy; real materials with fine wear; naturalistic light with a full range of values and muted colour. Edges come from light and
+  shadow, not drawn lines; "bold", "simple" and "chunky" are gone. Readability at 32 px rests on silhouette and value contrast. The
+  cursors keep their thick dark outline, which they need over the map, but their metal is drawn realistically.
+- **`ICON-NEG-TOON`** (in [icon-prompts.md](../../docs/content/prompts/icon-prompts.md)): cartoon, comic, cel shading, flat fills,
+  vector and clip art, mobile-game icons, thick outlines, exaggerated proportions, glossy plastic, oversaturated colour. Added to the
+  negative of every painted sheet (tiers A and B, crests, spells, creatures, heroes, towns). The cursors get the same words in
+  `CURSOR-NEG`, without the outline terms. `ICON-NEG` now names "plastic CGI render" instead of "3D render", so realism is not pushed
+  away.
+- **Unchanged**: tier C (one-colour button symbols the theme tints) and the heraldic charges (flat white stencils), which are flat by
+  design.
+- **Regenerate**: the icons and crests already in `textures/ui/` (tiers A and B, the crests) and cursor sets 1–3.

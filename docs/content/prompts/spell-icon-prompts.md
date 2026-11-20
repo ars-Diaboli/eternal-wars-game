@@ -13,7 +13,7 @@ them with a space:
 ```text
 PROMPT   = SPELL-STYLE + SPELL-<school> + ICON-SHEET-6 + CELLS
 CELLS    = "1 <subject 1>; 2 <subject 2>; …"   the sheet table's Subject column, in its # order
-NEGATIVE = ICON-NEG + ", " + SPELL-NEG   (only where the model takes a negative prompt)
+NEGATIVE = ICON-NEG + ", " + ICON-NEG-TOON + ", " + SPELL-NEG   (only where the model takes a negative prompt)
 OUTPUT   = 1536 × 1024; cut the sheet and save each cell as <File>.png
 ```
 
@@ -25,9 +25,11 @@ is not pasted. Do not paraphrase blocks or subjects.
 **`SPELL-STYLE`** (style, first in every prompt):
 
 ```text
-Game spell icon sheet, hand-painted dark-fantasy style, each spell one bold symbolic image of its effect at the moment it happens, a
-single central motif with a strong glow in the school's colour, painted light and soft gradients, light coming from the magic itself,
-a thin dark outline around each subject, front view unless a cell says otherwise. No photo realism, no 3D render look, no pixel art.
+Game spell icon sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting: each spell one strong image of
+its effect at the moment it happens, a single central motif with believable form and real materials (fire, smoke, ice, stone, metal,
+flesh), lit by its own magic in the school's colour so the glow falls naturally on the surfaces near it. Deep shadows, a full range of
+values, fine detail and subtle colour variation instead of flat fills; edges made by light and shadow, not by drawn lines; front view
+unless a cell says otherwise. Not a photograph, not a plastic CGI render, no pixel art.
 ```
 
 **`SPELL-light`** (palette, Light school, Haven):
@@ -83,7 +85,7 @@ spell book, card frame, scroll, whole characters, people, another school's colou
 
 ## Light (Haven)
 
-**Compose**: `SPELL-STYLE` + `SPELL-light` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `SPELL-NEG` · 1536 × 1024
+**Compose**: `SPELL-STYLE` + `SPELL-light` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` + `SPELL-NEG` · 1536 × 1024
 
 | # | File | Subject | Reads as |
 |---|---|---|---|
@@ -96,7 +98,7 @@ spell book, card frame, scroll, whole characters, people, another school's colou
 
 ## Nature (Sylvan)
 
-**Compose**: `SPELL-STYLE` + `SPELL-nature` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `SPELL-NEG` · 1536 × 1024
+**Compose**: `SPELL-STYLE` + `SPELL-nature` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` + `SPELL-NEG` · 1536 × 1024
 
 | # | File | Subject | Reads as |
 |---|---|---|---|
@@ -109,7 +111,7 @@ spell book, card frame, scroll, whole characters, people, another school's colou
 
 ## Arcana (Academy)
 
-**Compose**: `SPELL-STYLE` + `SPELL-arcana` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `SPELL-NEG` · 1536 × 1024
+**Compose**: `SPELL-STYLE` + `SPELL-arcana` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` + `SPELL-NEG` · 1536 × 1024
 
 | # | File | Subject | Reads as |
 |---|---|---|---|
@@ -122,7 +124,7 @@ spell book, card frame, scroll, whole characters, people, another school's colou
 
 ## Death (Necropolis)
 
-**Compose**: `SPELL-STYLE` + `SPELL-death` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `SPELL-NEG` · 1536 × 1024
+**Compose**: `SPELL-STYLE` + `SPELL-death` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` + `SPELL-NEG` · 1536 × 1024
 
 | # | File | Subject | Reads as |
 |---|---|---|---|
@@ -135,7 +137,7 @@ spell book, card frame, scroll, whole characters, people, another school's colou
 
 ## Chaos (Inferno)
 
-**Compose**: `SPELL-STYLE` + `SPELL-chaos` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `SPELL-NEG` · 1536 × 1024
+**Compose**: `SPELL-STYLE` + `SPELL-chaos` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` + `SPELL-NEG` · 1536 × 1024
 
 | # | File | Subject | Reads as |
 |---|---|---|---|
@@ -148,7 +150,7 @@ spell book, card frame, scroll, whole characters, people, another school's colou
 
 ## Shadow (Dungeon)
 
-**Compose**: `SPELL-STYLE` + `SPELL-shadow` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `SPELL-NEG` · 1536 × 1024
+**Compose**: `SPELL-STYLE` + `SPELL-shadow` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` + `SPELL-NEG` · 1536 × 1024
 
 | # | File | Subject | Reads as |
 |---|---|---|---|
@@ -163,5 +165,7 @@ spell book, card frame, scroll, whole characters, people, another school's colou
 
 1. Put each school's six icons side by side at 32 px: each is named at a glance, and the school's colour carries the page.
 2. Put two schools side by side: no icon of one could pass for the other's.
-3. Put the files in `src/Godot/EternalWars.Godot.Assets/textures/ui/spells/` *(proposal)* and add a line to its `CREDITS.md` with the
+3. Check for a cartoon look (thick outlines, flat colour fills, bubbly shapes, plastic shine, doll-like faces) and regenerate such a
+   sheet.
+4. Put the files in `src/Godot/EternalWars.Godot.Assets/textures/ui/spells/` *(proposal)* and add a line to its `CREDITS.md` with the
    tool and its licence terms.

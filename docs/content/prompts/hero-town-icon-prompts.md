@@ -14,7 +14,7 @@ them with a space:
 PROMPT   = HERO-STYLE + HERO-<town> + HERO-<class> + ICON-SHEET-4 + CELLS    (hero sheets)
          = TOWNICON-STYLE + ICON-SHEET-4 + CELLS                              (town sheets)
 CELLS    = "1 <subject 1>; 2 <subject 2>; …"   the sheet table's Subject column, in its # order
-NEGATIVE = ICON-NEG + ", " + HERO-NEG or TOWNICON-NEG   (only where the model takes a negative prompt)
+NEGATIVE = ICON-NEG + ", " + ICON-NEG-TOON + ", " + HERO-NEG or TOWNICON-NEG   (only where the model takes a negative prompt)
 OUTPUT   = 1024 × 1024; cut the sheet and save each cell as <File>.png
 ```
 
@@ -26,9 +26,12 @@ OUTPUT   = 1024 × 1024; cut the sheet and save each cell as <File>.png
 **`HERO-STYLE`** (style, first in every hero prompt):
 
 ```text
-Game hero portrait sheet, hand-painted dark-fantasy style, rich painted detail, each portrait a single character's head and shoulders
-in three-quarter view facing right, the face large and lit from the top left, a thin dark outline around the figure. Weathered, tired,
-determined faces with real character, worn realistic materials. No photo realism, no 3D render look, no pixel art.
+Game hero portrait sheet in a realistic painterly dark-fantasy style, like an oil-painted character portrait: each portrait a single
+character's head and shoulders in three-quarter view facing right, the face large. Realistic facial anatomy and proportions, natural
+eyes, skin with pores, scars, stubble, wrinkles and weather; worn real materials with fine texture. Naturalistic light from the top
+left with soft shadows and a faint cool fill light, a full range of values, muted natural colours; the figure set apart by value
+contrast, no drawn outline. Weathered, tired, determined faces with real character. Not a photograph, not a plastic CGI render, no pixel
+art.
 ```
 
 **`HERO-WARRIOR`** (class, after the town block on warrior sheets):
@@ -59,22 +62,24 @@ Mages: robes, staves, books and charms, a faint glow of their magic at the hands
 **`HERO-NEG`** (negative prompt, after `ICON-NEG` on every hero sheet):
 
 ```text
-background scenery, frame, full body, two people in one cell, glamour, clean flawless skin, modern clothes, real-world symbols, another
+background scenery, frame, full body, two people in one cell, glamour, clean flawless skin, smooth doll-like face, heroic cartoon jaw, modern clothes, real-world symbols, another
 game's character
 ```
 
 **`TOWNICON-STYLE`** (style, the town sheets):
 
 ```text
-Game town icon sheet, hand-painted dark-fantasy style, each icon a whole small fantasy town seen from above at a steep angle like on a
-strategy map, standing on a small round patch of its own ground that fades out at the edge, one tall landmark toward the back, chunky
-readable shapes, light from the top left. No photo realism, no 3D render look, no pixel art.
+Game town icon sheet in a realistic painterly dark-fantasy style, like a small diorama painted in oils: each icon a whole small fantasy
+town seen from above at a steep angle like on a strategy map, standing on a small round patch of its own ground that fades out at the
+edge, one tall landmark toward the back. Believable architecture and scale (doors, windows, roof tiles, stonework, timber), weathered
+materials with grime and moss, naturalistic light from the top left with soft shadows, muted natural colours, a strong silhouette
+without drawn outlines. Not a photograph, not a plastic CGI render, no pixel art.
 ```
 
 **`TOWNICON-NEG`** (negative prompt, after `ICON-NEG` on every town sheet):
 
 ```text
-square ground tile, landscape, horizon, people, banners in colour, text, front view, another game's town
+square ground tile, landscape, horizon, people, banners in colour, text, front view, toy houses, board-game piece, another game's town
 ```
 
 ## Output for every icon
@@ -91,7 +96,7 @@ square ground tile, landscape, horizon, people, banners in colour, text, front v
 
 ## Haven
 
-**Compose**: `HERO-STYLE` + `HERO-haven` + `HERO-WARRIOR` or `HERO-MAGE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `HERO-NEG` · 1024 × 1024
+**Compose**: `HERO-STYLE` + `HERO-haven` + `HERO-WARRIOR` or `HERO-MAGE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` + `HERO-NEG` · 1024 × 1024
 
 | # | File | Subject |
 |---|---|---|
@@ -114,7 +119,7 @@ square ground tile, landscape, horizon, people, banners in colour, text, front v
 
 ## Sylvan
 
-**Compose**: `HERO-STYLE` + `HERO-sylvan` + `HERO-WARRIOR` or `HERO-MAGE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `HERO-NEG` · 1024 × 1024
+**Compose**: `HERO-STYLE` + `HERO-sylvan` + `HERO-WARRIOR` or `HERO-MAGE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` + `HERO-NEG` · 1024 × 1024
 
 | # | File | Subject |
 |---|---|---|
@@ -137,7 +142,7 @@ square ground tile, landscape, horizon, people, banners in colour, text, front v
 
 ## Academy
 
-**Compose**: `HERO-STYLE` + `HERO-academy` + `HERO-WARRIOR` or `HERO-MAGE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `HERO-NEG` · 1024 × 1024
+**Compose**: `HERO-STYLE` + `HERO-academy` + `HERO-WARRIOR` or `HERO-MAGE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` + `HERO-NEG` · 1024 × 1024
 
 | # | File | Subject |
 |---|---|---|
@@ -160,7 +165,7 @@ square ground tile, landscape, horizon, people, banners in colour, text, front v
 
 ## Necropolis
 
-**Compose**: `HERO-STYLE` + `HERO-necropolis` + `HERO-WARRIOR` or `HERO-MAGE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `HERO-NEG` · 1024 × 1024
+**Compose**: `HERO-STYLE` + `HERO-necropolis` + `HERO-WARRIOR` or `HERO-MAGE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` + `HERO-NEG` · 1024 × 1024
 
 | # | File | Subject |
 |---|---|---|
@@ -183,7 +188,7 @@ square ground tile, landscape, horizon, people, banners in colour, text, front v
 
 ## Inferno
 
-**Compose**: `HERO-STYLE` + `HERO-inferno` + `HERO-WARRIOR` or `HERO-MAGE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `HERO-NEG` · 1024 × 1024
+**Compose**: `HERO-STYLE` + `HERO-inferno` + `HERO-WARRIOR` or `HERO-MAGE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` + `HERO-NEG` · 1024 × 1024
 
 | # | File | Subject |
 |---|---|---|
@@ -206,7 +211,7 @@ square ground tile, landscape, horizon, people, banners in colour, text, front v
 
 ## Dungeon
 
-**Compose**: `HERO-STYLE` + `HERO-dungeon` + `HERO-WARRIOR` or `HERO-MAGE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `HERO-NEG` · 1024 × 1024
+**Compose**: `HERO-STYLE` + `HERO-dungeon` + `HERO-WARRIOR` or `HERO-MAGE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` + `HERO-NEG` · 1024 × 1024
 
 | # | File | Subject |
 |---|---|---|
@@ -229,7 +234,7 @@ square ground tile, landscape, horizon, people, banners in colour, text, front v
 
 ## Stronghold
 
-**Compose**: `HERO-STYLE` + `HERO-stronghold` + `HERO-WARRIOR` or `HERO-MAGE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `HERO-NEG` · 1024 × 1024
+**Compose**: `HERO-STYLE` + `HERO-stronghold` + `HERO-WARRIOR` or `HERO-MAGE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` + `HERO-NEG` · 1024 × 1024
 
 | # | File | Subject |
 |---|---|---|
@@ -252,7 +257,7 @@ square ground tile, landscape, horizon, people, banners in colour, text, front v
 
 ## Swamp Bestiary
 
-**Compose**: `HERO-STYLE` + `HERO-swamp-bestiary` + `HERO-WARRIOR` or `HERO-MAGE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `HERO-NEG` · 1024 × 1024
+**Compose**: `HERO-STYLE` + `HERO-swamp-bestiary` + `HERO-WARRIOR` or `HERO-MAGE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` + `HERO-NEG` · 1024 × 1024
 
 | # | File | Subject |
 |---|---|---|
@@ -275,7 +280,7 @@ square ground tile, landscape, horizon, people, banners in colour, text, front v
 
 ## Towns
 
-**Compose**: `TOWNICON-STYLE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `TOWNICON-NEG` · 1024 × 1024
+**Compose**: `TOWNICON-STYLE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` + `TOWNICON-NEG` · 1024 × 1024
 
 Each sheet holds two towns: cells 1–2 the towns with their walls (`icon_town_<town>`), cells 3–4 the same towns as villages without
 walls (`icon_town_<town>_village`): "the same town as the one above it, as a small village: a few houses around the bare foundation of its
@@ -299,5 +304,7 @@ landmark, no walls". The subjects follow the town models ([town-model-prompts.md
 1. Put a town's sixteen portraits side by side at 48 px: each face is distinct, the town's look is shared.
 2. Check that each portrait faces right and that the face, not the gear, is the largest shape.
 3. Put the town icons side by side at 32 px: each town is named at a glance, walled and village apart.
-4. Put the files in `src/Godot/EternalWars.Godot.Assets/textures/ui/heroes/` and `textures/ui/towns/` *(proposal)* and add a line to each
+4. Check for a cartoon look (thick outlines, flat colour fills, bubbly shapes, plastic shine, doll-like faces) and regenerate such a
+   sheet.
+5. Put the files in `src/Godot/EternalWars.Godot.Assets/textures/ui/heroes/` and `textures/ui/towns/` *(proposal)* and add a line to each
    folder's `CREDITS.md` with the tool and its licence terms.

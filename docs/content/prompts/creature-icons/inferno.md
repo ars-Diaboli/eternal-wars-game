@@ -21,7 +21,7 @@ black slag field with glowing lava cracks under a smoky red sky
 
 ## Portraits
 
-**Compose**: `CREATURE-STYLE` + `CREATURE-inferno` + `ICON-SHEET-6` + cells (Cell rule) · negative `ICON-NEG` + `CREATURE-NEG` · 1536 × 1024
+**Compose**: `CREATURE-STYLE` + `CREATURE-inferno` + `ICON-SHEET-6` + cells (Cell rule) · negative `ICON-NEG` + `ICON-NEG-TOON` + `CREATURE-NEG` · 1536 × 1024
 
 | Sheet | Base | Base subject | Upgrade | Upgrade adds |
 |---|---|---|---|---|

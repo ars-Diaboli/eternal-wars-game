@@ -21,7 +21,7 @@ misty green highland hills under a pale dawn sky, a distant ruined stone tower
 
 ## Portraits
 
-**Compose**: `CREATURE-STYLE` + `CREATURE-haven` + `ICON-SHEET-6` + cells (Cell rule) · negative `ICON-NEG` + `CREATURE-NEG` · 1536 × 1024
+**Compose**: `CREATURE-STYLE` + `CREATURE-haven` + `ICON-SHEET-6` + cells (Cell rule) · negative `ICON-NEG` + `ICON-NEG-TOON` + `CREATURE-NEG` · 1536 × 1024
 
 | Sheet | Base | Base subject | Upgrade | Upgrade adds |
 |---|---|---|---|---|

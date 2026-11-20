@@ -26,18 +26,22 @@ Do not paraphrase blocks or subjects: the wording keeps the sheets consistent wi
 **`ICON-STYLE-A`** (style, tier A · objects):
 
 ```text
-Game UI icon sheet, hand-painted dark-fantasy style, rich painted detail on simple bold shapes, worn realistic materials (steel, wood,
-leather, stone, glass), soft painted shading, light from the top left, a thin dark outline around each subject, three-quarter view
-slightly from above unless a cell says otherwise, desaturated earthy colours with one accent colour per icon. No photo realism, no 3D
-render look, no pixel art.
+Game UI icon sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a concept-art prop study:
+realistic proportions and believable construction, worn real materials (steel, wood, leather, stone, glass) with fine surface detail
+(scratches, dents, grime, patina, rust, frayed edges). Naturalistic light from the top left with soft shadows and subtle reflected
+light, a full range of values from deep shadow to one small sharp highlight, muted natural colours with one accent colour per icon.
+Each subject a clear silhouette set apart by value contrast, its edges made by light and shadow, not by drawn lines; three-quarter view
+slightly from above unless a cell says otherwise. Not a photograph, not a plastic CGI render, no pixel art.
 ```
 
 **`ICON-STYLE-B`** (style, tier B · emblems):
 
 ```text
-Game UI icon sheet, hand-painted dark-fantasy emblems, flat front view, one bold symbolic shape per icon, medium detail, two or three
-colours plus a soft glow where named, soft painted gradients, light from the top left, a thin dark outline around each subject. No photo
-realism, no 3D render look, no pixel art.
+Game UI icon sheet of dark-fantasy emblems in a realistic painterly style, flat front view, each emblem one strong symbolic shape made
+as a real object: hammered and engraved metal, carved stone or bone, aged enamel or worn cloth, with true material texture, small dents
+and wear. Two or three muted colours plus a soft glow where named, the glow lighting the surface around it naturally. Light from the
+top left, the shape set apart by value contrast and a faint dark edge, no drawn outline. Not a photograph, not a plastic CGI render, no
+pixel art.
 ```
 
 **`ICON-STYLE-C`** (style, tier C · plain):
@@ -50,10 +54,11 @@ other colour, no glow, bold and simple, equal stroke weight on every symbol.
 **`ICON-STYLE-CREST`** (style, heraldry crests):
 
 ```text
-Fantasy heraldry crest sheet, hand-painted dark-fantasy style, each crest a heater-shaped shield of worn painted metal with a thin dark
-iron rim, every shield the same shape, size and angle, seen exactly from the front; one bold figure centred on the field in the colours
-named, flat heraldic colours with light wear and scratches, soft painted shading, light from the top left, no mantling, no helmet, no
-scroll, no motto, no text.
+Fantasy heraldry crest sheet in a realistic painterly dark-fantasy style, each crest a heater-shaped shield of real worn metal with a
+dark forged iron rim, every shield the same shape, size and angle, seen exactly from the front; one strong figure centred on the field
+in the colours named, painted in aged enamel with chips, scratches, small dents and a dull patina, the figure slightly raised so it
+catches the light. Naturalistic light from the top left, soft shadows, no drawn outline, no mantling, no helmet, no scroll, no motto, no
+text.
 ```
 
 **`ICON-STYLE-CHARGE`** (style, heraldry charges):
@@ -82,8 +87,17 @@ text, no labels, no numbers. Transparent background, PNG with alpha. The icons, 
 **`ICON-NEG`** (negative prompt, every sheet):
 
 ```text
-text, letters, numbers, labels, frames, borders, grid lines, cell dividers, scenery, ground shadow, photo, 3D render, pixel art, blurry,
+text, letters, numbers, labels, frames, borders, grid lines, cell dividers, scenery, ground shadow, photograph, plastic CGI render, pixel art, blurry,
 cropped subject, subjects touching or overlapping, two subjects in one cell.
+```
+
+**`ICON-NEG-TOON`** (negative prompt, added on every painted sheet: tiers A and B, crests, spells, creatures, heroes, towns; not on
+tier C, the charges or the cursors):
+
+```text
+cartoon, comic book, anime, manga, chibi, cute, toy-like, childish, cel shading, flat colours, flat shading, vector art, clip art,
+sticker, emoji, mobile game icon, casual game art, thick black outlines, ink line art, exaggerated proportions, oversized head, big eyes,
+rounded bubbly shapes, glossy plastic, smooth airbrushed gradients, oversaturated colours, candy colours
 ```
 
 **`ICON-NEG-MECH`** (negative prompt, added for mechanical subjects: machines, bows, scales, carts):
@@ -104,6 +118,9 @@ extra arms, tangled ropes, floating or disconnected parts.
   sheet); each tile keeps the sheet's transparency.
 - **Spare cell**: where a sheet has fewer icons than cells, the free cell is a second take of the hardest icon on it. Keep the better one.
 - **Light**: from the top left; one soft highlight, no rim light, no cast shadow outside the subject.
+- **Realism** (tiers A and B, crests): painted like a realistic oil study, not a cartoon: true proportions, real material texture,
+  values doing the work that outlines do in cartoon icons. Readability at 32 px comes from the silhouette and the contrast between
+  the subject's light and dark sides, not from a drawn line.
 - **Colour**: the faction groups own their colours: Dawn Covenant (Haven, Sylvan, Academy) gold, white, green, sky blue; Ashen Court
   (Necropolis, Inferno, Dungeon) ash grey, ember red, violet, bone; Unbound (Stronghold, Swamp Bestiary) raw wood, leather, bone, moss
   green; Firstborn (Conflux, Dragon Utopia) stone, crystal, old bronze. Neutral icons (resources, actions, buttons) use none of them
@@ -113,8 +130,8 @@ extra arms, tangled ropes, floating or disconnected parts.
 
 | Tier | What | Where it is shown | Sheets |
 |---|---|---|---|
-| **A · Objects** | painted objects with materials | hero screen, level-up and trade windows, the resource bar, the difficulty row; 48–64 px | 1–7, 29 |
-| **B · Emblems** | symbols with two or three colours and a glow | skill and spell rows, the action panel, the battle bar; 32–48 px | 8–18 |
+| **A · Objects** | realistically painted objects with materials | hero screen, level-up and trade windows, the resource bar, the difficulty row; 48–64 px | 1–7, 29 |
+| **B · Emblems** | symbols made as real objects (metal, stone, enamel), two or three colours and a glow | skill and spell rows, the action panel, the battle bar; 32–48 px | 8–18 |
 | **C · Plain** | one-colour symbols the theme tints | buttons; 24–32 px | 19–22 |
 | **Heraldry** | faction crests in colour, and their one-colour charges | town and player panels, flags and banners; 24–128 px | 23–28 |
 
@@ -124,7 +141,7 @@ The blocks are under [Blocks](#blocks).
 
 ### 1 · Resources (2 × 3) — the resource bar, trade and cost lists
 
-**Compose**: `ICON-STYLE-A` + `ICON-SHEET-6` + cells · negative `ICON-NEG` · 1536 × 1024
+**Compose**: `ICON-STYLE-A` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1536 × 1024
 
 | # | File | Subject |
 |---|---|---|
@@ -137,7 +154,7 @@ The blocks are under [Blocks](#blocks).
 
 ### 2 · Hero stats (2 × 3) — the hero screen's header, level-up
 
-**Compose**: `ICON-STYLE-A` + `ICON-SHEET-6` + cells · negative `ICON-NEG` · 1536 × 1024
+**Compose**: `ICON-STYLE-A` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1536 × 1024
 
 | # | File | Subject |
 |---|---|---|
@@ -150,7 +167,7 @@ The blocks are under [Blocks](#blocks).
 
 ### 3 · Combat skills (2 × 3) — skill rows, level-up offers
 
-**Compose**: `ICON-STYLE-A` + `ICON-SHEET-6` + cells · negative `ICON-NEG` · 1536 × 1024
+**Compose**: `ICON-STYLE-A` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1536 × 1024
 
 The level (Basic … Master) is shown by the game with a frame, not in the icon.
 
@@ -165,7 +182,7 @@ The level (Basic … Master) is shown by the game with a frame, not in the icon.
 
 ### 4 · Kingdom skills (2 × 3)
 
-**Compose**: `ICON-STYLE-A` + `ICON-SHEET-6` + cells · negative `ICON-NEG` · 1536 × 1024
+**Compose**: `ICON-STYLE-A` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1536 × 1024
 
 | # | File | Subject |
 |---|---|---|
@@ -178,7 +195,7 @@ The level (Basic … Master) is shown by the game with a frame, not in the icon.
 
 ### 5 · Battlecraft skills (2 × 3)
 
-**Compose**: `ICON-STYLE-A` + `ICON-SHEET-6` + cells · negative `ICON-NEG` · 1536 × 1024
+**Compose**: `ICON-STYLE-A` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1536 × 1024
 
 | # | File | Subject |
 |---|---|---|
@@ -191,7 +208,7 @@ The level (Basic … Master) is shown by the game with a frame, not in the icon.
 
 ### 6 · War-machine skills (2 × 2)
 
-**Compose**: `ICON-STYLE-A` + `ICON-SHEET-4` + cells · negative `ICON-NEG` · 1024 × 1024
+**Compose**: `ICON-STYLE-A` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1024 × 1024
 
 These show what the skill does, not the machine (the machines have their own sheet).
 
@@ -204,7 +221,7 @@ These show what the skill does, not the machine (the machines have their own she
 
 ### 7 · War machines (2 × 2) — the hero's army row, the blacksmith
 
-**Compose**: `ICON-STYLE-A` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-MECH` · 1024 × 1024
+**Compose**: `ICON-STYLE-A` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` + `ICON-NEG-MECH` · 1024 × 1024
 
 Image models draw machines badly (wheels at odd angles, uneven bow arms). This sheet follows the **rules for mechanical subjects** below;
 generate it on its own and expect to roll it several times.
@@ -229,7 +246,7 @@ generate it on its own and expect to roll it several times.
 
 ### 29 · Difficulty (2 × 3) — the new-game screen's difficulty row, the victory screen, the leaderboard (ADR-225)
 
-**Compose**: `ICON-STYLE-A` + `ICON-SHEET-6` + cells · negative `ICON-NEG` · 1536 × 1024
+**Compose**: `ICON-STYLE-A` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1536 × 1024
 
 Five chess pieces, from humble to grand, so the row reads as a climb at a glance: **carved wood and brass**, each piece standing
 upright on its own round base, **the same height and lighting** in every cell, three-quarter view facing left, each richer than the last.
@@ -248,7 +265,7 @@ Generate the five on one sheet so they match.
 
 ### 8 · Hero condition (2 × 2) — the hero panel, creature windows
 
-**Compose**: `ICON-STYLE-B` + `ICON-SHEET-4` + cells · negative `ICON-NEG` · 1024 × 1024
+**Compose**: `ICON-STYLE-B` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1024 × 1024
 
 | # | File | Subject |
 |---|---|---|
@@ -259,7 +276,7 @@ Generate the five on one sheet so they match.
 
 ### 9–14 · Magic schools (2 × 2 each, one sheet per school)
 
-**Compose**: `ICON-STYLE-B` + `ICON-SHEET-4` + cells · negative `ICON-NEG` · 1024 × 1024
+**Compose**: `ICON-STYLE-B` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1024 × 1024
 
 Every school sheet has the same four cells; only the emblem changes. **Cell rule**: replace `{emblem}` with the school's Emblem and
 `<town>` with its Town from the second table; one sheet per row of that table.
@@ -282,7 +299,7 @@ Every school sheet has the same four cells; only the emblem changes. **Cell rule
 
 ### 15 · Adventure map: hero actions (2 × 3) — the action panel
 
-**Compose**: `ICON-STYLE-B` + `ICON-SHEET-6` + cells · negative `ICON-NEG` · 1536 × 1024
+**Compose**: `ICON-STYLE-B` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1536 × 1024
 
 | # | File | Subject |
 |---|---|---|
@@ -295,7 +312,7 @@ Every school sheet has the same four cells; only the emblem changes. **Cell rule
 
 ### 16 · Adventure map: kingdom (2 × 2) — the action panel, kingdom overview
 
-**Compose**: `ICON-STYLE-B` + `ICON-SHEET-4` + cells · negative `ICON-NEG` · 1024 × 1024
+**Compose**: `ICON-STYLE-B` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1024 × 1024
 
 | # | File | Subject |
 |---|---|---|
@@ -306,7 +323,7 @@ Every school sheet has the same four cells; only the emblem changes. **Cell rule
 
 ### 17 · Battle: unit actions (2 × 3) — the battle bar, the cursor
 
-**Compose**: `ICON-STYLE-B` + `ICON-SHEET-6` + cells · negative `ICON-NEG` · 1536 × 1024
+**Compose**: `ICON-STYLE-B` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1536 × 1024
 
 | # | File | Subject |
 |---|---|---|
@@ -319,7 +336,7 @@ Every school sheet has the same four cells; only the emblem changes. **Cell rule
 
 ### 18 · Battle: commands (2 × 2)
 
-**Compose**: `ICON-STYLE-B` + `ICON-SHEET-4` + cells · negative `ICON-NEG` · 1024 × 1024
+**Compose**: `ICON-STYLE-B` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1024 × 1024
 
 | # | File | Subject |
 |---|---|---|
@@ -418,7 +435,7 @@ Crests use `ICON-STYLE-CREST`, charges `ICON-STYLE-CHARGE` ([Blocks](#blocks)).
 
 ### 23 · Crests: Dawn Covenant and Ashen Court (2 × 3)
 
-**Compose**: `ICON-STYLE-CREST` + `ICON-SHEET-6` + cells · negative `ICON-NEG` · 1536 × 1024
+**Compose**: `ICON-STYLE-CREST` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1536 × 1024
 
 **Cell rule** (sheets 23–25): subject = "a crest with " + Figure + ", in " + Crest colours, from the [Figures](#figures) table row of
 the cell's id; the file is `crest_<id>`.
@@ -427,13 +444,13 @@ Cells: 1 `crest_haven`, 2 `crest_sylvan`, 3 `crest_academy`, 4 `crest_necropolis
 
 ### 24 · Crests: Unbound and Firstborn (2 × 2)
 
-**Compose**: `ICON-STYLE-CREST` + `ICON-SHEET-4` + cells · negative `ICON-NEG` · 1024 × 1024
+**Compose**: `ICON-STYLE-CREST` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1024 × 1024
 
 Cells: 1 `crest_stronghold`, 2 `crest_swamp-bestiary`, 3 `crest_conflux`, 4 `crest_dragon-utopia`.
 
 ### 25 · Crests: the four groups (2 × 2)
 
-**Compose**: `ICON-STYLE-CREST` + `ICON-SHEET-4` + cells · negative `ICON-NEG` · 1024 × 1024
+**Compose**: `ICON-STYLE-CREST` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1024 × 1024
 
 Cells: 1 `crest_group_dawn-covenant`, 2 `crest_group_ashen-court`, 3 `crest_group_unbound`, 4 `crest_group_firstborn`.
 
@@ -449,6 +466,10 @@ Cut them as the other sheets; the game uses the alpha as the mask and paints the
 ## After generating
 
 1. Look at each sheet's icons side by side at 32 px: one clear shape each, the same scale and light across the sheet.
-2. Check mechanical subjects for oval or tilted wheels and uneven bow arms; regenerate rather than fix by hand where possible.
-3. Put the files in the folder of their group under `src/Godot/EternalWars.Godot.Assets/textures/ui/` and add a line to its
+2. Look for a cartoon look: thick outlines, flat colour fills, bubbly shapes, plastic shine. Regenerate such a sheet (with
+   `ICON-NEG-TOON` in the negative where the model takes one) rather than fixing it by hand.
+3. Check mechanical subjects for oval or tilted wheels and uneven bow arms; regenerate rather than fix by hand where possible.
+4. The icons and crests already in `textures/ui/` (resources, stats, skills, machines, schools, actions, heraldry crests) are the
+   earlier, more cartoon-like takes: regenerate tiers A and B and the crests with these blocks; tier C and the charges stay.
+5. Put the files in the folder of their group under `src/Godot/EternalWars.Godot.Assets/textures/ui/` and add a line to its
    `CREDITS.md` with the tool and its licence terms.

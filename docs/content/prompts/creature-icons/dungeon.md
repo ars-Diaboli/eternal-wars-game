@@ -21,7 +21,7 @@ a vast dark cavern, violet glowing crystals and pale mushrooms in the distance
 
 ## Portraits
 
-**Compose**: `CREATURE-STYLE` + `CREATURE-dungeon` + `ICON-SHEET-6` + cells (Cell rule) · negative `ICON-NEG` + `CREATURE-NEG` · 1536 × 1024
+**Compose**: `CREATURE-STYLE` + `CREATURE-dungeon` + `ICON-SHEET-6` + cells (Cell rule) · negative `ICON-NEG` + `ICON-NEG-TOON` + `CREATURE-NEG` · 1536 × 1024
 
 | Sheet | Base | Base subject | Upgrade | Upgrade adds |
 |---|---|---|---|---|
