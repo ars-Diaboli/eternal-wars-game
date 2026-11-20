@@ -146,6 +146,13 @@ internal sealed class EditorContext(GameState scenario, MapObjectCatalog catalog
         PublishUnsaved();
     }
 
+    /// <summary>The map as it is now is in no file: it has unsaved work until it is saved.</summary>
+    public void MarkUnsaved()
+    {
+        History.MarkUnsaved();
+        PublishUnsaved();
+    }
+
     private void PublishHistory()
     {
         Bus.Publish(new UndoHistoryChanged(History.UndoDescription, History.RedoDescription, History.Position, History.Count));

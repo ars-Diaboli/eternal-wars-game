@@ -508,10 +508,10 @@ The tasks of each step in build order. A task is one reviewable change that leav
    to the saved step makes it clean again. Tests. *Done.*
 8. **Files**: `FileService` with Open, Save and Save as (Godot's `FileDialog`, the system's own where offered) starting in the maps
    folder; Recent (ten) in the editor settings; an asterisk in the window title; a question before overwriting, before opening over
-   unsaved work and on closing (the window's close request waits for the answer). Today's name field goes.
+   unsaved work and on closing (the window's close request waits for the answer). Today's name field goes. *Done.*
 9. **Autosave and recovery**: every 2 minutes while dirty, to `user://maps/.autosave/` (the last five); a session marker written at
    start and removed on a clean exit; when the marker is found at start, the editor offers the newest autosave. Smoke
-   `editor-recovery` (a planted marker shows the offer).
+   `editor-recovery` (a planted marker shows the offer). *Done.*
 10. **Command palette**: Ctrl+Shift+P, search as you type over the registry, each command with its shortcut; only commands that can
     run now are offered.
 11. **Preferences and the editor theme**: the Preferences window (UI scale 100–200 %, autosave interval, camera speeds, default map

@@ -88,4 +88,7 @@ public sealed class MapEditorSession
 
     /// <summary>The front-end wrote the map as it is now to its file.</summary>
     public void MarkSaved() => _context.MarkSaved();
+
+    /// <summary>The map as it is now is in no file (the front-end restored it from an autosave): it is unsaved work until it is saved.</summary>
+    public void MarkUnsaved() => _context.MarkUnsaved();
 }

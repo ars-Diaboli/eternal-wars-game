@@ -26,7 +26,8 @@ namespace EternalWars.MapEditor;
 /// Map editor entry point. Editing operations, undo/redo and validation live in core (<see cref="MapEditorSession"/>);
 /// the views and panels live in the libraries (the window layout is <see cref="EditorWorkspace"/>); this class composes them, registers
 /// the editor's commands (<see cref="CommandRegistry"/>: the menus, the toolbar and the shortcuts run them), routes the pointer to the tool
-/// in use (<see cref="IEditorTool"/>), and does file I/O. Alt+Enter switches the window mode (ADR-186), kept in the editor's own settings file.
+/// in use (<see cref="IEditorTool"/>); the map's files, the autosave and the questions over unsaved work are the <see cref="FileService"/>'s.
+/// Alt+Enter switches the window mode (ADR-186), kept in the editor's own settings file.
 /// </summary>
 public partial class Main : Node3D
 {
@@ -45,14 +46,13 @@ public partial class Main : Node3D
     private InspectorPanel _inspector = null!;
     private EventsPanel _events = null!;
     private EventCellsView _eventCells = null!;
-    private LineEdit _fileName = null!;
+    private FileService _files = null!;
+    private EditorSettingsFile _settings = null!;
     private StatusBarView _statusBar = null!;
 
     /// <summary>The editor's messages: kept while maps are opened and closed, shown by the Output panel.</summary>
     private readonly EditorLog _log = new();
 
-    /// <summary>What the status bar says about saving: set when a map is opened, changed and saved.</summary>
-    private string _saveState = "";
     private EditorToolContext _toolContext = null!;
     private CommandRegistry _commands = null!;
 
@@ -81,10 +81,25 @@ public partial class Main : Node3D
         AddChild(_camera);
         _camera.Zoomed += () => _statusBar.ShowZoom(_camera.ZoomPercent);
         AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-55, -35, 0) });
+        _settings = new EditorSettingsFile(Path.Combine(DataFolder, EditorSettingsFile.FileName));
+        _files = new FileService { Name = "Files" };
+        AddChild(_files);
+        _files.Bind(
+            new FileServiceHost(Open, Say), _settings, new MapFiles(MapsFolder, AutosaveFolder),
+            systemDialogs: LaunchArguments.AutoInput is null); // a scripted run sees only Godot's own dialog
+        _files.Changed += ShowFile;
+        GetTree().AutoAcceptQuit = false; // the window's close request waits for the question over unsaved work
+
         // --map=file opens that map (the smoke scenarios), else a blank one.
-        Open(LaunchArguments.MapPath is { } path
-            ? MapConverter.ToGameState(MapSerializer.Load(path), GameContent.All, checkEvents: false)
-            : BlankScenario.Create(36, 36, content: GameContent.All));
+        _files.Start(LaunchArguments.MapPath is { } path ? MapFiles.Read(path) : BlankScenario.Create(36, 36, content: GameContent.All), LaunchArguments.MapPath);
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationWMCloseRequest)
+        {
+            _files.Quit();
+        }
     }
 
     /// <summary>Alt+Enter switches the window mode wherever the focus is, a text field included.</summary>
@@ -113,13 +128,26 @@ public partial class Main : Node3D
     private static string SettingsPath =>
         LaunchArguments.SettingsPath ?? Path.Combine(ProjectSettings.GlobalizePath("user://"), SettingsFile.FileName);
 
-    /// <summary>The editor's own settings file (the workspace layout), beside the settings file the launch arguments name when they name one.</summary>
-    private static string LayoutPath => Path.Combine(
-        LaunchArguments.SettingsPath is { } settings ? Path.GetDirectoryName(Path.GetFullPath(settings))! : ProjectSettings.GlobalizePath("user://"),
-        EditorWorkspace.SettingsFileName);
+    /// <summary>
+    /// Where the editor keeps its own files: the user data folder, or the folder of the settings file the launch arguments name (the smoke
+    /// scenarios run side by side, each with its own settings, maps folder and autosaves).
+    /// </summary>
+    private static string DataFolder =>
+        LaunchArguments.SettingsPath is { } settings ? Path.GetDirectoryName(Path.GetFullPath(settings))! : ProjectSettings.GlobalizePath("user://");
+
+    private static string MapsFolder =>
+        LaunchArguments.SettingsPath is null ? ProjectSettings.GlobalizePath(MapsDirectory) : Path.Combine(DataFolder, "maps");
+
+    private static string AutosaveFolder =>
+        LaunchArguments.SettingsPath is null ? Path.Combine(ProjectSettings.GlobalizePath(MapsDirectory), ".autosave") : Path.Combine(DataFolder, "autosave");
 
     public override void _UnhandledInput(InputEvent @event)
     {
+        if (_files.IsBusy)
+        {
+            return; // a question or a file dialog is open
+        }
+
         switch (@event)
         {
             case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } press when !_pressed:
@@ -181,22 +209,19 @@ public partial class Main : Node3D
         }
     }
 
-    /// <summary><paramref name="state"/> is what the status bar says while the map has no unsaved work.</summary>
-    private void SetSaveState(string state)
+    /// <summary>The map's file or its save state changed: the status bar and the commands follow.</summary>
+    private void ShowFile()
     {
-        _saveState = state;
-        ShowSaveState();
+        _statusBar.ShowSaveState(_files.SaveState);
+        _commands.NotifyStateChanged();
     }
-
-    private void ShowSaveState() => _statusBar.ShowSaveState(_editor.IsDirty ? "Unsaved changes" : _saveState);
 
     private MapPosition? Pick(Vector2 screen) =>
         MapSpace.PickTile(_camera, screen, _editor.Scenario.Map, _context.Level) is { } tile && _editor.Scenario.Map.Contains(tile) ? tile : null;
 
-    /// <summary>Opens <paramref name="state"/> as the map being edited; <paramref name="saveState"/> is what the status bar says until the map is edited.</summary>
-    private void Open(GameState state, string saveState = "Not saved")
+    /// <summary>Shows <paramref name="state"/> as the map being edited, for the <see cref="FileService"/>: every map is opened through it.</summary>
+    private MapEditorSession Open(GameState state)
     {
-        _saveState = saveState;
         _world?.QueueFree();
         _ui?.QueueFree();
         _pressed = false;
@@ -217,10 +242,9 @@ public partial class Main : Node3D
         BuildUi();
         // On the session's own UI, freed with it on the next Open; the root stays in the tree and would keep every old session alive.
         _ui!.SubscribeWhileInTree<UndoHistoryChanged>(_editor.Events, _ => _commands.NotifyStateChanged());
-        _ui!.SubscribeWhileInTree<UnsavedWorkChanged>(_editor.Events, _ => ShowSaveState());
 
         _camera.FocusOn(MapSpace.ToWorld(new(state.Map.Width / 2, state.Map.Height / 2)));
-        _fileName.Text = state.Map.Name;
+        return _editor;
     }
 
     private void BuildUi()
@@ -229,20 +253,15 @@ public partial class Main : Node3D
         AddChild(_ui);
         _workspace = new EditorWorkspace { Name = "Workspace" };
         _ui.AddChild(_workspace);
-        _workspace.Bind(LayoutPath);
+        _workspace.Bind(_settings);
 
         RegisterCommands();
         var menuBar = new MenuBarView { Name = "Menus" };
         _workspace.TopBar.AddChild(menuBar);
-        var toolRow = new HBoxContainer();
-        _workspace.TopBar.AddChild(toolRow);
         var toolbar = new ToolbarView { Name = "Toolbar" };
-        toolRow.AddChild(toolbar);
-        _fileName = new LineEdit { CustomMinimumSize = new Vector2(240, 0), TooltipText = "The map's name: Save and Load use it as the file name" };
-        toolRow.AddChild(_fileName);
+        _workspace.TopBar.AddChild(toolbar);
         _statusBar = new StatusBarView { Name = "Status" };
         _workspace.StatusBar.AddChild(_statusBar);
-        ShowSaveState();
         _statusBar.ShowZoom(_camera.ZoomPercent);
 
         // Left: the tools and the options of the one in use, which wrap to the region's width.
@@ -323,7 +342,13 @@ public partial class Main : Node3D
 
         menuBar.Bind(_commands,
         [
-            new("File", ["file.new", "file.new-two-levels", "file.generate", null, "file.save", "file.load"]),
+            new("File", ["file.new", "file.new-two-levels", "file.generate", null, "file.open", ">Open recent", null, "file.save", "file.save-as", null, "file.quit"])
+            {
+                Lists =
+                [
+                    new("Open recent", () => [.. _files.Recent.Select(path => (path, (Action)(() => _files.Open(path))))], "No file was opened or saved yet"),
+                ],
+            },
             new("Edit", ["edit.undo", "edit.redo"]),
             new("View", ["view.level", "view.grid", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.problems", "view.history", "view.output"]),
             new("Map", ["map.properties", "map.players", "map.conditions", "map.events", "map.bans", null, "view.problems"]),
@@ -334,7 +359,7 @@ public partial class Main : Node3D
         ]);
         toolbar.Bind(_commands,
         [
-            "file.new", "file.new-two-levels", "file.generate", "templates.editor", "file.save", "file.load", null,
+            "file.new", "file.new-two-levels", "file.generate", "templates.editor", "file.open", "file.save", null,
             "edit.undo", "edit.redo", null, "view.level", "view.grid", null, "view.left", "view.bottom", "view.right",
         ]);
         _workspace.RegionsChanged += _commands.NotifyStateChanged;
@@ -350,11 +375,13 @@ public partial class Main : Node3D
     private void RegisterCommands()
     {
         _commands = new CommandRegistry();
-        Command("file.new", "New", () => Open(BlankScenario.Create(36, 36, content: GameContent.All)));
-        Command("file.new-two-levels", "New (2 levels)", () => Open(BlankScenario.Create(36, 36, levels: 2, content: GameContent.All)));
+        Command("file.new", "New", () => _files.OpenNew(BlankScenario.Create(36, 36, content: GameContent.All)), shortcut: new(Key.N, Ctrl: true));
+        Command("file.new-two-levels", "New (2 levels)", () => _files.OpenNew(BlankScenario.Create(36, 36, levels: 2, content: GameContent.All)));
         Command("file.generate", "From template", () => _workspace.ShowTab(_generate));
-        Command("file.save", "Save", Save, UiIcon.Save);
-        Command("file.load", "Load", Load, UiIcon.Load);
+        Command("file.open", "Open", () => _files.Open(), UiIcon.Load, new(Key.O, Ctrl: true));
+        Command("file.save", "Save", () => _files.Save(), UiIcon.Save, new(Key.S, Ctrl: true));
+        Command("file.save-as", "Save as", () => _files.SaveAs(), shortcut: new(Key.S, Ctrl: true, Shift: true));
+        Command("file.quit", "Quit", _files.Quit, shortcut: new(Key.Q, Ctrl: true));
         Command("edit.undo", "Undo", () => _editor.Undo(), UiIcon.Undo, new(Key.Z, Ctrl: true),
             () => _editor.History.CanUndo ? null : "Nothing to undo");
         Command("edit.redo", "Redo", () => _editor.Redo(), UiIcon.Redo, new(Key.Y, Ctrl: true),
@@ -460,8 +487,7 @@ public partial class Main : Node3D
             return e.Message;
         }
 
-        Open(map.Scenario);
-        Describe(template, size, seed, map);
+        _files.OpenNew(map.Scenario, () => Describe(template, size, seed, map));
         return null;
     }
 
@@ -492,53 +518,7 @@ public partial class Main : Node3D
         }
 
         _lastGenerate = request;
-        Open(map.Scenario);
-        Describe(template, request.Size, request.Seed, map);
+        _files.OpenNew(map.Scenario, () => Describe(template, request.Size, request.Seed, map));
         return null;
-    }
-
-    private void Save()
-    {
-        var map = _editor.Scenario.Map;
-        var name = _fileName.Text.Trim();
-        if (name != map.Name)
-        {
-            _editor.Map.SetProperties(name, map.Description);
-        }
-
-        var errors = MapValidator.Validate(_editor.Scenario).Count(i => i.Severity == IssueSeverity.Error);
-        var path = MapPath(name);
-        MapSerializer.Save(MapConverter.ToDocument(_editor.Scenario), path);
-        _editor.MarkSaved();
-        SetSaveState($"Saved {DateTime.Now:HH:mm}");
-        Say(errors == 0 ? $"Saved {path}" : $"Saved {path} with {errors} error(s), see Problems");
-    }
-
-    private void Load()
-    {
-        var path = MapPath(_fileName.Text.Trim());
-        if (!File.Exists(path))
-        {
-            Say($"Not found: {path}");
-            return;
-        }
-
-        try
-        {
-            Open(MapConverter.ToGameState(MapSerializer.Load(path), GameContent.All, checkEvents: false), "No changes");
-            Say($"Loaded {path}");
-        }
-        catch (FormatException e)
-        {
-            Say($"Cannot load {path}: {e.Message}");
-        }
-    }
-
-    private static string MapPath(string name)
-    {
-        var directory = ProjectSettings.GlobalizePath(MapsDirectory);
-        Directory.CreateDirectory(directory);
-        var safeName = string.Concat(name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
-        return Path.Combine(directory, (safeName.Length == 0 ? "untitled" : safeName) + MapSerializer.FileExtension);
     }
 }
