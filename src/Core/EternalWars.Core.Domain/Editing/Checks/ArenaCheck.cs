@@ -15,6 +15,8 @@ namespace EternalWars.Core.Domain.Editing.Checks;
 /// </summary>
 internal sealed class ArenaCheck : IMapCheck
 {
+    public IssueKind Kind => IssueKind.Rules;
+
     public IEnumerable<MapIssue> Check(GameState scenario)
     {
         var places = scenario.ObjectsOf<CombatPlace>().OrderBy(p => p.Id.Value).ToList();

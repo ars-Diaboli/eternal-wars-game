@@ -13,6 +13,8 @@ namespace EternalWars.Core.Domain.Editing.Checks;
 /// </summary>
 internal sealed class StartZoneCheck : IMapCheck
 {
+    public IssueKind Kind => IssueKind.Players;
+
     public IEnumerable<MapIssue> Check(GameState scenario)
     {
         var map = scenario.Map;

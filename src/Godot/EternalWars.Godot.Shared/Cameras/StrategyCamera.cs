@@ -9,8 +9,11 @@ namespace EternalWars.Godot.Shared.Cameras;
 /// </summary>
 public partial class StrategyCamera : Camera3D
 {
+    /// <summary>The distance the camera starts at: 100 % zoom.</summary>
+    private const float DefaultDistance = 16f;
+
     private Vector3 _focus;
-    private float _distance = 16f;
+    private float _distance = DefaultDistance;
     private float _yawDegrees;
     private readonly HashSet<Key> _ignored = [];
 
@@ -27,6 +30,12 @@ public partial class StrategyCamera : Camera3D
     public float MaxTiltFromVertical { get; set; } = 30f;
 
     public float MaxYawDegrees { get; set; } = 45f;
+
+    /// <summary>The zoom in percent of the distance the camera starts at: closer is more.</summary>
+    public int ZoomPercent => Mathf.RoundToInt(DefaultDistance / _distance * 100f);
+
+    /// <summary>The wheel changed the zoom.</summary>
+    public event Action? Zoomed;
 
     public void FocusOn(Vector3 point)
     {
@@ -80,7 +89,7 @@ public partial class StrategyCamera : Camera3D
         {
             var forward = Vector3.Forward.Rotated(Vector3.Up, Mathf.DegToRad(_yawDegrees));
             var right = forward.Cross(Vector3.Up);
-            var step = pan.Normalized() * PanSpeed * dt * (_distance / 16f);
+            var step = pan.Normalized() * PanSpeed * dt * (_distance / DefaultDistance);
             _focus += (forward * step.Y) + (right * step.X);
             changed = true;
         }
@@ -106,6 +115,7 @@ public partial class StrategyCamera : Camera3D
             {
                 _distance = Mathf.Clamp(_distance + zoom, MinDistance, MaxDistance);
                 UpdateTransform();
+                Zoomed?.Invoke();
             }
         }
     }

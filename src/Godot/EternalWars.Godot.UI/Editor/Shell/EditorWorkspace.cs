@@ -12,7 +12,7 @@ public enum EditorRegion
 
 /// <summary>
 /// The editor's window layout (EDIT-1, ADR-250): a bar on top, then three docked regions around the map view, each a tab box that is resized
-/// with a splitter and collapsed (<see cref="SetOpen"/>); <see cref="ToggleAll"/> hides and shows them all. The map itself is drawn behind the workspace: the
+/// with a splitter and collapsed (<see cref="SetOpen"/>); <see cref="ToggleAll"/> hides and shows them all; a status bar at the bottom. The map itself is drawn behind the workspace: the
 /// middle is a hole that lets the pointer through to the app. The splitter positions, the collapsed regions and each region's open tab are
 /// kept in the editor's settings file (<see cref="SettingsFileName"/>) on every change.
 /// </summary>
@@ -46,6 +46,9 @@ public partial class EditorWorkspace : Control
 
     /// <summary>The bar above the regions: the app adds its rows here.</summary>
     public VBoxContainer TopBar { get; } = new() { Name = "TopBar", SizeFlagsHorizontal = SizeFlags.ExpandFill };
+
+    /// <summary>The bar under the regions: the app adds its status bar here.</summary>
+    public HBoxContainer StatusBar { get; } = new() { Name = "StatusBar", SizeFlagsHorizontal = SizeFlags.ExpandFill };
 
     /// <summary>
     /// Builds the regions and applies the layout kept in <paramref name="settingsPath"/> (null: the defaults, and nothing is kept). Add the
@@ -82,6 +85,10 @@ public partial class EditorWorkspace : Control
         centre.AddChild(new Control { Name = "MapView", MouseFilter = MouseFilterEnum.Ignore, SizeFlagsVertical = SizeFlags.ExpandFill });
         centre.AddChild(Region(EditorRegion.Bottom));
         inner.AddChild(Region(EditorRegion.Right));
+
+        var status = Opaque(new PanelContainer { Name = "StatusPanel" });
+        rows.AddChild(status);
+        status.AddChild(StatusBar);
         ApplyVisibility();
     }
 

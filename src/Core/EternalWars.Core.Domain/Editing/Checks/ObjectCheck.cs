@@ -10,6 +10,8 @@ namespace EternalWars.Core.Domain.Editing.Checks;
 /// </summary>
 internal sealed class ObjectCheck : IMapCheck
 {
+    public IssueKind Kind => IssueKind.Objects;
+
     public IEnumerable<MapIssue> Check(GameState scenario)
     {
         foreach (var mapObject in scenario.Objects)

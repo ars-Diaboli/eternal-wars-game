@@ -32,6 +32,19 @@ public sealed class MapChecksTests
     public void Validate_ListsTheChecksIssuesInOrder()
     {
         var scenario = TestEditor.Blank().Scenario;
-        Assert.Equal(MapChecks.All.SelectMany(c => c.Check(scenario)), MapValidator.Validate(scenario));
+        Assert.Equal(MapChecks.All.SelectMany(c => c.Check(scenario).Select(issue => issue with { Kind = c.Kind })), MapValidator.Validate(scenario));
+    }
+
+    /// <summary>The Problems panel filters by kind: an issue carries the kind of the check that found it.</summary>
+    [Fact]
+    public void Validate_MarksEveryIssueWithItsChecksKind()
+    {
+        var editor = TestEditor.Blank();
+        editor.Map.SetRules(editor.Scenario.Rules with { Arena = true }); // an arena without a combat place: a Rules error
+
+        var issues = MapValidator.Validate(editor.Scenario);
+
+        Assert.Contains(issues, i => i.Kind == IssueKind.Rules && i.Message.Contains("combat place", StringComparison.Ordinal));
+        Assert.Equal(MapChecks.All.SelectMany(c => c.Check(editor.Scenario).Select(_ => c.Kind)), issues.Select(i => i.Kind));
     }
 }

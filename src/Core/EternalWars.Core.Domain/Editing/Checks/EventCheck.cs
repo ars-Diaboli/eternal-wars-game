@@ -10,6 +10,8 @@ namespace EternalWars.Core.Domain.Editing.Checks;
 /// </summary>
 internal sealed class EventCheck : IMapCheck
 {
+    public IssueKind Kind => IssueKind.Events;
+
     public IEnumerable<MapIssue> Check(GameState scenario)
     {
         var set = scenario.MapEvents.Set;

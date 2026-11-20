@@ -8,6 +8,8 @@ namespace EternalWars.Core.Domain.Editing.Checks;
 /// </summary>
 internal sealed class HeroCheck : IMapCheck
 {
+    public IssueKind Kind => IssueKind.Heroes;
+
     public IEnumerable<MapIssue> Check(GameState scenario)
     {
         var map = scenario.Map;

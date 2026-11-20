@@ -12,8 +12,36 @@ public enum IssueSeverity
     Error,
 }
 
-/// <summary>A problem the validator found: how bad, what, where on the map and, for the map events, which event (the Events tab opens it).</summary>
-public sealed record MapIssue(IssueSeverity Severity, string Message, MapPosition? Position = null, string? Event = null);
+/// <summary>The part of a map an issue is about: the editor's Problems panel filters by it.</summary>
+public enum IssueKind
+{
+    Heroes,
+
+    /// <summary>Objects, with gates, the Eyes of the Magi, border posts and the Grail.</summary>
+    Objects,
+    Ground,
+
+    /// <summary>The players' starts and start zones.</summary>
+    Players,
+
+    /// <summary>The scenario's rules: conditions, the grace period, hero limits, the arena.</summary>
+    Rules,
+
+    /// <summary>Bans and random placeholders.</summary>
+    Content,
+
+    /// <summary>Map events.</summary>
+    Events,
+}
+
+/// <summary>
+/// A problem the validator found: how bad, what, where on the map and, for the map events, which event (the Events tab opens it).
+/// <see cref="Kind"/> is set by the validator from the check that found it.
+/// </summary>
+public sealed record MapIssue(IssueSeverity Severity, string Message, MapPosition? Position = null, string? Event = null)
+{
+    public IssueKind Kind { get; init; }
+}
 
 /// <summary>
 /// Checks a scenario for problems that individual edits cannot prevent (e.g. painting water under a
@@ -22,7 +50,7 @@ public sealed record MapIssue(IssueSeverity Severity, string Message, MapPositio
 public static class MapValidator
 {
     /// <summary>Runs every check (<see cref="MapChecks.All"/>) in order and lists their issues.</summary>
-    public static IReadOnlyList<MapIssue> Validate(GameState scenario) => MapChecks.All.SelectMany(c => c.Check(scenario)).ToList();
+    public static IReadOnlyList<MapIssue> Validate(GameState scenario) => [.. MapChecks.All.SelectMany(c => c.Check(scenario).Select(issue => issue with { Kind = c.Kind }))];
 
     /// <summary>A hero may start in the entrance of its own town, visiting it (HoMM3; generated maps put the start hero there).</summary>
     internal static bool IsOwnTownEntrance((MapObject Object, FootprintCell Cell) cell, PlayerId owner) =>

@@ -9,6 +9,8 @@ namespace EternalWars.Core.Domain.Editing.Checks;
 /// </summary>
 internal sealed class ColourCheck : IMapCheck
 {
+    public IssueKind Kind => IssueKind.Objects;
+
     public IEnumerable<MapIssue> Check(GameState scenario)
     {
         foreach (var colour in Enum.GetValues<ObjectColour>())

@@ -11,6 +11,8 @@ namespace EternalWars.Core.Domain.Editing.Checks;
 /// </summary>
 internal sealed class BansCheck : IMapCheck
 {
+    public IssueKind Kind => IssueKind.Content;
+
     public IEnumerable<MapIssue> Check(GameState scenario)
     {
         var bans = scenario.Rules.Bans;
