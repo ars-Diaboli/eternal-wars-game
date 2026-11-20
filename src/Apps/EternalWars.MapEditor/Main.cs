@@ -46,8 +46,13 @@ public partial class Main : Node3D
     private EventsPanel _events = null!;
     private EventCellsView _eventCells = null!;
     private LineEdit _fileName = null!;
-    private Label _status = null!;
-    private Label _history = null!;
+    private StatusBarView _statusBar = null!;
+
+    /// <summary>The editor's messages: kept while maps are opened and closed, shown by the Output panel.</summary>
+    private readonly EditorLog _log = new();
+
+    /// <summary>What the status bar says about saving: set when a map is opened, changed and saved.</summary>
+    private string _saveState = "";
     private EditorToolContext _toolContext = null!;
     private CommandRegistry _commands = null!;
 
@@ -65,7 +70,7 @@ public partial class Main : Node3D
     public override void _Ready()
     {
         UiTheme.Apply(); // the shared margins and gaps (ADR-163) and the look (ADR-191)
-        UiIcons.LabelsOnStatusBar = false; // the editor has no status bar: icon buttons name themselves in their tooltips (ADR-204)
+        UiIcons.LabelsOnStatusBar = false; // the editor's status bar shows no hints: icon buttons name themselves in their tooltips (ADR-204)
         WindowModes.Apply(SettingsFile.LoadInterface(SettingsPath).Window);
         if (AutoInput.FromLaunchArguments() is { } autoInput)
         {
@@ -74,6 +79,7 @@ public partial class Main : Node3D
 
         _camera = new StrategyCamera { Name = "Camera" };
         AddChild(_camera);
+        _camera.Zoomed += () => _statusBar.ShowZoom(_camera.ZoomPercent);
         AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-55, -35, 0) });
         // --map=file opens that map (the smoke scenarios), else a blank one.
         Open(LaunchArguments.MapPath is { } path
@@ -99,7 +105,7 @@ public partial class Main : Node3D
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            _status.Text = $"Could not keep the window mode: {e.Message}";
+            Say($"Could not keep the window mode: {e.Message}");
         }
     }
 
@@ -117,7 +123,7 @@ public partial class Main : Node3D
         switch (@event)
         {
             case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } press when !_pressed:
-                if (Pick(press.Position) is not { } tile)
+                if (Point(press.Position) is not { } tile)
                 {
                     return;
                 }
@@ -138,16 +144,14 @@ public partial class Main : Node3D
                 _tools.Tool.Release();
                 break;
             case InputEventMouseMotion motion when _pressed:
-                _context.Point(Pick(motion.Position));
-                if (_context.Pointed is { } dragged)
+                if (Point(motion.Position) is { } dragged)
                 {
                     _tools.Tool.Drag(dragged);
                 }
 
                 break;
             case InputEventMouseMotion motion:
-                _context.Point(Pick(motion.Position)); // the caption of what is under the pointer shows from afar
-                _tools.Tool.Hover(_context.Pointed);
+                _tools.Tool.Hover(Point(motion.Position)); // the caption of what is under the pointer shows from afar
                 return;
             case InputEventKey key when _commands.RunShortcut(key):
                 break;
@@ -158,11 +162,38 @@ public partial class Main : Node3D
         GetViewport().SetInputAsHandled();
     }
 
+    /// <summary>The tile at <paramref name="screen"/> becomes the pointed one: the views and the status bar show it.</summary>
+    private MapPosition? Point(Vector2 screen)
+    {
+        var tile = Pick(screen);
+        _context.Point(tile);
+        _statusBar.ShowTile(_editor.Scenario, tile);
+        return tile;
+    }
+
+    /// <summary>A message to the user: the status bar shows the last one, the Output panel keeps them all. Empty clears the status bar.</summary>
+    private void Say(string text)
+    {
+        _statusBar.ShowMessage(text);
+        if (text.Length > 0)
+        {
+            _log.Write(text);
+        }
+    }
+
+    private void SetSaveState(string state)
+    {
+        _saveState = state;
+        _statusBar.ShowSaveState(state);
+    }
+
     private MapPosition? Pick(Vector2 screen) =>
         MapSpace.PickTile(_camera, screen, _editor.Scenario.Map, _context.Level) is { } tile && _editor.Scenario.Map.Contains(tile) ? tile : null;
 
-    private void Open(GameState state)
+    /// <summary>Opens <paramref name="state"/> as the map being edited; <paramref name="saveState"/> is what the status bar says until it changes.</summary>
+    private void Open(GameState state, string saveState = "Not saved")
     {
+        _saveState = saveState;
         _world?.QueueFree();
         _ui?.QueueFree();
         _pressed = false;
@@ -182,9 +213,9 @@ public partial class Main : Node3D
 
         BuildUi();
         // On the session's own UI, freed with it on the next Open; the root stays in the tree and would keep every old session alive.
-        _ui!.SubscribeWhileInTree<UndoHistoryChanged>(_editor.Events, e =>
+        _ui!.SubscribeWhileInTree<UndoHistoryChanged>(_editor.Events, _ =>
         {
-            _history.Text = $"Undo: {e.UndoDescription ?? "—"}   Redo: {e.RedoDescription ?? "—"}";
+            SetSaveState("Unsaved changes");
             _commands.NotifyStateChanged();
         });
 
@@ -209,13 +240,10 @@ public partial class Main : Node3D
         toolRow.AddChild(toolbar);
         _fileName = new LineEdit { CustomMinimumSize = new Vector2(240, 0), TooltipText = "The map's name: Save and Load use it as the file name" };
         toolRow.AddChild(_fileName);
-
-        var statusRow = new HBoxContainer();
-        _workspace.TopBar.AddChild(statusRow);
-        _status = new Label { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, ClipText = true };
-        statusRow.AddChild(_status);
-        _history = new Label();
-        statusRow.AddChild(_history);
+        _statusBar = new StatusBarView { Name = "Status" };
+        _workspace.StatusBar.AddChild(_statusBar);
+        _statusBar.ShowSaveState(_saveState);
+        _statusBar.ShowZoom(_camera.ZoomPercent);
 
         // Left: the tools and the options of the one in use, which wrap to the region's width.
         _tools = new ToolPalette { Name = "Tools" };
@@ -234,7 +262,7 @@ public partial class Main : Node3D
         _inspector = new InspectorPanel { Name = "Inspector" };
         _workspace.AddTab(EditorRegion.Right, _inspector);
         _inspector.Bind(_editor);
-        _toolContext = new EditorToolContext(_editor, _inspector, text => _status.Text = text);
+        _toolContext = new EditorToolContext(_editor, _inspector, Say);
         _tools.Bind(EditorTools.All(_toolContext));
         _tools.ToolChanged += _commands.NotifyStateChanged;
         _events = new EventsPanel { Name = "Events" };
@@ -251,12 +279,24 @@ public partial class Main : Node3D
             Generate,
             _lastGenerate);
 
-        // Bottom: the map's problems.
-        var validation = new ValidationPanel { Name = "Validation" };
-        _workspace.AddTab(EditorRegion.Bottom, validation, scroll: false); // a list: it scrolls by itself
-        validation.Bind(_editor);
-        validation.IssueSelected += ShowTile;
-        validation.EventSelected += OpenEvent;
+        // Bottom: the map's problems, the undo history and the editor's messages. Each scrolls by itself.
+        var problems = new ProblemsPanel { Name = "Problems" };
+        _workspace.AddTab(EditorRegion.Bottom, problems, scroll: false);
+        problems.Changed += () =>
+        {
+            _statusBar.ShowProblems(problems.Errors, problems.Warnings);
+            _statusBar.ShowWork(problems.IsChecking ? "Checking the map…" : null);
+        };
+        problems.Bind(_editor, ValidationOfSnapshot);
+        problems.IssueSelected += ShowTile;
+        problems.EventSelected += OpenEvent;
+        _statusBar.ProblemsRequested += () => _workspace.ShowTab(problems);
+        var history = new HistoryPanel { Name = "History" };
+        _workspace.AddTab(EditorRegion.Bottom, history, scroll: false);
+        history.Bind(_editor);
+        var output = new OutputPanel { Name = "Output" };
+        _workspace.AddTab(EditorRegion.Bottom, output, scroll: false);
+        output.Bind(_log);
         _events.SelectionChanged += name => _eventCells.Highlighted = name;
         _events.ShowRequested += ShowTile;
         _inspector.EventRequested += OpenEvent;
@@ -272,7 +312,9 @@ public partial class Main : Node3D
         Command("map.conditions", "Victory and loss conditions", () => _workspace.ShowTab(conditions));
         Command("map.events", "Events", () => _workspace.ShowTab(_events));
         Command("map.bans", "Bans", () => _workspace.ShowTab(bans), UiIcon.Ban);
-        Command("map.validation", "Validation", () => _workspace.ShowTab(validation));
+        Command("view.problems", "Problems", () => _workspace.ShowTab(problems));
+        Command("view.history", "History", () => _workspace.ShowTab(history));
+        Command("view.output", "Output", () => _workspace.ShowTab(output));
         Command("view.inspector", "Inspector", () => _workspace.ShowTab(_inspector));
         foreach (var tool in _tools.Tools)
         {
@@ -283,8 +325,8 @@ public partial class Main : Node3D
         [
             new("File", ["file.new", "file.new-two-levels", "file.generate", null, "file.save", "file.load"]),
             new("Edit", ["edit.undo", "edit.redo"]),
-            new("View", ["view.level", "view.grid", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector"]),
-            new("Map", ["map.properties", "map.players", "map.conditions", "map.events", "map.bans", null, "map.validation"]),
+            new("View", ["view.level", "view.grid", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.problems", "view.history", "view.output"]),
+            new("Map", ["map.properties", "map.players", "map.conditions", "map.events", "map.bans", null, "view.problems"]),
             new("Tools", [.. _tools.Tools.Select(ToolCommand)]),
             new("Templates", ["templates.editor", "file.generate"]),
             new("Test", ["test.play"]),
@@ -337,6 +379,16 @@ public partial class Main : Node3D
     {
         _context.SetLevel((_context.Level + 1) % _editor.Scenario.Map.Levels);
         _camera.FocusOn(MapSpace.ToWorld(new MapPosition(_editor.Scenario.Map.Width / 2, _editor.Scenario.Map.Height / 2, _context.Level)));
+    }
+
+    /// <summary>
+    /// For the Problems panel: copies the map into a document now (on the main thread); the work returned builds a scenario of its own from
+    /// the copy and validates that, so it can run on a task while the map is edited.
+    /// </summary>
+    private Func<IReadOnlyList<MapIssue>> ValidationOfSnapshot()
+    {
+        var document = MapConverter.ToDocument(_editor.Scenario);
+        return () => MapValidator.Validate(MapConverter.ToGameState(document, GameContent.All, checkEvents: false));
     }
 
     private void ShowTile(MapPosition position)
@@ -417,8 +469,8 @@ public partial class Main : Node3D
     {
         var attempt = map.Generation.Attempt == 0 ? "" : $" (attempt {map.Generation.Attempt})";
         var problems = map.Problems.Count == 0 ? "" : $" Generator problems: {string.Join(" ", map.Problems)}";
-        var issues = map.Issues.Count == 0 ? "" : $" {map.Issues.Count} validator issue(s), see Validation.";
-        _status.Text = $"Generated {template.Name} {size}×{size}, seed {seed}{attempt}.{problems}{issues}";
+        var issues = map.Issues.Count == 0 ? "" : $" {map.Issues.Count} validator issue(s), see Problems.";
+        Say($"Generated {template.Name} {size}×{size}, seed {seed}{attempt}.{problems}{issues}");
     }
 
     /// <summary>
@@ -457,7 +509,8 @@ public partial class Main : Node3D
         var errors = MapValidator.Validate(_editor.Scenario).Count(i => i.Severity == IssueSeverity.Error);
         var path = MapPath(name);
         MapSerializer.Save(MapConverter.ToDocument(_editor.Scenario), path);
-        _status.Text = errors == 0 ? $"Saved {path}" : $"Saved {path} with {errors} error(s), see Validation";
+        SetSaveState($"Saved {DateTime.Now:HH:mm}");
+        Say(errors == 0 ? $"Saved {path}" : $"Saved {path} with {errors} error(s), see Problems");
     }
 
     private void Load()
@@ -465,18 +518,18 @@ public partial class Main : Node3D
         var path = MapPath(_fileName.Text.Trim());
         if (!File.Exists(path))
         {
-            _status.Text = $"Not found: {path}";
+            Say($"Not found: {path}");
             return;
         }
 
         try
         {
-            Open(MapConverter.ToGameState(MapSerializer.Load(path), GameContent.All, checkEvents: false));
-            _status.Text = $"Loaded {path}";
+            Open(MapConverter.ToGameState(MapSerializer.Load(path), GameContent.All, checkEvents: false), "No changes");
+            Say($"Loaded {path}");
         }
         catch (FormatException e)
         {
-            _status.Text = $"Cannot load {path}: {e.Message}";
+            Say($"Cannot load {path}: {e.Message}");
         }
     }
 

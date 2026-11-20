@@ -8,6 +8,9 @@ namespace EternalWars.Core.Domain.Editing.Checks;
 /// </summary>
 internal interface IMapCheck
 {
+    /// <summary>The part of the map this check's issues are about: the validator marks them with it.</summary>
+    IssueKind Kind { get; }
+
     /// <summary>The scenario's issues this check finds, in order.</summary>
     IEnumerable<MapIssue> Check(GameState scenario);
 }

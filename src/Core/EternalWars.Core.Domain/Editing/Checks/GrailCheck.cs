@@ -10,6 +10,8 @@ namespace EternalWars.Core.Domain.Editing.Checks;
 /// </summary>
 internal sealed class GrailCheck : IMapCheck
 {
+    public IssueKind Kind => IssueKind.Objects;
+
     public IEnumerable<MapIssue> Check(GameState scenario)
     {
         var obelisks = scenario.ObjectsOf<Obelisk>().ToList();

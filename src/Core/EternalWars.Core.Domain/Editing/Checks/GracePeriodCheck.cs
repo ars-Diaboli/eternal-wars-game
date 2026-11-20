@@ -8,6 +8,8 @@ namespace EternalWars.Core.Domain.Editing.Checks;
 /// </summary>
 internal sealed class GracePeriodCheck : IMapCheck
 {
+    public IssueKind Kind => IssueKind.Rules;
+
     public IEnumerable<MapIssue> Check(GameState scenario)
     {
         if (!scenario.Rules.Elimination || scenario.Rules.GraceDays <= 0 || scenario.Rules.Arena)

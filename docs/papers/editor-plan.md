@@ -501,9 +501,9 @@ The tasks of each step in build order. A task is one reviewable change that leav
    equals single undos and redos. *Done.*
 5. **Bottom panels**: `ProblemsPanel` (today's validator, run after every change with a short debounce on a snapshot of the map
    document, off the main thread, results back on the main thread; severity counts and a filter by kind), `HistoryPanel` (a click
-   jumps to a step) and `OutputPanel` (the messages `Report` writes today).
+   jumps to a step) and `OutputPanel` (the messages `Report` writes today). *Done.*
 6. **Status bar**: `StatusBarView` with the tile under the pointer (x, y, level, terrain, height, the object there), the problem
-   counts (a click opens Problems), the save state, the zoom and the running background work.
+   counts (a click opens Problems), the save state, the zoom and the running background work. *Done.*
 7. **Unsaved work in the core**: `MapEditorSession.IsDirty`, from the history position at the last save (`MarkSaved`); undoing back
    to the saved step makes it clean again. Tests.
 8. **Files**: `FileService` with Open, Save and Save as (Godot's `FileDialog`, the system's own where offered) starting in the maps

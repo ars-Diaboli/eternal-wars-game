@@ -6,6 +6,8 @@ namespace EternalWars.Core.Domain.Editing.Checks;
 /// <summary>Random monsters, towns and hero placeholders (ADR-126): a monster's tier must have creatures to draw.</summary>
 internal sealed class PlaceholderCheck : IMapCheck
 {
+    public IssueKind Kind => IssueKind.Content;
+
     public IEnumerable<MapIssue> Check(GameState scenario)
     {
         foreach (var monster in scenario.ObjectsOf<MonsterGuard>().Where(m => m.RandomTier is not null))

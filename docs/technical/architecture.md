@@ -130,7 +130,9 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   opens and on the few events that change what it shows at all. The editor's inspector has one `InspectorSection<T>` per map object
   type in the `InspectorSections` registry (`Editor/Inspector`). The map editor's actions are commands in a `CommandRegistry` (`Editor/Shell`), from which its menus and toolbar are built and which
   runs the shortcuts. Its tools are classes (`IEditorTool`, `Editor/Tools`): the app routes
-  the pointer to the one in use, and the tool edits through the session. **Apps** hold composition and input mapping only.
+  the pointer to the one in use, and the tool edits through the session. The editor's
+  Problems panel validates a copy of the map (the map document) on a task and takes the result back on the main thread; the validator
+  marks each `MapIssue` with the `IssueKind` of the check that found it. **Apps** hold composition and input mapping only.
 - **The game app** (ADR-222, ADR-231): `Main` builds the views and maps input; the policy it runs lives elsewhere. `GameDirector` (Core.Domain/Game)
   runs a shown game once a frame: the colours played here (`PlaysHere`, `PlaysElsewhere`, `Viewer`), the turn timer's clock and when it
   may end a turn (`RunClock`), a person's turn that waits for the computer's moves to be shown (`TurnStarted`, `TakeTurnToShow`) and the

@@ -6,6 +6,8 @@ namespace EternalWars.Core.Domain.Editing.Checks;
 /// <summary>Roads and rivers on impassable terrain.</summary>
 internal sealed class GroundCheck : IMapCheck
 {
+    public IssueKind Kind => IssueKind.Ground;
+
     public IEnumerable<MapIssue> Check(GameState scenario)
     {
         var map = scenario.Map;

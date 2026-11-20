@@ -7,6 +7,8 @@ namespace EternalWars.Core.Domain.Editing.Checks;
 /// <summary>Victory and defeat conditions (ADR-057): what they point at must exist, and a game should be able to end.</summary>
 internal sealed class RulesCheck : IMapCheck
 {
+    public IssueKind Kind => IssueKind.Rules;
+
     public IEnumerable<MapIssue> Check(GameState scenario)
     {
         var rules = scenario.Rules;
