@@ -22,11 +22,16 @@ properties, players, validation and conditions panels):
   tab ([adventure-map.md](adventure-map.md#map-bans-and-random-placeholders), ADR-133);
 - validation; [generate from a template and the template editor](random-maps.md#editor).
 
-**The window** (EDIT-1, ADR-250): a bar on top (the file row, the status line), then three docked regions around the map view, each a tab
+**The window** (EDIT-1, ADR-250): a bar on top (the menus, the toolbar with the map's name, the status line), then three docked regions around the map view, each a tab
 box: the tools and the options of the one in use on the left, the map's settings and the inspector on the right (Map, Players,
 Conditions, Inspector, Events, Bans, Generate), Validation at the bottom. A region is resized with its splitter and collapsed with its
-button on the bar; F11 hides them all and shows them again. A panel larger than its region scrolls. The splitter positions, the
-collapsed regions and each region's open tab are kept in `editor-settings.cfg` in the user data folder.
+button on the toolbar or in the View menu; F11 hides them all and shows them again. A panel larger than its region scrolls. The
+splitter positions, the collapsed regions and each region's open tab are kept in `editor-settings.cfg` in the user data folder.
+
+**Commands**: every action is a command with a name, an optional icon and shortcut, and a check whether it can run now. The menus
+(File, Edit, View, Map, Tools, Templates, Test, Help) and the toolbar are built from the commands; an item that cannot run is greyed
+and says why in its tooltip. Shortcuts: Ctrl+Z undo, Ctrl+Y redo, L the next level, F11 the panels. The Map menu opens the map's
+tabs, the Tools menu picks a tool. Test (F5) and Help (F1) are in their menus and greyed until they are built.
 
 *Planned*: map resize, and the rest of an overhaul of the map and template editors into one creator-app workspace (ADR-247,
 [plan](../papers/editor-plan.md)).

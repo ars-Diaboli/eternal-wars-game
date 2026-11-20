@@ -495,7 +495,7 @@ The tasks of each step in build order. A task is one reviewable change that leav
    and `editor-grail-and-town` screenshots stay the same. *Done.*
 3. **Commands**: `CommandRegistry` (id, name, icon, default shortcut, "can run now", action). Register every action the editor has
    today: the file row, Undo, Redo, Level, Grid, Templates, and one command per tool. `MenuBarView` (File, Edit, View, Map, Tools,
-   Templates, Test, Help) and `ToolbarView` are built from it; the file row goes. Disabled items say why in their tooltip.
+   Templates, Test, Help) and `ToolbarView` are built from it; the file row goes. Disabled items say why in their tooltip. *Done.*
 4. **History in the core**: `UndoHistory` exposes its steps (descriptions and the current position); `MapEditorSession.UndoTo(step)`;
    `HistoryChanged` published after every record, undo and redo. Tests: a jump back and forth equals single undos and redos.
 5. **Bottom panels**: `ProblemsPanel` (today's validator, run after every change with a short debounce on a snapshot of the map

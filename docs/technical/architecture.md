@@ -128,7 +128,8 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   asked; with `.OnlyWhileShown()` a hidden view (a tab not shown, the editor's events panel) waits and refreshes once when it shows. A large screen is made of sections (`ScreenSection<TSubject>`, ADR-223: the town screen's in `Hud/TownScreen`, the hero
   screen's in `Hud/HeroScreen`), each with its own scheduler and events, rebuilding only itself; the screen rebuilds them all when it
   opens and on the few events that change what it shows at all. The editor's inspector has one `InspectorSection<T>` per map object
-  type in the `InspectorSections` registry (`Editor/Inspector`). The map editor's tools are classes (`IEditorTool`, `Editor/Tools`): the app routes
+  type in the `InspectorSections` registry (`Editor/Inspector`). The map editor's actions are commands in a `CommandRegistry` (`Editor/Shell`), from which its menus and toolbar are built and which
+  runs the shortcuts. Its tools are classes (`IEditorTool`, `Editor/Tools`): the app routes
   the pointer to the one in use, and the tool edits through the session. **Apps** hold composition and input mapping only.
 - **The game app** (ADR-222, ADR-231): `Main` builds the views and maps input; the policy it runs lives elsewhere. `GameDirector` (Core.Domain/Game)
   runs a shown game once a frame: the colours played here (`PlaysHere`, `PlaysElsewhere`, `Viewer`), the turn timer's clock and when it

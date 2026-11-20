@@ -11,12 +11,20 @@ namespace EternalWars.Godot.UI.Editor;
 public partial class ToolPalette : VBoxContainer
 {
     private readonly HFlowContainer _options = new();
+    private readonly Dictionary<IEditorTool, Button> _buttons = [];
+
+    /// <summary>Another tool is in use.</summary>
+    public event Action? ToolChanged;
+
+    /// <summary>The tools, in the buttons' order.</summary>
+    public IReadOnlyList<IEditorTool> Tools { get; private set; } = [];
 
     /// <summary>The tool in use.</summary>
     public IEditorTool Tool { get; private set; } = null!;
 
     public void Bind(IReadOnlyList<IEditorTool> tools)
     {
+        Tools = tools;
         var buttons = new HFlowContainer();
         AddChild(buttons);
         var group = new ButtonGroup();
@@ -25,6 +33,7 @@ public partial class ToolPalette : VBoxContainer
             var button = new Button { Text = tool.Name, ToggleMode = true, ButtonGroup = group, ButtonPressed = tool == tools[0] };
             button.Pressed += () => Use(tool);
             buttons.AddChild(button);
+            _buttons[tool] = button;
         }
 
         AddChild(_options);
@@ -33,7 +42,8 @@ public partial class ToolPalette : VBoxContainer
         ShowOptions();
     }
 
-    private void Use(IEditorTool tool)
+    /// <summary>Puts <paramref name="tool"/> (one of <see cref="Tools"/>) in use.</summary>
+    public void Use(IEditorTool tool)
     {
         if (tool == Tool)
         {
@@ -43,7 +53,9 @@ public partial class ToolPalette : VBoxContainer
         Tool.Cancel();
         Tool = tool;
         tool.Activate();
+        _buttons[tool].ButtonPressed = true; // the group lets go of the old tool's button
         ShowOptions();
+        ToolChanged?.Invoke();
     }
 
     private void ShowOptions()

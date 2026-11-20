@@ -9,10 +9,15 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 1 task 3 (ADR-250): `CommandRegistry` (`Godot.UI/Editor/Shell/`) holds every action of the editor as an
+  `EditorCommand` (id, name, icon, shortcut, why it cannot run, whether it is on); `MenuBarView` and `ToolbarView` are built from it
+  and the app hands it the unhandled keys. The file row and the workspace's own toggle buttons are gone; the map's name field stays
+  beside the toolbar until the file dialogs (task 8). Test and Help are greyed placeholders. The top bar is 8 px taller, so the
+  `editor-*` smoke clicks were re-aimed; `editor-shell` also opens the Edit and Tools menus. Next: task 4, history in the core.
 - Editor overhaul, step 1 task 2 (ADR-250): the editor's tools are classes (`IEditorTool` in `Godot.UI/Editor/Tools/`: `BrushTool`
   for the five that paint, one class per tool, `EditorToolContext` for the session, the inspector and the status line); `ToolPalette`
   shows the tools it is given, and the app only routes press, drag, release and hover to the one in use. No change in behaviour.
-  Next: task 3, the command registry, menus and toolbar.
+
 - Editor overhaul, step 1 task 1 (ADR-250): `EditorWorkspace` (`Godot.UI/Editor/Shell/`) docks the editor's panels in three regions
   around the map (tools left, settings and inspector right, Validation bottom), with splitters, collapse, F11 and the layout kept in
   `editor-settings.cfg`; smoke `editor-shell`, the other `editor-*` scenarios re-aimed. The map is still drawn behind the regions and
@@ -34,7 +39,7 @@ Detail: [roadmap.md](roadmap.md).
 2. The prologue map (CAMP-1), as the first map of a campaign; Border Watch's story is a placeholder.
 3. The remaining Phase 5 items in [roadmap.md](roadmap.md) ("Presentation and UI", "Town screen overhaul", "Editor overhaul",
    "Platform and art", "Roster"); the town screen overhaul starts with the owner's answers (TOWN-14 … TOWN-23), the editor
-   overhaul continues with step 1 task 3 (the step 0 greybox of the wizard is still open).
+   overhaul continues with step 1 task 4 (the step 0 greybox of the wizard is still open).
 4. The "Code health" list in [roadmap.md](roadmap.md): skills, heroes and town types as typed ids; `InfoSheets` as data once localisation
    is decided (ADR-239).
 
