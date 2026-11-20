@@ -260,14 +260,16 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [ ] Step 5: Sylvan, Academy, Necropolis, Dungeon, Stronghold and Swamp Bestiary in full art
 - [ ] Step 6: controller pass, UI scale, the adopted TOWN-17 mechanics, idle creatures; the plan's target list ticked
 
-### Editor overhaul (ADR-247; [plan](../docs/papers/editor-plan.md), questions EDIT-1 … EDIT-12)
-- [ ] Step 0: answers to EDIT-1 … EDIT-12, a clickable greybox of the workspace and the new-map wizard
+### Editor overhaul (ADR-247, ADR-250; [plan](../docs/papers/editor-plan.md#implementation-plan), EDIT-1 … EDIT-12 answered)
+- [x] Step 0a: answers to EDIT-1 … EDIT-12 (ADR-250: the proposals)
+- [ ] Step 0: a clickable greybox of the workspace and the new-map wizard
 - [ ] Step 1: the shell: regions, menus, toolbar, command registry and palette, status bar, Problems / History / Output, file dialogs,
-      recent files, unsaved marker, autosave and crash recovery, preferences
+      recent files, unsaved marker, autosave and crash recovery, preferences, tools as classes, the Map / Template tabs
 - [ ] Step 2: selection and editing: marquee and multi-select, move, copy, paste, duplicate, erase by kind, fill, line, scatter,
-      stamps, map resize / crop / shift
+      scenery rotation (a format bump), stamps, map resize / crop / shift
 - [ ] Step 3: the object browser (thumbnails, search, favourites), the inspector in sections with multi-edit and picture pickers, the
-      map settings window, the new-map wizard
+      map settings window, the new map content (rumours, allowed factions, object names, custom heroes; a format bump), the Texts
+      view, the new-map wizard
 - [ ] Step 4: minimap, go to, bookmarks, layers and overlays, fix-its, the fairness report, play-test from the editor
 - [ ] Step 5: the template workspace: undo, zone cards, multi-select and copy, presets, mirror tools, preview, Generate many
 - [ ] Step 6: F1 help, sample maps, UI scale, shortcut editor, performance on 256 × 256, a first-use test; the plan's target list ticked

@@ -11,11 +11,12 @@
 | [064](#adr-064-random-map-generation-project-layout-and-seed-streams-2026-10-17) | Random map generation: project layout and seed streams (2026-10-17) | accepted |
 | [086](#adr-086-random-maps-on-the-new-game-screen-2026-10-28) | Random maps on the new-game screen (2026-10-28) | implemented |
 | [087](#adr-087-generate-from-template-in-the-map-editor-2026-10-28) | "Generate from template" in the map editor (2026-10-28) | implemented |
-| [117](#adr-117-phase-4-close-out-whole-map-fairness-teams-28-mirrored-templates-the-eight-player-template-the-template-editor-adr-064-adr-070-adr-071-adr-073-2026-11-03) | Phase 4 close-out: whole-map fairness, teams 2–8, mirrored templates, the eight-player template, the template editor (ADR-064, ADR-070, ADR-071, ADR-073, 2026-11-03) | implemented |
+| [117](#adr-117-phase-4-close-out-whole-map-fairness-teams-28-mirrored-templates-the-eight-player-template-the-template-editor-adr-064-adr-070-adr-071-adr-073-2026-11-03) | Phase 4 close-out: whole-map fairness, teams 2–8, mirrored templates, the eight-player template, the template editor (ADR-064, ADR-070, ADR-071, ADR-073, 2026-11-03) | implemented; "no undo" superseded by ADR-250 |
 | [157](#adr-157-more-scenery-on-random-maps-denser-by-terrain-adr-077-2026-11-09) | More scenery on random maps, denser by terrain (ADR-077, 2026-11-09) | implemented |
 | [181](#adr-181-adventure-map-relief-a-height-per-map-set-by-the-generator-and-the-editor-adr-011-adr-075-2026-11-12) | Adventure map relief: a height per map, set by the generator and the editor (ADR-011, ADR-075, 2026-11-12) | accepted |
 | [182](#adr-182-map-37-answered-how-the-relief-is-stored-generated-and-edited-adr-075-adr-174-adr-181-2026-11-13) | MAP-37 answered: how the relief is stored, generated and edited (ADR-075, ADR-174, ADR-181, 2026-11-13) | implemented |
 | [247](#adr-247-map-and-template-editor-overhaul-a-creator-app-workspace-planned-in-seven-steps-owner-adr-015-adr-023-adr-117-2026-11-20) | Map and template editor overhaul: a creator-app workspace, planned in seven steps (owner, ADR-015, ADR-023, ADR-117, 2026-11-20) | accepted |
+| [250](#adr-250-edit-1--edit-12-answered-the-editor-plans-proposals-adopted-template-undo-scenery-rotation-new-map-content-owner-adr-117-adr-247-2026-11-20) | EDIT-1 … EDIT-12 answered: the editor plan's proposals adopted; template undo; scenery rotation; new map content (owner, ADR-117, ADR-247, 2026-11-20) | accepted |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -236,7 +237,7 @@ seed and options, then generates" (ADR-064, RMG-5, RMG-7). Choices made here are
   two at 128, then the tab again).
 
 ### ADR-117: Phase 4 close-out: whole-map fairness, teams 2–8, mirrored templates, the eight-player template, the template editor (ADR-064, ADR-070, ADR-071, ADR-073, 2026-11-03)
-**Status**: implemented (2026-11-03). Numbers marked *(proposal)* are the agent's, for the owner to confirm or change.
+**Status**: implemented (2026-11-03); the template editor's "no undo" superseded by ADR-250. Numbers marked *(proposal)* are the agent's, for the owner to confirm or change.
 
 - **Whole-map check** (`MapFairness.Check`, generation stage 8, ADR-071 / RMG-8): after the treasure, every start town must reach every
   other start town, and every town, mine and treasure item must be reachable from some start. The walk uses the step costs (2 straight,
@@ -354,7 +355,7 @@ tuned once the look-dev spike shows them.
 
 ### ADR-247: Map and template editor overhaul: a creator-app workspace, planned in seven steps (owner, ADR-015, ADR-023, ADR-117, 2026-11-20)
 **Status**: accepted (the direction and the plan); nothing built. Plan, study and questions:
-[editor-plan.md](../../docs/papers/editor-plan.md). Would reverse ADR-117's "no undo" in the template editor if EDIT-2 is accepted.
+[editor-plan.md](../../docs/papers/editor-plan.md). EDIT-1 … EDIT-12 answered in ADR-250.
 
 - **Owner**: the map editor and the template editor are to be overhauled to the quality, usability and style of a professional
   creator app, and in function on the level of the HoMM3 editor with HotA's additions and the HoMM5 editor.
@@ -368,3 +369,31 @@ tuned once the look-dev spike shows them.
 - **Open**: EDIT-1 … EDIT-12 (layout, template undo, where the template editor lives, several maps, play-test, decoration off the
   grid, scripting, resize, fairness, import, map texts, map content); the plan follows their proposals until answered. New map content
   and format changes among them each get their own ADR.
+
+### ADR-250: EDIT-1 … EDIT-12 answered: the editor plan's proposals adopted; template undo; scenery rotation; new map content (owner, ADR-117, ADR-247, 2026-11-20)
+**Status**: accepted (the owner: "use proposals", 2026-11-20); nothing built. Supersedes ADR-117's "no undo" in the template editor. The
+step-by-step build is in [editor-plan.md](../../docs/papers/editor-plan.md#implementation-plan); each map format change below gets its own
+ADR when it is built.
+
+- **EDIT-1 Layout**: fixed regions (left, right, bottom) with tabs, splitters and collapse; the layout kept per user. No free docking
+  and no floating windows.
+- **EDIT-2 Template undo**: every template change is one undo step with a name, shown in a History panel like the map's.
+- **EDIT-3 Template editor's place**: a "Map" | "Template" workspace tab in the map editor app; both stay open, a generated map goes to
+  the Map tab.
+- **EDIT-4 Documents**: one map and one template at a time, with Recent; copy and paste between maps through the clipboard and stamps.
+- **EDIT-5 Play-test**: a separate process of the game app with new launch arguments: the player, the others computer or off, reveal,
+  start at a hero or tile, the day, and a cheat panel that exists only in play-tests.
+- **EDIT-6 Decoration**: scenery can be rotated in 90° steps and mirrored, on the grid, stored in the map (a format bump); game objects
+  keep their fixed facing; no free placement.
+- **EDIT-7 Scripting**: no scripting language; the event tree (ADR-115, ADR-129) stays, and a node-graph view of it comes after the
+  plan's step 6.
+- **EDIT-8 Resize**: a nine-point anchor, crop to a selection and shift; objects that end up outside are listed, then removed in the
+  same undo step; any size from 16 to 256 a side, square or not, the presets offered first.
+- **EDIT-9 Fairness report**: per start, the days to the nearest town, mines and providers; the treasure value and guard strength within
+  3 and 7 days; the resources around the start town. A warning when a start's number is more than 20 % from the mean *(placeholder)*.
+  The same code serves the generator's fairness (ADR-117) where it fits.
+- **EDIT-10 Import**: no import of HoMM3 or HotA maps or templates, for 1.0 and after.
+- **EDIT-11 Map texts**: one language until the localisation decision (ADR-239); a "Texts" view lists all of a map's texts.
+- **EDIT-12 Map content**: rumours for the tavern, per-player allowed factions on a fixed map, and placed objects named for events and
+  quests join the map format; custom heroes per map with a name, biography and starting skills (the portrait from the roster).
+  Per-player AI style comes later, with the AI's styles.

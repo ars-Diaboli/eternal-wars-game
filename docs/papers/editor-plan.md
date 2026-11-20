@@ -4,12 +4,11 @@ The plan to rebuild the map editor and the template editor (ADR-247). The goal i
 people expect from a professional tool. In function it should match the HoMM3 editor with HotA's additions and the HoMM5 editor,
 keeping this game's own rules and file formats.
 
-This file has five parts. The **study** looks at what we have and what the references do. The **target** sets the bar. **The
-workspace and its tools** describes every part of the new editor. **Technical design** covers how to build it. **Roadmap**,
-**questions** and **risks** close it. Nothing here is built yet. The questions (EDIT-1 … EDIT-12) are also in
-[open-questions.md](../../memory-bank/open-questions.md#tools-and-editor); each one has a proposal that the plan follows until the
-owner answers. When every step is built, this file moves to `archive/` and the rules live in [tools.md](../design/tools.md) and
-[random-maps.md](../design/random-maps.md).
+The **study** looks at what we have and what the references do. The **target** sets the bar. **The workspace and its tools**
+describes every part of the new editor, and **technical design** how it is built. The **roadmap** gives the seven steps and the
+**implementation plan** breaks each one into tasks in build order. **Decisions** and **risks** close it. The owner adopted every
+proposal for the questions EDIT-1 … EDIT-12 (ADR-250). Nothing here is built yet. When every step is built, this file moves to
+`archive/` and the rules live in [tools.md](../design/tools.md) and [random-maps.md](../design/random-maps.md).
 
 ## Study
 
@@ -186,7 +185,7 @@ The bar the overhaul is measured against. Each item can be checked; step 6 of th
 
 ### Files
 
-- **New map wizard**: the size (the presets 48 … 256, or a free size), levels, the default terrain, the number of players and their
+- **New map wizard**: the size (the presets 48 … 256, or any size from 16 to 256 a side), levels, the default terrain, the number of players and their
   kind, and a template. It ends either on a blank map or in Generate.
 - **Open / Save / Save as**: file dialogs (the system's own where Godot offers one), starting in the maps folder. **Recent** lists
   the last ten files. An asterisk in the title marks unsaved work.
@@ -268,18 +267,24 @@ The bar the overhaul is measured against. Each item can be checked; step 6 of th
 - **Pickers with pictures**: creatures, heroes, artifacts, spells and skills are chosen from searchable grids with their portraits and
   icons (from the prompt files, ADR-245), not from drop-downs.
 - **Jump links**: a gate's partner, an event's cells and a quest's target are links. A click selects them and the view goes there.
+- **Names** (EDIT-12): any placed object can be given a name that events and quests refer to and Go to finds.
+- **Custom heroes** (EDIT-12): a placed or starting hero can get its own name, biography and starting skills; the portrait comes from
+  the roster.
+- **Scenery** (EDIT-6): rotate in 90° steps and mirror. Game objects keep their fixed facing.
 
 ### Map settings
 
 - **One window with tabs** (opened from Map → Settings, or F7). It replaces today's Map, Players, Conditions and Bans tabs:
   - **General**: name, description, difficulty, hero limit, the arena switch;
-  - **Players**: per colour, human or computer, team, allowed factions, start town and hero, and the AI's style;
+  - **Players**: per colour, human or computer, team, allowed factions (EDIT-12), start town and hero; the AI's style comes later,
+    with the AI's styles;
   - **Victory and loss** (ADR-057);
   - **Bans** (ADR-133);
   - **Week events** (ADR-084);
-  - **Rumours** (if EDIT-12 b is adopted).
+  - **Rumours** for the tavern (EDIT-12);
+  - **Texts**: every text of the map in one list, editable in place, so a later translation finds them (EDIT-11).
 - **Events**: the existing tree (ADR-129), which keeps its own tab in the right region. A **graph view** of triggers, conditions and
-  actions is proposed for later (EDIT-7).
+  actions comes after step 6 (EDIT-7). There is no scripting language.
 
 ### Layers and overlays
 
@@ -387,11 +392,12 @@ The session already makes every edit an undoable step and publishes events. The 
 
   These are shared with the simulator, so the report and `sim` agree.
 - **Templates**:
-  - `TemplateEditorSession` gets an undo history like `UndoHistory`, which reverses ADR-117's "no undo" if EDIT-2 is accepted;
+  - `TemplateEditorSession` gets an undo history like `UndoHistory` (EDIT-2; ADR-250 reverses ADR-117's "no undo");
   - zone copy and paste, presets, mirror-keeping edits;
   - `TemplateBatch`: generate N seeds and return each map's checks and fairness, cancellable, off the main thread.
-- **Map format**: stamps are a new file. Scenery rotation and mirroring (EDIT-6) would bump `MapDocument.CurrentFormatVersion`, with a
-  format sample.
+- **Map format**: stamps are a new file. Two bumps of `MapDocument.CurrentFormatVersion`, each with its own ADR, a format sample and
+  a migration step (ADR-174): scenery rotation and mirroring (EDIT-6) in step 2, and the new map content (EDIT-12: rumours, allowed
+  factions, object names, custom heroes) in step 3.
 
 ### Godot
 
@@ -443,59 +449,246 @@ Seven steps. Each ends in a working editor with a green test suite. The checkbox
 
 | Step | What | Depends on | Done when |
 |---|---|---|---|
-| 0 | **Decide and sketch**: answers to EDIT-1 … EDIT-12; a clickable greybox of the workspace and the new-map wizard | — | The owner signs off the layout |
-| 1 | **The shell**: workspace regions, menus, toolbar, command registry and palette, status bar, Problems / History / Output, files (dialogs, recent, unsaved marker, autosave, recovery), preferences; today's panels moved in as they are | 0 | Every action of today's editor is a command in a menu; no work is lost on a crash |
-| 2 | **Selection and editing**: select, marquee, multi-select, move, copy, paste, duplicate, delete, erase by kind, fill, line, larger brushes, scatter, stamps, map resize / crop / shift | 1 | A map can be laid out by selecting and copying; resize is undoable |
-| 3 | **Browser and inspector**: categories, thumbnails, search, favourites, recent; the inspector in sections with multi-edit and picture pickers; the map settings window; the new-map wizard | 1 | Nothing is picked from a plain drop-down any more |
-| 4 | **Overlays, analysis and testing**: minimap, go to, bookmarks, the editor camera; layers and the overlays; problems with fix-its; the fairness report; play-test | 2, 3 | A map can be checked for fairness and played from the editor |
+| 0 | **Decide and sketch**: answers to EDIT-1 … EDIT-12 (ADR-250, done); the workspace layout with empty regions and the new-map wizard's pages as a clickable greybox | — | The owner signs off the layout |
+| 1 | **The shell**: workspace regions, menus, toolbar, command registry and palette, status bar, Problems / History / Output, files (dialogs, recent, unsaved marker, autosave, recovery), preferences, tools as classes, the Map / Template tabs; today's panels moved in as they are | 0 | Every action of today's editor is a command in a menu; no work is lost on a crash |
+| 2 | **Selection and editing**: select, marquee, multi-select, move, copy, paste, duplicate, delete, erase by kind, fill, line, larger brushes, scatter, scenery rotation, stamps, map resize / crop / shift | 1 | A map can be laid out by selecting and copying; resize is undoable |
+| 3 | **Browser, inspector and map content**: categories, thumbnails, search, favourites, recent; the inspector in sections with multi-edit and picture pickers; the map settings window with rumours and texts; object names and custom heroes; the new-map wizard | 1 | Nothing is picked from a plain drop-down any more |
+| 4 | **Navigation, overlays, analysis and testing**: the editor camera, minimap, go to, bookmarks; layers and the overlays; problems with fix-its; the fairness report; play-test | 2, 3 | A map can be checked for fairness and played from the editor |
 | 5 | **Template workspace**: undo, cards and snapping, multi-select and copy, presets, mirror tools, every field in the inspector, preview, Generate many with the gallery | 1 | A template can be built, checked over 20 seeds and opened in the map workspace without touching its file |
 | 6 | **Polish**: F1 help, sample maps, UI scale, shortcut editor, performance on the largest maps, a first-use test with one person, the [target](#target) list | 1–5 | The target list is ticked; this file moves to `archive/` |
 
-Steps 2, 3 and 5 can run in parallel once the shell exists.
+Steps 2, 3 and 5 can run in parallel once the shell exists. Step 4 needs selection (step 2) for Go to and fix-its, and named objects
+(step 3) for Go to by name.
 
-## Questions
+## Implementation plan
 
-Each question also has an entry in [open-questions.md](../../memory-bank/open-questions.md#tools-and-editor). The plan follows the
-**proposal** until the owner answers.
+The tasks of each step in build order. A task is one reviewable change that leaves the editor working.
+
+**Every task**:
+- Core first. A rule that can be engine-free goes into `src/Core/**` with tests in `tests/EternalWars.Core.Tests` (`TestWorld` ASCII
+  maps for map scenarios). Every new edit is undoable through `MapEditorSession` and publishes a past-tense event after the change.
+- Then the Godot view in `EternalWars.Godot.UI/Editor/`. Views subscribe with `SubscribeWhileInTree`; the app only composes and maps
+  input.
+- A smoke scenario in `tools/smoke-godot.ps1` where the task changes what the user sees; the existing `editor-*` scenarios keep
+  passing.
+- `dotnet build` and `dotnet test` green. [tools.md](../design/tools.md) states the new rule once it is built.
+- A map format change gets its own ADR, a bump of `MapDocument.CurrentFormatVersion`, a sample in `tests/.../Data/FormatSamples` and a
+  migration step where older files need one (ADR-174).
+- At the end of a step: tick [roadmap.md](../../memory-bank/roadmap.md) and refresh `active-context.md`.
+
+### Step 0: Decide and sketch
+
+1. **Decisions**: EDIT-1 … EDIT-12 answered with the proposals (ADR-250). *Done.*
+2. **Greybox**: `EditorWorkspace` in `Editor/Shell/` with the menu bar, toolbar, the three regions, the status bar and the Map /
+   Template tabs, all empty and inert, plus the new-map wizard's pages. It is not thrown away: step 1 fills it. A smoke scenario
+   `editor-greybox` saves screenshots for the owner.
+
+### Step 1: The shell
+
+1. **Regions**: `EditorWorkspace` built from nested `SplitContainer`s with tab boxes; collapse per region, F11 hides all; the
+   splitter positions and the open tabs kept in an editor settings file (`user://editor-settings.cfg`). Today's 560 px tab box goes:
+   Map, Players, Conditions, Inspector, Events, Bans and Generate move unchanged to the right region, Validation to the bottom, the
+   `ToolPalette` to the left. Smoke `editor-shell`.
+2. **Tools as classes**: `IEditorTool` (activate, hover, press, drag, release, cancel, options panel) in `Editor/Tools/`. Move one tool
+   at a time out of `Main.cs` (`Paint`, `Click`, `Link`, the height tools, start zones, the Grail) with no change in behaviour; the
+   app only routes input to the active tool. `Main.cs` ends at composition and input mapping. The `editor-tools`, `editor-heights`
+   and `editor-grail-and-town` screenshots stay the same.
+3. **Commands**: `CommandRegistry` (id, name, icon, default shortcut, "can run now", action). Register every action the editor has
+   today: the file row, Undo, Redo, Level, Grid, Templates, and one command per tool. `MenuBarView` (File, Edit, View, Map, Tools,
+   Templates, Test, Help) and `ToolbarView` are built from it; the file row goes. Disabled items say why in their tooltip.
+4. **History in the core**: `UndoHistory` exposes its steps (descriptions and the current position); `MapEditorSession.UndoTo(step)`;
+   `HistoryChanged` published after every record, undo and redo. Tests: a jump back and forth equals single undos and redos.
+5. **Bottom panels**: `ProblemsPanel` (today's validator, run after every change with a short debounce on a snapshot of the map
+   document, off the main thread, results back on the main thread; severity counts and a filter by kind), `HistoryPanel` (a click
+   jumps to a step) and `OutputPanel` (the messages `Report` writes today).
+6. **Status bar**: `StatusBarView` with the tile under the pointer (x, y, level, terrain, height, the object there), the problem
+   counts (a click opens Problems), the save state, the zoom and the running background work.
+7. **Unsaved work in the core**: `MapEditorSession.IsDirty`, from the history position at the last save (`MarkSaved`); undoing back
+   to the saved step makes it clean again. Tests.
+8. **Files**: `FileService` with Open, Save and Save as (Godot's `FileDialog`, the system's own where offered) starting in the maps
+   folder; Recent (ten) in the editor settings; an asterisk in the window title; a question before overwriting, before opening over
+   unsaved work and on closing (the window's close request waits for the answer). Today's name field goes.
+9. **Autosave and recovery**: every 2 minutes while dirty, to `user://maps/.autosave/` (the last five); a session marker written at
+   start and removed on a clean exit; when the marker is found at start, the editor offers the newest autosave. Smoke
+   `editor-recovery` (a planted marker shows the offer).
+10. **Command palette**: Ctrl+Shift+P, search as you type over the registry, each command with its shortcut; only commands that can
+    run now are offered.
+11. **Preferences and the editor theme**: the Preferences window (UI scale 100–200 %, autosave interval, camera speeds, default map
+    size); a compact variant of the game theme (ADR-191) for the editor; placeholder icons for every tool and command.
+12. **Map and Template tabs** (EDIT-3): the template editor overlay moves into the Template tab as it is; both tabs stay open, and
+    "Open in map editor" switches to the Map tab. Smoke `editor-template-editor` updated.
+
+**Done when**: every action of today's editor is in a menu with its shortcut and in the palette; killing the editor and starting it
+again offers the lost work.
+
+### Step 2: Selection and editing
+
+1. **Selection in the core**: `MapSelection` (tiles per level, plus object, hero and event ids), owned by the session and changed only
+   through it, with `SelectionChanged` published; it is not an undo step. Tests.
+2. **Select tool** (V): click, marquee, Shift adds, Alt removes, a double click selects every object of that kind in view; a filter
+   (objects, heroes, monsters, scenery, events); Ctrl+A, Escape, Delete. `SelectionView` draws outlines and handles. The inspector
+   shows a single selection as today.
+3. **Move** (M, or drag a selection): `ObjectEditor.Move` and `HeroEditor.Move` check the footprint and level the ground as placement
+   does; a selection moves as one step. A ghost shows the target, red cells where it does not fit. Tests: a move and its undo restore
+   heights, links and owners.
+4. **Fragments and the clipboard**: `MapFragment` (terrain, heights, roads, rivers, objects with their settings, links inside the
+   area); `Copy`, `Cut`, `Paste` (placement checks, new ids, links remapped, a choice of layers) and `DuplicateAt`, each one step.
+   The clipboard lives in the app, so it survives opening another map (EDIT-4). Tests: paste in place gives the same map; links to
+   outside the area are dropped; ids never repeat.
+5. **Brushes**: sizes 1–9, round or square, line (Shift + click), and `TerrainEditor.Fill` (a flood fill of a connected area of one
+   terrain, one step). Brush outlines on the ground before the click. Tests for fill and line.
+6. **Erase by kind** (E): under the brush or over the selection, for objects, scenery, monsters, roads, rivers and events; one step.
+   Tests.
+7. **Scatter** (S): `ScatterEditor` beside `EditorMapGenerator` in `Core.Generation`, reusing the generator's scenery choice
+   (`SceneryPlacer`, ADR-157) on a brush area or the selection, with density, kinds and "keep paths open"; it draws from the
+   scenario's `GameState.Random`, so the same seed gives the same result. Tests.
+8. **Scenery rotation and mirroring** (EDIT-6): an ADR and a format bump with a sample and a migration (older scenery gets no
+   rotation); the map view draws the rotation and the mirror; Rotate and Mirror commands on a scenery selection, one step each. The
+   generator is unchanged. Tests: a save and load round trip, undo.
+9. **Resize, crop and shift** (EDIT-8): `MapEditorSession.Resize(width, height, anchor)` with a nine-point anchor and any size from
+   16 to 256 a side; `Crop` to the selection; `Shift`. Heights, start zones, event cells, roads and rivers are cut or extended;
+   objects that end up outside are listed in a dialog, then removed in the same step. Check that a non-square map plays (the
+   minimap, the camera bounds, saves). Tests with objects on every edge. Smoke `editor-resize`.
+10. **Stamps**: a stamp file (a `MapFragment` in its own versioned format, with samples) in `user://stamps/`; "Save selection as
+    stamp"; until the browser exists (step 3) stamps are listed in the Object tool's options. Smoke `editor-select-move-paste`.
+
+**Done when**: a map can be laid out by selecting, copying and stamping; every edit of the step, resize included, can be undone.
+
+### Step 3: Browser, inspector and map content
+
+1. **Browser data in the core**: every kind in `MapObjectCatalog` gets a category (towns, heroes, monsters by faction and tier, mines
+   and providers, dwellings, treasure, artifacts by slot and tier, power-ups, utilities and travel, banks, events and quests, scenery
+   by kind and terrain), search words and the terrains it suits. Tests: every kind has a category; "gold" finds the mine, the pile
+   and the treasury.
+2. **Object browser**: `ObjectBrowser` in the left region with the categories, search, ★ Favourites and ⟲ Recent (in the editor
+   settings), a terrain filter, and the stamps; hovering shows a larger preview, the footprint and a one-line rule. The Object tool
+   places the browser's choice with a ghost. The drop-down goes. Smoke `editor-browser-place`.
+3. **Thumbnails**: `ThumbnailRenderer` renders each model once in a hidden `SubViewport` and caches it in `user://cache/thumbs/` by
+   the model's hash; icons are used where they exist (ADR-245), placeholders otherwise.
+4. **Inspector sections**: `InspectorForm` gets collapsible sections (identity, contents, guard, messages, links, events); today's
+   forms (hero, town, monster, Pandora's box, sphinx, owned objects) move into them. Jump links select the linked thing and move the
+   view.
+5. **Multi-edit**: a property edit over a list of objects of one kind as one step; differing values show "—". Tests.
+6. **Picture pickers**: searchable grids for creatures, heroes, artifacts, spells and skills, with their icons or placeholders,
+   replacing the drop-downs.
+7. **Map settings window** (F7): General, Players, Victory and loss, Bans and Week events tabs, made from today's Map, Players,
+   Conditions and Bans panels, which then leave the right region.
+8. **Map content** (EDIT-12): an ADR and one format bump with a sample and a migration, then each part with its rules and tests:
+   - **rumours**: a list per map, edited in a Rumours tab; the game's tavern shows them;
+   - **allowed factions per player** on a fixed map: in the Players tab; the new-game screen offers only those;
+   - **object names**: a name field in the inspector; events and quests can refer to a named object; names are unique (a validator
+     check);
+   - **custom heroes**: a name, biography and starting skills in the hero inspector; the portrait from the roster.
+9. **Texts** (EDIT-11): a core list of every text in a map (name, description, event texts, messages, signs, rumours, hero names and
+   biographies) with a setter for each, and a Texts tab that edits them in place. A test fails when a text field is missing from
+   the list.
+10. **New-map wizard**: size (the presets, or any size 16–256), levels, default terrain, the number of players and their kind, a
+    template; it ends on a blank map or in Generate. It replaces New, New (2 levels) and From template. The empty state offers the
+    wizard and the sample maps. Smoke `editor-new-map`.
+
+**Done when**: nothing is picked from a plain drop-down; a map can carry rumours, allowed factions, named objects and custom heroes,
+and the game uses them.
+
+### Step 4: Navigation, overlays, analysis and testing
+
+1. **Editor camera**: `EditorCamera` beside `StrategyCamera`: top-down or tilted, F to focus the selection, Home for the whole map,
+   the middle button pans, the wheel zooms; Ctrl+1 … 9 store bookmarks and 1 … 9 return to them.
+2. **Minimap and Go to**: `MinimapWidget` reused in the right region (a click or drag moves the view, the view's frame drawn); Ctrl+G
+   goes to a tile or a named object, searching as you type; the other level can show ghosted.
+3. **Layers**: show, hide and lock per kind; the core's selection and erase skip locked kinds. Tests.
+4. **Analysis in the core**: `MapAnalysis` over a `GameState`: reach in days from a tile with the game's pathfinding, guard strength
+   per cell, and the fairness numbers per start (EDIT-9): days to the nearest town, mines and providers; treasure value and guard
+   strength within 3 and 7 days; the resources around the start town; a warning when a start is more than 20 % from the mean
+   *(placeholder)*. `MapFairness` and `sim` use it where the numbers mean the same. Tests on `TestWorld` maps.
+5. **Overlays**: `OverlayView` (one multimesh per overlay) with a legend, one at a time: passability, owners, guard strength, reach
+   from a chosen start, zones, height contours. Smoke `editor-overlays`.
+6. **Fix-its**: `MapIssue` gets an optional fix, an edit the session runs as one step; fixes where the answer is clear (link an
+   unlinked gate, give a start town its owner). The Problems panel shows a Fix button. Tests per fix.
+7. **Fairness report and exports**: a Fairness panel from `MapAnalysis`; File → Export writes the report with the problems as
+   Markdown, and the whole map top-down as a PNG.
+8. **Play-test** (EDIT-5): the game app reads new launch arguments (`--player=`, `--others=ai|off`, `--reveal`, `--start=x,y,level`,
+   `--day=`, `--cheats`) in `LaunchArguments` and its composition; the cheat panel exists only with `--cheats` and changes the game
+   through commands (ADR-036); a play-tested game is not ranked. Test (F5) saves to a temporary file and starts the game as a
+   separate process (the game's path in Preferences); the editor stays where it was. Tests for the cheat commands; smoke
+   `editor-playtest-args` checks the arguments a play-test passes.
+
+**Done when**: a map can be checked for fairness and played from the editor in one click.
+
+### Step 5: Template workspace
+
+1. **Template undo** (EDIT-2): every `TemplateEditorSession` change records the template before it (templates are values), with a
+   name; undo, redo and jump to a step; the History panel shows the template's steps while the Template tab is open. Tests: every
+   change undoes. Smoke `editor-template-undo`.
+2. **Template files**: open, save, save as, Recent, the unsaved marker and autosave as for maps; shipped templates open read-only and
+   are saved as a copy.
+3. **Graph**: zones as cards (type, owner colour, size, towns, mines, monster strength), connections labelled (kind, guard value,
+   passages, chance), snapping to a grid, align and spread, auto-arrange as now.
+4. **Multi-select and copy**: marquee in the graph; copy, paste and duplicate zones with their inner connections and new ids. Tests.
+5. **Mirror tools**: make a zone's mirror image and keep it in sync (`mirror`). Tests.
+6. **Inspector and presets**: every field, including terrains and neutral town types, with pickers; zone presets (rich treasure, mine
+   junction, guarded start) and user presets in `user://template-presets/`.
+7. **Preview**: Generate runs in the background and shows the map in a preview panel (top-down, zones outlined) without leaving the
+   template; "Open in map editor" as now.
+8. **Generate many**: `TemplateBatch` in the core runs N seeds (default 20) off the main thread, cancellable, with a cap on parallel
+   work, and returns each map's checks (problems, determinism, starts reachable, as `sim maps`) and fairness. A gallery of
+   thumbnails shows the numbers per seed and their spread. Tests: a batch equals single runs. Smoke `editor-template-batch`.
+
+**Done when**: a template can be built, checked over 20 seeds and opened in the map workspace without touching its file.
+
+### Step 6: Polish
+
+1. **Shortcut editor**: rebind any command in Preferences, with conflicts shown; kept in the editor settings.
+2. **F1 help**: short in-app pages for tools, fields and problems, made from the text of [tools.md](../design/tools.md) and
+   [random-maps.md](../design/random-maps.md); F1 opens the page for what is hovered.
+3. **Sample maps**: in the Help menu and the empty state.
+4. **UI scale**: every panel checked at 100, 150 and 200 %; the theme's contrast setting.
+5. **Performance**: a 256 × 256 two-level generated map timed for opening (under 3 s), painting (60 fps) and validation (never
+   stalls); a script in `tools/` runs the timing, and the hot spots are fixed.
+6. **First-use test**: one person makes a playable two-player map in 15 minutes with the wizard and the browser, without a manual;
+   what they trip over gets fixed.
+7. **Close**: the [target](#target) list ticked; [tools.md](../design/tools.md) and [random-maps.md](../design/random-maps.md) hold
+   the rules; ADR-247 marked implemented; this file moves to `archive/`.
+
+**After step 6**: the node-graph view of the event tree (EDIT-7); per-player AI style with the AI's styles (EDIT-12); per-language
+map texts once localisation is decided (EDIT-11, ADR-239).
+
+## Decisions
+
+The owner adopted every proposal (ADR-250). The anchors keep the question ids that the ADRs and the roadmap cite.
 
 <a id="edit-1"></a>
-**EDIT-1 The workspace layout.** Free docking (panels dragged anywhere, floating windows), or fixed regions that can be resized and
-collapsed? **Proposal**: fixed regions (left, right, bottom) with tabs, splitters and collapse, the layout kept per user. Godot has no
-docking for game UIs, and free docking costs much for little gain.
+**EDIT-1 The workspace layout**: fixed regions (left, right, bottom) with tabs, splitters and collapse, the layout kept per user. No
+free docking and no floating windows: Godot has no docking for game UIs, and it would cost much for little gain.
 
 <a id="edit-2"></a>
-**EDIT-2 Undo in the template editor.** ADR-117 recorded the owner's "no undo". Does a professional-grade editor change that?
-**Proposal**: yes, undo for every template change, with a History panel like the map's.
+**EDIT-2 Undo in the template editor**: every template change can be undone, with a History panel like the map's. This reverses
+ADR-117's "no undo".
 
 <a id="edit-3"></a>
-**EDIT-3 Where the template editor lives.** An overlay as today, a workspace tab in the same app, or an app of its own? **Proposal**: a
-workspace tab ("Map" | "Template") in the map editor app. Both stay open, and a generated map goes to the Map tab.
+**EDIT-3 Where the template editor lives**: a workspace tab ("Map" | "Template") in the map editor app. Both stay open, and a
+generated map goes to the Map tab.
 
 <a id="edit-4"></a>
-**EDIT-4 Several maps open at once.** Document tabs for more than one map? **Proposal**: no. One map and one template at a time, plus
-Recent and fast switching. Copy and paste works between maps through the clipboard and stamps.
+**EDIT-4 Several maps open at once**: no. One map and one template at a time, plus Recent and fast switching. Copy and paste works
+between maps through the clipboard and stamps.
 
 <a id="edit-5"></a>
-**EDIT-5 Play-test.** (a) A separate game process or the game inside the editor? (b) Which options? **Proposal**: (a) a separate
-process of the game app with new launch arguments; (b) the player, the others computer or off, reveal, start at a hero or tile, the
-day, and a cheat panel only in play-tests.
+**EDIT-5 Play-test**: a separate process of the game app with new launch arguments. Options: the player, the others computer or off,
+reveal, start at a hero or tile, the day, and a cheat panel that exists only in play-tests.
 
 <a id="edit-6"></a>
-**EDIT-6 Decoration off the grid.** HoMM5 lets scenery be rotated and placed freely. Do we add rotation, mirroring or free placement
-for scenery, a map format change? **Proposal**: rotation in 90° steps and mirroring for scenery only, on the grid, stored in the map
-(a format bump). Game objects keep their fixed facing. No free placement.
+**EDIT-6 Decoration off the grid**: scenery can be rotated in 90° steps and mirrored, on the grid, stored in the map (a format bump).
+Game objects keep their fixed facing. No free placement.
 
 <a id="edit-7"></a>
-**EDIT-7 Scripting.** A scripting language (HoMM5's Lua) for map makers, or the event tree (ADR-115, ADR-129) only? **Proposal**: no
-scripting language. The event tree stays, and a node-graph view of it comes after step 6.
+**EDIT-7 Scripting**: no scripting language. The event tree (ADR-115, ADR-129) stays, and a node-graph view of it comes after step 6.
 
 <a id="edit-8"></a>
-**EDIT-8 Map resize.** (a) Where is the map anchored? (b) What happens to objects outside? (c) Any size, or only the presets?
-**Proposal**: (a) a nine-point anchor plus crop to a selection and shift; (b) listed, then removed in the same undo step; (c) any square
-or rectangular size from 16 to 256, the presets offered first.
+**EDIT-8 Map resize**: a nine-point anchor plus crop to a selection and shift; objects outside are listed, then removed in the same
+undo step; any size from 16 to 256 a side, square or not, the presets offered first.
 
 <a id="edit-9"></a>
-**EDIT-9 What the fairness report measures.** **Proposal**: per start:
+**EDIT-9 What the fairness report measures**: per start:
 - days to the nearest town, mines and providers;
 - the treasure value and the guard strength within 3 and 7 days;
 - the resources around the start town.
@@ -504,24 +697,20 @@ A warning appears when one start's number is more than 20 % from the mean (a pla
 fairness (ADR-117) where it fits.
 
 <a id="edit-10"></a>
-**EDIT-10 Importing HoMM3 or HotA maps and templates.** ADR-023's scope leaves template import out of 1.0. Maps too? **Proposal**: no
-import of either, for 1.0 and after. The formats and content differ too much, and the maps are other people's work.
+**EDIT-10 Importing HoMM3 or HotA maps and templates**: no import of either, for 1.0 and after. The formats and content differ too
+much, and the maps are other people's work.
 
 <a id="edit-11"></a>
-**EDIT-11 Map text in several languages.** Should map names, descriptions, event texts and rumours have per-language texts?
-**Proposal**: wait for the game's localisation decision (ADR-239). Until then one language, with all of a map's texts listed in one
-"Texts" view so a later translation finds them.
+**EDIT-11 Map text in several languages**: one language until the game's localisation decision (ADR-239), with all of a map's texts
+listed in one "Texts" view so a later translation finds them.
 
 <a id="edit-12"></a>
-**EDIT-12 Map content the editor lacks.** Which of these join the map format?
-- (a) Custom heroes per map: name, portrait, biography, skills.
-- (b) Rumours for the tavern.
-- (c) Per-player AI style.
-- (d) Per-player allowed factions on a fixed map.
-- (e) Placed objects named for events and quests.
-
-**Proposal**: b, d, e yes; a yes for name, biography and starting skills (the portrait from the roster); c later, with the AI's
-styles.
+**EDIT-12 Map content the editor lacks**:
+- (a) custom heroes per map: yes, with a name, biography and starting skills; the portrait from the roster;
+- (b) rumours for the tavern: yes;
+- (c) per-player AI style: later, with the AI's styles;
+- (d) per-player allowed factions on a fixed map: yes;
+- (e) placed objects named for events and quests: yes.
 
 ## Risks
 
