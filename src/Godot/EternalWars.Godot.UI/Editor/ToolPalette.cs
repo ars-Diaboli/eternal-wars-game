@@ -89,10 +89,13 @@ public sealed record EditorTool(
     };
 }
 
-/// <summary>Tool buttons plus the options of the selected tool. Raises <see cref="ToolChanged"/> on every change.</summary>
+/// <summary>
+/// Tool buttons plus the options of the selected tool, both wrapping to the width the palette is given. Raises <see cref="ToolChanged"/> on
+/// every change.
+/// </summary>
 public partial class ToolPalette : VBoxContainer
 {
-    private readonly HBoxContainer _options = new();
+    private readonly HFlowContainer _options = new();
     private MapEditorSession _editor = null!;
     private EditorTool _tool = null!;
 
@@ -110,7 +113,7 @@ public partial class ToolPalette : VBoxContainer
             Zone = editor.Scenario.Players[0].Id,
         };
 
-        var kinds = new HBoxContainer();
+        var kinds = new HFlowContainer();
         AddChild(kinds);
         var group = new ButtonGroup();
         foreach (var kind in Enum.GetValues<ToolKind>())
@@ -159,14 +162,13 @@ public partial class ToolPalette : VBoxContainer
                 Choice("Do", Enum.GetValues<HeightTool>().Select(h => (h == HeightTool.FromTerrain ? "From terrain" : h.ToString(), h)), _tool.Height,
                     h => _tool with { Height = h });
                 Radius();
-                _options.AddChild(new Label { Text = "Strength" });
                 var strength = new SpinBox
                 {
                     MinValue = 1, MaxValue = HeightEditor.MaxStrength, Value = _tool.Strength,
                     TooltipText = $"Eighths of a cell width per dab ({HeightEditor.MaxStrength} = a whole cell)",
                 };
                 strength.ValueChanged += v => Set(_tool with { Strength = (int)v });
-                _options.AddChild(strength);
+                Labelled("Strength", strength);
                 var whole = new Button { Text = "Heights from terrain", TooltipText = "The whole map, every level, takes its terrains' heights (one undo step)" };
                 whole.Pressed += () => _editor.Heights.FromTerrain();
                 _options.AddChild(whole);
@@ -187,10 +189,7 @@ public partial class ToolPalette : VBoxContainer
                     _tool.Zone,
                     z => _tool with { Zone = z });
                 Radius();
-                _options.AddChild(new Label
-                {
-                    Text = "Where each player's day stays its own in a simultaneous first week; another player's hero entering it ends those days.",
-                });
+                Hint("Where each player's day stays its own in a simultaneous first week; another player's hero entering it ends those days.");
                 break;
             case ToolKind.Object:
                 var definitions = _editor.Catalog.All.Where(d => d.Kind != MapObjectKind.Monster).OrderBy(d => d.Name, StringComparer.Ordinal);
@@ -200,30 +199,24 @@ public partial class ToolPalette : VBoxContainer
                 Choice("Creature", Creatures(), _tool.Creature, c => _tool with { Creature = c });
                 var count = new SpinBox { MinValue = 0, MaxValue = 999, Value = _tool.Count ?? 0, TooltipText = "0 = rolled from the tier at game start" };
                 count.ValueChanged += v => Set(_tool with { Count = v > 0 ? (int)v : null });
-                _options.AddChild(new Label { Text = "Count" });
-                _options.AddChild(count);
+                Labelled("Count", count);
                 Choice("Disposition", Enum.GetValues<GuardDisposition>().Select(d => (d.ToString(), d)), _tool.Disposition, d => _tool with { Disposition = d });
                 break;
             case ToolKind.Hero:
                 Choice("Owner", _editor.Scenario.Players.Select(p => (p.Name, p.Id)), _tool.Player, p => _tool with { Player = p });
                 break;
             case ToolKind.Erase:
-                _options.AddChild(new Label { Text = "Click a hero or object to remove it." });
+                Hint("Click a hero or object to remove it.");
                 break;
             case ToolKind.LinkGates:
-                _options.AddChild(new Label { Text = "Click a gate (or one-way entrance), then its partner (or exit)." });
+                Hint("Click a gate (or one-way entrance), then its partner (or exit).");
                 break;
             case ToolKind.Select:
-                _options.AddChild(new Label { Text = "Click a hero or object to edit it in the inspector." });
+                Hint("Click a hero or object to edit it in the inspector.");
                 break;
             case ToolKind.Grail:
-                _options.AddChild(new Label
-                {
-                    Text = "Click open ground at least 10 cells from the edges to bury the Grail; click it again to take it away "
-                           + "(left unset, it is drawn at game start on maps with obelisks; at most 25 obelisks a map).",
-                    AutowrapMode = TextServer.AutowrapMode.WordSmart,
-                    CustomMinimumSize = new Vector2(1000, 0), // a wrapping label in the options row needs a width, or it wraps every letter
-                });
+                Hint("Click open ground at least 10 cells from the edges to bury the Grail; click it again to take it away "
+                     + "(left unset, it is drawn at game start on maps with obelisks; at most 25 obelisks a map).");
                 break;
         }
     }
@@ -234,10 +227,9 @@ public partial class ToolPalette : VBoxContainer
 
     private void Radius()
     {
-        _options.AddChild(new Label { Text = "Radius" });
         var radius = new SpinBox { MinValue = 0, MaxValue = 5, Value = _tool.Radius };
         radius.ValueChanged += v => Set(_tool with { Radius = (int)v });
-        _options.AddChild(radius);
+        Labelled("Radius", radius);
     }
 
     /// <summary>The session's Auto height switch: painting terrain also gives the ground the new terrain's height.</summary>
@@ -264,7 +256,29 @@ public partial class ToolPalette : VBoxContainer
 
         option.Selected = Math.Max(0, list.FindIndex(i => EqualityComparer<T>.Default.Equals(i.Value, selected)));
         option.ItemSelected += index => Set(apply(list[(int)index].Value));
-        _options.AddChild(new Label { Text = label });
-        _options.AddChild(option);
+        option.FitToLongestItem = false; // the longest object name would set the palette's width
+        option.CustomMinimumSize = new Vector2(140, 0);
+        option.ClipText = true;
+        option.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        Labelled(label, option).SizeFlagsHorizontal = SizeFlags.ExpandFill; // a list takes the row
     }
+
+    /// <summary>A control with its label before it, kept together where the options wrap.</summary>
+    private HBoxContainer Labelled(string label, Control control)
+    {
+        var pair = new HBoxContainer();
+        pair.AddChild(new Label { Text = label });
+        pair.AddChild(control);
+        _options.AddChild(pair);
+        return pair;
+    }
+
+    /// <summary>A line of help for the tool, wrapped to the palette's width.</summary>
+    private void Hint(string text) => _options.AddChild(new Label
+    {
+        Text = text,
+        AutowrapMode = TextServer.AutowrapMode.WordSmart,
+        CustomMinimumSize = new Vector2(220, 0), // a wrapping label in a flow needs a width, or it wraps every letter
+        SizeFlagsHorizontal = SizeFlags.ExpandFill,
+    });
 }

@@ -22,7 +22,13 @@ properties, players, validation and conditions panels):
   tab ([adventure-map.md](adventure-map.md#map-bans-and-random-placeholders), ADR-133);
 - validation; [generate from a template and the template editor](random-maps.md#editor).
 
-*Planned*: map resize, and an overhaul of the map and template editors into one creator-app workspace (ADR-247,
+**The window** (EDIT-1, ADR-250): a bar on top (the file row, the status line), then three docked regions around the map view, each a tab
+box: the tools and the options of the one in use on the left, the map's settings and the inspector on the right (Map, Players,
+Conditions, Inspector, Events, Bans, Generate), Validation at the bottom. A region is resized with its splitter and collapsed with its
+button on the bar; F11 hides them all and shows them again. A panel larger than its region scrolls. The splitter positions, the
+collapsed regions and each region's open tab are kept in `editor-settings.cfg` in the user data folder.
+
+*Planned*: map resize, and the rest of an overhaul of the map and template editors into one creator-app workspace (ADR-247,
 [plan](../papers/editor-plan.md)).
 
 ## 2D harness and simulator

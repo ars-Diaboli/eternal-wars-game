@@ -201,30 +201,30 @@ $scenarios = @(
        Input = '3:key:Enter;12:click:@End turn;40:key:T;52:key:Escape' },
     # Inspector rows (ADR-114) on Ember March: Select, the Inspector tab, a Minor artifact pickup, the witch hut, the sphinx, the hero (artifacts).
     @{ Name = 'editor-inspector-objects'; App = 'EternalWars.MapEditor'; Frames = 38; Map = $emberMap
-       Input = '3:click:@Select;6:click:@Inspector;9:click:616,230;16:click:645,382;23:click:965,552;30:click:381,276' },
+       Input = '3:click:@Select;6:click:@Inspector;9:click:616,230;16:click:645,382;23:click:965,552;30:click:352,244' },
     # The tools on a blank map: roads, a river, an object, the gate link tool. Then the week event settings on the conditions tab
     # (ADR-084): tick Conflux for the weekly events, one more skipped week, undo both.
     @{ Name = 'editor-tools'; App = 'EternalWars.MapEditor'; Frames = 76
-       Input = '3:click:@Road;6:click:700,600;9:click:740,600;12:click:@River;15:click:800,500;18:click:@Object;21:click:900,450;24:click:@LinkGates;27:click:900,450;30:click:1305,24;39:click:@Conditions;44:click:@conflux;50:click:1583,250;56:click:@Undo;62:click:@Undo' },
+       Input = '3:click:@Road;6:click:700,600;9:click:740,600;12:click:@River;15:click:800,500;18:click:@Object;21:click:900,450;24:click:@LinkGates;27:click:900,450;30:click:1150,84;39:click:@Conditions;44:click:@conflux;50:click:1583,471;56:click:@Undo;62:click:@Undo' },
     # The height tools (ADR-182 g) on a blank map: radius 2, strength 8 (the spin boxes' up arrows), raise two strokes, lower one and undo
     # it; then highlands painted with Auto height on.
     # Then generate from a template (ADR-087): "From template", Sylvan for Blue, Generate (Two against two at 128), then the tab again: the settings stay.
     @{ Name = 'editor-heights'; App = 'EternalWars.MapEditor'; Frames = 106
-       Input = '3:click:@Height;5:click:322,53;7:click:322,53;9:click:493,53;10:click:493,53;11:click:493,53;12:click:493,53;13:click:493,53;14:click:493,53;17:drag:460,600,900,600;21:drag:460,620,900,620;26:click:@Raise;29:choose:Lower;33:drag:460,720,900,720;38:click:@Undo;42:click:@Terrain;45:click:@Highlands;48:click:300,400;59:click:@From template;64:click:@Random;68:choose:sylvan;72:click:@Generate;86:click:@From template' },
+       Input = '3:click:@Height;5:click:147,309;7:click:147,309;9:click:162,344;10:click:162,344;11:click:162,344;12:click:162,344;13:click:162,344;14:click:162,344;17:drag:460,600,900,600;21:drag:460,620,900,620;26:click:@Raise;29:choose:Lower;33:drag:460,560,900,560;38:click:@Undo;42:click:@Terrain;45:click:@Highlands;48:click:400,400;59:click:@From template;64:click:@Random;68:choose:sylvan;72:click:@Generate;86:click:@From template' },
     # The template editor (ADR-117): "Templates", select the middle zone (its obelisk count, ADR-140), add a treasure zone, drag it,
     # right-drag it onto start-1 to connect, Generate (opens the map).
     @{ Name = 'editor-template-editor'; App = 'EternalWars.MapEditor'; Frames = 70
        Input = '3:click:@Templates;10:click:708,373;18:click:@+ Treasure;24:drag:624,408,708,560;30:rdrag:708,560,568,373;44:click:@Generate' },
     # The Events tab (EVT-6) on the quests map: open the tab, pick the first event (its tree), then its first action (the node text).
     @{ Name = 'editor-events'; App = 'EternalWars.MapEditor'; Frames = 30; Map = $questsMap
-       Input = '3:click:@Events;8:click:1090,168;14:click:1133,465' },
+       Input = '3:click:@Events;8:click:1096,214;14:click:1141,536' },
     # Bans and placeholders (ADR-126) on the placeholders map: the Bans tab, ban the first hero, undo it; Select, the Inspector tab, the random town.
     @{ Name = 'editor-bans'; App = 'EternalWars.MapEditor'; Frames = 30; Map = $placeholdersMap
        Input = '3:click:@Bans;7:click:@Agathe Sorrel (haven, Mage);11:click:@Undo;15:click:@Select;18:click:@Inspector;21:click:420,300' },
-    # The arena switch (ARN-2) on the arena map: the Conditions tab (the switch on, the other victory rows off), untick it, scroll the tabs to
-    # Validation (the combat place now does nothing).
-    @{ Name = 'editor-arena'; App = 'EternalWars.MapEditor'; Frames = 40; Map = $arenaMap
-       Input = '3:click:@Conditions;6:click:@Arena: a day to prepare, then one battle decides the game;10:click:1584,100;13:click:1584,100;16:click:1584,100;19:click:1584,100;24:click:1318,100' }
+    # The arena switch (ARN-2) on the arena map: the Conditions tab (the switch on, the other victory rows off), untick it: Validation, in the
+    # bottom region, says the combat place now does nothing.
+    @{ Name = 'editor-arena'; App = 'EternalWars.MapEditor'; Frames = 20; Map = $arenaMap
+       Input = '3:click:@Conditions;6:click:@Arena: a day to prepare, then one battle decides the game' }
     # The scenarios below find buttons by their text (press:) rather than by pixel.
     # Unique buildings (ADR-138, ADR-143): Orrin enters the Necropolis town, ticks a garrison and a hero stack for the Undead Transformer and
     # transforms them; Ilya enters the Sylvan town (Elder Grove: a notice and a level-up). Stables and the Marketplace screen (ADR-067):
@@ -286,7 +286,7 @@ $scenarios = @(
        Input = '3:key:Enter;8:press:Digger;12:key:G;20:press:End turn;44:press:Digger;50:key:Left' },
     # A guild spell set by hand in the editor: select Emberkeep, open the inspector, pick Brand for the first level-1 slot.
     @{ Name = 'editor-guild-spell'; App = 'EternalWars.MapEditor'; Frames = 40; Map = $spellsMap
-       Input = '5:press:Select;10:click:400,300;16:click:@Inspector;22:click:1137,828;26:choose:Brand' },
+       Input = '5:press:Select;10:click:400,300;16:click:@Inspector;22:click:1145,869;26:choose:Brand' },
     # The siege's gate, keep and towers and Earthquake (ADR-120): the ballista breaks the gate; a second run casts Earthquake.
     @{ Name = 'game-siege-gate'; App = 'EternalWars.Game'; Frames = 104; Map = $siegeMagicMap
        Input = '3:key:Enter;10:key:Up;62:key:D;72:click:958,432' },
@@ -295,7 +295,12 @@ $scenarios = @(
     # The editor's Grail tool, the conditions panel's difficulty and hero limit rows (ADR-083, ADR-103) and the town inspector's faction and
     # guild spells (ADR-083, ADR-123).
     @{ Name = 'editor-grail-and-town'; App = 'EternalWars.MapEditor'; Frames = 38; Map = $grailMap
-       Input = '5:click:@Conditions;10:press:Grail;14:click:400,450;20:press:Select;24:click:720,560;28:click:@Inspector' }
+       Input = '5:click:@Conditions;10:press:Grail;14:click:400,450;20:press:Select;24:click:720,560;28:click:@Inspector' },
+    # The workspace's regions (EDIT-1, ADR-250) on Ember March: the Monster tool's options wrap in the left region; the right region's
+    # splitter dragged to the left; the left region collapsed; F11 hides the others and brings them back; the left region opens again;
+    # "From template" brings the Generate tab to the front.
+    @{ Name = 'editor-shell'; App = 'EternalWars.MapEditor'; Frames = 40; Map = $emberMap
+       Input = '4:click:@Monster;8:drag:1036,400,936,400;14:click:@Left panel;19:key:F11;24:key:F11;29:click:@Left panel;33:click:@From template' }
 )
 
 # Every scenario has a seed of its own, so its games and battles are the same on every run (ADR-239): the entry's Seed, else one made from
@@ -321,6 +326,8 @@ $results = $selected | ForEach-Object -ThrottleLimit ([Math]::Max(1, $Jobs)) -Pa
     # autosaves to itself: scenarios run side by side, and this computer's saves stay as they are.
     $settings = Join-Path $dir 'settings.json'
     Remove-Item $settings -ErrorAction SilentlyContinue
+    # The editor keeps its workspace layout beside the settings file: every scenario starts from the default layout.
+    Remove-Item (Join-Path $dir 'editor-settings.cfg') -ErrorAction SilentlyContinue
     $saves = Join-Path $dir 'saves'
     Remove-Item $saves -Recurse -ErrorAction SilentlyContinue
     $userArgs = @("--autoinput=$($scenario.Input)", "--settings=$settings", "--saves=$saves")
