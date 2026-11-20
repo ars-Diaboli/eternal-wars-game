@@ -61,6 +61,9 @@ public partial class Main : Node3D
     private readonly EditorLog _log = new();
 
     private EditorToolContext _toolContext = null!;
+
+    /// <summary>What was copied or cut last: kept from map to map, so a piece of one map can be pasted into another (EDIT-4).</summary>
+    private readonly EditorClipboard _clipboard = new();
     private CommandRegistry _commands = null!;
 
     /// <summary>The left button is held since the tool in use got its press.</summary>
@@ -244,6 +247,7 @@ public partial class Main : Node3D
                 _tools.Tool.Hover(Point(motion.Position)); // the caption of what is under the pointer shows from afar
                 return;
             case InputEventKey key when !_pressed && !IsTextKey(key) && _commands.RunShortcut(key): // no command in the middle of a stroke
+                _camera.IgnoreHeldKeys(); // a key that ran a command (E, the Erase tool) does not turn or move the camera as well
                 break;
             default:
                 return;
@@ -313,7 +317,7 @@ public partial class Main : Node3D
         _ui?.QueueFree();
         _pressed = false;
 
-        _editor = new MapEditorSession(state);
+        _editor = new MapEditorSession(state, copier: MapObjectCopier.Instance);
         _context = new MapViewContext(state, _editor.Events) { ShowGrid = _showGrid };
         var world = new AdventureWorldView { Name = "World" };
         _world = world;
@@ -331,7 +335,11 @@ public partial class Main : Node3D
 
         BuildUi();
         // On the session's own UI, freed with it on the next Open; the root stays in the tree and would keep every old session alive.
-        _ui!.SubscribeWhileInTree<UndoHistoryChanged>(_editor.Events, _ => _commands.NotifyStateChanged());
+        _ui!.SubscribeWhileInTree<UndoHistoryChanged>(_editor.Events, _ =>
+        {
+            _commands.NotifyStateChanged();
+            _tools.Tool.Refresh(); // a paste's ghost follows the map
+        });
         _ui!.SubscribeWhileInTree<SelectionChanged>(_editor.Events, _ => _commands.NotifyStateChanged());
 
         _camera.FocusOn(MapSpace.ToWorld(new(state.Map.Width / 2, state.Map.Height / 2)));
@@ -372,7 +380,7 @@ public partial class Main : Node3D
         _inspector = new InspectorPanel { Name = "Inspector" };
         _workspace.AddTab(EditorRegion.Right, _inspector);
         _inspector.Bind(_editor);
-        _toolContext = new EditorToolContext(_editor, _inspector, Say) { Marks = _selectionView, VisibleArea = VisibleTiles };
+        _toolContext = new EditorToolContext(_editor, _inspector, Say) { Marks = _selectionView, VisibleArea = VisibleTiles, Clipboard = _clipboard };
         _tools.Bind(EditorTools.All(_toolContext));
         _tools.ToolChanged += _commands.NotifyStateChanged;
         _events = new EventsPanel { Name = "Events" };
@@ -449,7 +457,7 @@ public partial class Main : Node3D
                     new("Open recent", () => [.. _files.Recent.Select(path => (path, (Action)(() => _files.Open(path))))], "No file was opened or saved yet"),
                 ],
             },
-            new("Edit", ["edit.undo", "edit.redo", null, "edit.select-all", "edit.deselect", "edit.delete", null, "edit.preferences"]),
+            new("Edit", ["edit.undo", "edit.redo", null, "edit.cut", "edit.copy", "edit.paste", "edit.duplicate", "edit.delete", null, "edit.select-all", "edit.deselect", null, "edit.preferences"]),
             new("View", ["view.palette", null, "view.map-tab", "templates.editor", null, "view.level", "view.grid", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.problems", "view.history", "view.output"]),
             new("Map", ["map.properties", "map.players", "map.conditions", "map.events", "map.bans", null, "view.problems"]),
             new("Tools", [.. _tools.Tools.Select(ToolCommand)]),
@@ -499,8 +507,13 @@ public partial class Main : Node3D
                 _editor.Selecting.Set(_editor.Selecting.Everything(_context.Level, _toolContext.Filter));
                 Say(EditorToolContext.Describe(_editor.Selection));
             }, shortcut: new(Key.A, Ctrl: true), onMap: true);
-        Command("edit.deselect", "Deselect", () => _editor.Selecting.Clear(), shortcut: new(Key.Escape),
-            whyNot: () => _editor.Selection.IsEmpty ? "Nothing is selected" : null, onMap: true);
+        Command("edit.deselect", "Deselect", Deselect, shortcut: new(Key.Escape),
+            whyNot: () => _editor.Selection.IsEmpty && _tools.Tool is not PasteTool ? "Nothing is selected" : null, onMap: true);
+        Command("edit.cut", "Cut", () => Copy(cut: true), shortcut: new(Key.X, Ctrl: true), whyNot: NothingToCopy, onMap: true);
+        Command("edit.copy", "Copy", () => Copy(cut: false), shortcut: new(Key.C, Ctrl: true), whyNot: NothingToCopy, onMap: true);
+        Command("edit.paste", "Paste", () => Paste(duplicate: false), shortcut: new(Key.V, Ctrl: true),
+            whyNot: () => _clipboard.Fragment is null ? "Nothing was copied" : null, onMap: true);
+        Command("edit.duplicate", "Duplicate", () => Paste(duplicate: true), shortcut: new(Key.D, Ctrl: true), whyNot: NothingToCopy, onMap: true);
         Command("edit.delete", "Delete", () => Say($"Deleted {_editor.Selecting.Delete()} thing(s)"), shortcut: new(Key.Delete),
             whyNot: () => _editor.Selection.HasThings ? null : "No object or hero is selected", onMap: true);
         Command("edit.preferences", "Preferences", OpenPreferences, UiIcon.Settings, new(Key.Comma, Ctrl: true));
@@ -523,10 +536,60 @@ public partial class Main : Node3D
         Command("help.help", "Help", () => { }, shortcut: new(Key.F1), whyNot: () => "The editor's help is not written yet");
     }
 
+    /// <summary>Why Copy, Cut and Duplicate cannot run: a fragment holds tiles and objects, and none is selected.</summary>
+    private string? NothingToCopy() =>
+        _editor.Selection.Tiles.Count + _editor.Selection.Objects.Count > 0 ? null : "No tile and no object is selected";
+
+    /// <summary>Copy or Cut: the selection goes to the clipboard as a fragment.</summary>
+    private void Copy(bool cut)
+    {
+        if ((cut ? _editor.Fragments.Cut() : _editor.Fragments.Copy()) is not { } fragment)
+        {
+            return;
+        }
+
+        _clipboard.Fragment = fragment;
+        _commands.NotifyStateChanged();
+        _tools.Tool.Refresh();
+        Say($"{(cut && fragment.Objects.Count > 0 ? "Cut" : "Copied")} {fragment.Tiles.Count} tile(s) and {fragment.Objects.Count} object(s); Ctrl+V pastes");
+    }
+
+    /// <summary>Paste or Duplicate: the Paste tool takes the clipboard or a copy of the selection, and every click puts it on the map.</summary>
+    private void Paste(bool duplicate)
+    {
+        var tool = _tools.Tools.OfType<PasteTool>().First();
+        _tools.Use(tool); // first: leaving the tool that was in use lets go of what it was doing
+        if (duplicate)
+        {
+            tool.UseSelection();
+        }
+        else
+        {
+            tool.UseClipboard();
+        }
+
+        tool.Hover(_context.Pointed); // the ghost shows at once, where the pointer is
+        Say("Click where it goes; Escape ends");
+    }
+
+    /// <summary>Escape: out of pasting back to the Select tool, else nothing is selected any more.</summary>
+    private void Deselect()
+    {
+        if (_tools.Tool is PasteTool)
+        {
+            _tools.Use(_tools.Tools.OfType<SelectTool>().First());
+        }
+        else
+        {
+            _editor.Selecting.Clear();
+        }
+    }
+
     /// <summary>The next level of the map, with the camera on its middle.</summary>
     private void SwitchLevel()
     {
         _context.SetLevel((_context.Level + 1) % _editor.Scenario.Map.Levels);
+        _tools.Tool.Refresh();
         _camera.FocusOn(MapSpace.ToWorld(new MapPosition(_editor.Scenario.Map.Width / 2, _editor.Scenario.Map.Height / 2, _context.Level)));
     }
 

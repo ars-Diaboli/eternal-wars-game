@@ -9,6 +9,17 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 2 tasks 4 to 6 (ADR-250). Core: `MapFragment` and `FragmentEditor` (`session.Fragments`: `Copy`, `Cut`,
+  `CheckPaste`, `Paste` with `FragmentLayers`, `DuplicateAt`; new ids, links remapped inside, dropped to outside; no heroes, start
+  zones or event cells); objects are copied through `IMapObjectCopier`, implemented in Core.Data by `MapObjectCopier` over the map
+  format's codecs and passed to `MapEditorSession` (`copier:`; without one, copying an object throws). `Brush` (size 1 to 9, square or
+  round, `Line`), `TerrainEditor` paints tile sets and has `Fill`; `EraseEditor` (`session.Erasing`: `Erase` under tiles,
+  `EraseSelection`, `EraseKinds`); `MapEventEditor.RemoveCells`; `EditorContext.AsOneStep` for operations made of several edits.
+  UI: `BrushTool` paints along lines, Shift + click line, brush outline (`SelectionView.ShowBrush`), `TileBrushTool` with the shared
+  `EditorToolContext.Brush`; Terrain tool (T) with Fill; `EraseTool` (E) and `PasteTool` in `Tools/FragmentTools.cs`; commands Cut,
+  Copy, Paste, Duplicate; the clipboard (`EditorClipboard`) is the app's and outlives the map. A key that ran a command is ignored by the camera while held (E is Erase and
+  the camera's turn key). Open for the owner: a cut and paste gives new ids, so conditions and events that name the object lose it. Tests `EditorFragmentTests`, cases in `EditorUndoTests`; smoke
+  `editor-clipboard`. Next: step 2 task 7.
 - Editor overhaul, step 2 tasks 1 to 3 (ADR-250). Core: `MapSelection` (tiles, objects, heroes, event names) on the session,
   changed only through `session.Selecting` (`SelectionEditor`: `At`, `In` a `TileArea`, `OfKind`, `Everything` with a
   `SelectionFilter`; `Set` / `Add` / `Remove` / `Clear` publish `SelectionChanged`, no undo step; `Delete` and `Move` are one step);
@@ -18,7 +29,7 @@ Detail: [roadmap.md](roadmap.md).
   `SelectionView` (Godot.Shared) for outlines, handles, marquee and ghost; `EditorToolContext` carries the press's modifiers
   (`PointerPress`), the filter and the visible area; commands Select all (Ctrl+A, the shown level), Deselect (Escape), Delete; tools may have a
   shortcut key. Plain keys run no command while a text field has the focus. Tests `EditorSelectionTests`, cases in
-  `EditorUndoTests`; smoke `editor-selection`. Next: step 2 task 4.
+  `EditorUndoTests`; smoke `editor-selection`.
 - Editor overhaul, step 1 tasks 10 to 12 (ADR-250), which close step 1. `CommandPalette` (Ctrl+Shift+P; `CommandSearch` in core
   ranks the names) offers the commands that can run now. `EditorPreferences` (core record with its ranges) are edited in
   `PreferencesWindow` (Ctrl+,), kept by `PreferencesStore` in `EditorSettingsFile` and applied by the app: the window's
@@ -81,7 +92,7 @@ Detail: [roadmap.md](roadmap.md).
 2. The prologue map (CAMP-1), as the first map of a campaign; Border Watch's story is a placeholder.
 3. The remaining Phase 5 items in [roadmap.md](roadmap.md) ("Presentation and UI", "Town screen overhaul", "Editor overhaul",
    "Platform and art", "Roster"); the town screen overhaul starts with the owner's answers (TOWN-14 … TOWN-23), the editor
-   overhaul continues with step 2 task 4 (the step 0 greybox of the wizard is still open).
+   overhaul continues with step 2 task 7 (the step 0 greybox of the wizard is still open).
 4. The "Code health" list in [roadmap.md](roadmap.md): skills, heroes and town types as typed ids; `InfoSheets` as data once localisation
    is decided (ADR-239).
 

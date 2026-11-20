@@ -329,6 +329,11 @@ $scenarios = @(
     # everything, Escape nothing; the Move tool (M) drags one chest onto the other (red ghost, refused); a click selects it, Delete removes it.
     @{ Name = 'editor-selection'; App = 'EternalWars.MapEditor'; Frames = 70
        Input = '3:click:@Object;6:click:700,500;9:click:760,500;12:key:V;15:drag:640,440,820,560;22:drag:700,500,700,400;30:key:Ctrl+A;34:key:Escape;38:key:M;41:drag:730,395,768,395;50:click:730,395;56:key:Delete' }
+    # The clipboard, the brushes and the eraser (EDIT-4, ADR-250): a chest and a road drawn with one drag, a rectangle round both, Ctrl+C,
+    # Ctrl+V and two clicks (two pasted copies, then the red ghost over the last one), Escape; the Terrain tool (T) with Fill on fills
+    # the grass with snow; the eraser (E) dragged over the first chest; undo brings it back.
+    @{ Name = 'editor-clipboard'; App = 'EternalWars.MapEditor'; Frames = 84
+       Input = '3:click:@Object;6:click:700,500;9:click:@Road;12:drag:650,470,790,470;18:key:V;21:drag:640,440,820,560;27:key:Ctrl+C;30:key:Ctrl+V;33:click:700,300;40:click:1000,500;46:key:Escape;49:key:T;52:click:@Snow;55:click:@Fill;58:click:500,600;66:key:E;69:drag:660,500,740,500;76:click:@Undo' }
 )
 
 # Every scenario has a seed of its own, so its games and battles are the same on every run (ADR-239): the entry's Seed, else one made from

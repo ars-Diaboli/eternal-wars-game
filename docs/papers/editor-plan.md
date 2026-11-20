@@ -535,11 +535,11 @@ again offers the lost work.
 4. **Fragments and the clipboard**: `MapFragment` (terrain, heights, roads, rivers, objects with their settings, links inside the
    area); `Copy`, `Cut`, `Paste` (placement checks, new ids, links remapped, a choice of layers) and `DuplicateAt`, each one step.
    The clipboard lives in the app, so it survives opening another map (EDIT-4). Tests: paste in place gives the same map; links to
-   outside the area are dropped; ids never repeat.
+   outside the area are dropped; ids never repeat. *Done.*
 5. **Brushes**: sizes 1–9, round or square, line (Shift + click), and `TerrainEditor.Fill` (a flood fill of a connected area of one
-   terrain, one step). Brush outlines on the ground before the click. Tests for fill and line.
+   terrain, one step). Brush outlines on the ground before the click. Tests for fill and line. *Done.*
 6. **Erase by kind** (E): under the brush or over the selection, for objects, scenery, monsters, roads, rivers and events; one step.
-   Tests.
+   Tests. *Done.*
 7. **Scatter** (S): `ScatterEditor` beside `EditorMapGenerator` in `Core.Generation`, reusing the generator's scenery choice
    (`SceneryPlacer`, ADR-157) on a brush area or the selection, with density, kinds and "keep paths open"; it draws from the
    scenario's `GameState.Random`, so the same seed gives the same result. Tests.

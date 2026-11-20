@@ -13,7 +13,8 @@ public sealed class MapEditorSession
 {
     private readonly EditorContext _context;
 
-    public MapEditorSession(GameState scenario, MapObjectCatalog? catalog = null, IEventBus? bus = null)
+    /// <summary><paramref name="copier"/> copies objects with their settings, for <see cref="Fragments"/>; without one, copying an object throws.</summary>
+    public MapEditorSession(GameState scenario, MapObjectCatalog? catalog = null, IEventBus? bus = null, IMapObjectCopier? copier = null)
     {
         ArgumentNullException.ThrowIfNull(scenario);
         _context = new EditorContext(scenario, catalog ?? MapObjectCatalog.Default, bus ?? new EventBus());
@@ -30,6 +31,8 @@ public sealed class MapEditorSession
         Map = new MapPropertiesEditor(_context);
         Selecting = new SelectionEditor(_context, Objects, Heroes, mover);
         _context.Selecting = Selecting;
+        Fragments = new FragmentEditor(_context, Terrain, Objects, Selecting, copier);
+        Erasing = new EraseEditor(_context, Terrain, Objects, Heroes, MapEvents, Selecting);
     }
 
     public GameState Scenario => _context.Scenario;
@@ -45,6 +48,12 @@ public sealed class MapEditorSession
 
     /// <summary>Finds things to select, changes the <see cref="Selection"/>, and deletes or moves what is selected.</summary>
     public SelectionEditor Selecting { get; }
+
+    /// <summary>Copy, cut, paste and duplicate: the selection as a <see cref="MapFragment"/> and back onto a map.</summary>
+    public FragmentEditor Fragments { get; }
+
+    /// <summary>Erase by kind, under a brush or over the selection.</summary>
+    public EraseEditor Erasing { get; }
 
     /// <summary>Terrain, roads and rivers.</summary>
     public TerrainEditor Terrain { get; }

@@ -6,12 +6,15 @@ using Godot;
 
 namespace EternalWars.Godot.UI.Editor.Tools;
 
-/// <summary>Paints a terrain.</summary>
-public sealed class TerrainTool(EditorToolContext context) : BrushTool(context)
+/// <summary>Paints a terrain; with Fill on, a click gives it to the whole joined area of the terrain clicked.</summary>
+public sealed class TerrainTool(EditorToolContext context) : TileBrushTool(context)
 {
     private TerrainType _terrain = TerrainType.Grass;
+    private bool _fill;
 
     public override string Name => "Terrain";
+
+    public override Key? Shortcut => Key.T;
 
     protected override string StrokeDescription => $"Paint {_terrain}";
 
@@ -26,15 +29,40 @@ public sealed class TerrainTool(EditorToolContext context) : BrushTool(context)
             options.Add(button);
         }
 
-        Radius(options);
+        BrushOptions(options);
+        var fill = new CheckBox
+        {
+            Text = "Fill", ButtonPressed = _fill,
+            TooltipText = "A click fills the joined area of the terrain clicked (tiles side by side, not across corners)",
+        };
+        fill.Toggled += on =>
+        {
+            _fill = on;
+            RefreshOutline();
+        };
+        options.Add(fill);
         AutoHeight(options);
     }
 
-    protected override void Paint(MapPosition tile) => Editor.Terrain.Paint(tile, _terrain, Context.Radius);
+    public override void Press(MapPosition tile)
+    {
+        if (_fill)
+        {
+            Context.Say($"Filled {Editor.Terrain.Fill(tile, _terrain)} tile(s) with {_terrain}");
+        }
+        else
+        {
+            base.Press(tile);
+        }
+    }
+
+    protected override IEnumerable<MapPosition> Outline(MapPosition tile) => _fill ? [tile] : base.Outline(tile);
+
+    protected override void Paint(IEnumerable<MapPosition> tiles) => Editor.Terrain.Paint(tiles, _terrain);
 }
 
 /// <summary>Paints a road.</summary>
-public sealed class RoadTool(EditorToolContext context) : BrushTool(context)
+public sealed class RoadTool(EditorToolContext context) : TileBrushTool(context)
 {
     private RoadType _road = RoadType.Dirt;
 
@@ -45,14 +73,14 @@ public sealed class RoadTool(EditorToolContext context) : BrushTool(context)
     public override void BuildOptions(ToolOptions options)
     {
         options.Choice("Road", Enum.GetValues<RoadType>().Select(r => (r.ToString(), r)), _road, r => _road = r);
-        Radius(options);
+        BrushOptions(options);
     }
 
-    protected override void Paint(MapPosition tile) => Editor.Terrain.PaintRoad(tile, _road, Context.Radius);
+    protected override void Paint(IEnumerable<MapPosition> tiles) => Editor.Terrain.PaintRoad(tiles, _road);
 }
 
 /// <summary>Paints a river of one kind (ADR-079).</summary>
-public sealed class RiverTool(EditorToolContext context) : BrushTool(context)
+public sealed class RiverTool(EditorToolContext context) : TileBrushTool(context)
 {
     private RiverType _river = RiverType.Clear;
 
@@ -63,14 +91,14 @@ public sealed class RiverTool(EditorToolContext context) : BrushTool(context)
     public override void BuildOptions(ToolOptions options)
     {
         options.Choice("River", Enum.GetValues<RiverType>().Select(r => (r.ToString(), r)), _river, r => _river = r);
-        Radius(options);
+        BrushOptions(options);
     }
 
-    protected override void Paint(MapPosition tile) => Editor.Terrain.PaintRiver(tile, _river, Context.Radius);
+    protected override void Paint(IEnumerable<MapPosition> tiles) => Editor.Terrain.PaintRiver(tiles, _river);
 }
 
 /// <summary>Paints a player's start zone, or erases zones (MP-4, ADR-197).</summary>
-public sealed class StartZoneTool(EditorToolContext context) : BrushTool(context)
+public sealed class StartZoneTool(EditorToolContext context) : TileBrushTool(context)
 {
     /// <summary>Whose zone is painted; null erases.</summary>
     private PlayerId? _zone = context.Editor.Scenario.Players[0].Id;
@@ -83,11 +111,11 @@ public sealed class StartZoneTool(EditorToolContext context) : BrushTool(context
     {
         options.Choice(
             "Zone", Editor.Scenario.Players.Select(pl => (pl.Name, (PlayerId?)pl.Id)).Append(("Erase", (PlayerId?)null)), _zone, z => _zone = z);
-        Radius(options);
+        BrushOptions(options);
         options.Hint("Where each player's day stays its own in a simultaneous first week; another player's hero entering it ends those days.");
     }
 
-    protected override void Paint(MapPosition tile) => Editor.Terrain.PaintStartZone(tile, _zone, Context.Radius);
+    protected override void Paint(IEnumerable<MapPosition> tiles) => Editor.Terrain.PaintStartZone(tiles, _zone);
 }
 
 /// <summary>What the Height tool does where it is dragged (<see cref="HeightEditor"/>).</summary>
@@ -143,6 +171,10 @@ public sealed class HeightTool(EditorToolContext context) : BrushTool(context)
         options.Add(whole);
         AutoHeight(options);
     }
+
+    protected override bool DabsInPlace => true;
+
+    protected override IEnumerable<MapPosition> Outline(MapPosition tile) => new Brush((2 * Context.Radius) + 1, BrushShape.Round).Tiles(tile);
 
     protected override void StartStroke(MapPosition tile) => _levelTo = Editor.Heights.HeightAt(tile);
 

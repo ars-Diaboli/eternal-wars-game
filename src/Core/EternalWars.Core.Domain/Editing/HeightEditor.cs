@@ -28,7 +28,7 @@ public sealed class HeightEditor
 
     /// <summary>
     /// Whether painting terrain also gives the painted ground, and about <see cref="ReliefShaper.BlendRadius"/> corners around it, the new
-    /// terrain's height (<see cref="TerrainEditor.Paint"/>). A setting of the session, not part of the map; on by default.
+    /// terrain's height (<see cref="TerrainEditor.Paint(MapPosition, TerrainType, int)"/>). A setting of the session, not part of the map; on by default.
     /// </summary>
     public bool AutoHeight { get; set; } = true;
 

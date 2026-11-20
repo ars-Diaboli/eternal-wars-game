@@ -51,7 +51,7 @@ public class RiverTests
     {
         var editor = TestEditor.Blank(12, 10);
         Assert.Equal(9, editor.Terrain.PaintRiver(new(4, 4), RiverType.Lava, radius: 1));
-        Assert.Equal(0, editor.Terrain.PaintRiver(new(4, 4), RiverType.Lava));
+        Assert.Equal(0, editor.Terrain.PaintRiver(new MapPosition(4, 4), RiverType.Lava));
 
         var json = TestFormat.Save(editor.Scenario);
         var restored = TestFormat.Load(json);

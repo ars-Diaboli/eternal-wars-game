@@ -274,7 +274,11 @@ subscribers. The session is a facade: edits live in per-area editors (`Terrain`,
 selection). The session owns the `MapSelection` (tiles, objects, heroes, event names); only `SelectionEditor` changes it, publishing
 `SelectionChanged`, and it is no undo step. `MapMover` moves objects and heroes together under placement's rules (`ObjectEditor.Move`,
 `HeroEditor.Move`, `SelectionEditor.Move`; `MapObjectMoved`, `HeroRepositioned`). The editor's `SelectionView` draws the selection,
-the marquee and a move's ghost.
+the marquee, the ghost of a move or a paste, and the outline of the brush. `FragmentEditor` (`session.Fragments`) copies the selection
+into a `MapFragment` (tiles, corner heights, objects) and pastes fragments with new ids and remapped links; objects are copied
+through `IMapObjectCopier`, which the data layer implements with the map format's own codecs (`MapObjectCopier`), so a copy has what
+a saved object has. `TerrainEditor` paints sets of tiles (`Brush`: size, shape, line) and flood-fills; `EraseEditor`
+(`session.Erasing`) erases by kind. An editor operation made of several edits runs through `EditorContext.AsOneStep`.
 Single-value edits are `PropertyEdit<T>` commands; an edit to the value already there records no undo step and publishes
 nothing. The three tile layers paint through `PaintLayer<TValue, TEvent>`. `BeginStroke`/`EndStroke` merge a drag into
 one undo step. `MapValidator` reports what single edits cannot prevent. `MapConnectivity` tells where a hero can walk on a fresh

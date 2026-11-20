@@ -226,6 +226,18 @@ public static partial class MapConverter
         }
     }
 
+    /// <summary>
+    /// A copy of <paramref name="source"/> with every setting the map format keeps, under another id at another place, made with
+    /// <paramref name="target"/>'s content. Throws <see cref="FormatException"/> when that content lacks what the object uses.
+    /// </summary>
+    public static MapObject Copy(MapObject source, MapObjectId id, MapPosition position, Domain.Game.GameState target)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(target);
+        var document = ToDocument(source) with { Id = id.Value, X = position.X, Y = position.Y, Level = position.Level };
+        return ToObject(document, target.ObjectCatalog, target.Creatures, target.Spells);
+    }
+
     private static MapObjectId? ToId(int? value) => value is { } v ? new MapObjectId(v) : null;
 
     private static TownDocument ToDocument(Town town, TownDocument document) => document with

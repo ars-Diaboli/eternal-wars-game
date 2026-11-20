@@ -107,7 +107,7 @@ CI (`.github/workflows/ci.yml`) runs build + test + `sim selftest`, and a parall
 | Move hero | Click tile (preview), click again; arrows / numpad | Move tool (M), or drag a selected hero | Same |
 | Level | L or button | L or button | — |
 | Camera | WASD pan, Q/E rotate, wheel zoom | same | — |
-| Edit | — | LMB with the active tool; Ctrl+Z / Ctrl+Y | — |
+| Edit | — | LMB with the active tool (Shift + click: a line); Ctrl+Z / Ctrl+Y; Ctrl+X / C / V / D | — |
 | Battle | Point to preview, click move / attack (from the pointer's side) / shoot; W wait, D defend, R retreat, Q quick combat; wheel zoom; Enter / Esc leave the result | — | Click; same keys |
 | Save / load | F10 or Menu; F5 quick save, F9 quick load; autosave at turn start (two slots) | — | — |
 

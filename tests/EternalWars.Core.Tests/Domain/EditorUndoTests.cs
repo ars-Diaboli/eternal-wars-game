@@ -32,7 +32,7 @@ public class EditorUndoTests
     {
         public Fixture()
         {
-            Editor = new MapEditorSession(BlankScenario.Create(40, 30));
+            Editor = new MapEditorSession(BlankScenario.Create(40, 30), copier: MapObjectCopier.Instance);
             var e = Editor;
             Hero = new HeroId(1);
             RedHero = new HeroId(2);
@@ -170,6 +170,7 @@ public class EditorUndoTests
         // Terrain
         ["TerrainEditor.Paint"] = f => f.Editor.Terrain.Paint(new MapPosition(30, 22), TerrainType.Snow, radius: 1) > 0,
         ["TerrainEditor.PaintRoad"] = f => f.Editor.Terrain.PaintRoad(new MapPosition(30, 24), RoadType.Cobblestone, radius: 1) > 0,
+        ["TerrainEditor.Fill"] = f => f.Editor.Terrain.Fill(new MapPosition(30, 22), TerrainType.Snow) > 0,
         ["TerrainEditor.PaintRoad (erase)"] = f => f.Editor.Terrain.PaintRoad(new MapPosition(30, 24), RoadType.None) > 0,
         ["TerrainEditor.PaintRiver"] = f => f.Editor.Terrain.PaintRiver(new MapPosition(26, 22), RiverType.Clear, radius: 1) > 0,
         ["TerrainEditor.PaintStartZone"] = f => f.Editor.Terrain.PaintStartZone(new MapPosition(26, 22), new PlayerId(0), radius: 1) > 0,
@@ -258,6 +259,15 @@ public class EditorUndoTests
             && Ok(f.Editor.Selecting.Move(0, 15)),
         ["SelectionEditor.Delete"] = f => f.Editor.Selecting.Set(new SelectionItems([], [f.Chest, f.Town, f.GateA], [f.Hero], []))
             && f.Editor.Selecting.Delete() == 4,
+        ["FragmentEditor.Cut"] = f => f.Editor.Selecting.Set(new SelectionItems([new MapPosition(30, 24)], [f.Chest, f.Town, f.GateA, f.Entrance], [], []))
+            && f.Editor.Fragments.Cut() is { Objects.Count: 4 },
+        ["FragmentEditor.Paste"] = f => f.Editor.Selecting.Set(f.Editor.Selecting.In(new TileArea(0, 0, 39, 12, 0)))
+            && f.Editor.Fragments.Copy() is { } fragment && Ok(f.Editor.Fragments.Paste(fragment, new MapPosition(0, 15))),
+        ["FragmentEditor.DuplicateAt"] = f => f.Editor.Selecting.Set(new SelectionItems([Fixture.Hill, new MapPosition(30, 24)], [f.Town, f.GateA, f.GateB], [], []))
+            && Ok(f.Editor.Fragments.DuplicateAt(new MapPosition(2, 16))),
+        ["EraseEditor.Erase"] = f => f.Editor.Erasing.Erase(new TileArea(0, 0, 39, 29, 0).Tiles(), EraseKinds.All) > 20,
+        ["EraseEditor.EraseSelection"] = f => f.Editor.Selecting.Set(new SelectionItems([new MapPosition(30, 24)], [f.Chest, f.GateA, f.Monster], [f.Hero], ["hero event"]))
+            && f.Editor.Erasing.EraseSelection(EraseKinds.All) == 6,
         ["HeroEditor.SetStats"] = f => Ok(f.Editor.Heroes.SetStats(f.Hero, 5, 4, SkillLevel.Advanced, 3, 2)),
         ["HeroEditor.SetWarMachines"] = f => Ok(f.Editor.Heroes.SetWarMachines(f.Hero, new HashSet<WarMachineSlot> { WarMachineSlot.Cart, WarMachineSlot.Tent })),
         ["HeroEditor.SetArtifacts"] = f => Ok(f.Editor.Heroes.SetArtifacts(f.Hero, ["rusted-blade"], ["iron-band", "iron-band"])),
@@ -281,6 +291,7 @@ public class EditorUndoTests
         ["MapEventEditor.RemoveVariable"] = f => Ok(f.Editor.MapEvents.RemoveVariable("v")),
         ["MapEventEditor.SetCampaignVariable"] = f => Ok(f.Editor.MapEvents.SetCampaignVariable("v", false, true)),
         ["MapEventEditor.SetCell"] = f => Ok(f.Editor.MapEvents.SetCell(new MapPosition(25, 25), "hero event")),
+        ["MapEventEditor.RemoveCells"] = f => f.Editor.MapEvents.RemoveCells([Fixture.EventCell, new MapPosition(3, 3)]) == 1,
         ["MapEventEditor.SetCell (remove)"] = f => Ok(f.Editor.MapEvents.SetCell(Fixture.EventCell, null)),
 
         // Players
@@ -321,6 +332,7 @@ public class EditorUndoTests
     [
         typeof(TerrainEditor), typeof(HeightEditor),typeof(ObjectEditor), typeof(ObjectContentsEditor), typeof(MonsterEditor), typeof(TownEditor),
         typeof(HeroEditor), typeof(MapEventEditor), typeof(PlayerEditor), typeof(MapPropertiesEditor), typeof(SelectionEditor),
+        typeof(FragmentEditor), typeof(EraseEditor),
     ];
 
     public static IEnumerable<TheoryDataRow<string>> CaseNames =>
