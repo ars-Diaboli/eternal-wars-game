@@ -264,7 +264,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Step 0a: answers to EDIT-1 … EDIT-12 (ADR-250: the proposals)
 - [ ] Step 0: a clickable greybox of the workspace and the new-map wizard
 - [ ] Step 1: the shell: regions, tools as classes, the command registry with the menus and the toolbar (built: `EditorWorkspace`,
-      `IEditorTool`, `CommandRegistry`; plan tasks 1 to 3), command palette, status bar,
+      `IEditorTool`, `CommandRegistry`, the history's steps and `UndoTo`; plan tasks 1 to 4), command palette, status bar,
       Problems / History / Output, file dialogs, recent files, unsaved marker, autosave and crash recovery, preferences,
       the Map / Template tabs
 - [ ] Step 2: selection and editing: marquee and multi-select, move, copy, paste, duplicate, erase by kind, fill, line, scatter,

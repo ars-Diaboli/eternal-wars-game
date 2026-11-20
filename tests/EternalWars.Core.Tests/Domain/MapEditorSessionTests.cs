@@ -46,7 +46,7 @@ public class MapEditorSessionTests
         Assert.Null(history); // nothing recorded until the stroke ends
         editor.EndStroke();
 
-        Assert.Equal(new UndoHistoryChanged("Paint water", null), history);
+        Assert.Equal(new UndoHistoryChanged("Paint water", null, 1, 1), history);
         editor.Undo();
         Assert.Equal(TerrainType.Grass, editor.Scenario.Map.GetTerrain(new MapPosition(5, 5)));
         Assert.Equal(TerrainType.Grass, editor.Scenario.Map.GetTerrain(new MapPosition(6, 5)));
