@@ -5,10 +5,10 @@ where a road crosses a river. Today the game draws both as flat coloured plates 
 painted strips laid along the path *(proposal)*. Each road and river reads at a glance from the map's camera, and sits on any terrain
 ([terrain-texture-prompts.md](terrain-texture-prompts.md)) without fighting it.
 
-## Compose a prompt
+## Use a prompt
 
-Each road and river below has its own block. Build the prompt from blocks, copying each block's text exactly and joining them with a
-space:
+Each road, river and bridge below has its own block. A prompt is the style block and the piece's block, each copied exactly and joined
+with a space:
 
 ```text
 PROMPT   = PATH-STYLE + ROAD-<id>      (roads)

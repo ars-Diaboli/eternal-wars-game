@@ -5,10 +5,10 @@ pieces. Each playable faction has its own; the window shows the player's faction
 a visit to an obelisk opens a share of them (the outer ring first, the centre last), showing the map beneath. A faction without a
 picture keeps plain parchment.
 
-## Compose a prompt
+## Use a prompt
 
-Each faction below has its own block, `PUZZLE-<town>`. Build the prompt from blocks, copying each block's text exactly and joining them
-with a space:
+Each faction below has its own block, `PUZZLE-<town>`. A prompt is the style block and the faction's block (or the frame's), each
+copied exactly and joined with a space:
 
 ```text
 PROMPT   = PUZZLE-STYLE + PUZZLE-<town>

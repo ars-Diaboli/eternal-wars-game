@@ -9,6 +9,8 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- ADR-249 (presentation): every prompt file reworked so a prompt is ready to paste: one block a sheet (cells written out),
+  at most a lead and an item for variants, negatives joined in advance; no blocks borrowed from other files.
 - ADR-248 (presentation): icon and portrait prompts painted realistically, not as cartoons: new style blocks, `ICON-NEG-TOON` on every
   painted sheet; the icons and crests already generated and cursor sets 1–3 are to be regenerated.
 - ADR-247 (random maps and editor): the map and template editor overhaul is planned: one creator-app workspace, seven steps;

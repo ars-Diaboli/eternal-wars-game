@@ -32,6 +32,7 @@
 | [245](#adr-245-asset-prompts-for-spells-creatures-heroes-and-towns-ui-pieces-roads-and-rivers-the-puzzle-map-and-the-environment-cursors-in-grey-iron-one-layout-for-every-prompt-file-owner-adr-116-adr-204-adr-244-2026-11-20) | Asset prompts for spells, creatures, heroes and towns, UI pieces, roads and rivers, the puzzle map and the environment; cursors in grey iron; one layout for every prompt file (owner, ADR-116, ADR-204, ADR-244, 2026-11-20) | accepted |
 | [246](#adr-246-town-screen-overhaul-a-3d-town-scene-with-full-town-windows-planned-in-six-steps-owner-adr-050-adr-114-adr-223-2026-11-20) | Town screen overhaul: a 3D town scene with full town windows, planned in six steps (owner, ADR-050, ADR-114, ADR-223, 2026-11-20) | accepted |
 | [248](#adr-248-icons-and-portraits-painted-realistically-not-as-cartoons-new-style-blocks-and-an-anti-cartoon-negative-owner-adr-116-adr-245-2026-11-20) | Icons and portraits painted realistically, not as cartoons: new style blocks and an anti-cartoon negative (owner, ADR-116, ADR-245, 2026-11-20) | accepted |
+| [249](#adr-249-prompts-ready-to-paste-one-block-a-sheet-at-most-a-lead-and-an-item-elsewhere-negatives-joined-in-advance-owner-adr-245-adr-248-2026-11-20) | Prompts ready to paste: one block a sheet, at most a lead and an item elsewhere, negatives joined in advance (owner, ADR-245, ADR-248, 2026-11-20) | accepted |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -485,7 +486,7 @@ map format changes. Changes ADR-183's and ADR-207's mesh (a vertex per corner an
   built.
 
 ### ADR-245: Asset prompts for spells, creatures, heroes and towns, UI pieces, roads and rivers, the puzzle map and the environment; cursors in grey iron; one layout for every prompt file (owner, ADR-116, ADR-204, ADR-244, 2026-11-20)
-**Status**: accepted. Art direction and asset prompts only; no code, rule or format change. Parts marked *(proposal)* in the prompt
+**Status**: accepted; the "one layout" point superseded by ADR-249. Art direction and asset prompts only; no code, rule or format change. Parts marked *(proposal)* in the prompt
 files (creature and hero backdrops, the puzzle picture over closed pieces, textured road and river strips, bridges, scatter debris,
 nine-slice UI frames) need view work once the art exists.
 
@@ -543,3 +544,17 @@ once step 3 of the plan lands. Plan, study and questions: [town-screen-plan.md](
 - **Unchanged**: tier C (one-colour button symbols the theme tints) and the heraldic charges (flat white stencils), which are flat by
   design.
 - **Regenerate**: the icons and crests already in `textures/ui/` (tiers A and B, the crests) and cursor sets 1–3.
+
+### ADR-249: Prompts ready to paste: one block a sheet, at most a lead and an item elsewhere, negatives joined in advance (owner, ADR-245, ADR-248, 2026-11-20)
+**Status**: accepted. Asset prompts only; no code, rule or format change. Supersedes ADR-245's "one layout" point.
+
+- **Owner**: a prompt should not need three or more text blocks put together by hand.
+- **Sheets** (icons, cursors, spells, creatures, heroes, town icons, UI state sheets): every sheet has **one complete prompt block**:
+  style, look, grid sentence and the numbered cells already joined, every "cell rule" written out. The tables keep the cell → file
+  mapping and the check-only columns (hotspot, "reads as"); the subjects live only in the prompt.
+- **Single pieces with variants** (terrain map or battlefield, town stages, scenery per ground family, siege pieces): at most **two
+  pieces**, a pre-joined lead and the item's own block.
+- **Negatives**: one ready negative block per kind of prompt, joined in advance; every file is self-contained (no blocks taken from
+  another file), except the faction creature files, which link to one negative in the creature file.
+- **Cost**: the shared style wording is repeated in each prompt of a file; a change to it is made in every copy (each file's "Shared
+  wording" note says which words to search for).
