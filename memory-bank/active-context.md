@@ -9,12 +9,15 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- ADR-250 (random maps and editor): EDIT-1 … EDIT-12 answered with the proposals (template undo, scenery rotation, new map
+  content, play-test as a separate process, resize 16–256); [editor-plan.md](../docs/papers/editor-plan.md#implementation-plan) now
+  has a step-by-step implementation plan; next is the step 0 greybox.
 - ADR-249 (presentation): every prompt file reworked so a prompt is ready to paste: one block a sheet (cells written out),
   at most a lead and an item for variants, negatives joined in advance; no blocks borrowed from other files.
 - ADR-248 (presentation): icon and portrait prompts painted realistically, not as cartoons: new style blocks, `ICON-NEG-TOON` on every
   painted sheet; the icons and crests already generated and cursor sets 1–3 are to be regenerated.
 - ADR-247 (random maps and editor): the map and template editor overhaul is planned: one creator-app workspace, seven steps;
-  [docs/papers/editor-plan.md](../docs/papers/editor-plan.md); questions EDIT-1 … EDIT-12 asked; nothing built.
+  [docs/papers/editor-plan.md](../docs/papers/editor-plan.md); nothing built.
 - ADR-246 (presentation): the town screen overhaul is planned: a 3D town scene per faction with full town windows, six steps;
   [docs/papers/town-screen-plan.md](../docs/papers/town-screen-plan.md); questions TOWN-14 … TOWN-23 asked; nothing built.
 
@@ -22,7 +25,8 @@ Detail: [roadmap.md](roadmap.md).
 1. A person's full game on Ember March (the Phase 3 exit's last check).
 2. The prologue map (CAMP-1), as the first map of a campaign; Border Watch's story is a placeholder.
 3. The remaining Phase 5 items in [roadmap.md](roadmap.md) ("Presentation and UI", "Town screen overhaul", "Editor overhaul",
-   "Platform and art", "Roster"); both overhauls start with the owner's answers (TOWN-14 … TOWN-23, EDIT-1 … EDIT-12).
+   "Platform and art", "Roster"); the town screen overhaul starts with the owner's answers (TOWN-14 … TOWN-23), the editor
+   overhaul with its step 0 greybox.
 4. The "Code health" list in [roadmap.md](roadmap.md): skills, heroes and town types as typed ids; `InfoSheets` as data once localisation
    is decided (ADR-239).
 

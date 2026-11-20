@@ -7,8 +7,8 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-11-20**: TOWN-14 … TOWN-23 asked, for the town screen overhaul (ADR-246); EDIT-1 … EDIT-12 for the editor overhaul
-(ADR-247).
+**Updated 2026-11-20**: TOWN-14 … TOWN-23 asked, for the town screen overhaul (ADR-246); EDIT-1 … EDIT-12 (the editor overhaul)
+answered in ADR-250.
 
 ## 🚧 Blocking now
 
@@ -77,68 +77,6 @@ faction-specific buildings does each town get (HoMM3 has 2–4 a town)?
 
 **Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-23).
 
-## Tools and editor
-
-<a id="edit-1"></a>
-**EDIT-1 The workspace layout** (ADR-247): free docking or fixed regions?
-
-**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-1).
-
-<a id="edit-2"></a>
-**EDIT-2 Undo in the template editor** (ADR-247): reverse ADR-117's "no undo"?
-
-**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-2).
-
-<a id="edit-3"></a>
-**EDIT-3 Where the template editor lives** (ADR-247): an overlay, a workspace tab or its own app?
-
-**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-3).
-
-<a id="edit-4"></a>
-**EDIT-4 Several maps open at once** (ADR-247): document tabs?
-
-**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-4).
-
-<a id="edit-5"></a>
-**EDIT-5 Play-test** (ADR-247): a separate game process or inside the editor; which options?
-
-**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-5).
-
-<a id="edit-6"></a>
-**EDIT-6 Decoration off the grid** (ADR-247): rotation, mirroring or free placement for scenery (a format change)?
-
-**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-6).
-
-<a id="edit-7"></a>
-**EDIT-7 Scripting** (ADR-247): a scripting language, or the event tree only?
-
-**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-7).
-
-<a id="edit-8"></a>
-**EDIT-8 Map resize** (ADR-247): anchor, objects outside, which sizes?
-
-**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-8).
-
-<a id="edit-9"></a>
-**EDIT-9 What the fairness report measures** (ADR-247): which numbers per start, which spread warns?
-
-**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-9).
-
-<a id="edit-10"></a>
-**EDIT-10 Importing HoMM3 or HotA maps and templates** (ADR-247): for 1.0 or after?
-
-**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-10).
-
-<a id="edit-11"></a>
-**EDIT-11 Map text in several languages** (ADR-247): per-language map texts?
-
-**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-11).
-
-<a id="edit-12"></a>
-**EDIT-12 Map content the editor lacks** (ADR-247): custom heroes, rumours, AI style, allowed factions, named objects?
-
-**Proposal**: [editor-plan.md](../docs/papers/editor-plan.md#edit-12).
-
 ## Game flow and content
 
 <a id="cont-1"></a>
@@ -191,6 +129,7 @@ One line per question; the ADR holds the detail.
 - **Game flow**: victory ADR-057; FLOW-1 (conditions, deadlines, teams) and FLOW-2 (week and month events) ADR-073, the conditions built ADR-094, FLOW-1's campaign hooks ADR-241; FLOW-2 event start and town-less players ADR-075; FLOW-3 (turn timer) ADR-091; FLOW-4 (victory screen, ranking) ADR-101.
 - **Map events**: EVT-1 … EVT-6 (scope and plan, triggers, conditions, actions, quests, AI and editor: the proposals) ADR-115.
 - **Campaign**: CAMP-1 (the prologue) ADR-118.
+- **Editor overhaul**: EDIT-1 … EDIT-12 (the plan's proposals) ADR-250.
 - **Arena**: ARN-1 and ARN-2 (before 1.0, with LAN, three shipped maps) ADR-100.
 - **Assumptions** of ADR-070 … ADR-072: confirmed in ADR-073; of ADR-073: confirmed in ADR-075.
 ~~~~
