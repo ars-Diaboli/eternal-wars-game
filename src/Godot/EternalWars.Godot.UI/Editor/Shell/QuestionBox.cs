@@ -16,19 +16,7 @@ public partial class QuestionBox : Control
     public void Bind(string title, string text, IReadOnlyList<QuestionAnswer> answers)
     {
         _answers = answers;
-        SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        var dim = new ColorRect { Color = new Color(0, 0, 0, 0.5f), MouseFilter = MouseFilterEnum.Stop };
-        AddChild(dim);
-        dim.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        var centre = new CenterContainer { MouseFilter = MouseFilterEnum.Ignore };
-        AddChild(centre);
-        centre.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        var panel = new PanelContainer();
-        panel.AddThemeStyleboxOverride("panel", UiTheme.Box(new Color(UiTheme.PanelBackground, 1), UiTheme.Border, UiSpacing.Padding * 2));
-        centre.AddChild(panel);
-        var rows = new VBoxContainer();
-        rows.AddThemeConstantOverride("separation", UiSpacing.Padding * 2);
-        panel.AddChild(rows);
+        var rows = EditorOverlay.Build(this);
         rows.AddChild(new Label { Text = title, HorizontalAlignment = HorizontalAlignment.Center });
         rows.AddChild(new Label { Text = text, CustomMinimumSize = new Vector2(420, 0), AutowrapMode = TextServer.AutowrapMode.WordSmart });
         var buttons = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
@@ -54,13 +42,9 @@ public partial class QuestionBox : Control
 
     private void Give(QuestionAnswer answer)
     {
-        if (IsQueuedForDeletion())
+        if (EditorOverlay.Close(this)) // gone before the answer runs: the answer may ask the next question
         {
-            return;
+            answer.Run?.Invoke();
         }
-
-        GetParent().RemoveChild(this); // gone before the answer runs: the answer may ask the next question
-        QueueFree();
-        answer.Run?.Invoke();
     }
 }

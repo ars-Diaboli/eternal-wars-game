@@ -49,19 +49,18 @@ public interface IMapFiles
 /// The map editor's files (EDIT-1, ADR-250): which file the map is, Open, Save and Save as with a file dialog (Godot's
 /// <see cref="FileDialog"/>, the system's own where there is one; it asks itself before a file is overwritten), the recent files (kept in
 /// the <see cref="EditorSettingsFile"/>), the window's title with an asterisk over unsaved work, the question before unsaved work is left
-/// (another map, closing the window), the autosave every <see cref="AutosaveSeconds"/> while there is unsaved work, and the offer to
+/// (another map, closing the window), the autosave every <see cref="AutosaveMinutes"/> while there is unsaved work, and the offer to
 /// restore the newest autosave after a session that did not close. The files themselves are the app's <see cref="IMapFiles"/>. Every map the editor shows goes through
 /// here, so the service always knows the map's session.
 /// </summary>
 public partial class FileService : Node
 {
-    public const double AutosaveSeconds = 120;
-
     private const string Section = "files";
     private const string RecentKey = "recent";
     private const string AppTitle = "Eternal Wars Map Editor";
 
     private readonly CanvasLayer _layer = new() { Name = "Questions", Layer = 50 };
+    private readonly global::Godot.Timer _autosave = new() { Name = "Autosave", WaitTime = 120, Autostart = true };
     private FileServiceHost _host = null!;
     private EditorSettingsFile _settings = null!;
     private IMapFiles _maps = null!;
@@ -85,6 +84,25 @@ public partial class FileService : Node
     /// <summary>For the status bar: "Not saved", "No changes", "Saved 12:05", or "Unsaved changes".</summary>
     public string SaveState => _editor.IsDirty ? "Unsaved changes" : _clean;
 
+    /// <summary>The minutes between two autosaves (the user's preference). Setting it starts the wait anew.</summary>
+    public int AutosaveMinutes
+    {
+        get => (int)Math.Round(_autosave.WaitTime / 60);
+        set
+        {
+            if (value == AutosaveMinutes)
+            {
+                return;
+            }
+
+            _autosave.WaitTime = value * 60.0;
+            if (_autosave.IsInsideTree())
+            {
+                _autosave.Start();
+            }
+        }
+    }
+
     /// <summary>A question or a file dialog is open: the editor takes no other input.</summary>
     public bool IsBusy => _layer.GetChildCount() > 0 || _dialog is not null;
 
@@ -103,9 +121,8 @@ public partial class FileService : Node
         _systemDialogs = systemDialogs;
         Recent = [.. settings.Get(Section, RecentKey, Array.Empty<string>()).AsStringArray()];
         AddChild(_layer);
-        var timer = new global::Godot.Timer { Name = "Autosave", WaitTime = AutosaveSeconds, Autostart = true };
-        AddChild(timer);
-        timer.Timeout += Autosave;
+        AddChild(_autosave);
+        _autosave.Timeout += Autosave;
     }
 
     /// <summary>
@@ -356,7 +373,7 @@ public partial class FileService : Node
         Notify();
     }
 
-    /// <summary>Every <see cref="AutosaveSeconds"/>: a copy of a map with unsaved work that changed since the last one, written on a task.</summary>
+    /// <summary>Every <see cref="AutosaveMinutes"/>: a copy of a map with unsaved work that changed since the last one, written on a task.</summary>
     private void Autosave()
     {
         if (!_editor.IsDirty || !_changed)

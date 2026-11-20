@@ -266,7 +266,9 @@ there by single undos or redos; `UndoHistoryChanged` follows every record, undo,
 so `IsDirty` is exact and `UnsavedWorkChanged` tells when it flips; the editor's `FileService` (Godot.UI) owns the map's file, the
 dialogs, the recent files (`RecentFiles`, kept in `EditorSettingsFile`), the questions over unsaved work (`QuestionBox`), the autosave
 timer and the recovery offer, and reads and writes through the app's `IMapFiles` (the map format, and `MapAutosaves` in Core.Data:
-the autosave folder and its session marker) and publishes the same kind of events as the game, so editor views are ordinary
+the autosave folder and its session marker); `CommandPalette` searches the `CommandRegistry` with `CommandSearch`; the user's
+`EditorPreferences` are edited in `PreferencesWindow`, kept by `PreferencesStore` and applied by the app; `EditorWorkspace` holds the
+Map and Template pages) and publishes the same kind of events as the game, so editor views are ordinary
 subscribers. The session is a facade: edits live in per-area editors (`Terrain`, `Objects`, `Contents`, `Monsters`, `Towns`,
 `Heroes`, `MapEvents`, `Players`, `Map`) over one internal `EditorContext` (scenario, catalog, bus, history, open stroke).
 Single-value edits are `PropertyEdit<T>` commands; an edit to the value already there records no undo step and publishes
@@ -296,7 +298,7 @@ into Core.Domain; `data/templates` into Core.Data. Apps use the embedded copy (`
   Core.Domain; `SaveSlotText`, `RankingText` in Core.Data, which the app maps onto the panels' view records).
 - Assets cannot live in a class library: `EternalWars.Godot.Assets` is mounted into each app as `res://shared/` by
   `tools/link-shared-assets.ps1` (junction, git-ignored).
-- **Spacing** (ADR-163): every app calls `UiSpacing.Apply()` first, which merges the shared gaps and margins into Godot's default theme (a
+- **Spacing** (ADR-163): every app calls `UiTheme.Apply()` first, which merges the shared gaps and margins (`UiSpacing`) and the look into Godot's default theme; the map editor calls `Apply(compact: true)` for a smaller font and tighter spacing (ADR-250) (a
   theme on the root window would not reach controls under a `CanvasLayer`). Panels take the theme's spacing instead of their own numbers:
   `AddHeading` for a section, `WithCellGap` for a row of slots, `Screens.UseOpaqueBackground` / `CenterAsScreen` for a screen over the map,
   `Screens.UseMenuPanel` for one over the main menu's picture; code that places controls itself uses `UiSpacing.ScreenEdge`.

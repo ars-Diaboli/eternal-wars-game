@@ -21,6 +21,9 @@ public partial class StrategyCamera : Camera3D
 
     public float RotateSpeedDegrees { get; set; } = 90f;
 
+    /// <summary>How far one notch of the wheel moves the camera towards the map or away from it.</summary>
+    public float ZoomStep { get; set; } = 1.5f;
+
     public float MinDistance { get; set; } = 6f;
 
     public float MaxDistance { get; set; } = 40f;
@@ -57,6 +60,17 @@ public partial class StrategyCamera : Camera3D
         }
     }
 
+    /// <summary>
+    /// Asked every frame: true while the app shows something over the map that takes the keyboard (a dialog, another page), so the
+    /// camera keys do nothing. Not set: the keys always work.
+    /// </summary>
+    public Func<bool>? KeysBlocked { get; set; }
+
+    /// <summary>The keys are letters now: a text field is being typed into, or the app blocks them (<see cref="KeysBlocked"/>).</summary>
+    private bool KeysAreText() =>
+        KeysBlocked?.Invoke() == true
+        || GetViewport().GuiGetFocusOwner() is TextEdit || (GetViewport().GuiGetFocusOwner() is LineEdit field && field.IsEditing());
+
     private bool Held(Key key)
     {
         if (!Input.IsKeyPressed(key))
@@ -70,6 +84,11 @@ public partial class StrategyCamera : Camera3D
 
     public override void _Process(double delta)
     {
+        if (KeysAreText())
+        {
+            return;
+        }
+
         var dt = (float)delta;
         var changed = false;
 
@@ -106,8 +125,8 @@ public partial class StrategyCamera : Camera3D
         {
             var zoom = wheel.ButtonIndex switch
             {
-                MouseButton.WheelUp => -1.5f,
-                MouseButton.WheelDown => 1.5f,
+                MouseButton.WheelUp => -ZoomStep,
+                MouseButton.WheelDown => ZoomStep,
                 _ => 0f,
             };
 

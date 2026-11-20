@@ -18,7 +18,7 @@ public sealed record CommandMenu(string Title, IReadOnlyList<string?> Items)
 public sealed record CommandList(string Title, Func<IReadOnlyList<(string Text, Action Run)>> Items, string Empty);
 
 /// <summary>
-/// The editor's menus, built from the <see cref="CommandRegistry"/>. An item shows its command's name and shortcut; one that cannot run now
+/// The editor's menus, built from the <see cref="CommandRegistry"/>. An item shows its command's icon, name and shortcut; one that cannot run now
 /// is greyed and says why in its tooltip. The shortcuts are only shown here: the app hands the keys to the registry.
 /// </summary>
 public partial class MenuBarView : MenuBar
@@ -74,6 +74,7 @@ public partial class MenuBarView : MenuBar
                     popup.AddCheckItem(command.Name, ids.Count);
                 }
 
+                popup.SetItemIcon(index, PlaceholderIcons.Of(command));
                 if (command.Shortcut is { } shortcut)
                 {
                     popup.SetItemAccelerator(index, Accelerator(shortcut));

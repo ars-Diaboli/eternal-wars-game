@@ -9,6 +9,17 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 1 tasks 10 to 12 (ADR-250), which close step 1. `CommandPalette` (Ctrl+Shift+P; `CommandSearch` in core
+  ranks the names) offers the commands that can run now. `EditorPreferences` (core record with its ranges) are edited in
+  `PreferencesWindow` (Ctrl+,), kept by `PreferencesStore` in `EditorSettingsFile` and applied by the app: the window's
+  `ContentScaleFactor`, `FileService.AutosaveMinutes`, the camera's `PanSpeed`, `RotateSpeedDegrees` and new `ZoomStep`, the size
+  of a new map. The editor runs `UiTheme.Apply(compact: true)` (14 px font, tighter spacing); `PlaceholderIcons` draws a tile with
+  two letters for every tool and command without art (menus, toolbar, tool palette, command palette). `EditorWorkspace` has pages
+  with tabs after the menus (`AddPage`, `ShowPage`): Map (the regions) and Template (`TemplateEditorPanel`, no longer an overlay;
+  its Close button and Escape are gone); map-view commands are greyed on the Template tab. The palette, Preferences and the
+  `QuestionBox` share `EditorOverlay`. `StrategyCamera` ignores its keys while a text field is edited (the game too) and while the app says so (`KeysBlocked`: an overlay, the Template tab). The template panel is made once and moved into each new workspace.
+  `AutoInput` takes `key:Ctrl+Shift+P`. The compact theme moved the `editor-*` smoke clicks; new smokes `editor-palette` and
+  `editor-preferences`. Next: step 2 (selection and editing).
 - Editor overhaul, step 1 tasks 8 and 9 (ADR-250): `FileService` (`Godot.UI/Editor/Shell/`) owns the map's file: Open, Save, Save
   as (Godot's `FileDialog`, native unless the run is scripted), Open recent (`RecentFiles`, ten, in `EditorSettingsFile`, which the
   workspace's layout shares), the title's asterisk, the question over unsaved work (`QuestionBox`: New, From template, Open, Quit,
@@ -16,7 +27,7 @@ Detail: [roadmap.md](roadmap.md).
   it (`Start`, `OpenNew`). It reads and writes through `IMapFiles`, which the app implements (`MapFiles`) with the map format and
   `MapAutosaves` (Core.Data: the newest five autosaves, the session marker with its process id and the last safe time).
   `MapEditorSession.MarkUnsaved` marks a restored map as unsaved work. The name field is gone. With `--settings=` the editor keeps
-  its maps folder and autosaves beside that file. Smokes `editor-files` and `editor-recovery`. Next: task 10, the command palette.
+  its maps folder and autosaves beside that file. Smokes `editor-files` and `editor-recovery`.
 - Editor overhaul, step 1 task 7 (ADR-250): `UndoHistory` remembers the position saved at (`MarkSaved`), so
   `MapEditorSession.IsDirty` is exact (an undo back to the saved step is clean; a step recorded over the saved one, or the saved
   one dropped from a full history, stays dirty until the next save); `UnsavedWorkChanged` is published when it flips. The editor's
@@ -60,7 +71,7 @@ Detail: [roadmap.md](roadmap.md).
 2. The prologue map (CAMP-1), as the first map of a campaign; Border Watch's story is a placeholder.
 3. The remaining Phase 5 items in [roadmap.md](roadmap.md) ("Presentation and UI", "Town screen overhaul", "Editor overhaul",
    "Platform and art", "Roster"); the town screen overhaul starts with the owner's answers (TOWN-14 … TOWN-23), the editor
-   overhaul continues with step 1 task 10 (the step 0 greybox of the wizard is still open).
+   overhaul continues with step 2 (the step 0 greybox of the wizard is still open).
 4. The "Code health" list in [roadmap.md](roadmap.md): skills, heroes and town types as typed ids; `InfoSheets` as data once localisation
    is decided (ADR-239).
 

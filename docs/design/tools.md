@@ -22,12 +22,23 @@ properties, players, validation and conditions panels):
   tab ([adventure-map.md](adventure-map.md#map-bans-and-random-placeholders), ADR-133);
 - validation; [generate from a template and the template editor](random-maps.md#editor).
 
-**The window** (EDIT-1, ADR-250): a bar on top (the menus, the toolbar), three docked regions around the map
+**The window** (EDIT-1, ADR-250): a bar on top (the menus, the Map and Template tabs, the toolbar), three docked regions around the map
 view, each a tab box, and a status bar at the bottom. The tools and the options of the one in use are on the left, the map's settings
 and the inspector on the right (Map, Players, Conditions, Inspector, Events, Bans, Generate), Problems, History and Output at the
 bottom. A region is resized with its splitter and collapsed with its
 button on the toolbar or in the View menu; F11 hides them all and shows them again. A panel larger than its region scrolls. The
 splitter positions, the collapsed regions and each region's open tab are kept in `editor-settings.cfg` in the user data folder.
+
+**Map and Template tabs** (EDIT-3), after the menus: the Map tab is the map with its regions; the Template tab is the
+[template editor](random-maps.md#template-editor), which fills the room between the bars. Both stay as they were left while the other
+shows; the template editor also stays so when another map is opened. The File menu and its shortcuts always act on the map (the
+template has its own Save button). Generating a map in the Template tab opens it in the Map tab. While the Template tab shows, the commands that work on the map's
+view (undo and redo, the level, the grid, the regions, the tools) are greyed; a command that opens one of the map's panels shows the
+Map tab.
+
+**The look**: the game's theme (ADR-191) in a compact variant: the same colours, a 14 px font, tighter rows and gaps and lower buttons.
+Every tool and command has an icon in the menus, on the toolbar and in the palette; where the art does not exist yet it is a
+placeholder, a coloured tile with the name's two letters.
 
 **Files** (File menu):
 - **Open** (Ctrl+O), **Save** (Ctrl+S) and **Save as** (Ctrl+Shift+S) use a file dialog, the system's own where there is one. It
@@ -38,16 +49,38 @@ splitter positions, the collapsed regions and each region's open tab are kept in
   unsaved work.
 - **Unsaved work**: New (Ctrl+N), From template, Open, Quit (Ctrl+Q) and closing the window first ask "Save", "Don't save" or
   "Cancel". Escape is Cancel.
-- **Autosave**: every 2 minutes, a map with unsaved work that changed since the last autosave is copied to `user://maps/.autosave/`;
+- **Autosave**: every 2 minutes (a preference), a map with unsaved work that changed since the last autosave is copied to `user://maps/.autosave/`;
   the newest five stay. The map's own file is not touched.
 - **Recovery**: when the editor did not close properly and an autosave was made after the last save (or after the last map was
   opened), the next start offers to restore the newest one. A restored map has no file and counts as unsaved work. A second editor
   started while one runs offers nothing.
 
-**Commands**: every action is a command with a name, an optional icon and shortcut, and a check whether it can run now. The menus
+**Commands**: every action is a command with a name, an icon, an optional shortcut, and a check whether it can run now. The menus
 (File, Edit, View, Map, Tools, Templates, Test, Help) and the toolbar are built from the commands; an item that cannot run is greyed
-and says why in its tooltip. Shortcuts: the File menu's, Ctrl+Z undo, Ctrl+Y redo, L the next level, F11 the panels. The Map menu opens the map's
+and says why in its tooltip. Shortcuts: the File menu's, Ctrl+Z undo, Ctrl+Y redo, L the next level, F11 the panels, Ctrl+Shift+P the
+command palette, Ctrl+, Preferences. The Map menu opens the map's
 tabs, the Tools menu picks a tool. Test (F5) and Help (F1) are in their menus and greyed until they are built.
+
+**The command palette** (Ctrl+Shift+P, or View > Command palette): a search field and the commands that can run now, each with its
+icon and shortcut. Typing narrows the list as you type: every typed word must fit the name, a name that starts with a word comes
+before one that has it at a word's start, then inside a word, then as letters in order ("svas" finds "Save as"). Up and Down move
+through the list, Enter or a click runs the command, Escape closes the palette.
+
+**Preferences** (Edit > Preferences, Ctrl+,), kept in `editor-settings.cfg` and applied on "OK":
+
+| Preference | Range | At start |
+|---|---|---|
+| UI scale | 100, 125, 150, 175 or 200 % | 100 % |
+| Autosave interval | 1 to 30 minutes | 2 |
+| Camera move speed | 4 to 40 tiles a second (at 100 % zoom) | 12 |
+| Camera turn speed | 30 to 180 degrees a second | 90 |
+| Camera zoom speed | 1 to 5 (one notch of the wheel) | 3 |
+| New map's size | 16 to 256 tiles a side | 36 |
+
+"Defaults" puts the values of a new installation into the fields; "Cancel" or Escape changes nothing.
+
+The camera keys do nothing while a text field is being typed into, while a question, a dialog, the palette or Preferences is open,
+and on the Template tab. A shortcut pressed in the middle of a stroke on the map is ignored.
 
 **The bottom panels**:
 - **Problems**: the validator's issues, checked a moment after every change, in the background on a copy of the map. Two buttons with

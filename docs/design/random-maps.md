@@ -127,7 +127,7 @@ The rest is the game's scenario assembly, so the map is playable as generated; i
 generator version, and the generator's problems and validator issues are shown. A hero may stand in its own town's entrance.
 
 ## Template editor
-The map editor's **Templates** button (RMG-10, ADR-117) opens a full-screen, HotA-like editor: a zone graph, a top row (New, Open, Save,
+The map editor's **Template** tab (RMG-10, ADR-117, EDIT-3) is a HotA-like editor: a zone graph, a top row (New, Open, Save,
 add zones, size, seed, Generate) and an inspector for the template, a zone or a connection; terrains and neutral town types are edited in
 the file. Core `TemplateEditorSession`: every change publishes `TemplateChanged` with the validator's issues; **no undo**.
 

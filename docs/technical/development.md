@@ -74,7 +74,7 @@ the script under Movie Maker and saves frames to `.shots/<scenario>/`. **A pass 
   window taking the focus closes the other windows' drop-down lists and loses their clicks.
   The windows share the one mouse pointer, so hover highlights can differ between runs; `-Jobs 1` when a frame must be exact.
 - A scenario runs at 10 frames a second; `Fps = <n>` in its entry changes that (the turn timer runs at 2, so its minute is 120 frames).
-- Script entries are `frame:kind:argument`: `click` / `rclick` (`x,y`), `key` (Godot key name), `hold` (`Key,frames`),
+- Script entries are `frame:kind:argument`: `click` / `rclick` (`x,y`), `key` (Godot key name, modifiers before it: `Ctrl+Shift+P`), `hold` (`Key,frames`),
   `wheel` (`up|down,count`), `drag` / `rdrag` (`x1,y1,x2,y2`, over three frames). Replayed by `AutoInput`.
 - Game scenarios start with `--new-game` and `key:Enter` (Start has focus), so they do not depend on the screen layout;
   all start from default settings.

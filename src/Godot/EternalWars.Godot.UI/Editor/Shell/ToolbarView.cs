@@ -3,7 +3,8 @@ using Godot;
 namespace EternalWars.Godot.UI.Editor.Shell;
 
 /// <summary>
-/// A row of buttons built from the <see cref="CommandRegistry"/>: a command's icon, or its name when it has none. The tooltip names the
+/// A row of icon buttons built from the <see cref="CommandRegistry"/>: a command's icon, or its placeholder
+/// (<see cref="PlaceholderIcons"/>). The tooltip names the
 /// command and its shortcut; a button whose command cannot run now is disabled and says why instead. A command that is on or off stays
 /// pressed while it is on.
 /// </summary>
@@ -26,10 +27,7 @@ public partial class ToolbarView : HBoxContainer
 
             var command = commands[id];
             var button = new Button { Text = command.Name, ToggleMode = command.IsOn is not null };
-            if (command.Icon is { } icon)
-            {
-                button.WithIcon(icon);
-            }
+            button.WithIcon(PlaceholderIcons.Of(command, PlaceholderIcons.ToolbarSize), PlaceholderIcons.ToolbarSize);
 
             button.Pressed += () => commands.Run(id);
             AddChild(button);

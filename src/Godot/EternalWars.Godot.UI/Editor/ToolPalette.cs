@@ -1,11 +1,12 @@
 using EternalWars.Godot.Shared.Controls;
+using EternalWars.Godot.UI.Editor.Shell;
 using EternalWars.Godot.UI.Editor.Tools;
 using Godot;
 
 namespace EternalWars.Godot.UI.Editor;
 
 /// <summary>
-/// A button per tool plus the options of the one in use, both wrapping to the width the palette is given. The first tool is in use at the
+/// A button per tool (its placeholder icon and its name) plus the options of the one in use, both wrapping to the width the palette is given. The first tool is in use at the
 /// start; picking another cancels what the old one was in the middle of.
 /// </summary>
 public partial class ToolPalette : VBoxContainer
@@ -30,7 +31,10 @@ public partial class ToolPalette : VBoxContainer
         var group = new ButtonGroup();
         foreach (var tool in tools)
         {
-            var button = new Button { Text = tool.Name, ToggleMode = true, ButtonGroup = group, ButtonPressed = tool == tools[0] };
+            var button = new Button
+            {
+                Text = tool.Name, Icon = PlaceholderIcons.Of(tool.Name), ToggleMode = true, ButtonGroup = group, ButtonPressed = tool == tools[0],
+            };
             button.Pressed += () => Use(tool);
             buttons.AddChild(button);
             _buttons[tool] = button;
