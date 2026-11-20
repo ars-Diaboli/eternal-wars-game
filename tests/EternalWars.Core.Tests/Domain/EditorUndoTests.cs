@@ -205,6 +205,9 @@ public class EditorUndoTests
 
         // Objects
         ["ObjectEditor.Place"] = f => Ok(f.Editor.Objects.Place(BuiltInMapObjects.MineId(ResourceType.Ore), new MapPosition(4, 22), out _)),
+        ["ObjectEditor.Move"] = f => Ok(f.Editor.Objects.Move(f.Chest, new MapPosition(12, 20))),
+        ["ObjectEditor.Move (town)"] = f => Ok(f.Editor.Objects.Move(f.Town, new MapPosition(6, 20))),
+        ["ObjectEditor.Move (linked two-way gate)"] = f => Ok(f.Editor.Objects.Move(f.GateA, new MapPosition(12, 20))),
         ["ObjectEditor.Remove"] = f => Ok(f.Editor.Objects.Remove(f.Chest)),
         ["ObjectEditor.Remove (linked two-way gate)"] = f => Ok(f.Editor.Objects.Remove(f.GateA)),
         ["ObjectEditor.Remove (one-way exit)"] = f => Ok(f.Editor.Objects.Remove(f.Exit)),
@@ -249,7 +252,12 @@ public class EditorUndoTests
 
         // Heroes
         ["HeroEditor.Place"] = f => Ok(f.Editor.Heroes.Place(Blue, new MapPosition(10, 25), "Orrin", out _)),
+        ["HeroEditor.Move"] = f => Ok(f.Editor.Heroes.Move(f.Hero, new MapPosition(10, 25))),
         ["HeroEditor.Remove"] = f => Ok(f.Editor.Heroes.Remove(f.Hero)),
+        ["SelectionEditor.Move"] = f => f.Editor.Selecting.Set(new SelectionItems([], [f.Chest, f.Town, f.GateA], [f.Hero], []))
+            && Ok(f.Editor.Selecting.Move(0, 15)),
+        ["SelectionEditor.Delete"] = f => f.Editor.Selecting.Set(new SelectionItems([], [f.Chest, f.Town, f.GateA], [f.Hero], []))
+            && f.Editor.Selecting.Delete() == 4,
         ["HeroEditor.SetStats"] = f => Ok(f.Editor.Heroes.SetStats(f.Hero, 5, 4, SkillLevel.Advanced, 3, 2)),
         ["HeroEditor.SetWarMachines"] = f => Ok(f.Editor.Heroes.SetWarMachines(f.Hero, new HashSet<WarMachineSlot> { WarMachineSlot.Cart, WarMachineSlot.Tent })),
         ["HeroEditor.SetArtifacts"] = f => Ok(f.Editor.Heroes.SetArtifacts(f.Hero, ["rusted-blade"], ["iron-band", "iron-band"])),
@@ -303,12 +311,16 @@ public class EditorUndoTests
     {
         ["ObjectEditor.CanPlace"] = "a query: whether Place would succeed",
         ["HeightEditor.HeightAt"] = "a query: the ground's height at a tile",
+        ["SelectionEditor.Set"] = "the selection is no undo step",
+        ["SelectionEditor.Add"] = "the selection is no undo step",
+        ["SelectionEditor.Remove"] = "the selection is no undo step",
+        ["SelectionEditor.Clear"] = "the selection is no undo step",
     };
 
     private static readonly Type[] AreaEditors =
     [
         typeof(TerrainEditor), typeof(HeightEditor),typeof(ObjectEditor), typeof(ObjectContentsEditor), typeof(MonsterEditor), typeof(TownEditor),
-        typeof(HeroEditor), typeof(MapEventEditor), typeof(PlayerEditor), typeof(MapPropertiesEditor),
+        typeof(HeroEditor), typeof(MapEventEditor), typeof(PlayerEditor), typeof(MapPropertiesEditor), typeof(SelectionEditor),
     ];
 
     public static IEnumerable<TheoryDataRow<string>> CaseNames =>

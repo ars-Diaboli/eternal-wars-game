@@ -57,9 +57,34 @@ placeholder, a coloured tile with the name's two letters.
 
 **Commands**: every action is a command with a name, an icon, an optional shortcut, and a check whether it can run now. The menus
 (File, Edit, View, Map, Tools, Templates, Test, Help) and the toolbar are built from the commands; an item that cannot run is greyed
-and says why in its tooltip. Shortcuts: the File menu's, Ctrl+Z undo, Ctrl+Y redo, L the next level, F11 the panels, Ctrl+Shift+P the
-command palette, Ctrl+, Preferences. The Map menu opens the map's
+and says why in its tooltip. Shortcuts: the File menu's, Ctrl+Z undo, Ctrl+Y redo, Ctrl+A select all, Escape deselect, Delete, V the Select
+tool, M the Move tool, L the next level, F11 the panels, Ctrl+Shift+P the command palette, Ctrl+, Preferences. The Map menu opens the map's
 tabs, the Tools menu picks a tool. Test (F5) and Help (F1) are in their menus and greyed until they are built.
+
+**Selection** (EDIT-1, ADR-250). The selection holds tiles, objects, heroes and map events. It is not an undo step, and a thing that
+leaves the map leaves the selection.
+- The **Select** tool (V): a click selects the hero, the object or the events of the cell under the pointer; a click on open ground
+  drops the selection. A drag selects the tiles of the rectangle and what stands in it (an object with any of its cells there). Shift
+  adds to the selection, Alt takes out of it. A double click on an object selects every object of its kind in view.
+- The **filter** (five boxes in the tool's options: objects, heroes, monsters, scenery, events) says which kinds of things clicks,
+  rectangles and Select all pick.
+- **Select all** (Ctrl+A) selects every thing on the shown level that the filter lets through, **Deselect** (Escape) nothing. **Delete**
+  removes the selected objects and heroes as one undo step; selected tiles and events stay.
+- Selected tiles are tinted and outlined in blue; a selected object or hero has a yellow outline round its cells with a handle at
+  each corner; a selected event's cells are outlined in violet.
+- After a click, a rectangle or a move with these tools the status bar counts what is selected, and a selection whose only thing is
+  one object or one hero opens in the inspector. Select all and Deselect leave the inspector as it is.
+- While a text field has the focus, plain keys (letters, Delete, Escape) are the field's and run no command.
+
+**Move**. A drag that starts on a selected object or hero moves everything selected by the same offset, on its level; released on
+the tile it started from, it moves nothing. With the
+**Move** tool (M) a drag on an object or hero that is not selected selects it alone and moves it.
+- A ghost shows the cells the things would take: green where they fit, red where they do not. A move with a red cell is refused.
+- The rules are placement's: every cell on the map; no cell on another object or hero (a hero may stand on its own town's entrance);
+  an object's entrance and a hero's tile on passable terrain. Things that move together are not in each other's way.
+- The ground under a moved object of more than one tile is levelled as placement does; the ground it left stays as it is.
+- An object keeps its links (gates), owner and contents. A move is one undo step, which also puts the ground back.
+- After a move the things stay selected; selected tiles and events are let go.
 
 **The command palette** (Ctrl+Shift+P, or View > Command palette): a search field and the commands that can run now, each with its
 icon and shortcut. Typing narrows the list as you type: every typed word must fit the name, a name that starts with a word comes
@@ -80,7 +105,7 @@ through the list, Enter or a click runs the command, Escape closes the palette.
 "Defaults" puts the values of a new installation into the fields; "Cancel" or Escape changes nothing.
 
 The camera keys do nothing while a text field is being typed into, while a question, a dialog, the palette or Preferences is open,
-and on the Template tab. A shortcut pressed in the middle of a stroke on the map is ignored.
+while Ctrl is held, and on the Template tab. A shortcut pressed in the middle of a stroke on the map is ignored.
 
 **The bottom panels**:
 - **Problems**: the validator's issues, checked a moment after every change, in the background on a copy of the map. Two buttons with
@@ -94,7 +119,7 @@ last message; "Checking the map…" while the problems are being checked; the co
 the save state ("Not saved" for a map without a file, "No changes" after a file is opened, "Saved" with the time, and "Unsaved changes" whenever the map
 differs from the saved one: undoing back to the saved step clears it); the zoom in percent.
 
-*Planned*: map resize, and the rest of an overhaul of the map and template editors into one creator-app workspace (ADR-247,
+*Planned*: copy and paste, map resize, and the rest of an overhaul of the map and template editors into one creator-app workspace (ADR-247,
 [plan](../papers/editor-plan.md)).
 
 ## 2D harness and simulator

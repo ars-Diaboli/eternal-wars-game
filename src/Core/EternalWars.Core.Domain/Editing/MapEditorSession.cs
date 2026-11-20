@@ -17,16 +17,19 @@ public sealed class MapEditorSession
     {
         ArgumentNullException.ThrowIfNull(scenario);
         _context = new EditorContext(scenario, catalog ?? MapObjectCatalog.Default, bus ?? new EventBus());
+        var mover = new MapMover(_context);
         Heights = new HeightEditor(_context);
         Terrain = new TerrainEditor(_context, Heights);
-        Objects = new ObjectEditor(_context, Heights);
+        Objects = new ObjectEditor(_context, Heights, mover);
         Contents = new ObjectContentsEditor(_context);
         Monsters = new MonsterEditor(_context, Objects);
         Towns = new TownEditor(_context);
-        Heroes = new HeroEditor(_context);
+        Heroes = new HeroEditor(_context, mover);
         MapEvents = new MapEventEditor(_context);
         Players = new PlayerEditor(_context);
         Map = new MapPropertiesEditor(_context);
+        Selecting = new SelectionEditor(_context, Objects, Heroes, mover);
+        _context.Selecting = Selecting;
     }
 
     public GameState Scenario => _context.Scenario;
@@ -36,6 +39,12 @@ public sealed class MapEditorSession
     public IEventSubscriber Events => _context.Bus;
 
     public UndoHistory History => _context.History;
+
+    /// <summary>What is selected: read here, changed through <see cref="Selecting"/> (<c>SelectionChanged</c> tells when).</summary>
+    public MapSelection Selection => _context.Selection;
+
+    /// <summary>Finds things to select, changes the <see cref="Selection"/>, and deletes or moves what is selected.</summary>
+    public SelectionEditor Selecting { get; }
 
     /// <summary>Terrain, roads and rivers.</summary>
     public TerrainEditor Terrain { get; }

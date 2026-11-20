@@ -104,7 +104,7 @@ CI (`.github/workflows/ci.yml`) runs build + test + `sim selftest`, and a parall
 |---|---|---|---|
 | Select hero | Click, Tab, hero list | Select tool | Click |
 | Hero / town screen | H / T, hero or town list, entering an own town; Escape closes | — | Click the town |
-| Move hero | Click tile (preview), click again; arrows / numpad | — | Same |
+| Move hero | Click tile (preview), click again; arrows / numpad | Move tool (M), or drag a selected hero | Same |
 | Level | L or button | L or button | — |
 | Camera | WASD pan, Q/E rotate, wheel zoom | same | — |
 | Edit | — | LMB with the active tool; Ctrl+Z / Ctrl+Y | — |

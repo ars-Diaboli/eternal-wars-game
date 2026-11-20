@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Common;
+using Godot;
 
 namespace EternalWars.Godot.UI.Editor.Tools;
 
@@ -10,6 +11,9 @@ public interface IEditorTool
 {
     /// <summary>The tool's name on its button.</summary>
     string Name { get; }
+
+    /// <summary>The key that picks the tool; null: none.</summary>
+    Key? Shortcut { get; }
 
     /// <summary>The tool was picked.</summary>
     void Activate();

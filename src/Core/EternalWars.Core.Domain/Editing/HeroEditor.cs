@@ -13,7 +13,9 @@ public sealed class HeroEditor
 {
     private readonly EditorContext _context;
 
-    internal HeroEditor(EditorContext context) => _context = context;
+    private readonly MapMover _mover;
+
+    internal HeroEditor(EditorContext context, MapMover mover) => (_context, _mover) = (context, mover);
 
     private Game.GameState Scenario => _context.Scenario;
 
@@ -50,6 +52,12 @@ public sealed class HeroEditor
         _context.Run($"Place hero {name}", () => _context.AddHero(hero), () => _context.RemoveHero(hero));
         return EditResult.Ok;
     }
+
+    /// <summary>Moves a hero to <paramref name="position"/> on its level, under placement's rules (<see cref="MapMover"/>).</summary>
+    public EditResult Move(HeroId id, MapPosition position) =>
+        _context.Hero(id) is not { } hero ? EditResult.InvalidTarget
+        : position.Level != hero.Position.Level ? EditResult.InvalidValue
+        : _mover.Move($"Move hero {hero.Name}", [], [hero], position.X - hero.Position.X, position.Y - hero.Position.Y);
 
     public EditResult Remove(HeroId id)
     {

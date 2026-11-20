@@ -323,7 +323,12 @@ $scenarios = @(
     # Preferences (EDIT-1, ADR-250): Ctrl+Comma opens the window; the UI scale goes to 150 %, OK applies it; the window again shows
     # what was kept.
     @{ Name = 'editor-preferences'; App = 'EternalWars.MapEditor'; Frames = 40
-       Input = '3:key:Ctrl+Comma;9:click:@100 %;13:choose:150 %;19:click:@OK;28:key:Ctrl+Comma' }
+       Input = '3:key:Ctrl+Comma;9:click:@100 %;13:choose:150 %;19:click:@OK;28:key:Ctrl+Comma' },
+    # Selection and move (EDIT-1, ADR-250) on a blank map: two chests are placed; the Select tool (V) drags a rectangle over them (the
+    # marquee, then tiles and chests selected); a drag from a selected chest moves both (the ghost, then the move); Ctrl+A selects
+    # everything, Escape nothing; the Move tool (M) drags one chest onto the other (red ghost, refused); a click selects it, Delete removes it.
+    @{ Name = 'editor-selection'; App = 'EternalWars.MapEditor'; Frames = 70
+       Input = '3:click:@Object;6:click:700,500;9:click:760,500;12:key:V;15:drag:640,440,820,560;22:drag:700,500,700,400;30:key:Ctrl+A;34:key:Escape;38:key:M;41:drag:730,395,768,395;50:click:730,395;56:key:Delete' }
 )
 
 # Every scenario has a seed of its own, so its games and battles are the same on every run (ADR-239): the entry's Seed, else one made from

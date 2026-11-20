@@ -9,6 +9,8 @@ public abstract class EditorTool(EditorToolContext context) : IEditorTool
 {
     public abstract string Name { get; }
 
+    public virtual Key? Shortcut => null;
+
     protected EditorToolContext Context { get; } = context;
 
     protected MapEditorSession Editor => Context.Editor;

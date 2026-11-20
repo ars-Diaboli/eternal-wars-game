@@ -11,11 +11,13 @@ public sealed class ObjectEditor
 {
     private readonly EditorContext _context;
     private readonly HeightEditor _heights;
+    private readonly MapMover _mover;
 
-    internal ObjectEditor(EditorContext context, HeightEditor heights)
+    internal ObjectEditor(EditorContext context, HeightEditor heights, MapMover mover)
     {
         _context = context;
         _heights = heights;
+        _mover = mover;
     }
 
     private Game.GameState Scenario => _context.Scenario;
@@ -86,6 +88,15 @@ public sealed class ObjectEditor
             });
         return EditResult.Ok;
     }
+
+    /// <summary>
+    /// Moves an object so that its top-left tile is <paramref name="topLeft"/> on its level (<see cref="MapMover"/>): the footprint is
+    /// checked and the ground levelled as placement does; its links, owner and contents stay.
+    /// </summary>
+    public EditResult Move(MapObjectId id, MapPosition topLeft) =>
+        _context.Object<MapObject>(id) is not { } mapObject ? EditResult.InvalidTarget
+        : topLeft.Level != mapObject.Position.Level ? EditResult.InvalidValue
+        : _mover.Move($"Move {mapObject.Definition.Name}", [mapObject], [], topLeft.X - mapObject.Position.X, topLeft.Y - mapObject.Position.Y);
 
     public EditResult Remove(MapObjectId id)
     {

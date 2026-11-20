@@ -35,6 +35,7 @@ public partial class ToolPalette : VBoxContainer
             {
                 Text = tool.Name, Icon = PlaceholderIcons.Of(tool.Name), ToggleMode = true, ButtonGroup = group, ButtonPressed = tool == tools[0],
             };
+            button.TooltipText = tool.Shortcut is { } key ? $"{tool.Name} ({key})" : tool.Name;
             button.Pressed += () => Use(tool);
             buttons.AddChild(button);
             _buttons[tool] = button;
