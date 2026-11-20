@@ -30,6 +30,9 @@ public interface IEditorTool
     /// <summary>The button held since <see cref="Press"/> came up.</summary>
     void Release();
 
+    /// <summary>The map, the clipboard or the shown level changed under the tool: what it shows before a click is worked out again.</summary>
+    void Refresh();
+
     /// <summary>Drops what the tool was in the middle of (another tool was picked).</summary>
     void Cancel();
 

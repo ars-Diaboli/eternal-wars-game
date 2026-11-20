@@ -5,7 +5,7 @@ using EternalWars.Core.Events;
 namespace EternalWars.Core.Domain.Editing;
 
 /// <summary>
-/// One per-tile layer of the map (terrain, roads, rivers) painted with a square brush. A paint is one undoable command over the tiles it changes;
+/// One per-tile layer of the map (terrain, roads, rivers) painted on a set of tiles. A paint is one undoable command over the tiles it changes;
 /// it publishes <typeparamref name="TEvent"/> for them, and undo publishes one per value it restores. <paramref name="ground"/>, when given and
 /// it returns an edit, also shapes the ground after the painted tiles in the same command (terrain's Auto height).
 /// </summary>
@@ -17,11 +17,16 @@ internal sealed class PaintLayer<TValue, TEvent>(
     Func<IReadOnlyList<MapPosition>, GroundEdit?>? ground = null)
     where TEvent : IEvent
 {
-    /// <summary>Paints <paramref name="value"/> on the tiles within <paramref name="radius"/> of <paramref name="center"/>; returns how many changed.</summary>
-    public int Paint(MapPosition center, int radius, TValue value, string description)
+    /// <summary>
+    /// Paints <paramref name="value"/> on those of <paramref name="tiles"/> that are on the map; returns how many changed.
+    /// <paramref name="shape"/> false leaves the ground as it is (the caller brings the heights itself).
+    /// </summary>
+    public int Paint(IEnumerable<MapPosition> tiles, TValue value, string description, bool shape = true)
     {
         var same = EqualityComparer<TValue>.Default;
-        var changes = Brush(center, radius)
+        var changes = tiles
+            .Where(context.Scenario.Map.Contains)
+            .Distinct()
             .Where(p => !same.Equals(get(p), value))
             .Select(p => (Position: p, Previous: get(p)))
             .ToList();
@@ -32,7 +37,7 @@ internal sealed class PaintLayer<TValue, TEvent>(
         }
 
         var positions = changes.Select(c => c.Position).ToList();
-        var shaping = ground?.Invoke(positions);
+        var shaping = shape ? ground?.Invoke(positions) : null;
         context.Run(
             description,
             () =>
@@ -52,20 +57,5 @@ internal sealed class PaintLayer<TValue, TEvent>(
                 }
             });
         return changes.Count;
-    }
-
-    private IEnumerable<MapPosition> Brush(MapPosition center, int radius)
-    {
-        for (var dy = -radius; dy <= radius; dy++)
-        {
-            for (var dx = -radius; dx <= radius; dx++)
-            {
-                var position = center.Offset(dx, dy);
-                if (context.Scenario.Map.Contains(position))
-                {
-                    yield return position;
-                }
-            }
-        }
     }
 }

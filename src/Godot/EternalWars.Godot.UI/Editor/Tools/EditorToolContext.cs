@@ -5,6 +5,12 @@ using EternalWars.Godot.Shared.Map;
 
 namespace EternalWars.Godot.UI.Editor.Tools;
 
+/// <summary>The editor's clipboard (EDIT-4, ADR-250): the fragment copied or cut last. The app keeps one for all the maps it opens.</summary>
+public sealed class EditorClipboard
+{
+    public MapFragment? Fragment { get; set; }
+}
+
 /// <summary>How the button went down for the press a tool is told of: the app sets it from the pointer's event before every press.</summary>
 public readonly record struct PointerPress(bool Add = false, bool Remove = false, bool DoubleClick = false);
 
@@ -43,8 +49,17 @@ public sealed class EditorToolContext(MapEditorSession editor, InspectorPanel in
         static string Count(int count, string one, string? many = null) => count == 0 ? "" : count == 1 ? $"1 {one}" : $"{count} {many ?? one + "s"}";
     }
 
-    /// <summary>The brushes' radius in tiles: one value for all of them.</summary>
+    /// <summary>The height brushes' radius in tiles.</summary>
     public int Radius { get; set; }
+
+    /// <summary>The paints' brush (terrain, roads, rivers, start zones, erase): one size and shape for all of them.</summary>
+    public Brush Brush { get; set; } = Brush.One;
+
+    /// <summary>What was copied or cut last; the app's, so it outlives the map (EDIT-4).</summary>
+    public EditorClipboard Clipboard { get; init; } = new();
+
+    /// <summary>Which layers a paste puts on the map.</summary>
+    public FragmentLayers PasteLayers { get; set; } = FragmentLayers.All;
 
     /// <summary>Writes <paramref name="text"/> to the status line.</summary>
     public void Say(string text) => status(text);

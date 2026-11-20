@@ -237,6 +237,26 @@ public sealed class MapEventEditor
         return EditResult.Ok;
     }
 
+    /// <summary>Removes the event cells on <paramref name="positions"/> as one undo step. Returns how many there were.</summary>
+    public int RemoveCells(IEnumerable<MapPosition> positions)
+    {
+        var where = positions.ToHashSet();
+        return RemoveCells(c => where.Contains(c.Position));
+    }
+
+    /// <summary>Removes the event cells that <paramref name="which"/> picks as one undo step. Returns how many there were.</summary>
+    internal int RemoveCells(Func<EventCell, bool> which)
+    {
+        var set = Scenario.MapEvents.Set;
+        var removed = set.Cells.Count(which);
+        if (removed > 0)
+        {
+            ChangeEvents(removed == 1 ? "Remove event cell" : $"Remove {removed} event cells", set with { Cells = [.. set.Cells.Where(c => !which(c))] });
+        }
+
+        return removed;
+    }
+
     /// <summary>The Pandora's boxes and quest objects that name the event.</summary>
     private IEnumerable<MapObject> References(string name) =>
         Scenario.Objects.Where(o => o is PandorasBox { Event: var e } && e == name || o is QuestSite { Quest: var q } && q == name);

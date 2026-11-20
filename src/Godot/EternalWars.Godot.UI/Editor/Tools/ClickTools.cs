@@ -66,23 +66,6 @@ public sealed class HeroTool(EditorToolContext context) : EditorTool(context)
     }
 }
 
-/// <summary>Removes the hero or the object clicked.</summary>
-public sealed class EraseTool(EditorToolContext context) : EditorTool(context)
-{
-    public override string Name => "Erase";
-
-    public override void BuildOptions(ToolOptions options) => options.Hint("Click a hero or object to remove it.");
-
-    public override void Press(MapPosition tile)
-    {
-        var scenario = Editor.Scenario;
-        Context.Report(
-            scenario.HeroAt(tile) is { } hero ? Editor.Heroes.Remove(hero.Id)
-            : scenario.ObjectCellAt(tile)?.Object is { } mapObject ? Editor.Objects.Remove(mapObject.Id)
-            : EditResult.InvalidTarget);
-    }
-}
-
 /// <summary>Links gates: the first click picks a two-way gate or a one-way entrance, the second its partner or exit.</summary>
 public sealed class LinkGatesTool(EditorToolContext context) : EditorTool(context)
 {

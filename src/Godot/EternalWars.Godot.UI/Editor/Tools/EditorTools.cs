@@ -17,6 +17,7 @@ public static class EditorTools
         new LinkGatesTool(context),
         new SelectTool(context),
         new MoveTool(context),
+        new PasteTool(context),
         new GrailTool(context),
     ];
 }

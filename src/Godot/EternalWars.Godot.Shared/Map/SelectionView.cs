@@ -10,8 +10,8 @@ namespace EternalWars.Godot.Shared.Map;
 /// <summary>
 /// The map editor's selection on the shown level (EDIT-1, ADR-250): selected tiles are tinted and outlined; a selected object, hero or
 /// event cell gets an outline round its cells, and an object or hero a handle at each corner of its box. While the Select tool drags,
-/// the tool also shows the marquee (<see cref="ShowMarquee"/>) or the ghost of a move (<see cref="ShowMove"/>): the cells the things
-/// would take, red where they do not fit. Redrawn when the selection, the things' places, the events, the ground or the level change,
+/// the tool also shows the marquee (<see cref="ShowMarquee"/>) or the ghost of a move or a paste (<see cref="ShowMove"/>): the cells the
+/// things would take, red where they do not fit. A brush tool shows the tiles under its brush (<see cref="ShowBrush"/>). Redrawn when the selection, the things' places, the events, the ground or the level change,
 /// once a frame however many events asked for it (a move of many things, a stroke's dabs).
 /// </summary>
 public partial class SelectionView : Node3D
@@ -21,6 +21,7 @@ public partial class SelectionView : Node3D
     private static readonly Color ThingEdge = new(1f, 0.85f, 0.3f, 0.95f);
     private static readonly Color EventEdge = new(0.8f, 0.5f, 1f, 0.95f);
     private static readonly Color MarqueeEdge = new(1f, 1f, 1f, 0.9f);
+    private static readonly Color BrushEdge = new(1f, 1f, 1f, 0.75f);
     private static readonly Color GhostFits = new(0.35f, 0.9f, 0.4f, 0.5f);
     private static readonly Color GhostBlocked = new(0.95f, 0.25f, 0.2f, 0.6f);
 
@@ -38,6 +39,8 @@ public partial class SelectionView : Node3D
     private readonly Node3D _selection = new() { Name = "Selection" };
     private readonly Node3D _marquee = new() { Name = "Marquee" };
     private readonly Node3D _ghost = new() { Name = "Ghost" };
+    private readonly Node3D _brush = new() { Name = "Brush" };
+    private IReadOnlyCollection<MapPosition>? _brushTiles;
     private MapViewContext _context = null!;
     private MapSelection _selected = null!;
     private TileArea? _marqueeArea;
@@ -50,6 +53,7 @@ public partial class SelectionView : Node3D
         AddChild(_selection);
         AddChild(_marquee);
         AddChild(_ghost);
+        AddChild(_brush);
         context.LevelChanged += RebuildAll;
         TreeExiting += () => context.LevelChanged -= RebuildAll;
         new RefreshScheduler(this, RebuildAll)
@@ -71,7 +75,14 @@ public partial class SelectionView : Node3D
         }
     }
 
-    /// <summary>Shows where the dragged things would land (null: no move is being dragged).</summary>
+    /// <summary>Outlines the tiles under a brush before it paints (null: none); those off the map or on another level are left out.</summary>
+    public void ShowBrush(IReadOnlyCollection<MapPosition>? tiles)
+    {
+        _brushTiles = tiles;
+        RebuildBrush();
+    }
+
+    /// <summary>Shows where the dragged or pasted things would land (null: nothing is being placed).</summary>
     public void ShowMove(MoveCheck? move)
     {
         _move = move;
@@ -85,6 +96,16 @@ public partial class SelectionView : Node3D
         RebuildSelection();
         RebuildMarquee();
         RebuildGhost();
+        RebuildBrush();
+    }
+
+    private void RebuildBrush()
+    {
+        Clear(_brush);
+        if (_brushTiles is { } tiles)
+        {
+            Outline(_brush, [.. tiles.Where(t => t.Level == _context.Level && Map.Contains(t))], BrushEdge);
+        }
     }
 
     private void RebuildSelection()

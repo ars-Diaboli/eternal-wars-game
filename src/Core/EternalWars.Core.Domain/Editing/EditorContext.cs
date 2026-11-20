@@ -52,6 +52,34 @@ internal sealed class EditorContext(GameState scenario, MapObjectCatalog catalog
         }
     }
 
+    /// <summary>
+    /// Runs <paramref name="edits"/> (calls of the editors) as one undo step named <paramref name="description"/>; inside an open stroke
+    /// they join that stroke instead. Edits that change nothing record nothing.
+    /// </summary>
+    public void AsOneStep(string description, Action edits)
+    {
+        if (_stroke is not null)
+        {
+            edits();
+            return;
+        }
+
+        var stroke = _stroke = [];
+        try
+        {
+            edits();
+        }
+        finally
+        {
+            _stroke = null;
+            if (stroke.Count > 0)
+            {
+                History.Record(new CompositeCommand(description, stroke));
+                PublishHistory();
+            }
+        }
+    }
+
     public bool ChangeHistory(Func<bool> change)
     {
         if (_stroke is not null)
