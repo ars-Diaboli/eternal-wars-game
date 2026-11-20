@@ -120,26 +120,6 @@ public sealed class LinkGatesTool(EditorToolContext context) : EditorTool(contex
     }
 }
 
-/// <summary>Opens the hero or the object clicked in the inspector.</summary>
-public sealed class SelectTool(EditorToolContext context) : EditorTool(context)
-{
-    public override string Name => "Select";
-
-    public override void BuildOptions(ToolOptions options) => options.Hint("Click a hero or object to edit it in the inspector.");
-
-    public override void Press(MapPosition tile)
-    {
-        if (Editor.Scenario.HeroAt(tile) is { } hero)
-        {
-            Context.Inspect(hero.Id);
-        }
-        else if (Editor.Scenario.ObjectCellAt(tile)?.Object is { } mapObject)
-        {
-            Context.Inspect(mapObject);
-        }
-    }
-}
-
 /// <summary>Buries the Grail where clicked, or takes it away when its cell is clicked again (ADR-140).</summary>
 public sealed class GrailTool(EditorToolContext context) : EditorTool(context)
 {

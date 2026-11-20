@@ -9,6 +9,16 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 2 tasks 1 to 3 (ADR-250). Core: `MapSelection` (tiles, objects, heroes, event names) on the session,
+  changed only through `session.Selecting` (`SelectionEditor`: `At`, `In` a `TileArea`, `OfKind`, `Everything` with a
+  `SelectionFilter`; `Set` / `Add` / `Remove` / `Clear` publish `SelectionChanged`, no undo step; `Delete` and `Move` are one step);
+  a removed thing leaves the selection. `MapMover` checks and makes moves under placement's rules and levels the ground;
+  `ObjectEditor.Move`, `HeroEditor.Move`; events `MapObjectMoved`, `HeroRepositioned` (`MapObject.Position` has an internal setter,
+  used only while the object is off the cell index). UI: `SelectTool` (V) and `MoveTool` (M) in `Tools/SelectTools.cs`,
+  `SelectionView` (Godot.Shared) for outlines, handles, marquee and ghost; `EditorToolContext` carries the press's modifiers
+  (`PointerPress`), the filter and the visible area; commands Select all (Ctrl+A, the shown level), Deselect (Escape), Delete; tools may have a
+  shortcut key. Plain keys run no command while a text field has the focus. Tests `EditorSelectionTests`, cases in
+  `EditorUndoTests`; smoke `editor-selection`. Next: step 2 task 4.
 - Editor overhaul, step 1 tasks 10 to 12 (ADR-250), which close step 1. `CommandPalette` (Ctrl+Shift+P; `CommandSearch` in core
   ranks the names) offers the commands that can run now. `EditorPreferences` (core record with its ranges) are edited in
   `PreferencesWindow` (Ctrl+,), kept by `PreferencesStore` in `EditorSettingsFile` and applied by the app: the window's
@@ -19,7 +29,7 @@ Detail: [roadmap.md](roadmap.md).
   its Close button and Escape are gone); map-view commands are greyed on the Template tab. The palette, Preferences and the
   `QuestionBox` share `EditorOverlay`. `StrategyCamera` ignores its keys while a text field is edited (the game too) and while the app says so (`KeysBlocked`: an overlay, the Template tab). The template panel is made once and moved into each new workspace.
   `AutoInput` takes `key:Ctrl+Shift+P`. The compact theme moved the `editor-*` smoke clicks; new smokes `editor-palette` and
-  `editor-preferences`. Next: step 2 (selection and editing).
+  `editor-preferences`.
 - Editor overhaul, step 1 tasks 8 and 9 (ADR-250): `FileService` (`Godot.UI/Editor/Shell/`) owns the map's file: Open, Save, Save
   as (Godot's `FileDialog`, native unless the run is scripted), Open recent (`RecentFiles`, ten, in `EditorSettingsFile`, which the
   workspace's layout shares), the title's asterisk, the question over unsaved work (`QuestionBox`: New, From template, Open, Quit,
@@ -71,7 +81,7 @@ Detail: [roadmap.md](roadmap.md).
 2. The prologue map (CAMP-1), as the first map of a campaign; Border Watch's story is a placeholder.
 3. The remaining Phase 5 items in [roadmap.md](roadmap.md) ("Presentation and UI", "Town screen overhaul", "Editor overhaul",
    "Platform and art", "Roster"); the town screen overhaul starts with the owner's answers (TOWN-14 … TOWN-23), the editor
-   overhaul continues with step 2 (the step 0 greybox of the wizard is still open).
+   overhaul continues with step 2 task 4 (the step 0 greybox of the wizard is still open).
 4. The "Code health" list in [roadmap.md](roadmap.md): skills, heroes and town types as typed ids; `InfoSheets` as data once localisation
    is decided (ADR-239).
 

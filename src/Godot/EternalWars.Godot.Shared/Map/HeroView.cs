@@ -97,6 +97,13 @@ public partial class HeroView : Node3D
                 Enqueue(e.Position, 0);
             }
         });
+        this.SubscribeWhileInTree<HeroRepositioned>(events, e =>
+        {
+            if (e.Hero == hero.Id)
+            {
+                Enqueue(e.To, 0); // the editor moved it: it stands there at once
+            }
+        });
         this.SubscribeWhileInTree<SightChanged>(events, _ => UpdateVisibility());
         // The editor reshaped the ground: a hero standing there moves with it (one walking takes the new ground as it goes).
         this.SubscribeWhileInTree<GroundHeightsChanged>(events, e =>

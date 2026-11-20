@@ -25,6 +25,11 @@ internal sealed class EditorContext(GameState scenario, MapObjectCatalog catalog
 
     public UndoHistory History { get; } = new();
 
+    public MapSelection Selection { get; } = new();
+
+    /// <summary>The session's selection editor, told when a thing leaves the map.</summary>
+    public SelectionEditor? Selecting { get; set; }
+
     public void BeginStroke(string description)
     {
         if (_stroke is not null)
@@ -118,6 +123,7 @@ internal sealed class EditorContext(GameState scenario, MapObjectCatalog catalog
     {
         var index = Scenario.RemoveObject(mapObject);
         Bus.Publish(new MapObjectRemoved(mapObject.Id));
+        Selecting?.Forget(mapObject.Id);
         return index;
     }
 
@@ -133,6 +139,7 @@ internal sealed class EditorContext(GameState scenario, MapObjectCatalog catalog
     {
         var index = Scenario.RemoveHero(hero);
         Bus.Publish(new HeroRemoved(hero.Id));
+        Selecting?.Forget(hero.Id);
         return index;
     }
 

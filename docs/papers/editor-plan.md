@@ -525,13 +525,13 @@ again offers the lost work.
 ### Step 2: Selection and editing
 
 1. **Selection in the core**: `MapSelection` (tiles per level, plus object, hero and event ids), owned by the session and changed only
-   through it, with `SelectionChanged` published; it is not an undo step. Tests.
+   through it, with `SelectionChanged` published; it is not an undo step. Tests. *Done.*
 2. **Select tool** (V): click, marquee, Shift adds, Alt removes, a double click selects every object of that kind in view; a filter
    (objects, heroes, monsters, scenery, events); Ctrl+A, Escape, Delete. `SelectionView` draws outlines and handles. The inspector
-   shows a single selection as today.
+   shows a single selection as today. *Done.*
 3. **Move** (M, or drag a selection): `ObjectEditor.Move` and `HeroEditor.Move` check the footprint and level the ground as placement
    does; a selection moves as one step. A ghost shows the target, red cells where it does not fit. Tests: a move and its undo restore
-   heights, links and owners.
+   heights, links and owners. *Done.*
 4. **Fragments and the clipboard**: `MapFragment` (terrain, heights, roads, rivers, objects with their settings, links inside the
    area); `Copy`, `Cut`, `Paste` (placement checks, new ids, links remapped, a choice of layers) and `DuplicateAt`, each one step.
    The clipboard lives in the app, so it survives opening another map (EDIT-4). Tests: paste in place gives the same map; links to

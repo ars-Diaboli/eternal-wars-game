@@ -270,7 +270,11 @@ the autosave folder and its session marker); `CommandPalette` searches the `Comm
 `EditorPreferences` are edited in `PreferencesWindow`, kept by `PreferencesStore` and applied by the app; `EditorWorkspace` holds the
 Map and Template pages) and publishes the same kind of events as the game, so editor views are ordinary
 subscribers. The session is a facade: edits live in per-area editors (`Terrain`, `Objects`, `Contents`, `Monsters`, `Towns`,
-`Heroes`, `MapEvents`, `Players`, `Map`) over one internal `EditorContext` (scenario, catalog, bus, history, open stroke).
+`Heroes`, `MapEvents`, `Players`, `Map`, `Selecting`) over one internal `EditorContext` (scenario, catalog, bus, history, open stroke,
+selection). The session owns the `MapSelection` (tiles, objects, heroes, event names); only `SelectionEditor` changes it, publishing
+`SelectionChanged`, and it is no undo step. `MapMover` moves objects and heroes together under placement's rules (`ObjectEditor.Move`,
+`HeroEditor.Move`, `SelectionEditor.Move`; `MapObjectMoved`, `HeroRepositioned`). The editor's `SelectionView` draws the selection,
+the marquee and a move's ghost.
 Single-value edits are `PropertyEdit<T>` commands; an edit to the value already there records no undo step and publishes
 nothing. The three tile layers paint through `PaintLayer<TValue, TEvent>`. `BeginStroke`/`EndStroke` merge a drag into
 one undo step. `MapValidator` reports what single edits cannot prevent. `MapConnectivity` tells where a hero can walk on a fresh

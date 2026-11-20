@@ -34,7 +34,8 @@ public abstract class MapObject
 
     public MapObjectKind Kind => Definition.Kind;
 
-    public MapPosition Position { get; }
+    /// <summary>Set only while the object is off the game's cell index (the editor's move takes it out, moves it and puts it back).</summary>
+    public MapPosition Position { get; internal set; }
 
     public MapPosition VisitPosition => Position.Offset(Definition.Footprint.VisitOffset.Dx, Definition.Footprint.VisitOffset.Dy);
 

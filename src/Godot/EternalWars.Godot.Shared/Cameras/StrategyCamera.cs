@@ -66,9 +66,10 @@ public partial class StrategyCamera : Camera3D
     /// </summary>
     public Func<bool>? KeysBlocked { get; set; }
 
-    /// <summary>The keys are letters now: a text field is being typed into, or the app blocks them (<see cref="KeysBlocked"/>).</summary>
+    /// <summary>The keys are not the camera's now: Ctrl is held, a text field is being typed into, or the app blocks them (<see cref="KeysBlocked"/>).</summary>
     private bool KeysAreText() =>
-        KeysBlocked?.Invoke() == true
+        Input.IsKeyPressed(Key.Ctrl) // Ctrl+A, Ctrl+S: a command's key, not the camera's
+        || KeysBlocked?.Invoke() == true
         || GetViewport().GuiGetFocusOwner() is TextEdit || (GetViewport().GuiGetFocusOwner() is LineEdit field && field.IsEditing());
 
     private bool Held(Key key)

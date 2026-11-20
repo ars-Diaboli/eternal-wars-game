@@ -61,6 +61,7 @@ public partial class MapObjectsView : Node3D
         // Live changes matter only without a viewer; with one, memory updates arrive as KnownObjectsChanged.
         this.SubscribeWhileInTree<MapObjectPlaced>(events, e => RebuildLive(e.Object));
         this.SubscribeWhileInTree<MapObjectRemoved>(events, e => RebuildLive(e.Object));
+        this.SubscribeWhileInTree<MapObjectMoved>(events, e => RebuildLive(e.Object)); // the editor moved it
         this.SubscribeWhileInTree<MapObjectChanged>(events, e => RebuildLive(e.Object));
         this.SubscribeWhileInTree<MineOwnerChanged>(events, e => RebuildLive(e.Mine));
         this.SubscribeWhileInTree<DwellingOwnerChanged>(events, e => RebuildLive(e.Dwelling));

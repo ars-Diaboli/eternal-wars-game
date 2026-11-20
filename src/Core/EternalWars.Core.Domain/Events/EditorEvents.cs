@@ -31,6 +31,18 @@ public sealed record HeroPlaced(HeroId Hero, PlayerId Owner, MapPosition Positio
 [SeenBy(Audience.Witnesses)]
 public sealed record HeroRemoved(HeroId Hero) : IEvent;
 
+/// <summary>The editor moved an object (its id, links, owner and contents stay); <paramref name="From"/> and <paramref name="To"/> are its top-left tiles.</summary>
+[SeenBy(Audience.Nobody)]
+public sealed record MapObjectMoved(MapObjectId Object, MapPosition From, MapPosition To) : IEvent;
+
+/// <summary>The editor moved a hero to another tile.</summary>
+[SeenBy(Audience.Nobody)]
+public sealed record HeroRepositioned(HeroId Hero, MapPosition From, MapPosition To) : IEvent;
+
+/// <summary>The editor's selection changed. Views re-read the session's <c>MapSelection</c>.</summary>
+[SeenBy(Audience.Nobody)]
+public sealed record SelectionChanged : IEvent;
+
 [SeenBy(Audience.Nobody)]
 public sealed record MapPropertiesChanged(string Name, string Description) : IEvent;
 

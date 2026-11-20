@@ -47,6 +47,7 @@ public partial class Main : Node3D
     private InspectorPanel _inspector = null!;
     private EventsPanel _events = null!;
     private EventCellsView _eventCells = null!;
+    private SelectionView _selectionView = null!;
     private FileService _files = null!;
     private EditorSettingsFile _settings = null!;
     private EditorPreferences _preferences = new();
@@ -223,6 +224,7 @@ public partial class Main : Node3D
                 else
                 {
                     _pressed = true;
+                    _toolContext.Pointer = new PointerPress(press.ShiftPressed, press.AltPressed, press.DoubleClick);
                     _tools.Tool.Press(tile);
                 }
 
@@ -241,13 +243,37 @@ public partial class Main : Node3D
             case InputEventMouseMotion motion:
                 _tools.Tool.Hover(Point(motion.Position)); // the caption of what is under the pointer shows from afar
                 return;
-            case InputEventKey key when !_pressed && _commands.RunShortcut(key): // no command in the middle of a stroke
+            case InputEventKey key when !_pressed && !IsTextKey(key) && _commands.RunShortcut(key): // no command in the middle of a stroke
                 break;
             default:
                 return;
         }
 
         GetViewport().SetInputAsHandled();
+    }
+
+    /// <summary>
+    /// A plain key (a letter, Delete, Escape) while a text field has the focus belongs to the field, not to a command, also when the
+    /// field let it through. Keys with Ctrl or Alt and the function keys stay commands.
+    /// </summary>
+    private bool IsTextKey(InputEventKey key) =>
+        GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit
+        && !key.CtrlPressed && !key.AltPressed && key.Keycode is < Key.F1 or > Key.F35;
+
+    /// <summary>The tiles of the shown level under the window's corners: what is in view (the whole level when a corner looks past the map's plane).</summary>
+    private TileArea VisibleTiles()
+    {
+        var map = _editor.Scenario.Map;
+        var whole = new TileArea(0, 0, map.Width - 1, map.Height - 1, _context.Level);
+        var size = GetViewport().GetVisibleRect().Size;
+        var corners = new[] { Vector2.Zero, new Vector2(size.X, 0), new Vector2(0, size.Y), size }
+            .Select(c => MapSpace.PickTile(_camera, c, map, _context.Level))
+            .ToList();
+        return corners.Any(c => c is null)
+            ? whole
+            : new TileArea(
+                Math.Max(0, corners.Min(c => c!.Value.X)), Math.Max(0, corners.Min(c => c!.Value.Y)),
+                Math.Min(map.Width - 1, corners.Max(c => c!.Value.X)), Math.Min(map.Height - 1, corners.Max(c => c!.Value.Y)), _context.Level);
     }
 
     /// <summary>The tile at <paramref name="screen"/> becomes the pointed one: the views and the status bar show it.</summary>
@@ -296,6 +322,9 @@ public partial class Main : Node3D
         _eventCells = new EventCellsView { Name = "EventCells" };
         world.AddChild(_eventCells);
         _eventCells.Bind(_context);
+        _selectionView = new SelectionView { Name = "Selection" };
+        world.AddChild(_selectionView);
+        _selectionView.Bind(_context, _editor.Selection);
         var zones = new StartZonesView { Name = "StartZones" };
         world.AddChild(zones);
         zones.Bind(_context);
@@ -303,6 +332,7 @@ public partial class Main : Node3D
         BuildUi();
         // On the session's own UI, freed with it on the next Open; the root stays in the tree and would keep every old session alive.
         _ui!.SubscribeWhileInTree<UndoHistoryChanged>(_editor.Events, _ => _commands.NotifyStateChanged());
+        _ui!.SubscribeWhileInTree<SelectionChanged>(_editor.Events, _ => _commands.NotifyStateChanged());
 
         _camera.FocusOn(MapSpace.ToWorld(new(state.Map.Width / 2, state.Map.Height / 2)));
         return _editor;
@@ -342,7 +372,7 @@ public partial class Main : Node3D
         _inspector = new InspectorPanel { Name = "Inspector" };
         _workspace.AddTab(EditorRegion.Right, _inspector);
         _inspector.Bind(_editor);
-        _toolContext = new EditorToolContext(_editor, _inspector, Say);
+        _toolContext = new EditorToolContext(_editor, _inspector, Say) { Marks = _selectionView, VisibleArea = VisibleTiles };
         _tools.Bind(EditorTools.All(_toolContext));
         _tools.ToolChanged += _commands.NotifyStateChanged;
         _events = new EventsPanel { Name = "Events" };
@@ -406,7 +436,7 @@ public partial class Main : Node3D
         {
             _commands.Register(new EditorCommand(ToolCommand(tool), tool.Name, () => _tools.Use(tool))
             {
-                WhyNot = OnMapTab, IsOn = () => _tools.Tool == tool, IsChoice = true,
+                Shortcut = tool.Shortcut is { } key ? new CommandShortcut(key) : null, WhyNot = OnMapTab, IsOn = () => _tools.Tool == tool, IsChoice = true,
             });
         }
 
@@ -419,7 +449,7 @@ public partial class Main : Node3D
                     new("Open recent", () => [.. _files.Recent.Select(path => (path, (Action)(() => _files.Open(path))))], "No file was opened or saved yet"),
                 ],
             },
-            new("Edit", ["edit.undo", "edit.redo", null, "edit.preferences"]),
+            new("Edit", ["edit.undo", "edit.redo", null, "edit.select-all", "edit.deselect", "edit.delete", null, "edit.preferences"]),
             new("View", ["view.palette", null, "view.map-tab", "templates.editor", null, "view.level", "view.grid", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.problems", "view.history", "view.output"]),
             new("Map", ["map.properties", "map.players", "map.conditions", "map.events", "map.bans", null, "view.problems"]),
             new("Tools", [.. _tools.Tools.Select(ToolCommand)]),
@@ -464,6 +494,15 @@ public partial class Main : Node3D
             () => _editor.History.CanUndo ? null : "Nothing to undo", onMap: true);
         Command("edit.redo", "Redo", () => _editor.Redo(), UiIcon.Redo, new(Key.Y, Ctrl: true),
             () => _editor.History.CanRedo ? null : "Nothing to redo", onMap: true);
+        Command("edit.select-all", "Select all", () =>
+            {
+                _editor.Selecting.Set(_editor.Selecting.Everything(_context.Level, _toolContext.Filter));
+                Say(EditorToolContext.Describe(_editor.Selection));
+            }, shortcut: new(Key.A, Ctrl: true), onMap: true);
+        Command("edit.deselect", "Deselect", () => _editor.Selecting.Clear(), shortcut: new(Key.Escape),
+            whyNot: () => _editor.Selection.IsEmpty ? "Nothing is selected" : null, onMap: true);
+        Command("edit.delete", "Delete", () => Say($"Deleted {_editor.Selecting.Delete()} thing(s)"), shortcut: new(Key.Delete),
+            whyNot: () => _editor.Selection.HasThings ? null : "No object or hero is selected", onMap: true);
         Command("edit.preferences", "Preferences", OpenPreferences, UiIcon.Settings, new(Key.Comma, Ctrl: true));
         Command("view.palette", "Command palette", OpenPalette, shortcut: new(Key.P, Ctrl: true, Shift: true));
         Command("view.map-tab", "Map tab", () => _workspace.ShowPage(EditorWorkspace.MapPage),
