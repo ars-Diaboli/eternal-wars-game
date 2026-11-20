@@ -38,8 +38,12 @@ public sealed record MapPropertiesChanged(string Name, string Description) : IEv
 [SeenBy(Audience.Nobody)]
 public sealed record PlayerSlotsChanged : IEvent;
 
+/// <summary>
+/// The editor's history changed: a step was recorded, undone or redone, or a jump moved over several. <paramref name="Position"/> of its
+/// <paramref name="Count"/> steps are applied now; views re-read <c>MapEditorSession.History</c> for the steps.
+/// </summary>
 [SeenBy(Audience.Nobody)]
-public sealed record UndoHistoryChanged(string? UndoDescription, string? RedoDescription) : IEvent
+public sealed record UndoHistoryChanged(string? UndoDescription, string? RedoDescription, int Position, int Count) : IEvent
 {
     public bool CanUndo => UndoDescription is not null;
 

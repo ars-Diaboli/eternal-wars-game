@@ -73,4 +73,10 @@ public sealed class MapEditorSession
     public bool Undo() => _context.ChangeHistory(History.Undo);
 
     public bool Redo() => _context.ChangeHistory(History.Redo);
+
+    /// <summary>
+    /// Jumps in the history until <paramref name="step"/> steps are applied (0: everything undone; <c>History.Count</c>: everything redone),
+    /// the same as that many single undos or redos, and published as one change. Returns whether anything changed.
+    /// </summary>
+    public bool UndoTo(int step) => _context.ChangeHistory(() => History.MoveTo(step));
 }

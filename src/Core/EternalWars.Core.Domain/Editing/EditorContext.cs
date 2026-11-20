@@ -138,5 +138,5 @@ internal sealed class EditorContext(GameState scenario, MapObjectCatalog catalog
     /// <summary>Whether two lists hold the same items in the same order (no-op check for list-valued edits).</summary>
     public static bool SameItems<T>(IReadOnlyList<T> a, IReadOnlyList<T> b) => a.SequenceEqual(b);
 
-    private void PublishHistory() => Bus.Publish(new UndoHistoryChanged(History.UndoDescription, History.RedoDescription));
+    private void PublishHistory() => Bus.Publish(new UndoHistoryChanged(History.UndoDescription, History.RedoDescription, History.Position, History.Count));
 }

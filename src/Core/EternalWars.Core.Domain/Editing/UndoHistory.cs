@@ -41,60 +41,95 @@ internal sealed class CompositeCommand(string description, IReadOnlyList<IEditor
     }
 }
 
-/// <summary>Linear undo/redo stack. Recording a new command discards the redo branch.</summary>
+/// <summary>
+/// Linear undo/redo history: its steps in the order they were made, and how many of them are applied now (<see cref="Position"/>).
+/// Recording a new command discards the steps after the position.
+/// </summary>
 public sealed class UndoHistory(int capacity = 200)
 {
-    private readonly LinkedList<IEditorCommand> _undo = new();
-    private readonly Stack<IEditorCommand> _redo = new();
+    private readonly List<IEditorCommand> _steps = [];
 
-    public bool CanUndo => _undo.Count > 0;
+    /// <summary>The descriptions of all steps, oldest first: the first <see cref="Position"/> are applied, the rest are undone.</summary>
+    public IReadOnlyList<string> Steps => [.. _steps.Select(step => step.Description)];
 
-    public bool CanRedo => _redo.Count > 0;
+    /// <summary>How many of the <see cref="Steps"/> are applied: 0 when everything is undone, the steps' count when nothing is.</summary>
+    public int Position { get; private set; }
 
-    public string? UndoDescription => _undo.Last?.Value.Description;
+    public int Count => _steps.Count;
 
-    public string? RedoDescription => _redo.TryPeek(out var command) ? command.Description : null;
+    public bool CanUndo => Position > 0;
+
+    public bool CanRedo => Position < _steps.Count;
+
+    public string? UndoDescription => CanUndo ? _steps[Position - 1].Description : null;
+
+    public string? RedoDescription => CanRedo ? _steps[Position].Description : null;
 
     /// <summary>Records an already executed command.</summary>
     public void Record(IEditorCommand command)
     {
-        _undo.AddLast(command);
-        if (_undo.Count > capacity)
+        _steps.RemoveRange(Position, _steps.Count - Position);
+        _steps.Add(command);
+        if (_steps.Count > capacity)
         {
-            _undo.RemoveFirst();
+            _steps.RemoveAt(0);
         }
 
-        _redo.Clear();
+        Position = _steps.Count;
     }
 
     public bool Undo()
     {
-        if (_undo.Last is not { } node)
+        if (!CanUndo)
         {
             return false;
         }
 
-        _undo.RemoveLast();
-        node.Value.Undo();
-        _redo.Push(node.Value);
+        Position--;
+        _steps[Position].Undo();
         return true;
     }
 
     public bool Redo()
     {
-        if (!_redo.TryPop(out var command))
+        if (!CanRedo)
         {
             return false;
         }
 
-        command.Execute();
-        _undo.AddLast(command);
+        _steps[Position].Execute();
+        Position++;
+        return true;
+    }
+
+    /// <summary>
+    /// Undoes or redoes one step at a time until <paramref name="position"/> steps are applied; returns whether anything changed.
+    /// </summary>
+    public bool MoveTo(int position)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(position);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(position, _steps.Count);
+        if (position == Position)
+        {
+            return false;
+        }
+
+        while (Position > position)
+        {
+            Undo();
+        }
+
+        while (Position < position)
+        {
+            Redo();
+        }
+
         return true;
     }
 
     public void Clear()
     {
-        _undo.Clear();
-        _redo.Clear();
+        _steps.Clear();
+        Position = 0;
     }
 }
