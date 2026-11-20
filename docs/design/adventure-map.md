@@ -272,6 +272,7 @@ Rules: [shared object rules](#shared-object-rules).
   ([town-buildings.md](../content/town-buildings.md), ADR-130).
 - **Puzzle map** (P), one per player: **20×20 cells** in **100 pieces of 2×2**, placed so the Grail lies in its centre 4×4 cells. It shows
   terrain and the objects that stay, without owners; not piles, chests, artifacts, loot, boxes, monsters, prisons or quest guards.
+  Closed pieces show the picture of the player's starting faction in a wooden frame (parchment for a faction without one).
 - **Obelisks** (at most 25): the 100 pieces split evenly over them, the first visits opening the smaller shares (11 obelisks: ten 9s, then
   10). The first half of a player's visits (rounded down) open random pieces of the outer ring (outside the middle 6×6 pieces), the next
   ones but the last pieces of the outer and mid rings, the last the rest with the centre, where a cross marks the spot. Allies' visits do

@@ -54,7 +54,7 @@ vector clip art, glossy plastic, bubbly rounded shapes
 ## Output for every cursor
 
 - **Sheet**: 2 × 2 at 1024 × 1024, 2 × 3 at 1536 × 1024, every cell 512 × 512, transparent background; cut as the icons.
-- **File**: `cursor_<group>_<id>.png`, 32-bit RGBA, kept at 512 px as the master; the game ships 64 px and scales to 48 and 32. One still
+- **File**: `cursor_<group>_<id>.png`, 32-bit RGBA, 64 × 64 in the game, cut from the 512 px cell; shown at 43 and 32. One still
   image a cursor, no animation.
 - **Hotspot**: given per cursor in 1/8 of the cell from the top left (`1,1` is 64 px in at 512 px). The **pointing part touches the
   hotspot**: the arrow's tip, the sword's point, the centre of a ring. A cursor redrawn with a moved hotspot needs its row changed in
@@ -111,24 +111,25 @@ Shown on menus, the town and hero screens and panels; busy while a computer turn
 
 **Compose**: `CURSOR-STYLE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `CURSOR-NEG` · 1024 × 1024
 
-One sword, the same on all eight cells, its point at the cell's centre and the hilt towards the side the attacker strikes from; the
-file names that side.
+One sword, the same on all eight cells, filling its cell, the hilt towards the side the attacker strikes from; the file names that
+side. The point is the hotspot: when cut, the sword is placed so its point lands one eighth in from the edges it points at.
 
-**Cell rule**: subject = "a straight steel sword with a blackened iron cross-guard and grip, its point at the cell's centre, " + Sword;
-sheet 4 takes the rows marked 4, sheet 5 those marked 5.
+**Cell rule**: subject = "a straight steel sword with a blackened iron cross-guard and grip, " + Sword; sheet 4 takes the rows marked 4,
+sheet 5 those marked 5.
 
 | Sheet | # | File | Sword | Hotspot |
 |---|---|---|---|---|
-| 4 | 1 | `cursor_bat_melee_from-n` | points straight down, hilt at the top | `4,4` (the point) |
-| 4 | 2 | `cursor_bat_melee_from-ne` | points down-left, hilt at the top right | `4,4` |
-| 4 | 3 | `cursor_bat_melee_from-e` | points left, hilt at the right | `4,4` |
-| 4 | 4 | `cursor_bat_melee_from-se` | points up-left, hilt at the bottom right | `4,4` |
-| 5 | 1 | `cursor_bat_melee_from-s` | points straight up, hilt at the bottom | `4,4` |
-| 5 | 2 | `cursor_bat_melee_from-sw` | points up-right, hilt at the bottom left | `4,4` |
-| 5 | 3 | `cursor_bat_melee_from-w` | points right, hilt at the left | `4,4` |
-| 5 | 4 | `cursor_bat_melee_from-nw` | points down-right, hilt at the top left | `4,4` |
+| 4 | 1 | `cursor_bat_melee_from-n` | points straight down, hilt at the top | `4,7` (the point) |
+| 4 | 2 | `cursor_bat_melee_from-ne` | points down-left, hilt at the top right | `1,7` (the point) |
+| 4 | 3 | `cursor_bat_melee_from-e` | points left, hilt at the right | `1,4` (the point) |
+| 4 | 4 | `cursor_bat_melee_from-se` | points up-left, hilt at the bottom right | `1,1` (the point) |
+| 5 | 1 | `cursor_bat_melee_from-s` | points straight up, hilt at the bottom | `4,1` (the point) |
+| 5 | 2 | `cursor_bat_melee_from-sw` | points up-right, hilt at the bottom left | `7,1` (the point) |
+| 5 | 3 | `cursor_bat_melee_from-w` | points right, hilt at the left | `7,4` (the point) |
+| 5 | 4 | `cursor_bat_melee_from-nw` | points down-right, hilt at the top left | `7,7` (the point) |
 
-If the model cannot keep the eight swords alike, generate `from-n` and `from-ne` alone and rotate them by 90° steps.
+If the model cannot keep the eight swords alike, generate sheet 4 alone and mirror it: `from-w`, `from-sw` and `from-nw` are `from-e`,
+`from-se` and `from-ne` mirrored left to right, `from-s` is `from-n` flipped upside down.
 
 ### 6 · Shooting, spells and machines (2 × 3)
 
@@ -159,5 +160,6 @@ If the model cannot keep the eight swords alike, generate `from-n` and `from-ne`
 1. Look at every cursor at 32 px on a dark and on a light background: one clear shape, no brown or bronze cast. Recolour by hand only
    a slight warm tint; regenerate a brown one.
 2. Check the hotspot: the pointing part lands on the cell given in the table.
-3. Put the files in `src/Godot/EternalWars.Godot.Assets/textures/ui/cursors/` and add a line to its `CREDITS.md`. The cursors already
-   there (sheets 1–3) are the earlier brown and bronze takes: regenerate them with these blocks.
+3. Cut each cursor to 64 × 64 with its pointing part on the hotspot (the arrow's tip one pixel in from the top left, the hooves, boot
+   and shovel at 7/8 down, the swords' points as in their table, the others centred), put the files in
+   `src/Godot/EternalWars.Godot.Assets/textures/ui/cursors/` and update its `CREDITS.md`.

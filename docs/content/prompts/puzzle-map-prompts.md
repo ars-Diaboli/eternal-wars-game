@@ -2,8 +2,8 @@
 
 Prompts for the **puzzle map's faction pictures** (ADR-140): the picture that covers a player's puzzle map until obelisks open its
 pieces. Each playable faction has its own; the window shows the player's faction's picture. The puzzle is cut into **10 × 10 pieces**;
-a visit to an obelisk opens a share of them (the outer ring first, the centre last), showing the map beneath. Today closed pieces are
-plain parchment.
+a visit to an obelisk opens a share of them (the outer ring first, the centre last), showing the map beneath. A faction without a
+picture keeps plain parchment.
 
 ## Compose a prompt
 
@@ -47,13 +47,14 @@ inside, faint stains and creases, seen exactly from the front, mirror-symmetric,
 
 ## Output
 
-- **Picture**: 2048 × 2048 px, square, PNG (opaque). The game cuts it into 10 × 10 pieces of about 205 px and shows each closed piece
-  over its 2 × 2 map cells *(proposal: the window draws parchment today)*.
+- **Picture**: square, at least 1024 × 1024 px (the pictures in the game are 1254), PNG (opaque). The window scales it to the puzzle
+  (480 px) and shows it on the closed pieces, each a tenth of the picture across over its 2 × 2 map cells.
 - **Detail everywhere**: a single piece, a tenth of the picture across, must show something (a leaf, a stone, a fold of cloth), never
   an empty patch; a player sees the picture break up from the edges inward.
 - **The centre last**: the middle 2 × 2 pieces close over the Grail and open last, so the faction's chief figure stands there and stays
   longest. The red cross of the Grail's spot is drawn by the game.
-- **Frame**: `puzzle_frame.png`, 2048 × 2048, nine-slice margins of 160 px *(proposal)*.
+- **Frame**: `puzzle_frame.png`, the same size as the pictures, its wood and torn parchment edge about 12 % of the side on each edge;
+  the window draws it nine-sliced around the puzzle, the border 48 px on screen.
 - **Names**: `puzzle_<town>.png` (`puzzle_haven.png`, `puzzle_swamp-bestiary.png`, ...).
 
 ## Haven (`puzzle_haven`)
@@ -165,5 +166,5 @@ mist, a toppled statue head sinking in the mud.
 1. Cut the picture into 10 × 10 pieces and look at a few single pieces at the window's size: none is empty.
 2. Take away the outer ring (it opens first), then the mid ring: the faction is still recognised from the centre that is left.
 3. Put the eight pictures side by side at thumbnail size: each faction is named at a glance.
-4. Put the files in `src/Godot/EternalWars.Godot.Assets/textures/ui/puzzle/` *(proposal)* and add a line to its `CREDITS.md` with the
-   tool and its licence terms.
+4. Put the files in `src/Godot/EternalWars.Godot.Assets/textures/ui/puzzle/` and add a line to its `CREDITS.md` with the tool and
+   its licence terms.
