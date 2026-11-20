@@ -63,6 +63,9 @@ public partial class ToolPalette : VBoxContainer
         ToolChanged?.Invoke();
     }
 
+    /// <summary>Builds the options of the tool in use again (what they list changed).</summary>
+    public void RefreshOptions() => ShowOptions();
+
     private void ShowOptions()
     {
         _options.ClearChildren();

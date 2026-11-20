@@ -238,6 +238,13 @@ public static partial class MapConverter
         return ToObject(document, target.ObjectCatalog, target.Creatures, target.Spells);
     }
 
+    /// <summary>The object as the map format writes it (a stamp keeps objects the same way).</summary>
+    internal static MapObjectDocument ToObjectDocument(MapObject mapObject) => ToDocument(mapObject);
+
+    /// <summary>The object a document describes, made with <paramref name="target"/>'s content; a <see cref="FormatException"/> says what it lacks.</summary>
+    internal static MapObject ToObject(MapObjectDocument document, Domain.Game.GameState target) =>
+        ToObject(document, target.ObjectCatalog, target.Creatures, target.Spells);
+
     private static MapObjectId? ToId(int? value) => value is { } v ? new MapObjectId(v) : null;
 
     private static TownDocument ToDocument(Town town, TownDocument document) => document with

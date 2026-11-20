@@ -23,7 +23,7 @@ internal sealed class GrailCheck : IMapCheck
         if (obelisks.Count > 0 && !GrailRules.HoldsGrail(scenario.Map))
         {
             yield return new(IssueSeverity.Warning,
-                $"The map is smaller than {GrailRules.MinMapSize}×{GrailRules.MinMapSize}, so it has no Grail and its obelisks show nothing.", obelisks[0].Position);
+                $"The map is under {GrailRules.MinMapSize} tiles wide or high, so it has no Grail and its obelisks show nothing.", obelisks[0].Position);
         }
 
         if (scenario.Grail.Position is not { } grail)

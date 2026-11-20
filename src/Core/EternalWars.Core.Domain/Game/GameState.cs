@@ -36,7 +36,7 @@ public sealed class GameState
     // Indexes (lookups the pathfinder makes for every tile it expands). Rebuilt or kept up to date by the mutators below; never part of the state.
     private readonly Dictionary<MapPosition, Hero> _heroAt = [];
     private long _heroAtMoves = -1; // HeroMoves.Count when _heroAt was built; -1 = rebuild
-    private readonly int[] _guards; // per tile: monster cells on its eight neighbours
+    private int[] _guards; // per tile: monster cells on its eight neighbours
     private readonly Dictionary<Type, object> _objectsOfType = []; // T -> read-only list of T, in Objects order
     private List<Towns.Town>? _townsById;
     private List<IFlaggable>? _flaggables;
@@ -654,6 +654,49 @@ public sealed class GameState
         _heroAtMoves = -1;
         RefreshArtifacts(hero);
         _highestHeroId = Math.Max(_highestHeroId, hero.Id.Value);
+    }
+
+    /// <summary>
+    /// The editor's resize (EDIT-8) and its undo, before the game starts: the map becomes a copy of <paramref name="contents"/> and every
+    /// object and hero (garrison heroes too) moves by (<paramref name="dx"/>, <paramref name="dy"/>) with it. All of them must fit on the
+    /// new map (the editor removes the others first); the order of the objects stays. The Grail and the map events are the caller's.
+    /// </summary>
+    internal void Reframe(AdventureMap contents, int dx, int dy)
+    {
+        if (IsStarted)
+        {
+            throw new InvalidOperationException("The map is resized before the game starts.");
+        }
+
+        if (_objects.SelectMany(o => o.OccupiedCells()).Any(c => !InFrame(c.Position)) || _heroes.Any(h => !InFrame(h.Position)))
+        {
+            throw new ArgumentException("An object or a hero would be off the resized map.", nameof(contents));
+        }
+
+        Map.TakeFrom(contents);
+        Fog.Forget();
+        _guards = new int[Map.Levels * Map.Width * Map.Height];
+        _objectCells.Clear();
+        foreach (var mapObject in _objects)
+        {
+            mapObject.Position = mapObject.Position.Offset(dx, dy);
+            foreach (var (position, cell) in mapObject.OccupiedCells())
+            {
+                _objectCells[position] = (mapObject, cell);
+            }
+
+            CountGuards(mapObject, +1);
+        }
+
+        foreach (var hero in _heroes.Concat(GarrisonHeroes))
+        {
+            hero.Position = hero.Position.Offset(dx, dy);
+        }
+
+        _heroAtMoves = -1;
+
+        bool InFrame(MapPosition position) =>
+            position.X + dx >= 0 && position.X + dx < contents.Width && position.Y + dy >= 0 && position.Y + dy < contents.Height;
     }
 
     /// <summary>Rebuilds the tile → hero lookup on its next use: a hero's place was written past <see cref="Hero.Position"/>'s setter.</summary>

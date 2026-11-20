@@ -25,6 +25,14 @@ public sealed class FogOfWar(AdventureMap map, FogMode mode)
 
     public FogMode Mode { get; } = mode;
 
+    /// <summary>Nothing is explored or in sight any more: the map changed its size (the editor's resize, before a game starts).</summary>
+    internal void Forget()
+    {
+        _explored.Clear();
+        _inSight.Clear();
+        _seenFrom.Clear();
+    }
+
     public bool IsExplored(PlayerId player, MapPosition position) =>
         map.Contains(position) && _explored.TryGetValue(player, out var levels) && levels[position.Level][Index(position)];
 

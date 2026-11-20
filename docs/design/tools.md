@@ -14,6 +14,7 @@ properties, players, validation and conditions panels):
   entrance's height, and painting near one levels it again. Each stroke or placement is one undo step. Heights are clamped to the
   [relief's limits](presentation.md#art-direction) (walkable 0–4, water below 0, impassable rock above 4) and nothing more; the validator
   does not warn about height;
+- the map's size: [resize, crop and shift](#editor-resize); [stamps](#editor-stamps) of map pieces;
 - objects: placement and removal ([erase by kind](#editor-brushes)), gate linking, mine owners and guards, map dwellings, artifact pickups, riddles, witch huts, shrines;
 - heroes (type, army, war machines, morale and luck, artifacts, spell book, placeholder), monsters (with guard mode, ADR-065; random by
   tier), towns (buildings, dwellings, garrison, guild spells, random faction);
@@ -107,6 +108,27 @@ copied objects from the map (the terrain, roads, rivers and ground stay), as one
 - What was pasted is selected. The clipboard is the editor's, not the map's: it stays when another map is opened, so a piece of one
   map can be pasted into another.
 
+<a id="editor-stamps"></a>
+**Stamps** (ADR-250, ADR-251). "Save selection as stamp" (Edit menu) asks for a name and writes a copy of the selection, a fragment
+as Copy makes it, to a stamp file in the editor's `stamps` folder; a stamp saved under a name that exists replaces it.
+- The Object tool lists the saved stamps. A click on one puts it on the pointer as a paste does: the ghost, a click for every
+  stamp, the layer boxes, Escape to end. The clipboard stays as it was.
+- A stamp belongs to no map, so it can be used in every map. What a map does not have is taken from the stamped objects as from
+  pasted ones.
+
+<a id="editor-resize"></a>
+**Resize, crop and shift** (EDIT-8, ADR-250, ADR-251). "Resize map" (Map menu) opens a window with the new width and height, 16 to
+256 tiles each (square or not; the square presets are buttons), and nine anchor buttons that say where the map as it is stays in
+the new one. The same window shifts everything by a number of tiles on a map of the same size. "Crop to selection" (Map menu) makes
+the box round the selected tiles the map; the box must be at least 16 tiles a side.
+- Ground that ends up outside is cut with its roads, rivers, heights and start zones. New ground is grass (subterranean below the
+  surface) at its terrain's height.
+- An object with any cell outside, a hero or an event cell outside is removed. A buried Grail that would lie nearer than 10 tiles
+  to the new edge is taken away. When anything would be removed, the window lists it first ("Remove and resize", Back, Cancel).
+- Everything is one undo step, the removals included. What stays keeps its ids, links and settings; the places event actions name
+  (reveal, give a hero) move with the map, and the validator warns of one that is off the map. The selection is let go.
+- With the middle anchor and an odd change of size, the odd tile is added (or cut) on the right and at the bottom.
+
 <a id="editor-brushes"></a>
 **Brushes** (EDIT-1, ADR-250). The Terrain, Road, River, Start zone and Erase tools share one brush: a size of 1 to 9 tiles across,
 square or round.
@@ -155,7 +177,7 @@ last message; "Checking the map…" while the problems are being checked; the co
 the save state ("Not saved" for a map without a file, "No changes" after a file is opened, "Saved" with the time, and "Unsaved changes" whenever the map
 differs from the saved one: undoing back to the saved step clears it); the zoom in percent.
 
-*Planned*: scatter, stamps, map resize, and the rest of an overhaul of the map and template editors into one creator-app workspace (ADR-247,
+*Planned*: scatter, scenery rotation, and the rest of an overhaul of the map and template editors into one creator-app workspace (ADR-247,
 [plan](../papers/editor-plan.md)).
 
 ## 2D harness and simulator

@@ -549,9 +549,9 @@ again offers the lost work.
 9. **Resize, crop and shift** (EDIT-8): `MapEditorSession.Resize(width, height, anchor)` with a nine-point anchor and any size from
    16 to 256 a side; `Crop` to the selection; `Shift`. Heights, start zones, event cells, roads and rivers are cut or extended;
    objects that end up outside are listed in a dialog, then removed in the same step. Check that a non-square map plays (the
-   minimap, the camera bounds, saves). Tests with objects on every edge. Smoke `editor-resize`.
+   minimap, the camera bounds, saves). Tests with objects on every edge. Smoke `editor-resize`. *Done.*
 10. **Stamps**: a stamp file (a `MapFragment` in its own versioned format, with samples) in `user://stamps/`; "Save selection as
-    stamp"; until the browser exists (step 3) stamps are listed in the Object tool's options. Smoke `editor-select-move-paste`.
+    stamp"; until the browser exists (step 3) stamps are listed in the Object tool's options. Smoke `editor-select-move-paste`. *Done.*
 
 **Done when**: a map can be laid out by selecting, copying and stamping; every edit of the step, resize included, can be undone.
 

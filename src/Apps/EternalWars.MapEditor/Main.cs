@@ -1,5 +1,6 @@
 using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Data.Settings;
+using EternalWars.Core.Data.Stamps;
 using EternalWars.Core.Data.Templates;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Editing;
@@ -201,6 +202,10 @@ public partial class Main : Node3D
     private static string MapsFolder =>
         LaunchArguments.SettingsPath is null ? ProjectSettings.GlobalizePath(MapsDirectory) : Path.Combine(DataFolder, "maps");
 
+    /// <summary>Where "Save selection as stamp" writes and the Object tool's stamp list reads (ADR-250).</summary>
+    private static string StampsFolder =>
+        LaunchArguments.SettingsPath is null ? ProjectSettings.GlobalizePath("user://stamps") : Path.Combine(DataFolder, "stamps");
+
     private static string AutosaveFolder =>
         LaunchArguments.SettingsPath is null ? Path.Combine(ProjectSettings.GlobalizePath(MapsDirectory), ".autosave") : Path.Combine(DataFolder, "autosave");
 
@@ -319,6 +324,25 @@ public partial class Main : Node3D
 
         _editor = new MapEditorSession(state, copier: MapObjectCopier.Instance);
         _context = new MapViewContext(state, _editor.Events) { ShowGrid = _showGrid };
+        BuildWorld();
+
+        BuildUi();
+        // On the session's own UI, freed with it on the next Open; the root stays in the tree and would keep every old session alive.
+        _ui!.SubscribeWhileInTree<UndoHistoryChanged>(_editor.Events, _ =>
+        {
+            _commands.NotifyStateChanged();
+            _tools.Tool.Refresh(); // a paste's ghost follows the map
+        });
+        _ui!.SubscribeWhileInTree<MapResized>(_editor.Events, _ => ShowResizedMap());
+        _ui!.SubscribeWhileInTree<SelectionChanged>(_editor.Events, _ => _commands.NotifyStateChanged());
+
+        _camera.FocusOn(MapSpace.ToWorld(new(state.Map.Width / 2, state.Map.Height / 2)));
+        return _editor;
+    }
+
+    /// <summary>The views of the map in the 3D scene, made from the scenario as it is now.</summary>
+    private void BuildWorld()
+    {
         var world = new AdventureWorldView { Name = "World" };
         _world = world;
         AddChild(world);
@@ -332,18 +356,109 @@ public partial class Main : Node3D
         var zones = new StartZonesView { Name = "StartZones" };
         world.AddChild(zones);
         zones.Bind(_context);
+    }
 
-        BuildUi();
-        // On the session's own UI, freed with it on the next Open; the root stays in the tree and would keep every old session alive.
-        _ui!.SubscribeWhileInTree<UndoHistoryChanged>(_editor.Events, _ =>
+    /// <summary>
+    /// The map has another size or its content moved (a resize, a crop, a shift or the undo of one): the views of the map are made
+    /// again from the scenario. The old ones leave the tree at once, so they hear no later event of a map they no longer fit.
+    /// </summary>
+    private void ShowResizedMap()
+    {
+        var highlighted = _eventCells.Highlighted;
+        if (_world is { } old)
         {
-            _commands.NotifyStateChanged();
-            _tools.Tool.Refresh(); // a paste's ghost follows the map
-        });
-        _ui!.SubscribeWhileInTree<SelectionChanged>(_editor.Events, _ => _commands.NotifyStateChanged());
+            RemoveChild(old);
+            old.QueueFree();
+        }
 
-        _camera.FocusOn(MapSpace.ToWorld(new(state.Map.Width / 2, state.Map.Height / 2)));
-        return _editor;
+        // A view context of their own for the new views: the old ones' handlers stay behind with the old context.
+        _pressed = false;
+        var level = _context.Level;
+        _context = new MapViewContext(_editor.Scenario, _editor.Events) { ShowGrid = _showGrid };
+        _context.SetLevel(level);
+        BuildWorld();
+        _eventCells.Highlighted = highlighted;
+        _toolContext.Marks = _selectionView;
+        _tools.Tool.Hover(null); // what the tool drew before a click was on the old views
+        _tools.Tool.Refresh();
+        var map = _editor.Scenario.Map;
+        _camera.FocusOn(MapSpace.ToWorld(new MapPosition(map.Width / 2, map.Height / 2, _context.Level)));
+        _commands.NotifyStateChanged();
+    }
+
+    private void OpenResize()
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        var window = new ResizeWindow { Name = "Resize" };
+        _overlays.AddChild(window);
+        window.Bind(_editor, Say);
+    }
+
+    /// <summary>Crop to the selection: at once when nothing would be lost, else after the window's question.</summary>
+    private void Crop()
+    {
+        if (!IsBusy && ResizeWindow.Crop(_editor, Say) is { } question)
+        {
+            _overlays.AddChild(question);
+        }
+    }
+
+    /// <summary>"Save selection as stamp": asks for a name, then writes the selection's copy to the stamps folder.</summary>
+    private void SaveStamp()
+    {
+        if (IsBusy || _editor.Fragments.Copy() is not { } fragment)
+        {
+            return;
+        }
+
+        var box = new NameBox { Name = "StampName" };
+        _overlays.AddChild(box);
+        var taken = StampFolder.Names(StampsFolder).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var free = Enumerable.Range(1, taken.Count + 1).Select(n => $"Stamp {n}").First(n => !taken.Contains(n));
+        box.Bind("Save selection as stamp", free, name =>
+        {
+            try
+            {
+                var replaced = File.Exists(StampFolder.PathOf(StampsFolder, name));
+                var path = StampFolder.Save(StampsFolder, name, fragment);
+                Say($"{(replaced ? "Replaced" : "Saved")} stamp {Path.GetFileName(path)}; the Object tool lists it");
+                _tools.RefreshOptions();
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                Say($"Could not save the stamp: {e.Message}");
+            }
+        });
+    }
+
+    /// <summary>A stamp picked in the Object tool's list: the Paste tool takes it, and every click puts it on the map.</summary>
+    private void PasteStamp(string name)
+    {
+        MapFragment fragment;
+        try
+        {
+            fragment = StampFolder.Load(StampsFolder, name, _editor.Scenario);
+        }
+        catch (Exception e) when (e is FormatException or IOException or UnauthorizedAccessException)
+        {
+            Say($"Could not read stamp {name}: {e.Message}");
+            return;
+        }
+
+        var tool = _tools.Tools.OfType<PasteTool>().First();
+        if (_tools.Tool != tool)
+        {
+            _tools.Use(_tools.Tools.OfType<SelectTool>().First()); // the tool in use lets go; the Paste tool is told its fragment before it comes in
+        }
+
+        tool.UseFragment(fragment);
+        _tools.Use(tool);
+        tool.Hover(_context.Pointed);
+        Say($"Stamp {name}: click where it goes; Escape ends");
     }
 
     private void BuildUi()
@@ -380,7 +495,10 @@ public partial class Main : Node3D
         _inspector = new InspectorPanel { Name = "Inspector" };
         _workspace.AddTab(EditorRegion.Right, _inspector);
         _inspector.Bind(_editor);
-        _toolContext = new EditorToolContext(_editor, _inspector, Say) { Marks = _selectionView, VisibleArea = VisibleTiles, Clipboard = _clipboard };
+        _toolContext = new EditorToolContext(_editor, _inspector, Say) {
+            Marks = _selectionView, VisibleArea = VisibleTiles, Clipboard = _clipboard,
+            StampNames = () => StampFolder.Names(StampsFolder), PasteStamp = PasteStamp,
+        };
         _tools.Bind(EditorTools.All(_toolContext));
         _tools.ToolChanged += _commands.NotifyStateChanged;
         _events = new EventsPanel { Name = "Events" };
@@ -457,9 +575,9 @@ public partial class Main : Node3D
                     new("Open recent", () => [.. _files.Recent.Select(path => (path, (Action)(() => _files.Open(path))))], "No file was opened or saved yet"),
                 ],
             },
-            new("Edit", ["edit.undo", "edit.redo", null, "edit.cut", "edit.copy", "edit.paste", "edit.duplicate", "edit.delete", null, "edit.select-all", "edit.deselect", null, "edit.preferences"]),
+            new("Edit", ["edit.undo", "edit.redo", null, "edit.cut", "edit.copy", "edit.paste", "edit.duplicate", "edit.delete", "edit.save-stamp", null, "edit.select-all", "edit.deselect", null, "edit.preferences"]),
             new("View", ["view.palette", null, "view.map-tab", "templates.editor", null, "view.level", "view.grid", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.problems", "view.history", "view.output"]),
-            new("Map", ["map.properties", "map.players", "map.conditions", "map.events", "map.bans", null, "view.problems"]),
+            new("Map", ["map.properties", "map.players", "map.conditions", "map.events", "map.bans", null, "map.resize", "map.crop", null, "view.problems"]),
             new("Tools", [.. _tools.Tools.Select(ToolCommand)]),
             new("Templates", ["templates.editor", "file.generate"]),
             new("Test", ["test.play"]),
@@ -516,6 +634,10 @@ public partial class Main : Node3D
         Command("edit.duplicate", "Duplicate", () => Paste(duplicate: true), shortcut: new(Key.D, Ctrl: true), whyNot: NothingToCopy, onMap: true);
         Command("edit.delete", "Delete", () => Say($"Deleted {_editor.Selecting.Delete()} thing(s)"), shortcut: new(Key.Delete),
             whyNot: () => _editor.Selection.HasThings ? null : "No object or hero is selected", onMap: true);
+        Command("edit.save-stamp", "Save selection as stamp", SaveStamp, whyNot: NothingToCopy, onMap: true);
+        Command("map.resize", "Resize map", OpenResize, onMap: true);
+        Command("map.crop", "Crop to selection", Crop,
+            whyNot: () => _editor.Selection.Tiles.Count > 0 ? null : "No tile is selected", onMap: true);
         Command("edit.preferences", "Preferences", OpenPreferences, UiIcon.Settings, new(Key.Comma, Ctrl: true));
         Command("view.palette", "Command palette", OpenPalette, shortcut: new(Key.P, Ctrl: true, Shift: true));
         Command("view.map-tab", "Map tab", () => _workspace.ShowPage(EditorWorkspace.MapPage),

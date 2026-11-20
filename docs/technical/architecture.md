@@ -279,6 +279,12 @@ into a `MapFragment` (tiles, corner heights, objects) and pastes fragments with 
 through `IMapObjectCopier`, which the data layer implements with the map format's own codecs (`MapObjectCopier`), so a copy has what
 a saved object has. `TerrainEditor` paints sets of tiles (`Brush`: size, shape, line) and flood-fills; `EraseEditor`
 (`session.Erasing`) erases by kind. An editor operation made of several edits runs through `EditorContext.AsOneStep`.
+`MapEditorSession.Resize`, `Crop` and `Shift` (ADR-251) give the map a new frame in place: `MapResizer` removes what would be outside
+through the other editors, then `GameState.Reframe` makes the same `AdventureMap` object a copy of the reframed one
+(`AdventureMap.Reframed`, `TakeFrom`) and moves every object and hero; `CheckResize` / `CheckCrop` / `CheckShift` say beforehand what
+would be removed. A map's `Width` and `Height` therefore change only there, before a game starts; on `MapResized` the editor app
+builds the map's views again. Stamps are `MapFragment`s in files of their own versioned format (`StampDocument`, `StampSerializer`,
+`StampFolder` in Core.Data; the objects are written as the map format writes them).
 Single-value edits are `PropertyEdit<T>` commands; an edit to the value already there records no undo step and publishes
 nothing. The three tile layers paint through `PaintLayer<TValue, TEvent>`. `BeginStroke`/`EndStroke` merge a drag into
 one undo step. `MapValidator` reports what single edits cannot prevent. `MapConnectivity` tells where a hero can walk on a fresh

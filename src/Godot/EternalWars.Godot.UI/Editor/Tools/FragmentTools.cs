@@ -44,7 +44,7 @@ public sealed class EraseTool(EditorToolContext context) : TileBrushTool(context
 }
 
 /// <summary>
-/// Pastes a fragment where clicked (EDIT-4, ADR-250): the clipboard's, or a copy of the selection (Duplicate). The fragment's middle
+/// Pastes a fragment where clicked (EDIT-4, ADR-250): the clipboard's, a copy of the selection (Duplicate) or a stamp. The fragment's middle
 /// follows the pointer as a ghost, red where an object does not fit; every click pastes once more. The boxes say which layers go on the
 /// map.
 /// </summary>
@@ -56,7 +56,7 @@ public sealed class PasteTool(EditorToolContext context) : EditorTool(context)
         ("Rivers", FragmentLayers.Rivers), ("Objects", FragmentLayers.Objects),
     ];
 
-    /// <summary>Duplicate: the selection's copy, kept apart from the clipboard. Null: the clipboard is pasted.</summary>
+    /// <summary>Duplicate or a stamp: a fragment of the tool's own, kept apart from the clipboard. Null: the clipboard is pasted.</summary>
     private MapFragment? _duplicate;
     private MapPosition? _hovered;
 
@@ -82,6 +82,13 @@ public sealed class PasteTool(EditorToolContext context) : EditorTool(context)
         _duplicate = copy;
         ShowGhost(_hovered);
         return true;
+    }
+
+    /// <summary>The tool pastes <paramref name="fragment"/> (a stamp), leaving the clipboard as it was.</summary>
+    public void UseFragment(MapFragment fragment)
+    {
+        _duplicate = fragment;
+        ShowGhost(_hovered);
     }
 
     public override void BuildOptions(ToolOptions options)

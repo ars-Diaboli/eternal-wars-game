@@ -3,7 +3,7 @@ using EternalWars.Core.Domain.Common;
 namespace EternalWars.Core.Domain.Map;
 
 /// <summary>
-/// The strategic (adventure) map: a square grid with one or two levels (surface + underground),
+/// The strategic (adventure) map: a grid (square or not) with one or two levels (surface + underground),
 /// a terrain layer, a road layer, a river layer (ADR-079) and the ground's height (ADR-181, ADR-182).
 /// Plain data; rules live in services that publish events when they change it.
 /// </summary>
@@ -14,13 +14,13 @@ namespace EternalWars.Core.Domain.Map;
 /// </remarks>
 public sealed class AdventureMap
 {
-    private readonly TerrainType[][] _terrain;
-    private readonly RoadType[][] _roads;
-    private readonly RiverType[][] _rivers;
-    private readonly sbyte[][] _ground;
+    private TerrainType[][] _terrain;
+    private RoadType[][] _roads;
+    private RiverType[][] _rivers;
+    private sbyte[][] _ground;
 
     /// <summary>Each tile's start zone: the player's number, or -1 for none (MP-4).</summary>
-    private readonly sbyte[][] _startZones;
+    private sbyte[][] _startZones;
 
     public AdventureMap(int width, int height, int levels = 1, TerrainType fill = TerrainType.Grass)
     {
@@ -53,9 +53,11 @@ public sealed class AdventureMap
 
     public string Description { get; set; } = "";
 
-    public int Width { get; }
+    /// <summary>The map's width in tiles; only the editor's resize changes it (<see cref="TakeFrom"/>).</summary>
+    public int Width { get; private set; }
 
-    public int Height { get; }
+    /// <inheritdoc cref="Width"/>
+    public int Height { get; private set; }
 
     public int Levels { get; }
 
@@ -151,6 +153,65 @@ public sealed class AdventureMap
                 yield return new MapPosition(x, y, level);
             }
         }
+    }
+
+    /// <summary>
+    /// A new map of <paramref name="width"/> × <paramref name="height"/> tiles with this one's content moved by (<paramref name="dx"/>,
+    /// <paramref name="dy"/>): tile (x, y) of this map is tile (x + dx, y + dy) of the new one, and what falls outside is cut (EDIT-8).
+    /// Tiles the old map does not cover are grass on the surface and subterranean below, without road, river or start zone; corners
+    /// it does not cover are at height 0 (the caller shapes them). The name and the description come along.
+    /// </summary>
+    public AdventureMap Reframed(int width, int height, int dx, int dy)
+    {
+        var result = new AdventureMap(width, height, Levels) { Name = Name, Description = Description };
+        for (var level = 0; level < Levels; level++)
+        {
+            if (level > 0)
+            {
+                Array.Fill(result._terrain[level], TerrainType.Subterranean);
+            }
+
+            for (var y = Math.Max(0, dy); y < Math.Min(height, Height + dy); y++)
+            {
+                for (var x = Math.Max(0, dx); x < Math.Min(width, Width + dx); x++)
+                {
+                    var (to, from) = ((y * width) + x, ((y - dy) * Width) + x - dx);
+                    result._terrain[level][to] = _terrain[level][from];
+                    result._roads[level][to] = _roads[level][from];
+                    result._rivers[level][to] = _rivers[level][from];
+                    result._startZones[level][to] = _startZones[level][from];
+                }
+            }
+
+            for (var cy = Math.Max(0, dy); cy <= Math.Min(height, Height + dy); cy++)
+            {
+                for (var cx = Math.Max(0, dx); cx <= Math.Min(width, Width + dx); cx++)
+                {
+                    result._ground[level][(cy * (width + 1)) + cx] = _ground[level][((cy - dy) * (Width + 1)) + cx - dx];
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// This map becomes a copy of <paramref name="other"/>: its size and every layer (the editor's resize and its undo; whoever holds
+    /// the map keeps the same object). The name and the description stay. The levels must be the same.
+    /// </summary>
+    internal void TakeFrom(AdventureMap other)
+    {
+        if (other.Levels != Levels)
+        {
+            throw new ArgumentException("A resize keeps the map's levels.", nameof(other));
+        }
+
+        (Width, Height) = (other.Width, other.Height);
+        _terrain = [.. other._terrain.Select(l => (TerrainType[])l.Clone())];
+        _roads = [.. other._roads.Select(l => (RoadType[])l.Clone())];
+        _rivers = [.. other._rivers.Select(l => (RiverType[])l.Clone())];
+        _ground = [.. other._ground.Select(l => (sbyte[])l.Clone())];
+        _startZones = [.. other._startZones.Select(l => (sbyte[])l.Clone())];
     }
 
     private int Index(MapPosition position)
