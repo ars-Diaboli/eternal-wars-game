@@ -24,8 +24,9 @@ namespace EternalWars.MapEditor;
 
 /// <summary>
 /// Map editor entry point. Editing operations, undo/redo and validation live in core (<see cref="MapEditorSession"/>);
-/// the views and panels live in the libraries (the window layout is <see cref="EditorWorkspace"/>); this class composes them, routes the
-/// pointer to the tool in use (<see cref="IEditorTool"/>), maps the keys, and does file I/O. Alt+Enter switches the window mode (ADR-186), kept in the editor's own settings file.
+/// the views and panels live in the libraries (the window layout is <see cref="EditorWorkspace"/>); this class composes them, registers
+/// the editor's commands (<see cref="CommandRegistry"/>: the menus, the toolbar and the shortcuts run them), routes the pointer to the tool
+/// in use (<see cref="IEditorTool"/>), and does file I/O. Alt+Enter switches the window mode (ADR-186), kept in the editor's own settings file.
 /// </summary>
 public partial class Main : Node3D
 {
@@ -48,6 +49,7 @@ public partial class Main : Node3D
     private Label _status = null!;
     private Label _history = null!;
     private EditorToolContext _toolContext = null!;
+    private CommandRegistry _commands = null!;
 
     /// <summary>The left button is held since the tool in use got its press.</summary>
     private bool _pressed;
@@ -147,15 +149,7 @@ public partial class Main : Node3D
                 _context.Point(Pick(motion.Position)); // the caption of what is under the pointer shows from afar
                 _tools.Tool.Hover(_context.Pointed);
                 return;
-            case InputEventKey { Pressed: true, Keycode: Key.Z, CtrlPressed: true, ShiftPressed: false }:
-                _editor.Undo();
-                break;
-            case InputEventKey { Pressed: true, Keycode: Key.Y, CtrlPressed: true }:
-                _editor.Redo();
-                break;
-            case InputEventKey { Pressed: true, Keycode: Key.L }:
-                _context.SetLevel((_context.Level + 1) % _editor.Scenario.Map.Levels);
-                _camera.FocusOn(MapSpace.ToWorld(new MapPosition(_editor.Scenario.Map.Width / 2, _editor.Scenario.Map.Height / 2, _context.Level)));
+            case InputEventKey key when _commands.RunShortcut(key):
                 break;
             default:
                 return;
@@ -189,7 +183,10 @@ public partial class Main : Node3D
         BuildUi();
         // On the session's own UI, freed with it on the next Open; the root stays in the tree and would keep every old session alive.
         _ui!.SubscribeWhileInTree<UndoHistoryChanged>(_editor.Events, e =>
-            _history.Text = $"Undo: {e.UndoDescription ?? "—"}   Redo: {e.RedoDescription ?? "—"}");
+        {
+            _history.Text = $"Undo: {e.UndoDescription ?? "—"}   Redo: {e.RedoDescription ?? "—"}";
+            _commands.NotifyStateChanged();
+        });
 
         _camera.FocusOn(MapSpace.ToWorld(new(state.Map.Width / 2, state.Map.Height / 2)));
         _fileName.Text = state.Map.Name;
@@ -203,22 +200,15 @@ public partial class Main : Node3D
         _ui.AddChild(_workspace);
         _workspace.Bind(LayoutPath);
 
-        var fileRow = new HBoxContainer();
-        _workspace.TopBar.AddChild(fileRow);
-        _fileName = new LineEdit { CustomMinimumSize = new Vector2(240, 0) };
-        fileRow.AddChild(_fileName);
-        AddButton(fileRow, "New", () => Open(BlankScenario.Create(36, 36, content: GameContent.All)));
-        AddButton(fileRow, "New (2 levels)", () => Open(BlankScenario.Create(36, 36, levels: 2, content: GameContent.All)));
-        AddButton(fileRow, "From template", () => _workspace.ShowTab(_generate));
-        AddButton(fileRow, "Templates", () => _templateEditor.Open());
-        AddButton(fileRow, "Save", Save);
-        AddButton(fileRow, "Load", Load);
-        AddButton(fileRow, "Undo", () => _editor.Undo());
-        AddButton(fileRow, "Redo", () => _editor.Redo());
-        AddButton(fileRow, "Level (L)", () => _context.SetLevel((_context.Level + 1) % _editor.Scenario.Map.Levels));
-        var grid = new CheckBox { Text = "Grid", ButtonPressed = _showGrid, TooltipText = "Show the tile grid on the ground" };
-        grid.Toggled += on => _context.ShowGrid = _showGrid = on;
-        fileRow.AddChild(grid);
+        RegisterCommands();
+        var menuBar = new MenuBarView { Name = "Menus" };
+        _workspace.TopBar.AddChild(menuBar);
+        var toolRow = new HBoxContainer();
+        _workspace.TopBar.AddChild(toolRow);
+        var toolbar = new ToolbarView { Name = "Toolbar" };
+        toolRow.AddChild(toolbar);
+        _fileName = new LineEdit { CustomMinimumSize = new Vector2(240, 0), TooltipText = "The map's name: Save and Load use it as the file name" };
+        toolRow.AddChild(_fileName);
 
         var statusRow = new HBoxContainer();
         _workspace.TopBar.AddChild(statusRow);
@@ -226,7 +216,6 @@ public partial class Main : Node3D
         statusRow.AddChild(_status);
         _history = new Label();
         statusRow.AddChild(_history);
-        _workspace.TopBar.AddChild(new Label { Text = "LMB: use tool   Ctrl+Z / Ctrl+Y: undo / redo   L: level   WASD/QE/wheel: camera   F11: panels" });
 
         // Left: the tools and the options of the one in use, which wrap to the region's width.
         _tools = new ToolPalette { Name = "Tools" };
@@ -247,6 +236,7 @@ public partial class Main : Node3D
         _inspector.Bind(_editor);
         _toolContext = new EditorToolContext(_editor, _inspector, text => _status.Text = text);
         _tools.Bind(EditorTools.All(_toolContext));
+        _tools.ToolChanged += _commands.NotifyStateChanged;
         _events = new EventsPanel { Name = "Events" };
         _workspace.AddTab(EditorRegion.Right, _events);
         _events.Bind(_editor, MapEventNodeJson.Instance);
@@ -275,6 +265,78 @@ public partial class Main : Node3D
         _templateEditor = new TemplateEditorPanel { Name = "TemplateEditor", Visible = false };
         _ui.AddChild(_templateEditor);
         _templateEditor.Bind(_templates, new TemplateEditorHost(TemplateSources, SaveTemplate, GenerateFromEditor));
+
+        // The panels and the tools exist: the commands that open them, then the menus and the toolbar built from the registry.
+        Command("map.properties", "Map properties", () => _workspace.ShowTab(properties));
+        Command("map.players", "Players", () => _workspace.ShowTab(players));
+        Command("map.conditions", "Victory and loss conditions", () => _workspace.ShowTab(conditions));
+        Command("map.events", "Events", () => _workspace.ShowTab(_events));
+        Command("map.bans", "Bans", () => _workspace.ShowTab(bans), UiIcon.Ban);
+        Command("map.validation", "Validation", () => _workspace.ShowTab(validation));
+        Command("view.inspector", "Inspector", () => _workspace.ShowTab(_inspector));
+        foreach (var tool in _tools.Tools)
+        {
+            _commands.Register(new EditorCommand(ToolCommand(tool), tool.Name, () => _tools.Use(tool)) { IsOn = () => _tools.Tool == tool, IsChoice = true });
+        }
+
+        menuBar.Bind(_commands,
+        [
+            new("File", ["file.new", "file.new-two-levels", "file.generate", null, "file.save", "file.load"]),
+            new("Edit", ["edit.undo", "edit.redo"]),
+            new("View", ["view.level", "view.grid", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector"]),
+            new("Map", ["map.properties", "map.players", "map.conditions", "map.events", "map.bans", null, "map.validation"]),
+            new("Tools", [.. _tools.Tools.Select(ToolCommand)]),
+            new("Templates", ["templates.editor", "file.generate"]),
+            new("Test", ["test.play"]),
+            new("Help", ["help.help"]),
+        ]);
+        toolbar.Bind(_commands,
+        [
+            "file.new", "file.new-two-levels", "file.generate", "templates.editor", "file.save", "file.load", null,
+            "edit.undo", "edit.redo", null, "view.level", "view.grid", null, "view.left", "view.bottom", "view.right",
+        ]);
+        _workspace.RegionsChanged += _commands.NotifyStateChanged;
+    }
+
+    private static string ToolCommand(IEditorTool tool) => $"tool.{tool.Name.ToLowerInvariant()}";
+
+    private void Command(
+        string id, string name, Action run, UiIcon? icon = null, CommandShortcut? shortcut = null, Func<string?>? whyNot = null, Func<bool>? isOn = null) =>
+        _commands.Register(new EditorCommand(id, name, run) { Icon = icon, Shortcut = shortcut, WhyNot = whyNot, IsOn = isOn });
+
+    /// <summary>The commands that need no panel: the file, the history, the view. The rest are registered once the panels exist.</summary>
+    private void RegisterCommands()
+    {
+        _commands = new CommandRegistry();
+        Command("file.new", "New", () => Open(BlankScenario.Create(36, 36, content: GameContent.All)));
+        Command("file.new-two-levels", "New (2 levels)", () => Open(BlankScenario.Create(36, 36, levels: 2, content: GameContent.All)));
+        Command("file.generate", "From template", () => _workspace.ShowTab(_generate));
+        Command("file.save", "Save", Save, UiIcon.Save);
+        Command("file.load", "Load", Load, UiIcon.Load);
+        Command("edit.undo", "Undo", () => _editor.Undo(), UiIcon.Undo, new(Key.Z, Ctrl: true),
+            () => _editor.History.CanUndo ? null : "Nothing to undo");
+        Command("edit.redo", "Redo", () => _editor.Redo(), UiIcon.Redo, new(Key.Y, Ctrl: true),
+            () => _editor.History.CanRedo ? null : "Nothing to redo");
+        Command("view.level", "Switch level", SwitchLevel, UiIcon.SwitchLevel, new(Key.L),
+            () => _editor.Scenario.Map.Levels > 1 ? null : "The map has one level");
+        Command("view.grid", "Grid", () => _context.ShowGrid = _showGrid = !_showGrid, isOn: () => _showGrid);
+        Command("view.left", "Left panel", () => _workspace.SetOpen(EditorRegion.Left, !_workspace.IsShown(EditorRegion.Left)),
+            isOn: () => _workspace.IsShown(EditorRegion.Left));
+        Command("view.bottom", "Bottom panel", () => _workspace.SetOpen(EditorRegion.Bottom, !_workspace.IsShown(EditorRegion.Bottom)),
+            isOn: () => _workspace.IsShown(EditorRegion.Bottom));
+        Command("view.right", "Right panel", () => _workspace.SetOpen(EditorRegion.Right, !_workspace.IsShown(EditorRegion.Right)),
+            isOn: () => _workspace.IsShown(EditorRegion.Right));
+        Command("view.panels", "Hide all panels", _workspace.ToggleAll, shortcut: new(Key.F11), isOn: () => _workspace.AllHidden);
+        Command("templates.editor", "Templates", () => _templateEditor.Open());
+        Command("test.play", "Test the map", () => { }, shortcut: new(Key.F5), whyNot: () => "Play-testing from the editor is not built yet");
+        Command("help.help", "Help", () => { }, shortcut: new(Key.F1), whyNot: () => "The editor's help is not written yet");
+    }
+
+    /// <summary>The next level of the map, with the camera on its middle.</summary>
+    private void SwitchLevel()
+    {
+        _context.SetLevel((_context.Level + 1) % _editor.Scenario.Map.Levels);
+        _camera.FocusOn(MapSpace.ToWorld(new MapPosition(_editor.Scenario.Map.Width / 2, _editor.Scenario.Map.Height / 2, _context.Level)));
     }
 
     private void ShowTile(MapPosition position)
@@ -424,17 +486,5 @@ public partial class Main : Node3D
         Directory.CreateDirectory(directory);
         var safeName = string.Concat(name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
         return Path.Combine(directory, (safeName.Length == 0 ? "untitled" : safeName) + MapSerializer.FileExtension);
-    }
-
-    private static void AddButton(Container parent, string text, Action onPressed)
-    {
-        var button = new Button { Text = text };
-        if (text switch { "Save" => UiIcon.Save, "Load" => UiIcon.Load, "Undo" => UiIcon.Undo, "Redo" => UiIcon.Redo, "Level (L)" => UiIcon.SwitchLevel, _ => (UiIcon?)null } is { } icon)
-        {
-            button.WithIcon(icon);
-        }
-
-        button.Pressed += onPressed;
-        parent.AddChild(button);
     }
 }

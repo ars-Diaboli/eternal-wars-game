@@ -12,7 +12,7 @@ public enum EditorRegion
 
 /// <summary>
 /// The editor's window layout (EDIT-1, ADR-250): a bar on top, then three docked regions around the map view, each a tab box that is resized
-/// with a splitter and collapsed with its button on the bar; F11 hides and shows them all. The map itself is drawn behind the workspace: the
+/// with a splitter and collapsed (<see cref="SetOpen"/>); <see cref="ToggleAll"/> hides and shows them all. The map itself is drawn behind the workspace: the
 /// middle is a hole that lets the pointer through to the app. The splitter positions, the collapsed regions and each region's open tab are
 /// kept in the editor's settings file (<see cref="SettingsFileName"/>) on every change.
 /// </summary>
@@ -33,7 +33,6 @@ public partial class EditorWorkspace : Control
 
     private readonly Dictionary<EditorRegion, TabContainer> _regions = [];
     private readonly Dictionary<EditorRegion, PanelContainer> _panels = [];
-    private readonly Dictionary<EditorRegion, Button> _toggles = [];
     private readonly Dictionary<EditorRegion, bool> _open = [];
     private readonly Dictionary<EditorRegion, string> _savedTabs = [];
     private readonly Dictionary<Control, Control> _tabOf = [];
@@ -41,6 +40,9 @@ public partial class EditorWorkspace : Control
     private string? _settingsPath;
     private bool _allHidden;
     private bool _addingTab;
+
+    /// <summary>A region was collapsed, opened, hidden or shown.</summary>
+    public event Action? RegionsChanged;
 
     /// <summary>The bar above the regions: the app adds its rows here.</summary>
     public VBoxContainer TopBar { get; } = new() { Name = "TopBar", SizeFlagsHorizontal = SizeFlags.ExpandFill };
@@ -67,23 +69,19 @@ public partial class EditorWorkspace : Control
 
         var bar = Opaque(new PanelContainer { Name = "Bar" });
         rows.AddChild(bar);
-        var barRow = new HBoxContainer();
-        bar.AddChild(barRow);
-        barRow.AddChild(TopBar);
-        var toggles = new HBoxContainer { SizeFlagsVertical = SizeFlags.ShrinkBegin };
-        barRow.AddChild(toggles);
+        bar.AddChild(TopBar);
 
         // Left | (map over Bottom) | Right. A region is the side of its splitter that does not expand, so the map takes what is left.
         var outer = Splitter(new HSplitContainer { Name = "Outer", SizeFlagsVertical = SizeFlags.ExpandFill }, EditorRegion.Left);
         rows.AddChild(outer);
-        outer.AddChild(Region(EditorRegion.Left, toggles));
+        outer.AddChild(Region(EditorRegion.Left));
         var inner = Splitter(new HSplitContainer { Name = "Inner", SizeFlagsHorizontal = SizeFlags.ExpandFill }, EditorRegion.Right);
         outer.AddChild(inner);
         var centre = Splitter(new VSplitContainer { Name = "Centre", SizeFlagsHorizontal = SizeFlags.ExpandFill }, EditorRegion.Bottom);
         inner.AddChild(centre);
         centre.AddChild(new Control { Name = "MapView", MouseFilter = MouseFilterEnum.Ignore, SizeFlagsVertical = SizeFlags.ExpandFill });
-        centre.AddChild(Region(EditorRegion.Bottom, toggles));
-        inner.AddChild(Region(EditorRegion.Right, toggles));
+        centre.AddChild(Region(EditorRegion.Bottom));
+        inner.AddChild(Region(EditorRegion.Right));
         ApplyVisibility();
     }
 
@@ -132,7 +130,6 @@ public partial class EditorWorkspace : Control
             }
 
             tabs.CurrentTab = tab.GetIndex();
-            _allHidden = false;
             SetOpen(region, true);
             return;
         }
@@ -141,15 +138,14 @@ public partial class EditorWorkspace : Control
     /// <summary>Whether <paramref name="region"/> shows (not collapsed and not hidden with the others).</summary>
     public bool IsShown(EditorRegion region) => _panels[region].Visible;
 
-    /// <summary>F11 hides every region, and shows those that were open again.</summary>
-    public override void _ShortcutInput(InputEvent @event)
+    /// <summary>Whether every region is hidden (<see cref="ToggleAll"/>).</summary>
+    public bool AllHidden => _allHidden;
+
+    /// <summary>Hides every region, or shows those that were open again. Not kept in the settings.</summary>
+    public void ToggleAll()
     {
-        if (@event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.F11 })
-        {
-            _allHidden = !_allHidden;
-            ApplyVisibility();
-            GetViewport().SetInputAsHandled();
-        }
+        _allHidden = !_allHidden;
+        ApplyVisibility();
     }
 
     private SplitContainer Splitter(SplitContainer splitter, EditorRegion region)
@@ -164,7 +160,7 @@ public partial class EditorWorkspace : Control
         return splitter;
     }
 
-    private PanelContainer Region(EditorRegion region, HBoxContainer toggles)
+    private PanelContainer Region(EditorRegion region)
     {
         var horizontal = region != EditorRegion.Bottom;
         var panel = Opaque(new PanelContainer
@@ -188,25 +184,13 @@ public partial class EditorWorkspace : Control
         _regions[region] = tabs;
         _open[region] = _settings.GetValue(Section, SettingKey(region, "open"), true).AsBool();
         _savedTabs[region] = _settings.GetValue(Section, SettingKey(region, "tab"), "").AsString();
-
-        var toggle = new Button
-        {
-            Text = $"{region} panel",
-            ToggleMode = true,
-            TooltipText = $"Show or collapse the {region.ToString().ToLowerInvariant()} region (F11: all of them)",
-        };
-        toggle.Toggled += on =>
-        {
-            _allHidden = false;
-            SetOpen(region, on);
-        };
-        toggles.AddChild(toggle);
-        _toggles[region] = toggle;
         return panel;
     }
 
-    private void SetOpen(EditorRegion region, bool open)
+    /// <summary>Opens or collapses <paramref name="region"/>, and shows the regions again when they were all hidden.</summary>
+    public void SetOpen(EditorRegion region, bool open)
     {
+        _allHidden = false;
         if (_open[region] != open)
         {
             _open[region] = open;
@@ -222,8 +206,9 @@ public partial class EditorWorkspace : Control
         foreach (var (region, panel) in _panels)
         {
             panel.Visible = _open[region] && !_allHidden;
-            _toggles[region].SetPressedNoSignal(panel.Visible);
         }
+
+        RegionsChanged?.Invoke();
     }
 
     /// <summary>A docked panel hides the map behind it (the theme's panels over the map let it show through).</summary>
