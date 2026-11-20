@@ -118,13 +118,15 @@ public static class UiIcons
     /// <see cref="LabelsOnStatusBar"/> is off), and the name smoke scripts press it by. With <paramref name="keepText"/> (the buttons along a
     /// window's bottom: OK, Cancel, Start, Back) the icon stands small before the text instead. The text stays if the icon is missing.
     /// </summary>
-    public static T WithIcon<T>(this T button, UiIcon icon, int size = WindowSize, bool keepText = false) where T : Button
-    {
-        if (Get(icon, keepText ? ButtonSize : size) is not { } texture)
-        {
-            return button;
-        }
+    public static T WithIcon<T>(this T button, UiIcon icon, int size = WindowSize, bool keepText = false) where T : Button =>
+        Get(icon, keepText ? ButtonSize : size) is { } texture ? button.WithIcon(texture, size, keepText) : button;
 
+    /// <summary>
+    /// <see cref="WithIcon{T}(T, UiIcon, int, bool)"/> with a picture that is no <see cref="UiIcon"/> (a placeholder), drawn at
+    /// <paramref name="size"/> pixels already.
+    /// </summary>
+    public static T WithIcon<T>(this T button, Texture2D texture, int size, bool keepText = false) where T : Button
+    {
         button.Icon = texture;
         if (keepText)
         {

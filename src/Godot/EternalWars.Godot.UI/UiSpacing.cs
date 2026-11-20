@@ -31,16 +31,26 @@ public static class UiSpacing
     /// <summary>From the window's edge to the HUD parts, and between them.</summary>
     public const int ScreenEdge = 8;
 
+    /// <summary>Between the rows of a panel in the compact variant (the map editor).</summary>
+    public const int CompactRow = 4;
+
+    /// <summary>Between controls side by side in the compact variant.</summary>
+    public const int CompactGap = 6;
+
+    /// <summary>Inside a panel's border in the compact variant.</summary>
+    public const int CompactPadding = 6;
+
     /// <summary>
     /// The spacing as a theme: containers' separations and panels' inner margins (the default panel box with margins added; <see cref="UiTheme"/>
-    /// replaces it with its own).
+    /// replaces it with its own). <paramref name="compact"/>: the tighter rows and gaps of a tool (the map editor).
     /// </summary>
-    public static Theme CreateTheme()
+    public static Theme CreateTheme(bool compact = false)
     {
         var theme = new Theme();
-        theme.SetConstant("separation", "BoxContainer", Row);
-        theme.SetConstant("separation", "VBoxContainer", Row);
-        theme.SetConstant("separation", "HBoxContainer", Gap);
+        var row = compact ? CompactRow : Row;
+        theme.SetConstant("separation", "BoxContainer", row);
+        theme.SetConstant("separation", "VBoxContainer", row);
+        theme.SetConstant("separation", "HBoxContainer", compact ? CompactGap : Gap);
         foreach (var type in new[] { "GridContainer", "FlowContainer", "HFlowContainer", "VFlowContainer" })
         {
             theme.SetConstant("h_separation", type, Cell);
@@ -51,7 +61,7 @@ public static class UiSpacing
         theme.SetConstant("separation", "VSplitContainer", Gap);
         if (ThemeDB.GetDefaultTheme().GetStylebox("panel", "PanelContainer").Duplicate() is StyleBox panel)
         {
-            panel.SetContentMarginAll(Padding);
+            panel.SetContentMarginAll(compact ? CompactPadding : Padding);
             theme.SetStylebox("panel", "PanelContainer", panel);
         }
 

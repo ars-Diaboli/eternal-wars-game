@@ -263,10 +263,10 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 ### Editor overhaul (ADR-247, ADR-250; [plan](../docs/papers/editor-plan.md#implementation-plan), EDIT-1 … EDIT-12 answered)
 - [x] Step 0a: answers to EDIT-1 … EDIT-12 (ADR-250: the proposals)
 - [ ] Step 0: a clickable greybox of the workspace and the new-map wizard
-- [ ] Step 1: the shell: regions, tools as classes, the command registry with the menus and the toolbar (built: `EditorWorkspace`,
+- [x] Step 1: the shell: regions, tools as classes, the command registry with the menus and the toolbar (built: `EditorWorkspace`,
       `IEditorTool`, `CommandRegistry`, the history's steps and `UndoTo`, Problems / History / Output, the status bar, `IsDirty`, `FileService` with the file dialogs, recent files, the
-      unsaved marker, autosave and crash recovery; plan tasks 1 to 9), command palette, preferences,
-      the Map / Template tabs
+      unsaved marker, autosave and crash recovery, `CommandPalette`, `PreferencesWindow`, the compact theme and placeholder icons,
+      the Map / Template tabs; plan tasks 1 to 12)
 - [ ] Step 2: selection and editing: marquee and multi-select, move, copy, paste, duplicate, erase by kind, fill, line, scatter,
       scenery rotation (a format bump), stamps, map resize / crop / shift
 - [ ] Step 3: the object browser (thumbnails, search, favourites), the inspector in sections with multi-edit and picture pickers, the

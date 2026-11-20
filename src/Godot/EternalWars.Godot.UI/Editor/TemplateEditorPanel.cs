@@ -28,7 +28,7 @@ public sealed record TemplateEditorHost(
 /// settings of the selected zone or connection, or of the template when nothing is selected, and under the graph the validator's issues, live.
 /// Every control applies at once through the <see cref="TemplateEditorSession"/> (no undo, the owner's answer). The top row: New, open a template,
 /// Save (the user's templates folder), add zones, arrange the graph, and Generate (size and seed), which opens the result in the map editor.
-/// Escape or Close hides it.
+/// The app places it (the editor's Template tab, EDIT-3, ADR-250) and shows the map once one was generated.
 /// </summary>
 public partial class TemplateEditorPanel : PanelContainer
 {
@@ -43,8 +43,6 @@ public partial class TemplateEditorPanel : PanelContainer
     private TemplateEditorHost _host = null!;
     private IReadOnlyList<TemplateSource> _sources = [];
 
-    public event Action? Closed;
-
     public TemplateEditorSession Session => _session;
 
     public void Bind(TemplateEditorSession session, TemplateEditorHost host)
@@ -52,9 +50,6 @@ public partial class TemplateEditorPanel : PanelContainer
         _session = session;
         _host = host;
         this.UseOpaqueBackground();
-        SetAnchorsPreset(LayoutPreset.FullRect);
-        OffsetLeft = OffsetTop = UiSpacing.ScreenEdge;
-        OffsetRight = OffsetBottom = -UiSpacing.ScreenEdge;
 
         var rows = new VBoxContainer();
         AddChild(rows);
@@ -82,12 +77,6 @@ public partial class TemplateEditorPanel : PanelContainer
         _seed.Text = ((ulong)System.Random.Shared.NextInt64()).ToString(CultureInfo.InvariantCulture);
         top.AddChild(_seed);
         Button(top, "Generate", Generate);
-        top.AddChild(new VSeparator());
-        Button(top, "Close (Esc)", () =>
-        {
-            Visible = false;
-            Closed?.Invoke();
-        });
 
         var body = new HSplitContainer { SizeFlagsVertical = SizeFlags.ExpandFill };
         rows.AddChild(body);
@@ -115,21 +104,13 @@ public partial class TemplateEditorPanel : PanelContainer
         ShowInspector();
     }
 
-    public override void _UnhandledKeyInput(InputEvent @event)
+    /// <summary>The template list is read again each time the editor shows: a file may have been saved meanwhile.</summary>
+    public override void _Notification(int what)
     {
-        if (Visible && @event is InputEventKey { Pressed: true, Keycode: Key.Escape })
+        if (what == NotificationVisibilityChanged && IsVisibleInTree() && _host is not null)
         {
-            Visible = false;
-            Closed?.Invoke();
-            GetViewport().SetInputAsHandled();
+            RefreshSources();
         }
-    }
-
-    /// <summary>Shows the editor (the template list is read again, a file may have been saved meanwhile).</summary>
-    public void Open()
-    {
-        RefreshSources();
-        Visible = true;
     }
 
     private static void Button(Container parent, string text, Action pressed)
@@ -213,11 +194,7 @@ public partial class TemplateEditorPanel : PanelContainer
         if (_host.Generate(_session.Template, _size.GetSelectedId(), seed) is { } refused)
         {
             _message.Text = refused;
-            return;
         }
-
-        Visible = false;
-        Closed?.Invoke();
     }
 
     private void ShowIssues(IReadOnlyList<TemplateIssue> issues)

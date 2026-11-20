@@ -513,11 +513,11 @@ The tasks of each step in build order. A task is one reviewable change that leav
    start and removed on a clean exit; when the marker is found at start, the editor offers the newest autosave. Smoke
    `editor-recovery` (a planted marker shows the offer). *Done.*
 10. **Command palette**: Ctrl+Shift+P, search as you type over the registry, each command with its shortcut; only commands that can
-    run now are offered.
+    run now are offered. *Done.*
 11. **Preferences and the editor theme**: the Preferences window (UI scale 100–200 %, autosave interval, camera speeds, default map
-    size); a compact variant of the game theme (ADR-191) for the editor; placeholder icons for every tool and command.
+    size); a compact variant of the game theme (ADR-191) for the editor; placeholder icons for every tool and command. *Done.*
 12. **Map and Template tabs** (EDIT-3): the template editor overlay moves into the Template tab as it is; both tabs stay open, and
-    "Open in map editor" switches to the Map tab. Smoke `editor-template-editor` updated.
+    "Open in map editor" switches to the Map tab. Smoke `editor-template-editor` updated. *Done.*
 
 **Done when**: every action of today's editor is in a menu with its shortcut and in the palette; killing the editor and starting it
 again offers the lost work.

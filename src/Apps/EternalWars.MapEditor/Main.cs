@@ -27,6 +27,7 @@ namespace EternalWars.MapEditor;
 /// the views and panels live in the libraries (the window layout is <see cref="EditorWorkspace"/>); this class composes them, registers
 /// the editor's commands (<see cref="CommandRegistry"/>: the menus, the toolbar and the shortcuts run them), routes the pointer to the tool
 /// in use (<see cref="IEditorTool"/>); the map's files, the autosave and the questions over unsaved work are the <see cref="FileService"/>'s.
+/// It applies the user's <see cref="EditorPreferences"/> (the UI's scale, the autosave interval, the camera's speeds, a new map's size).
 /// Alt+Enter switches the window mode (ADR-186), kept in the editor's own settings file.
 /// </summary>
 public partial class Main : Node3D
@@ -48,6 +49,11 @@ public partial class Main : Node3D
     private EventCellsView _eventCells = null!;
     private FileService _files = null!;
     private EditorSettingsFile _settings = null!;
+    private EditorPreferences _preferences = new();
+
+    /// <summary>The command palette and the Preferences window while one is open: over the editor's UI, kept from map to map.</summary>
+    private readonly CanvasLayer _overlays = new() { Name = "Overlays", Layer = 40 };
+    private int _templatePage;
     private StatusBarView _statusBar = null!;
 
     /// <summary>The editor's messages: kept while maps are opened and closed, shown by the Output panel.</summary>
@@ -64,12 +70,14 @@ public partial class Main : Node3D
 
     /// <summary>The template being edited: kept while maps are opened and generated (the editor itself is rebuilt with the UI).</summary>
     private readonly TemplateEditorSession _templates = new(content: GameContent.All);
-    private TemplateEditorPanel _templateEditor = null!;
+
+    /// <summary>The Template tab's editor: made once and moved into each new workspace, so it stays as it was left when a map is opened.</summary>
+    private TemplateEditorPanel? _templateEditor;
     private IReadOnlyList<MapTemplate> _generatorTemplates = [];
 
     public override void _Ready()
     {
-        UiTheme.Apply(); // the shared margins and gaps (ADR-163) and the look (ADR-191)
+        UiTheme.Apply(compact: true); // the look (ADR-191) and the spacing (ADR-163) in the compact variant for a tool (ADR-250)
         UiIcons.LabelsOnStatusBar = false; // the editor's status bar shows no hints: icon buttons name themselves in their tooltips (ADR-204)
         WindowModes.Apply(SettingsFile.LoadInterface(SettingsPath).Window);
         if (AutoInput.FromLaunchArguments() is { } autoInput)
@@ -81,7 +89,9 @@ public partial class Main : Node3D
         AddChild(_camera);
         _camera.Zoomed += () => _statusBar.ShowZoom(_camera.ZoomPercent);
         AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-55, -35, 0) });
+        AddChild(_overlays);
         _settings = new EditorSettingsFile(Path.Combine(DataFolder, EditorSettingsFile.FileName));
+        _preferences = PreferencesStore.Read(_settings);
         _files = new FileService { Name = "Files" };
         AddChild(_files);
         _files.Bind(
@@ -89,9 +99,58 @@ public partial class Main : Node3D
             systemDialogs: LaunchArguments.AutoInput is null); // a scripted run sees only Godot's own dialog
         _files.Changed += ShowFile;
         GetTree().AutoAcceptQuit = false; // the window's close request waits for the question over unsaved work
+        ApplyPreferences();
+        _camera.KeysBlocked = () => IsBusy || _workspace.Page != EditorWorkspace.MapPage;
 
         // --map=file opens that map (the smoke scenarios), else a blank one.
-        _files.Start(LaunchArguments.MapPath is { } path ? MapFiles.Read(path) : BlankScenario.Create(36, 36, content: GameContent.All), LaunchArguments.MapPath);
+        _files.Start(LaunchArguments.MapPath is { } path ? MapFiles.Read(path) : Blank(), LaunchArguments.MapPath);
+    }
+
+    /// <summary>A new, empty map of the size the preferences say.</summary>
+    private GameState Blank(int levels = 1) =>
+        BlankScenario.Create(_preferences.DefaultMapSize, _preferences.DefaultMapSize, levels, content: GameContent.All);
+
+    /// <summary>The preferences take effect: the UI's scale, the autosave interval and the camera's speeds (a new map reads its size when it is made).</summary>
+    private void ApplyPreferences()
+    {
+        GetWindow().ContentScaleFactor = _preferences.UiScalePercent / 100f;
+        _files.AutosaveMinutes = _preferences.AutosaveMinutes;
+        _camera.PanSpeed = _preferences.CameraPanSpeed;
+        _camera.RotateSpeedDegrees = _preferences.CameraRotateSpeed;
+        _camera.ZoomStep = _preferences.CameraZoomSpeed * 0.5f; // 3, the default, is the camera's own step
+    }
+
+    /// <summary>A question, a file dialog, the palette or the Preferences window is open: the editor takes no other input.</summary>
+    private bool IsBusy => _files.IsBusy || _overlays.GetChildCount() > 0;
+
+    private void OpenPalette()
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        var palette = new CommandPalette { Name = "Palette" };
+        _overlays.AddChild(palette);
+        palette.Bind(_commands, except: "view.palette");
+    }
+
+    private void OpenPreferences()
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        var window = new PreferencesWindow { Name = "Preferences" };
+        _overlays.AddChild(window);
+        window.Bind(_preferences, chosen =>
+        {
+            _preferences = chosen;
+            PreferencesStore.Write(_settings, chosen);
+            ApplyPreferences();
+            Say("Preferences kept");
+        });
     }
 
     public override void _Notification(int what)
@@ -143,14 +202,15 @@ public partial class Main : Node3D
 
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (_files.IsBusy)
+        if (IsBusy)
         {
-            return; // a question or a file dialog is open
+            return;
         }
 
         switch (@event)
         {
             case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } press when !_pressed:
+                GetViewport().GuiReleaseFocus(); // a click on the map leaves the text field that was typed into: the keys are the camera's again
                 if (Point(press.Position) is not { } tile)
                 {
                     return;
@@ -181,7 +241,7 @@ public partial class Main : Node3D
             case InputEventMouseMotion motion:
                 _tools.Tool.Hover(Point(motion.Position)); // the caption of what is under the pointer shows from afar
                 return;
-            case InputEventKey key when _commands.RunShortcut(key):
+            case InputEventKey key when !_pressed && _commands.RunShortcut(key): // no command in the middle of a stroke
                 break;
             default:
                 return;
@@ -223,6 +283,7 @@ public partial class Main : Node3D
     private MapEditorSession Open(GameState state)
     {
         _world?.QueueFree();
+        _templateEditor?.GetParent()?.RemoveChild(_templateEditor); // kept: the new workspace takes it
         _ui?.QueueFree();
         _pressed = false;
 
@@ -257,7 +318,7 @@ public partial class Main : Node3D
 
         RegisterCommands();
         var menuBar = new MenuBarView { Name = "Menus" };
-        _workspace.TopBar.AddChild(menuBar);
+        _workspace.SetMenus(menuBar);
         var toolbar = new ToolbarView { Name = "Toolbar" };
         _workspace.TopBar.AddChild(toolbar);
         _statusBar = new StatusBarView { Name = "Status" };
@@ -320,10 +381,16 @@ public partial class Main : Node3D
         _events.ShowRequested += ShowTile;
         _inspector.EventRequested += OpenEvent;
 
-        // The template editor (ADR-117): over everything, hidden until "Templates".
-        _templateEditor = new TemplateEditorPanel { Name = "TemplateEditor", Visible = false };
-        _ui.AddChild(_templateEditor);
-        _templateEditor.Bind(_templates, new TemplateEditorHost(TemplateSources, SaveTemplate, GenerateFromEditor));
+        // The template editor (ADR-117) is the workspace's Template tab (EDIT-3, ADR-250), the same one from map to map.
+        var templateEditor = _templateEditor;
+        _templateEditor ??= new TemplateEditorPanel { Name = "TemplateEditor" };
+        _templatePage = _workspace.AddPage("Template", _templateEditor);
+        if (templateEditor is null)
+        {
+            _templateEditor.Bind(_templates, new TemplateEditorHost(TemplateSources, SaveTemplate, GenerateFromEditor));
+        }
+
+        _workspace.PageChanged += _commands.NotifyStateChanged;
 
         // The panels and the tools exist: the commands that open them, then the menus and the toolbar built from the registry.
         Command("map.properties", "Map properties", () => _workspace.ShowTab(properties));
@@ -337,7 +404,10 @@ public partial class Main : Node3D
         Command("view.inspector", "Inspector", () => _workspace.ShowTab(_inspector));
         foreach (var tool in _tools.Tools)
         {
-            _commands.Register(new EditorCommand(ToolCommand(tool), tool.Name, () => _tools.Use(tool)) { IsOn = () => _tools.Tool == tool, IsChoice = true });
+            _commands.Register(new EditorCommand(ToolCommand(tool), tool.Name, () => _tools.Use(tool))
+            {
+                WhyNot = OnMapTab, IsOn = () => _tools.Tool == tool, IsChoice = true,
+            });
         }
 
         menuBar.Bind(_commands,
@@ -349,8 +419,8 @@ public partial class Main : Node3D
                     new("Open recent", () => [.. _files.Recent.Select(path => (path, (Action)(() => _files.Open(path))))], "No file was opened or saved yet"),
                 ],
             },
-            new("Edit", ["edit.undo", "edit.redo"]),
-            new("View", ["view.level", "view.grid", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.problems", "view.history", "view.output"]),
+            new("Edit", ["edit.undo", "edit.redo", null, "edit.preferences"]),
+            new("View", ["view.palette", null, "view.map-tab", "templates.editor", null, "view.level", "view.grid", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.problems", "view.history", "view.output"]),
             new("Map", ["map.properties", "map.players", "map.conditions", "map.events", "map.bans", null, "view.problems"]),
             new("Tools", [.. _tools.Tools.Select(ToolCommand)]),
             new("Templates", ["templates.editor", "file.generate"]),
@@ -367,36 +437,49 @@ public partial class Main : Node3D
 
     private static string ToolCommand(IEditorTool tool) => $"tool.{tool.Name.ToLowerInvariant()}";
 
+    /// <summary>Registers a command. <paramref name="onMap"/>: it works on the map's view, so it cannot run while the Template tab shows.</summary>
     private void Command(
-        string id, string name, Action run, UiIcon? icon = null, CommandShortcut? shortcut = null, Func<string?>? whyNot = null, Func<bool>? isOn = null) =>
-        _commands.Register(new EditorCommand(id, name, run) { Icon = icon, Shortcut = shortcut, WhyNot = whyNot, IsOn = isOn });
+        string id, string name, Action run, UiIcon? icon = null, CommandShortcut? shortcut = null, Func<string?>? whyNot = null, Func<bool>? isOn = null,
+        bool onMap = false, bool isChoice = false) =>
+        _commands.Register(new EditorCommand(id, name, run)
+        {
+            Icon = icon, Shortcut = shortcut, WhyNot = onMap ? () => OnMapTab() ?? whyNot?.Invoke() : whyNot, IsOn = isOn, IsChoice = isChoice,
+        });
+
+    /// <summary>Why a command that works on the map's view cannot run now; null on the Map tab.</summary>
+    private string? OnMapTab() => _workspace.Page == EditorWorkspace.MapPage ? null : "Only on the Map tab";
 
     /// <summary>The commands that need no panel: the file, the history, the view. The rest are registered once the panels exist.</summary>
     private void RegisterCommands()
     {
         _commands = new CommandRegistry();
-        Command("file.new", "New", () => _files.OpenNew(BlankScenario.Create(36, 36, content: GameContent.All)), shortcut: new(Key.N, Ctrl: true));
-        Command("file.new-two-levels", "New (2 levels)", () => _files.OpenNew(BlankScenario.Create(36, 36, levels: 2, content: GameContent.All)));
+        Command("file.new", "New", () => _files.OpenNew(Blank()), shortcut: new(Key.N, Ctrl: true));
+        Command("file.new-two-levels", "New (2 levels)", () => _files.OpenNew(Blank(levels: 2)));
         Command("file.generate", "From template", () => _workspace.ShowTab(_generate));
         Command("file.open", "Open", () => _files.Open(), UiIcon.Load, new(Key.O, Ctrl: true));
         Command("file.save", "Save", () => _files.Save(), UiIcon.Save, new(Key.S, Ctrl: true));
         Command("file.save-as", "Save as", () => _files.SaveAs(), shortcut: new(Key.S, Ctrl: true, Shift: true));
         Command("file.quit", "Quit", _files.Quit, shortcut: new(Key.Q, Ctrl: true));
         Command("edit.undo", "Undo", () => _editor.Undo(), UiIcon.Undo, new(Key.Z, Ctrl: true),
-            () => _editor.History.CanUndo ? null : "Nothing to undo");
+            () => _editor.History.CanUndo ? null : "Nothing to undo", onMap: true);
         Command("edit.redo", "Redo", () => _editor.Redo(), UiIcon.Redo, new(Key.Y, Ctrl: true),
-            () => _editor.History.CanRedo ? null : "Nothing to redo");
+            () => _editor.History.CanRedo ? null : "Nothing to redo", onMap: true);
+        Command("edit.preferences", "Preferences", OpenPreferences, UiIcon.Settings, new(Key.Comma, Ctrl: true));
+        Command("view.palette", "Command palette", OpenPalette, shortcut: new(Key.P, Ctrl: true, Shift: true));
+        Command("view.map-tab", "Map tab", () => _workspace.ShowPage(EditorWorkspace.MapPage),
+            isOn: () => _workspace.Page == EditorWorkspace.MapPage, isChoice: true);
+        Command("templates.editor", "Template tab", () => _workspace.ShowPage(_templatePage),
+            isOn: () => _workspace.Page == _templatePage, isChoice: true);
         Command("view.level", "Switch level", SwitchLevel, UiIcon.SwitchLevel, new(Key.L),
-            () => _editor.Scenario.Map.Levels > 1 ? null : "The map has one level");
-        Command("view.grid", "Grid", () => _context.ShowGrid = _showGrid = !_showGrid, isOn: () => _showGrid);
+            () => _editor.Scenario.Map.Levels > 1 ? null : "The map has one level", onMap: true);
+        Command("view.grid", "Grid", () => _context.ShowGrid = _showGrid = !_showGrid, isOn: () => _showGrid, onMap: true);
         Command("view.left", "Left panel", () => _workspace.SetOpen(EditorRegion.Left, !_workspace.IsShown(EditorRegion.Left)),
-            isOn: () => _workspace.IsShown(EditorRegion.Left));
+            isOn: () => _workspace.IsShown(EditorRegion.Left), onMap: true);
         Command("view.bottom", "Bottom panel", () => _workspace.SetOpen(EditorRegion.Bottom, !_workspace.IsShown(EditorRegion.Bottom)),
-            isOn: () => _workspace.IsShown(EditorRegion.Bottom));
+            isOn: () => _workspace.IsShown(EditorRegion.Bottom), onMap: true);
         Command("view.right", "Right panel", () => _workspace.SetOpen(EditorRegion.Right, !_workspace.IsShown(EditorRegion.Right)),
-            isOn: () => _workspace.IsShown(EditorRegion.Right));
-        Command("view.panels", "Hide all panels", _workspace.ToggleAll, shortcut: new(Key.F11), isOn: () => _workspace.AllHidden);
-        Command("templates.editor", "Templates", () => _templateEditor.Open());
+            isOn: () => _workspace.IsShown(EditorRegion.Right), onMap: true);
+        Command("view.panels", "Hide all panels", _workspace.ToggleAll, shortcut: new(Key.F11), isOn: () => _workspace.AllHidden, onMap: true);
         Command("test.play", "Test the map", () => { }, shortcut: new(Key.F5), whyNot: () => "Play-testing from the editor is not built yet");
         Command("help.help", "Help", () => { }, shortcut: new(Key.F1), whyNot: () => "The editor's help is not written yet");
     }
@@ -500,7 +583,7 @@ public partial class Main : Node3D
     }
 
     /// <summary>
-    /// "Generate from template" (ADR-087): a new map like "New", from <see cref="EditorMapGenerator"/>; the status line tells how it was made, the
+    /// "Generate from template" (ADR-087): a new map like "New", from <see cref="EditorMapGenerator"/>; a message tells how it was made, the
     /// generator's problems if every attempt had some, and how many validator issues there are. A refused request returns its reason to the panel.
     /// </summary>
     private string? Generate(GenerateRequest request)

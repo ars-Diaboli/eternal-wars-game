@@ -205,19 +205,19 @@ $scenarios = @(
     # The tools on a blank map: roads, a river, an object, the gate link tool. Then the week event settings on the conditions tab
     # (ADR-084): tick Conflux for the weekly events, one more skipped week, undo both.
     @{ Name = 'editor-tools'; App = 'EternalWars.MapEditor'; Frames = 76
-       Input = '3:click:@Road;6:click:700,600;9:click:740,600;12:click:@River;15:click:800,500;18:click:@Object;21:click:900,450;24:click:@LinkGates;27:click:900,450;30:click:1500,67;39:click:@Conditions;44:click:@conflux;50:click:1583,450;56:click:@Undo;62:click:@Undo' },
+       Input = '3:click:@Road;6:click:700,600;9:click:740,600;12:click:@River;15:click:800,500;18:click:@Object;21:click:900,450;24:click:@LinkGates;27:click:900,450;30:click:1500,67;39:click:@Conditions;44:click:@conflux;50:click:1576,387;56:click:@Undo;62:click:@Undo' },
     # The height tools (ADR-182 g) on a blank map: radius 2, strength 8 (the spin boxes' up arrows), raise two strokes, lower one and undo
     # it; then highlands painted with Auto height on.
     # Then generate from a template (ADR-087): "From template", Sylvan for Blue, Generate (Two against two at 128), then the tab again: the settings stay.
     @{ Name = 'editor-heights'; App = 'EternalWars.MapEditor'; Frames = 106
-       Input = '3:click:@Height;5:click:147,288;7:click:147,288;9:click:162,323;10:click:162,323;11:click:162,323;12:click:162,323;13:click:162,323;14:click:162,323;17:drag:460,600,900,600;21:drag:460,620,900,620;26:click:@Raise;29:choose:Lower;33:drag:460,560,900,560;38:click:@Undo;42:click:@Terrain;45:click:@Highlands;48:click:400,400;59:click:@From template;64:click:@Random;68:choose:sylvan;72:click:@Generate;86:click:@From template' },
-    # The template editor (ADR-117): "Templates", select the middle zone (its obelisk count, ADR-140), add a treasure zone, drag it,
-    # right-drag it onto start-1 to connect, Generate (opens the map).
+       Input = '3:click:@Height;5:click:304,243;7:click:304,243;9:click:144,274;10:click:144,274;11:click:144,274;12:click:144,274;13:click:144,274;14:click:144,274;17:drag:460,600,900,600;21:drag:460,620,900,620;26:click:@Raise;29:choose:Lower;33:drag:460,560,900,560;38:click:@Undo;42:click:@Terrain;45:click:@Highlands;48:click:400,400;59:click:@From template;64:click:@Random;68:choose:sylvan;72:click:@Generate;86:click:@From template' },
+    # The template editor (ADR-117) in the workspace's Template tab (EDIT-3): the tab, select the middle zone (its obelisk count, ADR-140), add a treasure zone, drag it,
+    # right-drag it onto start-1 to connect, Generate (the map opens in the Map tab).
     @{ Name = 'editor-template-editor'; App = 'EternalWars.MapEditor'; Frames = 70
-       Input = '3:click:@Templates;10:click:708,373;18:click:@+ Treasure;24:drag:624,408,708,560;30:rdrag:708,560,568,373;44:click:@Generate' },
+       Input = '3:click:@Template;10:click:710,405;18:click:@+ Treasure;24:drag:626,440,710,590;30:rdrag:710,590,570,405;44:click:@Generate' },
     # The Events tab (EVT-6) on the quests map: open the tab, pick the first event (its tree), then its first action (the node text).
     @{ Name = 'editor-events'; App = 'EternalWars.MapEditor'; Frames = 30; Map = $questsMap
-       Input = '3:click:@Events;8:click:1096,193;14:click:1141,515' },
+       Input = '3:click:@Events;8:click:1096,170;14:click:1145,436' },
     # Bans and placeholders (ADR-126) on the placeholders map: the Bans tab, ban the first hero, undo it; Select, the Inspector tab, the random town.
     @{ Name = 'editor-bans'; App = 'EternalWars.MapEditor'; Frames = 30; Map = $placeholdersMap
        Input = '3:click:@Bans;7:click:@Agathe Sorrel (haven, Mage);11:click:@Undo;15:click:@Select;18:click:@Inspector;21:click:420,300' },
@@ -287,7 +287,7 @@ $scenarios = @(
     # A guild spell set by hand in the editor: select Emberkeep, open the inspector, scroll to the guild spells (a press on a
     # slot further down, closed again), pick Brand for the first level-1 slot.
     @{ Name = 'editor-guild-spell'; App = 'EternalWars.MapEditor'; Frames = 40; Map = $spellsMap
-       Input = '5:press:Select;10:click:400,300;16:click:@Inspector;20:press:drawn;23:key:Escape;26:click:1145,711;30:choose:Brand' },
+       Input = '5:press:Select;10:click:400,300;16:click:@Inspector;20:press:drawn;23:key:Escape;26:click:1143,748;30:choose:Brand' },
     # The siege's gate, keep and towers and Earthquake (ADR-120): the ballista breaks the gate; a second run casts Earthquake.
     @{ Name = 'game-siege-gate'; App = 'EternalWars.Game'; Frames = 104; Map = $siegeMagicMap
        Input = '3:key:Enter;10:key:Up;62:key:D;72:click:958,432' },
@@ -302,12 +302,12 @@ $scenarios = @(
     # "From template" brings the Generate tab to the front. Then the menus built from the command registry: Edit (Undo and Redo greyed:
     # nothing to undo), and Tools, where Hero is picked (the palette follows).
     @{ Name = 'editor-shell'; App = 'EternalWars.MapEditor'; Frames = 54; Map = $emberMap
-       Input = '4:click:@Monster;8:drag:1036,400,936,400;14:click:@Left panel;19:key:F11;24:key:F11;29:click:@Left panel;33:click:@From template;37:click:66,24;42:key:Escape;45:click:208,24;48:choose:Hero' },
+       Input = '4:click:@Monster;8:drag:1036,400,936,400;14:click:@Left panel;19:key:F11;24:key:F11;29:click:@Left panel;33:click:@From template;37:click:60,22;42:key:Escape;45:click:190,22;48:choose:Hero' },
     # The bottom panels and the status bar (EDIT-1, ADR-250) on a blank map: a road, a river and an object are three steps; History lists
     # them and a click on the first jumps back to it (the river and the object are undone and dim); Output keeps the messages (the gate link tool, clicked on empty ground, says what it needs); the status
     # bar's problem counts open Problems, where the warnings are hidden and shown again and the kind Heroes is picked.
     @{ Name = 'editor-bottom-panels'; App = 'EternalWars.MapEditor'; Frames = 66
-       Input = '3:click:@Road;6:click:700,600;9:click:@River;12:click:800,500;15:click:@Object;18:click:900,450;21:click:@LinkGates;24:click:1000,300;27:click:@History;31:click:500,725;36:click:@Output;43:click:1327,877;47:click:478,708;51:click:478,708;55:click:604,708;59:choose:Heroes (2)' },
+       Input = '3:click:@Road;6:click:700,600;9:click:@River;12:click:800,500;15:click:@Object;18:click:900,450;21:click:@LinkGates;24:click:1000,300;27:click:@History;31:click:500,736;36:click:@Output;43:click:1327,877;47:click:478,708;51:click:478,708;55:click:604,708;59:choose:Heroes (2)' },
     # The editor's files (EDIT-1, ADR-250) on a blank map: a road makes unsaved work; File > New asks over it and Cancel stays; New
     # again and "Don't save" opens the new map ("Not saved"); File > Save as shows the file dialog in the scenario's own maps folder, and Enter saves the map there ("Saved" with the time).
     @{ Name = 'editor-files'; App = 'EternalWars.MapEditor'; Frames = 60
@@ -315,7 +315,15 @@ $scenarios = @(
     # Recovery (EDIT-1, ADR-250): a session marker and an autosave (Ember March) are planted, as a crashed editor leaves them; the editor
     # starts on its blank map and offers the autosave; Restore opens it as unsaved work.
     @{ Name = 'editor-recovery'; App = 'EternalWars.MapEditor'; Frames = 30; Recovery = $emberMap
-       Input = '12:click:@Restore' }
+       Input = '12:click:@Restore' },
+    # The command palette (EDIT-1, ADR-250) on a blank map: Ctrl+Shift+P, "roa" leaves the Road tool, Enter puts it in use; the
+    # palette again, "panel" lists the panel commands with their shortcuts, Down and Enter run the second (the bottom panel collapses).
+    @{ Name = 'editor-palette'; App = 'EternalWars.MapEditor'; Frames = 50
+       Input = '3:key:Ctrl+Shift+P;10:text:roa;18:key:Enter;24:key:Ctrl+Shift+P;30:text:panel;38:key:Down;42:key:Enter' },
+    # Preferences (EDIT-1, ADR-250): Ctrl+Comma opens the window; the UI scale goes to 150 %, OK applies it; the window again shows
+    # what was kept.
+    @{ Name = 'editor-preferences'; App = 'EternalWars.MapEditor'; Frames = 40
+       Input = '3:key:Ctrl+Comma;9:click:@100 %;13:choose:150 %;19:click:@OK;28:key:Ctrl+Comma' }
 )
 
 # Every scenario has a seed of its own, so its games and battles are the same on every run (ADR-239): the entry's Seed, else one made from

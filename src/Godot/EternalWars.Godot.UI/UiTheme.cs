@@ -5,7 +5,8 @@ namespace EternalWars.Godot.UI;
 /// <summary>
 /// The game's look (ADR-191): dark slate panels framed in bronze, in the HoMM manner, with Godot's default fonts. One set of colours that
 /// the theme, the screens, the status bar and the side panel share; <see cref="Apply"/> merges it with the spacing (<see cref="UiSpacing"/>)
-/// into Godot's default theme at start, so it holds on every canvas layer.
+/// into Godot's default theme at start, so it holds on every canvas layer. The map editor uses the compact variant (EDIT-1, ADR-250): the
+/// same colours with a smaller font, tighter rows and gaps and lower buttons, so more fits into a tool's panels.
 /// </summary>
 public static class UiTheme
 {
@@ -29,6 +30,9 @@ public static class UiTheme
 
     /// <summary>A button's face.</summary>
     public static readonly Color ButtonFace = new(0.17f, 0.18f, 0.22f);
+
+    /// <summary>The compact variant's font size (Godot's own is 16).</summary>
+    public const int CompactFontSize = 14;
 
     /// <summary>The side panel's frame width, thicker than a panel's.</summary>
     public const int FrameWidth = 3;
@@ -126,11 +130,12 @@ public static class UiTheme
         return style;
     }
 
-    /// <summary>The spacing (<see cref="UiSpacing.CreateTheme"/>) with the colours: panels and buttons.</summary>
-    public static Theme CreateTheme()
+    /// <summary>The spacing (<see cref="UiSpacing.CreateTheme"/>) with the colours: panels and buttons. <paramref name="compact"/>: the editor's variant.</summary>
+    public static Theme CreateTheme(bool compact = false)
     {
-        var theme = UiSpacing.CreateTheme();
-        theme.SetStylebox("panel", "PanelContainer", Box(PanelBackground, Border, UiSpacing.Padding));
+        var theme = UiSpacing.CreateTheme(compact);
+        theme.SetStylebox("panel", "PanelContainer", Box(PanelBackground, Border, compact ? UiSpacing.CompactPadding : UiSpacing.Padding));
+        StyleBoxFlat ButtonBox(Color face, Color border) => ButtonStyle(face, border, compact);
         foreach (var type in new[] { "Button", "OptionButton", "MenuButton" })
         {
             theme.SetStylebox("normal", type, ButtonBox(ButtonFace, BorderDim));
@@ -146,14 +151,25 @@ public static class UiTheme
         return theme;
     }
 
-    /// <summary>Merges the theme into Godot's default one, which every control falls back to. Call it once, before the UI is built.</summary>
-    public static void Apply() => ThemeDB.GetDefaultTheme().MergeWith(CreateTheme());
+    /// <summary>
+    /// Merges the theme into Godot's default one, which every control falls back to. Call it once, before the UI is built.
+    /// <paramref name="compact"/>: the editor's variant, with its smaller font.
+    /// </summary>
+    public static void Apply(bool compact = false)
+    {
+        var theme = ThemeDB.GetDefaultTheme();
+        theme.MergeWith(CreateTheme(compact));
+        if (compact)
+        {
+            theme.DefaultFontSize = CompactFontSize;
+        }
+    }
 
-    private static StyleBoxFlat ButtonBox(Color face, Color border)
+    private static StyleBoxFlat ButtonStyle(Color face, Color border, bool compact)
     {
         var style = Box(face, border, 0);
-        style.ContentMarginLeft = style.ContentMarginRight = UiSpacing.Gap;
-        style.ContentMarginTop = style.ContentMarginBottom = 4;
+        style.ContentMarginLeft = style.ContentMarginRight = compact ? UiSpacing.CompactGap : UiSpacing.Gap;
+        style.ContentMarginTop = style.ContentMarginBottom = compact ? 2 : 4;
         style.SetCornerRadiusAll(2);
         return style;
     }

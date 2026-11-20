@@ -7,7 +7,7 @@ namespace EternalWars.Godot.Shared.Controls;
 /// Replays scripted input for smoke tests and screenshots (together with Godot's <c>--write-movie</c>):
 /// <c>-- --autoinput=30:click:800,450;45:key:Enter;60:rclick:400,300</c>. Each entry is
 /// <c>frame:kind:argument</c>; kinds are <c>click</c>/<c>rclick</c> (screen x,y), <c>key</c> (a Godot
-/// <see cref="Key"/> name), <c>text</c> (letters typed into the focused text field, one a frame), <c>touch</c> (<c>x,y,frames</c>: one finger down there, lifted that many frames later; a long press
+/// <see cref="Key"/> name, with its modifiers before it: <c>key:Ctrl+Shift+P</c>), <c>text</c> (letters typed into the focused text field, one a frame), <c>touch</c> (<c>x,y,frames</c>: one finger down there, lifted that many frames later; a long press
 /// opens the information window through <see cref="TouchInput"/>), <c>hold</c> (<c>Key,frames</c>: held down that long), <c>wheel</c> (<c>up|down,count</c>) and
 /// <c>drag</c>/<c>rdrag</c> (<c>x1,y1,x2,y2</c>: left or right button pressed, moved, released over three frames), <c>press</c> (a visible,
 /// enabled button by its text or, without one, its tooltip; the topmost: exact, else the first that contains it, ignoring case; scrolled into view, then clicked at its centre the next
@@ -73,10 +73,21 @@ public partial class AutoInput : Node
                 case "key" or "hold":
                     // hold:Key,frames keeps the key down that many frames (camera panning reads the held keys).
                     var keyParts = parts[2].Split(',');
-                    var key = Enum.Parse<Key>(keyParts[0], ignoreCase: true);
+                    // key:Ctrl+Shift+P presses the key with those modifiers (Ctrl, Shift, Alt) held.
+                    var chord = keyParts[0].Split('+');
+                    var key = Enum.Parse<Key>(chord[^1], ignoreCase: true);
+                    var modifiers = chord[..^1];
+                    bool With(string modifier) => modifiers.Contains(modifier, StringComparer.OrdinalIgnoreCase);
                     var held = parts[1] == "hold" && keyParts.Length > 1 ? int.Parse(keyParts[1], CultureInfo.InvariantCulture) : 1;
-                    _script.Add((frame, new InputEventKey { Keycode = key, PhysicalKeycode = key, Pressed = true }));
-                    _script.Add((frame + held, new InputEventKey { Keycode = key, PhysicalKeycode = key, Pressed = false }));
+                    foreach (var (when, pressed) in new[] { (frame, true), (frame + held, false) })
+                    {
+                        _script.Add((when, new InputEventKey
+                        {
+                            Keycode = key, PhysicalKeycode = key, Pressed = pressed,
+                            CtrlPressed = With("Ctrl"), ShiftPressed = With("Shift"), AltPressed = With("Alt"),
+                        }));
+                    }
+
                     break;
                 case "text":
                     // text:hello types the letters, one a frame, as the keyboard would (a focused text field takes them).
