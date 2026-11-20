@@ -262,7 +262,8 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
 ### Map editor
 `MapEditorSession` (`Editing/`) wraps a scenario `GameState` that never starts. Every edit is an `IEditorCommand`
 (execute/undo) in `UndoHistory` (its steps' descriptions oldest first, and the position: how many are applied; `UndoTo(step)` jumps
-there by single undos or redos; `UndoHistoryChanged` follows every record, undo, redo and jump) and publishes the same kind of events as the game, so editor views are ordinary
+there by single undos or redos; `UndoHistoryChanged` follows every record, undo, redo and jump; the history remembers the step the front-end saved at, `MarkSaved`,
+so `IsDirty` is exact and `UnsavedWorkChanged` tells when it flips) and publishes the same kind of events as the game, so editor views are ordinary
 subscribers. The session is a facade: edits live in per-area editors (`Terrain`, `Objects`, `Contents`, `Monsters`, `Towns`,
 `Heroes`, `MapEvents`, `Players`, `Map`) over one internal `EditorContext` (scenario, catalog, bus, history, open stroke).
 Single-value edits are `PropertyEdit<T>` commands; an edit to the value already there records no undo step and publishes

@@ -50,6 +50,13 @@ public sealed record UndoHistoryChanged(string? UndoDescription, string? RedoDes
     public bool CanRedo => RedoDescription is not null;
 }
 
+/// <summary>
+/// The edited map started (<paramref name="IsDirty"/>) or stopped having work that is not saved: an edit, undo or redo left the saved
+/// step or came back to it, or the map was saved (<c>MapEditorSession.MarkSaved</c>).
+/// </summary>
+[SeenBy(Audience.Nobody)]
+public sealed record UnsavedWorkChanged(bool IsDirty) : IEvent;
+
 /// <summary>The editor changed a hero's spell book or spells (ADR-120).</summary>
 [SeenBy(Audience.Witnesses)]
 public sealed record HeroSpellsChanged(HeroId Hero) : IEvent;

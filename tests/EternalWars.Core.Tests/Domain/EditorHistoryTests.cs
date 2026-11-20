@@ -9,7 +9,7 @@ using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Tests.Domain;
 
-/// <summary>The history's steps and jumps in it (EDIT-1, ADR-250).</summary>
+/// <summary>The history's steps, jumps in it and the unsaved work it tells (EDIT-1, ADR-250).</summary>
 public class EditorHistoryTests
 {
     private static readonly TerrainType[] Paints = [TerrainType.Water, TerrainType.Sand, TerrainType.Snow, TerrainType.Dirt];
@@ -137,6 +137,122 @@ public class EditorHistoryTests
         editor.BeginStroke("Paint");
 
         Assert.Throws<InvalidOperationException>(() => editor.UndoTo(0));
+    }
+
+    [Fact]
+    public void IsDirty_FollowsTheSavedStep()
+    {
+        var editor = TestEditor.Blank();
+        Assert.False(editor.IsDirty); // a new session has nothing to save
+
+        editor.Terrain.Paint(new MapPosition(2, 2), TerrainType.Water);
+        Assert.True(editor.IsDirty);
+        editor.Undo();
+        Assert.False(editor.IsDirty);
+        editor.Redo();
+
+        editor.MarkSaved();
+        Assert.False(editor.IsDirty);
+
+        editor.Terrain.Paint(new MapPosition(3, 2), TerrainType.Sand);
+        Assert.True(editor.IsDirty);
+        editor.Undo();
+        Assert.False(editor.IsDirty); // back at the saved step
+        editor.Undo();
+        Assert.True(editor.IsDirty); // before it
+        editor.UndoTo(1);
+        Assert.False(editor.IsDirty);
+    }
+
+    [Fact]
+    public void IsDirty_StaysWhenANewStepReplacesTheSavedOne()
+    {
+        var editor = Painted();
+        editor.MarkSaved();
+        editor.UndoTo(3);
+
+        editor.Terrain.Paint(new MapPosition(1, 1), TerrainType.Snow);
+        editor.Terrain.Paint(new MapPosition(2, 1), TerrainType.Snow);
+
+        Assert.Equal(5, editor.History.Position); // the saved position, but another map
+        Assert.True(editor.IsDirty);
+        for (var step = 0; step <= editor.History.Count; step++)
+        {
+            editor.UndoTo(step);
+            Assert.True(editor.IsDirty);
+        }
+
+        editor.MarkSaved();
+        Assert.False(editor.IsDirty);
+    }
+
+    [Fact]
+    public void IsDirty_ANewStepAtTheSavedStepKeepsItReachable()
+    {
+        var editor = Painted();
+        editor.UndoTo(3);
+        editor.MarkSaved();
+
+        editor.Terrain.Paint(new MapPosition(1, 1), TerrainType.Snow);
+
+        Assert.True(editor.IsDirty);
+        editor.Undo();
+        Assert.False(editor.IsDirty);
+    }
+
+    [Fact]
+    public void IsDirty_TheSavedStepFollowsAFullHistory_UntilItFallsOut()
+    {
+        var history = new UndoHistory(capacity: 3);
+        history.Record(new NamedStep("a"));
+        history.MarkSaved();
+        history.Record(new NamedStep("b"));
+        history.Record(new NamedStep("c"));
+        history.Record(new NamedStep("d")); // drops "a": the saved map is now the history's start
+
+        history.MoveTo(0);
+        Assert.False(history.IsDirty);
+
+        history.MoveTo(3);
+        history.Record(new NamedStep("e")); // drops "b": nothing leads back to the saved map
+        for (var position = 0; position <= history.Count; position++)
+        {
+            history.MoveTo(position);
+            Assert.True(history.IsDirty);
+        }
+    }
+
+    [Fact]
+    public void Clear_KeepsWhetherThereIsUnsavedWork()
+    {
+        var history = new UndoHistory();
+        history.Record(new NamedStep("a"));
+        history.MarkSaved();
+        history.Clear();
+        Assert.False(history.IsDirty);
+
+        history.Record(new NamedStep("b"));
+        history.Clear();
+        Assert.True(history.IsDirty);
+        history.MarkSaved();
+        Assert.False(history.IsDirty);
+    }
+
+    [Fact]
+    public void UnsavedWorkChanged_IsPublishedOnlyWhenTheAnswerChanges()
+    {
+        var editor = TestEditor.Blank();
+        var changes = new List<bool>();
+        editor.Events.Subscribe<UnsavedWorkChanged>(e => changes.Add(e.IsDirty));
+
+        editor.MarkSaved(); // already clean
+        editor.Terrain.Paint(new MapPosition(2, 2), TerrainType.Water);
+        editor.Terrain.Paint(new MapPosition(3, 2), TerrainType.Sand); // still dirty
+        editor.MarkSaved();
+        editor.Undo();
+        editor.Redo();
+
+        Assert.Equal([true, false, true, false], changes);
     }
 
     /// <summary>An editor with five steps: the map's name, then four paints over one another.</summary>

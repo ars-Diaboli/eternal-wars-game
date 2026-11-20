@@ -79,4 +79,13 @@ public sealed class MapEditorSession
     /// the same as that many single undos or redos, and published as one change. Returns whether anything changed.
     /// </summary>
     public bool UndoTo(int step) => _context.ChangeHistory(() => History.MoveTo(step));
+
+    /// <summary>
+    /// The map has work that is not saved: the history is not at the step of the last <see cref="MarkSaved"/> (a new session counts as
+    /// saved). Undoing or redoing back to that step makes it clean again. <c>UnsavedWorkChanged</c> tells when this changes.
+    /// </summary>
+    public bool IsDirty => History.IsDirty;
+
+    /// <summary>The front-end wrote the map as it is now to its file.</summary>
+    public void MarkSaved() => _context.MarkSaved();
 }

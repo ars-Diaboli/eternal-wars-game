@@ -9,13 +9,16 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 1 task 7 (ADR-250): `UndoHistory` remembers the position saved at (`MarkSaved`), so
+  `MapEditorSession.IsDirty` is exact (an undo back to the saved step is clean; a step recorded over the saved one, or the saved
+  one dropped from a full history, stays dirty until the next save); `UnsavedWorkChanged` is published when it flips. The editor's
+  status bar reads it. Tests in `EditorHistoryTests`. Next: task 8, the file dialogs.
 - Editor overhaul, step 1 tasks 5 and 6 (ADR-250): the bottom region holds `ProblemsPanel` (the validator on a copy of the map, on a
   task, 0.2 s after the last change; counts, a filter by severity and by `IssueKind`, which the validator now sets on every
   `MapIssue` from its check), `HistoryPanel` (a click jumps, `UndoTo`) and `OutputPanel` (the messages, kept in an `EditorLog`);
   `StatusBarView` under the regions shows the pointed tile, the last message, the background work, the problem counts, the save
   state and the zoom (`StrategyCamera.ZoomPercent`). `ValidationPanel` and the top bar's status row are gone, so the `editor-*`
-  smoke clicks moved 29 px up; new smoke `editor-bottom-panels`. The save state is a plain text (changed since the last save or
-  not, an undo back to the saved step still counts as changed); the exact one is task 7 (`IsDirty` in the core), which is next.
+  smoke clicks moved 29 px up; new smoke `editor-bottom-panels`.
 - Editor overhaul, step 1 task 4 (ADR-250): `UndoHistory` is a list of steps with a position (`Steps`, `Position`, `Count`);
   `MapEditorSession.UndoTo(step)` jumps there by single undos or redos and publishes one `UndoHistoryChanged`, which now carries the
   position and the count; tests in `EditorHistoryTests`.
@@ -49,7 +52,7 @@ Detail: [roadmap.md](roadmap.md).
 2. The prologue map (CAMP-1), as the first map of a campaign; Border Watch's story is a placeholder.
 3. The remaining Phase 5 items in [roadmap.md](roadmap.md) ("Presentation and UI", "Town screen overhaul", "Editor overhaul",
    "Platform and art", "Roster"); the town screen overhaul starts with the owner's answers (TOWN-14 … TOWN-23), the editor
-   overhaul continues with step 1 task 7 (the step 0 greybox of the wizard is still open).
+   overhaul continues with step 1 task 8 (the step 0 greybox of the wizard is still open).
 4. The "Code health" list in [roadmap.md](roadmap.md): skills, heroes and town types as typed ids; `InfoSheets` as data once localisation
    is decided (ADR-239).
 
