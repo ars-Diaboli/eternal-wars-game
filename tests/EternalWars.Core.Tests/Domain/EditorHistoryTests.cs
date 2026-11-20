@@ -239,6 +239,24 @@ public class EditorHistoryTests
     }
 
     [Fact]
+    public void MarkUnsaved_MakesTheMapUnsavedWorkUntilItIsSaved()
+    {
+        var editor = TestEditor.Blank();
+        var changes = new List<bool>();
+        editor.Events.Subscribe<UnsavedWorkChanged>(e => changes.Add(e.IsDirty));
+
+        editor.MarkUnsaved();
+        Assert.True(editor.IsDirty);
+        editor.Terrain.Paint(new MapPosition(2, 2), TerrainType.Water);
+        editor.Undo();
+        Assert.True(editor.IsDirty); // no step leads to a saved map
+
+        editor.MarkSaved();
+        Assert.False(editor.IsDirty);
+        Assert.Equal([true, false], changes);
+    }
+
+    [Fact]
     public void UnsavedWorkChanged_IsPublishedOnlyWhenTheAnswerChanges()
     {
         var editor = TestEditor.Blank();

@@ -147,6 +147,9 @@ public sealed class UndoHistory(int capacity = 200)
     /// <summary>The map as it is now was saved.</summary>
     public void MarkSaved() => _saved = Position;
 
+    /// <summary>The map as it is now is in no file (one restored from an autosave): it is unsaved work until the next save.</summary>
+    public void MarkUnsaved() => _saved = null;
+
     /// <summary>Forgets every step; unsaved work stays unsaved.</summary>
     public void Clear()
     {

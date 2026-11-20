@@ -307,7 +307,15 @@ $scenarios = @(
     # them and a click on the first jumps back to it (the river and the object are undone and dim); Output keeps the messages (the gate link tool, clicked on empty ground, says what it needs); the status
     # bar's problem counts open Problems, where the warnings are hidden and shown again and the kind Heroes is picked.
     @{ Name = 'editor-bottom-panels'; App = 'EternalWars.MapEditor'; Frames = 66
-       Input = '3:click:@Road;6:click:700,600;9:click:@River;12:click:800,500;15:click:@Object;18:click:900,450;21:click:@LinkGates;24:click:1000,300;27:click:@History;31:click:500,725;36:click:@Output;43:click:1327,877;47:click:478,708;51:click:478,708;55:click:604,708;59:choose:Heroes (2)' }
+       Input = '3:click:@Road;6:click:700,600;9:click:@River;12:click:800,500;15:click:@Object;18:click:900,450;21:click:@LinkGates;24:click:1000,300;27:click:@History;31:click:500,725;36:click:@Output;43:click:1327,877;47:click:478,708;51:click:478,708;55:click:604,708;59:choose:Heroes (2)' },
+    # The editor's files (EDIT-1, ADR-250) on a blank map: a road makes unsaved work; File > New asks over it and Cancel stays; New
+    # again and "Don't save" opens the new map ("Not saved"); File > Save as shows the file dialog in the scenario's own maps folder, and Enter saves the map there ("Saved" with the time).
+    @{ Name = 'editor-files'; App = 'EternalWars.MapEditor'; Frames = 60
+       Input = '3:click:@Road;6:click:700,600;10:click:24,24;13:choose:New;20:click:@Cancel;24:click:24,24;27:choose:New;33:click:@Don''t save;40:click:24,24;43:choose:Save as;49:key:Enter' },
+    # Recovery (EDIT-1, ADR-250): a session marker and an autosave (Ember March) are planted, as a crashed editor leaves them; the editor
+    # starts on its blank map and offers the autosave; Restore opens it as unsaved work.
+    @{ Name = 'editor-recovery'; App = 'EternalWars.MapEditor'; Frames = 30; Recovery = $emberMap
+       Input = '12:click:@Restore' }
 )
 
 # Every scenario has a seed of its own, so its games and battles are the same on every run (ADR-239): the entry's Seed, else one made from
@@ -335,6 +343,14 @@ $results = $selected | ForEach-Object -ThrottleLimit ([Math]::Max(1, $Jobs)) -Pa
     Remove-Item $settings -ErrorAction SilentlyContinue
     # The editor keeps its workspace layout beside the settings file: every scenario starts from the default layout.
     Remove-Item (Join-Path $dir 'editor-settings.cfg') -ErrorAction SilentlyContinue
+    # ... and its maps folder and its autosaves with the session marker, which a run ended by --quit-after leaves behind.
+    Remove-Item (Join-Path $dir 'maps'), (Join-Path $dir 'autosave') -Recurse -ErrorAction SilentlyContinue
+    if ($scenario.Recovery) {
+        $autosave = Join-Path $dir 'autosave'
+        New-Item -ItemType Directory -Force $autosave | Out-Null
+        Set-Content (Join-Path $autosave 'session.marker') 'planted'
+        Copy-Item $scenario.Recovery (Join-Path $autosave 'autosave-20261120-101500.ewmap.json')
+    }
     $saves = Join-Path $dir 'saves'
     Remove-Item $saves -Recurse -ErrorAction SilentlyContinue
     $userArgs = @("--autoinput=$($scenario.Input)", "--settings=$settings", "--saves=$saves")

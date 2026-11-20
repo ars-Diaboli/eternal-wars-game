@@ -22,16 +22,31 @@ properties, players, validation and conditions panels):
   tab ([adventure-map.md](adventure-map.md#map-bans-and-random-placeholders), ADR-133);
 - validation; [generate from a template and the template editor](random-maps.md#editor).
 
-**The window** (EDIT-1, ADR-250): a bar on top (the menus, the toolbar with the map's name), three docked regions around the map
+**The window** (EDIT-1, ADR-250): a bar on top (the menus, the toolbar), three docked regions around the map
 view, each a tab box, and a status bar at the bottom. The tools and the options of the one in use are on the left, the map's settings
 and the inspector on the right (Map, Players, Conditions, Inspector, Events, Bans, Generate), Problems, History and Output at the
 bottom. A region is resized with its splitter and collapsed with its
 button on the toolbar or in the View menu; F11 hides them all and shows them again. A panel larger than its region scrolls. The
 splitter positions, the collapsed regions and each region's open tab are kept in `editor-settings.cfg` in the user data folder.
 
+**Files** (File menu):
+- **Open** (Ctrl+O), **Save** (Ctrl+S) and **Save as** (Ctrl+Shift+S) use a file dialog, the system's own where there is one. It
+  starts in the maps folder (`user://maps`), or in the folder of the map's file. Save writes to the map's file; a map without a file
+  asks for one. The dialog asks before it overwrites a file.
+- **Open recent** lists the last ten files opened or saved, the newest first (kept in `editor-settings.cfg`).
+- The window's title is the file's name (the map's name for a map without a file), with an asterisk in front while the map has
+  unsaved work.
+- **Unsaved work**: New (Ctrl+N), From template, Open, Quit (Ctrl+Q) and closing the window first ask "Save", "Don't save" or
+  "Cancel". Escape is Cancel.
+- **Autosave**: every 2 minutes, a map with unsaved work that changed since the last autosave is copied to `user://maps/.autosave/`;
+  the newest five stay. The map's own file is not touched.
+- **Recovery**: when the editor did not close properly and an autosave was made after the last save (or after the last map was
+  opened), the next start offers to restore the newest one. A restored map has no file and counts as unsaved work. A second editor
+  started while one runs offers nothing.
+
 **Commands**: every action is a command with a name, an optional icon and shortcut, and a check whether it can run now. The menus
 (File, Edit, View, Map, Tools, Templates, Test, Help) and the toolbar are built from the commands; an item that cannot run is greyed
-and says why in its tooltip. Shortcuts: Ctrl+Z undo, Ctrl+Y redo, L the next level, F11 the panels. The Map menu opens the map's
+and says why in its tooltip. Shortcuts: the File menu's, Ctrl+Z undo, Ctrl+Y redo, L the next level, F11 the panels. The Map menu opens the map's
 tabs, the Tools menu picks a tool. Test (F5) and Help (F1) are in their menus and greyed until they are built.
 
 **The bottom panels**:
@@ -39,11 +54,11 @@ tabs, the Tools menu picks a tool. Test (F5) and Help (F1) are in their menus an
   the counts show and hide the errors and the warnings; a list picks one kind (heroes, objects, ground, players, rules, content,
   events). A click on a problem shows its tile; a double click on an event's problem opens the event.
 - **History**: the start, then every undo step, oldest first; the undone steps are dim. A click on a row jumps there.
-- **Output**: the editor's messages with their time (what was saved, loaded or generated, why an edit was refused).
+- **Output**: the editor's messages with their time (what was saved, opened, autosaved or generated, why an edit was refused).
 
 **The status bar**, left to right: the tile under the pointer (x, y, level, terrain, height, the hero, town or object there); the
 last message; "Checking the map…" while the problems are being checked; the counts of errors and warnings (a click opens Problems);
-the save state ("Not saved" for a new map, "No changes" after a load, "Saved" with the time, and "Unsaved changes" whenever the map
+the save state ("Not saved" for a map without a file, "No changes" after a file is opened, "Saved" with the time, and "Unsaved changes" whenever the map
 differs from the saved one: undoing back to the saved step clears it); the zoom in percent.
 
 *Planned*: map resize, and the rest of an overhaul of the map and template editors into one creator-app workspace (ADR-247,

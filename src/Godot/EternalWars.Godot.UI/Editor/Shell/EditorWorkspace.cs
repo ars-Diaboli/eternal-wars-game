@@ -14,13 +14,10 @@ public enum EditorRegion
 /// The editor's window layout (EDIT-1, ADR-250): a bar on top, then three docked regions around the map view, each a tab box that is resized
 /// with a splitter and collapsed (<see cref="SetOpen"/>); <see cref="ToggleAll"/> hides and shows them all; a status bar at the bottom. The map itself is drawn behind the workspace: the
 /// middle is a hole that lets the pointer through to the app. The splitter positions, the collapsed regions and each region's open tab are
-/// kept in the editor's settings file (<see cref="SettingsFileName"/>) on every change.
+/// kept in the <see cref="EditorSettingsFile"/> on every change.
 /// </summary>
 public partial class EditorWorkspace : Control
 {
-    /// <summary>The editor's own settings file, in the user data folder.</summary>
-    public const string SettingsFileName = "editor-settings.cfg";
-
     private const string Section = "layout";
 
     /// <summary>Each region's splitter offset when no settings file says otherwise: the left one's width, the others' size from the far edge.</summary>
@@ -36,8 +33,7 @@ public partial class EditorWorkspace : Control
     private readonly Dictionary<EditorRegion, bool> _open = [];
     private readonly Dictionary<EditorRegion, string> _savedTabs = [];
     private readonly Dictionary<Control, Control> _tabOf = [];
-    private readonly ConfigFile _settings = new();
-    private string? _settingsPath;
+    private EditorSettingsFile _settings = null!;
     private bool _allHidden;
     private bool _addingTab;
 
@@ -51,17 +47,11 @@ public partial class EditorWorkspace : Control
     public HBoxContainer StatusBar { get; } = new() { Name = "StatusBar", SizeFlagsHorizontal = SizeFlags.ExpandFill };
 
     /// <summary>
-    /// Builds the regions and applies the layout kept in <paramref name="settingsPath"/> (null: the defaults, and nothing is kept). Add the
-    /// tabs after this.
+    /// Builds the regions and applies the layout kept in <paramref name="settings"/>. Add the tabs after this.
     /// </summary>
-    public void Bind(string? settingsPath)
+    public void Bind(EditorSettingsFile settings)
     {
-        _settingsPath = settingsPath;
-        if (settingsPath is not null && File.Exists(settingsPath) && _settings.Load(settingsPath) != Error.Ok)
-        {
-            GD.PushWarning($"Could not read {settingsPath}: the default layout is used.");
-            _settings.Clear();
-        }
+        _settings = settings;
 
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         MouseFilter = MouseFilterEnum.Ignore;
@@ -158,11 +148,10 @@ public partial class EditorWorkspace : Control
     private SplitContainer Splitter(SplitContainer splitter, EditorRegion region)
     {
         splitter.MouseFilter = MouseFilterEnum.Ignore; // the draggers are controls of their own
-        splitter.SplitOffsets = [_settings.GetValue(Section, SettingKey(region, "offset"), DefaultOffsets[region]).AsInt32()];
+        splitter.SplitOffsets = [_settings.Get(Section, SettingKey(region, "offset"), DefaultOffsets[region]).AsInt32()];
         splitter.DragEnded += () =>
         {
-            _settings.SetValue(Section, SettingKey(region, "offset"), splitter.SplitOffsets[0]);
-            Save();
+            _settings.Set(Section, SettingKey(region, "offset"), splitter.SplitOffsets[0]);
         };
         return splitter;
     }
@@ -185,12 +174,11 @@ public partial class EditorWorkspace : Control
                 return;
             }
 
-            _settings.SetValue(Section, SettingKey(region, "tab"), tabs.GetTabControl((int)index).Name.ToString());
-            Save();
+            _settings.Set(Section, SettingKey(region, "tab"), tabs.GetTabControl((int)index).Name.ToString());
         };
         _regions[region] = tabs;
-        _open[region] = _settings.GetValue(Section, SettingKey(region, "open"), true).AsBool();
-        _savedTabs[region] = _settings.GetValue(Section, SettingKey(region, "tab"), "").AsString();
+        _open[region] = _settings.Get(Section, SettingKey(region, "open"), true).AsBool();
+        _savedTabs[region] = _settings.Get(Section, SettingKey(region, "tab"), "").AsString();
         return panel;
     }
 
@@ -201,8 +189,7 @@ public partial class EditorWorkspace : Control
         if (_open[region] != open)
         {
             _open[region] = open;
-            _settings.SetValue(Section, SettingKey(region, "open"), open);
-            Save();
+            _settings.Set(Section, SettingKey(region, "open"), open);
         }
 
         ApplyVisibility();
@@ -223,14 +210,6 @@ public partial class EditorWorkspace : Control
     {
         panel.AddThemeStyleboxOverride("panel", UiTheme.Box(new Color(UiTheme.PanelBackground, 1), UiTheme.Border, UiSpacing.Padding));
         return panel;
-    }
-
-    private void Save()
-    {
-        if (_settingsPath is not null && _settings.Save(_settingsPath) != Error.Ok)
-        {
-            GD.PushWarning($"Could not keep the layout in {_settingsPath}.");
-        }
     }
 
     private static string SettingKey(EditorRegion region, string what) => $"{region.ToString().ToLowerInvariant()}_{what}";
