@@ -492,7 +492,7 @@ The tasks of each step in build order. A task is one reviewable change that leav
 2. **Tools as classes**: `IEditorTool` (activate, hover, press, drag, release, cancel, options panel) in `Editor/Tools/`. Move one tool
    at a time out of `Main.cs` (`Paint`, `Click`, `Link`, the height tools, start zones, the Grail) with no change in behaviour; the
    app only routes input to the active tool. `Main.cs` ends at composition and input mapping. The `editor-tools`, `editor-heights`
-   and `editor-grail-and-town` screenshots stay the same.
+   and `editor-grail-and-town` screenshots stay the same. *Done.*
 3. **Commands**: `CommandRegistry` (id, name, icon, default shortcut, "can run now", action). Register every action the editor has
    today: the file row, Undo, Redo, Level, Grid, Templates, and one command per tool. `MenuBarView` (File, Edit, View, Map, Tools,
    Templates, Test, Help) and `ToolbarView` are built from it; the file row goes. Disabled items say why in their tooltip.
