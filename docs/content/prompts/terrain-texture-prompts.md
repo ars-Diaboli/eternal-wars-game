@@ -10,14 +10,14 @@ Three rules carry every prompt (ADR-244):
 3. **The real scale of the map**: one texture covers about **30 × 30 m** of ground on the adventure map (a tile is about 2 m).
    Plants read as dense masses and clumps, never as single big leaves or blades.
 
-## Compose a prompt
+## Use a prompt
 
-Each terrain section below ends with its own block, `TERRAIN-<id>` (the id is the texture's file name). Build the prompt from blocks,
-copying each block's text exactly and joining them with a space:
+Each terrain section below ends with its own block, `TERRAIN-<id>` (the id is the texture's file name). A prompt is a lead block and
+the terrain's block, each copied exactly and joined with a space:
 
 ```text
-PROMPT   = TERRAIN-STYLE + TERRAIN-MAP + TERRAIN-<id>      (adventure map)
-         = TERRAIN-STYLE + TERRAIN-BATTLE + TERRAIN-<id>   (battlefield)
+PROMPT   = MAP-LEAD + TERRAIN-<id>      (adventure map)
+         = BATTLE-LEAD + TERRAIN-<id>   (battlefield)
 NEGATIVE = TERRAIN-NEG   (only where the tool takes a negative prompt)
 OUTPUT   = <id>.png and its maps, as under "Output for every terrain"
 ```
@@ -28,27 +28,25 @@ Avoid list, add those words to the negative prompt for that terrain. Do not para
 
 ## Blocks
 
-**`TERRAIN-STYLE`** (style, first in every prompt):
+**`MAP-LEAD`** (style and scale, first in every adventure-map prompt):
 
 ```text
 Seamless tileable PBR ground material, perfectly top-down orthographic view, evenly lit with flat ambient light, no shadows, no
-perspective. Rich saturated natural colour, vivid and clean, bright and clear like a sunny high-resolution aerial survey photo,
-strong colour identity, crisp detail. Albedo without lighting, with matching normal, roughness, ambient occlusion and height maps.
+perspective. Rich saturated natural colour, vivid and clean, bright and clear like a sunny high-resolution aerial survey photo, strong
+colour identity, crisp detail. Albedo without lighting, with matching normal, roughness, ambient occlusion and height maps. Covers a
+large area of about 30 by 30 metres of ground, seen from high above like a drone photo; the ground's typical plants, stones and cracks
+are small at this scale, many hundreds of them, forming dense natural clusters and drifts; a single grass tuft or pebble is only a few
+pixels; clear medium-scale pattern of patches and clumps that defines the surface, bright raised parts and darker hollows.
 ```
 
-**`TERRAIN-MAP`** (scale, adventure-map textures):
+**`BATTLE-LEAD`** (style and scale, first in every battlefield prompt):
 
 ```text
-Covers a large area of about 30 by 30 metres of ground, seen from high above like a drone photo; the ground's typical plants, stones
-and cracks are small at this scale, many hundreds of them, forming dense natural clusters and drifts; a single grass tuft or pebble is
-only a few pixels; clear medium-scale pattern of patches and clumps that defines the surface, bright raised parts and darker hollows.
-```
-
-**`TERRAIN-BATTLE`** (scale, battlefield textures):
-
-```text
-Covers about 12 by 12 metres of ground, seen from a low aerial view; individual tufts, stones, cracks and leaves visible but small, no
-single feature larger than about 1 metre; no straight lines, no grid-like or tile-like pattern; the colour as strong as on the map.
+Seamless tileable PBR ground material, perfectly top-down orthographic view, evenly lit with flat ambient light, no shadows, no
+perspective. Rich saturated natural colour, vivid and clean, bright and clear like a sunny high-resolution aerial survey photo, strong
+colour identity, crisp detail. Albedo without lighting, with matching normal, roughness, ambient occlusion and height maps. Covers
+about 12 by 12 metres of ground, seen from a low aerial view; individual tufts, stones, cracks and leaves visible but small, no single
+feature larger than about 1 metre; no straight lines, no grid-like or tile-like pattern; the colour as strong as on the map.
 ```
 
 **`TERRAIN-NEG`** (negative prompt, every terrain):
@@ -407,8 +405,8 @@ wind, fine grit in the joints, sparse hardy green tufts, a few deep old claw scr
 
 ## Battlefield variants
 
-Same terrain block, with `TERRAIN-BATTLE` instead of `TERRAIN-MAP`. A thin white cell grid and the units are drawn on top, and one texture
-fills the whole field, so:
+Same terrain block, with `BATTLE-LEAD` instead of `MAP-LEAD`. A thin white cell grid and the units are drawn on top, and one
+texture fills the whole field, so:
 
 - **No high-contrast speckle at cell size** (a cell is about 1.5 m) and no straight lines.
 - **Variation from small clusters**, never from one large feature.

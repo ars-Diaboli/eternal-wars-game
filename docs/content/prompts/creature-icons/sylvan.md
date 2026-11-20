@@ -1,36 +1,110 @@
 # Creature icon prompts: Sylvan
 
-The Sylvan portraits. The shared blocks (`CREATURE-STYLE`, `CREATURE-NEG`, `BACKDROP-STYLE`), the output rules and the checks are in
-[creature-icon-prompts.md](../creature-icon-prompts.md); `ICON-SHEET-4`, `ICON-SHEET-6` and `ICON-NEG` are in
-[icon-prompts.md](../icon-prompts.md#blocks). Cells by the shared **Cell rule** (top row the bases, bottom row their upgrades).
-
-## Blocks
-
-**`CREATURE-sylvan`** (look, second in every prompt of this file):
-
-```text
-Sylvan creatures: elves and fey of a dying forest, grey-brown bark, pale carved wood, green-gold leaves and moss, a faint pale-green
-glow, grey rot at the edges; graceful and failing.
-```
-
-**`BACKDROP-sylvan`** (the backdrop, after `BACKDROP-STYLE`; generated alone at 1024 × 1024 as `creature_backdrop_sylvan.png`):
-
-```text
-deep old forest of grey trunks, pale green light through thin leaves, falling leaves
-```
+The Sylvan portraits, each sheet's prompt ready to copy whole. Each sheet holds three creatures in its top row and their upgrades
+directly below them. The output rules and the checks are in [creature-icon-prompts.md](../creature-icon-prompts.md); the negative
+prompt is [`NEG-CREATURE`](../creature-icon-prompts.md#negative-prompt) there.
 
 ## Portraits
 
-**Compose**: `CREATURE-STYLE` + `CREATURE-sylvan` + `ICON-SHEET-6` + cells (Cell rule) · negative `ICON-NEG` + `ICON-NEG-TOON` + `CREATURE-NEG` · 1536 × 1024
+**Sheet S1** · 1536 × 1024 · negative [`NEG-CREATURE`](../creature-icon-prompts.md#negative-prompt)
 
-| Sheet | Base | Base subject | Upgrade | Upgrade adds |
-|---|---|---|---|---|
-| S1 | `icon_creature_sylvan.pixie` | a tiny fey creature with dragonfly wings and a pale-green glow, a thorn held like a spear, the whole body shown | `icon_creature_sylvan.sprite` | moth wings patterned with eye spots, a crown of tiny white flowers, a silver glow |
-| S1 | `icon_creature_sylvan.satyr` | a goat-legged satyr with curled horns and a shaggy beard, a wooden pipe in one hand and a short knotted club in the other | `icon_creature_sylvan.satyr-warrior` | horns capped in carved pale wood, a leather jerkin, a curved bone-handled sickle |
-| S1 | `icon_creature_sylvan.blade-dancer` | a lithe elf warrior with braided silver hair in grey-green leather, two slim curved blades held crossed | `icon_creature_sylvan.war-dancer` | caught mid-spin, long green ribbons trailing, both blades glinting green-gold |
-| S2 | `icon_creature_sylvan.hunter` | an elf hunter in a mossy green hooded cloak, a tall longbow drawn, the arrow at the cheek | `icon_creature_sylvan.arcane-archer` | a bow of pale living wood with leaves still growing on it, the arrowhead glowing pale green |
-| S2 | `icon_creature_sylvan.druid` | an elf druid in grey-green robes, a headdress of dead antler-like branches, a gnarled staff with a pale-green crystal | `icon_creature_sylvan.druid-elder` | a long white braid and a mantle of moss, the staff crackling with silver-white lightning |
-| S2 | `icon_creature_sylvan.pegasus` | a slender white winged horse with grey dapples, wings raised, a braided mane | `icon_creature_sylvan.silver-pegasus` | a silver-white coat with a faint sheen, feathers tipped in silver, a carved pale-wood brow plate |
-| S3 | `icon_creature_sylvan.moon-doe` | a pale silver deer with large dark eyes and long slim legs, a faint crescent of moonlight on its brow | `icon_creature_sylvan.unicorn` | a white unicorn with one long spiral horn of pale gold and a mane like mist |
-| S3 | `icon_creature_sylvan.treant` | a walking tree with a face of knotted bark, branch arms and a half-bare crown, grey rot creeping up from its roots | `icon_creature_sylvan.ancient-treant` | huge and older, its split bark braced with woven living branches, pale-green lanterns hanging in its crown |
-| S3 | `icon_creature_sylvan.fire-bird` | a long-tailed bird of flame, red and orange feathers burning at the tips, the whole body shown | `icon_creature_sylvan.phoenix` | wings of white-gold fire spread wide, a crest of flame, embers falling from it |
+```text
+Game creature portrait sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a dark-fantasy book
+illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
+scarred skin, matted fur, cracked scales, wet hide). Naturalistic light from the top left with soft shadows and a faint cool fill
+light, deep shadows and a full range of values, muted natural colours. Each portrait shows the creature from the chest up in
+three-quarter view facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant
+creatures and dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no
+drawn outline. Not a photograph, not a plastic CGI render, no pixel art. Sylvan creatures: elves and fey of a dying forest, grey-brown
+bark, pale carved wood, green-gold leaves and moss, a faint pale-green glow, grey rot at the edges; graceful and failing. 6 separate
+icons arranged in a grid of 3 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at
+the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no
+numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a tiny fey creature with
+dragonfly wings and a pale-green glow, a thorn held like a spear, the whole body shown; 2 a goat-legged satyr with curled horns and a
+shaggy beard, a wooden pipe in one hand and a short knotted club in the other; 3 a lithe elf warrior with braided silver hair in
+grey-green leather, two slim curved blades held crossed; 4 the same creature as the one above it, upgraded, bigger and more dangerous:
+moth wings patterned with eye spots, a crown of tiny white flowers, a silver glow; 5 the same creature as the one above it, upgraded,
+bigger and more dangerous: horns capped in carved pale wood, a leather jerkin, a curved bone-handled sickle; 6 the same creature as the
+one above it, upgraded, bigger and more dangerous: caught mid-spin, long green ribbons trailing, both blades glinting green-gold
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_creature_sylvan.pixie` |
+| 2 | `icon_creature_sylvan.satyr` |
+| 3 | `icon_creature_sylvan.blade-dancer` |
+| 4 | `icon_creature_sylvan.sprite` |
+| 5 | `icon_creature_sylvan.satyr-warrior` |
+| 6 | `icon_creature_sylvan.war-dancer` |
+
+**Sheet S2** · 1536 × 1024 · negative [`NEG-CREATURE`](../creature-icon-prompts.md#negative-prompt)
+
+```text
+Game creature portrait sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a dark-fantasy book
+illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
+scarred skin, matted fur, cracked scales, wet hide). Naturalistic light from the top left with soft shadows and a faint cool fill
+light, deep shadows and a full range of values, muted natural colours. Each portrait shows the creature from the chest up in
+three-quarter view facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant
+creatures and dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no
+drawn outline. Not a photograph, not a plastic CGI render, no pixel art. Sylvan creatures: elves and fey of a dying forest, grey-brown
+bark, pale carved wood, green-gold leaves and moss, a faint pale-green glow, grey rot at the edges; graceful and failing. 6 separate
+icons arranged in a grid of 3 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at
+the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no
+numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 an elf hunter in a mossy green
+hooded cloak, a tall longbow drawn, the arrow at the cheek; 2 an elf druid in grey-green robes, a headdress of dead antler-like
+branches, a gnarled staff with a pale-green crystal; 3 a slender white winged horse with grey dapples, wings raised, a braided mane; 4
+the same creature as the one above it, upgraded, bigger and more dangerous: a bow of pale living wood with leaves still growing on it,
+the arrowhead glowing pale green; 5 the same creature as the one above it, upgraded, bigger and more dangerous: a long white braid and
+a mantle of moss, the staff crackling with silver-white lightning; 6 the same creature as the one above it, upgraded, bigger and more
+dangerous: a silver-white coat with a faint sheen, feathers tipped in silver, a carved pale-wood brow plate
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_creature_sylvan.hunter` |
+| 2 | `icon_creature_sylvan.druid` |
+| 3 | `icon_creature_sylvan.pegasus` |
+| 4 | `icon_creature_sylvan.arcane-archer` |
+| 5 | `icon_creature_sylvan.druid-elder` |
+| 6 | `icon_creature_sylvan.silver-pegasus` |
+
+**Sheet S3** · 1536 × 1024 · negative [`NEG-CREATURE`](../creature-icon-prompts.md#negative-prompt)
+
+```text
+Game creature portrait sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a dark-fantasy book
+illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
+scarred skin, matted fur, cracked scales, wet hide). Naturalistic light from the top left with soft shadows and a faint cool fill
+light, deep shadows and a full range of values, muted natural colours. Each portrait shows the creature from the chest up in
+three-quarter view facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant
+creatures and dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no
+drawn outline. Not a photograph, not a plastic CGI render, no pixel art. Sylvan creatures: elves and fey of a dying forest, grey-brown
+bark, pale carved wood, green-gold leaves and moss, a faint pale-green glow, grey rot at the edges; graceful and failing. 6 separate
+icons arranged in a grid of 3 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at
+the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no
+numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a pale silver deer with large
+dark eyes and long slim legs, a faint crescent of moonlight on its brow; 2 a walking tree with a face of knotted bark, branch arms and
+a half-bare crown, grey rot creeping up from its roots; 3 a long-tailed bird of flame, red and orange feathers burning at the tips, the
+whole body shown; 4 the same creature as the one above it, upgraded, bigger and more dangerous: a white unicorn with one long spiral
+horn of pale gold and a mane like mist; 5 the same creature as the one above it, upgraded, bigger and more dangerous: huge and older,
+its split bark braced with woven living branches, pale-green lanterns hanging in its crown; 6 the same creature as the one above it,
+upgraded, bigger and more dangerous: wings of white-gold fire spread wide, a crest of flame, embers falling from it
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_creature_sylvan.moon-doe` |
+| 2 | `icon_creature_sylvan.treant` |
+| 3 | `icon_creature_sylvan.fire-bird` |
+| 4 | `icon_creature_sylvan.unicorn` |
+| 5 | `icon_creature_sylvan.ancient-treant` |
+| 6 | `icon_creature_sylvan.phoenix` |
+
+## Backdrop
+
+**Prompt** · 1024 × 1024 · saved as `creature_backdrop_sylvan.png`
+
+```text
+Square painted background for a creature portrait, in a realistic painterly dark-fantasy style like an atmospheric matte painting, soft
+and out of focus like a distant landscape seen through haze, no creature, no figures, no text, darker toward the edges, the middle
+third calm and even so a portrait reads on it. Deep old forest of grey trunks, pale green light through thin leaves, falling leaves
+```

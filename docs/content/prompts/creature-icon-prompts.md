@@ -5,53 +5,34 @@ initiative bar and the creature windows. One portrait for each creature in `crea
 icons ([icon-prompts.md](icon-prompts.md)): a town sheet holds three creatures in its top row and **their upgrades directly below
 them**, so each pair comes out as the same creature. The designs are original: the prompts never imitate another game's creatures.
 
-## Compose a prompt
+## Use a prompt
 
-Every sheet below has a **Compose** line naming its blocks. Build the prompt from blocks, copying each block's text exactly and joining
-them with a space:
+1. Open the faction's file (see [Factions](#factions)) and copy a sheet's prompt block whole.
+2. Where the model takes a negative prompt, paste [`NEG-CREATURE`](#negative-prompt) as it.
+3. Generate at the size on the sheet's line, cut the sheet and save each cell as the **File** its table gives (`<File>.png`).
+4. Do not paraphrase a prompt or a subject.
 
-```text
-PROMPT   = CREATURE-STYLE + CREATURE-<town> + ICON-SHEET-6 (or ICON-SHEET-4) + CELLS   (sheets in the faction files)
-CELLS    = "1 <subject 1>; 2 <subject 2>; …"   from the sheet's table, by its Cell rule
-NEGATIVE = ICON-NEG + ", " + ICON-NEG-TOON + ", " + CREATURE-NEG   (only where the model takes a negative prompt)
-OUTPUT   = the size on the Compose line; cut the sheet and save each cell as <File>.png
-```
+## Negative prompt
 
-**Cell rule** (town and neutral pair sheets): cells 1–3 are the **Base** subjects of the sheet's three rows, in order; cells 4–6 are
-"the same creature as the one above it, upgraded, bigger and more dangerous: " + **Upgrade adds**, in the same order. Sheets of single
-creatures list their cells in full. `ICON-SHEET-4`, `ICON-SHEET-6` and `ICON-NEG` are in [icon-prompts.md](icon-prompts.md#blocks). Do
-not paraphrase blocks or subjects.
-
-## Blocks
-
-**`CREATURE-STYLE`** (style, first in every prompt):
+**`NEG-CREATURE`** (every creature sheet):
 
 ```text
-Game creature portrait sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a dark-fantasy book
-illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
-scarred skin, matted fur, cracked scales, wet hide). Naturalistic light from the top left with soft shadows and a faint cool fill light,
-deep shadows and a full range of values, muted natural colours. Each portrait shows the creature from the chest up in three-quarter
-view facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
-dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline. Not
-a photograph, not a plastic CGI render, no pixel art.
+text, letters, numbers, labels, frames, borders, grid lines, cell dividers, scenery, ground shadow, photograph, plastic CGI render,
+pixel art, blurry, cropped subject, subjects touching or overlapping, two subjects in one cell, cartoon, comic book, anime, manga,
+chibi, cute, toy-like, childish, cel shading, flat colours, flat shading, vector art, clip art, sticker, emoji, mobile game icon,
+casual game art, thick black outlines, ink line art, exaggerated proportions, oversized head, big eyes, rounded bubbly shapes, glossy
+plastic, smooth airbrushed gradients, oversaturated colours, candy colours, background scenery, ground, frame, card border, full-body
+figure for a large creature, cropped head, two creatures in one cell, monster-toy look, friendly expression, modern clothes, real-world
+symbols, another game's creature design
 ```
 
-**`CREATURE-NEG`** (negative prompt, after `ICON-NEG` on every creature sheet):
+## Shared wording
 
-```text
-background scenery, ground, frame, card border, full-body figure for a large creature, cropped head, two creatures in one cell, monster-toy look,
-friendly expression, modern clothes, real-world symbols, another game's creature design
-```
-
-**`CREATURE-<town>`** and **`BACKDROP-<town>`**: one of each in every faction's file (below).
-
-**`BACKDROP-STYLE`** (style, the one backdrop a town, see [Backdrops](#backdrops)):
-
-```text
-Square painted background for a creature portrait, in a realistic painterly dark-fantasy style like an atmospheric matte painting, soft
-and out of focus like a distant landscape seen through haze, no creature, no figures, no text, darker toward the edges, the middle third
-calm and even so a portrait reads on it.
-```
+Every creature prompt repeats three passages word for word, so that each prompt is ready to paste: the creature style ("Game
+creature portrait sheet in a realistic painterly…"), its faction's look ("Haven creatures: …" and so on) and the grid sentence ("6
+separate icons arranged in a grid…" or "4 separate icons…"). Every backdrop prompt starts with the same backdrop style ("Square painted
+background for a creature portrait…"). A change to one of them is made in every prompt that holds it: search the faction files for its
+first words.
 
 ## Output for every portrait
 
@@ -66,26 +47,26 @@ calm and even so a portrait reads on it.
 
 ## Factions
 
-One file a faction: its look and backdrop blocks and its sheets.
+One file a faction: its sheets' prompts, which cell is which file, and its backdrop prompt.
 
-| File | Blocks |
-|---|---|
-| [Haven](creature-icons/haven.md) | `CREATURE-haven`, `BACKDROP-haven` |
-| [Sylvan](creature-icons/sylvan.md) | `CREATURE-sylvan`, `BACKDROP-sylvan` |
-| [Academy](creature-icons/academy.md) | `CREATURE-academy`, `BACKDROP-academy` |
-| [Necropolis](creature-icons/necropolis.md) | `CREATURE-necropolis`, `BACKDROP-necropolis` |
-| [Inferno](creature-icons/inferno.md) | `CREATURE-inferno`, `BACKDROP-inferno` |
-| [Dungeon](creature-icons/dungeon.md) | `CREATURE-dungeon`, `BACKDROP-dungeon` |
-| [Stronghold](creature-icons/stronghold.md) | `CREATURE-stronghold`, `BACKDROP-stronghold` |
-| [Swamp Bestiary](creature-icons/swamp-bestiary.md) | `CREATURE-swamp-bestiary`, `BACKDROP-swamp-bestiary` |
-| [Conflux](creature-icons/conflux.md) | `CREATURE-conflux`, `BACKDROP-conflux` |
-| [Dragon Utopia](creature-icons/dragon-utopia.md) | `CREATURE-dragon-utopia`, `BACKDROP-dragon-utopia` |
-| [Neutral](creature-icons/neutral.md) | `CREATURE-neutral`, `BACKDROP-neutral` |
+| File |
+|---|
+| [Haven](creature-icons/haven.md) |
+| [Sylvan](creature-icons/sylvan.md) |
+| [Academy](creature-icons/academy.md) |
+| [Necropolis](creature-icons/necropolis.md) |
+| [Inferno](creature-icons/inferno.md) |
+| [Dungeon](creature-icons/dungeon.md) |
+| [Stronghold](creature-icons/stronghold.md) |
+| [Swamp Bestiary](creature-icons/swamp-bestiary.md) |
+| [Conflux](creature-icons/conflux.md) |
+| [Dragon Utopia](creature-icons/dragon-utopia.md) |
+| [Neutral](creature-icons/neutral.md) |
 
 ## Backdrops
 
-One painted backdrop a faction, generated alone: `BACKDROP-STYLE` + `BACKDROP-<town>`, 1024 × 1024, saved as
-`creature_backdrop_<town>.png` (opaque, the game scales it). A creature keeps its own faction's backdrop wherever it is hired; neutral
+One painted backdrop a faction, generated alone from the ready prompt under **Backdrop** in its faction's file, 1024 × 1024, saved
+as `creature_backdrop_<town>.png` (opaque, the game scales it). A creature keeps its own faction's backdrop wherever it is hired; neutral
 creatures use `neutral`. Hero portraits use the same backdrops ([hero-town-icon-prompts.md](hero-town-icon-prompts.md)).
 
 ## After generating

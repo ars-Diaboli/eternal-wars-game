@@ -5,50 +5,37 @@ battle. They are generated like the icons ([icon-prompts.md](icon-prompts.md)): 
 per cursor. Every cursor is **cold grey iron and steel**: no brown, no bronze, no gold, so it stands apart from the warm bronze UI and
 from the ground under it.
 
-## Compose a prompt
+## Use a prompt
 
-Every sheet below has a **Compose** line naming its blocks. Build the prompt from blocks, copying each block's text exactly and joining
-them with a space:
+Copy the sheet's **Prompt** block whole; where the model takes a negative prompt, paste the negative block the Prompt line names (from
+[Negative prompts](#negative-prompts)). Generate at the size given, cut the sheet and save each cell as its **File** (`<File>.png`). The
+**Hotspot** column is not pasted: it is where the pointing part must land, checked after cutting. If a result comes out brown or bronze,
+add the colour words to the negative prompt again and regenerate; do not paraphrase the prompts.
+
+**Shared wording**: the style paragraph ("Game mouse cursor sheet in a realistic painterly…"), the horse paragraph of sheet 2 ("Every
+horse is the same horse…") and the grid sentence ("4 separate icons…" / "6 separate icons…") are repeated verbatim in each prompt so
+each is ready to paste; a change to one of them must be made in every prompt of this file.
+
+## Negative prompts
+
+**`NEG-CURSOR`** (every cursor sheet but 6):
 
 ```text
-PROMPT   = CURSOR-STYLE (+ CURSOR-HORSE on sheet 2) + ICON-SHEET-4 or ICON-SHEET-6 + CELLS
-CELLS    = "1 <subject 1>; 2 <subject 2>; …"   the sheet table's Subject column, in its # order, spare cell included
-NEGATIVE = ICON-NEG + ", " + CURSOR-NEG   (only where the model takes a negative prompt)
-OUTPUT   = the size on the Compose line; cut the sheet and save each cell as <File>.png
+text, letters, numbers, labels, frames, borders, grid lines, cell dividers, scenery, ground shadow, photograph, plastic CGI render,
+pixel art, blurry, cropped subject, subjects touching or overlapping, two subjects in one cell, drop shadows, thin lines, background,
+extra objects, brown, bronze, brass, copper, gold, warm tones, sepia, bay horse, chestnut horse, brown horse, leather brown, wood
+brown, cartoon, comic, cute, toy-like, flat colour fills, vector clip art, glossy plastic, bubbly rounded shapes
 ```
 
-`CURSOR-*` blocks are below; `ICON-SHEET-4`, `ICON-SHEET-6` and `ICON-NEG` are in [icon-prompts.md](icon-prompts.md#blocks). The
-**Hotspot** column is not pasted: it is where the pointing part must land, checked after cutting. Sheets 4–5 give a **Cell rule** instead
-of full subjects: apply it to each row. If a result comes out brown or bronze, add the colour words to the negative prompt again and
-regenerate; do not paraphrase blocks or subjects.
-
-## Blocks
-
-**`CURSOR-STYLE`** (style, first in every prompt):
+**`NEG-CURSOR-MECH`** (sheet 6, with the bow):
 
 ```text
-Game mouse cursor sheet in a realistic painterly dark-fantasy style: each cursor a clear, simple silhouette made as a real forged metal
-object, hammered and engraved iron and steel with true metallic reflections, fine scratches, pitting and worn edges catching the light,
-true proportions. Cold grey palette: dark gunmetal iron, polished pale steel and blackened iron, cool blue-grey highlights, no warm
-colours except where a cell names one. Light from the top left, a thick near-black outline around each subject and a thin pale silver
-edge just inside it so it reads on dark and on light ground, flat front or side view as each cell says, no cast shadow, no background.
-Not a photograph, not a plastic CGI render, no pixel art.
-```
-
-**`CURSOR-HORSE`** (after `CURSOR-STYLE` on sheet 2):
-
-```text
-Every horse is the same horse: a war horse forged from dark grey iron like a polished steel statuette, a cool gunmetal sheen with pale
-steel highlights on the muscles, a black iron mane and tail, a plain steel bridle, never brown; in pure side profile facing right
-unless the cell says otherwise.
-```
-
-**`CURSOR-NEG`** (negative prompt, after `ICON-NEG` on every cursor sheet):
-
-```text
-text, letters, numbers, frames, drop shadows, thin lines, scenery, background, extra objects, brown, bronze, brass, copper, gold, warm
-tones, sepia, bay horse, chestnut horse, brown horse, leather brown, wood brown, cartoon, comic, cute, toy-like, flat colour fills,
-vector clip art, glossy plastic, bubbly rounded shapes
+text, letters, numbers, labels, frames, borders, grid lines, cell dividers, scenery, ground shadow, photograph, plastic CGI render,
+pixel art, blurry, cropped subject, subjects touching or overlapping, two subjects in one cell, drop shadows, thin lines, background,
+extra objects, brown, bronze, brass, copper, gold, warm tones, sepia, bay horse, chestnut horse, brown horse, leather brown, wood
+brown, cartoon, comic, cute, toy-like, flat colour fills, vector clip art, glossy plastic, bubbly rounded shapes, warped or oval
+wheels, wheels at different angles, wheels tilted off the axle, extra wheels, asymmetric bow arms, bent or doubled string, extra arms,
+tangled ropes, floating or disconnected parts.
 ```
 
 ## Output for every cursor
@@ -68,92 +55,198 @@ vector clip art, glossy plastic, bubbly rounded shapes
 
 ### 1 · Pointers (2 × 2)
 
-**Compose**: `CURSOR-STYLE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `CURSOR-NEG` · 1024 × 1024
-
 Shown on menus, the town and hero screens and panels; busy while a computer turn plays or a game loads; blocked where a click does nothing.
 
-| # | File | Subject | Hotspot |
-|---|---|---|---|
-| 1 | `cursor_ui_pointer` | the standard computer arrow pointer shape, tip at the top left, tilted about 30°, with a short tail; dark polished steel with a pale steel bevel | `0,0` (the tip) |
-| 2 | `cursor_ui_busy` | a small upright hourglass in a blackened iron frame, pale grey sand running into the lower bulb | `4,4` (centre) |
-| 3 | `cursor_ui_blocked` | a round steel ring with one diagonal bar from top left to bottom right, dark red inside the ring | `4,4` |
-| 4 | — | spare: a second take of the pointer | |
+**Prompt** · 1024 × 1024 · negative `NEG-CURSOR`
+
+```text
+Game mouse cursor sheet in a realistic painterly dark-fantasy style: each cursor a clear, simple silhouette made as a real forged metal
+object, hammered and engraved iron and steel with true metallic reflections, fine scratches, pitting and worn edges catching the light,
+true proportions. Cold grey palette: dark gunmetal iron, polished pale steel and blackened iron, cool blue-grey highlights, no warm
+colours except where a cell names one. Light from the top left, a thick near-black outline around each subject and a thin pale silver
+edge just inside it so it reads on dark and on light ground, flat front or side view as each cell says, no cast shadow, no background.
+Not a photograph, not a plastic CGI render, no pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in
+its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into
+another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons,
+top row left to right, then bottom row: 1 the standard computer arrow pointer shape, tip at the top left, tilted about 30°, with a
+short tail; dark polished steel with a pale steel bevel; 2 a small upright hourglass in a blackened iron frame, pale grey sand running
+into the lower bulb; 3 a round steel ring with one diagonal bar from top left to bottom right, dark red inside the ring; 4 a second
+take of the pointer
+```
+
+| # | File | Hotspot |
+|---|---|---|
+| 1 | `cursor_ui_pointer` | `0,0` (the tip) |
+| 2 | `cursor_ui_busy` | `4,4` (centre) |
+| 3 | `cursor_ui_blocked` | `4,4` |
+| 4 | — (spare) | |
 
 ## Adventure map
 
 ### 2 · Moving and visiting (2 × 3)
 
-**Compose**: `CURSOR-STYLE` + `CURSOR-HORSE` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `CURSOR-NEG` · 1536 × 1024
+**Prompt** · 1536 × 1024 · negative `NEG-CURSOR`
 
-| # | File | Subject | Hotspot |
-|---|---|---|---|
-| 1 | `cursor_adv_move` | the iron horse galloping to the right, all four legs off the ground | `4,7` (under its hooves) |
-| 2 | `cursor_adv_visit` | the iron horse rearing up, front hooves raised high, facing right | `4,7` |
-| 3 | `cursor_adv_attack` | the iron horse's head and neck facing right, two crossed steel swords behind it | `4,4` |
-| 4 | `cursor_adv_exchange` | two iron horse heads facing each other, a curved steel double-headed arrow between them | `4,4` |
-| 5 | `cursor_adv_enter-town` | the iron horse walking right towards a small grey stone gate arch, its rump at the left edge | `4,7` |
-| 6 | `cursor_adv_spell` | a violet swirl of sparks around a small bright white star at the centre | `4,4` |
+```text
+Game mouse cursor sheet in a realistic painterly dark-fantasy style: each cursor a clear, simple silhouette made as a real forged metal
+object, hammered and engraved iron and steel with true metallic reflections, fine scratches, pitting and worn edges catching the light,
+true proportions. Cold grey palette: dark gunmetal iron, polished pale steel and blackened iron, cool blue-grey highlights, no warm
+colours except where a cell names one. Light from the top left, a thick near-black outline around each subject and a thin pale silver
+edge just inside it so it reads on dark and on light ground, flat front or side view as each cell says, no cast shadow, no background.
+Not a photograph, not a plastic CGI render, no pixel art. Every horse is the same horse: a war horse forged from dark grey iron like a
+polished steel statuette, a cool gunmetal sheen with pale steel highlights on the muscles, a black iron mane and tail, a plain steel
+bridle, never brown; in pure side profile facing right unless the cell says otherwise. 6 separate icons arranged in a grid of 3 columns
+and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same
+light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background,
+PNG with alpha. The icons, top row left to right, then bottom row: 1 the iron horse galloping to the right, all four legs off the
+ground; 2 the iron horse rearing up, front hooves raised high, facing right; 3 the iron horse's head and neck facing right, two crossed
+steel swords behind it; 4 two iron horse heads facing each other, a curved steel double-headed arrow between them; 5 the iron horse
+walking right towards a small grey stone gate arch, its rump at the left edge; 6 a violet swirl of sparks around a small bright white
+star at the centre
+```
+
+| # | File | Hotspot |
+|---|---|---|
+| 1 | `cursor_adv_move` | `4,7` (under its hooves) |
+| 2 | `cursor_adv_visit` | `4,7` |
+| 3 | `cursor_adv_attack` | `4,4` |
+| 4 | `cursor_adv_exchange` | `4,4` |
+| 5 | `cursor_adv_enter-town` | `4,7` |
+| 6 | `cursor_adv_spell` | `4,4` |
 
 ### 3 · Selecting and digging (2 × 2)
 
-**Compose**: `CURSOR-STYLE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `CURSOR-NEG` · 1024 × 1024
+**Prompt** · 1024 × 1024 · negative `NEG-CURSOR`
 
-| # | File | Subject | Hotspot |
-|---|---|---|---|
-| 1 | `cursor_adv_select-hero` | a plain steel knight's helmet in three-quarter view, a small pale grey plume | `4,4` |
-| 2 | `cursor_adv_select-town` | a small grey stone keep with one tower and a dark slate-blue conical roof, seen from the front | `4,4` |
-| 3 | `cursor_adv_dig` | a short iron shovel with an iron shaft stuck in the ground at an angle, a little heap of dark grey earth beside it | `4,7` (the blade's tip) |
-| 4 | — | spare: a second take of the exchange cursor | |
+```text
+Game mouse cursor sheet in a realistic painterly dark-fantasy style: each cursor a clear, simple silhouette made as a real forged metal
+object, hammered and engraved iron and steel with true metallic reflections, fine scratches, pitting and worn edges catching the light,
+true proportions. Cold grey palette: dark gunmetal iron, polished pale steel and blackened iron, cool blue-grey highlights, no warm
+colours except where a cell names one. Light from the top left, a thick near-black outline around each subject and a thin pale silver
+edge just inside it so it reads on dark and on light ground, flat front or side view as each cell says, no cast shadow, no background.
+Not a photograph, not a plastic CGI render, no pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in
+its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into
+another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons,
+top row left to right, then bottom row: 1 a plain steel knight's helmet in three-quarter view, a small pale grey plume; 2 a small grey
+stone keep with one tower and a dark slate-blue conical roof, seen from the front; 3 a short iron shovel with an iron shaft stuck in
+the ground at an angle, a little heap of dark grey earth beside it; 4 a second take of the exchange cursor
+```
+
+| # | File | Hotspot |
+|---|---|---|
+| 1 | `cursor_adv_select-hero` | `4,4` |
+| 2 | `cursor_adv_select-town` | `4,4` |
+| 3 | `cursor_adv_dig` | `4,7` (the blade's tip) |
+| 4 | — (spare) | |
 
 ## Battle
 
 ### 4–5 · Melee attack, by side (2 × 2 each)
 
-**Compose**: `CURSOR-STYLE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `CURSOR-NEG` · 1024 × 1024
-
 One sword, the same on all eight cells, filling its cell, the hilt towards the side the attacker strikes from; the file names that
 side. The point is the hotspot: when cut, the sword is placed so its point lands one eighth in from the edges it points at.
 
-**Cell rule**: subject = "a straight steel sword with a blackened iron cross-guard and grip, " + Sword; sheet 4 takes the rows marked 4,
-sheet 5 those marked 5.
+**Prompt, sheet 4** · 1024 × 1024 · negative `NEG-CURSOR`
 
-| Sheet | # | File | Sword | Hotspot |
-|---|---|---|---|---|
-| 4 | 1 | `cursor_bat_melee_from-n` | points straight down, hilt at the top | `4,7` (the point) |
-| 4 | 2 | `cursor_bat_melee_from-ne` | points down-left, hilt at the top right | `1,7` (the point) |
-| 4 | 3 | `cursor_bat_melee_from-e` | points left, hilt at the right | `1,4` (the point) |
-| 4 | 4 | `cursor_bat_melee_from-se` | points up-left, hilt at the bottom right | `1,1` (the point) |
-| 5 | 1 | `cursor_bat_melee_from-s` | points straight up, hilt at the bottom | `4,1` (the point) |
-| 5 | 2 | `cursor_bat_melee_from-sw` | points up-right, hilt at the bottom left | `7,1` (the point) |
-| 5 | 3 | `cursor_bat_melee_from-w` | points right, hilt at the left | `7,4` (the point) |
-| 5 | 4 | `cursor_bat_melee_from-nw` | points down-right, hilt at the top left | `7,7` (the point) |
+```text
+Game mouse cursor sheet in a realistic painterly dark-fantasy style: each cursor a clear, simple silhouette made as a real forged metal
+object, hammered and engraved iron and steel with true metallic reflections, fine scratches, pitting and worn edges catching the light,
+true proportions. Cold grey palette: dark gunmetal iron, polished pale steel and blackened iron, cool blue-grey highlights, no warm
+colours except where a cell names one. Light from the top left, a thick near-black outline around each subject and a thin pale silver
+edge just inside it so it reads on dark and on light ground, flat front or side view as each cell says, no cast shadow, no background.
+Not a photograph, not a plastic CGI render, no pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in
+its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into
+another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons,
+top row left to right, then bottom row: 1 a straight steel sword with a blackened iron cross-guard and grip, points straight down, hilt
+at the top; 2 a straight steel sword with a blackened iron cross-guard and grip, points down-left, hilt at the top right; 3 a straight
+steel sword with a blackened iron cross-guard and grip, points left, hilt at the right; 4 a straight steel sword with a blackened iron
+cross-guard and grip, points up-left, hilt at the bottom right
+```
+
+**Prompt, sheet 5** · 1024 × 1024 · negative `NEG-CURSOR`
+
+```text
+Game mouse cursor sheet in a realistic painterly dark-fantasy style: each cursor a clear, simple silhouette made as a real forged metal
+object, hammered and engraved iron and steel with true metallic reflections, fine scratches, pitting and worn edges catching the light,
+true proportions. Cold grey palette: dark gunmetal iron, polished pale steel and blackened iron, cool blue-grey highlights, no warm
+colours except where a cell names one. Light from the top left, a thick near-black outline around each subject and a thin pale silver
+edge just inside it so it reads on dark and on light ground, flat front or side view as each cell says, no cast shadow, no background.
+Not a photograph, not a plastic CGI render, no pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in
+its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into
+another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons,
+top row left to right, then bottom row: 1 a straight steel sword with a blackened iron cross-guard and grip, points straight up, hilt
+at the bottom; 2 a straight steel sword with a blackened iron cross-guard and grip, points up-right, hilt at the bottom left; 3 a
+straight steel sword with a blackened iron cross-guard and grip, points right, hilt at the left; 4 a straight steel sword with a
+blackened iron cross-guard and grip, points down-right, hilt at the top left
+```
+
+| Sheet | # | File | Hotspot |
+|---|---|---|---|
+| 4 | 1 | `cursor_bat_melee_from-n` | `4,7` (the point) |
+| 4 | 2 | `cursor_bat_melee_from-ne` | `1,7` (the point) |
+| 4 | 3 | `cursor_bat_melee_from-e` | `1,4` (the point) |
+| 4 | 4 | `cursor_bat_melee_from-se` | `1,1` (the point) |
+| 5 | 1 | `cursor_bat_melee_from-s` | `4,1` (the point) |
+| 5 | 2 | `cursor_bat_melee_from-sw` | `7,1` (the point) |
+| 5 | 3 | `cursor_bat_melee_from-w` | `7,4` (the point) |
+| 5 | 4 | `cursor_bat_melee_from-nw` | `7,7` (the point) |
 
 If the model cannot keep the eight swords alike, generate sheet 4 alone and mirror it: `from-w`, `from-sw` and `from-nw` are `from-e`,
 `from-se` and `from-ne` mirrored left to right, `from-s` is `from-n` flipped upside down.
 
 ### 6 · Shooting, spells and machines (2 × 3)
 
-**Compose**: `CURSOR-STYLE` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `CURSOR-NEG` + `ICON-NEG-MECH` · 1536 × 1024
+**Prompt** · 1536 × 1024 · negative `NEG-CURSOR-MECH`
 
-| # | File | Subject | Hotspot |
-|---|---|---|---|
-| 1 | `cursor_bat_shoot` | a drawn short bow of blackened iron seen from the front, a steel-tipped arrow nocked and pointing up-left, **mirror-symmetric arms** | `0,0` (the arrow's tip, up-left) |
-| 2 | `cursor_bat_shoot-weak` | the same arrow without the bow, snapped in the middle, the two halves slightly apart | `0,0` |
-| 3 | `cursor_bat_spell` | a short iron wand pointing up-left, a small bright violet star at its tip | `0,0` (the star) |
-| 4 | `cursor_bat_spell-area` | a round target ring of violet light with four short marks at the top, bottom, left and right, a spark at the centre | `4,4` |
-| 5 | `cursor_bat_siege` | a round grey stone boulder flying into a broken piece of grey stone wall, chips flying | `4,4` |
-| 6 | — | spare: a second take of the siege cursor | |
+```text
+Game mouse cursor sheet in a realistic painterly dark-fantasy style: each cursor a clear, simple silhouette made as a real forged metal
+object, hammered and engraved iron and steel with true metallic reflections, fine scratches, pitting and worn edges catching the light,
+true proportions. Cold grey palette: dark gunmetal iron, polished pale steel and blackened iron, cool blue-grey highlights, no warm
+colours except where a cell names one. Light from the top left, a thick near-black outline around each subject and a thin pale silver
+edge just inside it so it reads on dark and on light ground, flat front or side view as each cell says, no cast shadow, no background.
+Not a photograph, not a plastic CGI render, no pixel art. 6 separate icons arranged in a grid of 3 columns and 2 rows, each alone in
+its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into
+another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons,
+top row left to right, then bottom row: 1 a drawn short bow of blackened iron seen from the front, a steel-tipped arrow nocked and
+pointing up-left, mirror-symmetric arms; 2 the same arrow without the bow, snapped in the middle, the two halves slightly apart; 3
+a short iron wand pointing up-left, a small bright violet star at its tip; 4 a round target ring of violet light with four short marks
+at the top, bottom, left and right, a spark at the centre; 5 a round grey stone boulder flying into a broken piece of grey stone wall,
+chips flying; 6 a second take of the siege cursor
+```
+
+| # | File | Hotspot |
+|---|---|---|
+| 1 | `cursor_bat_shoot` | `0,0` (the arrow's tip, up-left) |
+| 2 | `cursor_bat_shoot-weak` | `0,0` |
+| 3 | `cursor_bat_spell` | `0,0` (the star) |
+| 4 | `cursor_bat_spell-area` | `4,4` |
+| 5 | `cursor_bat_siege` | `4,4` |
+| 6 | — (spare) | |
 
 ### 7 · Moving in battle (2 × 2)
 
-**Compose**: `CURSOR-STYLE` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `CURSOR-NEG` · 1024 × 1024
+**Prompt** · 1024 × 1024 · negative `NEG-CURSOR`
 
-| # | File | Subject | Hotspot |
-|---|---|---|---|
-| 1 | `cursor_bat_walk` | an armoured steel sabaton (a knight's iron boot) in side profile, facing right, mid-step | `4,7` (the sole) |
-| 2 | `cursor_bat_fly` | one spread feathered wing of pale silver and steel-grey feathers, rising to the right | `4,4` |
-| 3 | `cursor_bat_teleport` | a violet ring of sparks around an empty dark centre, like a small portal seen from the front | `4,4` |
-| 4 | — | spare: a second take of the wing | |
+```text
+Game mouse cursor sheet in a realistic painterly dark-fantasy style: each cursor a clear, simple silhouette made as a real forged metal
+object, hammered and engraved iron and steel with true metallic reflections, fine scratches, pitting and worn edges catching the light,
+true proportions. Cold grey palette: dark gunmetal iron, polished pale steel and blackened iron, cool blue-grey highlights, no warm
+colours except where a cell names one. Light from the top left, a thick near-black outline around each subject and a thin pale silver
+edge just inside it so it reads on dark and on light ground, flat front or side view as each cell says, no cast shadow, no background.
+Not a photograph, not a plastic CGI render, no pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in
+its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into
+another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons,
+top row left to right, then bottom row: 1 an armoured steel sabaton (a knight's iron boot) in side profile, facing right, mid-step; 2
+one spread feathered wing of pale silver and steel-grey feathers, rising to the right; 3 a violet ring of sparks around an empty dark
+centre, like a small portal seen from the front; 4 a second take of the wing
+```
+
+| # | File | Hotspot |
+|---|---|---|
+| 1 | `cursor_bat_walk` | `4,7` (the sole) |
+| 2 | `cursor_bat_fly` | `4,4` |
+| 3 | `cursor_bat_teleport` | `4,4` |
+| 4 | — (spare) | |
 
 ## After generating
 

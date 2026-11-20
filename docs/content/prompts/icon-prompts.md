@@ -6,105 +6,50 @@ actions, plain icon buttons, the faction heraldry and the five difficulty levels
 the same use**, so they come out matching. Other icon sets have their own files: [cursor-prompts.md](cursor-prompts.md),
 [spell-icon-prompts.md](spell-icon-prompts.md), [creature-icon-prompts.md](creature-icon-prompts.md).
 
-## Compose a prompt
+## Use a prompt
 
-Every sheet below has a **Compose** line naming its blocks. Build the prompt from blocks, copying each block's text exactly and joining
-them with a space:
+1. Copy the sheet's **Prompt** block whole; it already holds the style, the grid and every cell.
+2. Where the model takes a negative prompt, paste the negative block named on the Prompt line ([Negative prompts](#negative-prompts)).
+3. Generate at the size on the Prompt line, cut the sheet into its cells and save each cell as its **File** (`<File>.png`).
+
+Do not paraphrase the prompts: the wording keeps the sheets consistent with each other.
+
+## Shared wording
+
+Each prompt repeats its style paragraph ("Game UI icon sheet in a realistic painterly…", "Game UI icon sheet of dark-fantasy
+emblems…", "Game UI button symbol sheet, flat front view…", "Fantasy heraldry crest sheet in a realistic…", "Heraldic charge sheet, each
+figure a single…") and the grid sentence ("4 separate icons arranged in a grid…" or "6 separate icons arranged in a grid…") verbatim, so
+each is ready to paste. A change to them must be made in every prompt of this file: search for those first words.
+
+## Negative prompts
+
+**`NEG-PAINTED`** (every painted sheet: tiers A and B, crests):
 
 ```text
-PROMPT   = <style block> + ICON-SHEET-4 or ICON-SHEET-6 + CELLS
-CELLS    = "1 <subject 1>; 2 <subject 2>; …"   the sheet table's Subject column, in its # order, spare cell included
-NEGATIVE = the negative blocks named, joined with ", "   (only where the model takes a negative prompt)
-OUTPUT   = the size on the Compose line; cut the sheet and save each cell as <File>.png
+text, letters, numbers, labels, frames, borders, grid lines, cell dividers, scenery, ground shadow, photograph, plastic CGI render,
+pixel art, blurry, cropped subject, subjects touching or overlapping, two subjects in one cell, cartoon, comic book, anime, manga,
+chibi, cute, toy-like, childish, cel shading, flat colours, flat shading, vector art, clip art, sticker, emoji, mobile game icon,
+casual game art, thick black outlines, ink line art, exaggerated proportions, oversized head, big eyes, rounded bubbly shapes, glossy
+plastic, smooth airbrushed gradients, oversaturated colours, candy colours
 ```
 
-Where a sheet gives a **Cell rule** instead of full subjects (magic schools, heraldry), apply the rule to each row to get the subjects.
-Do not paraphrase blocks or subjects: the wording keeps the sheets consistent with each other.
-
-## Blocks
-
-**`ICON-STYLE-A`** (style, tier A · objects):
+**`NEG-PAINTED-MECH`** (painted sheets with mechanical subjects: machines, bows, scales, carts):
 
 ```text
-Game UI icon sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a concept-art prop study:
-realistic proportions and believable construction, worn real materials (steel, wood, leather, stone, glass) with fine surface detail
-(scratches, dents, grime, patina, rust, frayed edges). Naturalistic light from the top left with soft shadows and subtle reflected
-light, a full range of values from deep shadow to one small sharp highlight, muted natural colours with one accent colour per icon.
-Each subject a clear silhouette set apart by value contrast, its edges made by light and shadow, not by drawn lines; three-quarter view
-slightly from above unless a cell says otherwise. Not a photograph, not a plastic CGI render, no pixel art.
+text, letters, numbers, labels, frames, borders, grid lines, cell dividers, scenery, ground shadow, photograph, plastic CGI render,
+pixel art, blurry, cropped subject, subjects touching or overlapping, two subjects in one cell, cartoon, comic book, anime, manga,
+chibi, cute, toy-like, childish, cel shading, flat colours, flat shading, vector art, clip art, sticker, emoji, mobile game icon,
+casual game art, thick black outlines, ink line art, exaggerated proportions, oversized head, big eyes, rounded bubbly shapes, glossy
+plastic, smooth airbrushed gradients, oversaturated colours, candy colours, warped or oval wheels, wheels at different angles, wheels
+tilted off the axle, extra wheels, asymmetric bow arms, bent or doubled string, extra arms, tangled ropes, floating or disconnected
+parts.
 ```
 
-**`ICON-STYLE-B`** (style, tier B · emblems):
+**`NEG-PLAIN`** (tier C and the charges):
 
 ```text
-Game UI icon sheet of dark-fantasy emblems in a realistic painterly style, flat front view, each emblem one strong symbolic shape made
-as a real object: hammered and engraved metal, carved stone or bone, aged enamel or worn cloth, with true material texture, small dents
-and wear. Two or three muted colours plus a soft glow where named, the glow lighting the surface around it naturally. Light from the
-top left, the shape set apart by value contrast and a faint dark edge, no drawn outline. Not a photograph, not a plastic CGI render, no
-pixel art.
-```
-
-**`ICON-STYLE-C`** (style, tier C · plain):
-
-```text
-Game UI button symbol sheet, flat front view, each symbol a single light-grey shape with a subtle bevel and a thick dark outline, no
-other colour, no glow, bold and simple, equal stroke weight on every symbol.
-```
-
-**`ICON-STYLE-CREST`** (style, heraldry crests):
-
-```text
-Fantasy heraldry crest sheet in a realistic painterly dark-fantasy style, each crest a heater-shaped shield of real worn metal with a
-dark forged iron rim, every shield the same shape, size and angle, seen exactly from the front; one strong figure centred on the field
-in the colours named, painted in aged enamel with chips, scratches, small dents and a dull patina, the figure slightly raised so it
-catches the light. Naturalistic light from the top left, soft shadows, no drawn outline, no mantling, no helmet, no scroll, no motto, no
-text.
-```
-
-**`ICON-STYLE-CHARGE`** (style, heraldry charges):
-
-```text
-Heraldic charge sheet, each figure a single flat pure-white silhouette, no shading, no gradient, no outline, no shield,
-bold and simple like a stencil, readable at 24 pixels, every figure filling about 75 % of its cell.
-```
-
-**`ICON-SHEET-4`** (sheet, 2 × 2, after the style block; the cells follow it):
-
-```text
-4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 %
-empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no
-text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row:
-```
-
-**`ICON-SHEET-6`** (sheet, 2 × 3, after the style block; the cells follow it):
-
-```text
-6 separate icons arranged in a grid of 3 columns and 2 rows, each alone in its own equal square cell, centred with about 10 %
-empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no
-text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row:
-```
-
-**`ICON-NEG`** (negative prompt, every sheet):
-
-```text
-text, letters, numbers, labels, frames, borders, grid lines, cell dividers, scenery, ground shadow, photograph, plastic CGI render, pixel art, blurry,
-cropped subject, subjects touching or overlapping, two subjects in one cell.
-```
-
-**`ICON-NEG-TOON`** (negative prompt, added on every painted sheet: tiers A and B, crests, spells, creatures, heroes, towns; not on
-tier C, the charges or the cursors):
-
-```text
-cartoon, comic book, anime, manga, chibi, cute, toy-like, childish, cel shading, flat colours, flat shading, vector art, clip art,
-sticker, emoji, mobile game icon, casual game art, thick black outlines, ink line art, exaggerated proportions, oversized head, big eyes,
-rounded bubbly shapes, glossy plastic, smooth airbrushed gradients, oversaturated colours, candy colours
-```
-
-**`ICON-NEG-MECH`** (negative prompt, added for mechanical subjects: machines, bows, scales, carts):
-
-```text
-warped or oval wheels, wheels at different angles, wheels tilted off the axle, extra wheels, asymmetric bow arms, bent or doubled string,
-extra arms, tangled ropes, floating or disconnected parts.
+text, letters, numbers, labels, frames, borders, grid lines, cell dividers, scenery, ground shadow, photograph, plastic CGI render,
+pixel art, blurry, cropped subject, subjects touching or overlapping, two subjects in one cell.
 ```
 
 ## Output for every icon
@@ -135,103 +80,223 @@ extra arms, tangled ropes, floating or disconnected parts.
 | **C · Plain** | one-colour symbols the theme tints | buttons; 24–32 px | 19–22 |
 | **Heraldry** | faction crests in colour, and their one-colour charges | town and player panels, flags and banners; 24–128 px | 23–28 |
 
-The blocks are under [Blocks](#blocks).
-
 ## Tier A · Objects
 
 ### 1 · Resources (2 × 3) — the resource bar, trade and cost lists
 
-**Compose**: `ICON-STYLE-A` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1536 × 1024
+**Prompt** · 1536 × 1024 · negative `NEG-PAINTED`
 
-| # | File | Subject |
-|---|---|---|
-| 1 | `icon_resource_gold` | a small heap of thick, worn gold coins stamped with a sun, one coin standing upright in front; warm yellow metal, brown shadows, one bright glint |
-| 2 | `icon_resource_lumber` | three thick cut logs stacked as a pyramid (two below, one on top), tied with a coarse rope; dark bark, pale end grain with rings facing the viewer |
-| 3 | `icon_resource_ore` | a fist-sized lump of dark grey iron ore with rust-brown streaks and metallic flecks, two small broken pieces beside it |
-| 4 | `icon_resource_crystal` | a cluster of three pale rose-red crystals (one tall, two short) growing from a grey rock base; sharp facets, faint inner glow |
-| 5 | `icon_resource_mercury` | a round-bellied glass flask with a short neck and a cork stopper, half full of liquid silver that mirrors the light, one silver droplet beside it |
-| 6 | `icon_resource_sulfur` | a small pile of rough, powdery bright-yellow sulfur crystals, one thin curl of pale yellow smoke rising from it |
+```text
+Game UI icon sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a concept-art prop study:
+realistic proportions and believable construction, worn real materials (steel, wood, leather, stone, glass) with fine surface detail
+(scratches, dents, grime, patina, rust, frayed edges). Naturalistic light from the top left with soft shadows and subtle reflected
+light, a full range of values from deep shadow to one small sharp highlight, muted natural colours with one accent colour per icon.
+Each subject a clear silhouette set apart by value contrast, its edges made by light and shadow, not by drawn lines; three-quarter view
+slightly from above unless a cell says otherwise. Not a photograph, not a plastic CGI render, no pixel art. 6 separate icons arranged
+in a grid of 3 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale
+and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers.
+Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a small heap of thick, worn gold coins
+stamped with a sun, one coin standing upright in front; warm yellow metal, brown shadows, one bright glint; 2 three thick cut logs
+stacked as a pyramid (two below, one on top), tied with a coarse rope; dark bark, pale end grain with rings facing the viewer; 3 a
+fist-sized lump of dark grey iron ore with rust-brown streaks and metallic flecks, two small broken pieces beside it; 4 a cluster of
+three pale rose-red crystals (one tall, two short) growing from a grey rock base; sharp facets, faint inner glow; 5 a round-bellied
+glass flask with a short neck and a cork stopper, half full of liquid silver that mirrors the light, one silver droplet beside it; 6 a
+small pile of rough, powdery bright-yellow sulfur crystals, one thin curl of pale yellow smoke rising from it
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_resource_gold` |
+| 2 | `icon_resource_lumber` |
+| 3 | `icon_resource_ore` |
+| 4 | `icon_resource_crystal` |
+| 5 | `icon_resource_mercury` |
+| 6 | `icon_resource_sulfur` |
 
 ### 2 · Hero stats (2 × 3) — the hero screen's header, level-up
 
-**Compose**: `ICON-STYLE-A` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1536 × 1024
+**Prompt** · 1536 × 1024 · negative `NEG-PAINTED`
 
-| # | File | Subject |
-|---|---|---|
-| 1 | `icon_stat_attack` | a straight longsword pointing up, filling the cell's height: steel blade with a central groove, brass cross-guard, red leather grip, round pommel |
-| 2 | `icon_stat_defense` | a kite shield seen from the front: steel rim with rivets, plain deep-blue field with a few dents and scratches |
-| 3 | `icon_stat_spell-power` | an open hand, palm up, seen from the front; a bright violet four-rayed spark floats above the palm and lights the fingertips violet |
-| 4 | `icon_stat_knowledge` | a closed thick tome in dark brown leather with brass corners, a small pale-blue rune glowing on the cover |
-| 5 | `icon_stat_mana` | one large drop of deep-blue liquid light, glowing from within, a soft white highlight at the top left |
-| 6 | `icon_stat_experience` | a five-pointed gold star with bevelled faces, a soft golden glow around it |
+```text
+Game UI icon sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a concept-art prop study:
+realistic proportions and believable construction, worn real materials (steel, wood, leather, stone, glass) with fine surface detail
+(scratches, dents, grime, patina, rust, frayed edges). Naturalistic light from the top left with soft shadows and subtle reflected
+light, a full range of values from deep shadow to one small sharp highlight, muted natural colours with one accent colour per icon.
+Each subject a clear silhouette set apart by value contrast, its edges made by light and shadow, not by drawn lines; three-quarter view
+slightly from above unless a cell says otherwise. Not a photograph, not a plastic CGI render, no pixel art. 6 separate icons arranged
+in a grid of 3 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale
+and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers.
+Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a straight longsword pointing up, filling
+the cell's height: steel blade with a central groove, brass cross-guard, red leather grip, round pommel; 2 a kite shield seen from the
+front: steel rim with rivets, plain deep-blue field with a few dents and scratches; 3 an open hand, palm up, seen from the front; a
+bright violet four-rayed spark floats above the palm and lights the fingertips violet; 4 a closed thick tome in dark brown leather with
+brass corners, a small pale-blue rune glowing on the cover; 5 one large drop of deep-blue liquid light, glowing from within, a soft
+white highlight at the top left; 6 a five-pointed gold star with bevelled faces, a soft golden glow around it
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_stat_attack` |
+| 2 | `icon_stat_defense` |
+| 3 | `icon_stat_spell-power` |
+| 4 | `icon_stat_knowledge` |
+| 5 | `icon_stat_mana` |
+| 6 | `icon_stat_experience` |
 
 ### 3 · Combat skills (2 × 3) — skill rows, level-up offers
 
-**Compose**: `ICON-STYLE-A` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1536 × 1024
-
 The level (Basic … Master) is shown by the game with a frame, not in the icon.
 
-| # | File | Subject |
-|---|---|---|
-| 1 | `icon_skill_offense.melee` | two broadswords crossed in an X, blades up, steel with red grips; a small spark where the blades cross |
-| 2 | `icon_skill_offense.archery` | a drawn longbow held upright, an arrow nocked and the string pulled back in a clean V; dark wood, leather grip; both limbs the same length and curve (mirror-symmetric) |
-| 3 | `icon_skill_offense.marksmanship` | a round straw archery target seen from the front, red and white rings, one arrow buried in the exact centre, its feathers toward the viewer |
-| 4 | `icon_skill_defense.armor` | a steel breastplate on its own, seen from the front: rounded shoulder plates, leather straps, rivets, a few scratches |
-| 5 | `icon_skill_defense.resistance` | a round shield seen from the front; a violet lightning bolt strikes it from the upper right and shatters into violet sparks on its face |
-| 6 | `icon_skill_defense.leadership` | a commander's closed helmet in three-quarter view, gold trim on the brow, a tall red horsehair plume |
+**Prompt** · 1536 × 1024 · negative `NEG-PAINTED-MECH`
+
+```text
+Game UI icon sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a concept-art prop study:
+realistic proportions and believable construction, worn real materials (steel, wood, leather, stone, glass) with fine surface detail
+(scratches, dents, grime, patina, rust, frayed edges). Naturalistic light from the top left with soft shadows and subtle reflected
+light, a full range of values from deep shadow to one small sharp highlight, muted natural colours with one accent colour per icon.
+Each subject a clear silhouette set apart by value contrast, its edges made by light and shadow, not by drawn lines; three-quarter view
+slightly from above unless a cell says otherwise. Not a photograph, not a plastic CGI render, no pixel art. 6 separate icons arranged
+in a grid of 3 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale
+and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers.
+Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 two broadswords crossed in an X, blades
+up, steel with red grips; a small spark where the blades cross; 2 a drawn longbow held upright, an arrow nocked and the string pulled
+back in a clean V; dark wood, leather grip; both limbs the same length and curve (mirror-symmetric); 3 a round straw archery target
+seen from the front, red and white rings, one arrow buried in the exact centre, its feathers toward the viewer; 4 a steel breastplate
+on its own, seen from the front: rounded shoulder plates, leather straps, rivets, a few scratches; 5 a round shield seen from the
+front; a violet lightning bolt strikes it from the upper right and shatters into violet sparks on its face; 6 a commander's closed
+helmet in three-quarter view, gold trim on the brow, a tall red horsehair plume
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_skill_offense.melee` |
+| 2 | `icon_skill_offense.archery` |
+| 3 | `icon_skill_offense.marksmanship` |
+| 4 | `icon_skill_defense.armor` |
+| 5 | `icon_skill_defense.resistance` |
+| 6 | `icon_skill_defense.leadership` |
 
 ### 4 · Kingdom skills (2 × 3)
 
-**Compose**: `ICON-STYLE-A` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1536 × 1024
+**Prompt** · 1536 × 1024 · negative `NEG-PAINTED`
 
-| # | File | Subject |
-|---|---|---|
-| 1 | `icon_skill_estates.treasury` | an iron-bound wooden chest, lid open, heaped with gold coins that spill over its front edge |
-| 2 | `icon_skill_estates.prospecting` | a miner's pickaxe leaning on a small heap of dark ore with two pink crystals in it |
-| 3 | `icon_skill_estates.stewardship` | an iron ring with three large old keys, lying across a rolled scroll sealed with red wax |
-| 4 | `icon_skill_pathfinding.pathfinding` | a dirt path winding from the bottom of the cell between two small green hills into the distance, a tiny wooden signpost at its side |
-| 5 | `icon_skill_pathfinding.logistics` | a pair of packed leather saddlebags joined by a broad strap, a rolled blanket tied on top |
-| 6 | `icon_skill_pathfinding.scouting` | a brass spyglass, extended in three sections, lying diagonally; leather-wrapped grip, a glint on the lens |
+```text
+Game UI icon sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a concept-art prop study:
+realistic proportions and believable construction, worn real materials (steel, wood, leather, stone, glass) with fine surface detail
+(scratches, dents, grime, patina, rust, frayed edges). Naturalistic light from the top left with soft shadows and subtle reflected
+light, a full range of values from deep shadow to one small sharp highlight, muted natural colours with one accent colour per icon.
+Each subject a clear silhouette set apart by value contrast, its edges made by light and shadow, not by drawn lines; three-quarter view
+slightly from above unless a cell says otherwise. Not a photograph, not a plastic CGI render, no pixel art. 6 separate icons arranged
+in a grid of 3 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale
+and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers.
+Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 an iron-bound wooden chest, lid open,
+heaped with gold coins that spill over its front edge; 2 a miner's pickaxe leaning on a small heap of dark ore with two pink crystals
+in it; 3 an iron ring with three large old keys, lying across a rolled scroll sealed with red wax; 4 a dirt path winding from the
+bottom of the cell between two small green hills into the distance, a tiny wooden signpost at its side; 5 a pair of packed leather
+saddlebags joined by a broad strap, a rolled blanket tied on top; 6 a brass spyglass, extended in three sections, lying diagonally;
+leather-wrapped grip, a glint on the lens
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_skill_estates.treasury` |
+| 2 | `icon_skill_estates.prospecting` |
+| 3 | `icon_skill_estates.stewardship` |
+| 4 | `icon_skill_pathfinding.pathfinding` |
+| 5 | `icon_skill_pathfinding.logistics` |
+| 6 | `icon_skill_pathfinding.scouting` |
 
 ### 5 · Battlecraft skills (2 × 3)
 
-**Compose**: `ICON-STYLE-A` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1536 × 1024
+**Prompt** · 1536 × 1024 · negative `NEG-PAINTED`
 
-| # | File | Subject |
-|---|---|---|
-| 1 | `icon_skill_tactics.tactics` | a small parchment battle map seen from above at an angle, three tiny banner pins (red, blue, gold) stuck in it, a curved ink arrow between them |
-| 2 | `icon_skill_tactics.alert` | an open eye drawn front-on: sharp black pupil, gold iris, short pale rays around it |
-| 3 | `icon_skill_tactics.wartempo` | a round war drum with a pale leather head and zig-zag rope cords on its side, two drumsticks crossed above it |
-| 4 | `icon_skill_rage.first` (Blood Rage) | a clenched fist seen from the front, wrapped in strips of red cloth, small drops of red light around it |
-| 5 | `icon_skill_rage.second` (Warcry) | the head of a tusked orc warrior seen exactly from the side, mouth wide open in a shout, three curved sound waves in front of the mouth |
-| 6 | `icon_skill_rage.third` (Interference) | a wooden mage staff snapped in two in the middle, splinters and a fizzling blue spark at the break |
+```text
+Game UI icon sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a concept-art prop study:
+realistic proportions and believable construction, worn real materials (steel, wood, leather, stone, glass) with fine surface detail
+(scratches, dents, grime, patina, rust, frayed edges). Naturalistic light from the top left with soft shadows and subtle reflected
+light, a full range of values from deep shadow to one small sharp highlight, muted natural colours with one accent colour per icon.
+Each subject a clear silhouette set apart by value contrast, its edges made by light and shadow, not by drawn lines; three-quarter view
+slightly from above unless a cell says otherwise. Not a photograph, not a plastic CGI render, no pixel art. 6 separate icons arranged
+in a grid of 3 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale
+and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers.
+Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a small parchment battle map seen from
+above at an angle, three tiny banner pins (red, blue, gold) stuck in it, a curved ink arrow between them; 2 an open eye drawn front-on:
+sharp black pupil, gold iris, short pale rays around it; 3 a round war drum with a pale leather head and zig-zag rope cords on its
+side, two drumsticks crossed above it; 4 a clenched fist seen from the front, wrapped in strips of red cloth, small drops of red light
+around it; 5 the head of a tusked orc warrior seen exactly from the side, mouth wide open in a shout, three curved sound waves in front
+of the mouth; 6 a wooden mage staff snapped in two in the middle, splinters and a fizzling blue spark at the break
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_skill_tactics.tactics` |
+| 2 | `icon_skill_tactics.alert` |
+| 3 | `icon_skill_tactics.wartempo` |
+| 4 | `icon_skill_rage.first` (Blood Rage) |
+| 5 | `icon_skill_rage.second` (Warcry) |
+| 6 | `icon_skill_rage.third` (Interference) |
 
 ### 6 · War-machine skills (2 × 2)
 
-**Compose**: `ICON-STYLE-A` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1024 × 1024
-
 These show what the skill does, not the machine (the machines have their own sheet).
 
-| # | File | Subject |
-|---|---|---|
-| 1 | `icon_skill_machines.ballistics` | a round stone boulder smashing into a block of grey masonry wall: cracks spreading from the hit, stone chips flying |
-| 2 | `icon_skill_machines.healing` | a rolled linen bandage, a small clay jar of salve with a wooden lid, and a sprig of green herb, grouped together |
-| 3 | `icon_skill_machines.ammo` | a full leather quiver standing upright, packed with arrows and crossbow bolts, their feathers fanned at the top |
-| 4 | spare | a second take of cell 1 |
+**Prompt** · 1024 × 1024 · negative `NEG-PAINTED`
+
+```text
+Game UI icon sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a concept-art prop study:
+realistic proportions and believable construction, worn real materials (steel, wood, leather, stone, glass) with fine surface detail
+(scratches, dents, grime, patina, rust, frayed edges). Naturalistic light from the top left with soft shadows and subtle reflected
+light, a full range of values from deep shadow to one small sharp highlight, muted natural colours with one accent colour per icon.
+Each subject a clear silhouette set apart by value contrast, its edges made by light and shadow, not by drawn lines; three-quarter view
+slightly from above unless a cell says otherwise. Not a photograph, not a plastic CGI render, no pixel art. 4 separate icons arranged
+in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale
+and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers.
+Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a round stone boulder smashing into a
+block of grey masonry wall: cracks spreading from the hit, stone chips flying; 2 a rolled linen bandage, a small clay jar of salve with
+a wooden lid, and a sprig of green herb, grouped together; 3 a full leather quiver standing upright, packed with arrows and crossbow
+bolts, their feathers fanned at the top; 4 a second take of cell 1
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_skill_machines.ballistics` |
+| 2 | `icon_skill_machines.healing` |
+| 3 | `icon_skill_machines.ammo` |
+| 4 | spare |
 
 ### 7 · War machines (2 × 2) — the hero's army row, the blacksmith
-
-**Compose**: `ICON-STYLE-A` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` + `ICON-NEG-MECH` · 1024 × 1024
 
 Image models draw machines badly (wheels at odd angles, uneven bow arms). This sheet follows the **rules for mechanical subjects** below;
 generate it on its own and expect to roll it several times.
 
-| # | File | Subject |
-|---|---|---|
-| 1 | `icon_machine_ballista` | a heavy siege crossbow seen **from directly above**: a long wooden stock running from the bottom of the cell to the top, the bow across it near the top as one wide arc, **mirror-symmetric, both arms the same length and curve**, the string a straight line from tip to tip pulled back into a V to the trigger, one thick bolt lying along the stock; iron bands on the wood; **no wheels** |
-| 2 | `icon_machine_catapult` | a wooden catapult in **pure side profile**, facing right: a low rectangular frame on **two solid plank wheels, each a perfect circle**, one throwing arm angled up at 45° with a cup holding a round stone, a crossbar where the arm stops; the far wheels are **hidden exactly behind** the near ones |
-| 3 | `icon_machine_healing-tent` | a small white canvas field tent in three-quarter view, its flap tied open, a pole at the front with a red **flame-shaped** pennant (no red cross: it is a protected emblem) |
-| 4 | `icon_machine_ammo-cart` | a two-wheeled wooden handcart in **pure side profile**, facing right: **one visible wheel, a perfect circle with six straight spokes**, two long handles reaching to the left, the box full of bundled arrows standing upright; the far wheel **hidden exactly behind** the near one |
+**Prompt** · 1024 × 1024 · negative `NEG-PAINTED-MECH`
+
+```text
+Game UI icon sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a concept-art prop study:
+realistic proportions and believable construction, worn real materials (steel, wood, leather, stone, glass) with fine surface detail
+(scratches, dents, grime, patina, rust, frayed edges). Naturalistic light from the top left with soft shadows and subtle reflected
+light, a full range of values from deep shadow to one small sharp highlight, muted natural colours with one accent colour per icon.
+Each subject a clear silhouette set apart by value contrast, its edges made by light and shadow, not by drawn lines; three-quarter view
+slightly from above unless a cell says otherwise. Not a photograph, not a plastic CGI render, no pixel art. 4 separate icons arranged
+in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale
+and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers.
+Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a heavy siege crossbow seen from directly
+above: a long wooden stock running from the bottom of the cell to the top, the bow across it near the top as one wide arc,
+mirror-symmetric, both arms the same length and curve, the string a straight line from tip to tip pulled back into a V to the trigger,
+one thick bolt lying along the stock; iron bands on the wood; no wheels; 2 a wooden catapult in pure side profile, facing right: a low
+rectangular frame on two solid plank wheels, each a perfect circle, one throwing arm angled up at 45° with a cup holding a round stone,
+a crossbar where the arm stops; the far wheels are hidden exactly behind the near ones; 3 a small white canvas field tent in
+three-quarter view, its flap tied open, a pole at the front with a red flame-shaped pennant (no red cross: it is a protected emblem); 4
+a two-wheeled wooden handcart in pure side profile, facing right: one visible wheel, a perfect circle with six straight spokes, two
+long handles reaching to the left, the box full of bundled arrows standing upright; the far wheel hidden exactly behind the near one
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_machine_ballista` |
+| 2 | `icon_machine_catapult` |
+| 3 | `icon_machine_healing-tent` |
+| 4 | `icon_machine_ammo-cart` |
 
 **Rules for mechanical subjects** (machines, bows, scales, carts):
 
@@ -240,110 +305,333 @@ generate it on its own and expect to roll it several times.
 - **Say the counts and shapes**: "one visible wheel, a perfect circle, six spokes", "two wheels", "one throwing arm".
 - **Say the symmetry**: "mirror-symmetric, both arms the same length and curve, the string straight from tip to tip".
 - **Fewer parts**: no ropes, winches, gears or crew unless the subject needs them; solid plank wheels are safer than spoked ones.
-- **Add `ICON-NEG-MECH` to the negative prompt** (the Compose line of sheet 7 has it; add it to any other sheet with a wheel or a bow).
+- **Use `NEG-PAINTED-MECH` as the negative** (the Prompt lines of sheets 3, 7 and 16 name it; use it for any new painted sheet with a wheel, a bow or scales).
 - **If it still fails**: generate the one icon alone (1 × 1 at 1024 px); or sketch it (a few boxes and cylinders in Blender or Godot, a
   screenshot is enough) and give it to the model as the image input at medium strength; or fix the wheel by hand with a circle.
 
 ### 29 · Difficulty (2 × 3) — the new-game screen's difficulty row, the victory screen, the leaderboard (ADR-225)
 
-**Compose**: `ICON-STYLE-A` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1536 × 1024
-
 Five chess pieces, from humble to grand, so the row reads as a climb at a glance: **carved wood and brass**, each piece standing
 upright on its own round base, **the same height and lighting** in every cell, three-quarter view facing left, each richer than the last.
 Generate the five on one sheet so they match.
 
-| # | File | Subject |
-|---|---|---|
-| 1 | `icon_difficulty_easy` | a pawn of plain pale wood, a few nicks in the base |
-| 2 | `icon_difficulty_normal` | a knight of polished light wood, a horse's head with a carved mane |
-| 3 | `icon_difficulty_hard` | a bishop of dark walnut with a thin brass band round its waist |
-| 4 | `icon_difficulty_expert` | a rook of dark walnut, its battlements capped in brass, a brass ring at the base |
-| 5 | `icon_difficulty_master` | a queen of blackened wood, a gold crown with one ember-red gem, gold rings at the waist and base |
-| 6 | — | spare: a second take of the queen |
+**Prompt** · 1536 × 1024 · negative `NEG-PAINTED`
+
+```text
+Game UI icon sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a concept-art prop study:
+realistic proportions and believable construction, worn real materials (steel, wood, leather, stone, glass) with fine surface detail
+(scratches, dents, grime, patina, rust, frayed edges). Naturalistic light from the top left with soft shadows and subtle reflected
+light, a full range of values from deep shadow to one small sharp highlight, muted natural colours with one accent colour per icon.
+Each subject a clear silhouette set apart by value contrast, its edges made by light and shadow, not by drawn lines; three-quarter view
+slightly from above unless a cell says otherwise. Not a photograph, not a plastic CGI render, no pixel art. 6 separate icons arranged
+in a grid of 3 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale
+and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers.
+Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a pawn of plain pale wood, a few nicks in
+the base; 2 a knight of polished light wood, a horse's head with a carved mane; 3 a bishop of dark walnut with a thin brass band round
+its waist; 4 a rook of dark walnut, its battlements capped in brass, a brass ring at the base; 5 a queen of blackened wood, a gold
+crown with one ember-red gem, gold rings at the waist and base; 6 a second take of the queen
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_difficulty_easy` |
+| 2 | `icon_difficulty_normal` |
+| 3 | `icon_difficulty_hard` |
+| 4 | `icon_difficulty_expert` |
+| 5 | `icon_difficulty_master` |
+| 6 | spare |
 
 ## Tier B · Emblems
 
 ### 8 · Hero condition (2 × 2) — the hero panel, creature windows
 
-**Compose**: `ICON-STYLE-B` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1024 × 1024
+**Prompt** · 1024 × 1024 · negative `NEG-PAINTED`
 
-| # | File | Subject |
-|---|---|---|
-| 1 | `icon_stat_morale` | a tall banner on a short pole, the red cloth with gold trim streaming to the right |
-| 2 | `icon_stat_luck` | a four-leaf clover seen from above, deep-green leaves with pale veins, a faint golden glow |
-| 3 | `icon_stat_movement` | a leather traveller's boot seen from the side, a small white feathered wing at the heel |
-| 4 | `icon_action_sleep` | a closed eye drawn as a curved lid with lashes, a small pale crescent moon above it; night-blue tones |
+```text
+Game UI icon sheet of dark-fantasy emblems in a realistic painterly style, flat front view, each emblem one strong symbolic shape made
+as a real object: hammered and engraved metal, carved stone or bone, aged enamel or worn cloth, with true material texture, small dents
+and wear. Two or three muted colours plus a soft glow where named, the glow lighting the surface around it naturally. Light from the
+top left, the shape set apart by value contrast and a faint dark edge, no drawn outline. Not a photograph, not a plastic CGI render, no
+pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10
+% empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames,
+no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a tall
+banner on a short pole, the red cloth with gold trim streaming to the right; 2 a four-leaf clover seen from above, deep-green leaves
+with pale veins, a faint golden glow; 3 a leather traveller's boot seen from the side, a small white feathered wing at the heel; 4 a
+closed eye drawn as a curved lid with lashes, a small pale crescent moon above it; night-blue tones
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_stat_morale` |
+| 2 | `icon_stat_luck` |
+| 3 | `icon_stat_movement` |
+| 4 | `icon_action_sleep` |
 
 ### 9–14 · Magic schools (2 × 2 each, one sheet per school)
 
-**Compose**: `ICON-STYLE-B` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1024 × 1024
+Every school sheet has the same four cells; only the emblem changes.
 
-Every school sheet has the same four cells; only the emblem changes. **Cell rule**: replace `{emblem}` with the school's Emblem and
-`<town>` with its Town from the second table; one sheet per row of that table.
+#### 9 · Light (`haven`)
 
-| # | File | Subject |
-|---|---|---|
-| 1 | `icon_school_<town>` | {emblem}, alone and large |
-| 2 | `icon_skill_magic.<town>.spells` | {emblem}, glowing above an open spell book with worn leather covers, its pages tinted in the school's colour |
-| 3 | `icon_skill_magic.<town>.attunement` | {emblem}, smaller, inside a thin ring of small runes in the school's colour |
-| 4 | `icon_skill_magic.<town>.mastery` | {emblem}, smaller, above a small three-pointed crown of old gold |
+**Prompt** · 1024 × 1024 · negative `NEG-PAINTED`
 
-| Sheet | Town | School | Emblem |
-|---|---|---|---|
-| 9 | `haven` | Light | a radiant sun disc of white gold with twelve straight rays of alternating length, a pale warm inner glow |
-| 10 | `sylvan` | Nature | a single green leaf with pale veins, a thin vine curling into a spiral around its stem, one small bud |
-| 11 | `academy` | Arcana | an eight-pointed star drawn in thin lines of pale-blue light over a faint circle, a bright point at its centre |
-| 12 | `necropolis` | Death | a pale bone skull seen from the front over an upturned crescent, cold green glow in the eye sockets |
-| 13 | `inferno` | Chaos | a twisting ember-red flame with a black core and orange edges, a few sparks flying off it |
-| 14 | `dungeon` | Shadow | a violet crescent moon half covered by curling black smoke, a faint violet rim light |
+```text
+Game UI icon sheet of dark-fantasy emblems in a realistic painterly style, flat front view, each emblem one strong symbolic shape made
+as a real object: hammered and engraved metal, carved stone or bone, aged enamel or worn cloth, with true material texture, small dents
+and wear. Two or three muted colours plus a soft glow where named, the glow lighting the surface around it naturally. Light from the
+top left, the shape set apart by value contrast and a faint dark edge, no drawn outline. Not a photograph, not a plastic CGI render, no
+pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10
+% empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames,
+no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a radiant
+sun disc of white gold with twelve straight rays of alternating length, a pale warm inner glow, alone and large; 2 a radiant sun disc
+of white gold with twelve straight rays of alternating length, a pale warm inner glow, glowing above an open spell book with worn
+leather covers, its pages tinted in the school's colour; 3 a radiant sun disc of white gold with twelve straight rays of alternating
+length, a pale warm inner glow, smaller, inside a thin ring of small runes in the school's colour; 4 a radiant sun disc of white gold
+with twelve straight rays of alternating length, a pale warm inner glow, smaller, above a small three-pointed crown of old gold
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_school_haven` |
+| 2 | `icon_skill_magic.haven.spells` |
+| 3 | `icon_skill_magic.haven.attunement` |
+| 4 | `icon_skill_magic.haven.mastery` |
+
+#### 10 · Nature (`sylvan`)
+
+**Prompt** · 1024 × 1024 · negative `NEG-PAINTED`
+
+```text
+Game UI icon sheet of dark-fantasy emblems in a realistic painterly style, flat front view, each emblem one strong symbolic shape made
+as a real object: hammered and engraved metal, carved stone or bone, aged enamel or worn cloth, with true material texture, small dents
+and wear. Two or three muted colours plus a soft glow where named, the glow lighting the surface around it naturally. Light from the
+top left, the shape set apart by value contrast and a faint dark edge, no drawn outline. Not a photograph, not a plastic CGI render, no
+pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10
+% empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames,
+no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a single
+green leaf with pale veins, a thin vine curling into a spiral around its stem, one small bud, alone and large; 2 a single green leaf
+with pale veins, a thin vine curling into a spiral around its stem, one small bud, glowing above an open spell book with worn leather
+covers, its pages tinted in the school's colour; 3 a single green leaf with pale veins, a thin vine curling into a spiral around its
+stem, one small bud, smaller, inside a thin ring of small runes in the school's colour; 4 a single green leaf with pale veins, a thin
+vine curling into a spiral around its stem, one small bud, smaller, above a small three-pointed crown of old gold
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_school_sylvan` |
+| 2 | `icon_skill_magic.sylvan.spells` |
+| 3 | `icon_skill_magic.sylvan.attunement` |
+| 4 | `icon_skill_magic.sylvan.mastery` |
+
+#### 11 · Arcana (`academy`)
+
+**Prompt** · 1024 × 1024 · negative `NEG-PAINTED`
+
+```text
+Game UI icon sheet of dark-fantasy emblems in a realistic painterly style, flat front view, each emblem one strong symbolic shape made
+as a real object: hammered and engraved metal, carved stone or bone, aged enamel or worn cloth, with true material texture, small dents
+and wear. Two or three muted colours plus a soft glow where named, the glow lighting the surface around it naturally. Light from the
+top left, the shape set apart by value contrast and a faint dark edge, no drawn outline. Not a photograph, not a plastic CGI render, no
+pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10
+% empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames,
+no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 an
+eight-pointed star drawn in thin lines of pale-blue light over a faint circle, a bright point at its centre, alone and large; 2 an
+eight-pointed star drawn in thin lines of pale-blue light over a faint circle, a bright point at its centre, glowing above an open
+spell book with worn leather covers, its pages tinted in the school's colour; 3 an eight-pointed star drawn in thin lines of pale-blue
+light over a faint circle, a bright point at its centre, smaller, inside a thin ring of small runes in the school's colour; 4 an
+eight-pointed star drawn in thin lines of pale-blue light over a faint circle, a bright point at its centre, smaller, above a small
+three-pointed crown of old gold
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_school_academy` |
+| 2 | `icon_skill_magic.academy.spells` |
+| 3 | `icon_skill_magic.academy.attunement` |
+| 4 | `icon_skill_magic.academy.mastery` |
+
+#### 12 · Death (`necropolis`)
+
+**Prompt** · 1024 × 1024 · negative `NEG-PAINTED`
+
+```text
+Game UI icon sheet of dark-fantasy emblems in a realistic painterly style, flat front view, each emblem one strong symbolic shape made
+as a real object: hammered and engraved metal, carved stone or bone, aged enamel or worn cloth, with true material texture, small dents
+and wear. Two or three muted colours plus a soft glow where named, the glow lighting the surface around it naturally. Light from the
+top left, the shape set apart by value contrast and a faint dark edge, no drawn outline. Not a photograph, not a plastic CGI render, no
+pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10
+% empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames,
+no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a pale
+bone skull seen from the front over an upturned crescent, cold green glow in the eye sockets, alone and large; 2 a pale bone skull seen
+from the front over an upturned crescent, cold green glow in the eye sockets, glowing above an open spell book with worn leather
+covers, its pages tinted in the school's colour; 3 a pale bone skull seen from the front over an upturned crescent, cold green glow in
+the eye sockets, smaller, inside a thin ring of small runes in the school's colour; 4 a pale bone skull seen from the front over an
+upturned crescent, cold green glow in the eye sockets, smaller, above a small three-pointed crown of old gold
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_school_necropolis` |
+| 2 | `icon_skill_magic.necropolis.spells` |
+| 3 | `icon_skill_magic.necropolis.attunement` |
+| 4 | `icon_skill_magic.necropolis.mastery` |
+
+#### 13 · Chaos (`inferno`)
+
+**Prompt** · 1024 × 1024 · negative `NEG-PAINTED`
+
+```text
+Game UI icon sheet of dark-fantasy emblems in a realistic painterly style, flat front view, each emblem one strong symbolic shape made
+as a real object: hammered and engraved metal, carved stone or bone, aged enamel or worn cloth, with true material texture, small dents
+and wear. Two or three muted colours plus a soft glow where named, the glow lighting the surface around it naturally. Light from the
+top left, the shape set apart by value contrast and a faint dark edge, no drawn outline. Not a photograph, not a plastic CGI render, no
+pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10
+% empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames,
+no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a twisting
+ember-red flame with a black core and orange edges, a few sparks flying off it, alone and large; 2 a twisting ember-red flame with a
+black core and orange edges, a few sparks flying off it, glowing above an open spell book with worn leather covers, its pages tinted in
+the school's colour; 3 a twisting ember-red flame with a black core and orange edges, a few sparks flying off it, smaller, inside a
+thin ring of small runes in the school's colour; 4 a twisting ember-red flame with a black core and orange edges, a few sparks flying
+off it, smaller, above a small three-pointed crown of old gold
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_school_inferno` |
+| 2 | `icon_skill_magic.inferno.spells` |
+| 3 | `icon_skill_magic.inferno.attunement` |
+| 4 | `icon_skill_magic.inferno.mastery` |
+
+#### 14 · Shadow (`dungeon`)
+
+**Prompt** · 1024 × 1024 · negative `NEG-PAINTED`
+
+```text
+Game UI icon sheet of dark-fantasy emblems in a realistic painterly style, flat front view, each emblem one strong symbolic shape made
+as a real object: hammered and engraved metal, carved stone or bone, aged enamel or worn cloth, with true material texture, small dents
+and wear. Two or three muted colours plus a soft glow where named, the glow lighting the surface around it naturally. Light from the
+top left, the shape set apart by value contrast and a faint dark edge, no drawn outline. Not a photograph, not a plastic CGI render, no
+pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10
+% empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames,
+no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a violet
+crescent moon half covered by curling black smoke, a faint violet rim light, alone and large; 2 a violet crescent moon half covered by
+curling black smoke, a faint violet rim light, glowing above an open spell book with worn leather covers, its pages tinted in the
+school's colour; 3 a violet crescent moon half covered by curling black smoke, a faint violet rim light, smaller, inside a thin ring of
+small runes in the school's colour; 4 a violet crescent moon half covered by curling black smoke, a faint violet rim light, smaller,
+above a small three-pointed crown of old gold
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_school_dungeon` |
+| 2 | `icon_skill_magic.dungeon.spells` |
+| 3 | `icon_skill_magic.dungeon.attunement` |
+| 4 | `icon_skill_magic.dungeon.mastery` |
 
 ### 15 · Adventure map: hero actions (2 × 3) — the action panel
 
-**Compose**: `ICON-STYLE-B` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1536 × 1024
+**Prompt** · 1536 × 1024 · negative `NEG-PAINTED`
 
-| # | File | Subject |
-|---|---|---|
-| 1 | `icon_action_move` | an old iron horseshoe with a small glowing gold rune on it, and a short trail of three hoof prints curving ahead of it toward the upper right |
-| 2 | `icon_action_next-hero` | a knight's helmet in profile facing right, a small gold arrow pointing right in front of it |
-| 3 | `icon_action_end-turn` | an hourglass in a dark wooden frame, the top bulb almost empty, the last grains of pale sand falling |
-| 4 | `icon_action_spell-book` | a closed thick spell book in dark-violet leather, gold corners and a gold clasp, a faint rune glowing on the cover |
-| 5 | `icon_action_dig` | an iron shovel with a wooden handle stuck upright in a small mound of dark earth, a few clods around it |
-| 6 | `icon_action_level` | a dark cave mouth in a grey rock face, one small gold arrow above it pointing up and one beside it pointing down (surface and underground) |
+```text
+Game UI icon sheet of dark-fantasy emblems in a realistic painterly style, flat front view, each emblem one strong symbolic shape made
+as a real object: hammered and engraved metal, carved stone or bone, aged enamel or worn cloth, with true material texture, small dents
+and wear. Two or three muted colours plus a soft glow where named, the glow lighting the surface around it naturally. Light from the
+top left, the shape set apart by value contrast and a faint dark edge, no drawn outline. Not a photograph, not a plastic CGI render, no
+pixel art. 6 separate icons arranged in a grid of 3 columns and 2 rows, each alone in its own equal square cell, centred with about 10
+% empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames,
+no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 an old
+iron horseshoe with a small glowing gold rune on it, and a short trail of three hoof prints curving ahead of it toward the upper right;
+2 a knight's helmet in profile facing right, a small gold arrow pointing right in front of it; 3 an hourglass in a dark wooden frame,
+the top bulb almost empty, the last grains of pale sand falling; 4 a closed thick spell book in dark-violet leather, gold corners and a
+gold clasp, a faint rune glowing on the cover; 5 an iron shovel with a wooden handle stuck upright in a small mound of dark earth, a
+few clods around it; 6 a dark cave mouth in a grey rock face, one small gold arrow above it pointing up and one beside it pointing down
+(surface and underground)
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_action_move` |
+| 2 | `icon_action_next-hero` |
+| 3 | `icon_action_end-turn` |
+| 4 | `icon_action_spell-book` |
+| 5 | `icon_action_dig` |
+| 6 | `icon_action_level` |
 
 ### 16 · Adventure map: kingdom (2 × 2) — the action panel, kingdom overview
 
-**Compose**: `ICON-STYLE-B` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1024 × 1024
+**Prompt** · 1024 × 1024 · negative `NEG-PAINTED-MECH`
 
-| # | File | Subject |
-|---|---|---|
-| 1 | `icon_action_kingdom` | a small castle seen from the front: three grey stone towers with dark-red conical roofs, a tiny gold flag on the middle one |
-| 2 | `icon_action_marketplace` | brass balance scales seen from the front, **mirror-symmetric** frame, the beam level, gold coins in the left pan and a pink crystal in the right |
-| 3 | `icon_action_thieves-guild` | a black hooded mask with empty eye holes, a curved dagger crossed behind it |
-| 4 | `icon_action_quest-log` | a rolled parchment scroll tied with a cord, a red wax seal hanging from the cord |
+```text
+Game UI icon sheet of dark-fantasy emblems in a realistic painterly style, flat front view, each emblem one strong symbolic shape made
+as a real object: hammered and engraved metal, carved stone or bone, aged enamel or worn cloth, with true material texture, small dents
+and wear. Two or three muted colours plus a soft glow where named, the glow lighting the surface around it naturally. Light from the
+top left, the shape set apart by value contrast and a faint dark edge, no drawn outline. Not a photograph, not a plastic CGI render, no
+pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10
+% empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames,
+no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a small
+castle seen from the front: three grey stone towers with dark-red conical roofs, a tiny gold flag on the middle one; 2 brass balance
+scales seen from the front, mirror-symmetric frame, the beam level, gold coins in the left pan and a pink crystal in the right; 3 a
+black hooded mask with empty eye holes, a curved dagger crossed behind it; 4 a rolled parchment scroll tied with a cord, a red wax seal
+hanging from the cord
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_action_kingdom` |
+| 2 | `icon_action_marketplace` |
+| 3 | `icon_action_thieves-guild` |
+| 4 | `icon_action_quest-log` |
 
 ### 17 · Battle: unit actions (2 × 3) — the battle bar, the cursor
 
-**Compose**: `ICON-STYLE-B` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1536 × 1024
+**Prompt** · 1536 × 1024 · negative `NEG-PAINTED`
 
-| # | File | Subject |
-|---|---|---|
-| 1 | `icon_battle_melee` | a sword striking down diagonally from the top right, a short pale motion arc behind the blade |
-| 2 | `icon_battle_shoot` | one arrow in flight from left to right, rising slightly, three speed lines behind its feathers |
-| 3 | `icon_battle_cast` | an open hand palm up under a small floating open spell book, a violet spark rising from the pages |
-| 4 | `icon_battle_defend` | a raised round shield seen from the front, a bright spark on its upper rim |
-| 5 | `icon_battle_wait` | an hourglass lying on its side, sand resting in both bulbs |
-| 6 | `icon_battle_warcry` | a curved war horn of yellowed bone with a leather strap, three curved sound waves coming from its mouth |
+```text
+Game UI icon sheet of dark-fantasy emblems in a realistic painterly style, flat front view, each emblem one strong symbolic shape made
+as a real object: hammered and engraved metal, carved stone or bone, aged enamel or worn cloth, with true material texture, small dents
+and wear. Two or three muted colours plus a soft glow where named, the glow lighting the surface around it naturally. Light from the
+top left, the shape set apart by value contrast and a faint dark edge, no drawn outline. Not a photograph, not a plastic CGI render, no
+pixel art. 6 separate icons arranged in a grid of 3 columns and 2 rows, each alone in its own equal square cell, centred with about 10
+% empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames,
+no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a sword
+striking down diagonally from the top right, a short pale motion arc behind the blade; 2 one arrow in flight from left to right, rising
+slightly, three speed lines behind its feathers; 3 an open hand palm up under a small floating open spell book, a violet spark rising
+from the pages; 4 a raised round shield seen from the front, a bright spark on its upper rim; 5 an hourglass lying on its side, sand
+resting in both bulbs; 6 a curved war horn of yellowed bone with a leather strap, three curved sound waves coming from its mouth
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_battle_melee` |
+| 2 | `icon_battle_shoot` |
+| 3 | `icon_battle_cast` |
+| 4 | `icon_battle_defend` |
+| 5 | `icon_battle_wait` |
+| 6 | `icon_battle_warcry` |
 
 ### 18 · Battle: commands (2 × 2)
 
-**Compose**: `ICON-STYLE-B` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1024 × 1024
+**Prompt** · 1024 × 1024 · negative `NEG-PAINTED`
 
-| # | File | Subject |
-|---|---|---|
-| 1 | `icon_battle_retreat` | a tattered white flag on a broken spear shaft, leaning to the left |
-| 2 | `icon_battle_surrender` | a sword laid flat across two open, upturned hands, offered forward |
-| 3 | `icon_battle_quick-combat` | two swords crossed in an X, a yellow lightning bolt running down between them |
-| 4 | `icon_battle_auto-combat` | two swords crossed in an X, a small bronze cogwheel where they cross |
+```text
+Game UI icon sheet of dark-fantasy emblems in a realistic painterly style, flat front view, each emblem one strong symbolic shape made
+as a real object: hammered and engraved metal, carved stone or bone, aged enamel or worn cloth, with true material texture, small dents
+and wear. Two or three muted colours plus a soft glow where named, the glow lighting the surface around it naturally. Light from the
+top left, the shape set apart by value contrast and a faint dark edge, no drawn outline. Not a photograph, not a plastic CGI render, no
+pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10
+% empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames,
+no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a tattered
+white flag on a broken spear shaft, leaning to the left; 2 a sword laid flat across two open, upturned hands, offered forward; 3 two
+swords crossed in an X, a yellow lightning bolt running down between them; 4 two swords crossed in an X, a small bronze cogwheel where
+they cross
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_battle_retreat` |
+| 2 | `icon_battle_surrender` |
+| 3 | `icon_battle_quick-combat` |
+| 4 | `icon_battle_auto-combat` |
 
 ## Tier C · Plain
 
@@ -351,51 +639,92 @@ The symbols are light grey; the theme tints them.
 
 ### 19 · Confirm (2 × 2)
 
-**Compose**: `ICON-STYLE-C` + `ICON-SHEET-4` + cells · negative `ICON-NEG` · 1024 × 1024
+**Prompt** · 1024 × 1024 · negative `NEG-PLAIN`
 
-| # | File | Subject |
-|---|---|---|
-| 1 | `icon_button_ok` | a tick mark, the short stroke and the long stroke the same thickness |
-| 2 | `icon_button_cancel` | a circle with one diagonal stroke from top left to bottom right |
-| 3 | `icon_button_close` | an X of two short, equal strokes |
-| 4 | `icon_button_info` | a small open scroll, rolled at both ends |
+```text
+Game UI button symbol sheet, flat front view, each symbol a single light-grey shape with a subtle bevel and a thick dark outline, no
+other colour, no glow, bold and simple, equal stroke weight on every symbol. 4 separate icons arranged in a grid of 2 columns and 2
+rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
+nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
+with alpha. The icons, top row left to right, then bottom row: 1 a tick mark, the short stroke and the long stroke the same thickness;
+2 a circle with one diagonal stroke from top left to bottom right; 3 an X of two short, equal strokes; 4 a small open scroll, rolled at
+both ends
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_button_ok` |
+| 2 | `icon_button_cancel` |
+| 3 | `icon_button_close` |
+| 4 | `icon_button_info` |
 
 ### 20 · Navigation (2 × 2)
 
-**Compose**: `ICON-STYLE-C` + `ICON-SHEET-4` + cells · negative `ICON-NEG` · 1024 × 1024
+**Prompt** · 1024 × 1024 · negative `NEG-PLAIN`
 
-| # | File | Subject |
-|---|---|---|
-| 1 | `icon_button_back` | a thick arrow pointing left: a short shaft and a wide triangular head |
-| 2 | `icon_button_forward` | the same arrow pointing right |
-| 3 | `icon_button_up` | the same arrow pointing up |
-| 4 | `icon_button_down` | the same arrow pointing down |
+```text
+Game UI button symbol sheet, flat front view, each symbol a single light-grey shape with a subtle bevel and a thick dark outline, no
+other colour, no glow, bold and simple, equal stroke weight on every symbol. 4 separate icons arranged in a grid of 2 columns and 2
+rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
+nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
+with alpha. The icons, top row left to right, then bottom row: 1 a thick arrow pointing left: a short shaft and a wide triangular head;
+2 the same arrow pointing right; 3 the same arrow pointing up; 4 the same arrow pointing down
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_button_back` |
+| 2 | `icon_button_forward` |
+| 3 | `icon_button_up` |
+| 4 | `icon_button_down` |
 
 ### 21 · Editing (2 × 3)
 
-**Compose**: `ICON-STYLE-C` + `ICON-SHEET-6` + cells · negative `ICON-NEG` · 1536 × 1024
+**Prompt** · 1536 × 1024 · negative `NEG-PLAIN`
 
-| # | File | Subject |
-|---|---|---|
-| 1 | `icon_button_add` | a plus sign with equal arms |
-| 2 | `icon_button_remove` | a minus sign, as long as the plus sign's arms |
-| 3 | `icon_button_undo` | a thick arrow curving up and back to the left, like a hook |
-| 4 | `icon_button_redo` | the same arrow mirrored, curving to the right |
-| 5 | `icon_button_zoom-in` | a magnifying glass with a round lens and a short handle to the lower right, a plus sign in the lens |
-| 6 | `icon_button_zoom-out` | the same magnifying glass with a minus sign in the lens |
+```text
+Game UI button symbol sheet, flat front view, each symbol a single light-grey shape with a subtle bevel and a thick dark outline, no
+other colour, no glow, bold and simple, equal stroke weight on every symbol. 6 separate icons arranged in a grid of 3 columns and 2
+rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
+nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
+with alpha. The icons, top row left to right, then bottom row: 1 a plus sign with equal arms; 2 a minus sign, as long as the plus
+sign's arms; 3 a thick arrow curving up and back to the left, like a hook; 4 the same arrow mirrored, curving to the right; 5 a
+magnifying glass with a round lens and a short handle to the lower right, a plus sign in the lens; 6 the same magnifying glass with a
+minus sign in the lens
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_button_add` |
+| 2 | `icon_button_remove` |
+| 3 | `icon_button_undo` |
+| 4 | `icon_button_redo` |
+| 5 | `icon_button_zoom-in` |
+| 6 | `icon_button_zoom-out` |
 
 ### 22 · System (2 × 3)
 
-**Compose**: `ICON-STYLE-C` + `ICON-SHEET-6` + cells · negative `ICON-NEG` · 1536 × 1024
+**Prompt** · 1536 × 1024 · negative `NEG-PLAIN`
 
-| # | File | Subject |
-|---|---|---|
-| 1 | `icon_button_save` | a closed book seen from the front with a ribbon bookmark hanging below it |
-| 2 | `icon_button_load` | an open book seen from the front, pages fanned |
-| 3 | `icon_button_settings` | a cogwheel with eight square teeth and a round hole in the middle |
-| 4 | `icon_button_lock` | a closed padlock, the shackle down in the body |
-| 5 | `icon_button_unlock` | the same padlock open, the shackle raised and turned aside |
-| 6 | `icon_action_menu` | three thick horizontal bars of equal length, evenly spaced |
+```text
+Game UI button symbol sheet, flat front view, each symbol a single light-grey shape with a subtle bevel and a thick dark outline, no
+other colour, no glow, bold and simple, equal stroke weight on every symbol. 6 separate icons arranged in a grid of 3 columns and 2
+rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
+nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
+with alpha. The icons, top row left to right, then bottom row: 1 a closed book seen from the front with a ribbon bookmark hanging below
+it; 2 an open book seen from the front, pages fanned; 3 a cogwheel with eight square teeth and a round hole in the middle; 4 a closed
+padlock, the shackle down in the body; 5 the same padlock open, the shackle raised and turned aside; 6 three thick horizontal bars of
+equal length, evenly spaced
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_button_save` |
+| 2 | `icon_button_load` |
+| 3 | `icon_button_settings` |
+| 4 | `icon_button_lock` |
+| 5 | `icon_button_unlock` |
+| 6 | `icon_action_menu` |
 
 ## Heraldry
 
@@ -409,67 +738,183 @@ Every town type and every group has a **crest** and a **charge**, one design in 
   [town-model-prompts.md](town-model-prompts.md)), small markers on the map and the minimap. It must read at **24 px**: one silhouette, no
   inner detail thinner than 8 % of the cell, no lettering.
 
-Generate the crests first, then the charges with the same subject lines, so both keep one design. The figures come from the lore and
-the town models: each repeats its town's landmark.
-
-Crests use `ICON-STYLE-CREST`, charges `ICON-STYLE-CHARGE` ([Blocks](#blocks)).
+Generate the crests first, then the charges, whose prompts use the same figures, so both keep one design. The figures come from the lore
+and the town models: each repeats its town's landmark. The charge sheets are cut as the other sheets; the game uses the alpha as the mask
+and paints the white in the colour it needs.
 
 ### Figures
 
-| Id | Figure (the charge) | Crest colours (field / figure) | Why |
-|---|---|---|---|
-| `haven` | a sun with straight rays held inside an iron cage of four curved bars | white field / gold sun, black cage | the last lit cities, the sun-brazier that "feeds the light" |
-| `sylvan` | a tree whose crown is leafy on one side and bare branches on the other, its roots forming a circle below | deep green field / silver tree | the old forest dying from the root |
-| `academy` | three nested rings at different tilts (an orrery) around a small eight-pointed star | sky-blue field / bronze rings, white star | the mages who study, and may want to control, the Wheel |
-| `necropolis` | a skeletal hand gripping the rim of a spoked wheel | ash-grey field / bone hand, black wheel, a cold-green glint | the Wheel cannot be stopped, only ruled |
-| `inferno` | a curved harvest sickle whose blade is a flame | black field / ember-red flame-blade, dark iron handle | every war is harvest |
-| `dungeon` | a spider with eight legs whose body is a cut gem | dark-violet field / black spider, violet gem | the lightless ones waiting to inherit |
-| `stronghold` | a horned beast skull, horns sweeping up and out | red-ochre field (like painted hide) / bone skull | the war camp under the beast skull; nothing worth burning |
-| `swamp-bestiary` | a coiled serpent with three heads rising from the coil | moss-green field / dull-gold serpent | the beast cults of the mire, the hydra |
-| `conflux` | a cogged wheel split into four quarters by a cross | stone-grey field / old-bronze wheel, each quarter tinted faintly (ice blue, ember, pale air, moss) | the wardens of the Wheel's mechanism |
-| `dragon-utopia` | a dragon coiled around a rayed sun, wings closed | dark-bronze field / gold dragon, white sun | the dragons who remember the world before the Wheel |
-| `group_dawn-covenant` | a sun rising half above a straight horizon line, three long rays | sunrise-gold field / white sun | stop the Wheel; three towns |
-| `group_ashen-court` | a spoked wheel wreathed in flame | ash-grey field / ember-red burning wheel | hasten the turning |
-| `group_unbound` | a broken chain: two links pulled apart, the loose ends hanging | raw-leather brown field / iron chain | bound to neither side |
-| `group_firstborn` | a whole spoked wheel of stone, complete and unbroken | stone field / old-bronze wheel | the Wheel's keepers |
+Why each id has its figure (the figure and the crest colours are written into the crest and charge prompts below):
+
+| Id | Why |
+|---|---|
+| `haven` | the last lit cities, the sun-brazier that "feeds the light" |
+| `sylvan` | the old forest dying from the root |
+| `academy` | the mages who study, and may want to control, the Wheel |
+| `necropolis` | the Wheel cannot be stopped, only ruled |
+| `inferno` | every war is harvest |
+| `dungeon` | the lightless ones waiting to inherit |
+| `stronghold` | the war camp under the beast skull; nothing worth burning |
+| `swamp-bestiary` | the beast cults of the mire, the hydra |
+| `conflux` | the wardens of the Wheel's mechanism |
+| `dragon-utopia` | the dragons who remember the world before the Wheel |
+| `group_dawn-covenant` | stop the Wheel; three towns |
+| `group_ashen-court` | hasten the turning |
+| `group_unbound` | bound to neither side |
+| `group_firstborn` | the Wheel's keepers |
 
 ### 23 · Crests: Dawn Covenant and Ashen Court (2 × 3)
 
-**Compose**: `ICON-STYLE-CREST` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1536 × 1024
+**Prompt** · 1536 × 1024 · negative `NEG-PAINTED`
 
-**Cell rule** (sheets 23–25): subject = "a crest with " + Figure + ", in " + Crest colours, from the [Figures](#figures) table row of
-the cell's id; the file is `crest_<id>`.
+```text
+Fantasy heraldry crest sheet in a realistic painterly dark-fantasy style, each crest a heater-shaped shield of real worn metal with a
+dark forged iron rim, every shield the same shape, size and angle, seen exactly from the front; one strong figure centred on the field
+in the colours named, painted in aged enamel with chips, scratches, small dents and a dull patina, the figure slightly raised so it
+catches the light. Naturalistic light from the top left, soft shadows, no drawn outline, no mantling, no helmet, no scroll, no motto,
+no text. 6 separate icons arranged in a grid of 3 columns and 2 rows, each alone in its own equal square cell, centred with about 10 %
+empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames,
+no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a crest
+with a sun with straight rays held inside an iron cage of four curved bars, in white field / gold sun, black cage; 2 a crest with a
+tree whose crown is leafy on one side and bare branches on the other, its roots forming a circle below, in deep green field / silver
+tree; 3 a crest with three nested rings at different tilts (an orrery) around a small eight-pointed star, in sky-blue field / bronze
+rings, white star; 4 a crest with a skeletal hand gripping the rim of a spoked wheel, in ash-grey field / bone hand, black wheel, a
+cold-green glint; 5 a crest with a curved harvest sickle whose blade is a flame, in black field / ember-red flame-blade, dark iron
+handle; 6 a crest with a spider with eight legs whose body is a cut gem, in dark-violet field / black spider, violet gem
+```
 
-Cells: 1 `crest_haven`, 2 `crest_sylvan`, 3 `crest_academy`, 4 `crest_necropolis`, 5 `crest_inferno`, 6 `crest_dungeon`.
+| # | File |
+|---|---|
+| 1 | `crest_haven` |
+| 2 | `crest_sylvan` |
+| 3 | `crest_academy` |
+| 4 | `crest_necropolis` |
+| 5 | `crest_inferno` |
+| 6 | `crest_dungeon` |
 
 ### 24 · Crests: Unbound and Firstborn (2 × 2)
 
-**Compose**: `ICON-STYLE-CREST` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1024 × 1024
+**Prompt** · 1024 × 1024 · negative `NEG-PAINTED`
 
-Cells: 1 `crest_stronghold`, 2 `crest_swamp-bestiary`, 3 `crest_conflux`, 4 `crest_dragon-utopia`.
+```text
+Fantasy heraldry crest sheet in a realistic painterly dark-fantasy style, each crest a heater-shaped shield of real worn metal with a
+dark forged iron rim, every shield the same shape, size and angle, seen exactly from the front; one strong figure centred on the field
+in the colours named, painted in aged enamel with chips, scratches, small dents and a dull patina, the figure slightly raised so it
+catches the light. Naturalistic light from the top left, soft shadows, no drawn outline, no mantling, no helmet, no scroll, no motto,
+no text. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 %
+empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames,
+no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a crest
+with a horned beast skull, horns sweeping up and out, in red-ochre field (like painted hide) / bone skull; 2 a crest with a coiled
+serpent with three heads rising from the coil, in moss-green field / dull-gold serpent; 3 a crest with a cogged wheel split into four
+quarters by a cross, in stone-grey field / old-bronze wheel, each quarter tinted faintly (ice blue, ember, pale air, moss); 4 a crest
+with a dragon coiled around a rayed sun, wings closed, in dark-bronze field / gold dragon, white sun
+```
+
+| # | File |
+|---|---|
+| 1 | `crest_stronghold` |
+| 2 | `crest_swamp-bestiary` |
+| 3 | `crest_conflux` |
+| 4 | `crest_dragon-utopia` |
 
 ### 25 · Crests: the four groups (2 × 2)
 
-**Compose**: `ICON-STYLE-CREST` + `ICON-SHEET-4` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` · 1024 × 1024
+**Prompt** · 1024 × 1024 · negative `NEG-PAINTED`
 
-Cells: 1 `crest_group_dawn-covenant`, 2 `crest_group_ashen-court`, 3 `crest_group_unbound`, 4 `crest_group_firstborn`.
+```text
+Fantasy heraldry crest sheet in a realistic painterly dark-fantasy style, each crest a heater-shaped shield of real worn metal with a
+dark forged iron rim, every shield the same shape, size and angle, seen exactly from the front; one strong figure centred on the field
+in the colours named, painted in aged enamel with chips, scratches, small dents and a dull patina, the figure slightly raised so it
+catches the light. Naturalistic light from the top left, soft shadows, no drawn outline, no mantling, no helmet, no scroll, no motto,
+no text. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 %
+empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames,
+no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a crest
+with a sun rising half above a straight horizon line, three long rays, in sunrise-gold field / white sun; 2 a crest with a spoked wheel
+wreathed in flame, in ash-grey field / ember-red burning wheel; 3 a crest with a broken chain: two links pulled apart, the loose ends
+hanging, in raw-leather brown field / iron chain; 4 a crest with a whole spoked wheel of stone, complete and unbroken, in stone field /
+old-bronze wheel
+```
 
-### 26–28 · Charges (same grids)
+| # | File |
+|---|---|
+| 1 | `crest_group_dawn-covenant` |
+| 2 | `crest_group_ashen-court` |
+| 3 | `crest_group_unbound` |
+| 4 | `crest_group_firstborn` |
 
-**Compose**: `ICON-STYLE-CHARGE` + `ICON-SHEET-6` (sheet 26) or `ICON-SHEET-4` (sheets 27, 28) + cells · negative `ICON-NEG` · as sheets 23–25
+### 26 · Charges: Dawn Covenant and Ashen Court (2 × 3)
 
-**Cell rule**: subject = Figure only (no colours), from the [Figures](#figures) table; the file is `charge_<id>`. The cells are in the
-order of sheets 23, 24 and 25.
+**Prompt** · 1536 × 1024 · negative `NEG-PLAIN`
 
-Cut them as the other sheets; the game uses the alpha as the mask and paints the white in the colour it needs.
+```text
+Heraldic charge sheet, each figure a single flat pure-white silhouette, no shading, no gradient, no outline, no shield, bold and simple
+like a stencil, readable at 24 pixels, every figure filling about 75 % of its cell. 6 separate icons arranged in a grid of 3 columns
+and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same
+light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background,
+PNG with alpha. The icons, top row left to right, then bottom row: 1 a sun with straight rays held inside an iron cage of four curved
+bars; 2 a tree whose crown is leafy on one side and bare branches on the other, its roots forming a circle below; 3 three nested rings
+at different tilts (an orrery) around a small eight-pointed star; 4 a skeletal hand gripping the rim of a spoked wheel; 5 a curved
+harvest sickle whose blade is a flame; 6 a spider with eight legs whose body is a cut gem
+```
+
+| # | File |
+|---|---|
+| 1 | `charge_haven` |
+| 2 | `charge_sylvan` |
+| 3 | `charge_academy` |
+| 4 | `charge_necropolis` |
+| 5 | `charge_inferno` |
+| 6 | `charge_dungeon` |
+
+### 27 · Charges: Unbound and Firstborn (2 × 2)
+
+**Prompt** · 1024 × 1024 · negative `NEG-PLAIN`
+
+```text
+Heraldic charge sheet, each figure a single flat pure-white silhouette, no shading, no gradient, no outline, no shield, bold and simple
+like a stencil, readable at 24 pixels, every figure filling about 75 % of its cell. 4 separate icons arranged in a grid of 2 columns
+and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same
+light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background,
+PNG with alpha. The icons, top row left to right, then bottom row: 1 a horned beast skull, horns sweeping up and out; 2 a coiled
+serpent with three heads rising from the coil; 3 a cogged wheel split into four quarters by a cross; 4 a dragon coiled around a rayed
+sun, wings closed
+```
+
+| # | File |
+|---|---|
+| 1 | `charge_stronghold` |
+| 2 | `charge_swamp-bestiary` |
+| 3 | `charge_conflux` |
+| 4 | `charge_dragon-utopia` |
+
+### 28 · Charges: the four groups (2 × 2)
+
+**Prompt** · 1024 × 1024 · negative `NEG-PLAIN`
+
+```text
+Heraldic charge sheet, each figure a single flat pure-white silhouette, no shading, no gradient, no outline, no shield, bold and simple
+like a stencil, readable at 24 pixels, every figure filling about 75 % of its cell. 4 separate icons arranged in a grid of 2 columns
+and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same
+light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background,
+PNG with alpha. The icons, top row left to right, then bottom row: 1 a sun rising half above a straight horizon line, three long rays;
+2 a spoked wheel wreathed in flame; 3 a broken chain: two links pulled apart, the loose ends hanging; 4 a whole spoked wheel of stone,
+complete and unbroken
+```
+
+| # | File |
+|---|---|
+| 1 | `charge_group_dawn-covenant` |
+| 2 | `charge_group_ashen-court` |
+| 3 | `charge_group_unbound` |
+| 4 | `charge_group_firstborn` |
 
 ## After generating
 
 1. Look at each sheet's icons side by side at 32 px: one clear shape each, the same scale and light across the sheet.
-2. Look for a cartoon look: thick outlines, flat colour fills, bubbly shapes, plastic shine. Regenerate such a sheet (with
-   `ICON-NEG-TOON` in the negative where the model takes one) rather than fixing it by hand.
+2. Look for a cartoon look: thick outlines, flat colour fills, bubbly shapes, plastic shine. Regenerate such a sheet (with its
+   `NEG-PAINTED` or `NEG-PAINTED-MECH` negative where the model takes one) rather than fixing it by hand.
 3. Check mechanical subjects for oval or tilted wheels and uneven bow arms; regenerate rather than fix by hand where possible.
 4. The icons and crests already in `textures/ui/` (resources, stats, skills, machines, schools, actions, heraldry crests) are the
-   earlier, more cartoon-like takes: regenerate tiers A and B and the crests with these blocks; tier C and the charges stay.
+   earlier, more cartoon-like takes: regenerate tiers A and B and the crests with these prompts; tier C and the charges stay.
 5. Put the files in the folder of their group under `src/Godot/EternalWars.Godot.Assets/textures/ui/` and add a line to its
    `CREDITS.md` with the tool and its licence terms.

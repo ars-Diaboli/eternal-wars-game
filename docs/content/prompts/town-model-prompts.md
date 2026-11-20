@@ -3,15 +3,18 @@
 Prompts for the **adventure-map town models** of all ten town types, for a text-to-3D or image-to-3D model (or a concept-art pass
 first, then image-to-3D). The designs are original: the prompts never name or imitate another game's towns.
 
-## Compose a prompt
+## Use a prompt
 
-Each town section below ends with its own block, `TOWN-<id>`. Build the prompt from blocks, copying each block's text exactly and
-joining them with a space:
+Each town section below ends with its own block, `TOWN-<id>`. A prompt is a lead block and the town's block, each copied exactly and
+joined with a space:
 
 ```text
-PROMPT   = TOWN-STYLE + TOWN-<id> (+ one STAGE-<n> line from "Optional: stages by fort level", only for a staged variant)
+PROMPT   = TOWN-STYLE + TOWN-<id>          (the town)
+         = TOWN-STAGE-<n> + TOWN-<id>      (a stage, from "Optional: stages by fort level"; TOWN-<id>-staged where there is one)
+         = PIECE-<piece> + SIEGE-<id>      (a siege piece, from "Optional: siege pieces")
 NEGATIVE = TOWN-NEG   (only where the tool takes a negative prompt)
-OUTPUT   = town_<id>.glb (town_<id>_<n>.glb for a stage), to the footprint, size and triangle budget under "Output for every town"
+OUTPUT   = town_<id>.glb (town_<id>_<n>.glb for a stage), to the footprint, size and triangle budget under "Output for every town";
+           siege_<id>_<piece>.glb for a siege piece
 ```
 
 The **Silhouette**, **Materials**, **Telling details** and **Avoid** notes in each section explain the block and are for checking the
@@ -20,7 +23,7 @@ paraphrase the blocks.
 
 ## Blocks
 
-**`TOWN-STYLE`** (style, first in every prompt):
+**`TOWN-STYLE`** (style, first in every full-town prompt):
 
 ```text
 Game-ready 3D model of a fortified fantasy town for a turn-based strategy game, seen from above at a steep angle. Grim dark fantasy,
@@ -279,23 +282,86 @@ dark openings, worn reliefs of a bright young sun from before the world began to
 ## Optional: stages by fort level
 
 If the map is to show a town's growth (not decided ❓), make three variants from the same base: **Fort** (`town_<id>_1`), **Citadel**
-(`_2`), **Castle** (`_3`), same footprint and gate. Add to the town prompt:
+(`_2`), **Castle** (`_3`), same footprint and gate. Use the stage's lead instead of `TOWN-STYLE`.
 
-| Stage | Block | Add to the prompt |
-|---|---|---|
-| Fort | `STAGE-1` | "early stage: a low wall, few buildings, the landmark not built yet, open ground inside" |
-| Citadel | `STAGE-2` | "middle stage: a full wall, a central keep, the landmark half built under scaffolding" |
-| Castle | `STAGE-3` | "final stage: high walls with towers, dense buildings, the landmark complete" |
+**`TOWN-STAGE-1`** (style and stage, first in every Fort prompt):
 
-Stronghold and Swamp Bestiary grow outward and taller, not into stone: "more lodges and a higher palisade" / "more stilt huts and a
-higher shell wall".
+```text
+Game-ready 3D model of a fortified fantasy town for a turn-based strategy game, seen from above at a steep angle. Grim dark fantasy,
+realistic PBR materials, weathered and worn, desaturated earth tones. Compact, fits a square base with the corners cut off, main gate
+centred on the front edge at ground level. Clear silhouette from above, chunky readable shapes, one tall landmark toward the back. Flat
+bottom, no ground plane, no lights, no characters. Light-grey cloth banners for player colour. Early stage: a low wall, few buildings,
+the landmark not built yet, open ground inside.
+```
+
+**`TOWN-STAGE-2`** (style and stage, first in every Citadel prompt):
+
+```text
+Game-ready 3D model of a fortified fantasy town for a turn-based strategy game, seen from above at a steep angle. Grim dark fantasy,
+realistic PBR materials, weathered and worn, desaturated earth tones. Compact, fits a square base with the corners cut off, main gate
+centred on the front edge at ground level. Clear silhouette from above, chunky readable shapes, one tall landmark toward the back. Flat
+bottom, no ground plane, no lights, no characters. Light-grey cloth banners for player colour. Middle stage: a full wall, a central
+keep, the landmark half built under scaffolding.
+```
+
+**`TOWN-STAGE-3`** (style and stage, first in every Castle prompt):
+
+```text
+Game-ready 3D model of a fortified fantasy town for a turn-based strategy game, seen from above at a steep angle. Grim dark fantasy,
+realistic PBR materials, weathered and worn, desaturated earth tones. Compact, fits a square base with the corners cut off, main gate
+centred on the front edge at ground level. Clear silhouette from above, chunky readable shapes, one tall landmark toward the back. Flat
+bottom, no ground plane, no lights, no characters. Light-grey cloth banners for player colour. Final stage: high walls with towers,
+dense buildings, the landmark complete.
+```
+
+Stronghold and Swamp Bestiary grow outward and taller, not into stone: their stages take `TOWN-<id>-staged` instead of
+`TOWN-<id>`.
+
+**`TOWN-stronghold-staged`** (subject, stages only):
+
+```text
+Stronghold: a fortified orc war camp that could be packed up and moved, a log palisade with crude battlements, hide yurts and long
+leather tents with smoke holes, a great lodge under a huge horned beast skull on a pole frame, a dirt fighting arena ringed by stakes,
+giant war drums on a raised platform, carts and sledges by the gate, rope, rusted scrap iron, bones, red-ochre paint, dust. Built to
+survive, never to last. Grows outward and taller, not into stone: more lodges and a higher palisade.
+```
+
+**`TOWN-swamp-bestiary-staged`** (subject, stages only):
+
+```text
+Swamp Bestiary: a beast-cult town in a drowned marsh, half-sunken tilted ruins of an ancient stone city green with algae, stilt huts
+and reed lodges built on and between the ruins, boardwalks over black shallow water, a rampart of giant shells, scales and bones
+instead of a wall, spawning pools with clusters of eggs, a tall carved totem of coiled beasts at the back, a toppled statue head
+sinking in the mud, driftwood, rope, moss and mist-grey reeds. Grows outward and taller, not into stone: more stilt huts and a higher
+shell wall.
+```
 
 ## Optional: siege pieces
 
-The siege field uses placeholder shapes in each town's look (ADR-144) until there are models. For a modular kit in the same style, use
-the town's material line with one of these subjects (each piece on its own, flat bottom; a battle cell is 0.5 units,
-`BattleSpace.CellSize`): "a straight wall segment, 1 unit long", "a wall corner tower", "the main gate with its doors closed", "the central keep", "a broken
-wall segment, rubble". Name them `siege_<id>_<piece>.glb` (`wall`, `tower`, `gate`, `keep`, `breach`).
+The siege field uses placeholder shapes in each town's look (ADR-144) until there are models. For a modular kit in the same style, a
+prompt is the piece's block and the town's material line (each piece on its own, flat bottom; a battle cell is 0.5 units,
+`BattleSpace.CellSize`). Name them `siege_<id>_<piece>.glb`.
+
+| Piece | Block | Text |
+|---|---|---|
+| `wall` | `PIECE-wall` | `A straight wall segment, 1 unit long.` |
+| `tower` | `PIECE-tower` | `A wall corner tower.` |
+| `gate` | `PIECE-gate` | `The main gate with its doors closed.` |
+| `keep` | `PIECE-keep` | `The central keep.` |
+| `breach` | `PIECE-breach` | `A broken wall segment, rubble.` |
+
+| Town | Block | Text (the town's **Materials** line) |
+|---|---|---|
+| Haven | `SIEGE-haven` | `Pale limestone gone grey with soot, black iron, dark slate, gilded trim worn to brass; whitewash peeling.` |
+| Sylvan | `SIEGE-sylvan` | `Grey-brown bark, pale carved wood, moss, woven living branches, green-gold leaves; a creeping grey rot climbing from the roots.` |
+| Academy | `SIEGE-academy` | `Blue-grey granite, frost and snow on every ledge, verdigris bronze, dark glass, pale sky-blue rune light (emissive).` |
+| Necropolis | `SIEGE-necropolis` | `Grey-black basalt, bleached bone set into walls, rusted iron, crumbling older stone below newer; ash on everything.` |
+| Inferno | `SIEGE-inferno` | `Black obsidian and slag, glowing lava cracks and channels (emissive, ember red), blackened bronze, charred timber and half-melted human masonry caught in the walls.` |
+| Dungeon | `SIEGE-dungeon` | `Black and dark-violet stone, polished and angular, slick wet rock, pale fungus, violet bioluminescence (emissive), silver inlay.` |
+| Stronghold | `SIEGE-stronghold` | `Raw split logs, rope, hide and leather, bone, rusted scrap iron, dust; red-ochre paint on hides.` |
+| Swamp Bestiary | `SIEGE-swamp-bestiary` | `Algae-green stone, black water (a few shallow pools inside the footprint), reeds, rope, giant shells and scales, driftwood, bone; moss green and muddy brown.` |
+| Conflux | `SIEGE-conflux` | `Ancient weathered stone, old green bronze, floating crystal shards close to the stone (not far off), a soft shimmer (emissive) in the crystals only.` |
+| Dragon Utopia | `SIEGE-dragon-utopia` | `Weathered sandstone and granite, old bronze, gold hoard glints in the openings, giant claw marks in the rock.` |
 
 ## After generating
 

@@ -5,15 +5,15 @@ and the screen backgrounds. They replace the flat theme (dark slate panels with 
 colours: **dark slate-blue grounds framed in worn bronze** (ADR-191). Icons are in [icon-prompts.md](icon-prompts.md), the main menu's
 picture already exists.
 
-## Compose a prompt
+## Use a prompt
 
-Every group below has a **Compose** line naming its blocks. Build the prompt from blocks, copying each block's text exactly and joining
-them with a space:
+Every group below has a **Use** line naming its blocks. A prompt is either one ready block, or a lead block and a subject from the
+table, copied exactly and joined with a space:
 
 ```text
-PROMPT   = UI-STYLE + UI-FRAME (frames, buttons, slots, bars) + <subject>             (pieces made alone)
-         = UI-STYLE + UI-SHEET-4 + CELLS                                               (state sheets)
-         = UI-BACKGROUND + <subject>                                                   (screen backgrounds)
+PROMPT   = UI-FRAME-LEAD + <subject>          (pieces made alone: frames, bars)
+         = UI-SHEET-<sheet>                   (state sheets, one ready block per sheet)
+         = UI-BACKGROUND + <subject>          (screen backgrounds)
 NEGATIVE = UI-NEG   (only where the model takes a negative prompt)
 OUTPUT   = the size in the table; save as <File>.png
 ```
@@ -24,30 +24,15 @@ order. Do not paraphrase blocks or subjects.
 
 ## Blocks
 
-**`UI-STYLE`** (style, first in every piece and sheet):
+**`UI-FRAME-LEAD`** (style and frame, first in every piece made alone):
 
 ```text
 Game user interface element, hand-painted dark-fantasy style, surfaces of dark slate-blue stone and dark worn leather, framed in old
 worn bronze with darker recesses and soft highlights on the raised edges, seen straight from the front, flat and orthographic, evenly
 lit from the top left, crisp clean edges, restrained ornament. No text, no letters, no icons, no photo realism, no 3D render look, no
-pixel art.
-```
-
-**`UI-FRAME`** (after `UI-STYLE` on frames, buttons, slots and bars):
-
-```text
-A rectangular frame seen exactly from the front, mirror-symmetric left to right and top to bottom, the four corners decorated
-identically, the straight edges plain and even along their whole length so they can be stretched, the inside plain and even with no
-pattern, centred in the picture with an empty transparent margin around it.
-```
-
-**`UI-SHEET-4`** (sheet, after `UI-STYLE` on the state sheets; the cells follow it):
-
-```text
-4 separate interface elements arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about
-10 % empty margin, all the same outline, size and light, each mirror-symmetric with identical corners and plain even edges; nothing
-crosses into another cell. No grid lines, no text, no labels. Transparent background, PNG with alpha. The elements, top row left to
-right, then bottom row:
+pixel art. A rectangular frame seen exactly from the front, mirror-symmetric left to right and top to bottom, the four corners
+decorated identically, the straight edges plain and even along their whole length so they can be stretched, the inside plain and even
+with no pattern, centred in the picture with an empty transparent margin around it.
 ```
 
 **`UI-BACKGROUND`** (style, screen backgrounds):
@@ -82,7 +67,7 @@ another game's interface
 
 ## Frames and panels
 
-**Compose**: `UI-STYLE` + `UI-FRAME` + subject · negative `UI-NEG` · size in the table
+**Use**: `UI-FRAME-LEAD` + subject · negative `UI-NEG` · size in the table
 
 | File | Size | Margins | Subject |
 |---|---|---|---|
@@ -97,30 +82,122 @@ another game's interface
 
 ## Buttons and controls
 
-**Compose**: `UI-STYLE` + `UI-SHEET-4` + cells · negative `UI-NEG` · 1024 × 1024. Cells in the order normal, hover,
-pressed, disabled unless the table says otherwise; the files add the state (`ui_button_text_normal.png`, ...).
+**Use**: `UI-SHEET-<sheet>` · negative `UI-NEG` · 1024 × 1024. Each sheet's cells are in the order of its **States** column; the files
+add the state (`ui_button_text_normal.png`, ...).
 
-| Sheet | File | Margins (trimmed) | Subject (every cell; the states follow it) |
+| Sheet | File | Margins (trimmed) | States (cells 1–4) |
 |---|---|---|---|
-| B1 | `ui_button_text_<state>` | 24, 24, 24, 24 | a wide rectangular button about three times as wide as tall, a dark slate face in a bronze rim; 1 at rest, 2 the rim brighter and the face a little lighter, 3 the face darker and pressed in, the rim's shadow on top, 4 grey and desaturated |
-| B2 | `ui_button_icon_<state>` | 20, 20, 20, 20 | a square button, a dark slate face in a bevelled bronze rim with small corner studs; the four states as on B1 |
-| B3 | `ui_tab_<state>` | 24, 24, 24, 8 | a tab of a tabbed panel, a rectangle with the top corners cut, open at the bottom; 1 a quiet dark tab at rest, 2 the same lit at the rim, 3 the selected tab, brighter and joined to the panel below, 4 grey disabled |
-| B4 | `ui_check_<state>` | none | 1 an empty small square box with a bronze rim (`off`), 2 the same box holding a bold bronze tick (`on`), 3 an empty small round socket with a bronze rim (`radio-off`), 4 the same socket holding a round bronze stud (`radio-on`) |
+| B1 | `ui_button_text_<state>` | 24, 24, 24, 24 | `normal`, `hover`, `pressed`, `disabled` |
+| B2 | `ui_button_icon_<state>` | 20, 20, 20, 20 | `normal`, `hover`, `pressed`, `disabled` |
+| B3 | `ui_tab_<state>` | 24, 24, 24, 8 | `normal`, `hover`, `pressed`, `disabled` |
+| B4 | `ui_check_<state>` | none | `off`, `on`, `radio-off`, `radio-on` |
+
+**`UI-SHEET-B1`**:
+
+```text
+Game user interface element, hand-painted dark-fantasy style, surfaces of dark slate-blue stone and dark worn leather, framed in old
+worn bronze with darker recesses and soft highlights on the raised edges, seen straight from the front, flat and orthographic, evenly
+lit from the top left, crisp clean edges, restrained ornament. No text, no letters, no icons, no photo realism, no 3D render look, no
+pixel art. 4 separate interface elements arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred
+with about 10 % empty margin, all the same outline, size and light, each mirror-symmetric with identical corners and plain even edges;
+nothing crosses into another cell. No grid lines, no text, no labels. Transparent background, PNG with alpha. The elements, top row
+left to right, then bottom row: a wide rectangular button about three times as wide as tall, a dark slate face in a bronze rim; 1 at
+rest; 2 the rim brighter and the face a little lighter; 3 the face darker and pressed in, the rim's shadow on top; 4 grey and
+desaturated.
+```
+
+**`UI-SHEET-B2`**:
+
+```text
+Game user interface element, hand-painted dark-fantasy style, surfaces of dark slate-blue stone and dark worn leather, framed in old
+worn bronze with darker recesses and soft highlights on the raised edges, seen straight from the front, flat and orthographic, evenly
+lit from the top left, crisp clean edges, restrained ornament. No text, no letters, no icons, no photo realism, no 3D render look, no
+pixel art. 4 separate interface elements arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred
+with about 10 % empty margin, all the same outline, size and light, each mirror-symmetric with identical corners and plain even edges;
+nothing crosses into another cell. No grid lines, no text, no labels. Transparent background, PNG with alpha. The elements, top row
+left to right, then bottom row: a square button, a dark slate face in a bevelled bronze rim with small corner studs; 1 at rest; 2 the
+rim brighter and the face a little lighter; 3 the face darker and pressed in, the rim's shadow on top; 4 grey and desaturated.
+```
+
+**`UI-SHEET-B3`**:
+
+```text
+Game user interface element, hand-painted dark-fantasy style, surfaces of dark slate-blue stone and dark worn leather, framed in old
+worn bronze with darker recesses and soft highlights on the raised edges, seen straight from the front, flat and orthographic, evenly
+lit from the top left, crisp clean edges, restrained ornament. No text, no letters, no icons, no photo realism, no 3D render look, no
+pixel art. 4 separate interface elements arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred
+with about 10 % empty margin, all the same outline, size and light, each mirror-symmetric with identical corners and plain even edges;
+nothing crosses into another cell. No grid lines, no text, no labels. Transparent background, PNG with alpha. The elements, top row
+left to right, then bottom row: a tab of a tabbed panel, a rectangle with the top corners cut, open at the bottom; 1 a quiet dark tab
+at rest; 2 the same lit at the rim; 3 the selected tab, brighter and joined to the panel below; 4 grey disabled.
+```
+
+**`UI-SHEET-B4`**:
+
+```text
+Game user interface element, hand-painted dark-fantasy style, surfaces of dark slate-blue stone and dark worn leather, framed in old
+worn bronze with darker recesses and soft highlights on the raised edges, seen straight from the front, flat and orthographic, evenly
+lit from the top left, crisp clean edges, restrained ornament. No text, no letters, no icons, no photo realism, no 3D render look, no
+pixel art. 4 separate interface elements arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred
+with about 10 % empty margin, all the same outline, size and light, each mirror-symmetric with identical corners and plain even edges;
+nothing crosses into another cell. No grid lines, no text, no labels. Transparent background, PNG with alpha. The elements, top row
+left to right, then bottom row: 1 an empty small square box with a bronze rim; 2 the same box holding a bold bronze tick; 3 an empty
+small round socket with a bronze rim; 4 the same socket holding a round bronze stud.
+```
 
 ## Slots
 
-**Compose**: `UI-STYLE` + `UI-SHEET-4` + cells · negative `UI-NEG` · 1024 × 1024. The inside of every slot is empty and
-transparent: the game draws the creature, artifact or portrait in it.
+**Use**: `UI-SHEET-<sheet>` · negative `UI-NEG` · 1024 × 1024. The inside of every slot is empty and transparent: the game draws the
+creature, artifact or portrait in it.
 
-| Sheet | File | Margins (trimmed) | Cells |
+| Sheet | File | Margins (trimmed) | States (cells 1–4) |
 |---|---|---|---|
-| L1 | `ui_slot_army_<state>` | 16, 16, 16, 16 | a frame a little wider than tall around an empty dark inside; 1 `empty`, a quiet dim bronze rim, 2 `filled`, the normal bronze rim, 3 `selected`, the rim bright with a soft warm glow, 4 `target`, the rim glowing pale green (a valid drop) |
-| L2 | `ui_slot_<id>` | 16, 16, 16, 16 | 1 `artifact`, a square slot with a round recess, 2 `portrait`, a portrait frame a little taller than wide with an arched top, 3 `backpack`, a smaller plain square slot, 4 `spell`, a square slot with a thin ring of small runes engraved in the rim |
-| L3 | `ui_frame_skill_<level>` | 16, 16, 16, 16 | one square frame for a skill icon in four materials, the same shape each time: 1 `basic`, plain dark iron, 2 `advanced`, bronze, 3 `expert`, polished silver with small studs, 4 `master`, old gold with a small gem at the top |
+| L1 | `ui_slot_army_<state>` | 16, 16, 16, 16 | `empty`, `filled`, `selected`, `target` |
+| L2 | `ui_slot_<id>` | 16, 16, 16, 16 | `artifact`, `portrait`, `backpack`, `spell` |
+| L3 | `ui_frame_skill_<level>` | 16, 16, 16, 16 | `basic`, `advanced`, `expert`, `master` |
+
+**`UI-SHEET-L1`**:
+
+```text
+Game user interface element, hand-painted dark-fantasy style, surfaces of dark slate-blue stone and dark worn leather, framed in old
+worn bronze with darker recesses and soft highlights on the raised edges, seen straight from the front, flat and orthographic, evenly
+lit from the top left, crisp clean edges, restrained ornament. No text, no letters, no icons, no photo realism, no 3D render look, no
+pixel art. 4 separate interface elements arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred
+with about 10 % empty margin, all the same outline, size and light, each mirror-symmetric with identical corners and plain even edges;
+nothing crosses into another cell. No grid lines, no text, no labels. Transparent background, PNG with alpha. The elements, top row
+left to right, then bottom row: a frame a little wider than tall around an empty dark inside; 1 a quiet dim bronze rim; 2 the normal
+bronze rim; 3 the rim bright with a soft warm glow; 4 the rim glowing pale green (a valid drop).
+```
+
+**`UI-SHEET-L2`**:
+
+```text
+Game user interface element, hand-painted dark-fantasy style, surfaces of dark slate-blue stone and dark worn leather, framed in old
+worn bronze with darker recesses and soft highlights on the raised edges, seen straight from the front, flat and orthographic, evenly
+lit from the top left, crisp clean edges, restrained ornament. No text, no letters, no icons, no photo realism, no 3D render look, no
+pixel art. 4 separate interface elements arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred
+with about 10 % empty margin, all the same outline, size and light, each mirror-symmetric with identical corners and plain even edges;
+nothing crosses into another cell. No grid lines, no text, no labels. Transparent background, PNG with alpha. The elements, top row
+left to right, then bottom row: 1 a square slot with a round recess; 2 a portrait frame a little taller than wide with an arched top; 3
+a smaller plain square slot; 4 a square slot with a thin ring of small runes engraved in the rim.
+```
+
+**`UI-SHEET-L3`**:
+
+```text
+Game user interface element, hand-painted dark-fantasy style, surfaces of dark slate-blue stone and dark worn leather, framed in old
+worn bronze with darker recesses and soft highlights on the raised edges, seen straight from the front, flat and orthographic, evenly
+lit from the top left, crisp clean edges, restrained ornament. No text, no letters, no icons, no photo realism, no 3D render look, no
+pixel art. 4 separate interface elements arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred
+with about 10 % empty margin, all the same outline, size and light, each mirror-symmetric with identical corners and plain even edges;
+nothing crosses into another cell. No grid lines, no text, no labels. Transparent background, PNG with alpha. The elements, top row
+left to right, then bottom row: one square frame for a skill icon in four materials, the same shape each time: 1 plain dark iron; 2
+bronze; 3 polished silver with small studs; 4 old gold with a small gem at the top.
+```
 
 ## Bars
 
-**Compose**: `UI-STYLE` + `UI-FRAME` + subject · negative `UI-NEG` · size in the table. Each bar's frame and fill are separate files:
+**Use**: `UI-FRAME-LEAD` + subject · negative `UI-NEG` · size in the table. Each bar's frame and fill are separate files:
 the game stretches the fill inside the frame.
 
 | File | Size | Margins | Subject |
@@ -136,7 +213,7 @@ the game stretches the fill inside the frame.
 
 ## Screen backgrounds
 
-**Compose**: `UI-BACKGROUND` + subject · negative `UI-NEG` · 2560 × 1440
+**Use**: `UI-BACKGROUND` + subject · negative `UI-NEG` · 2560 × 1440
 
 | File | Screen | Subject |
 |---|---|---|
