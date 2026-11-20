@@ -17,14 +17,15 @@ using EternalWars.Godot.Shared.Map;
 using EternalWars.Godot.UI;
 using EternalWars.Godot.UI.Editor;
 using EternalWars.Godot.UI.Editor.Shell;
+using EternalWars.Godot.UI.Editor.Tools;
 using Godot;
 
 namespace EternalWars.MapEditor;
 
 /// <summary>
 /// Map editor entry point. Editing operations, undo/redo and validation live in core (<see cref="MapEditorSession"/>);
-/// the views and panels live in the libraries (the window layout is <see cref="EditorWorkspace"/>); this class composes them, maps mouse
-/// and keys to the active tool, and does file I/O. Alt+Enter switches the window mode (ADR-186), kept in the editor's own settings file.
+/// the views and panels live in the libraries (the window layout is <see cref="EditorWorkspace"/>); this class composes them, routes the
+/// pointer to the tool in use (<see cref="IEditorTool"/>), maps the keys, and does file I/O. Alt+Enter switches the window mode (ADR-186), kept in the editor's own settings file.
 /// </summary>
 public partial class Main : Node3D
 {
@@ -46,11 +47,10 @@ public partial class Main : Node3D
     private LineEdit _fileName = null!;
     private Label _status = null!;
     private Label _history = null!;
-    private bool _painting;
+    private EditorToolContext _toolContext = null!;
 
-    /// <summary>The Level tool's target: the ground's height (eighths) where the stroke started.</summary>
-    private int _levelTo;
-    private MapObjectId? _linkFrom;
+    /// <summary>The left button is held since the tool in use got its press.</summary>
+    private bool _pressed;
     private GenerateRequest? _lastGenerate;
     private EditorWorkspace _workspace = null!;
     private GeneratePanel _generate = null!;
@@ -114,7 +114,7 @@ public partial class Main : Node3D
     {
         switch (@event)
         {
-            case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } press when !_painting:
+            case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } press when !_pressed:
                 if (Pick(press.Position) is not { } tile)
                 {
                     return;
@@ -122,35 +122,30 @@ public partial class Main : Node3D
 
                 if (_events.PlacingCells is not null)
                 {
-                    Report(_events.ClickCell(tile));
-                }
-                else if (_tools.Tool.IsBrush)
-                {
-                    _painting = true;
-                    _levelTo = _editor.Heights.HeightAt(tile); // Level spreads the height where the stroke starts
-                    _editor.BeginStroke(_tools.Tool.StrokeDescription);
-                    Paint(tile);
+                    _toolContext.Report(_events.ClickCell(tile));
                 }
                 else
                 {
-                    Click(tile);
+                    _pressed = true;
+                    _tools.Tool.Press(tile);
                 }
 
                 break;
-            case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: false } when _painting:
-                _painting = false;
-                _editor.EndStroke();
+            case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: false } when _pressed:
+                _pressed = false;
+                _tools.Tool.Release();
                 break;
-            case InputEventMouseMotion motion when _painting:
+            case InputEventMouseMotion motion when _pressed:
                 _context.Point(Pick(motion.Position));
                 if (_context.Pointed is { } dragged)
                 {
-                    Paint(dragged);
+                    _tools.Tool.Drag(dragged);
                 }
 
                 break;
             case InputEventMouseMotion motion:
                 _context.Point(Pick(motion.Position)); // the caption of what is under the pointer shows from afar
+                _tools.Tool.Hover(_context.Pointed);
                 return;
             case InputEventKey { Pressed: true, Keycode: Key.Z, CtrlPressed: true, ShiftPressed: false }:
                 _editor.Undo();
@@ -172,121 +167,11 @@ public partial class Main : Node3D
     private MapPosition? Pick(Vector2 screen) =>
         MapSpace.PickTile(_camera, screen, _editor.Scenario.Map, _context.Level) is { } tile && _editor.Scenario.Map.Contains(tile) ? tile : null;
 
-    private void Paint(MapPosition tile)
-    {
-        var tool = _tools.Tool;
-        if (tool.Kind == ToolKind.Road)
-        {
-            _editor.Terrain.PaintRoad(tile, tool.Road, tool.Radius);
-        }
-        else if (tool.Kind == ToolKind.River)
-        {
-            _editor.Terrain.PaintRiver(tile, tool.River, tool.Radius);
-        }
-        else if (tool.Kind == ToolKind.StartZone)
-        {
-            _editor.Terrain.PaintStartZone(tile, tool.Zone, tool.Radius);
-        }
-        else if (tool.Kind == ToolKind.Height)
-        {
-            _ = tool.Height switch
-            {
-                HeightTool.Raise => _editor.Heights.Raise(tile, tool.Radius, tool.Strength),
-                HeightTool.Lower => _editor.Heights.Lower(tile, tool.Radius, tool.Strength),
-                HeightTool.Level => _editor.Heights.Level(tile, tool.Radius, tool.Strength, _levelTo),
-                HeightTool.Smooth => _editor.Heights.Smooth(tile, tool.Radius, tool.Strength),
-                _ => _editor.Heights.FromTerrain(tile, tool.Radius),
-            };
-        }
-        else
-        {
-            _editor.Terrain.Paint(tile, tool.Terrain, tool.Radius);
-        }
-    }
-
-    /// <summary>One click with a placement, erase, link or select tool.</summary>
-    private void Click(MapPosition tile)
-    {
-        var tool = _tools.Tool;
-        var scenario = _editor.Scenario;
-        var hero = scenario.HeroAt(tile);
-        var mapObject = scenario.ObjectCellAt(tile)?.Object;
-        switch (tool.Kind)
-        {
-            case ToolKind.Object:
-                Report(_editor.Objects.Place(tool.ObjectDefinition, tile, out _));
-                break;
-            case ToolKind.Monster:
-                Report(_editor.Monsters.Place(tile, tool.Creature, tool.Count, tool.Disposition, neverFlees: false, out _));
-                break;
-            case ToolKind.Hero:
-                Report(_editor.Heroes.Place(tool.Player, tile, $"Hero {scenario.NextHeroId().Value}", out var placed), () => Inspect(placed));
-                break;
-            case ToolKind.Erase:
-                Report(hero is not null ? _editor.Heroes.Remove(hero.Id) : mapObject is not null ? _editor.Objects.Remove(mapObject.Id) : EditResult.InvalidTarget);
-                break;
-            case ToolKind.LinkGates:
-                Link(mapObject);
-                break;
-            case ToolKind.Grail:
-                Report(_editor.Map.SetGrail(scenario.Grail.Position == tile ? null : tile));
-                break;
-            case ToolKind.Select when hero is not null:
-                Inspect(hero.Id);
-                break;
-            case ToolKind.Select when mapObject is not null:
-                _inspector.InspectObject(mapObject.Id);
-                _status.Text = $"Inspecting {mapObject}";
-                break;
-        }
-    }
-
-    /// <summary>First click picks a two-way gate or one-way entrance, the second its partner or exit.</summary>
-    private void Link(MapObject? clicked)
-    {
-        if (_linkFrom is not { } from)
-        {
-            if (clicked is TwoWayGate or OneWayGateEntrance)
-            {
-                _linkFrom = clicked.Id;
-                _status.Text = $"Linking {clicked}: now click its partner (or exit).";
-            }
-            else
-            {
-                _status.Text = "Click a two-way gate or a one-way entrance first.";
-            }
-
-            return;
-        }
-
-        _linkFrom = null;
-        var source = _editor.Scenario.GetObject(from);
-        Report(clicked is null ? EditResult.InvalidTarget
-            : source is OneWayGateEntrance ? _editor.Objects.SetGateExit(from, clicked.Id)
-            : _editor.Objects.LinkGates(from, clicked.Id));
-    }
-
-    private void Inspect(HeroId hero)
-    {
-        _inspector.InspectHero(hero);
-        _status.Text = $"Inspecting {_editor.Scenario.GetHero(hero).Name}";
-    }
-
-    private void Report(EditResult result, Action? onSuccess = null)
-    {
-        _status.Text = result == EditResult.Ok ? "" : $"Refused: {result}";
-        if (result == EditResult.Ok)
-        {
-            onSuccess?.Invoke();
-        }
-    }
-
     private void Open(GameState state)
     {
         _world?.QueueFree();
         _ui?.QueueFree();
-        _painting = false;
-        _linkFrom = null;
+        _pressed = false;
 
         _editor = new MapEditorSession(state);
         _context = new MapViewContext(state, _editor.Events) { ShowGrid = _showGrid };
@@ -346,8 +231,6 @@ public partial class Main : Node3D
         // Left: the tools and the options of the one in use, which wrap to the region's width.
         _tools = new ToolPalette { Name = "Tools" };
         _workspace.AddTab(EditorRegion.Left, _tools);
-        _tools.Bind(_editor);
-        _tools.ToolChanged += _ => _linkFrom = null;
 
         // Right: the map's settings and the inspector.
         var properties = new MapPropertiesPanel { Name = "Map" };
@@ -362,6 +245,8 @@ public partial class Main : Node3D
         _inspector = new InspectorPanel { Name = "Inspector" };
         _workspace.AddTab(EditorRegion.Right, _inspector);
         _inspector.Bind(_editor);
+        _toolContext = new EditorToolContext(_editor, _inspector, text => _status.Text = text);
+        _tools.Bind(EditorTools.All(_toolContext));
         _events = new EventsPanel { Name = "Events" };
         _workspace.AddTab(EditorRegion.Right, _events);
         _events.Bind(_editor, MapEventNodeJson.Instance);
