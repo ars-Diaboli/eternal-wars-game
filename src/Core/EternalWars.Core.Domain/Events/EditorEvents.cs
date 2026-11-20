@@ -25,6 +25,14 @@ public sealed record StartZonesPainted(IReadOnlyList<MapPosition> Positions, Pla
 [SeenBy(Audience.Nobody)]
 public sealed record GroundHeightsChanged(int Level, CornerArea Area) : IEvent;
 
+/// <summary>
+/// The editor gave the map a new frame (a resize, a crop, a shift or the undo of one; EDIT-8): it is now <paramref name="Width"/> ×
+/// <paramref name="Height"/> tiles and what stayed on it moved by (<paramref name="Dx"/>, <paramref name="Dy"/>). Views of the map build
+/// themselves again from the scenario.
+/// </summary>
+[SeenBy(Audience.Nobody)]
+public sealed record MapResized(int Width, int Height, int Dx, int Dy) : IEvent;
+
 [SeenBy(Audience.Witnesses)]
 public sealed record HeroPlaced(HeroId Hero, PlayerId Owner, MapPosition Position) : IEvent;
 

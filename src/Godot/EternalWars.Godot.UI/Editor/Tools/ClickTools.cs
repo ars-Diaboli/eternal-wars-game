@@ -16,6 +16,19 @@ public sealed class ObjectTool(EditorToolContext context) : EditorTool(context)
     {
         var definitions = Editor.Catalog.All.Where(d => d.Kind != MapObjectKind.Monster).OrderBy(d => d.Name, StringComparer.Ordinal);
         options.Choice("Object", definitions.Select(d => (d.Name, d.Id)), _definition, id => _definition = id);
+
+        // The saved stamps, until the browser lists them: a click puts one on the pointer, as a paste.
+        var stamps = Context.StampNames();
+        if (stamps.Count > 0)
+        {
+            options.Hint("Stamps (a click, then click the map to stamp):");
+            foreach (var name in stamps)
+            {
+                var stamp = new Button { Text = name, TooltipText = $"Stamp \"{name}\": click the map where it goes" };
+                stamp.Pressed += () => Context.PasteStamp(name);
+                options.Add(stamp);
+            }
+        }
     }
 
     public override void Press(MapPosition tile) => Context.Report(Editor.Objects.Place(_definition, tile, out _));

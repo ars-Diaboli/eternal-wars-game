@@ -268,6 +268,11 @@ public class EditorUndoTests
         ["EraseEditor.Erase"] = f => f.Editor.Erasing.Erase(new TileArea(0, 0, 39, 29, 0).Tiles(), EraseKinds.All) > 20,
         ["EraseEditor.EraseSelection"] = f => f.Editor.Selecting.Set(new SelectionItems([new MapPosition(30, 24)], [f.Chest, f.GateA, f.Monster], [f.Hero], ["hero event"]))
             && f.Editor.Erasing.EraseSelection(EraseKinds.All) == 6,
+        ["MapEditorSession.Resize"] = f => f.Editor.CheckResize(24, 18, ResizeAnchor.Centre).LosesThings && Ok(f.Editor.Resize(24, 18, ResizeAnchor.Centre)),
+        ["MapEditorSession.Resize (grown)"] = f => Ok(f.Editor.Resize(57, 41, ResizeAnchor.BottomRight)),
+        ["MapEditorSession.Crop"] = f => f.Editor.Selecting.Set(new SelectionItems([new MapPosition(3, 2), new MapPosition(30, 20)], [f.Chest], [f.Hero], ["hero event"]))
+            && Ok(f.Editor.Crop()),
+        ["MapEditorSession.Shift"] = f => f.Editor.CheckShift(-9, 7).LosesThings && Ok(f.Editor.Shift(-9, 7)),
         ["HeroEditor.SetStats"] = f => Ok(f.Editor.Heroes.SetStats(f.Hero, 5, 4, SkillLevel.Advanced, 3, 2)),
         ["HeroEditor.SetWarMachines"] = f => Ok(f.Editor.Heroes.SetWarMachines(f.Hero, new HashSet<WarMachineSlot> { WarMachineSlot.Cart, WarMachineSlot.Tent })),
         ["HeroEditor.SetArtifacts"] = f => Ok(f.Editor.Heroes.SetArtifacts(f.Hero, ["rusted-blade"], ["iron-band", "iron-band"])),

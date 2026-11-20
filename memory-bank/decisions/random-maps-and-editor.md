@@ -17,6 +17,7 @@
 | [182](#adr-182-map-37-answered-how-the-relief-is-stored-generated-and-edited-adr-075-adr-174-adr-181-2026-11-13) | MAP-37 answered: how the relief is stored, generated and edited (ADR-075, ADR-174, ADR-181, 2026-11-13) | implemented |
 | [247](#adr-247-map-and-template-editor-overhaul-a-creator-app-workspace-planned-in-seven-steps-owner-adr-015-adr-023-adr-117-2026-11-20) | Map and template editor overhaul: a creator-app workspace, planned in seven steps (owner, ADR-015, ADR-023, ADR-117, 2026-11-20) | accepted |
 | [250](#adr-250-edit-1--edit-12-answered-the-editor-plans-proposals-adopted-template-undo-scenery-rotation-new-map-content-owner-adr-117-adr-247-2026-11-20) | EDIT-1 … EDIT-12 answered: the editor plan's proposals adopted; template undo; scenery rotation; new map content (owner, ADR-117, ADR-247, 2026-11-20) | accepted |
+| [251](#adr-251-map-resize-reframes-the-map-in-place-stamps-are-fragments-in-a-file-format-of-their-own-edit-8-adr-015-adr-250-2026-11-21) | Map resize reframes the map in place; stamps are fragments in a file format of their own (EDIT-8, ADR-015, ADR-250, 2026-11-21) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -397,3 +398,21 @@ ADR when it is built.
 - **EDIT-12 Map content**: rumours for the tavern, per-player allowed factions on a fixed map, and placed objects named for events and
   quests join the map format; custom heroes per map with a name, biography and starting skills (the portrait from the roster).
   Per-player AI style comes later, with the AI's styles.
+
+### ADR-251: Map resize reframes the map in place; stamps are fragments in a file format of their own (EDIT-8, ADR-015, ADR-250, 2026-11-21)
+**Status**: implemented (plan step 2, tasks 9 and 10).
+
+- **Resize in place**: `Resize`, `Crop` and `Shift` are one operation, a new frame round the map's content. The scenario keeps its
+  `GameState` and its `AdventureMap` object: the map takes the reframed layers (`TakeFrom`) and `GameState.Reframe` moves every
+  object and hero and rebuilds the indexes. So `AdventureMap.Width` and `Height` are no longer fixed for the object's life; they
+  change only through the editor, before a game starts. A new scenario for every resize was rejected: the session, its undo history
+  and every panel hold the scenario.
+- **Undo**: the step keeps the map's layers before and after (a few megabytes at 256 × 256 on two levels) and the removals are the
+  other editors' own commands in the same step, so an undo is exact.
+- **What leaves**: an object with any cell outside, heroes and event cells outside, and a Grail nearer the new edge than placement
+  allows. Places that event actions name move with the map and stay when they end up off it: the validator warns of one that is off the map.
+- **New ground**: grass on the surface and subterranean below, at the terrain's height, as a new map has.
+- **Views**: views of the map copy its size when bound, so the editor builds them again on `MapResized`; the game never sees one.
+- **Stamps**: a stamp is a `MapFragment` in `*.ewstamp.json` with its own format version (1). Its objects are written as the map
+  format writes them, and the file names that map format (`mapFormat`), so a later map format change can upgrade old stamps. Tiles the
+  fragment does not have are spaces in the rows. No migration framework yet: there is one version.

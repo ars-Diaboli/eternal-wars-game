@@ -6,7 +6,8 @@ namespace EternalWars.Core.Domain.Editing.Checks;
 
 /// <summary>
 /// The map events (EVT-6 c): what stops the map loading (<see cref="MapEvents.MapEventRules"/>) as errors, then the warnings of
-/// <see cref="MapEvents.MapEventChecks"/>; each at the event's first cell, quest object or town when it has one.
+/// <see cref="MapEvents.MapEventChecks"/>; each at the event's first cell, quest object or town when it has one. A place an action names
+/// (reveal, give a hero) that is off the map is a warning: a resize or a typed number can leave one there.
 /// </summary>
 internal sealed class EventCheck : IMapCheck
 {
@@ -27,6 +28,31 @@ internal sealed class EventCheck : IMapCheck
         foreach (var warning in MapEvents.MapEventChecks.Warnings(scenario, set))
         {
             yield return new(IssueSeverity.Warning, warning.Message, Where(warning), warning.Event);
+        }
+
+        foreach (var definition in set.Events)
+        {
+            var places = new List<(string What, MapPosition Place)>();
+            MapEvents.MapEventTreeEdit.Rewrite(definition, action =>
+            {
+                switch (action)
+                {
+                    case MapEvents.RevealAction reveal:
+                        places.Add(("reveals the map round", new MapPosition(reveal.X, reveal.Y, reveal.Level)));
+                        break;
+                    case MapEvents.GiveHeroAction { X: { } x, Y: { } y } give:
+                        places.Add(("gives a hero at", new MapPosition(x, y, give.Level)));
+                        break;
+                }
+
+                return action;
+            });
+            foreach (var (what, place) in places.Where(p => !scenario.Map.Contains(p.Place)).Distinct())
+            {
+                yield return new(
+                    IssueSeverity.Warning, $"Event '{definition.Name}' {what} {place.X}, {place.Y} (level {place.Level}), which is off the map.",
+                    Where(new MapEvents.MapEventProblem("", definition.Name)), definition.Name);
+            }
         }
     }
 }

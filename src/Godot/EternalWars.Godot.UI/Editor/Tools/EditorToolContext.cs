@@ -24,7 +24,7 @@ public sealed class EditorToolContext(MapEditorSession editor, InspectorPanel in
     public MapEditorSession Editor { get; } = editor;
 
     /// <summary>The view that shows the selection, for the marquee and the ghost of a move; null: nothing shows them.</summary>
-    public SelectionView? Marks { get; init; }
+    public SelectionView? Marks { get; set; }
 
     /// <summary>The tiles of the shown level that are in view now; the whole level when the app does not say.</summary>
     public Func<TileArea> VisibleArea { get; init; } =
@@ -57,6 +57,12 @@ public sealed class EditorToolContext(MapEditorSession editor, InspectorPanel in
 
     /// <summary>What was copied or cut last; the app's, so it outlives the map (EDIT-4).</summary>
     public EditorClipboard Clipboard { get; init; } = new();
+
+    /// <summary>The names of the stamps the user saved (ADR-250), for the Object tool's list; the app reads its stamps folder.</summary>
+    public Func<IReadOnlyList<string>> StampNames { get; init; } = () => [];
+
+    /// <summary>Puts the stamp of that name on the pointer: the app loads it and hands it to the Paste tool.</summary>
+    public Action<string> PasteStamp { get; init; } = _ => { };
 
     /// <summary>Which layers a paste puts on the map.</summary>
     public FragmentLayers PasteLayers { get; set; } = FragmentLayers.All;

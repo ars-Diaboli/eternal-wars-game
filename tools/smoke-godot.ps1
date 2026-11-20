@@ -333,7 +333,17 @@ $scenarios = @(
     # Ctrl+V and two clicks (two pasted copies, then the red ghost over the last one), Escape; the Terrain tool (T) with Fill on fills
     # the grass with snow; the eraser (E) dragged over the first chest; undo brings it back.
     @{ Name = 'editor-clipboard'; App = 'EternalWars.MapEditor'; Frames = 84
-       Input = '3:click:@Object;6:click:700,500;9:click:@Road;12:drag:650,470,790,470;18:key:V;21:drag:640,440,820,560;27:key:Ctrl+C;30:key:Ctrl+V;33:click:700,300;40:click:1000,500;46:key:Escape;49:key:T;52:click:@Snow;55:click:@Fill;58:click:500,600;66:key:E;69:drag:660,500,740,500;76:click:@Undo' }
+       Input = '3:click:@Object;6:click:700,500;9:click:@Road;12:drag:650,470,790,470;18:key:V;21:drag:640,440,820,560;27:key:Ctrl+C;30:key:Ctrl+V;33:click:700,300;40:click:1000,500;46:key:Escape;49:key:T;52:click:@Snow;55:click:@Fill;58:click:500,600;66:key:E;69:drag:660,500,740,500;76:click:@Undo' },
+    # Resize (EDIT-8, ADR-250) on a blank 36 x 36 map with a chest: the palette opens "Resize map"; the 48 preset grows the map
+    # (nothing is lost); the window again, 24 typed as the width: the red hero would be off the map, so the window lists it, and
+    # "Remove and resize" makes the map 24 x 48; Undo brings the 48 x 48 map and the hero back.
+    @{ Name = 'editor-resize'; App = 'EternalWars.MapEditor'; Frames = 96
+       Input = '3:click:@Object;6:click:700,500;10:key:Ctrl+Shift+P;14:text:resize;22:key:Enter;28:click:@48;33:click:@Resize;42:key:Ctrl+Shift+P;46:text:resize;54:key:Enter;60:text:24;66:click:@Resize;74:click:@Remove and resize;86:click:@Undo' },
+    # Select, move, stamp and paste (ADR-250): two chests; the Select tool's rectangle takes them and their tiles; a drag moves both;
+    # "Save selection as stamp" (the palette) asks for a name and Enter takes "Stamp 1"; Ctrl+C and Ctrl+V paste a copy; the Object
+    # tool lists the stamp, a click on it puts it on the pointer and a click on the map stamps it; Undo takes the stamp off.
+    @{ Name = 'editor-select-move-paste'; App = 'EternalWars.MapEditor'; Frames = 100
+       Input = '3:click:@Object;6:click:700,500;9:click:760,500;12:key:V;15:drag:640,440,820,560;22:drag:700,500,700,400;30:key:Ctrl+Shift+P;33:text:stamp;41:key:Enter;48:key:Enter;54:key:Ctrl+C;57:key:Ctrl+V;60:click:950,330;66:key:Escape;70:click:@Object;76:click:@Stamp 1;82:click:560,600;90:click:@Undo' }
 )
 
 # Every scenario has a seed of its own, so its games and battles are the same on every run (ADR-239): the entry's Seed, else one made from
@@ -362,7 +372,7 @@ $results = $selected | ForEach-Object -ThrottleLimit ([Math]::Max(1, $Jobs)) -Pa
     # The editor keeps its workspace layout beside the settings file: every scenario starts from the default layout.
     Remove-Item (Join-Path $dir 'editor-settings.cfg') -ErrorAction SilentlyContinue
     # ... and its maps folder and its autosaves with the session marker, which a run ended by --quit-after leaves behind.
-    Remove-Item (Join-Path $dir 'maps'), (Join-Path $dir 'autosave') -Recurse -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $dir 'maps'), (Join-Path $dir 'autosave'), (Join-Path $dir 'stamps') -Recurse -ErrorAction SilentlyContinue
     if ($scenario.Recovery) {
         $autosave = Join-Path $dir 'autosave'
         New-Item -ItemType Directory -Force $autosave | Out-Null

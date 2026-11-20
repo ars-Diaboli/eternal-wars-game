@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Events;
 
@@ -12,6 +13,7 @@ namespace EternalWars.Core.Domain.Editing;
 public sealed class MapEditorSession
 {
     private readonly EditorContext _context;
+    private readonly MapResizer _resizer;
 
     /// <summary><paramref name="copier"/> copies objects with their settings, for <see cref="Fragments"/>; without one, copying an object throws.</summary>
     public MapEditorSession(GameState scenario, MapObjectCatalog? catalog = null, IEventBus? bus = null, IMapObjectCopier? copier = null)
@@ -33,6 +35,7 @@ public sealed class MapEditorSession
         _context.Selecting = Selecting;
         Fragments = new FragmentEditor(_context, Terrain, Objects, Selecting, copier);
         Erasing = new EraseEditor(_context, Terrain, Objects, Heroes, MapEvents, Selecting);
+        _resizer = new MapResizer(_context, Objects, Heroes, MapEvents, Map);
     }
 
     public GameState Scenario => _context.Scenario;
@@ -82,6 +85,42 @@ public sealed class MapEditorSession
 
     /// <summary>Map name and description, scenario rules and the Grail.</summary>
     public MapPropertiesEditor Map { get; }
+
+    /// <summary>
+    /// What <see cref="Resize"/> would do: refused (<see cref="EditResult.InvalidValue"/>) unless both sides are
+    /// <see cref="MapSizes.MinDimension"/> to <see cref="MapSizes.MaxDimension"/> tiles; else what would leave the map.
+    /// </summary>
+    public ResizeCheck CheckResize(int width, int height, ResizeAnchor anchor = ResizeAnchor.TopLeft) => _resizer.CheckResize(width, height, anchor);
+
+    /// <summary>
+    /// Gives the map a new size (EDIT-8, ADR-250), square or not, as one undo step: the old map stays at <paramref name="anchor"/> of the
+    /// new one. Ground that falls outside is cut with its roads, rivers, heights and start zones; new ground is grass (subterranean
+    /// below the surface) at its terrain's height. Objects with a cell outside, heroes and event cells outside are removed in the same
+    /// step, and so is a Grail that would lie too near the new edge (<see cref="CheckResize"/> lists them beforehand). What stays keeps
+    /// its ids and links. The selection is let go.
+    /// </summary>
+    public EditResult Resize(int width, int height, ResizeAnchor anchor = ResizeAnchor.TopLeft) =>
+        _resizer.Apply($"Resize to {width} × {height}", CheckResize(width, height, anchor));
+
+    /// <summary>
+    /// What <see cref="Crop"/> would do: refused without selected tiles (<see cref="EditResult.InvalidTarget"/>) or when the box round
+    /// them is under <see cref="MapSizes.MinDimension"/> tiles a side (<see cref="EditResult.InvalidValue"/>).
+    /// </summary>
+    public ResizeCheck CheckCrop() => _resizer.CheckCrop();
+
+    /// <summary>Crops the map to the box round the selected tiles, as <see cref="Resize"/> cuts: one undo step.</summary>
+    public EditResult Crop() => CheckCrop() is var check && check.Result == EditResult.Ok
+        ? _resizer.Apply($"Crop to {check.Width} × {check.Height}", check)
+        : check.Result;
+
+    /// <summary>What <see cref="Shift"/> would do: refused (<see cref="EditResult.InvalidValue"/>) when the move is as long as the map.</summary>
+    public ResizeCheck CheckShift(int dx, int dy) => _resizer.CheckShift(dx, dy);
+
+    /// <summary>
+    /// Moves everything on the map by (<paramref name="dx"/>, <paramref name="dy"/>) tiles on a map of the same size, as one undo step:
+    /// what leaves on one side is cut as <see cref="Resize"/> cuts, and new ground comes in on the other.
+    /// </summary>
+    public EditResult Shift(int dx, int dy) => _resizer.Apply($"Shift by {dx}, {dy}", CheckShift(dx, dy));
 
     /// <summary>Groups all following edits into a single undo step until <see cref="EndStroke"/> (mouse down … mouse up).</summary>
     public void BeginStroke(string description) => _context.BeginStroke(description);
