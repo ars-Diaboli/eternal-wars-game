@@ -11,7 +11,7 @@ joining them with a space:
 ```text
 PROMPT   = TOWN-STYLE + TOWN-<id> (+ one STAGE-<n> line from "Optional: stages by fort level", only for a staged variant)
 NEGATIVE = TOWN-NEG   (only where the tool takes a negative prompt)
-OUTPUT   = town_<id>.glb (town_<id>_<n>.glb for a stage), to the footprint, size and triangle budget under "Format for every town"
+OUTPUT   = town_<id>.glb (town_<id>_<n>.glb for a stage), to the footprint, size and triangle budget under "Output for every town"
 ```
 
 The **Silhouette**, **Materials**, **Telling details** and **Avoid** notes in each section explain the block and are for checking the
@@ -37,11 +37,7 @@ art, bright saturated colours everywhere, floating debris, terrain around the ba
 another game's design.
 ```
 
-Sources: the world and the towns' stance from [lore.md](../lore.md) (a draft), art direction from
-[presentation.md](../../design/presentation.md), the footprint from ADR-046, buildings from [town-buildings.md](../town-buildings.md), the
-group colours as in [icon-prompts.md](icon-prompts.md). Numbers marked *(proposal)* are not decided yet.
-
-## Format for every town
+## Output for every town
 
 - **Footprint**: a town covers **7 × 7 tiles with the four corner tiles free** (ADR-046); 1 tile = 1 Godot unit (`MapSpace.TileSize`),
   so the model fits a 7 × 7 unit square with its corners cut, the blocked cells' shape below. The **entrance** is the bottom-middle tile:
@@ -72,17 +68,9 @@ group colours as in [icon-prompts.md](icon-prompts.md). Numbers marked *(proposa
   *(proposal)*; PBR metal-roughness, one 2048 px texture set (albedo, normal, ORM, emissive), real-world scale as above; no animation
   (flags, smoke and fire are added by the game).
 
-**The world in one breath** (keep it in mind for every town): *Vael* is dying under a dimming sun, the **Waning Eye**. Every age ends
-when the **Wheel of Ash** turns: kingdoms burn and a new age grows from the ashes. No faction is clean: the light is desperate and
-zealous, the dark often tells the truth. So every town is **old, patched and scarred**: built on the ruins of earlier ages, repaired
-in a hurry, never pristine.
-
-| Group | Towns | Colours (sparingly, on top of the earth tones) |
-|---|---|---|
-| Dawn Covenant (stop the Wheel) | Haven, Sylvan, Academy | gold, white, green, sky blue, sunrise light |
-| Ashen Court (hasten it) | Necropolis, Inferno, Dungeon | ash grey, ember red, violet, bone |
-| Unbound (survive it) | Stronghold, Swamp Bestiary | raw wood, leather, bone, moss green |
-| Firstborn (keep it, not playable) | Conflux, Dragon Utopia | stone, crystal, old bronze |
+- **Look**: every town is **old, patched and scarred**, built on the ruins of earlier ages and repaired in a hurry, never pristine. Group
+  colours sparingly on top of the earth tones: Dawn Covenant gold, white, green, sky blue; Ashen Court ash grey, ember red, violet, bone;
+  Unbound raw wood, leather, bone, moss green; Firstborn stone, crystal, old bronze.
 
 ## Haven (`town_haven`)
 
@@ -308,3 +296,11 @@ The siege field uses placeholder shapes in each town's look (ADR-144) until ther
 the town's material line with one of these subjects (each piece on its own, flat bottom; a battle cell is 0.5 units,
 `BattleSpace.CellSize`): "a straight wall segment, 1 unit long", "a wall corner tower", "the main gate with its doors closed", "the central keep", "a broken
 wall segment, rubble". Name them `siege_<id>_<piece>.glb` (`wall`, `tower`, `gate`, `keep`, `breach`).
+
+## After generating
+
+1. Look at the model from above at the game's angle (15–30° from vertical) at 60 px wide: the outline must name the town.
+2. Check the footprint (7 × 7 units, corners free), the gate on the bottom-middle tile, the height limit and the triangle budget.
+3. Check that `team_flag` is a separate light-grey mesh and that only braziers, lava, runes and crystals glow.
+4. Put the file in `src/Godot/EternalWars.Godot.Assets/models/towns/` *(proposal)* and add a line to its `CREDITS.md` with the tool and its
+   licence terms.

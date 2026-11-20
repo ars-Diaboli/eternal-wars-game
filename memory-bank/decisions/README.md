@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-245.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-246.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -20,7 +20,7 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [game-modes.md](game-modes.md) | Victory and defeat, saves, the turn timer, score, ranking and difficulty, replays and the viewer, the main menu and new-game screen, the arena. | 20 |
 | [random-maps-and-editor.md](random-maps-and-editor.md) | Templates and the generator, scenery density, relief, the standalone editor and the template editor. | 9 |
 | [multiplayer.md](multiplayer.md) | The host and clients, each client's view, the lobby, live battles, LAN saves, start zones and the simultaneous first week. | 13 |
-| [presentation.md](presentation.md) | Art direction, the camera, terrain and fog drawing, the HUD, layout and theme, information windows, icons, cursors and heraldry. | 21 |
+| [presentation.md](presentation.md) | Art direction, the camera, terrain and fog drawing, the HUD, layout and theme, information windows, icons, cursors and heraldry. | 22 |
 | [project-and-scope.md](project-and-scope.md) | Scope and phases, the owner's batches of answers that touch several areas, phase close-outs and the Godot checks, closing reviews. | 20 |
 
 ## All decisions
@@ -271,3 +271,4 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [242](map-events.md#adr-242-map-events-for-stories-dialogues-the-end-of-the-game-captured-and-battle-events-map-format-v42-adr-115-adr-241-2026-11-19) | map-events | Map events for stories: dialogues, the end of the game, captured and battle events, map format v42 (ADR-115, ADR-241, 2026-11-19) | implemented |
 | [243](architecture.md#adr-243-code-health-creature-spell-artifact-and-building-ids-are-types-of-their-own-adr-226-adr-239-2026-11-19) | architecture | Code health: creature, spell, artifact and building ids are types of their own (ADR-226, ADR-239, 2026-11-19) | implemented |
 | [244](presentation.md#adr-244-ground-textures-each-terrain-its-own-saturated-colour-and-structure-at-a-30-m-scale-the-mood-comes-from-light-and-grading-owner-adr-183-2026-11-20) | presentation | Ground textures: each terrain its own saturated colour and structure, at a 30 m scale; the mood comes from light and grading (owner, ADR-183, 2026-11-20) | accepted |
+| [245](presentation.md#adr-245-asset-prompts-for-spells-creatures-heroes-and-towns-ui-pieces-roads-and-rivers-the-puzzle-map-and-the-environment-cursors-in-grey-iron-one-layout-for-every-prompt-file-owner-adr-116-adr-204-adr-244-2026-11-20) | presentation | Asset prompts for spells, creatures, heroes and towns, UI pieces, roads and rivers, the puzzle map and the environment; cursors in grey iron; one layout for every prompt file (owner, ADR-116, ADR-204, ADR-244, 2026-11-20) | accepted |

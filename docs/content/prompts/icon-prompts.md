@@ -1,26 +1,25 @@
 # Icon prompts (for an image-generating model)
 
-Prompts for the UI icons (owner's note, ADR-116): resources, primary stats, skills, magic schools, war machines, adventure-map and battle actions,
-and plain icon buttons, the faction heraldry, and the five difficulty levels (ADR-204). The mouse cursors are in
-[cursor-prompts.md](cursor-prompts.md). The icons are generated as **sheets of 4 (2 × 2) or 6 (2 × 3)**, the shapes the image model handles
-best, and cut into one file per icon. A sheet groups icons of the **same level of detail and the same use**, so they come out matching.
+Prompts for the **UI icons** (ADR-116, ADR-204): resources, primary stats, skills, magic schools, war machines, adventure-map and battle
+actions, plain icon buttons, the faction heraldry and the five difficulty levels. They are generated as **sheets of 4 (2 × 2) or 6
+(2 × 3)**, the shapes the image model handles best, and cut into one file per icon. A sheet groups icons of the **same level of detail and
+the same use**, so they come out matching. Other icon sets have their own files: [cursor-prompts.md](cursor-prompts.md),
+[spell-icon-prompts.md](spell-icon-prompts.md), [creature-icon-prompts.md](creature-icon-prompts.md).
 
 ## Compose a prompt
 
-Every sheet below has a **Compose** line naming its blocks. Build the prompt from it, copying each block's text exactly:
+Every sheet below has a **Compose** line naming its blocks. Build the prompt from blocks, copying each block's text exactly and joining
+them with a space:
 
 ```text
-PROMPT   = <style block> + " " + <sheet block> + " " + CELLS
+PROMPT   = <style block> + ICON-SHEET-4 or ICON-SHEET-6 + CELLS
 CELLS    = "1 <subject 1>; 2 <subject 2>; …"   the sheet table's Subject column, in its # order, spare cell included
 NEGATIVE = the negative blocks named, joined with ", "   (only where the model takes a negative prompt)
-SIZE     = the size on the Compose line; then cut the sheet and save each cell under the File column's name + ".png"
+OUTPUT   = the size on the Compose line; cut the sheet and save each cell as <File>.png
 ```
 
-Where a sheet gives a **Cell** rule instead of full subjects (magic schools, heraldry), apply the rule to each row to get the subjects.
+Where a sheet gives a **Cell rule** instead of full subjects (magic schools, heraldry), apply the rule to each row to get the subjects.
 Do not paraphrase blocks or subjects: the wording keeps the sheets consistent with each other.
-
-Example (sheet 1): the `ICON-STYLE-A` text, a space, the `ICON-SHEET-6` text, a space, then "1 a small heap of thick, worn gold coins
-stamped with a sun, …; 2 three thick cut logs stacked as a pyramid …; … 6 a small pile of rough, powdery bright-yellow sulfur crystals …".
 
 ## Blocks
 
@@ -94,26 +93,23 @@ warped or oval wheels, wheels at different angles, wheels tilted off the axle, e
 extra arms, tangled ropes, floating or disconnected parts.
 ```
 
-## Format
+## Output for every icon
 
-- **Sheet**: 2 × 2 at **1024 × 1024**, 2 × 3 (3 columns, 2 rows) at **1536 × 1024**; every cell is 512 × 512. The cells are listed in reading
-  order: top row left to right, then the bottom row.
-- **Icon**: each cell becomes one PNG, 32-bit RGBA, sRGB, **512 × 512**, transparent background, named `icon_<group>_<id>.png` as in the tables
-  (e.g. `icon_resource_gold.png`). The game scales them to 64, 48 and 32 px, so every shape must read at 32 px: one clear silhouette, no
+- **Sheet**: 2 × 2 at **1024 × 1024**, 2 × 3 (3 columns, 2 rows) at **1536 × 1024**; every cell is 512 × 512, listed in reading order
+  (top row left to right, then the bottom row). Keep the sheets (`sheet_<name>.png`) as the masters.
+- **Icon**: one PNG a cell, 32-bit RGBA, sRGB, **512 × 512**, transparent background (crests and charges included), named as in the
+  tables (`icon_resource_gold.png`). The game scales them to 64, 48 and 32 px, so every shape must read at 32 px: one clear silhouette, no
   line thinner than 6 % of the cell, no text, letters or numbers.
-- **Cutting**: split the sheet into equal tiles (ImageMagick: `magick sheet.png -crop 3x2@ +repage icon_%d.png`, `2x2@` for a 2 × 2 sheet),
-  each tile keeps the sheet's transparency. Keep the sheets (`sheet_<name>.png`) as the masters.
-- **Background**: **transparent** (alpha) on every sheet, crests and charges included; no colour behind the subjects.
+- **Cutting**: split the sheet into equal tiles (ImageMagick: `magick sheet.png -crop 3x2@ +repage icon_%d.png`, `2x2@` for a 2 × 2
+  sheet); each tile keeps the sheet's transparency.
 - **Spare cell**: where a sheet has fewer icons than cells, the free cell is a second take of the hardest icon on it. Keep the better one.
 - **Light**: from the top left; one soft highlight, no rim light, no cast shadow outside the subject.
+- **Colour**: the faction groups own their colours: Dawn Covenant (Haven, Sylvan, Academy) gold, white, green, sky blue; Ashen Court
+  (Necropolis, Inferno, Dungeon) ash grey, ember red, violet, bone; Unbound (Stronghold, Swamp Bestiary) raw wood, leather, bone, moss
+  green; Firstborn (Conflux, Dragon Utopia) stone, crystal, old bronze. Neutral icons (resources, actions, buttons) use none of them
+  strongly.
 
-**Lore** (docs/content/lore.md): the world turns on the *Wheel of Ash*; the sun is dimming and everything is old, worn and repaired. The
-**Dawn Covenant** (Haven, Sylvan, Academy) wants to stop the Wheel: gold, white, green, sky blue, sunrise light. The **Ashen Court**
-(Necropolis, Inferno, Dungeon) wants to hasten it: ash grey, ember red, violet, bone. The **Unbound** (Stronghold, Swamp Bestiary): raw wood,
-leather, bone, moss green. The **Firstborn** (Conflux, Dragon Utopia): stone, crystal, old bronze. Neutral icons (resources, actions,
-buttons) use none of the faction colours strongly.
-
-### Detail tiers and style blocks
+## Detail tiers
 
 | Tier | What | Where it is shown | Sheets |
 |---|---|---|---|
@@ -449,3 +445,10 @@ Cells: 1 `crest_group_dawn-covenant`, 2 `crest_group_ashen-court`, 3 `crest_grou
 order of sheets 23, 24 and 25.
 
 Cut them as the other sheets; the game uses the alpha as the mask and paints the white in the colour it needs.
+
+## After generating
+
+1. Look at each sheet's icons side by side at 32 px: one clear shape each, the same scale and light across the sheet.
+2. Check mechanical subjects for oval or tilted wheels and uneven bow arms; regenerate rather than fix by hand where possible.
+3. Put the files in the folder of their group under `src/Godot/EternalWars.Godot.Assets/textures/ui/` and add a line to its
+   `CREDITS.md` with the tool and its licence terms.

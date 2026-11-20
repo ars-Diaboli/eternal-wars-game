@@ -29,6 +29,7 @@
 | [212](#adr-212-terrain-borders-blend-over-two-thirds-of-a-tile-a-picture-repeats-every-16-tiles-with-the-repeat-hidden-owner-2026-11-18) | Terrain borders blend over two thirds of a tile; a picture repeats every 16 tiles with the repeat hidden (owner, 2026-11-18) | — |
 | [240](#adr-240-the-splat-reads-adventure-only-pictures-and-normal-roughness-and-occlusion-maps-owner-adr-183-2026-11-19) | The splat reads adventure-only pictures and normal, roughness and occlusion maps (owner, ADR-183, 2026-11-19) | implemented |
 | [244](#adr-244-ground-textures-each-terrain-its-own-saturated-colour-and-structure-at-a-30-m-scale-the-mood-comes-from-light-and-grading-owner-adr-183-2026-11-20) | Ground textures: each terrain its own saturated colour and structure, at a 30 m scale; the mood comes from light and grading (owner, ADR-183, 2026-11-20) | accepted |
+| [245](#adr-245-asset-prompts-for-spells-creatures-heroes-and-towns-ui-pieces-roads-and-rivers-the-puzzle-map-and-the-environment-cursors-in-grey-iron-one-layout-for-every-prompt-file-owner-adr-116-adr-204-adr-244-2026-11-20) | Asset prompts for spells, creatures, heroes and towns, UI pieces, roads and rivers, the puzzle map and the environment; cursors in grey iron; one layout for every prompt file (owner, ADR-116, ADR-204, ADR-244, 2026-11-20) | accepted |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -480,3 +481,27 @@ map format changes. Changes ADR-183's and ADR-207's mesh (a vertex per corner an
   height) and about **12 × 12 m** on the battlefield (8 cells). The prompts size plants and stones to that.
 - If the new set looks too loud on the map, a saturation and brightness control in the grading or the splat comes next; it is not
   built.
+
+### ADR-245: Asset prompts for spells, creatures, heroes and towns, UI pieces, roads and rivers, the puzzle map and the environment; cursors in grey iron; one layout for every prompt file (owner, ADR-116, ADR-204, ADR-244, 2026-11-20)
+**Status**: accepted. Art direction and asset prompts only; no code, rule or format change. Parts marked *(proposal)* in the prompt
+files (creature and hero backdrops, the puzzle picture over closed pieces, textured road and river strips, bridges, scatter debris,
+nine-slice UI frames) need view work once the art exists.
+
+- **One layout** (owner): every prompt file in `docs/content/prompts/` reads the same way: a short intro, "Compose a prompt" (a formula
+  of named blocks), "Blocks", "Output", the subjects, "After generating". Engine detail, sources and lore that do not go into a prompt
+  are left to the design docs and ADRs; the terrain file loses its "How the game uses them" and world sections.
+- **Cursors in grey iron** (owner: the first takes came out brown, the horses above all): every cursor is cold grey iron and steel,
+  the horse a forged iron figure, bronze, gold and brown named in the negative prompt. Sets 1–3 are to be regenerated.
+- **New prompt files**: [spell-icon-prompts.md](../../docs/content/prompts/spell-icon-prompts.md) (36 common spells, six a school: the
+  heroes' specialties, the creature casters' spells, the staple adventure spells),
+  [creature-icon-prompts.md](../../docs/content/prompts/creature-icon-prompts.md) (all 180 creatures, a base above its upgrade on one
+  sheet, one file a faction under `creature-icons/`, and a backdrop a faction),
+  [hero-town-icon-prompts.md](../../docs/content/prompts/hero-town-icon-prompts.md) (the 128 roster heroes, the ten town types walled
+  and as villages), [ui-element-prompts.md](../../docs/content/prompts/ui-element-prompts.md) (frames, buttons and their states, slots,
+  skill-level frames, bars, screen and town-screen backgrounds),
+  [road-river-prompts.md](../../docs/content/prompts/road-river-prompts.md) (three roads, four rivers, three bridges),
+  [puzzle-map-prompts.md](../../docs/content/prompts/puzzle-map-prompts.md) (a picture a playable faction, its chief figure in the centre
+  that opens last), [environment-prompts.md](../../docs/content/prompts/environment-prompts.md) (`scenery.csv`'s pieces per ground
+  family, battle obstacles, scatter debris, shared materials).
+- **Portraits** face right and keep the face and weapon in the middle band of the cell, so the wide army slots can crop them.
+

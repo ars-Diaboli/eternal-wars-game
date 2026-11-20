@@ -33,9 +33,16 @@ The game design document, split by mechanic. Start at the overview.
 | [spells.md](content/spells.md) | Spell catalog: six schools, four levels, three ranks |
 | [artifacts.md](content/artifacts.md) | Artifact catalog: slots, tiers, sets and lore |
 | [icon-prompts.md](content/prompts/icon-prompts.md) | Image-model prompts for the UI icons and the faction heraldry, as 2×2 and 2×3 sheets with shared style blocks |
-| [cursor-prompts.md](content/prompts/cursor-prompts.md) | Image-model prompts for the mouse cursors (menus, adventure map, battle), their hotspots and when each shows |
-| [terrain-texture-prompts.md](content/prompts/terrain-texture-prompts.md) | Image-model prompts for the adventure map's terrain textures |
+| [cursor-prompts.md](content/prompts/cursor-prompts.md) | Image-model prompts for the mouse cursors (menus, adventure map, battle) in grey iron, and their hotspots |
+| [spell-icon-prompts.md](content/prompts/spell-icon-prompts.md) | Image-model prompts for the icons of the 36 most common spells, one sheet a school |
+| [creature-icon-prompts.md](content/prompts/creature-icon-prompts.md) | Image-model prompts for the portraits of all creatures, one file a faction in `creature-icons/`, and their backdrops |
+| [hero-town-icon-prompts.md](content/prompts/hero-town-icon-prompts.md) | Image-model prompts for the 128 hero portraits and the town icons |
+| [ui-element-prompts.md](content/prompts/ui-element-prompts.md) | Image-model prompts for frames, buttons, slots, bars and screen backgrounds |
+| [puzzle-map-prompts.md](content/prompts/puzzle-map-prompts.md) | Image-model prompts for the puzzle map's faction pictures |
+| [terrain-texture-prompts.md](content/prompts/terrain-texture-prompts.md) | Image-model prompts for the terrain textures of the adventure map and the battlefield |
 | [town-model-prompts.md](content/prompts/town-model-prompts.md) | 3D-model prompts for the ten town types on the adventure map: format, style block, lore per town |
+| [road-river-prompts.md](content/prompts/road-river-prompts.md) | Texture prompts for roads and rivers, and 3D prompts for the bridges |
+| [environment-prompts.md](content/prompts/environment-prompts.md) | 3D and material prompts for map scenery, battle obstacles, scatter debris and their shared materials |
 
 ## Technical: how the code works (`technical/`)
 
