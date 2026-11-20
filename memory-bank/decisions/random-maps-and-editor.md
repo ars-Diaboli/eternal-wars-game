@@ -15,6 +15,7 @@
 | [157](#adr-157-more-scenery-on-random-maps-denser-by-terrain-adr-077-2026-11-09) | More scenery on random maps, denser by terrain (ADR-077, 2026-11-09) | implemented |
 | [181](#adr-181-adventure-map-relief-a-height-per-map-set-by-the-generator-and-the-editor-adr-011-adr-075-2026-11-12) | Adventure map relief: a height per map, set by the generator and the editor (ADR-011, ADR-075, 2026-11-12) | accepted |
 | [182](#adr-182-map-37-answered-how-the-relief-is-stored-generated-and-edited-adr-075-adr-174-adr-181-2026-11-13) | MAP-37 answered: how the relief is stored, generated and edited (ADR-075, ADR-174, ADR-181, 2026-11-13) | implemented |
+| [247](#adr-247-map-and-template-editor-overhaul-a-creator-app-workspace-planned-in-seven-steps-owner-adr-015-adr-023-adr-117-2026-11-20) | Map and template editor overhaul: a creator-app workspace, planned in seven steps (owner, ADR-015, ADR-023, ADR-117, 2026-11-20) | accepted |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -350,3 +351,20 @@ tuned once the look-dev spike shows them.
   afterwards. Maps built in code (`MapSketch`, Ember March) get the
   same heights from terrain when built.
 - **Plan**: [archive/relief-plan.md](../../docs/papers/relief-plan.md).
+
+### ADR-247: Map and template editor overhaul: a creator-app workspace, planned in seven steps (owner, ADR-015, ADR-023, ADR-117, 2026-11-20)
+**Status**: accepted (the direction and the plan); nothing built. Plan, study and questions:
+[editor-plan.md](../../docs/papers/editor-plan.md). Would reverse ADR-117's "no undo" in the template editor if EDIT-2 is accepted.
+
+- **Owner**: the map editor and the template editor are to be overhauled to the quality, usability and style of a professional
+  creator app, and in function on the level of the HoMM3 editor with HotA's additions and the HoMM5 editor.
+- **Shape**: one workspace with a menu bar, toolbar, command registry and palette, resizable and collapsible regions (tool options and
+  an object browser with pictures; the minimap, inspector and layers; problems, history and output) and a status bar; selection,
+  move, copy and paste, stamps, area tools and map resize as undoable core edits; overlays, a fairness report and play-test from the
+  editor; the template editor as a second workspace tab with undo, presets and a gallery of many seeds. Core keeps every edit
+  (ADR-015); the app keeps composition and input mapping only.
+- **Order**: seven steps, each leaving a working editor: decisions and a greybox; the shell (with files, autosave and recovery);
+  selection and editing; browser and inspector; overlays, analysis and testing; the template workspace; polish.
+- **Open**: EDIT-1 … EDIT-12 (layout, template undo, where the template editor lives, several maps, play-test, decoration off the
+  grid, scripting, resize, fairness, import, map texts, map content); the plan follows their proposals until answered. New map content
+  and format changes among them each get their own ADR.

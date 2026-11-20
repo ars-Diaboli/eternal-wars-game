@@ -21,7 +21,7 @@ a sandstone crag with huge ledges under a hazy gold sky, distant winged shapes
 
 ## Portraits
 
-**Compose**: `CREATURE-STYLE` + `CREATURE-dragon-utopia` + `ICON-SHEET-6` (U1) or `ICON-SHEET-4` (U2) + cells · negative `ICON-NEG` + `CREATURE-NEG` · 1536 × 1024 (U1), 1024 × 1024 (U2)
+**Compose**: `CREATURE-STYLE` + `CREATURE-dragon-utopia` + `ICON-SHEET-6` (U1) or `ICON-SHEET-4` (U2) + cells · negative `ICON-NEG` + `ICON-NEG-TOON` + `CREATURE-NEG` · 1536 × 1024 (U1), 1024 × 1024 (U2)
 
 | Sheet | # | File | Subject |
 |---|---|---|---|

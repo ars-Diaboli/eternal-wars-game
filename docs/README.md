@@ -32,7 +32,7 @@ The game design document, split by mechanic. Start at the overview.
 | [town-buildings.md](content/town-buildings.md) | Town buildings, the tech tree and every town's dwellings |
 | [spells.md](content/spells.md) | Spell catalog: six schools, four levels, three ranks |
 | [artifacts.md](content/artifacts.md) | Artifact catalog: slots, tiers, sets and lore |
-| [icon-prompts.md](content/prompts/icon-prompts.md) | Image-model prompts for the UI icons and the faction heraldry, as 2×2 and 2×3 sheets with shared style blocks |
+| [icon-prompts.md](content/prompts/icon-prompts.md) | Image-model prompts for the UI icons and the faction heraldry, as 2×2 and 2×3 sheets with shared style blocks and the shared anti-cartoon negative |
 | [cursor-prompts.md](content/prompts/cursor-prompts.md) | Image-model prompts for the mouse cursors (menus, adventure map, battle) in grey iron, and their hotspots |
 | [spell-icon-prompts.md](content/prompts/spell-icon-prompts.md) | Image-model prompts for the icons of the 36 most common spells, one sheet a school |
 | [creature-icon-prompts.md](content/prompts/creature-icon-prompts.md) | Image-model prompts for the portraits of all creatures, one file a faction in `creature-icons/`, and their backdrops |
@@ -52,12 +52,14 @@ The game design document, split by mechanic. Start at the overview.
 | [event-system.md](technical/event-system.md) | The custom pub/sub (event publisher / handler), conventions and event ordering |
 | [development.md](technical/development.md) | Toolchain, build/run/test commands, the simulator, smoke tests, coding conventions |
 
-## Papers: reports on past work (`papers/`, read-only)
+## Papers: plans and reports (`papers/`)
 
 | Document | What it covers |
 |---|---|
 | [code-review-2026-11.md](papers/code-review-2026-11.md) | The November 2026 code review and what became of each item (ADR-165 … ADR-175) |
 | [relief-plan.md](papers/relief-plan.md) | How the adventure map's relief was built in five steps (ADR-181, ADR-182) |
+| [town-screen-plan.md](papers/town-screen-plan.md) | The town screen overhaul: a study of today's screen, HoMM3 with HotA and HoMM5, the target, every screen, the technical and art plan, six steps and the open questions (ADR-246) |
+| [editor-plan.md](papers/editor-plan.md) | The map and template editor overhaul: a study of today's editor, the HoMM3 / HotA and HoMM5 editors and creator tools, the target, the workspace and every tool, the technical plan, seven steps and the open questions (ADR-247) |
 | [refactoring-plan-2026-11.md](papers/refactoring-plan-2026-11.md) | The November 2026 codebase review and refactoring plan, its baselines and how each item was checked (ADR-202 … ADR-226) |
 
 ## Project state (in `memory-bank/`)

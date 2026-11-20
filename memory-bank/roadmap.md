@@ -239,10 +239,36 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Cursors: the cursor for what is under the pointer (core resolvers, adventure map and battle), system cursors standing in (ADR-204)
 - [x] The cursor images for menus and the adventure map (sets 1–3 of [cursor-prompts.md](../docs/content/prompts/cursor-prompts.md), ADR-204)
 - [ ] The battle cursor images (sets 4–7) and the days a move takes drawn on the move cursor (ADR-204)
-- [ ] The cursor images of sets 1–3 again, in grey iron instead of brown and bronze (ADR-245)
+- [ ] The cursor images of sets 1–3 again, in grey iron instead of brown and bronze, and drawn realistically (ADR-245, ADR-248)
+- [ ] The icons and crests already generated (tiers A and B, the heraldry crests) again, painted realistically instead of as
+      cartoons (ADR-248)
 - [ ] The art from the new prompt files: spell, creature and hero portraits, town icons, UI frames and backgrounds, roads and rivers,
       puzzle pictures, scenery and obstacles (ADR-245); then the views that use them
 - [x] Melee direction in battle: the side to strike from by the pointer's place in the cell (8 sides), the stand cells highlighted (ADR-204)
+
+### Town screen overhaul (ADR-246; [plan](../docs/papers/town-screen-plan.md), questions TOWN-14 … TOWN-23)
+- [ ] Step 0: answers to TOWN-14 … TOWN-23, clickable greybox wireframes of every window, one faction's style frame
+- [ ] Step 1: UI foundation: own fonts, nine-slice frames, the shared widgets (army bar with drag, split and swap; slider dialog; cost
+      label; creature card; building tile; window frame), hotkeys and focus order
+- [ ] Step 2: the windows over a 2D main screen: Hall (building tree), Recruitment and the recruit dialog, Mage guild, Tavern,
+      Marketplace, Blacksmith, Fort, Caravan; the bottom bar; previous / next town; core read models and Recruit all / Upgrade all
+- [ ] Step 3: the 3D town scene in greybox for the eight playable towns: plots, camera, hover and pick, construction scene, walls by
+      fort level, loading ahead
+- [ ] Step 4: Haven and Inferno in full art, light, life, sound and music; Hall pictures; the Deck preset
+- [ ] Step 5: Sylvan, Academy, Necropolis, Dungeon, Stronghold and Swamp Bestiary in full art
+- [ ] Step 6: controller pass, UI scale, the adopted TOWN-17 mechanics, idle creatures; the plan's target list ticked
+
+### Editor overhaul (ADR-247; [plan](../docs/papers/editor-plan.md), questions EDIT-1 … EDIT-12)
+- [ ] Step 0: answers to EDIT-1 … EDIT-12, a clickable greybox of the workspace and the new-map wizard
+- [ ] Step 1: the shell: regions, menus, toolbar, command registry and palette, status bar, Problems / History / Output, file dialogs,
+      recent files, unsaved marker, autosave and crash recovery, preferences
+- [ ] Step 2: selection and editing: marquee and multi-select, move, copy, paste, duplicate, erase by kind, fill, line, scatter,
+      stamps, map resize / crop / shift
+- [ ] Step 3: the object browser (thumbnails, search, favourites), the inspector in sections with multi-edit and picture pickers, the
+      map settings window, the new-map wizard
+- [ ] Step 4: minimap, go to, bookmarks, layers and overlays, fix-its, the fairness report, play-test from the editor
+- [ ] Step 5: the template workspace: undo, zone cards, multi-select and copy, presets, mirror tools, preview, Generate many
+- [ ] Step 6: F1 help, sample maps, UI scale, shortcut editor, performance on 256 × 256, a first-use test; the plan's target list ticked
 
 ### Platform and art
 - [x] Built: speed settings (ADR-095, UI-1)

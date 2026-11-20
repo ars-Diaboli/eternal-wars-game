@@ -21,7 +21,7 @@ snowy mountain peaks under a cold pale-blue sky, a distant domed observatory
 
 ## Portraits
 
-**Compose**: `CREATURE-STYLE` + `CREATURE-academy` + `ICON-SHEET-6` + cells (Cell rule) · negative `ICON-NEG` + `CREATURE-NEG` · 1536 × 1024
+**Compose**: `CREATURE-STYLE` + `CREATURE-academy` + `ICON-SHEET-6` + cells (Cell rule) · negative `ICON-NEG` + `ICON-NEG-TOON` + `CREATURE-NEG` · 1536 × 1024
 
 | Sheet | Base | Base subject | Upgrade | Upgrade adds |
 |---|---|---|---|---|

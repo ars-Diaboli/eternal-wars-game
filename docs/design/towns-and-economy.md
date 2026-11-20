@@ -12,7 +12,8 @@ mercury.
 ADR-050.
 - **One building per town per day**. At any time on the owner's turn: build, recruit into the garrison or the visiting hero, upgrade stacks
   for the price difference, move stacks between garrison and visiting hero.
-- New towns start with town hall 1, fort 1 and tavern 1; pre-built buildings keep the requirements. The town screen is 2D, in the 3D game too.
+- New towns start with town hall 1, fort 1 and tavern 1; pre-built buildings keep the requirements. The town screen is 2D, in the 3D game too; a 3D town scene with full town
+  windows is *(planned)* (ADR-246, [plan](../papers/town-screen-plan.md)).
 
 ## Buildings
 Each building's levels, cost, requirements and effect: [town-buildings.md](../content/town-buildings.md) (ADR-046). Rules kept here:

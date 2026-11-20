@@ -21,7 +21,7 @@ grey ash plain under a sickly green sky, dead trees and leaning tombstones
 
 ## Portraits
 
-**Compose**: `CREATURE-STYLE` + `CREATURE-necropolis` + `ICON-SHEET-6` + cells (Cell rule) · negative `ICON-NEG` + `CREATURE-NEG` · 1536 × 1024
+**Compose**: `CREATURE-STYLE` + `CREATURE-necropolis` + `ICON-SHEET-6` + cells (Cell rule) · negative `ICON-NEG` + `ICON-NEG-TOON` + `CREATURE-NEG` · 1536 × 1024
 
 | Sheet | Base | Base subject | Upgrade | Upgrade adds |
 |---|---|---|---|---|

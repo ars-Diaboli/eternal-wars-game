@@ -21,7 +21,7 @@ a ring of ancient standing stones with old bronze gears half-buried, a soft shim
 
 ## Portraits
 
-**Compose**: `CREATURE-STYLE` + `CREATURE-conflux` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `CREATURE-NEG` · 1536 × 1024
+**Compose**: `CREATURE-STYLE` + `CREATURE-conflux` + `ICON-SHEET-6` + cells · negative `ICON-NEG` + `ICON-NEG-TOON` + `CREATURE-NEG` · 1536 × 1024
 
 | Sheet | # | File | Subject |
 |---|---|---|---|

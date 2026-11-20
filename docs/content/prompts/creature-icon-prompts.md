@@ -13,7 +13,7 @@ them with a space:
 ```text
 PROMPT   = CREATURE-STYLE + CREATURE-<town> + ICON-SHEET-6 (or ICON-SHEET-4) + CELLS   (sheets in the faction files)
 CELLS    = "1 <subject 1>; 2 <subject 2>; …"   from the sheet's table, by its Cell rule
-NEGATIVE = ICON-NEG + ", " + CREATURE-NEG   (only where the model takes a negative prompt)
+NEGATIVE = ICON-NEG + ", " + ICON-NEG-TOON + ", " + CREATURE-NEG   (only where the model takes a negative prompt)
 OUTPUT   = the size on the Compose line; cut the sheet and save each cell as <File>.png
 ```
 
@@ -27,18 +27,20 @@ not paraphrase blocks or subjects.
 **`CREATURE-STYLE`** (style, first in every prompt):
 
 ```text
-Game creature portrait sheet, hand-painted dark-fantasy style, rich painted detail on bold readable shapes, worn realistic materials,
-soft painted shading, light from the top left, a thin dark outline around each subject. Each portrait shows the creature from the
-chest up in three-quarter view facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole
-body, giant creatures and dragons only the head and neck. Grim, weathered, never cute. No photo realism, no 3D render look, no pixel
-art.
+Game creature portrait sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a dark-fantasy book
+illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
+scarred skin, matted fur, cracked scales, wet hide). Naturalistic light from the top left with soft shadows and a faint cool fill light,
+deep shadows and a full range of values, muted natural colours. Each portrait shows the creature from the chest up in three-quarter
+view facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
+dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline. Not
+a photograph, not a plastic CGI render, no pixel art.
 ```
 
 **`CREATURE-NEG`** (negative prompt, after `ICON-NEG` on every creature sheet):
 
 ```text
-background scenery, ground, frame, card border, full-body figure for a large creature, cropped head, two creatures in one cell, cartoon,
-chibi, cute, toy, glossy plastic, modern clothes, real-world symbols, another game's creature design
+background scenery, ground, frame, card border, full-body figure for a large creature, cropped head, two creatures in one cell, monster-toy look,
+friendly expression, modern clothes, real-world symbols, another game's creature design
 ```
 
 **`CREATURE-<town>`** and **`BACKDROP-<town>`**: one of each in every faction's file (below).
@@ -46,8 +48,9 @@ chibi, cute, toy, glossy plastic, modern clothes, real-world symbols, another ga
 **`BACKDROP-STYLE`** (style, the one backdrop a town, see [Backdrops](#backdrops)):
 
 ```text
-Square painted background for a creature portrait, hand-painted dark-fantasy style, soft and blurred like a distant landscape, no
-creature, no figures, no text, darker toward the edges, the middle third calm and even so a portrait reads on it.
+Square painted background for a creature portrait, in a realistic painterly dark-fantasy style like an atmospheric matte painting, soft
+and out of focus like a distant landscape seen through haze, no creature, no figures, no text, darker toward the edges, the middle third
+calm and even so a portrait reads on it.
 ```
 
 ## Output for every portrait
@@ -90,5 +93,7 @@ creatures use `neutral`. Hero portraits use the same backdrops ([hero-town-icon-
 1. Put each base and its upgrade side by side: the same creature, clearly upgraded.
 2. Put a town's eighteen portraits side by side at 48 px: each is named at a glance, no two share a silhouette.
 3. Crop a portrait to the army slot's wide band (about 16 : 9 through the middle): the face and the weapon still show.
-4. Put the files in `src/Godot/EternalWars.Godot.Assets/textures/ui/creatures/` *(proposal)* and add a line to its `CREDITS.md` with the
+4. Check for a cartoon look (thick outlines, flat fills, big eyes, a friendly face, toy-like proportions) and regenerate such a
+   sheet.
+5. Put the files in `src/Godot/EternalWars.Godot.Assets/textures/ui/creatures/` *(proposal)* and add a line to its `CREDITS.md` with the
    tool and its licence terms.

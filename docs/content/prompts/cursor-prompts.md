@@ -27,11 +27,12 @@ regenerate; do not paraphrase blocks or subjects.
 **`CURSOR-STYLE`** (style, first in every prompt):
 
 ```text
-Game mouse cursor sheet, hand-painted dark-fantasy style, simple bold shapes with light painted shading, cold grey palette: dark
-gunmetal iron, polished pale steel and blackened iron, cool blue-grey highlights, no warm colours except where a cell names one. Light
-from the top left, a thick near-black outline around each subject and a thin pale silver edge just inside it so it reads on dark and on
-light ground, flat front or side view as each cell says, no cast shadow, no background. No photo realism, no 3D render look, no pixel
-art.
+Game mouse cursor sheet in a realistic painterly dark-fantasy style: each cursor a clear, simple silhouette made as a real forged metal
+object, hammered and engraved iron and steel with true metallic reflections, fine scratches, pitting and worn edges catching the light,
+true proportions. Cold grey palette: dark gunmetal iron, polished pale steel and blackened iron, cool blue-grey highlights, no warm
+colours except where a cell names one. Light from the top left, a thick near-black outline around each subject and a thin pale silver
+edge just inside it so it reads on dark and on light ground, flat front or side view as each cell says, no cast shadow, no background.
+Not a photograph, not a plastic CGI render, no pixel art.
 ```
 
 **`CURSOR-HORSE`** (after `CURSOR-STYLE` on sheet 2):
@@ -46,7 +47,8 @@ unless the cell says otherwise.
 
 ```text
 text, letters, numbers, frames, drop shadows, thin lines, scenery, background, extra objects, brown, bronze, brass, copper, gold, warm
-tones, sepia, bay horse, chestnut horse, brown horse, leather brown, wood brown
+tones, sepia, bay horse, chestnut horse, brown horse, leather brown, wood brown, cartoon, comic, cute, toy-like, flat colour fills,
+vector clip art, glossy plastic, bubbly rounded shapes
 ```
 
 ## Output for every cursor
