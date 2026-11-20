@@ -43,7 +43,8 @@ tabs, the Tools menu picks a tool. Test (F5) and Help (F1) are in their menus an
 
 **The status bar**, left to right: the tile under the pointer (x, y, level, terrain, height, the hero, town or object there); the
 last message; "Checking the map…" while the problems are being checked; the counts of errors and warnings (a click opens Problems);
-the save state ("Not saved", "No changes" after a load, "Unsaved changes", "Saved" with the time); the zoom in percent.
+the save state ("Not saved" for a new map, "No changes" after a load, "Saved" with the time, and "Unsaved changes" whenever the map
+differs from the saved one: undoing back to the saved step clears it); the zoom in percent.
 
 *Planned*: map resize, and the rest of an overhaul of the map and template editors into one creator-app workspace (ADR-247,
 [plan](../papers/editor-plan.md)).

@@ -181,16 +181,19 @@ public partial class Main : Node3D
         }
     }
 
+    /// <summary><paramref name="state"/> is what the status bar says while the map has no unsaved work.</summary>
     private void SetSaveState(string state)
     {
         _saveState = state;
-        _statusBar.ShowSaveState(state);
+        ShowSaveState();
     }
+
+    private void ShowSaveState() => _statusBar.ShowSaveState(_editor.IsDirty ? "Unsaved changes" : _saveState);
 
     private MapPosition? Pick(Vector2 screen) =>
         MapSpace.PickTile(_camera, screen, _editor.Scenario.Map, _context.Level) is { } tile && _editor.Scenario.Map.Contains(tile) ? tile : null;
 
-    /// <summary>Opens <paramref name="state"/> as the map being edited; <paramref name="saveState"/> is what the status bar says until it changes.</summary>
+    /// <summary>Opens <paramref name="state"/> as the map being edited; <paramref name="saveState"/> is what the status bar says until the map is edited.</summary>
     private void Open(GameState state, string saveState = "Not saved")
     {
         _saveState = saveState;
@@ -213,11 +216,8 @@ public partial class Main : Node3D
 
         BuildUi();
         // On the session's own UI, freed with it on the next Open; the root stays in the tree and would keep every old session alive.
-        _ui!.SubscribeWhileInTree<UndoHistoryChanged>(_editor.Events, _ =>
-        {
-            SetSaveState("Unsaved changes");
-            _commands.NotifyStateChanged();
-        });
+        _ui!.SubscribeWhileInTree<UndoHistoryChanged>(_editor.Events, _ => _commands.NotifyStateChanged());
+        _ui!.SubscribeWhileInTree<UnsavedWorkChanged>(_editor.Events, _ => ShowSaveState());
 
         _camera.FocusOn(MapSpace.ToWorld(new(state.Map.Width / 2, state.Map.Height / 2)));
         _fileName.Text = state.Map.Name;
@@ -242,7 +242,7 @@ public partial class Main : Node3D
         toolRow.AddChild(_fileName);
         _statusBar = new StatusBarView { Name = "Status" };
         _workspace.StatusBar.AddChild(_statusBar);
-        _statusBar.ShowSaveState(_saveState);
+        ShowSaveState();
         _statusBar.ShowZoom(_camera.ZoomPercent);
 
         // Left: the tools and the options of the one in use, which wrap to the region's width.
@@ -509,6 +509,7 @@ public partial class Main : Node3D
         var errors = MapValidator.Validate(_editor.Scenario).Count(i => i.Severity == IssueSeverity.Error);
         var path = MapPath(name);
         MapSerializer.Save(MapConverter.ToDocument(_editor.Scenario), path);
+        _editor.MarkSaved();
         SetSaveState($"Saved {DateTime.Now:HH:mm}");
         Say(errors == 0 ? $"Saved {path}" : $"Saved {path} with {errors} error(s), see Problems");
     }

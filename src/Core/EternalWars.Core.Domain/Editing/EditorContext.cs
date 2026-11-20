@@ -15,6 +15,7 @@ internal sealed class EditorContext(GameState scenario, MapObjectCatalog catalog
 {
     private List<IEditorCommand>? _stroke;
     private string _strokeDescription = "";
+    private bool _dirty;
 
     public GameState Scenario { get; } = scenario;
 
@@ -138,5 +139,26 @@ internal sealed class EditorContext(GameState scenario, MapObjectCatalog catalog
     /// <summary>Whether two lists hold the same items in the same order (no-op check for list-valued edits).</summary>
     public static bool SameItems<T>(IReadOnlyList<T> a, IReadOnlyList<T> b) => a.SequenceEqual(b);
 
-    private void PublishHistory() => Bus.Publish(new UndoHistoryChanged(History.UndoDescription, History.RedoDescription, History.Position, History.Count));
+    /// <summary>The map as it is now was saved: it has no unsaved work until the history moves.</summary>
+    public void MarkSaved()
+    {
+        History.MarkSaved();
+        PublishUnsaved();
+    }
+
+    private void PublishHistory()
+    {
+        Bus.Publish(new UndoHistoryChanged(History.UndoDescription, History.RedoDescription, History.Position, History.Count));
+        PublishUnsaved();
+    }
+
+    /// <summary>Tells when the map starts or stops having unsaved work, not at every step.</summary>
+    private void PublishUnsaved()
+    {
+        if (_dirty != History.IsDirty)
+        {
+            _dirty = History.IsDirty;
+            Bus.Publish(new UnsavedWorkChanged(_dirty));
+        }
+    }
 }

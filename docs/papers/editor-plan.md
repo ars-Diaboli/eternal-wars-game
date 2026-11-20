@@ -505,7 +505,7 @@ The tasks of each step in build order. A task is one reviewable change that leav
 6. **Status bar**: `StatusBarView` with the tile under the pointer (x, y, level, terrain, height, the object there), the problem
    counts (a click opens Problems), the save state, the zoom and the running background work. *Done.*
 7. **Unsaved work in the core**: `MapEditorSession.IsDirty`, from the history position at the last save (`MarkSaved`); undoing back
-   to the saved step makes it clean again. Tests.
+   to the saved step makes it clean again. Tests. *Done.*
 8. **Files**: `FileService` with Open, Save and Save as (Godot's `FileDialog`, the system's own where offered) starting in the maps
    folder; Recent (ten) in the editor settings; an asterisk in the window title; a question before overwriting, before opening over
    unsaved work and on closing (the window's close request waits for the answer). Today's name field goes.
