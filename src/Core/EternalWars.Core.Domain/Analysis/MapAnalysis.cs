@@ -48,6 +48,9 @@ public sealed record StartAnalysis(
     long GuardsWithin7,
     IReadOnlyDictionary<ResourceType, int> MinesWithin3);
 
+/// <summary>Where a player begins (<see cref="MapAnalysis.Starts"/>), and the town whose faction's terrain its scout is at home on (null: none).</summary>
+public sealed record MapStart(PlayerId Player, MapPosition Tile, string? Town);
+
 /// <summary>The starts' numbers, and a warning for each number where a start is far from the others.</summary>
 public sealed record FairnessAnalysis(IReadOnlyList<StartAnalysis> Starts, IReadOnlyList<string> Warnings);
 
@@ -180,14 +183,7 @@ public sealed class MapAnalysis(GameState state)
     /// </summary>
     public FairnessAnalysis Fairness()
     {
-        var starts = new List<StartAnalysis>();
-        foreach (var player in state.Players)
-        {
-            if (StartOf(player.Id) is var (start, town))
-            {
-                starts.Add(Measure(player.Id, start, town));
-            }
-        }
+        var starts = Starts().Select(s => Measure(s.Player, s.Tile, s.Town)).ToList();
 
         var warnings = new List<string>();
         if (starts.Count > 1)
@@ -210,19 +206,25 @@ public sealed class MapAnalysis(GameState state)
     }
 
     /// <summary>
-    /// Where <paramref name="player"/> begins, and the faction whose terrain it is at home on: the entrance of its first town on the map, else
-    /// where its first hero stands with the town of the hero's army; null for neither.
+    /// Where each player begins, in player order (a player with neither town nor hero on the map has none): the entrance of its first town,
+    /// else where its first hero stands; with the faction whose terrain it is at home on (the town's, else the town of the hero's army).
     /// </summary>
-    private (MapPosition Start, string? Town)? StartOf(PlayerId player)
+    public IReadOnlyList<MapStart> Starts()
     {
-        if (state.ObjectsOf<Town>().Where(t => t.Owner == player && state.Map.Contains(t.VisitPosition)).OrderBy(t => t.Id.Value).FirstOrDefault() is { } town)
+        var starts = new List<MapStart>();
+        foreach (var player in state.Players.Select(p => p.Id))
         {
-            return (town.VisitPosition, town.TownType);
+            if (state.ObjectsOf<Town>().Where(t => t.Owner == player && state.Map.Contains(t.VisitPosition)).OrderBy(t => t.Id.Value).FirstOrDefault() is { } town)
+            {
+                starts.Add(new MapStart(player, town.VisitPosition, town.TownType));
+            }
+            else if (state.Heroes.FirstOrDefault(h => h.Owner == player && state.Map.Contains(h.Position)) is { } hero)
+            {
+                starts.Add(new MapStart(player, hero.Position, MovementRules.ArmyTown(state, hero)));
+            }
         }
 
-        return state.Heroes.FirstOrDefault(h => h.Owner == player && state.Map.Contains(h.Position)) is { } hero
-            ? (hero.Position, MovementRules.ArmyTown(state, hero))
-            : null;
+        return starts;
     }
 
     private StartAnalysis Measure(PlayerId player, MapPosition start, string? town)

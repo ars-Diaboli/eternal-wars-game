@@ -312,6 +312,14 @@ Top-down view); it goes out far enough to show a 256 × 256 map.
   go of what was selected of it. A copy leaves out hidden or locked roads and rivers, and a paste does not paint over them. The brushes
   still paint terrain, roads, rivers and start zones. The grid hides with the terrain. "Show and unlock all" undoes it all; every map
   opened starts with everything shown and unlocked.
+- **Overlays** (ADR-264, the Overlays tab of the right region, View > Overlays, or View > Overlay): one at a time over the shown level,
+  with a legend in the map view's lower left corner. Passability tints entrances, blocked cells and the cells a monster guards;
+  Owners tints everything that can have an owner, and every hero, in its owner's colour (unowned: grey); Guard strength is a heat map
+  of the army power guarding each cell in five bands from the level's weakest to its strongest guard; Reach tints every tile by the
+  days a hero needs from a chosen start (a player's start, or the first selected cell, for the first player), up to 7 and then
+  "more"; Zones shows a generated map's zones, laid out again from what its description records, and otherwise the start zones;
+  Height contours draws a line every half cell of height, thicker at each whole cell. An overlay follows every edit and the level
+  shown, and changes nothing on the map.
 
 The camera keys do nothing while a text field is being typed into, while a question, a dialog, the palette or Preferences is open,
 while Ctrl is held, and on the Template tab. A shortcut pressed in the middle of a stroke on the map is ignored.
@@ -319,7 +327,10 @@ while Ctrl is held, and on the Template tab. A shortcut pressed in the middle of
 **The bottom panels**:
 - **Problems**: the validator's issues, checked a moment after every change, in the background on a copy of the map. Two buttons with
   the counts show and hide the errors and the warnings; a list picks one kind (heroes, objects, ground, players, rules, content,
-  events). A click on a problem shows its tile; a double click on an event's problem opens the event.
+  events). A click on a problem shows its tile; a double click on an event's problem opens the event. Where the fix is clear the row
+  names it (ADR-265): link an unlinked gate with its only possible partner, point a one-way entrance at the only free exit, make what
+  belongs to a missing player neutral, give a player without a start the one neutral town in its start zone. The Fix button runs the
+  selected problem's fix as one undo step; if the map changed since it was checked, nothing happens and Output says so.
 - **History**: the start, then every undo step, oldest first; the undone steps are dim. A click on a row jumps there.
 - **Output**: the editor's messages with their time (what was saved, opened, autosaved or generated, why an edit was refused).
 

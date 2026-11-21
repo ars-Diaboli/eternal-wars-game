@@ -128,19 +128,22 @@ public static class MapOverlays
 
     /// <summary>
     /// Owners: the cells of every thing that can have an owner (towns, mines, dwellings, providers, garrisons…) and every hero, in its owner's
-    /// colour; an ownable thing without one as neutral. The legend lists the players that own something, then neutral.
+    /// colour; an ownable thing without one as neutral (a hero on an object's cell tints it in its own colour). The legend lists the players
+    /// that own something, then neutral.
     /// </summary>
     public static MapOverlay Owners(GameState state, int level)
     {
         ArgumentNullException.ThrowIfNull(state);
+        var heroes = state.Heroes.Where(h => h.Position.Level == level && state.Map.Contains(h.Position)).ToList();
+        var heroTiles = heroes.Select(h => h.Position).ToHashSet();
         var tinted = new List<(MapPosition Tile, PlayerId? Owner)>();
         foreach (var mapObject in state.Objects.OfType<IFlaggable>().Cast<MapObject>())
         {
-            tinted.AddRange(mapObject.OccupiedCells().Where(c => c.Position.Level == level && state.Map.Contains(c.Position))
+            tinted.AddRange(mapObject.OccupiedCells().Where(c => c.Position.Level == level && state.Map.Contains(c.Position) && !heroTiles.Contains(c.Position))
                 .Select(c => (c.Position, ((IFlaggable)mapObject).Owner)));
         }
 
-        tinted.AddRange(state.Heroes.Where(h => h.Position.Level == level && state.Map.Contains(h.Position)).Select(h => (h.Position, (PlayerId?)h.Owner)));
+        tinted.AddRange(heroes.Select(h => (h.Position, (PlayerId?)h.Owner)));
 
         var owners = tinted.Where(t => t.Owner is not null).Select(t => t.Owner!.Value).Distinct().OrderBy(p => p.Value).ToList();
         var legend = owners.Select(p => new OverlayBand(Name(state, p), new(TintKind.Player, Colour(state, p)))).ToList();
@@ -150,8 +153,9 @@ public static class MapOverlays
     }
 
     /// <summary>
-    /// Guard strength: the army power guarding every cell (<see cref="MapAnalysis.GuardStrength"/>), in <see cref="GuardBands"/> heat bands that
-    /// split the level's weakest to strongest guard evenly on a log scale; the legend gives each band's powers.
+    /// Guard strength: the army power of the monsters guarding every cell (<see cref="MapAnalysis.GuardStrength"/>), in <see cref="GuardBands"/>
+    /// heat bands that split the level's weakest to strongest guard evenly on a log scale (one band when they are all alike); the legend gives
+    /// each band's powers.
     /// </summary>
     public static MapOverlay GuardStrength(GameState state, int level)
     {
@@ -160,22 +164,28 @@ public static class MapOverlays
         var guarded = state.Map.Positions(level).Select(t => (Tile: t, Power: analysis.GuardStrength(t))).Where(g => g.Power > 0).ToList();
         if (guarded.Count == 0)
         {
-            return new MapOverlay(OverlayKind.GuardStrength, level, [], [], [], "No monster or garrison guards this level.");
+            return new MapOverlay(OverlayKind.GuardStrength, level, [], [], [], "No monster guards this level.");
         }
 
-        var (low, high) = (Math.Log(guarded.Min(g => g.Power)), Math.Log(guarded.Max(g => g.Power)));
-        int Band(long power) => high - low < 1e-9 ? GuardBands - 1 : Math.Min(GuardBands - 1, (int)((Math.Log(power) - low) / (high - low) * GuardBands));
+        const string note = "Army power of the monsters around a cell: count × fight value; an open count as the middle of its range.";
+        var (weakest, strongest) = (guarded.Min(g => g.Power), guarded.Max(g => g.Power));
+        if (weakest == strongest)
+        {
+            return new MapOverlay(OverlayKind.GuardStrength, level, [new($"Power {weakest:N0}", new(TintKind.Heat, 100))],
+                [.. guarded.Select(g => new OverlayCell(g.Tile, 0))], [], note);
+        }
+
+        var (low, high) = (Math.Log(weakest), Math.Log(strongest));
+        int Band(long power) => Math.Min(GuardBands - 1, (int)((Math.Log(power) - low) / (high - low) * GuardBands));
         long Edge(int band) => (long)Math.Round(Math.Exp(low + ((high - low) * band / GuardBands)));
 
         var legend = new List<OverlayBand>();
         for (var band = 0; band < GuardBands; band++)
         {
-            var text = high - low < 1e-9 ? $"Power {Edge(0):N0}" : $"Power {Edge(band):N0} – {Edge(band + 1):N0}";
-            legend.Add(new OverlayBand(text, new(TintKind.Heat, band * 100 / (GuardBands - 1))));
+            legend.Add(new OverlayBand($"Power {Edge(band):N0} – {Edge(band + 1):N0}", new(TintKind.Heat, band * 100 / (GuardBands - 1))));
         }
 
-        return new MapOverlay(OverlayKind.GuardStrength, level, legend, [.. guarded.Select(g => new OverlayCell(g.Tile, Band(g.Power)))], [],
-            "Army power: count × fight value; an open count as the middle of its range.");
+        return new MapOverlay(OverlayKind.GuardStrength, level, legend, [.. guarded.Select(g => new OverlayCell(g.Tile, Band(g.Power)))], [], note);
     }
 
     /// <summary>
@@ -280,6 +290,11 @@ public static class MapOverlays
                 Cross(d, a, x, y + 1, x, y);
                 for (var i = 0; i + 1 < count; i += 2)
                 {
+                    if (points[i] == points[i + 1])
+                    {
+                        continue; // a peak exactly at the height: both crossings on its corner
+                    }
+
                     lines.Add(new OverlayLine(points[i].X, points[i].Y, points[i + 1].X, points[i + 1].Y, band));
                 }
             }

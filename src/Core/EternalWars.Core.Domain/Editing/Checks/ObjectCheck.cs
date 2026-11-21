@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
@@ -6,7 +7,8 @@ namespace EternalWars.Core.Domain.Editing.Checks;
 
 /// <summary>
 /// The map objects: a passable entrance, then each kind's own problem (owners, gate links, known creatures, artifacts and heroes, prisons, garrisons,
-/// towns, Pandora's Boxes, quest objects without a quest).
+/// towns, Pandora's Boxes, quest objects without a quest). Where the answer is clear an issue carries its fix (ADR-265): a gate is linked with
+/// the only gate it can pair with, and what belongs to a missing player becomes neutral.
 /// </summary>
 internal sealed class ObjectCheck : IMapCheck
 {
@@ -25,24 +27,31 @@ internal sealed class ObjectCheck : IMapCheck
             switch (mapObject)
             {
                 case Mine { Owner: { } owner } mine when !scenario.HasPlayer(owner):
-                    yield return new(IssueSeverity.Error, $"{name} belongs to a missing player.", mine.Position);
+                    yield return new(IssueSeverity.Error, $"{name} belongs to a missing player.", mine.Position) { Fix = Neutral(mine, owner) };
                     break;
                 case TwoWayGate { LinkedGate: null } gate:
-                    yield return new(IssueSeverity.Warning, $"{name} is not linked.", gate.Position);
+                    yield return new(IssueSeverity.Warning, $"{name} is not linked.", gate.Position) { Fix = PairFor(scenario, gate) };
                     break;
                 case TwoWayGate { LinkedGate: { } link } gate
                     when scenario.Objects.FirstOrDefault(o => o.Id == link) is not TwoWayGate partner || partner.LinkedGate != gate.Id:
-                    yield return new(IssueSeverity.Error, $"{name} link is not mutual.", gate.Position);
+                    yield return new(IssueSeverity.Error, $"{name} link is not mutual.", gate.Position)
+                    {
+                        // The gate it points at, of its kind, is linked to nothing and pointed at by it alone: linking that one back is the clear answer.
+                        Fix = scenario.FindObject(link) is TwoWayGate { LinkedGate: null } back && back.Definition.Id == gate.Definition.Id
+                            && scenario.ObjectsOf<TwoWayGate>().Count(g => g.LinkedGate == back.Id) == 1
+                            ? new LinkGatesFix($"Link the {back.Definition.Name.ToLowerInvariant()} at {At(back.Position)} back to it", gate.Id, back.Id)
+                            : null,
+                    };
                     break;
                 case OneWayGateEntrance { Exit: null } entrance:
-                    yield return new(IssueSeverity.Warning, $"{name} has no exit.", entrance.Position);
+                    yield return new(IssueSeverity.Warning, $"{name} has no exit.", entrance.Position) { Fix = ExitFor(scenario) };
                     break;
                 case OneWayGateEntrance { Exit: { } exit } entrance
                     when scenario.Objects.FirstOrDefault(o => o.Id == exit) is not OneWayGateExit:
                     yield return new(IssueSeverity.Error, $"{name} points at something that is not a one-way exit.", entrance.Position);
                     break;
                 case OneWayGateExit exit when !scenario.ObjectsOf<OneWayGateEntrance>().Any(e => e.Exit == exit.Id):
-                    yield return new(IssueSeverity.Warning, $"{name} is not used by any entrance.", exit.Position);
+                    yield return new(IssueSeverity.Warning, $"{name} is not used by any entrance.", exit.Position) { Fix = ExitFor(scenario) };
                     break;
                 case ArtifactPickup { Artifact: { } artifact } pickup when !scenario.Artifacts.Contains(artifact):
                     yield return new(IssueSeverity.Error, $"{name} holds the unknown artifact '{artifact}'.", pickup.Position);
@@ -71,7 +80,7 @@ internal sealed class ObjectCheck : IMapCheck
                     yield return new(IssueSeverity.Error, $"{name} guard uses unknown creature '{guard.Creature}'.", mine.Position);
                     break;
                 case MapGarrison { Owner: { } garrisonOwner } garrison when !scenario.HasPlayer(garrisonOwner):
-                    yield return new(IssueSeverity.Error, $"{name} belongs to a missing player.", garrison.Position);
+                    yield return new(IssueSeverity.Error, $"{name} belongs to a missing player.", garrison.Position) { Fix = Neutral(garrison, garrisonOwner) };
                     break;
                 case MapGarrison garrison when garrison.Troops.Stacks.Any(s => !scenario.Creatures.Contains(s.Stack.Creature)):
                     yield return new(IssueSeverity.Error, $"{name} holds an unknown creature.", garrison.Position);
@@ -82,7 +91,10 @@ internal sealed class ObjectCheck : IMapCheck
                 case Town town:
                     foreach (var problem in TownProblems(scenario, town))
                     {
-                        yield return new(IssueSeverity.Error, $"{town.Name} {problem}", town.Position);
+                        yield return new(IssueSeverity.Error, $"{town.Name} {problem}", town.Position)
+                        {
+                            Fix = problem == MissingOwner && town.Owner is { } missing ? Neutral(town, missing) : null,
+                        };
                     }
 
                     break;
@@ -99,6 +111,50 @@ internal sealed class ObjectCheck : IMapCheck
             }
         }
     }
+
+    private const string MissingOwner = "belongs to a missing player.";
+
+    /// <summary>The fix of a thing whose owner is not a player of the map: it becomes neutral.</summary>
+    private static OwnerFix Neutral(MapObject mapObject, PlayerId missing) =>
+        new($"Make the {mapObject.Definition.Name.ToLowerInvariant()} neutral", mapObject.Id, missing, null);
+
+    /// <summary>
+    /// The gate an unlinked two-way gate clearly pairs with, among the gates of its kind (a subterranean gate pairs with a subterranean gate):
+    /// the one gate that points at it, else the one other unlinked gate when no gate points at either; null when there is no such gate or more
+    /// than one.
+    /// </summary>
+    private static LinkGatesFix? PairFor(GameState scenario, TwoWayGate gate)
+    {
+        var gates = scenario.ObjectsOf<TwoWayGate>().Where(g => g.Definition.Id == gate.Definition.Id).ToList();
+        if (scenario.ObjectsOf<TwoWayGate>().Any(g => g.LinkedGate == gate.Id && g.Definition.Id != gate.Definition.Id))
+        {
+            return null; // a gate of another kind points at it: not clear
+        }
+
+        var pointing = gates.Where(g => g.LinkedGate == gate.Id).ToList();
+        var partner = pointing.Count switch
+        {
+            1 => pointing[0],
+            0 => gates.Where(g => g.LinkedGate is null && !gates.Any(o => o.LinkedGate == g.Id)).ToList() is [var a, var b] && (a == gate || b == gate)
+                ? (a == gate ? b : a)
+                : null,
+            _ => null,
+        };
+        return partner is null ? null : new LinkGatesFix($"Link it with the {partner.Definition.Name.ToLowerInvariant()} at {At(partner.Position)}", gate.Id, partner.Id);
+    }
+
+    /// <summary>The fix of a one-way entrance without an exit and an exit no entrance uses, when the map has exactly one of each: link them.</summary>
+    private static GateExitFix? ExitFor(GameState scenario)
+    {
+        var exits = scenario.ObjectsOf<OneWayGateExit>();
+        var entrances = scenario.ObjectsOf<OneWayGateEntrance>();
+        return entrances.Where(e => e.Exit is null).ToList() is [var entrance] && exits.Where(x => !entrances.Any(e => e.Exit == x.Id)).ToList() is [var exit]
+            ? new GateExitFix($"Point the entrance at {At(entrance.Position)} at the exit at {At(exit.Position)}", entrance.Id, exit.Id)
+            : null;
+    }
+
+    /// <summary>A tile as the fixes name it: x, y, and "underground" below the surface.</summary>
+    internal static string At(MapPosition position) => $"{position.X}, {position.Y}{(position.Level > 0 ? " underground" : "")}";
 
     /// <summary>A Pandora's Box (ADR-100): it must hold something (or run a hero event), only gains, and only what exists.</summary>
     private static IEnumerable<string> BoxProblems(GameState scenario, PandorasBox box)
@@ -130,7 +186,7 @@ internal sealed class ObjectCheck : IMapCheck
     {
         if (town.Owner is { } owner && !scenario.HasPlayer(owner))
         {
-            yield return "belongs to a missing player.";
+            yield return MissingOwner;
         }
 
         foreach (var (building, level) in town.Buildings.Where(b => b.Value > TownRules.Buildings(scenario, town).MaxLevel(b.Key)))

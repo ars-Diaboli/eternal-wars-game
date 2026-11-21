@@ -397,6 +397,11 @@ $scenarios = @(
     # hidden; then all shown and unlocked, and Select all takes the monsters too.
     @{ Name = 'editor-layers'; App = 'EternalWars.MapEditor'; Frames = 60; Map = $emberMap
        Input = '3:key:Home;6:click:@Layers;10:click:@Locked#5;14:key:Ctrl+A;24:click:@Scenery;30:click:@Terrain#2;40:click:@Show and unlock all;50:key:Ctrl+A' }
+    # The overlays (ADR-264) on Ember March, one after another with their legend over the map: passability, owners, guard strength, reach
+    # from the first start, height contours, the start zones (not a generated map). Then a map generated in the Generate tab, and its zones
+    # laid out again from its description.
+    @{ Name = 'editor-overlays'; App = 'EternalWars.MapEditor'; Frames = 100; Map = $emberMap
+       Input = '3:key:Home;6:click:@Overlays;10:click:@Passability;18:click:@Owners;26:click:@Guard strength;34:click:@Reach;42:click:@Height contours;50:click:@Zones;58:click:@Generate;62:click:@Generate;80:click:@Overlays;84:click:@Zones' }
 )
 
 # Every scenario has a seed of its own, so its games and battles are the same on every run (ADR-239): the entry's Seed, else one made from

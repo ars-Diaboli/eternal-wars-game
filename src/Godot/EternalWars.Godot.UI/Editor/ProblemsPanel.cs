@@ -9,7 +9,8 @@ namespace EternalWars.Godot.UI.Editor;
 /// <summary>
 /// The map's problems (EDIT-1, ADR-250): <see cref="MapValidator"/>'s issues, checked a moment after every change, on a snapshot of the map
 /// and off the main thread; the result comes back on the main thread. The two count buttons show and hide the errors and the warnings, the
-/// list beside them picks one kind. Selecting an issue reports its tile; activating (double click) an event's issue opens the event.
+/// list beside them picks one kind. Selecting an issue reports its tile; activating (double click) an event's issue opens the event. An
+/// issue with a clear fix (ADR-265) says so in its row, and the Fix button runs the selected one's as one undo step.
 /// </summary>
 public partial class ProblemsPanel : VBoxContainer
 {
@@ -19,6 +20,7 @@ public partial class ProblemsPanel : VBoxContainer
     private readonly Button _errors = new() { ToggleMode = true, ButtonPressed = true, TooltipText = "Show the errors" };
     private readonly Button _warnings = new() { ToggleMode = true, ButtonPressed = true, TooltipText = "Show the warnings" };
     private readonly OptionButton _kinds = new() { TooltipText = "Show one kind of problem" };
+    private readonly Button _fix = new() { Name = "Fix", Text = "Fix", Disabled = true, TooltipText = "Select a problem that has a fix" };
     private readonly ItemList _list = new() { SizeFlagsVertical = SizeFlags.ExpandFill, AllowSearch = false }; // a typed key is the app's, not a search
     private readonly global::Godot.Timer _timer = new() { OneShot = true, WaitTime = Delay };
     private readonly List<IssueKind?> _listedKinds = [];
@@ -46,6 +48,9 @@ public partial class ProblemsPanel : VBoxContainer
     /// <summary>An issue of a map event was activated: the editor opens the event in the "Events" tab.</summary>
     public event Action<string>? EventSelected;
 
+    /// <summary>A fix ran or was refused: what to tell the user.</summary>
+    public event Action<string>? FixReported;
+
     /// <summary>
     /// <paramref name="snapshot"/> runs on the main thread and copies the map; the work it returns validates the copy and runs on a task, so it
     /// must not touch the live scenario.
@@ -59,6 +64,7 @@ public partial class ProblemsPanel : VBoxContainer
         filters.AddChild(_errors);
         filters.AddChild(_warnings);
         filters.AddChild(_kinds);
+        filters.AddChild(_fix);
         AddChild(_list);
         AddChild(_timer);
 
@@ -71,11 +77,13 @@ public partial class ProblemsPanel : VBoxContainer
         };
         _list.ItemSelected += index =>
         {
+            ShowFix();
             if ((int)index < _shown.Count && _shown[(int)index].Position is { } position)
             {
                 IssueSelected?.Invoke(position);
             }
         };
+        _fix.Pressed += RunFix;
         _list.ItemActivated += index =>
         {
             if ((int)index < _shown.Count && _shown[(int)index].Event is { } name)
@@ -162,6 +170,7 @@ public partial class ProblemsPanel : VBoxContainer
         if (IsChecking != checking)
         {
             IsChecking = checking;
+            ShowFix();
             Changed?.Invoke();
         }
     }
@@ -200,6 +209,7 @@ public partial class ProblemsPanel : VBoxContainer
             .. Issues.Where(i => (i.Severity == IssueSeverity.Error ? _errors.ButtonPressed : _warnings.ButtonPressed) && (_kind is null || i.Kind == _kind)),
         ];
         _list.Clear();
+        ShowFix();
         if (_shown.Count == 0)
         {
             _list.AddItem(Issues.Count == 0 ? "No problems found." : "No problems of the kinds shown.");
@@ -208,8 +218,43 @@ public partial class ProblemsPanel : VBoxContainer
 
         foreach (var issue in _shown)
         {
-            var index = _list.AddItem($"{issue.Severity}: {issue.Message}{(issue.Position is { } p ? $" {p}" : "")}{(issue.Event is not null ? " (double click: open the event)" : "")}");
+            var index = _list.AddItem($"{issue.Severity}: {issue.Message}{(issue.Position is { } p ? $" {p}" : "")}"
+                + $"{(issue.Event is not null ? " (double click: open the event)" : "")}{(issue.Fix is { } fix ? $" (Fix: {fix.Text})" : "")}");
             _list.SetItemCustomFgColor(index, issue.Severity == IssueSeverity.Error ? UiTheme.IssueError : UiTheme.IssueWarning);
         }
+    }
+
+    /// <summary>The issue selected in the list, if one is.</summary>
+    private MapIssue? Selected => _list.GetSelectedItems() is [var index] && index < _shown.Count ? _shown[index] : null;
+
+    /// <summary>The Fix button follows the selected issue: on with its fix named in the tooltip, else off; off while the map is being checked.</summary>
+    private void ShowFix()
+    {
+        var fix = Selected?.Fix;
+        _fix.Disabled = fix is null || IsChecking;
+        _fix.TooltipText = fix is null ? "Select a problem that has a fix" : IsChecking ? "Wait for the map to be checked" : fix.Text;
+    }
+
+    /// <summary>Runs the selected issue's fix as one undo step; the map is checked again after it, as after any edit.</summary>
+    private void RunFix()
+    {
+        if (Selected?.Fix is not { } fix)
+        {
+            return;
+        }
+
+        var result = _editor.Fix(fix);
+        FixReported?.Invoke(result switch
+        {
+            EditResult.Ok => $"Fixed: {fix.Text}",
+            EditResult.InvalidTarget => "Not fixed: the map changed since it was checked; the problems are checked again.",
+            _ => $"Not fixed: {fix.Text} was refused ({result}).",
+        });
+        if (result != EditResult.Ok)
+        {
+            Check(); // a refusal changed nothing, so no edit starts the check
+        }
+
+        _fix.Disabled = true; // until the next check lists the issues again
     }
 }

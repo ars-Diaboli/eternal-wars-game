@@ -30,6 +30,8 @@
 | [261](#adr-261-the-editors-minimap-and-go-to-adr-260-2026-11-21) | The editor's minimap and Go to (ADR-260, 2026-11-21) | implemented |
 | [262](#adr-262-the-editors-layers-adr-250-2026-11-21) | The editor's layers (ADR-250, 2026-11-21) | implemented |
 | [263](#adr-263-the-map-analysis-in-the-core-adr-117-adr-250-2026-11-21) | The map analysis in the core (ADR-117, ADR-250, 2026-11-21) | implemented |
+| [264](#adr-264-the-editors-overlays-adr-262-adr-263-2026-11-21) | The editor's overlays (ADR-262, ADR-263, 2026-11-21) | implemented |
+| [265](#adr-265-fix-its-for-the-maps-problems-adr-250-2026-11-21) | Fix-its for the map's problems (ADR-250, 2026-11-21) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -709,3 +711,49 @@ ADR when it is built.
   prints the analysis of the game of each seed with every slot taken (built as the new-game screen builds it, which may be another
   attempt than the single map measured; its time is not counted in a seed's).
 - The editor's fairness report and overlays (plan step 4) are views of these numbers.
+
+### ADR-264: The editor's overlays (ADR-262, ADR-263, 2026-11-21)
+**Status**: implemented (plan step 4, task 5).
+
+- **One overlay at a time**, or none, chosen in the Overlays tab of the right region (View > Overlays; View > Overlay lists them too):
+  - **Passability**: an object's entrance, a blocked cell (impassable terrain or an object's blocked cell), a cell a monster guards.
+  - **Owners**: the cells of everything that can have an owner and of every hero in the owner's colour; an unowned one neutral.
+  - **Guard strength**: the army power of the monsters guarding each cell (`MapAnalysis.GuardStrength`) in five heat bands that split
+    the level's weakest to strongest guard evenly on a log scale (one band when all are alike); the legend gives each band's powers.
+  - **Reach**: the days from a chosen start to every tile (`MapAnalysis.Reach`), a band per day up to 7 and one for more; a tile no
+    route reaches is not tinted. The start is a player's (`MapAnalysis.Starts`: its first town, else its first hero) or the first
+    selected cell, for the first player.
+  - **Zones**: a generated map's zones, laid out again from its description: it names the template, size, seed and attempt, and only
+    the layout stage runs (`GeneratedZones`, Core.Generation, over the shipped and the user's templates). The legend names each zone with
+    its type and whose start it is, and warns when another generator version made the map. A map that was not generated, whose template
+    is not found or whose size changed shows its start zones instead, and the legend says why. The zones move with the map's content
+    when it is shifted, resized or cropped in the same session; a move made in an earlier session and saved cannot be told.
+  - **Height contours**: lines where the ground crosses every half cell of height, thicker at whole cells, traced over the tile
+    corners (marching squares).
+- Overlays show the whole map whatever layers are hidden (ADR-262): they are for checking it.
+- **The numbers are the core's** (`MapOverlays`, Core.Domain/Analysis): per level, the tinted tiles or the lines, a legend of bands
+  (`OverlayTint` says what a band means; the views choose the colour) and a note. The overlay is computed again after every edit and
+  when the level changes; a generated map's zones are laid out once per description and size.
+- **Drawn as one multimesh per overlay** (`OverlayView`, Godot.Shared): a see-through plate on each tinted tile, or a thin bar along
+  each line, over the ground. The legend lies over the map view's lower left corner while an overlay is shown. Overlays are views: they
+  change nothing, add no undo step and are not saved; every map opened starts with none.
+
+### ADR-265: Fix-its for the map's problems (ADR-250, 2026-11-21)
+**Status**: implemented (plan step 4, task 6).
+
+- **A `MapIssue` may carry a fix** (`MapFix`) where the answer is clear; none is guessed where there are several:
+  - an unlinked two-way gate: link it with the one gate of its kind that points at it, else with the one other unlinked gate of its kind
+    when the map has exactly two that nothing points at (`LinkGatesFix`; a subterranean gate never pairs with a portal);
+  - a two-way link that is not mutual, when the gate pointed at is of its kind, linked to nothing and pointed at by this gate alone:
+    link that one back;
+  - a one-way entrance without an exit, or an exit no entrance uses, when the map has exactly one of each: point the one at the other
+    (`GateExitFix`);
+  - a town, mine or garrison that belongs to a player the map does not have: make it neutral (`OwnerFix`);
+  - a player without a starting hero or town, when exactly one neutral town has its entrance in that player's start zone: give it to
+    the player (`OwnerFix`; the issue then points at the town).
+- **A fix is data**: the ids of what it changes and what it found there (an owner fix records the owner it saw), because the Problems
+  panel validates a copy of the map on a task; object ids are the live map's. `MapEditorSession.Fix` validates the live map again and
+  runs the fix only when an issue there still carries the same fix: through the editors, as one undo step named "Fix: …". Otherwise it
+  refuses (`InvalidTarget`, nothing changed).
+- **The Problems panel** names a problem's fix in its row; the Fix button runs the selected problem's fix (it is off while the map is
+  being checked) and the editor's messages say what was done or why not. The map is checked again after it, refused or not.

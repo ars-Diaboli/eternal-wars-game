@@ -277,8 +277,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       done-when: drop-downs remain in the conditions, bans, difficulty, quest kind, Generate, template editor, tool options,
       preferences and the browser's and Problems' filters)
 - [ ] Step 4: minimap, go to, bookmarks, layers and overlays, fix-its, the fairness report, play-test from the editor (done: the
-      editor's camera with framing and bookmarks, the minimap and Go to, layers, the map analysis in the core; plan tasks 1 to 4;
-      ADR-260 to ADR-263)
+      editor's camera with framing and bookmarks, the minimap and Go to, layers, the map analysis in the core, the overlays,
+      fix-its; plan tasks 1 to 6; ADR-260 to ADR-265)
 - [ ] Step 5: the template workspace: undo, zone cards, multi-select and copy, presets, mirror tools, preview, Generate many
 - [ ] Step 6: F1 help, sample maps, UI scale, shortcut editor, performance on 256 × 256, a first-use test; the plan's target list ticked
 
