@@ -837,7 +837,7 @@ public partial class Main : Node3D
         _templatePage = _workspace.AddPage("Template", _templateEditor);
         if (templateEditor is null)
         {
-            _templateEditor.Bind(_templates, new TemplateEditorHost(_templateFiles, GenerateFromEditor, new ZonePresetFiles(TemplatePresetsFolder)));
+            _templateEditor.Bind(_templates, new TemplateEditorHost(_templateFiles, GameContent.All, OpenGenerated, new ZonePresetFiles(TemplatePresetsFolder)));
         }
 
         _workspace.SetPageTitle(_templatePage, _templates.IsDirty ? "Template*" : "Template");
@@ -1288,22 +1288,9 @@ public partial class Main : Node3D
     private List<GeneratorTemplate> GeneratorTemplates() =>
         [.. _generatorTemplates.Select(t => new GeneratorTemplate(t.Name, t.Description, t.Sizes, t.MinPlayers, t.MaxHeroes, StartSlots.Of(t).Select(s => s.Name).ToList()))];
 
-    /// <summary>"Generate" in the template editor: the template as it is, every slot a player, towns drawn; opens the map like the Generate tab.</summary>
-    private string? GenerateFromEditor(MapTemplate template, int size, ulong seed)
-    {
-        EditorMap map;
-        try
-        {
-            map = EditorMapGenerator.Generate(template, size, seed, template.MaxPlayers, new Dictionary<int, string>(), GameContent.All);
-        }
-        catch (ArgumentException e)
-        {
-            return e.Message;
-        }
-
+    /// <summary>"Open in map editor" in the template editor's preview (ADR-274): the generated map as a new map, like the Generate tab's.</summary>
+    private void OpenGenerated(MapTemplate template, int size, ulong seed, EditorMap map) =>
         _files.OpenNew(map.Scenario, () => Describe(template, size, seed, map));
-        return null;
-    }
 
     private void Describe(MapTemplate template, int size, ulong seed, EditorMap map)
     {

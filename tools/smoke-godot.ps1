@@ -213,9 +213,18 @@ $scenarios = @(
     @{ Name = 'editor-heights'; App = 'EternalWars.MapEditor'; Frames = 110
        Input = '3:click:@Height;5:click:304,243;7:click:304,243;9:click:144,274;10:click:144,274;11:click:144,274;12:click:144,274;13:click:144,274;14:click:144,274;17:drag:460,600,900,600;21:drag:460,620,900,620;26:click:@Raise;29:choose:Lower;33:drag:460,560,900,560;38:click:@Undo;42:click:@Terrain;45:click:@Highlands;48:click:400,400;59:click:@Generate;64:click:@Random;68:choose:sylvan;72:click:@Generate;86:click:@Inspector;90:click:@Generate' },
     # The template editor (ADR-117) in the workspace's Template tab (EDIT-3): the tab, select the middle zone's card (its obelisk count, ADR-140),
-    # add a treasure zone, drag it (on the grid, ADR-270), right-drag it onto start-1 to connect, Generate (the map opens in the Map tab).
-    @{ Name = 'editor-template-editor'; App = 'EternalWars.MapEditor'; Frames = 70
-       Input = '3:click:@Template;10:click:781,405;18:click:@+ Treasure;24:drag:641,510,781,600;30:rdrag:781,600,571,405;44:click:@Generate' },
+    # add a treasure zone, drag it (on the grid, ADR-270), right-drag it onto start-1 to connect, Generate (off the main thread, ADR-274: the
+    # graph stays usable while it runs).
+    @{ Name = 'editor-template-editor'; App = 'EternalWars.MapEditor'; Frames = 60
+       Input = '3:click:@Template;10:click:781,405;18:click:@+ Treasure;24:drag:600,510,740,600;30:rdrag:740,625,527,420;44:click:@Generate' },
+    # The preview (ADR-274): Generate shows the new template's map in the Preview tab, its zones outlined and named, the template still open;
+    # Open in map editor opens it in the Map tab.
+    @{ Name = 'editor-template-preview'; App = 'EternalWars.MapEditor'; Frames = 140
+       Input = '3:click:@Template;8:click:@Generate;120:click:@Open in map editor' },
+    # Generate many (ADR-274): at 72×72, the Seeds tab's Generate many checks 20 seeds off the main thread; the tab fills with thumbnails,
+    # each seed's checks and fairness, and their spread over the batch.
+    @{ Name = 'editor-template-batch'; App = 'EternalWars.MapEditor'; Frames = 200
+       Input = '3:click:@Template;6:click:@96×96;9:choose:72×72;12:click:@Seeds;15:click:@Generate many' },
     # The template graph's selection and clipboard (ADR-270, ADR-271): pan up with the middle button, a marquee round start-1 and middle, Ctrl+C,
     # a click on empty ground, Ctrl+V pastes them there (new ids, the connection between them), Ctrl+D duplicates the pasted pair beside it;
     # the History tab, Ctrl+A, Delete removes every zone as one step, Ctrl+Z brings them back.

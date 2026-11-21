@@ -279,9 +279,9 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Step 4: minimap, go to, bookmarks, layers and overlays, fix-its, the fairness report, play-test from the editor (the editor's
       camera with framing and bookmarks, the minimap and Go to, layers, the map analysis in the core, the overlays, fix-its, the
       fairness report and the exports, play-test with cheats; plan tasks 1 to 8; ADR-260 to ADR-267)
-- [ ] Step 5: the template workspace: undo, zone cards, multi-select and copy, presets, mirror tools, preview, Generate many (built:
-      template undo, the template's files, the graph's cards, grid and align, multi-select and copy, mirror tools, the full inspector
-      and zone presets; plan tasks 1 to 6; ADR-268 to ADR-273)
+- [x] Step 5: the template workspace: undo, zone cards, multi-select and copy, presets, mirror tools, preview, Generate many
+      (template undo, the template's files, the graph's cards, grid and align, multi-select and copy, mirror tools, the full inspector
+      and zone presets, the preview and Generate many; plan tasks 1 to 8; ADR-268 to ADR-274)
 - [ ] Step 6: F1 help, sample maps, UI scale, shortcut editor, performance on 256 × 256, a first-use test; the plan's target list ticked
 
 ### Platform and art
