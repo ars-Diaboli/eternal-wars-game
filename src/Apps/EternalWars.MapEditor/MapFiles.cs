@@ -39,7 +39,8 @@ internal sealed class MapFiles(string folder, string autosaveFolder) : IMapFiles
 
     public DateTime AutosaveTime(string path) => MapAutosaves.TimeOf(path)!.Value.ToLocalTime();
 
-    private static bool IsRunning(int process)
+    /// <summary>Whether the process of that id still runs (the owner of an autosave session marker).</summary>
+    public static bool IsRunning(int process)
     {
         try
         {

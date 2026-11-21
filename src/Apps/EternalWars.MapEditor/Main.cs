@@ -28,7 +28,8 @@ namespace EternalWars.MapEditor;
 /// Map editor entry point. Editing operations, undo/redo and validation live in core (<see cref="MapEditorSession"/>);
 /// the views and panels live in the libraries (the window layout is <see cref="EditorWorkspace"/>); this class composes them, registers
 /// the editor's commands (<see cref="CommandRegistry"/>: the menus, the toolbar and the shortcuts run them), routes the pointer to the tool
-/// in use (<see cref="IEditorTool"/>); the map's files, the autosave and the questions over unsaved work are the <see cref="FileService"/>'s.
+/// in use (<see cref="IEditorTool"/>); the map's files, the autosave and the questions over unsaved work are the <see cref="FileService"/>'s, the
+/// template's the <see cref="TemplateFileService"/>'s.
 /// It applies the user's <see cref="EditorPreferences"/> (the UI's scale, the autosave interval, the camera's speeds, a new map's size, the
 /// game the Test starts).
 /// Alt+Enter switches the window mode (ADR-186), kept in the editor's own settings file.
@@ -37,7 +38,7 @@ public partial class Main : Node3D
 {
     private const string MapsDirectory = "user://maps";
 
-    /// <summary>Where the template editor saves (ADR-070: user templates live in the user data folder).</summary>
+    /// <summary>The user's templates (ADR-070: they live in the user data folder): where the template editor saves, and the Generate tab looks.</summary>
     private const string TemplatesDirectory = "user://templates";
 
     private MapEditorSession _editor = null!;
@@ -59,6 +60,7 @@ public partial class Main : Node3D
     private EventCellsView _eventCells = null!;
     private SelectionView _selectionView = null!;
     private FileService _files = null!;
+    private TemplateFileService _templateFiles = null!;
     private EditorSettingsFile _settings = null!;
     private EditorPreferences _preferences = new();
 
@@ -122,12 +124,21 @@ public partial class Main : Node3D
             new FileServiceHost(Open, Say), _settings, new MapFiles(MapsFolder, AutosaveFolder),
             systemDialogs: LaunchArguments.AutoInput is null); // a scripted run sees only Godot's own dialog
         _files.Changed += ShowFile;
-        GetTree().AutoAcceptQuit = false; // the window's close request waits for the question over unsaved work
+        _templateFiles = new TemplateFileService { Name = "TemplateFiles" };
+        AddChild(_templateFiles);
+        _templateFiles.Bind(
+            _templates, new TemplateFiles(TemplatesFolder, TemplateAutosaveFolder), _settings, Say, systemDialogs: LaunchArguments.AutoInput is null);
+        _templateFiles.Changed += ShowTemplateFile;
+        GetTree().AutoAcceptQuit = false; // the window's close request waits for the questions over unsaved work
         ApplyPreferences();
         _camera.KeysBlocked = () => IsBusy || _workspace.Page != EditorWorkspace.MapPage;
 
         // --map=file opens that map (the smoke scenarios), else a blank one.
         _files.Start(LaunchArguments.MapPath is { } path ? MapFiles.Read(path) : Blank(), LaunchArguments.MapPath);
+        if (!_files.IsBusy)
+        {
+            _templateFiles.OfferRestore(); // else when the Template tab first shows, not over the map's question
+        }
     }
 
     /// <summary>The map the editor starts with: blank, of the size the preferences say.</summary>
@@ -168,13 +179,35 @@ public partial class Main : Node3D
     {
         GetWindow().ContentScaleFactor = _preferences.UiScalePercent / 100f;
         _files.AutosaveMinutes = _preferences.AutosaveMinutes;
+        _templateFiles.AutosaveMinutes = _preferences.AutosaveMinutes;
         _camera.PanSpeed = _preferences.CameraPanSpeed;
         _camera.RotateSpeedDegrees = _preferences.CameraRotateSpeed;
         _camera.ZoomStep = _preferences.CameraZoomSpeed * 0.5f; // 3, the default, is the camera's own step
     }
 
     /// <summary>A question, a file dialog, the palette or the Preferences window is open: the editor takes no other input.</summary>
-    private bool IsBusy => _files.IsBusy || _overlays.GetChildCount() > 0;
+    private bool IsBusy => _files.IsBusy || _templateFiles.IsBusy || _overlays.GetChildCount() > 0;
+
+    /// <summary>
+    /// Closes the editor, after the questions over the template's unsaved work and then the map's. A template autosave not offered yet is
+    /// offered first (quitting properly would forget it); nothing happens while a question or a dialog is open.
+    /// </summary>
+    private void Quit()
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        if (_templateFiles.HasRestoreOffer)
+        {
+            _workspace.ShowPage(_templatePage);
+            _templateFiles.OfferRestore();
+            return;
+        }
+
+        _templateFiles.WhenSafe(() => _files.Quit(_templateFiles.EndSession));
+    }
 
     private void OpenPalette()
     {
@@ -210,7 +243,7 @@ public partial class Main : Node3D
     {
         if (what == NotificationWMCloseRequest)
         {
-            _files.Quit();
+            Quit();
         }
     }
 
@@ -260,6 +293,12 @@ public partial class Main : Node3D
 
     private static string AutosaveFolder =>
         LaunchArguments.SettingsPath is null ? Path.Combine(ProjectSettings.GlobalizePath(MapsDirectory), ".autosave") : Path.Combine(DataFolder, "autosave");
+
+    private static string TemplatesFolder =>
+        LaunchArguments.SettingsPath is null ? ProjectSettings.GlobalizePath(TemplatesDirectory) : Path.Combine(DataFolder, "templates");
+
+    private static string TemplateAutosaveFolder =>
+        LaunchArguments.SettingsPath is null ? Path.Combine(TemplatesFolder, ".autosave") : Path.Combine(DataFolder, "template-autosave");
 
     public override void _UnhandledInput(InputEvent @event)
     {
@@ -364,6 +403,35 @@ public partial class Main : Node3D
         _commands.NotifyStateChanged();
     }
 
+    /// <summary>The template's file or its save state changed: the Template tab's title (an asterisk over unsaved work) and the commands follow.</summary>
+    private void ShowTemplateFile()
+    {
+        if (_ui is null)
+        {
+            return; // the first map's UI is not built yet; it reads the state when it is
+        }
+
+        _workspace.SetPageTitle(_templatePage, _templates.IsDirty ? "Template*" : "Template");
+        _commands.NotifyStateChanged();
+    }
+
+    /// <summary>The page shown changed: the commands follow, and the Template tab, shown the first time, offers a template autosave.</summary>
+    private void ShowPage()
+    {
+        if (OnTemplateTab)
+        {
+            _templateFiles.OfferRestore();
+        }
+
+        _commands.NotifyStateChanged();
+    }
+
+    /// <summary>The Template tab shows: Undo, Redo, Open and Save work on the template.</summary>
+    private bool OnTemplateTab => _workspace.Page == _templatePage;
+
+    /// <summary>The history the Undo and Redo commands work on: the template's on the Template tab, else the map's.</summary>
+    private IUndoSession Undoable => OnTemplateTab ? _templates : _editor;
+
     private MapPosition? Pick(Vector2 screen) =>
         MapSpace.PickTile(_camera, screen, _editor.Scenario.Map, _context.Level) is { } tile && _editor.Scenario.Map.Contains(tile) ? tile : null;
 
@@ -389,6 +457,7 @@ public partial class Main : Node3D
         });
         _ui!.SubscribeWhileInTree<MapResized>(_editor.Events, _ => ShowResizedMap());
         _ui!.SubscribeWhileInTree<SelectionChanged>(_editor.Events, _ => _commands.NotifyStateChanged());
+        _ui!.SubscribeWhileInTree<UndoHistoryChanged>(_templates.Events, _ => _commands.NotifyStateChanged()); // the template's Undo and Redo
         _ui!.SubscribeWhileInTree<MapLayersChanged>(_editor.Events, e => _context.Hidden = e.Hidden); // the views leave out the hidden kinds (ADR-262)
 
         _camera.FocusOn(MapSpace.ToWorld(new(state.Map.Width / 2, state.Map.Height / 2)));
@@ -761,10 +830,11 @@ public partial class Main : Node3D
         _templatePage = _workspace.AddPage("Template", _templateEditor);
         if (templateEditor is null)
         {
-            _templateEditor.Bind(_templates, new TemplateEditorHost(TemplateSources, SaveTemplate, GenerateFromEditor));
+            _templateEditor.Bind(_templates, new TemplateEditorHost(_templateFiles, GenerateFromEditor));
         }
 
-        _workspace.PageChanged += _commands.NotifyStateChanged;
+        _workspace.SetPageTitle(_templatePage, _templates.IsDirty ? "Template*" : "Template");
+        _workspace.PageChanged += ShowPage;
 
         // The panels and the tools exist: the commands that open them, then the menus and the toolbar built from the registry.
         Command("map.events", "Events", () => _workspace.ShowTab(_events), icon: UiIcon.Events);
@@ -805,7 +875,15 @@ public partial class Main : Node3D
             },
             new("Map", ["map.settings", "map.general", "map.players", "map.conditions", "map.bans", "map.week-events", "map.rumours", "map.texts", null, "map.events", null, "map.resize", "map.crop", null, "view.problems", "view.fairness"]),
             new("Tools", [.. _tools.Tools.Select(ToolCommand)]),
-            new("Templates", ["templates.editor"]),
+            new("Templates", ["templates.editor", null, "template.new", "template.open", ">Recent templates", ">Shipped templates", null, "template.save", "template.save-as"])
+            {
+                Lists =
+                [
+                    new("Recent templates", () => [.. _templateFiles.Recent.Select(path => (path, (Action)(() => OpenTemplate(() => _templateFiles.Open(path)))))],
+                        "No template file was opened or saved yet"),
+                    new("Shipped templates", () => [.. _templateFiles.Shipped.Select(t => (t.Name, (Action)(() => OpenTemplate(() => _templateFiles.OpenShipped(t)))))], "None"),
+                ],
+            },
             new("Test", ["test.play"]),
             new("Help", ["help.help"]),
         ]);
@@ -836,16 +914,20 @@ public partial class Main : Node3D
     {
         _commands = new CommandRegistry();
         Command("file.new", "New map…", OpenWizard, shortcut: new(Key.N, Ctrl: true), icon: UiIcon.New);
-        Command("file.open", "Open", () => _files.Open(), UiIcon.Load, new(Key.O, Ctrl: true));
-        Command("file.save", "Save", () => _files.Save(), UiIcon.Save, new(Key.S, Ctrl: true));
-        Command("file.save-as", "Save as", () => _files.SaveAs(), shortcut: new(Key.S, Ctrl: true, Shift: true), icon: UiIcon.SaveAs);
+        // Open, Save and Save as work on the tab shown: the map's file, or the template's on the Template tab (ADR-269).
+        Command("file.open", "Open", () => OnTab(_templateFiles.Open, () => _files.Open()), UiIcon.Load, new(Key.O, Ctrl: true));
+        Command("file.save", "Save", () => OnTab(() => _templateFiles.Save(), () => _files.Save()), UiIcon.Save, new(Key.S, Ctrl: true));
+        Command("file.save-as", "Save as", () => OnTab(() => _templateFiles.SaveAs(), () => _files.SaveAs()), shortcut: new(Key.S, Ctrl: true, Shift: true), icon: UiIcon.SaveAs);
         Command("file.export-report", "Export report (Markdown)…", ExportReport);
         Command("file.export-picture", "Export map picture (PNG)…", ExportPicture, onMap: true);
-        Command("file.quit", "Quit", _files.Quit, shortcut: new(Key.Q, Ctrl: true), icon: UiIcon.Quit);
-        Command("edit.undo", "Undo", () => _editor.Undo(), UiIcon.Undo, new(Key.Z, Ctrl: true),
-            () => _editor.History.CanUndo ? null : "Nothing to undo", onMap: true);
-        Command("edit.redo", "Redo", () => _editor.Redo(), UiIcon.Redo, new(Key.Y, Ctrl: true),
-            () => _editor.History.CanRedo ? null : "Nothing to redo", onMap: true);
+        Command("file.quit", "Quit", Quit, shortcut: new(Key.Q, Ctrl: true), icon: UiIcon.Quit);
+        Command("template.new", "New template", () => OpenTemplate(_templateFiles.New), UiIcon.New);
+        Command("template.open", "Open template…", () => OpenTemplate(_templateFiles.Open), UiIcon.Load);
+        Command("template.save", "Save template", () => _templateFiles.Save(), UiIcon.Save);
+        Command("template.save-as", "Save template as…", () => _templateFiles.SaveAs(), UiIcon.SaveAs);
+        // Undo and Redo work on the tab shown (ADR-268): the map's history, or the template's on the Template tab.
+        Command("edit.undo", "Undo", () => Undoable.Undo(), UiIcon.Undo, new(Key.Z, Ctrl: true), () => WhyNoHistory(Undoable.History.CanUndo, "undo"));
+        Command("edit.redo", "Redo", () => Undoable.Redo(), UiIcon.Redo, new(Key.Y, Ctrl: true), () => WhyNoHistory(Undoable.History.CanRedo, "redo"));
         Command("edit.select-all", "Select all", () =>
             {
                 _editor.Selecting.Set(_editor.Selecting.Everything(_context.Level, _toolContext.Filter));
@@ -906,6 +988,38 @@ public partial class Main : Node3D
         Command("test.play", "Test the map…", OpenPlayTest, shortcut: new(Key.F5), onMap: true, icon: UiIcon.Play);
         Command("help.help", "Help", () => { }, shortcut: new(Key.F1), whyNot: () => "The editor's help is not written yet", icon: UiIcon.Help);
     }
+
+    /// <summary>Runs <paramref name="template"/> on the Template tab, else <paramref name="map"/>.</summary>
+    private void OnTab(Action template, Action map)
+    {
+        if (OnTemplateTab)
+        {
+            template();
+        }
+        else
+        {
+            map();
+        }
+    }
+
+    /// <summary>
+    /// A template command from the menus: the Template tab shows, then <paramref name="open"/> runs (it may ask over unsaved work). A template
+    /// autosave waiting to be offered is offered instead; the command is chosen again after that question.
+    /// </summary>
+    private void OpenTemplate(Action open)
+    {
+        _workspace.ShowPage(_templatePage);
+        if (_templateFiles.IsBusy)
+        {
+            Say("Answer the question over the template autosave first");
+            return;
+        }
+
+        open();
+    }
+
+    /// <summary>Why Undo or Redo cannot run: nothing to <paramref name="what"/>.</summary>
+    private static string? WhyNoHistory(bool can, string what) => can ? null : $"Nothing to {what}";
 
     /// <summary>Why Copy, Cut and Duplicate cannot run: a fragment holds tiles and objects, and none is selected.</summary>
     private string? NothingToCopy() =>
@@ -1129,17 +1243,10 @@ public partial class Main : Node3D
         _events.Select(name);
     }
 
-    /// <summary>The templates the template editor can open: the shipped ones, then the user's files.</summary>
-    private IReadOnlyList<TemplateSource> TemplateSources() =>
-    [
-        .. BuiltInTemplates.All.Select(t => new TemplateSource($"{t.Name} (shipped)", () => t)),
-        .. UserTemplates().Select(u => new TemplateSource($"{u.Template.Name} ({Path.GetFileName(u.Path)})", () => TemplateSerializer.Load(u.Path))),
-    ];
-
     /// <summary>The readable template files in the user's templates folder.</summary>
     private static List<(string Path, MapTemplate Template)> UserTemplates()
     {
-        var directory = ProjectSettings.GlobalizePath(TemplatesDirectory);
+        var directory = TemplatesFolder;
         if (!Directory.Exists(directory))
         {
             return [];
@@ -1159,17 +1266,6 @@ public partial class Main : Node3D
         }
 
         return found;
-    }
-
-    private string SaveTemplate(MapTemplate template)
-    {
-        var directory = ProjectSettings.GlobalizePath(TemplatesDirectory);
-        Directory.CreateDirectory(directory);
-        var safeName = string.Concat(template.Name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c)).Trim();
-        var path = Path.Combine(directory, (safeName.Length == 0 ? "untitled" : safeName) + TemplateSerializer.FileExtension);
-        TemplateSerializer.Save(template, path);
-        var errors = TemplateValidator.Validate(template).Count(i => i.Severity == IssueSeverity.Error);
-        return errors == 0 ? $"Saved {path}" : $"Saved {path} with {errors} error(s): it cannot generate until they are fixed.";
     }
 
     /// <summary>The templates the Generate tab and the new-map wizard offer, as the panels show them.</summary>

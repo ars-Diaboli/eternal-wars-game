@@ -10,7 +10,7 @@ namespace EternalWars.Core.Domain.Editing;
 /// (<see cref="Terrain"/>, <see cref="Objects"/>, <see cref="Towns"/>, …). Every change goes through an <see cref="IEditorCommand"/> and
 /// publishes events, so the editor UI is a thin view exactly like the game's. An edit that would not change anything records nothing.
 /// </summary>
-public sealed class MapEditorSession
+public sealed class MapEditorSession : IUndoSession
 {
     private readonly EditorContext _context;
     private readonly MapResizer _resizer;

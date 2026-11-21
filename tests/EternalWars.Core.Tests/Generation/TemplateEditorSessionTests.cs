@@ -1,5 +1,6 @@
 using EternalWars.Core.Data.Templates;
 using EternalWars.Core.Domain.Editing;
+using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Events;
 using EternalWars.Core.Generation;
 
@@ -97,6 +98,183 @@ public class TemplateEditorSessionTests
         session.AddZone(ZoneType.Treasure, 9, 9);
         var loaded = TemplateSerializer.Deserialize(TemplateSerializer.Serialize(session.Template));
         Assert.Equal(session.Template.Zones.Select(z => (z.Id, z.GraphX, z.GraphY)), loaded.Zones.Select(z => (z.Id, z.GraphX, z.GraphY)));
+    }
+
+    public static TheoryData<string, string> Changes() => new()
+    {
+        { "add a treasure zone", "Add zone treasure-1" },
+        { "add a start zone", "Add zone start-3" },
+        { "change a zone", "Change zone middle" },
+        { "rename a zone", "Rename zone middle to centre" },
+        { "move a zone", "Move zone middle" },
+        { "remove a zone", "Remove zone start-2" },
+        { "connect two zones", "Connect start-1 – start-2" },
+        { "change a connection", "Change connection start-1 – middle" },
+        { "remove a connection", "Remove connection start-2 – middle" },
+        { "change the template's settings", "Change the template's settings" },
+        { "arrange the graph", "Arrange the graph" },
+    };
+
+    private static void Make(TemplateEditorSession session, string change)
+    {
+        var applied = change switch
+        {
+            "add a treasure zone" => session.AddZone(ZoneType.Treasure, 1, 1) is not null,
+            "add a start zone" => session.AddZone(ZoneType.PlayerStart, 1, 1) is not null,
+            "change a zone" => session.UpdateZone(session.Template.Zone("middle")! with { Monsters = MonsterStrength.Weak }),
+            "rename a zone" => session.RenameZone("middle", "centre"),
+            "move a zone" => session.MoveZone("middle", 7, 7),
+            "remove a zone" => session.RemoveZone("start-2"),
+            "connect two zones" => session.Connect("start-1", "start-2"),
+            "change a connection" => session.UpdateConnection(0, session.Template.Connections[0] with { GuardValue = 4000 }),
+            "remove a connection" => session.Disconnect(1),
+            "change the template's settings" => Apply(() => session.UpdateTemplate(t => t with { Name = "Renamed" })),
+            "arrange the graph" => Apply(() => session.ArrangeGraph(all: true)),
+            _ => throw new ArgumentOutOfRangeException(nameof(change)),
+        };
+        Assert.True(applied);
+
+        static bool Apply(Action change)
+        {
+            change();
+            return true;
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(Changes))]
+    public void EveryChange_IsOneNamedStep_ThatUndoesAndRedoes(string change, string description)
+    {
+        var bus = new EventBus();
+        var session = new TemplateEditorSession(bus: bus);
+        var changes = new List<TemplateChanged>();
+        bus.Subscribe(new Handler<TemplateChanged>(changes.Add));
+        var before = session.Template;
+
+        Make(session, change);
+        var after = session.Template;
+        Assert.NotSame(before, after);
+        Assert.Equal([description], session.History.Steps);
+        Assert.True(session.IsDirty);
+        Assert.False(changes.Last().Replaced); // made by an operation: the view that made it shows it
+
+        Assert.True(session.Undo());
+        Assert.Same(before, session.Template); // the template before the step, as it was (templates are values)
+        Assert.True(changes.Last().Replaced); // put back whole: the views show every part again
+        Assert.Equal(changes.Last().Issues, session.Issues);
+        Assert.False(session.IsDirty);
+
+        Assert.True(session.Redo());
+        Assert.Same(after, session.Template);
+        Assert.False(session.Redo());
+    }
+
+    [Fact]
+    public void AChangeThatChangesNothing_RecordsNoStep()
+    {
+        var session = new TemplateEditorSession();
+        var zone = session.Template.Zone("middle")!;
+        Assert.True(session.UpdateZone(zone));
+        Assert.True(session.MoveZone("middle", zone.GraphX!.Value, zone.GraphY!.Value));
+        Assert.True(session.RenameZone("middle", "middle"));
+        Assert.True(session.UpdateConnection(0, session.Template.Connections[0]));
+        session.UpdateTemplate(t => t with { Name = t.Name });
+        session.ArrangeGraph(); // every zone is placed already
+        Assert.Empty(session.History.Steps);
+        Assert.False(session.IsDirty);
+    }
+
+    [Fact]
+    public void UndoTo_JumpsToAStep_AndANewChangeDropsTheUndoneSteps()
+    {
+        var session = new TemplateEditorSession();
+        var start = session.Template;
+        session.AddZone(ZoneType.Treasure, 1, 1);
+        var one = session.Template;
+        session.AddZone(ZoneType.Junction, 2, 2);
+        session.UpdateTemplate(t => t with { Name = "Three" });
+
+        Assert.True(session.UndoTo(1));
+        Assert.Same(one, session.Template);
+        Assert.Equal(1, session.History.Position);
+        Assert.False(session.UndoTo(1));
+        Assert.True(session.UndoTo(0));
+        Assert.Same(start, session.Template);
+        Assert.True(session.UndoTo(3));
+        Assert.Equal("Three", session.Template.Name);
+
+        session.UndoTo(1);
+        session.RemoveZone("treasure-1");
+        Assert.Equal(["Add zone treasure-1", "Remove zone treasure-1"], session.History.Steps);
+        Assert.False(session.Redo());
+    }
+
+    [Fact]
+    public void ChangesBetweenBeginStepAndEndStep_AreOneStep()
+    {
+        var session = new TemplateEditorSession();
+        var before = session.Template;
+        session.BeginStep("Move zone middle");
+        Assert.True(session.IsStepOpen);
+        session.MoveZone("middle", 1, 1);
+        session.MoveZone("middle", 2, 2);
+        session.MoveZone("middle", 3, 3);
+        Assert.Empty(session.History.Steps); // shown as it is dragged, recorded when it ends
+        Assert.Throws<InvalidOperationException>(() => session.BeginStep("Another"));
+        session.EndStep();
+
+        Assert.Equal(["Move zone middle"], session.History.Steps);
+        Assert.Equal(3, session.Template.Zone("middle")!.GraphX);
+        session.Undo();
+        Assert.Same(before, session.Template);
+
+        session.BeginStep("Move zone middle"); // a click without a drag
+        session.EndStep();
+        session.EndStep(); // none open: nothing happens
+        Assert.Equal(0, session.History.Position);
+        Assert.Single(session.History.Steps); // the undone drag stays to redo
+
+        session.Redo();
+        session.BeginStep("Move zone middle"); // dragged away and back: no step
+        session.MoveZone("middle", 9, 9);
+        session.MoveZone("middle", 3, 3);
+        session.EndStep();
+        Assert.Single(session.History.Steps);
+
+        session.BeginStep("Move zone middle"); // a release that never came: an undo ends the drag first, as its own step
+        session.MoveZone("middle", 5, 5);
+        Assert.True(session.Undo());
+        Assert.False(session.IsStepOpen);
+        Assert.Equal(3, session.Template.Zone("middle")!.GraphX);
+        Assert.Equal(2, session.History.Steps.Count);
+    }
+
+    [Fact]
+    public void Load_StartsTheHistoryAnew_AsSaved_AndArrangesWithoutAStep()
+    {
+        var bus = new EventBus();
+        var session = new TemplateEditorSession(bus: bus);
+        var unsaved = new List<bool>();
+        bus.Subscribe(new Handler<UnsavedWorkChanged>(e => unsaved.Add(e.IsDirty)));
+        session.AddZone(ZoneType.Treasure, 1, 1);
+        Assert.True(session.IsDirty);
+
+        session.Load(BuiltInTemplates.Find("2v2")!, arrange: true);
+        Assert.All(session.Template.Zones, z => Assert.NotNull(z.GraphX));
+        Assert.Empty(session.History.Steps);
+        Assert.False(session.IsDirty);
+        Assert.Equal([true, false], unsaved);
+
+        session.UpdateTemplate(t => t with { Name = "Mine" });
+        session.MarkSaved(); // written to a file
+        Assert.False(session.IsDirty);
+        session.Undo();
+        Assert.True(session.IsDirty); // the saved template is a step ahead
+        session.Redo();
+        Assert.False(session.IsDirty);
+        session.MarkUnsaved(); // a restored autosave
+        Assert.True(session.IsDirty);
+        Assert.Equal([true, false, true, false, true, false, true], unsaved);
     }
 
     private sealed class Handler<T>(Action<T> handle) : IEventHandler<T>

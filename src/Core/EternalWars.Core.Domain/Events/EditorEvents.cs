@@ -67,7 +67,8 @@ public sealed record PlayerSlotsChanged : IEvent;
 
 /// <summary>
 /// The editor's history changed: a step was recorded, undone or redone, or a jump moved over several. <paramref name="Position"/> of its
-/// <paramref name="Count"/> steps are applied now; views re-read <c>MapEditorSession.History</c> for the steps.
+/// <paramref name="Count"/> steps are applied now; views re-read the session's <c>History</c> for the steps. Published by
+/// <c>MapEditorSession</c> and by the template editor's session (ADR-268), each on its own bus.
 /// </summary>
 [SeenBy(Audience.Nobody)]
 public sealed record UndoHistoryChanged(string? UndoDescription, string? RedoDescription, int Position, int Count) : IEvent
@@ -78,8 +79,8 @@ public sealed record UndoHistoryChanged(string? UndoDescription, string? RedoDes
 }
 
 /// <summary>
-/// The edited map started (<paramref name="IsDirty"/>) or stopped having work that is not saved: an edit, undo or redo left the saved
-/// step or came back to it, or the map was saved (<c>MapEditorSession.MarkSaved</c>).
+/// The edited map (or, on the template editor's bus, the template: ADR-269) started (<paramref name="IsDirty"/>) or stopped having work
+/// that is not saved: an edit, undo or redo left the saved step or came back to it, or it was saved (<c>MarkSaved</c>).
 /// </summary>
 [SeenBy(Audience.Nobody)]
 public sealed record UnsavedWorkChanged(bool IsDirty) : IEvent;

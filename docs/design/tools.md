@@ -32,10 +32,12 @@ splitter positions, the collapsed regions and each region's open tab are kept in
 
 **Map and Template tabs** (EDIT-3), after the menus: the Map tab is the map with its regions; the Template tab is the
 [template editor](random-maps.md#template-editor), which fills the room between the bars. Both stay as they were left while the other
-shows; the template editor also stays so when another map is opened. The File menu and its shortcuts always act on the map (the
-template has its own Save button). Generating a map in the Template tab opens it in the Map tab. While the Template tab shows, the commands that work on the map's
-view (undo and redo, the level, the grid, the regions, the tools) are greyed; a command that opens one of the map's panels or the map
-settings window shows the Map tab.
+shows; the template editor also stays so when another map is opened. Open, Save and Save as (the File menu and Ctrl+O, Ctrl+S,
+Ctrl+Shift+S), Undo and Redo act on the tab shown: the template's [files](random-maps.md#template-editor) and history on the Template
+tab; New map… is always the map's, and the Templates menu has the template's own file commands. Generating a map in the Template tab
+opens it in the Map tab. While the Template tab shows, the commands that work on the map's view (the level, the grid, the regions, the
+tools) are greyed; a command that opens one of the map's panels or the map settings window shows the Map tab. Quitting asks over the
+template's unsaved work, then the map's.
 
 **Map settings** (EDIT-1, ADR-256): one window over the editor, opened with Map → Map settings or F7 (the Map menu's other entries
 open it at a tab). Its tabs:

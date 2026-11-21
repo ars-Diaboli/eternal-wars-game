@@ -619,9 +619,9 @@ and the game uses them.
 
 1. **Template undo** (EDIT-2): every `TemplateEditorSession` change records the template before it (templates are values), with a
    name; undo, redo and jump to a step; the History panel shows the template's steps while the Template tab is open. Tests: every
-   change undoes. Smoke `editor-template-undo`.
+   change undoes. Smoke `editor-template-undo`. *Done.*
 2. **Template files**: open, save, save as, Recent, the unsaved marker and autosave as for maps; shipped templates open read-only and
-   are saved as a copy.
+   are saved as a copy. Smoke `editor-template-files`. *Done.*
 3. **Graph**: zones as cards (type, owner colour, size, towns, mines, monster strength), connections labelled (kind, guard value,
    passages, chance), snapping to a grid, align and spread, auto-arrange as now.
 4. **Multi-select and copy**: marquee in the graph; copy, paste and duplicate zones with their inner connections and new ids. Tests.
