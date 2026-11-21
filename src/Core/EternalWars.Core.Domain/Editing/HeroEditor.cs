@@ -22,6 +22,21 @@ public sealed class HeroEditor
     public EditResult Place(PlayerId owner, MapPosition position, string name, out HeroId id)
     {
         id = default;
+        var check = CanPlace(owner, position);
+        if (check != EditResult.Ok)
+        {
+            return check;
+        }
+
+        var hero = new Hero(Scenario.NextHeroId(), name, owner, position);
+        id = hero.Id;
+        _context.Run($"Place hero {name}", () => _context.AddHero(hero), () => _context.RemoveHero(hero));
+        return EditResult.Ok;
+    }
+
+    /// <summary>Whether a new hero of <paramref name="owner"/> may stand on <paramref name="position"/>: what <see cref="Place"/> checks.</summary>
+    public EditResult CanPlace(PlayerId owner, MapPosition position)
+    {
         if (!Scenario.HasPlayer(owner))
         {
             return EditResult.UnknownPlayer;
@@ -42,15 +57,7 @@ public sealed class HeroEditor
             return EditResult.ImpassableTerrain;
         }
 
-        if (Scenario.HeroLimitReached(owner))
-        {
-            return EditResult.HeroLimit;
-        }
-
-        var hero = new Hero(Scenario.NextHeroId(), name, owner, position);
-        id = hero.Id;
-        _context.Run($"Place hero {name}", () => _context.AddHero(hero), () => _context.RemoveHero(hero));
-        return EditResult.Ok;
+        return Scenario.HeroLimitReached(owner) ? EditResult.HeroLimit : EditResult.Ok;
     }
 
     /// <summary>Moves a hero to <paramref name="position"/> on its level, under placement's rules (<see cref="MapMover"/>).</summary>

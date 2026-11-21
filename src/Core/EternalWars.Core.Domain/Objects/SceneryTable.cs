@@ -39,6 +39,13 @@ public static class SceneryTable
         return reader.ReadToEnd();
     }
 
+    /// <summary>The kind of a scenery id (<c>scenery.tree.pair</c> → <c>tree</c>): what the generator weighs and the browser groups by.</summary>
+    public static string KindOf(MapObjectDefinition definition)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        return definition.Id.Split('.') is { Length: > 1 } parts ? parts[1] : definition.Id;
+    }
+
     private static MapObjectDefinition Read(CsvTable.Row row, string id)
     {
         Footprint footprint;

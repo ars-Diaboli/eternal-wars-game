@@ -340,10 +340,14 @@ $scenarios = @(
     @{ Name = 'editor-resize'; App = 'EternalWars.MapEditor'; Frames = 96
        Input = '3:click:@Object;6:click:700,500;10:key:Ctrl+Shift+P;14:text:resize;22:key:Enter;28:click:@48;33:click:@Resize;42:key:Ctrl+Shift+P;46:text:resize;54:key:Enter;60:text:24;66:click:@Resize;74:click:@Remove and resize;86:click:@Undo' },
     # Select, move, stamp and paste (ADR-250): two chests; the Select tool's rectangle takes them and their tiles; a drag moves both;
-    # "Save selection as stamp" (the palette) asks for a name and Enter takes "Stamp 1"; Ctrl+C and Ctrl+V paste a copy; the Object
-    # tool lists the stamp, a click on it puts it on the pointer and a click on the map stamps it; Undo takes the stamp off.
+    # "Save selection as stamp" (the palette) asks for a name and Enter takes "Stamp 1"; Ctrl+C and Ctrl+V paste a copy; the object
+    # browser lists the stamp, a click on it puts it on the pointer and a click on the map stamps it; Undo takes the stamp off.
     @{ Name = 'editor-select-move-paste'; App = 'EternalWars.MapEditor'; Frames = 100
        Input = '3:click:@Object;6:click:700,500;9:click:760,500;12:key:V;15:drag:640,440,820,560;22:drag:700,500,700,400;30:key:Ctrl+Shift+P;33:text:stamp;41:key:Enter;48:key:Enter;54:key:Ctrl+C;57:key:Ctrl+V;60:click:950,330;66:key:Escape;70:click:@Object;76:click:@Stamp 1;82:click:560,600;90:click:@Undo' },
+    # The object browser (EDIT-1, ADR-253): with the Object tool in use, the Mines heading is opened and the gold mine chosen, placed
+    # with a click and made a favourite with a right click; then a monster is chosen from its faction and placed; Undo takes it back.
+    @{ Name = 'editor-browser-place'; App = 'EternalWars.MapEditor'; Frames = 70
+       Input = '3:click:@Object;7:click:@Mines and providers;12:click:@Gold mine;18:click:700,500;24:rclick:@Gold mine;30:click:@Mines and providers;34:click:@Monsters;40:click:@Dwarf;46:click:900,500;54:click:@Undo;62:click:@Redo' },
     # Scatter and scenery rotation (EDIT-6, ADR-252) on a blank map: the Scatter tool with only walls ticked and a brush of 5 tiles is
     # dragged over the grass (pieces of wall, ways kept open); the Select tool's rectangle takes them; Ctrl+R turns them a quarter
     # turn, Ctrl+M mirrors them; Undo takes the mirroring back.

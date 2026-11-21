@@ -262,6 +262,11 @@ public class EditorUndoTests
 
         // Heroes
         ["HeroEditor.Place"] = f => Ok(f.Editor.Heroes.Place(Blue, new MapPosition(10, 25), "Orrin", out _)),
+        ["EntryEditor.Place"] = f => Ok(f.Editor.Placing.Place(Entry(BuiltInMapObjects.MineId(ResourceType.Ore)), new MapPosition(4, 22), out _)),
+        ["EntryEditor.Place (monster)"] = f => Ok(f.Editor.Placing.Place(Entry($"{BuiltInMapObjects.Monster}/{BuiltInCreatures.Griffin}"), new MapPosition(15, 25), out _)),
+        ["EntryEditor.Place (dwelling)"] = f => Ok(f.Editor.Placing.Place(Entry($"{BuiltInMapObjects.Dwelling}/{BuiltInCreatures.Pikeman}"), new MapPosition(4, 22), out _)),
+        ["EntryEditor.Place (artifact)"] = f => Ok(f.Editor.Placing.Place(AnArtifact(), new MapPosition(15, 25), out _)),
+        ["EntryEditor.Place (hero)"] = f => Ok(f.Editor.Placing.Place(Entry(BrowserEntry.HeroId), new MapPosition(10, 25), out _, Red)),
         ["HeroEditor.Move"] = f => Ok(f.Editor.Heroes.Move(f.Hero, new MapPosition(10, 25))),
         ["HeroEditor.Remove"] = f => Ok(f.Editor.Heroes.Remove(f.Hero)),
         ["SelectionEditor.Move"] = f => f.Editor.Selecting.Set(new SelectionItems([], [f.Chest, f.Town, f.GateA], [f.Hero], []))
@@ -339,6 +344,8 @@ public class EditorUndoTests
     private static readonly Dictionary<string, string> NotUndoable = new()
     {
         ["ObjectEditor.CanPlace"] = "a query: whether Place would succeed",
+        ["HeroEditor.CanPlace"] = "a query: whether Place would succeed",
+        ["ObjectEditor.CheckLimit"] = "a query: whether the map may hold one more such object",
         ["HeightEditor.HeightAt"] = "a query: the ground's height at a tile",
         ["SelectionEditor.Set"] = "the selection is no undo step",
         ["SelectionEditor.Add"] = "the selection is no undo step",
@@ -350,8 +357,14 @@ public class EditorUndoTests
     [
         typeof(TerrainEditor), typeof(HeightEditor),typeof(ObjectEditor), typeof(ObjectContentsEditor), typeof(MonsterEditor), typeof(TownEditor),
         typeof(HeroEditor), typeof(MapEventEditor), typeof(PlayerEditor), typeof(MapPropertiesEditor), typeof(SelectionEditor),
-        typeof(FragmentEditor), typeof(EraseEditor),
+        typeof(FragmentEditor), typeof(EraseEditor), typeof(EntryEditor),
     ];
+
+    private static readonly BrowserCatalog Browser = new(MapObjectCatalog.Default, CreatureCatalog.Default, Core.Domain.Artifacts.ArtifactCatalog.Default);
+
+    private static BrowserEntry AnArtifact() => Browser.Entries.First(e => e.Artifact is not null);
+
+    private static BrowserEntry Entry(string id) => Browser.Find(id) ?? throw new InvalidOperationException($"No browser entry '{id}'.");
 
     public static IEnumerable<TheoryDataRow<string>> CaseNames =>
         Cases.Keys.Select(name => new TheoryDataRow<string>(name));

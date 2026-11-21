@@ -16,7 +16,7 @@ properties, players, validation and conditions panels):
   does not warn about height;
 - the map's size: [resize, crop and shift](#editor-resize); [stamps](#editor-stamps) of map pieces;
 - scenery: [scatter](#editor-scatter) over an area, [rotation and mirroring](#editor-scenery-turn);
-- objects: placement and removal ([erase by kind](#editor-brushes)), gate linking, mine owners and guards, map dwellings, artifact pickups, riddles, witch huts, shrines;
+- objects: placement from the [object browser](#editor-browser) and removal ([erase by kind](#editor-brushes)), gate linking, mine owners and guards, map dwellings, artifact pickups, riddles, witch huts, shrines;
 - heroes (type, army, war machines, morale and luck, artifacts, spell book, placeholder), monsters (with guard mode, ADR-065; random by
   tier), towns (buildings, dwellings, garrison, guild spells, random faction);
 - player slots and teams, map name and description, victory and defeat conditions (ADR-057);
@@ -60,7 +60,7 @@ placeholder, a coloured tile with the name's two letters.
 **Commands**: every action is a command with a name, an icon, an optional shortcut, and a check whether it can run now. The menus
 (File, Edit, View, Map, Tools, Templates, Test, Help) and the toolbar are built from the commands; an item that cannot run is greyed
 and says why in its tooltip. Shortcuts: the File menu's, Ctrl+Z undo, Ctrl+Y redo, Ctrl+X cut, Ctrl+C copy, Ctrl+V paste, Ctrl+D duplicate, Delete, Ctrl+A select all, Escape
-deselect, Ctrl+R rotate scenery, Ctrl+M mirror scenery, the tools' keys (T Terrain, E Erase, V Select, M Move), L the next level, F11 the panels, Ctrl+Shift+P the command palette, Ctrl+, Preferences. The Map menu opens the map's
+deselect, Ctrl+R rotate scenery, Ctrl+M mirror scenery, the tools' keys (T Terrain, O Object, E Erase, V Select, M Move), L the next level, F11 the panels, Ctrl+Shift+P the command palette, Ctrl+, Preferences. The Map menu opens the map's
 tabs, the Tools menu picks a tool. Test (F5) and Help (F1) are in their menus and greyed until they are built.
 
 **Selection** (EDIT-1, ADR-250). The selection holds tiles, objects, heroes and map events. It is not an undo step, and a thing that
@@ -112,10 +112,41 @@ copied objects from the map (the terrain, roads, rivers and ground stay), as one
 <a id="editor-stamps"></a>
 **Stamps** (ADR-250, ADR-251). "Save selection as stamp" (Edit menu) asks for a name and writes a copy of the selection, a fragment
 as Copy makes it, to a stamp file in the editor's `stamps` folder; a stamp saved under a name that exists replaces it.
-- The Object tool lists the saved stamps. A click on one puts it on the pointer as a paste does: the ghost, a click for every
+- The object browser lists the saved stamps. A click on one puts it on the pointer as a paste does: the ghost, a click for every
   stamp, the layer boxes, Escape to end. The clipboard stays as it was.
 - A stamp belongs to no map, so it can be used in every map. What a map does not have is taken from the stamped objects as from
   pasted ones.
+
+<a id="editor-browser"></a>
+**The object browser** (EDIT-1, ADR-253) stands in the left region, under the tools and the options of the tool in use. It lists
+everything that can be put on the map. A click on an entry makes it the Object tool's choice and brings that tool in.
+- **Categories**, each a heading that opens and closes: towns, heroes, monsters, mines and providers, dwellings, treasure, artifacts,
+  power-ups, utilities and travel, banks, events and quests, scenery. Inside a category the entries stand in groups:
+  - monsters and dwellings by faction (the neutrals last), in tier order; one entry per creature, a dwelling for base creatures only;
+  - artifacts by slot, in tier order, after the three "random artifact" pickups that roll one of their tier;
+  - mines, then providers, deposits and abandoned mines;
+  - scenery by kind (trees, rocks, walls…).
+- **Search**: typing lists the entries that fit, whatever their category. Every typed word must start a word of the name or one of
+  the entry's search words (its category, group, resource, faction, tier as "tier3" or "t3", slot, colour, what a bank pays), or stand
+  inside the name. Names that start with the word come first, entries found by a search word only come last: "gold" finds the gold
+  mine, the gold pile and the dwarven treasury. At most 60 entries show; typing more narrows the list.
+- **Terrain filter**: any terrain, the terrain under the pointer on the map, or a chosen one. It hides the scenery that is not made
+  for the terrain; everything else suits every terrain.
+- **★ Favourites and ⟲ Recent** stand first. A right click on an entry, or the ★ on the card, adds the entry to the
+  favourites or takes it out. Recent holds the last 12 entries that were placed, the newest first. Both are kept in the editor's
+  settings, so they are the same in every map.
+- **Stamps**: the saved [stamps](#editor-stamps), under their own heading above the categories; the search lists, after the
+  entries, the stamps whose name holds every typed word.
+- **The card** at the bottom shows the entry under the pointer, or the chosen one: its footprint (the entrance lighter), its category
+  and group, its size, a one-line rule and, for scenery, its terrains. The pictures are coloured tiles with two letters until
+  thumbnails exist.
+
+**The Object tool** (O) places the browser's choice with its top-left tile where clicked; the treasure chest is chosen at the start.
+Before the click a ghost shows the tiles it would take, red where it does not fit; all of them are red when the map may hold no
+more of the thing (a player's heroes, the obelisks, the Eyes of one colour). A monster is placed aggressive with its number
+left to the game's start, a dwelling and an artifact pickup already hold their creature or artifact (one undo step), and a hero is
+placed for the player picked in the tool's options and opens in the inspector. The Monster and Hero tools place the same things with
+their own options.
 
 <a id="editor-scatter"></a>
 **Scatter** (EDIT-6, ADR-252). The Scatter tool puts scenery on the tiles its brush is dragged over, when the button comes up;

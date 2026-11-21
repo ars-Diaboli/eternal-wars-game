@@ -560,10 +560,10 @@ again offers the lost work.
 1. **Browser data in the core**: every kind in `MapObjectCatalog` gets a category (towns, heroes, monsters by faction and tier, mines
    and providers, dwellings, treasure, artifacts by slot and tier, power-ups, utilities and travel, banks, events and quests, scenery
    by kind and terrain), search words and the terrains it suits. Tests: every kind has a category; "gold" finds the mine, the pile
-   and the treasury.
+   and the treasury. *Done.*
 2. **Object browser**: `ObjectBrowser` in the left region with the categories, search, ★ Favourites and ⟲ Recent (in the editor
    settings), a terrain filter, and the stamps; hovering shows a larger preview, the footprint and a one-line rule. The Object tool
-   places the browser's choice with a ghost. The drop-down goes. Smoke `editor-browser-place`.
+   places the browser's choice with a ghost. The drop-down goes. Smoke `editor-browser-place`. *Done.*
 3. **Thumbnails**: `ThumbnailRenderer` renders each model once in a hidden `SubViewport` and caches it in `user://cache/thumbs/` by
    the model's hash; icons are used where they exist (ADR-245), placeholders otherwise.
 4. **Inspector sections**: `InspectorForm` gets collapsible sections (identity, contents, guard, messages, links, events); today's

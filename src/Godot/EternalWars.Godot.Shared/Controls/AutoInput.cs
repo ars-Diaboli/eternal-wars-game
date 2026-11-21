@@ -237,8 +237,8 @@ public partial class AutoInput : Node
 
     /// <summary>
     /// A point of an aimed event: <c>x,y</c>, or <c>@label</c> (the centre of the first visible button, enabled or not, whose label as
-    /// <c>dump</c> shows it is that, ignoring case) or <c>@label#n</c> (the n-th of them in tree order). Null, with an error, when there is
-    /// no such button.
+    /// <c>dump</c> shows it is that, ignoring case) or <c>@label#n</c> (the n-th of them in tree order). A button a scrolling box has
+    /// scrolled out of sight does not count (<see cref="InView"/>). Null, with an error, when there is no such button.
     /// </summary>
     private Vector2? Point(string point)
     {
@@ -257,7 +257,7 @@ public partial class AutoInput : Node
             (label, nth) = (label[..hash], n);
         }
 
-        var matches = VisibleButtons().Where(b => string.Equals(Shown(b), label, StringComparison.OrdinalIgnoreCase))
+        var matches = VisibleButtons().Where(b => string.Equals(Shown(b), label, StringComparison.OrdinalIgnoreCase) && InView(b))
             .Select(b => b.GetGlobalRect().GetCenter())
             .Concat(VisibleTabs(GetTree().Root).Where(t => string.Equals(t.Title, label, StringComparison.OrdinalIgnoreCase)).Select(t => t.Centre))
             .ToList();
@@ -328,6 +328,24 @@ public partial class AutoInput : Node
                 yield return popup;
             }
         }
+    }
+
+    /// <summary>
+    /// Whether a click on <paramref name="button"/>'s centre reaches it: no scrolling box round it has scrolled the centre out of sight
+    /// (the click would land on whatever is drawn there instead).
+    /// </summary>
+    private static bool InView(Control button)
+    {
+        var centre = button.GetGlobalRect().GetCenter();
+        for (var parent = button.GetParent(); parent is not null and not Window; parent = parent.GetParent()) // a window has its own coordinates
+        {
+            if (parent is ScrollContainer scroll && !scroll.GetGlobalRect().HasPoint(centre))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>A button's label on one line, as <c>dump</c> prints it and aimed events name it.</summary>

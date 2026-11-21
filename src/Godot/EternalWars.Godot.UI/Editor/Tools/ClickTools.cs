@@ -5,33 +5,83 @@ using Godot;
 
 namespace EternalWars.Godot.UI.Editor.Tools;
 
-/// <summary>Places a map object of the chosen definition.</summary>
+/// <summary>
+/// Places what is chosen in the object browser (EDIT-1, ADR-253), its top-left tile where clicked. Before the click a ghost shows the
+/// cells it would take, red where it does not fit. A hero is placed for the player the tool's options name and opens in the inspector.
+/// </summary>
 public sealed class ObjectTool(EditorToolContext context) : EditorTool(context)
 {
-    private string _definition = BuiltInMapObjects.TreasureChest;
+    private PlayerId _owner = context.Editor.Scenario.Players[0].Id;
+    private MapPosition? _hovered;
 
     public override string Name => "Object";
 
+    public override Key? Shortcut => Key.O;
+
+    private BrowserEntry? Entry => Context.Choice.Entry;
+
+    /// <summary>The player a hero is placed for: the picked one, or the first when that player has left the map.</summary>
+    private PlayerId Owner => Editor.Scenario.HasPlayer(_owner) ? _owner : Editor.Scenario.Players[0].Id;
+
     public override void BuildOptions(ToolOptions options)
     {
-        var definitions = Editor.Catalog.All.Where(d => d.Kind != MapObjectKind.Monster).OrderBy(d => d.Name, StringComparer.Ordinal);
-        options.Choice("Object", definitions.Select(d => (d.Name, d.Id)), _definition, id => _definition = id);
-
-        // The saved stamps, until the browser lists them: a click puts one on the pointer, as a paste.
-        var stamps = Context.StampNames();
-        if (stamps.Count > 0)
+        if (Entry is not { } entry)
         {
-            options.Hint("Stamps (a click, then click the map to stamp):");
-            foreach (var name in stamps)
+            options.Hint("Pick what to place in the browser below.");
+            return;
+        }
+
+        if (entry.Placement == BrowserPlacement.Hero)
+        {
+            options.Choice("Owner", Editor.Scenario.Players.Select(p => (p.Name, p.Id)), Owner, p =>
             {
-                var stamp = new Button { Text = name, TooltipText = $"Stamp \"{name}\": click the map where it goes" };
-                stamp.Pressed += () => Context.PasteStamp(name);
-                options.Add(stamp);
-            }
+                _owner = p;
+                ShowGhost(_hovered);
+            });
+        }
+
+        options.Hint($"Places {entry.Name} where clicked: the ghost shows its tiles, red where it does not fit.");
+    }
+
+    public override void Hover(MapPosition? tile)
+    {
+        if (tile != _hovered)
+        {
+            ShowGhost(tile);
         }
     }
 
-    public override void Press(MapPosition tile) => Context.Report(Editor.Objects.Place(_definition, tile, out _));
+    public override void Press(MapPosition tile)
+    {
+        if (Entry is not { } entry)
+        {
+            Context.Say("Pick what to place in the browser first.");
+            return;
+        }
+
+        if (Context.Report(Editor.Placing.Place(entry, tile, out var placed, Owner)))
+        {
+            Context.Choice.NotePlaced(entry);
+            if (placed.Hero is { } hero)
+            {
+                Context.Inspect(hero);
+            }
+        }
+
+        ShowGhost(tile);
+    }
+
+    public override void Drag(MapPosition tile) => Hover(tile);
+
+    public override void Refresh() => ShowGhost(_hovered);
+
+    public override void Cancel() => ShowGhost(null);
+
+    private void ShowGhost(MapPosition? tile)
+    {
+        _hovered = tile;
+        Context.Marks?.ShowMove(tile is { } at && Entry is { } entry ? Editor.Placing.Check(entry, at, Owner) : null);
+    }
 }
 
 /// <summary>Places a monster guard.</summary>

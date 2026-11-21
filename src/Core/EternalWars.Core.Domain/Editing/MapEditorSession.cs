@@ -31,6 +31,7 @@ public sealed class MapEditorSession
         MapEvents = new MapEventEditor(_context);
         Players = new PlayerEditor(_context);
         Map = new MapPropertiesEditor(_context);
+        Placing = new EntryEditor(_context, Objects, Contents, Monsters, Heroes);
         Selecting = new SelectionEditor(_context, Objects, Heroes, mover);
         _context.Selecting = Selecting;
         Fragments = new FragmentEditor(_context, Terrain, Objects, Selecting, copier);
@@ -76,6 +77,9 @@ public sealed class MapEditorSession
     public TownEditor Towns { get; }
 
     public HeroEditor Heroes { get; }
+
+    /// <summary>Places what the object browser offers (<see cref="BrowserCatalog"/>).</summary>
+    public EntryEditor Placing { get; }
 
     /// <summary>Map events, variables and event cells (EVT-6).</summary>
     public MapEventEditor MapEvents { get; }
