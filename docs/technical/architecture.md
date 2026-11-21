@@ -258,7 +258,8 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   `BuiltInTemplates` (Core.Data), `TemplateValidator` (errors, fairness), `MapFairness`. `TemplateEditorSession`
   edits a template, one undo step a change (an `UndoHistory` of whole templates, `IUndoSession` like the map's session), and publishes
   `TemplateChanged`, `UndoHistoryChanged` and `UnsavedWorkChanged`. The graph's geometry (snap, align, spread) is `TemplateGraph` and
-  its clipboard `TemplateFragment` (Core.Generation); `TemplateGraphView` (Godot.UI) draws and edits through the session. Its files are `TemplateFileService` (Godot.UI) over the app's
+  its clipboard `TemplateFragment`, the mirror tools' rules `TemplateMirrors` and the zone presets `ZonePresets`
+  (Core.Generation), the user's preset files `ZonePresetFolder` (Core.Data) behind the app's `IZonePresetFiles`; `TemplateGraphView` (Godot.UI) draws and edits through the session. Its files are `TemplateFileService` (Godot.UI) over the app's
   `ITemplateFiles`; both editors' autosaves are an `AutosaveFolder` (Core.Data).
 - Generation touches no shared state and must stay fast (target < 5 s for 256×256×2).
 

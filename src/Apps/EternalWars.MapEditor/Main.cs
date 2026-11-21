@@ -300,6 +300,10 @@ public partial class Main : Node3D
     private static string TemplateAutosaveFolder =>
         LaunchArguments.SettingsPath is null ? Path.Combine(TemplatesFolder, ".autosave") : Path.Combine(DataFolder, "template-autosave");
 
+    /// <summary>Where the template editor keeps the user's zone presets (ADR-273).</summary>
+    private static string TemplatePresetsFolder =>
+        LaunchArguments.SettingsPath is null ? ProjectSettings.GlobalizePath("user://template-presets") : Path.Combine(DataFolder, "template-presets");
+
     public override void _UnhandledInput(InputEvent @event)
     {
         if (IsBusy)
@@ -833,7 +837,7 @@ public partial class Main : Node3D
         _templatePage = _workspace.AddPage("Template", _templateEditor);
         if (templateEditor is null)
         {
-            _templateEditor.Bind(_templates, new TemplateEditorHost(_templateFiles, GenerateFromEditor));
+            _templateEditor.Bind(_templates, new TemplateEditorHost(_templateFiles, GenerateFromEditor, new ZonePresetFiles(TemplatePresetsFolder)));
         }
 
         _workspace.SetPageTitle(_templatePage, _templates.IsDirty ? "Template*" : "Template");

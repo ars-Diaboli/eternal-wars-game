@@ -626,9 +626,9 @@ and the game uses them.
    passages, chance), snapping to a grid, align and spread, auto-arrange as now. *Done.*
 4. **Multi-select and copy**: marquee in the graph; copy, paste and duplicate zones with their inner connections and new ids. Tests.
    Smoke `editor-template-graph`. *Done.*
-5. **Mirror tools**: make a zone's mirror image and keep it in sync (`mirror`). Tests.
+5. **Mirror tools**: make a zone's mirror image and keep it in sync (`mirror`). Tests. Smoke `editor-template-mirror`. *Done.*
 6. **Inspector and presets**: every field, including terrains and neutral town types, with pickers; zone presets (rich treasure, mine
-   junction, guarded start) and user presets in `user://template-presets/`.
+   junction, guarded start) and user presets in `user://template-presets/`. Smoke `editor-template-presets`. *Done.*
 7. **Preview**: Generate runs in the background and shows the map in a preview panel (top-down, zones outlined) without leaving the
    template; "Open in map editor" as now.
 8. **Generate many**: `TemplateBatch` in the core runs N seeds (default 20) off the main thread, cancellable, with a cap on parallel

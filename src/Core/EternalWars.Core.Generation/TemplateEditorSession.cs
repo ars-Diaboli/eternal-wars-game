@@ -24,12 +24,16 @@ public sealed record TemplateChanged(MapTemplate Template, IReadOnlyList<Templat
 /// template was saved at (<see cref="IsDirty"/>). Changes made between <see cref="BeginStep"/> and <see cref="EndStep"/> (a drag) are one step
 /// (ADR-268).
 /// <list type="bullet">
-/// <item>Zones: <see cref="AddZone"/> (a new id, a start zone takes the next free player slot), <see cref="UpdateZone"/>, <see cref="RenameZone"/>
+/// <item>Zones: <see cref="AddZone(ZoneType, double, double)"/> (a new id, a start zone takes the next free player slot), <see cref="UpdateZone"/>, <see cref="RenameZone"/>
 /// (connections and mirrors follow), <see cref="MoveZone"/> (its place in the graph), <see cref="RemoveZone"/> (with its connections).</item>
 /// <item>Several zones (a selection in the graph): <see cref="MoveZones"/>, <see cref="AlignZones"/> and <see cref="SpreadZones"/> (ADR-270),
 /// <see cref="RemoveZones"/>, and <see cref="Copy"/>, <see cref="Paste"/> and <see cref="Duplicate"/> with their inner connections and new ids
 /// (ADR-271).</item>
 /// <item>Connections: <see cref="Connect"/>, <see cref="UpdateConnection"/>, <see cref="Disconnect"/>.</item>
+/// <item>Mirrors (ADR-272): <see cref="MakeMirror"/> adds the images of zones under the template's symmetry, <see cref="BreakMirror"/> unlinks a
+/// cycle. While a zone is in a closed cycle of mirrors, an edit of it carries to its images (<see cref="TemplateMirrors.Carry(TemplateZone, TemplateZone, TemplateZone, Func{int})"/>),
+/// and connecting, changing or removing a connection does the same to the connection's images, in the same step.</item>
+/// <item>Presets (ADR-273): <see cref="AddZone(ZonePreset, double, double)"/> and <see cref="ApplyPreset"/>.</item>
 /// <item>The template's own settings: <see cref="UpdateTemplate"/> (zones and connections are kept).</item>
 /// </list>
 /// The player count follows the start zones (<see cref="SyncPlayers"/>), so a template stays valid while start zones are added and removed.
@@ -58,6 +62,9 @@ public sealed class TemplateEditorSession : IUndoSession
     public MapTemplate Template { get; private set; }
 
     public IReadOnlyList<TemplateIssue> Issues => TemplateValidator.Validate(Template, _content);
+
+    /// <summary>The game's tables the template is checked against (terrains, buildings), for the inspector's pickers.</summary>
+    public ContentCatalogs Content => _content ?? ContentCatalogs.Default;
 
     /// <summary>The undo steps (their names, how many are applied) and the step the template was saved at.</summary>
     public UndoHistory History { get; } = new();
@@ -182,32 +189,66 @@ public sealed class TemplateEditorSession : IUndoSession
     /// Adds a zone of the type at a place in the graph and returns its id (<c>start-N</c>, <c>treasure-N</c>, <c>junction-N</c>); a start zone takes the
     /// lowest free player slot (none above 7: refused, null).
     /// </summary>
-    public string? AddZone(ZoneType type, double x, double y)
+    public string? AddZone(ZoneType type, double x, double y) => Add(type switch
     {
-        var prefix = type switch { ZoneType.PlayerStart or ZoneType.AiStart => "start", ZoneType.Treasure => "treasure", _ => "junction" };
-        var id = Enumerable.Range(1, 999).Select(n => $"{prefix}-{n}").First(candidate => Template.Zone(candidate) is null);
-        TemplateZone zone;
-        if (type is ZoneType.PlayerStart or ZoneType.AiStart)
+        ZoneType.PlayerStart or ZoneType.AiStart => StartZone(ZonePresets.PresetId, 0) with { Type = type },
+        _ => new TemplateZone
         {
-            var used = Template.Zones.Select(z => z.Owner).OfType<int>().ToHashSet();
-            if (Enumerable.Range(0, Domain.Game.GameState.MaxPlayers).Where(s => !used.Contains(s)).Select(s => (int?)s).FirstOrDefault() is not { } slot)
+            Id = ZonePresets.PresetId, Type = type, Size = 2, Monsters = type == ZoneType.Junction ? MonsterStrength.Strong : MonsterStrength.Average,
+            Treasure = type == ZoneType.Treasure ? [new TreasureBand(1500, 4000, 4)] : [], ExtraPiles = 2,
+        },
+    }, x, y, "");
+
+    /// <summary>
+    /// Adds a zone with the preset's settings at a place in the graph (ADR-273), as <see cref="AddZone(ZoneType, double, double)"/> does: the
+    /// type's id, the lowest free slot for a start zone (none: refused, null), one step "Add zone x (preset)".
+    /// </summary>
+    public string? AddZone(ZonePreset preset, double x, double y)
+    {
+        ArgumentNullException.ThrowIfNull(preset);
+        return Add(ZonePresets.Settings(preset.Zone), x, y, $" ({preset.Name})");
+    }
+
+    private string? Add(TemplateZone settings, double x, double y, string note)
+    {
+        var prefix = settings.Type switch { ZoneType.PlayerStart or ZoneType.AiStart => "start", ZoneType.Treasure => "treasure", _ => "junction" };
+        var id = Enumerable.Range(1, 999).Select(n => $"{prefix}-{n}").First(candidate => Template.Zone(candidate) is null);
+        var zone = settings with { Id = id, GraphX = x, GraphY = y, Owner = null, Team = null };
+        if (settings.Type is ZoneType.PlayerStart or ZoneType.AiStart)
+        {
+            if (!FreeSlots(Template).TryDequeue(out var slot))
             {
                 return null;
             }
 
-            zone = StartZone(id, slot) with { Type = type };
-        }
-        else
-        {
-            zone = new TemplateZone
-            {
-                Id = id, Type = type, Size = 2, Monsters = type == ZoneType.Junction ? MonsterStrength.Strong : MonsterStrength.Average,
-                Treasure = type == ZoneType.Treasure ? [new TreasureBand(1500, 4000, 4)] : [], ExtraPiles = 2,
-            };
+            zone = zone with { Owner = slot };
         }
 
-        ChangeSynced($"Add zone {id}", Template with { Zones = [.. Template.Zones, zone with { GraphX = x, GraphY = y }] });
+        ChangeSynced($"Add zone {id}{note}", Template with { Zones = [.. Template.Zones, zone] });
         return id;
+    }
+
+    /// <summary>
+    /// Gives the zone the preset's settings (ADR-273), keeping its id, slot, team, mirror, level and graph place, as one step "Apply preset
+    /// p to zone x"; a zone in a mirror cycle carries the change to its images. False for an unknown zone, or a zone made a start zone with no
+    /// player slot free.
+    /// </summary>
+    public bool ApplyPreset(string id, ZonePreset preset)
+    {
+        ArgumentNullException.ThrowIfNull(preset);
+        if (Template.Zone(id) is not { } zone)
+        {
+            return false;
+        }
+
+        var slots = FreeSlots(Template);
+        var full = false;
+        var applied = ZonePresets.Apply(zone, preset, () =>
+        {
+            full = !slots.TryDequeue(out var slot);
+            return slot;
+        });
+        return !full && ReplaceZone(applied, $"Apply preset {preset.Name} to zone {id}");
     }
 
     /// <summary>Replaces the zone of the same id (its graph place is kept unless the new one has one).</summary>
@@ -227,10 +268,32 @@ public sealed class TemplateEditorSession : IUndoSession
         var placed = zone with { GraphX = zone.GraphX ?? old.GraphX, GraphY = zone.GraphY ?? old.GraphY };
         if (placed != old)
         {
-            ChangeSynced(description, Template with { Zones = [.. Template.Zones.Select(z => z.Id == zone.Id ? placed : z)] });
+            var images = placed.Mirror == old.Mirror && TemplateMirrors.Cycle(Template, zone.Id) is { } cycle ? cycle.Skip(1).ToHashSet() : [];
+            var slots = FreeSlots(Template with { Zones = [.. Template.Zones.Select(z => z.Id == zone.Id ? placed : z)] });
+            var full = false;
+            int Slot()
+            {
+                full |= !slots.TryDequeue(out var slot);
+                return slot;
+            }
+
+            var zones = Template.Zones.Select(z => z.Id == zone.Id ? placed : images.Contains(z.Id) ? TemplateMirrors.Carry(old, placed, z, Slot) : z).ToList();
+            if (full)
+            {
+                return false; // the images made start zones need more player slots than are free
+            }
+
+            ChangeSynced(description, Template with { Zones = zones });
         }
 
         return true;
+    }
+
+    /// <summary>The player slots no zone of <paramref name="template"/> holds, lowest first.</summary>
+    private static Queue<int> FreeSlots(MapTemplate template)
+    {
+        var used = template.Zones.Select(z => z.Owner).OfType<int>().ToHashSet();
+        return new Queue<int>(Enumerable.Range(0, GameState.MaxPlayers).Where(s => !used.Contains(s)));
     }
 
     /// <summary>Gives a zone a new id; its connections and the mirrors that name it follow. Refused for an empty or used id.</summary>
@@ -371,22 +434,14 @@ public sealed class TemplateEditorSession : IUndoSession
     private IReadOnlyList<string>? PasteAs(TemplateFragment fragment, double x, double y, string verb)
     {
         ArgumentNullException.ThrowIfNull(fragment);
-        var used = Template.Zones.Select(z => z.Owner).OfType<int>().ToHashSet();
-        var slots = new Queue<int>(Enumerable.Range(0, GameState.MaxPlayers).Where(s => !used.Contains(s)));
+        var slots = FreeSlots(Template);
         if (fragment.Zones.Count == 0 || fragment.StartZones > slots.Count)
         {
             return null;
         }
 
         var taken = Template.Zones.Select(z => z.Id).ToHashSet();
-        var ids = new Dictionary<string, string>();
-        foreach (var zone in fragment.Zones)
-        {
-            var stem = Stem(zone.Id);
-            var id = Enumerable.Range(1, int.MaxValue - 1).Select(n => $"{stem}-{n}").First(candidate => !taken.Contains(candidate));
-            taken.Add(id);
-            ids[zone.Id] = id;
-        }
+        var ids = fragment.Zones.ToDictionary(z => z.Id, z => NewId(z.Id, taken));
 
         var (cx, cy) = fragment.Centre;
         var zones = fragment.Zones.Select(zone =>
@@ -412,6 +467,161 @@ public sealed class TemplateEditorSession : IUndoSession
         return [.. zones.Select(z => z.Id)];
     }
 
+    /// <summary>A new id for a copy of <paramref name="id"/>: its stem and the next number not in <paramref name="taken"/>, which gets it.</summary>
+    private static string NewId(string id, HashSet<string> taken)
+    {
+        var stem = Stem(id);
+        var newId = Enumerable.Range(1, int.MaxValue - 1).Select(n => $"{stem}-{n}").First(candidate => !taken.Contains(candidate));
+        taken.Add(newId);
+        return newId;
+    }
+
+    /// <summary>
+    /// Why <see cref="MakeMirror"/> cannot mirror the zones; null when it can: the template needs a symmetry, and every zone must be known,
+    /// name no mirror and be named by none; each start zone needs a free player slot per image.
+    /// </summary>
+    public string? MirrorRefusal(IEnumerable<string> ids)
+    {
+        var zones = Known(ids);
+        if (Template.Symmetry == TemplateSymmetry.None)
+        {
+            return "The template has no symmetry: choose one in its settings first";
+        }
+
+        if (zones.Count == 0)
+        {
+            return "No zone is selected";
+        }
+
+        if (zones.FirstOrDefault(z => !TemplateMirrors.IsOwnImage(z) || TemplateMirrors.IsNamed(Template, z.Id)) is { } mirrored)
+        {
+            return $"Zone {mirrored.Id} is mirrored already (break its mirror first)";
+        }
+
+        var images = MapTemplate.Order(Template.Symmetry) - 1;
+        var starts = zones.Count(z => z.Type is ZoneType.PlayerStart or ZoneType.AiStart) * images;
+        return starts > FreeSlots(Template).Count ? $"No room: the images need {starts} free player slot(s)" : null;
+    }
+
+    /// <summary>
+    /// Adds the images of the zones under the template's symmetry (ADR-272), as one step "Mirror zone x" or "Mirror N zones": one image per
+    /// step of the symmetry (one across an axis or a half turn, three for a quarter turn), alike in everything but the id (the stem and the next
+    /// free number), the player slot (the lowest free, with no team) and the graph place (the zone's place mirrored around the middle of the other zones). The
+    /// zones and their images name each other as mirrors in a cycle. Each connection of a zone gets its images: to the other zone's image when
+    /// that is mirrored too (or among the zones), to the zone itself when it is its own image. Returns the new ids, or null when
+    /// <see cref="MirrorRefusal"/> refuses (nothing changes then).
+    /// </summary>
+    public IReadOnlyList<string>? MakeMirror(IEnumerable<string> ids)
+    {
+        var zones = Known(ids);
+        if (MirrorRefusal(zones.Select(z => z.Id)) is not null)
+        {
+            return null;
+        }
+
+        var symmetry = Template.Symmetry;
+        var order = MapTemplate.Order(symmetry);
+        var selected = zones.Select(z => z.Id).ToHashSet();
+        var others = Template.Zones.Where(z => !selected.Contains(z.Id)).ToList();
+        var centre = others.Count > 0
+            ? TemplateGraph.Centre(others)
+            : (zones.Max(z => TemplateGraph.Place(z).X) + 1.5, TemplateGraph.Centre(zones).Y); // nothing else: the axis just right of the zones
+        var taken = Template.Zones.Select(z => z.Id).ToHashSet();
+        var slots = FreeSlots(Template);
+        var placesTaken = Template.Zones.Select(TemplateGraph.Place).ToList();
+
+        // image[k][id]: the id of the zone's image after k steps (k = 0: the zone itself).
+        var image = new List<Dictionary<string, string>> { selected.ToDictionary(id => id, id => id) };
+        for (var k = 1; k < order; k++)
+        {
+            image.Add(zones.ToDictionary(z => z.Id, z => NewId(z.Id, taken)));
+        }
+
+        var added = new List<TemplateZone>();
+        for (var k = 1; k < order; k++)
+        {
+            foreach (var zone in zones)
+            {
+                var place = TemplateMirrors.Place(TemplateGraph.Place(zone), symmetry, k, centre);
+                while (TemplateGraph.Crowded(place, placesTaken))
+                {
+                    place = (place.X, place.Y + 1.5); // clear of the cards there (a zone near the axis would hide its image)
+                }
+
+                placesTaken.Add(place);
+                added.Add(zone with
+                {
+                    Id = image[k][zone.Id],
+                    Owner = zone.Type is ZoneType.PlayerStart or ZoneType.AiStart ? slots.Dequeue() : zone.Owner,
+                    Team = null, // another player: no ally of the zone's unless set so
+                    Mirror = image[(k + 1) % order][zone.Id],
+                    GraphX = place.X,
+                    GraphY = place.Y,
+                });
+            }
+        }
+
+        string? ImageOf(string id, int k) => selected.Contains(id) ? image[k][id] : TemplateMirrors.Image(Template, id, k);
+        var connections = Template.Connections.ToList();
+        foreach (var c in Template.Connections.Where(c => selected.Contains(c.From) || selected.Contains(c.To)))
+        {
+            for (var k = 1; k < order; k++)
+            {
+                if (ImageOf(c.From, k) is { } from && ImageOf(c.To, k) is { } to && from != to
+                    && !connections.Any(o => (o.From == from && o.To == to) || (o.From == to && o.To == from)))
+                {
+                    connections.Add(c with { From = from, To = to });
+                }
+            }
+        }
+
+        var linked = Template.Zones.Select(z => selected.Contains(z.Id) ? z with { Mirror = image[1][z.Id] } : z);
+        ChangeSynced(zones.Count == 1 ? $"Mirror zone {zones[0].Id}" : $"Mirror {zones.Count} zones", Template with
+        {
+            Zones = [.. linked, .. added],
+            Connections = connections,
+        });
+        return [.. added.Select(z => z.Id)];
+    }
+
+    /// <summary>
+    /// Unlinks the mirrors of the zone's cycle (or of the zone and the zone naming it, when the cycle is broken), as one step "Break the mirror
+    /// of x": the zones stay, each its own image, and edits no longer carry between them. False when the zone is in no mirror.
+    /// </summary>
+    public bool BreakMirror(string id)
+    {
+        if (Template.Zone(id) is not { } zone || (TemplateMirrors.IsOwnImage(zone) && !TemplateMirrors.IsNamed(Template, id)))
+        {
+            return false;
+        }
+
+        var members = (TemplateMirrors.Cycle(Template, id) ?? [id]).ToHashSet();
+        Change($"Break the mirror of {id}", Template with
+        {
+            Zones = [.. Template.Zones.Select(z => members.Contains(z.Id) || (z.Mirror is { } m && members.Contains(m)) ? z with { Mirror = null } : z)],
+        });
+        return true;
+    }
+
+    /// <summary>
+    /// The pairs of zones the connection <paramref name="from"/> – <paramref name="to"/> turns into under the symmetry's steps (ADR-272): only
+    /// where both ends have an image, without the pair itself or a zone joined to itself, each pair once.
+    /// </summary>
+    private List<(string From, string To)> ImagePairs(string from, string to)
+    {
+        var pairs = new List<(string From, string To)>();
+        for (var k = 1; k < MapTemplate.Order(Template.Symmetry); k++)
+        {
+            if (TemplateMirrors.Image(Template, from, k) is { } a && TemplateMirrors.Image(Template, to, k) is { } b && a != b
+                && !((a == from && b == to) || (a == to && b == from)) && !pairs.Any(p => (p.From == a && p.To == b) || (p.From == b && p.To == a)))
+            {
+                pairs.Add((a, b));
+            }
+        }
+
+        return pairs;
+    }
+
     /// <summary>A zone id without its number: <c>treasure-2</c> → <c>treasure</c>; <c>middle</c> stays.</summary>
     private static string Stem(string id)
     {
@@ -429,7 +639,9 @@ public sealed class TemplateEditorSession : IUndoSession
         }
 
         var levels = Template.Zone(from)!.Level != Template.Zone(to)!.Level;
-        Change($"Connect {from} – {to}", Template with { Connections = [.. Template.Connections, new TemplateConnection { From = from, To = to, GuardValue = guardValue, Kind = levels ? ConnectionKind.Gate : ConnectionKind.Normal }] });
+        var connection = new TemplateConnection { From = from, To = to, GuardValue = guardValue, Kind = levels ? ConnectionKind.Gate : ConnectionKind.Normal };
+        var images = ImagePairs(from, to).Where(p => TemplateMirrors.Find(Template, p.From, p.To) < 0).Select(p => connection with { From = p.From, To = p.To });
+        Change($"Connect {from} – {to}", Template with { Connections = [.. Template.Connections, connection, .. images] });
         return true;
     }
 
@@ -442,9 +654,17 @@ public sealed class TemplateEditorSession : IUndoSession
             return false;
         }
 
-        if (connection != Template.Connections[index])
+        var old = Template.Connections[index];
+        if (connection != old)
         {
-            Change($"Change connection {connection.From} – {connection.To}", Template with { Connections = [.. Template.Connections.Select((c, i) => i == index ? connection : c)] });
+            // While its ends stay, the images of the connection (ADR-272) take the changed fields.
+            var images = old.From == connection.From && old.To == connection.To
+                ? ImagePairs(old.From, old.To).Select(p => TemplateMirrors.Find(Template, p.From, p.To)).Where(i => i >= 0 && i != index).ToHashSet()
+                : [];
+            Change($"Change connection {connection.From} – {connection.To}", Template with
+            {
+                Connections = [.. Template.Connections.Select((c, i) => i == index ? connection : images.Contains(i) ? TemplateMirrors.Carry(old, connection, c) : c)],
+            });
         }
 
         return true;
@@ -458,7 +678,8 @@ public sealed class TemplateEditorSession : IUndoSession
         }
 
         var removed = Template.Connections[index];
-        Change($"Remove connection {removed.From} – {removed.To}", Template with { Connections = [.. Template.Connections.Where((_, i) => i != index)] });
+        var gone = ImagePairs(removed.From, removed.To).Select(p => TemplateMirrors.Find(Template, p.From, p.To)).Append(index).ToHashSet();
+        Change($"Remove connection {removed.From} – {removed.To}", Template with { Connections = [.. Template.Connections.Where((_, i) => !gone.Contains(i))] });
         return true;
     }
 

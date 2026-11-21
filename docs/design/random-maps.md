@@ -128,9 +128,8 @@ generator version, and the generator's problems and validator issues are shown. 
 
 ## Template editor
 The map editor's **Template** tab (RMG-10, ADR-117, EDIT-3) is a HotA-like editor: a zone graph, a top row (the template's name, New,
-Open, Shipped, Save, Save as, add zones, size, seed, Generate), the graph's tools over it, an inspector for the template, a zone, several
-zones or a connection, and under the graph the validator's issues and the template's undo history; terrains and neutral town types are
-edited in the file. Core `TemplateEditorSession`: every change publishes `TemplateChanged` with the validator's issues and is one named
+Open, Shipped, Save, Save as, add zones, add a zone from a preset, size, seed, Generate), the graph's tools over it, an inspector for the
+template, a zone, several zones or a connection, and under the graph the validator's issues and the template's undo history. Core `TemplateEditorSession`: every change publishes `TemplateChanged` with the validator's issues and is one named
 undo step (EDIT-2, ADR-268); dragging a zone (or a selection) is one step. Ctrl+Z and Ctrl+Y undo and redo on the Template tab, and a
 click in the History list jumps.
 
@@ -151,6 +150,27 @@ on empty ground, pans. On the Template tab the Edit menu's Select all, Deselect,
 Escape, Ctrl+X, C, V, D, Delete) work on the graph: copied zones take the connections between them; Paste puts them under the pointer and
 Duplicate beside the originals, each zone with a new id (its name's stem and the next free number), a start zone with the lowest free
 player slot (refused when too few are free), a mirror kept only inside the copy. The clipboard stays while another template is opened.
+
+**The inspector** (ADR-273) edits every field of the file. The template: name, description, players, humans, teams, hero limit,
+underground, symmetry, connection guard, sizes, roads (on, type, the mines and gates they reach) and week events (on, the weeks before
+the first, the weekly and monthly factions, the playable towns when left alone). A zone: type, slot, team, towns, size, level, monsters,
+mine guards, obstacles, mirror, mines, resource piles, obelisks, three treasure bands, and pickers for its terrains (the passable ones)
+and neutral town types (the playable towns), where none ticked means any; a start zone also its start buildings besides the default
+start (each at a level) and its start dwellings by tier. A connection: kind, guard value, passages, chance, guard and Keymaster colour.
+
+**Zone presets** (ADR-273): + Preset adds a zone with a preset's settings; a zone's **Apply preset** gives it a preset's settings while
+its id, player slot, team, mirror, level and graph place stay (a zone made a start zone takes the lowest free slot; refused when none is
+free); **Save as preset…** keeps the zone's settings under a name of the user's, and Delete preset forgets one. The game ships Rich
+treasure, Mine junction and Guarded start; the user's are files in `user://template-presets/` (`*.ewzone.json`), listed after them.
+
+**Mirrors** (ADR-272): in a template with a symmetry, **Mirror** (over the graph, and in the zone inspector as Make mirror image) adds the
+images of the selected zones (none of them mirrored yet): one across an axis or by a half turn, three by a quarter turn, each alike but for
+its id, player slot (with no team) and graph place (mirrored around the middle of the other zones, moved down while it would cover a card), the zones
+naming each other in a cycle. Each connection of a mirrored zone gets its images (to the other zone's image, or to that zone itself when
+it is its own image). A dotted line joins a zone to its mirror. While zones form a closed cycle they stay **in sync**: a field changed on
+one (type, size, level, towns, mines, treasure, monsters, terrains, start buildings, …) changes on its images in the same step, while the
+player slot, team, mirror and graph place stay each zone's own; connecting two zones, changing a connection or removing it does the same to
+the connection's images. **Break mirror** unlinks a cycle, so its zones are edited apart.
 
 **Files** (ADR-269), as for maps: Open and Save as with the file dialog (the user's templates folder first), Save, recent templates
 (Templates menu), an asterisk over unsaved work ("Template*" on the tab), the question before unsaved work is left, an autosave every

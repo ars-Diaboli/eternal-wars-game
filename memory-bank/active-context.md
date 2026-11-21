@@ -9,13 +9,24 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 5 task 6 (ADR-273): the template inspector edits every field: tick-box pickers for a zone's terrains and neutral
+  town types, the week events' factions and the roads' mines; start buildings by level and start dwellings by tier; road type and gates,
+  weeks before events. Zone presets: `ZonePresets` (Rich treasure, Mine junction, Guarded start), the session's `AddZone(preset)` and
+  `ApplyPreset`, user presets as `*.ewzone.json` in `user://template-presets/` (`ZonePresetFolder` in Core.Data, the editor's
+  `ZonePresetFiles` behind `IZonePresetFiles`); + Preset, Apply preset, Save as preset…, Delete preset. Tests `ZonePresetTests` and the
+  undo theory; smoke `editor-template-presets`. Next: step 5 task 7 (preview), or step 3's drop-downs.
+- Editor overhaul, step 5 task 5 (ADR-272): mirror tools. `TemplateEditorSession.MakeMirror` adds the images of zones under the
+  template's symmetry (new ids, free slots, a mirror cycle, mirrored graph places, the connections' images); while a cycle is closed an
+  edit carries its changed fields to the images (`TemplateMirrors.Carry`) and Connect / a connection change / Disconnect apply to the
+  connection's images; `BreakMirror` unlinks a cycle. Mirror over the graph and in the inspectors; dotted mirror lines. Tests
+  `TemplateMirrorTests`; smoke `editor-template-mirror`.
 - Editor overhaul, step 5 tasks 3 and 4 (ADR-270, ADR-271): the template graph. Zones are cards (type colour and icon, owner, team,
   size, monsters, towns, mines), connections carry labels (kind, guard, value, passages, chance); Snap to grid, Align in a row / column,
   Spread across / down and Arrange sit over the graph (`TemplateGraph` in Core.Generation holds the geometry). Multi-select with
   Ctrl/Shift + click and a marquee; a selection drags as one step (`MoveZones`); `TemplateFragment` with the session's `Copy`, `Paste`,
   `Duplicate` and `RemoveZones` (new ids, free player slots, inner connections and mirrors). Edit > Select all / Deselect / Cut / Copy /
   Paste / Duplicate / Delete follow the tab shown. The blank template's zones are 3 units apart. Tests `TemplateGraphTests` and the
-  undo theory; smoke `editor-template-graph`. Next: step 5 task 5 (mirror tools), or step 3's drop-downs.
+  undo theory; smoke `editor-template-graph`.
 - Editor overhaul, step 5 task 2 (ADR-269): template files. `TemplateFileService` (Godot.UI, Editor/Shell) over the app's
   `ITemplateFiles` (`TemplateFiles` in the editor): New, Open, Save, Save as, recent, shipped templates read-only (saved as a copy),
   "Template*" over unsaved work, the question before leaving it (quitting asks for the template first), the autosave and its recovery
