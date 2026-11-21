@@ -36,6 +36,7 @@ The game design document, split by mechanic. Start at the overview.
 | [cursor-prompts.md](content/prompts/cursor-prompts.md) | Image-model prompts for the mouse cursors (menus, adventure map, battle) in grey iron, and their hotspots |
 | [spell-icon-prompts.md](content/prompts/spell-icon-prompts.md) | Image-model prompts for the icons of the 36 most common spells, one sheet a school |
 | [creature-icon-prompts.md](content/prompts/creature-icon-prompts.md) | Image-model prompts for the portraits of all creatures, one file a faction in `creature-icons/`, and their backdrops |
+| [editor-icon-prompts.md](content/prompts/editor-icon-prompts.md) | Image-model prompts for the map and template editor icons: tools, commands, panel tabs, tool options, template zones and connections |
 | [hero-town-icon-prompts.md](content/prompts/hero-town-icon-prompts.md) | Image-model prompts for the 128 hero portraits and the town icons |
 | [ui-element-prompts.md](content/prompts/ui-element-prompts.md) | Image-model prompts for frames, buttons, slots, bars and screen backgrounds |
 | [puzzle-map-prompts.md](content/prompts/puzzle-map-prompts.md) | Image-model prompts for the puzzle map's faction pictures |
