@@ -476,5 +476,5 @@ slashes from the upper right to the lower left
 4. Look for a cartoon look on the tier B sheets (thick outlines, flat fills, bubbly shapes, plastic shine) and regenerate such a sheet
    rather than fixing it by hand.
 5. Put the files in `src/Godot/EternalWars.Godot.Assets/textures/ui/icons/` and add their lines to its `CREDITS.md` with the tool and
-   its licence terms. A file shows in the editor once `UiIcon` has its value and `FileName` case and the command, tab or tool is given
-   it in `Main.cs`.
+   its licence terms. A file shows in the editor once `UiIcon` has a value of the same name in Pascal case (`tool_terrain`: `ToolTerrain`;
+   `UiIcons` loads the snake-case file of it) and the command, tab, tool (its `Icon`) or option is given it.

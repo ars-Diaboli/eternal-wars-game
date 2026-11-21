@@ -682,7 +682,7 @@ public partial class Main : Node3D
 
         // Right: the inspector, the events and Generate; the map's settings are a window of their own (F7).
         _inspector = new InspectorPanel { Name = "Inspector" };
-        _workspace.AddTab(EditorRegion.Right, _inspector);
+        _workspace.AddTab(EditorRegion.Right, _inspector, UiIcon.Inspector);
         _inspector.Bind(_editor, _settings);
         _toolContext = new EditorToolContext(_editor, _inspector, Say) {
             Marks = _selectionView, VisibleArea = VisibleTiles, Clipboard = _clipboard, Choice = _choice,
@@ -697,7 +697,7 @@ public partial class Main : Node3D
         _choice.Changed += UseChoice;
         _browser.TreeExiting += () => _choice.Changed -= UseChoice; // this UI goes when another map is opened; the choice stays
         _layers = new LayersPanel { Name = "Layers" };
-        _workspace.AddTab(EditorRegion.Right, _layers);
+        _workspace.AddTab(EditorRegion.Right, _layers, UiIcon.Layers);
         _layers.Bind(_editor, _showGrid, ShowGrid);
         _overlayPanel = new OverlaysPanel { Name = "Overlays" };
         _workspace.AddTab(EditorRegion.Right, _overlayPanel);
@@ -707,10 +707,10 @@ public partial class Main : Node3D
         _fairness.Bind(_editor);
         _fairness.StartSelected += ShowTile;
         _events = new EventsPanel { Name = "Events" };
-        _workspace.AddTab(EditorRegion.Right, _events);
+        _workspace.AddTab(EditorRegion.Right, _events, UiIcon.Events);
         _events.Bind(_editor, MapEventNodeJson.Instance);
         _generate = new GeneratePanel { Name = "Generate" }; // the new-map wizard ends in it with a template
-        _workspace.AddTab(EditorRegion.Right, _generate);
+        _workspace.AddTab(EditorRegion.Right, _generate, UiIcon.Generate);
         _generatorTemplates = [.. BuiltInTemplates.All, .. UserTemplates().Select(u => u.Template).Where(t => TemplateValidator.IsValid(t))];
         _generate.Bind(
             GeneratorTemplates(),
@@ -733,7 +733,7 @@ public partial class Main : Node3D
 
         // Bottom: the map's problems, the undo history and the editor's messages. Each scrolls by itself.
         var problems = new ProblemsPanel { Name = "Problems" };
-        _workspace.AddTab(EditorRegion.Bottom, problems, scroll: false);
+        _workspace.AddTab(EditorRegion.Bottom, problems, UiIcon.Error, scroll: false);
         problems.Changed += () =>
         {
             _statusBar.ShowProblems(problems.Errors, problems.Warnings);
@@ -745,10 +745,10 @@ public partial class Main : Node3D
         problems.FixReported += Say;
         _statusBar.ProblemsRequested += () => _workspace.ShowTab(problems);
         var history = new HistoryPanel { Name = "History" };
-        _workspace.AddTab(EditorRegion.Bottom, history, scroll: false);
+        _workspace.AddTab(EditorRegion.Bottom, history, UiIcon.History, scroll: false);
         history.Bind(_editor);
         var output = new OutputPanel { Name = "Output" };
-        _workspace.AddTab(EditorRegion.Bottom, output, scroll: false);
+        _workspace.AddTab(EditorRegion.Bottom, output, UiIcon.Output, scroll: false);
         output.Bind(_log);
         _events.SelectionChanged += name => _eventCells.Highlighted = name;
         _events.ShowRequested += ShowTile;
@@ -767,19 +767,19 @@ public partial class Main : Node3D
         _workspace.PageChanged += _commands.NotifyStateChanged;
 
         // The panels and the tools exist: the commands that open them, then the menus and the toolbar built from the registry.
-        Command("map.events", "Events", () => _workspace.ShowTab(_events));
-        Command("view.problems", "Problems", () => _workspace.ShowTab(problems));
-        Command("view.history", "History", () => _workspace.ShowTab(history));
-        Command("view.output", "Output", () => _workspace.ShowTab(output));
-        Command("view.inspector", "Inspector", () => _workspace.ShowTab(_inspector));
-        Command("view.layers", "Layers", () => _workspace.ShowTab(_layers));
+        Command("map.events", "Events", () => _workspace.ShowTab(_events), icon: UiIcon.Events);
+        Command("view.problems", "Problems", () => _workspace.ShowTab(problems), icon: UiIcon.Error);
+        Command("view.history", "History", () => _workspace.ShowTab(history), icon: UiIcon.History);
+        Command("view.output", "Output", () => _workspace.ShowTab(output), icon: UiIcon.Output);
+        Command("view.inspector", "Inspector", () => _workspace.ShowTab(_inspector), icon: UiIcon.Inspector);
+        Command("view.layers", "Layers", () => _workspace.ShowTab(_layers), icon: UiIcon.Layers);
         Command("view.overlays", "Overlays", () => _workspace.ShowTab(_overlayPanel));
         Command("view.fairness", "Fairness", () => _workspace.ShowTab(_fairness));
         foreach (var tool in _tools.Tools)
         {
             _commands.Register(new EditorCommand(ToolCommand(tool), tool.Name, () => _tools.Use(tool))
             {
-                Shortcut = tool.Shortcut is { } key ? new CommandShortcut(key) : null, WhyNot = OnMapTab, IsOn = () => _tools.Tool == tool, IsChoice = true,
+                Icon = tool.Icon, Shortcut = tool.Shortcut is { } key ? new CommandShortcut(key) : null, WhyNot = OnMapTab, IsOn = () => _tools.Tool == tool, IsChoice = true,
             });
         }
 
@@ -835,13 +835,13 @@ public partial class Main : Node3D
     private void RegisterCommands()
     {
         _commands = new CommandRegistry();
-        Command("file.new", "New map…", OpenWizard, shortcut: new(Key.N, Ctrl: true));
+        Command("file.new", "New map…", OpenWizard, shortcut: new(Key.N, Ctrl: true), icon: UiIcon.New);
         Command("file.open", "Open", () => _files.Open(), UiIcon.Load, new(Key.O, Ctrl: true));
         Command("file.save", "Save", () => _files.Save(), UiIcon.Save, new(Key.S, Ctrl: true));
-        Command("file.save-as", "Save as", () => _files.SaveAs(), shortcut: new(Key.S, Ctrl: true, Shift: true));
+        Command("file.save-as", "Save as", () => _files.SaveAs(), shortcut: new(Key.S, Ctrl: true, Shift: true), icon: UiIcon.SaveAs);
         Command("file.export-report", "Export report (Markdown)…", ExportReport);
         Command("file.export-picture", "Export map picture (PNG)…", ExportPicture, onMap: true);
-        Command("file.quit", "Quit", _files.Quit, shortcut: new(Key.Q, Ctrl: true));
+        Command("file.quit", "Quit", _files.Quit, shortcut: new(Key.Q, Ctrl: true), icon: UiIcon.Quit);
         Command("edit.undo", "Undo", () => _editor.Undo(), UiIcon.Undo, new(Key.Z, Ctrl: true),
             () => _editor.History.CanUndo ? null : "Nothing to undo", onMap: true);
         Command("edit.redo", "Redo", () => _editor.Redo(), UiIcon.Redo, new(Key.Y, Ctrl: true),
@@ -850,19 +850,19 @@ public partial class Main : Node3D
             {
                 _editor.Selecting.Set(_editor.Selecting.Everything(_context.Level, _toolContext.Filter));
                 Say(EditorToolContext.Describe(_editor.Selection));
-            }, shortcut: new(Key.A, Ctrl: true), onMap: true);
+            }, shortcut: new(Key.A, Ctrl: true), onMap: true, icon: UiIcon.SelectAll);
         Command("edit.deselect", "Deselect", Deselect, shortcut: new(Key.Escape),
-            whyNot: () => _editor.Selection.IsEmpty && _tools.Tool is not PasteTool ? "Nothing is selected" : null, onMap: true);
-        Command("edit.cut", "Cut", () => Copy(cut: true), shortcut: new(Key.X, Ctrl: true), whyNot: NothingToCopy, onMap: true);
-        Command("edit.copy", "Copy", () => Copy(cut: false), shortcut: new(Key.C, Ctrl: true), whyNot: NothingToCopy, onMap: true);
+            whyNot: () => _editor.Selection.IsEmpty && _tools.Tool is not PasteTool ? "Nothing is selected" : null, onMap: true, icon: UiIcon.Deselect);
+        Command("edit.cut", "Cut", () => Copy(cut: true), shortcut: new(Key.X, Ctrl: true), whyNot: NothingToCopy, onMap: true, icon: UiIcon.Cut);
+        Command("edit.copy", "Copy", () => Copy(cut: false), shortcut: new(Key.C, Ctrl: true), whyNot: NothingToCopy, onMap: true, icon: UiIcon.Copy);
         Command("edit.paste", "Paste", () => Paste(duplicate: false), shortcut: new(Key.V, Ctrl: true),
-            whyNot: () => _clipboard.Fragment is null ? "Nothing was copied" : null, onMap: true);
-        Command("edit.duplicate", "Duplicate", () => Paste(duplicate: true), shortcut: new(Key.D, Ctrl: true), whyNot: NothingToCopy, onMap: true);
+            whyNot: () => _clipboard.Fragment is null ? "Nothing was copied" : null, onMap: true, icon: UiIcon.Paste);
+        Command("edit.duplicate", "Duplicate", () => Paste(duplicate: true), shortcut: new(Key.D, Ctrl: true), whyNot: NothingToCopy, onMap: true, icon: UiIcon.Duplicate);
         Command("edit.delete", "Delete", () => Say($"Deleted {_editor.Selecting.Delete()} thing(s)"), shortcut: new(Key.Delete),
-            whyNot: () => _editor.Selection.HasThings ? null : "No object or hero is selected", onMap: true);
-        Command("edit.save-stamp", "Save selection as stamp", SaveStamp, whyNot: NothingToCopy, onMap: true);
-        Command("edit.rotate", "Rotate scenery", () => Turn(mirror: false), shortcut: new(Key.R, Ctrl: true), whyNot: NoScenery, onMap: true);
-        Command("edit.mirror", "Mirror scenery", () => Turn(mirror: true), shortcut: new(Key.M, Ctrl: true), whyNot: NoScenery, onMap: true);
+            whyNot: () => _editor.Selection.HasThings ? null : "No object or hero is selected", onMap: true, icon: UiIcon.Delete);
+        Command("edit.save-stamp", "Save selection as stamp", SaveStamp, whyNot: NothingToCopy, onMap: true, icon: UiIcon.ToolStamp);
+        Command("edit.rotate", "Rotate scenery", () => Turn(mirror: false), shortcut: new(Key.R, Ctrl: true), whyNot: NoScenery, onMap: true, icon: UiIcon.Rotate);
+        Command("edit.mirror", "Mirror scenery", () => Turn(mirror: true), shortcut: new(Key.M, Ctrl: true), whyNot: NoScenery, onMap: true, icon: UiIcon.Mirror);
         Command("map.settings", "Map settings", () => OpenSettings(null), UiIcon.Settings, new(Key.F7));
         Command("map.general", "Name, difficulty and arena", () => OpenSettings(MapSettingsTab.General));
         Command("map.players", "Players and teams", () => OpenSettings(MapSettingsTab.Players));
@@ -871,11 +871,11 @@ public partial class Main : Node3D
         Command("map.week-events", "Week events", () => OpenSettings(MapSettingsTab.WeekEvents));
         Command("map.rumours", "Rumours", () => OpenSettings(MapSettingsTab.Rumours));
         Command("map.texts", "Texts", () => OpenSettings(MapSettingsTab.Texts));
-        Command("map.resize", "Resize map", OpenResize, onMap: true);
+        Command("map.resize", "Resize map", OpenResize, onMap: true, icon: UiIcon.Resize);
         Command("map.crop", "Crop to selection", Crop,
-            whyNot: () => _editor.Selection.Tiles.Count > 0 ? null : "No tile is selected", onMap: true);
+            whyNot: () => _editor.Selection.Tiles.Count > 0 ? null : "No tile is selected", onMap: true, icon: UiIcon.Crop);
         Command("edit.preferences", "Preferences", OpenPreferences, UiIcon.Settings, new(Key.Comma, Ctrl: true));
-        Command("view.palette", "Command palette", OpenPalette, shortcut: new(Key.P, Ctrl: true, Shift: true));
+        Command("view.palette", "Command palette", OpenPalette, shortcut: new(Key.P, Ctrl: true, Shift: true), icon: UiIcon.CommandPalette);
         Command("view.map-tab", "Map tab", () => _workspace.ShowPage(EditorWorkspace.MapPage),
             isOn: () => _workspace.Page == EditorWorkspace.MapPage, isChoice: true);
         Command("templates.editor", "Template tab", () => _workspace.ShowPage(_templatePage),
@@ -897,14 +897,14 @@ public partial class Main : Node3D
         }
 
         Command("view.left", "Left panel", () => _workspace.SetOpen(EditorRegion.Left, !_workspace.IsShown(EditorRegion.Left)),
-            isOn: () => _workspace.IsShown(EditorRegion.Left), onMap: true);
+            isOn: () => _workspace.IsShown(EditorRegion.Left), onMap: true, icon: UiIcon.PanelLeft);
         Command("view.bottom", "Bottom panel", () => _workspace.SetOpen(EditorRegion.Bottom, !_workspace.IsShown(EditorRegion.Bottom)),
-            isOn: () => _workspace.IsShown(EditorRegion.Bottom), onMap: true);
+            isOn: () => _workspace.IsShown(EditorRegion.Bottom), onMap: true, icon: UiIcon.PanelBottom);
         Command("view.right", "Right panel", () => _workspace.SetOpen(EditorRegion.Right, !_workspace.IsShown(EditorRegion.Right)),
-            isOn: () => _workspace.IsShown(EditorRegion.Right), onMap: true);
-        Command("view.panels", "Hide all panels", _workspace.ToggleAll, shortcut: new(Key.F11), isOn: () => _workspace.AllHidden, onMap: true);
-        Command("test.play", "Test the map…", OpenPlayTest, shortcut: new(Key.F5), onMap: true);
-        Command("help.help", "Help", () => { }, shortcut: new(Key.F1), whyNot: () => "The editor's help is not written yet");
+            isOn: () => _workspace.IsShown(EditorRegion.Right), onMap: true, icon: UiIcon.PanelRight);
+        Command("view.panels", "Hide all panels", _workspace.ToggleAll, shortcut: new(Key.F11), isOn: () => _workspace.AllHidden, onMap: true, icon: UiIcon.PanelsHide);
+        Command("test.play", "Test the map…", OpenPlayTest, shortcut: new(Key.F5), onMap: true, icon: UiIcon.Play);
+        Command("help.help", "Help", () => { }, shortcut: new(Key.F1), whyNot: () => "The editor's help is not written yet", icon: UiIcon.Help);
     }
 
     /// <summary>Why Copy, Cut and Duplicate cannot run: a fragment holds tiles and objects, and none is selected.</summary>

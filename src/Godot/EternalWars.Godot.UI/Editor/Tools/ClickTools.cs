@@ -16,6 +16,8 @@ public sealed class ObjectTool(EditorToolContext context) : EditorTool(context)
 
     public override string Name => "Object";
 
+    public override UiIcon? Icon => UiIcon.ToolObject;
+
     public override Key? Shortcut => Key.O;
 
     private BrowserEntry? Entry => Context.Choice.Entry;
@@ -95,6 +97,8 @@ public sealed class MonsterTool(EditorToolContext context) : EditorTool(context)
 
     public override string Name => "Monster";
 
+    public override UiIcon? Icon => UiIcon.ToolMonster;
+
     public override void BuildOptions(ToolOptions options)
     {
         var creatures = Editor.Scenario.Creatures.All.OrderBy(c => c.Town ?? "~").ThenBy(c => c.Tier).ThenBy(c => c.Name, StringComparer.Ordinal)
@@ -117,6 +121,8 @@ public sealed class HeroTool(EditorToolContext context) : EditorTool(context)
 
     public override string Name => "Hero";
 
+    public override UiIcon? Icon => UiIcon.Hero;
+
     public override void BuildOptions(ToolOptions options) =>
         options.Choice("Owner", Editor.Scenario.Players.Select(p => (p.Name, p.Id)), _owner, p => _owner = p);
 
@@ -135,6 +141,8 @@ public sealed class LinkGatesTool(EditorToolContext context) : EditorTool(contex
     private MapObjectId? _from;
 
     public override string Name => "LinkGates";
+
+    public override UiIcon? Icon => UiIcon.ToolLinkGates;
 
     public override void BuildOptions(ToolOptions options) => options.Hint("Click a gate (or one-way entrance), then its partner (or exit).");
 
@@ -170,6 +178,8 @@ public sealed class LinkGatesTool(EditorToolContext context) : EditorTool(contex
 public sealed class GrailTool(EditorToolContext context) : EditorTool(context)
 {
     public override string Name => "Grail";
+
+    public override UiIcon? Icon => UiIcon.ToolGrail;
 
     public override void BuildOptions(ToolOptions options) => options.Hint(
         "Click open ground at least 10 cells from the edges to bury the Grail; click it again to take it away "

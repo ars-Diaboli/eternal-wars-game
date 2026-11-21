@@ -9,6 +9,8 @@ public abstract class EditorTool(EditorToolContext context) : IEditorTool
 {
     public abstract string Name { get; }
 
+    public virtual UiIcon? Icon => null;
+
     public virtual Key? Shortcut => null;
 
     protected EditorToolContext Context { get; } = context;
@@ -213,8 +215,10 @@ public abstract class TileBrushTool(EditorToolContext context) : BrushTool(conte
         };
         options.Labelled("Size", size);
         var round = new CheckBox { Text = "Round", ButtonPressed = Context.Brush.Shape == BrushShape.Round, TooltipText = "A round brush instead of a square one" };
+        round.Icon = UiIcons.Get(round.ButtonPressed ? UiIcon.BrushRound : UiIcon.BrushSquare);
         round.Toggled += on =>
         {
+            round.Icon = UiIcons.Get(on ? UiIcon.BrushRound : UiIcon.BrushSquare);
             Context.Brush = Context.Brush with { Shape = on ? BrushShape.Round : BrushShape.Square };
             RefreshOutline();
         };

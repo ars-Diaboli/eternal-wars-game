@@ -62,8 +62,11 @@ public static class PlaceholderIcons
     private static readonly Dictionary<(string, int), Texture2D> Cache = [];
 
     /// <summary>The command's icon at <paramref name="size"/> pixels: its own, or the placeholder for its name.</summary>
-    public static Texture2D Of(EditorCommand command, int size = SmallSize) =>
-        command.Icon is { } icon && UiIcons.Get(icon, size) is { } texture ? texture : Of(command.Name, size);
+    public static Texture2D Of(EditorCommand command, int size = SmallSize) => Of(command.Icon, command.Name, size);
+
+    /// <summary><paramref name="icon"/> at <paramref name="size"/> pixels, or the placeholder for <paramref name="name"/> when it has none or its file is missing.</summary>
+    public static Texture2D Of(UiIcon? icon, string name, int size = SmallSize) =>
+        icon is { } own && UiIcons.Get(own, size) is { } texture ? texture : Of(name, size);
 
     /// <summary>The placeholder for <paramref name="name"/> at <paramref name="size"/> pixels.</summary>
     public static Texture2D Of(string name, int size = SmallSize)

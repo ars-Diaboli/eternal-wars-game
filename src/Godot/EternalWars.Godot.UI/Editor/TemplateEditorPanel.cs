@@ -56,7 +56,7 @@ public partial class TemplateEditorPanel : PanelContainer
         var top = new HBoxContainer();
         rows.AddChild(top);
         top.AddChild(new Label { Text = "Template editor" });
-        Button(top, "New", () => Load(TemplateEditorSession.Blank()));
+        Button(top, "New", () => Load(TemplateEditorSession.Blank()), UiIcon.New);
         _open.ItemSelected += index =>
         {
             if (index > 0 && index - 1 < _sources.Count)
@@ -67,16 +67,16 @@ public partial class TemplateEditorPanel : PanelContainer
         top.AddChild(_open);
         Button(top, "Save", () => _message.Text = _host.Save(_session.Template));
         top.AddChild(new VSeparator());
-        Button(top, "+ Start", () => Add(ZoneType.PlayerStart));
-        Button(top, "+ AI start", () => Add(ZoneType.AiStart));
-        Button(top, "+ Treasure", () => Add(ZoneType.Treasure));
-        Button(top, "+ Junction", () => Add(ZoneType.Junction));
-        Button(top, "Arrange", () => _session.ArrangeGraph(all: true));
+        Button(top, "+ Start", () => Add(ZoneType.PlayerStart), ZoneIcon(ZoneType.PlayerStart));
+        Button(top, "+ AI start", () => Add(ZoneType.AiStart), ZoneIcon(ZoneType.AiStart));
+        Button(top, "+ Treasure", () => Add(ZoneType.Treasure), ZoneIcon(ZoneType.Treasure));
+        Button(top, "+ Junction", () => Add(ZoneType.Junction), ZoneIcon(ZoneType.Junction));
+        Button(top, "Arrange", () => _session.ArrangeGraph(all: true), UiIcon.Arrange);
         top.AddChild(new VSeparator());
         top.AddChild(_size);
         _seed.Text = ((ulong)System.Random.Shared.NextInt64()).ToString(CultureInfo.InvariantCulture);
         top.AddChild(_seed);
-        Button(top, "Generate", Generate);
+        Button(top, "Generate", Generate, UiIcon.Generate);
 
         var body = new HSplitContainer { SizeFlagsVertical = SizeFlags.ExpandFill };
         rows.AddChild(body);
@@ -113,17 +113,63 @@ public partial class TemplateEditorPanel : PanelContainer
         }
     }
 
-    private static void Button(Container parent, string text, Action pressed)
+    /// <summary>A button; <paramref name="icon"/> stands before its text.</summary>
+    private static void Button(Container parent, string text, Action pressed, UiIcon? icon = null)
     {
         var button = new Button { Text = text };
         if (text == "Save")
         {
             button.WithIcon(UiIcon.Save);
         }
+        else if (icon is { } shown)
+        {
+            button.WithIcon(shown, keepText: true);
+        }
 
         button.Pressed += pressed;
         parent.AddChild(button);
     }
+
+    private static UiIcon ZoneIcon(ZoneType type) => type switch
+    {
+        ZoneType.PlayerStart => UiIcon.ZoneStart,
+        ZoneType.AiStart => UiIcon.ZoneAiStart,
+        ZoneType.Treasure => UiIcon.ZoneTreasure,
+        _ => UiIcon.ZoneJunction,
+    };
+
+    private static UiIcon KindIcon(ConnectionKind kind) => kind switch
+    {
+        ConnectionKind.Wide => UiIcon.ConnectionWide,
+        ConnectionKind.Gate => UiIcon.ConnectionGate,
+        ConnectionKind.Portal => UiIcon.ConnectionPortal,
+        _ => UiIcon.ConnectionNormal,
+    };
+
+    private static UiIcon? GuardIcon(ConnectionGuard guard) => guard switch
+    {
+        ConnectionGuard.Monsters => UiIcon.ToolMonster,
+        ConnectionGuard.Garrison => UiIcon.GuardGarrison,
+        ConnectionGuard.BorderGuard => UiIcon.GuardBorder,
+        ConnectionGuard.BorderGate => UiIcon.GuardBorderGate,
+        _ => null,
+    };
+
+    private static UiIcon StrengthIcon(MonsterStrength strength) => strength switch
+    {
+        MonsterStrength.None => UiIcon.StrengthNone,
+        MonsterStrength.Weak => UiIcon.StrengthWeak,
+        MonsterStrength.Average => UiIcon.StrengthAverage,
+        _ => UiIcon.StrengthStrong,
+    };
+
+    private static UiIcon? SymmetryIcon(TemplateSymmetry symmetry) => symmetry switch
+    {
+        TemplateSymmetry.Vertical => UiIcon.MirrorVertical,
+        TemplateSymmetry.Horizontal => UiIcon.MirrorHorizontal,
+        TemplateSymmetry.Diagonal => UiIcon.MirrorDiagonal,
+        _ => null,
+    };
 
     private void RefreshSources()
     {
@@ -202,7 +248,7 @@ public partial class TemplateEditorPanel : PanelContainer
         _issues.Clear();
         foreach (var issue in issues)
         {
-            var index = _issues.AddItem($"{(issue.Severity == IssueSeverity.Error ? "Error" : "Warning")}: {issue.Message}");
+            var index = _issues.AddItem($"{(issue.Severity == IssueSeverity.Error ? "Error" : "Warning")}: {issue.Message}", ProblemsPanel.SeverityIcon(issue.Severity));
             _issues.SetItemCustomFgColor(index, issue.Severity == IssueSeverity.Error ? UiTheme.IssueError : UiTheme.IssueWarning);
         }
 
@@ -239,12 +285,22 @@ public partial class TemplateEditorPanel : PanelContainer
         _inspector.AddRow(label, labelWidth: 150).AddChild(spin);
     }
 
-    private void Choice<T>(string label, IReadOnlyList<T> values, T current, Action<T> changed, Func<T, string>? name = null)
+    /// <summary>A labelled list of <paramref name="values"/>; <paramref name="icon"/> gives an item its icon (null: none).</summary>
+    private void Choice<T>(
+        string label, IReadOnlyList<T> values, T current, Action<T> changed, Func<T, string>? name = null, Func<T, UiIcon?>? icon = null)
     {
         var option = new OptionButton();
         foreach (var value in values)
         {
-            option.AddItem(name?.Invoke(value) ?? value?.ToString() ?? "");
+            var text = name?.Invoke(value) ?? value?.ToString() ?? "";
+            if (icon?.Invoke(value) is { } own && UiIcons.Get(own) is { } texture)
+            {
+                option.AddIconItem(texture, text);
+            }
+            else
+            {
+                option.AddItem(text);
+            }
         }
 
         option.Select(Math.Max(0, values.ToList().IndexOf(current)));
@@ -291,8 +347,9 @@ public partial class TemplateEditorPanel : PanelContainer
         Check("Teams locked", t.TeamsLocked, v => _session.UpdateTemplate(x => x with { TeamsLocked = v }));
         Spin("Hero limit", t.MaxHeroes, 1, 8, v => _session.UpdateTemplate(x => x with { MaxHeroes = v }));
         Check("Underground", t.Underground, v => _session.UpdateTemplate(x => x with { Underground = v }));
-        Choice("Symmetry", Enum.GetValues<TemplateSymmetry>(), t.Symmetry, v => _session.UpdateTemplate(x => x with { Symmetry = v }));
-        Choice("Connection guard", Enum.GetValues<ConnectionGuard>(), t.ConnectionGuard, v => _session.UpdateTemplate(x => x with { ConnectionGuard = v }));
+        Choice("Symmetry", Enum.GetValues<TemplateSymmetry>(), t.Symmetry, v => _session.UpdateTemplate(x => x with { Symmetry = v }), icon: SymmetryIcon);
+        Choice("Connection guard", Enum.GetValues<ConnectionGuard>(), t.ConnectionGuard, v => _session.UpdateTemplate(x => x with { ConnectionGuard = v }),
+            icon: g => GuardIcon(g));
         Check("Roads", t.Roads.Enabled, v => _session.UpdateTemplate(x => x with { Roads = x.Roads with { Enabled = v } }));
         Check("Week events", t.WeekEvents.Enabled, v => _session.UpdateTemplate(x => x with { WeekEvents = x.WeekEvents with { Enabled = v } }));
         var sizes = _inspector.AddRow("Sizes", labelWidth: 150);
@@ -335,7 +392,7 @@ public partial class TemplateEditorPanel : PanelContainer
                 ? x with { Type = v, Owner = x.Owner ?? FreeSlot(), PlayerTowns = x.PlayerTowns.Min < 1 ? CountRange.Exactly(1) : x.PlayerTowns }
                 : x with { Type = v, Owner = null, Team = null, PlayerTowns = CountRange.None, StartBuildings = null, StartDwellings = null });
             ShowInspector();
-        });
+        }, icon: t => ZoneIcon(t));
         if (z.Type is ZoneType.PlayerStart or ZoneType.AiStart)
         {
             Spin("Player slot", (z.Owner ?? 0) + 1, 1, 8, v => Zone(id, x => x with { Owner = v - 1 }));
@@ -348,7 +405,7 @@ public partial class TemplateEditorPanel : PanelContainer
         Spin("Level", z.Level, 0, 1, v => Zone(id, x => x with { Level = v }), tooltip: "1 = underground (the template needs it on)");
         Spin("Neutral towns from", z.NeutralTowns.Min, 0, 4, v => Zone(id, x => x with { NeutralTowns = new CountRange(v, Math.Max(v, x.NeutralTowns.Max)) }));
         Spin("Neutral towns to", z.NeutralTowns.Max, 0, 4, v => Zone(id, x => x with { NeutralTowns = new CountRange(Math.Min(v, x.NeutralTowns.Min), v) }));
-        Choice("Monsters", Enum.GetValues<MonsterStrength>(), z.Monsters, v => Zone(id, x => x with { Monsters = v }));
+        Choice("Monsters", Enum.GetValues<MonsterStrength>(), z.Monsters, v => Zone(id, x => x with { Monsters = v }), icon: m => StrengthIcon(m));
         Choice("Mine guards", Enum.GetValues<MineGuarding>(), z.MineGuards, v => Zone(id, x => x with { MineGuards = v }));
         Choice("Obstacles", Enum.GetValues<ObstacleDensity>(), z.Obstacles, v => Zone(id, x => x with { Obstacles = v }));
         var mirrors = new List<string?> { null };
@@ -432,7 +489,7 @@ public partial class TemplateEditorPanel : PanelContainer
         {
             Connection(index, x => x with { Kind = v });
             ShowInspector();
-        });
+        }, icon: k => KindIcon(k));
         if (c.Kind != ConnectionKind.Wide)
         {
             Spin("Guard value", c.GuardValue, 0, 100000, v => Connection(index, x => x with { GuardValue = v }), step: 100, tooltip: "Neutral army power (creature value × count); 0 = unguarded");
@@ -448,7 +505,7 @@ public partial class TemplateEditorPanel : PanelContainer
             {
                 Connection(index, x => x with { Guard = v });
                 ShowInspector();
-            }, v => v?.ToString() ?? $"template's ({_session.Template.ConnectionGuard})");
+            }, v => v?.ToString() ?? $"template's ({_session.Template.ConnectionGuard})", v => GuardIcon(v ?? _session.Template.ConnectionGuard));
             if (_session.Template.GuardOf(c) is ConnectionGuard.BorderGuard or ConnectionGuard.BorderGate)
             {
                 var colours = new List<ObjectColour?> { null };

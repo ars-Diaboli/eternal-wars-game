@@ -14,6 +14,8 @@ public sealed class TerrainTool(EditorToolContext context) : TileBrushTool(conte
 
     public override string Name => "Terrain";
 
+    public override UiIcon? Icon => UiIcon.ToolTerrain;
+
     public override Key? Shortcut => Key.T;
 
     protected override string StrokeDescription => $"Paint {_terrain}";
@@ -32,7 +34,7 @@ public sealed class TerrainTool(EditorToolContext context) : TileBrushTool(conte
         BrushOptions(options);
         var fill = new CheckBox
         {
-            Text = "Fill", ButtonPressed = _fill,
+            Text = "Fill", Icon = UiIcons.Get(UiIcon.ToolFill), ButtonPressed = _fill,
             TooltipText = "A click fills the joined area of the terrain clicked (tiles side by side, not across corners)",
         };
         fill.Toggled += on =>
@@ -68,6 +70,8 @@ public sealed class RoadTool(EditorToolContext context) : TileBrushTool(context)
 
     public override string Name => "Road";
 
+    public override UiIcon? Icon => UiIcon.ToolRoad;
+
     protected override string StrokeDescription => "Paint road";
 
     public override void BuildOptions(ToolOptions options)
@@ -85,6 +89,8 @@ public sealed class RiverTool(EditorToolContext context) : TileBrushTool(context
     private RiverType _river = RiverType.Clear;
 
     public override string Name => "River";
+
+    public override UiIcon? Icon => UiIcon.ToolRiver;
 
     protected override string StrokeDescription => "Paint river";
 
@@ -104,6 +110,8 @@ public sealed class StartZoneTool(EditorToolContext context) : TileBrushTool(con
     private PlayerId? _zone = context.Editor.Scenario.Players[0].Id;
 
     public override string Name => "StartZone";
+
+    public override UiIcon? Icon => UiIcon.ToolStartZone;
 
     protected override string StrokeDescription => _zone is null ? "Erase start zone" : "Paint start zone";
 
@@ -145,6 +153,8 @@ public sealed class HeightTool(EditorToolContext context) : BrushTool(context)
 
     public override string Name => "Height";
 
+    public override UiIcon? Icon => UiIcon.ToolHeight;
+
     protected override string StrokeDescription => _action switch
     {
         HeightAction.Raise => "Raise ground",
@@ -157,7 +167,15 @@ public sealed class HeightTool(EditorToolContext context) : BrushTool(context)
     public override void BuildOptions(ToolOptions options)
     {
         options.Choice(
-            "Do", Enum.GetValues<HeightAction>().Select(h => (h == HeightAction.FromTerrain ? "From terrain" : h.ToString(), h)), _action, h => _action = h);
+            "Do", Enum.GetValues<HeightAction>().Select(h => (h == HeightAction.FromTerrain ? "From terrain" : h.ToString(), h)), _action, h => _action = h,
+            h => h switch
+            {
+                HeightAction.Raise => UiIcon.HeightRaise,
+                HeightAction.Lower => UiIcon.HeightLower,
+                HeightAction.Level => UiIcon.HeightLevel,
+                HeightAction.Smooth => UiIcon.HeightSmooth,
+                _ => null,
+            });
         Radius(options);
         var strength = new SpinBox
         {

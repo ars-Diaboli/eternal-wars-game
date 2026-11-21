@@ -35,7 +35,11 @@ public partial class LayersPanel : VBoxContainer
         foreach (var (text, layer) in Rows)
         {
             var shown = new CheckBox { Name = $"Show{layer}", Text = text, SizeFlagsHorizontal = SizeFlags.ExpandFill, TooltipText = $"Show {text.ToLowerInvariant()}" };
-            shown.Toggled += on => _layers.Show(layer, on);
+            shown.Toggled += on =>
+            {
+                _layers.Show(layer, on);
+                shown.Icon = EyeIcon(on);
+            };
             table.AddChild(shown);
             CheckBox? locked = null;
             if ((MapLayers.Lockable & layer) != 0)
@@ -50,6 +54,7 @@ public partial class LayersPanel : VBoxContainer
             }
 
             _boxes[layer] = (shown, locked);
+            shown.Icon = EyeIcon(shown.ButtonPressed);
         }
 
         _grid.ButtonPressed = gridShown;
@@ -77,7 +82,11 @@ public partial class LayersPanel : VBoxContainer
         foreach (var (layer, (shown, locked)) in _boxes)
         {
             shown.SetPressedNoSignal(_layers.IsShown(layer));
+            shown.Icon = EyeIcon(shown.ButtonPressed);
             locked?.SetPressedNoSignal(_layers.IsLocked(layer));
         }
     }
+
+    /// <summary>The open eye before a shown kind, the closed one before a hidden kind.</summary>
+    private static Texture2D? EyeIcon(bool shown) => UiIcons.Get(shown ? UiIcon.Eye : UiIcon.EyeOff);
 }

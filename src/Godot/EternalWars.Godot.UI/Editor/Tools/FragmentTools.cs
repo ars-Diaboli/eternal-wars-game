@@ -20,6 +20,8 @@ public sealed class EraseTool(EditorToolContext context) : TileBrushTool(context
 
     public override string Name => "Erase";
 
+    public override UiIcon? Icon => UiIcon.ToolErase;
+
     public override Key? Shortcut => Key.E;
 
     protected override string StrokeDescription => "Erase";
@@ -61,6 +63,8 @@ public sealed class PasteTool(EditorToolContext context) : EditorTool(context)
     private MapPosition? _hovered;
 
     public override string Name => "Paste";
+
+    public override UiIcon? Icon => UiIcon.ToolStamp;
 
     private MapFragment? Fragment => _duplicate ?? Context.Clipboard.Fragment;
 
