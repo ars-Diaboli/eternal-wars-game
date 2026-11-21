@@ -1,4 +1,5 @@
 using EternalWars.Core.Data.Templates;
+using EternalWars.Core.Domain.Analysis;
 using EternalWars.Core.Generation;
 
 namespace EternalWars.Tools.Sim.Commands;
@@ -6,7 +7,7 @@ namespace EternalWars.Tools.Sim.Commands;
 /// <summary>
 /// <c>sim fairness [--template T] [--seeds N] [--seed S] [--size N] [--verbose]</c>: the whole-map check (ADR-071, ADR-117) over N seeds per
 /// template and size: how many single attempts pass, how many seeds <see cref="MapGenerator.GenerateBest"/> gets a map without problems for,
-/// and which check fails most.
+/// and which check fails most. With --verbose, each seed's map is also measured by the map analysis (ADR-263), every slot taken.
 /// </summary>
 internal sealed class FairnessCommand : SimCommand
 {
@@ -46,6 +47,9 @@ internal sealed class FairnessCommand : SimCommand
                     {
                         Console.WriteLine($"  seed {seed}: {string.Join(" | ", single.Fairness!.Starts.Select(s => $"{s.Zone} mines {s.MineDistance} treasure {s.TreasureValue} guard {s.GuardPower}"))}");
                         single.Problems.ToList().ForEach(p => Console.WriteLine($"    {p}"));
+                        clock.Stop(); // the analysis is no part of a seed's generation time
+                        PrintAnalysis(sim, template, templateSize, seed);
+                        clock.Start();
                     }
 
                     var result = single.Problems.Count == 0 ? new GenerationResult(single, 0, seed) : MapGenerator.GenerateBest(template, templateSize, seed, content: sim.Content);
@@ -63,5 +67,24 @@ internal sealed class FairnessCommand : SimCommand
         }
 
         return failedSeeds == 0 ? 0 : 1;
+    }
+
+    /// <summary>
+    /// The map analysis's numbers (EDIT-9, ADR-263) for the game of <paramref name="seed"/> with every slot taken (built as the new-game
+    /// screen builds it, so it may be another attempt than the single map measured above): days to the nearest town, mines and provider; treasure and guards within 3 and 7 days; its warnings.
+    /// </summary>
+    private static void PrintAnalysis(SimContext sim, MapTemplate template, int size, ulong seed)
+    {
+        var state = SimGames.GeneratedGame(sim, template, size, template.MaxPlayers, seed).State;
+        var fairness = new MapAnalysis(state).Fairness();
+        foreach (var start in fairness.Starts)
+        {
+            static string Days(int? days) => days is { } d ? $"{d}d" : "-";
+            Console.WriteLine($"    analysis player {start.Player.Value + 1}: town {Days(start.DaysToTown)}, mines "
+                + $"{string.Join(" ", start.DaysToMine.Select(m => $"{m.Key.ToString().ToLowerInvariant()} {Days(m.Value)}"))}, provider {Days(start.DaysToProvider)}, "
+                + $"treasure {start.TreasureWithin3}/{start.TreasureWithin7}, guards {start.GuardsWithin3}/{start.GuardsWithin7} (within {MapAnalysis.NearDays}/{MapAnalysis.FarDays} days)");
+        }
+
+        fairness.Warnings.ToList().ForEach(w => Console.WriteLine($"    analysis: {w}"));
     }
 }

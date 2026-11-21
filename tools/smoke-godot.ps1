@@ -393,6 +393,10 @@ $scenarios = @(
     # two levels: the underground with the surface shown faintly on the minimap.
     @{ Name = 'editor-minimap'; App = 'EternalWars.MapEditor'; Frames = 96; Map = $emberMap
        Input = '3:key:Home;6:click:1260,720;12:drag:1250,800,1390,700;18:key:Ctrl+G;22:text:Castle;32:key:Enter;40:key:Ctrl+G;44:text:20 10;52:key:Enter;60:key:Ctrl+N;64:click:@The surface and the underground;67:click:@Create map;80:key:L;84:click:@Show the other level faintly' }
+    # The layers (ADR-262) on Ember March: the Layers tab; monsters locked, then Select all takes every thing but them; scenery and the terrain
+    # hidden; then all shown and unlocked, and Select all takes the monsters too.
+    @{ Name = 'editor-layers'; App = 'EternalWars.MapEditor'; Frames = 60; Map = $emberMap
+       Input = '3:key:Home;6:click:@Layers;10:click:@Locked#5;14:key:Ctrl+A;24:click:@Scenery;30:click:@Terrain#2;40:click:@Show and unlock all;50:key:Ctrl+A' }
 )
 
 # Every scenario has a seed of its own, so its games and battles are the same on every run (ADR-239): the entry's Seed, else one made from

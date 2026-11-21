@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Objects;
@@ -35,18 +36,22 @@ public partial class MapObjectsView : Node3D
     private MapViewContext _context = null!;
     private int _level;
     private Label3D? _pointedCaption;
+    private MapLayer _hiddenObjects;
 
     public void Bind(MapViewContext context, int level)
     {
         _context = context;
         _level = level;
+        _hiddenObjects = context.Hidden & MapLayers.ObjectLayers;
         RebuildAll();
 
         context.ViewerChanged += RebuildAll;
+        context.HiddenChanged += ShowLayers;
         context.PointedChanged += ShowPointedCaption;
         TreeExiting += () =>
         {
             context.ViewerChanged -= RebuildAll;
+            context.HiddenChanged -= ShowLayers;
             context.PointedChanged -= ShowPointedCaption;
         };
         var events = context.Events;
@@ -151,9 +156,21 @@ public partial class MapObjectsView : Node3D
         }
     }
 
+    /// <summary>The objects drawn on this level: those the viewer knows (all without one), of the kinds not hidden (ADR-262).</summary>
     private IEnumerable<KnownObject> Known() =>
         (_context.Viewer is { } viewer ? _context.State.Memory.Of(viewer) : _context.State.Objects.Select(KnownObject.Of))
-        .Where(k => k.Position.Level == _level);
+        .Where(k => k.Position.Level == _level && _context.Shows(MapLayers.Of(k.Definition.Kind)));
+
+    /// <summary>Other kinds are hidden: the objects are drawn again only when an object layer is among them.</summary>
+    private void ShowLayers()
+    {
+        var hidden = _context.Hidden & MapLayers.ObjectLayers;
+        if (hidden != _hiddenObjects)
+        {
+            _hiddenObjects = hidden;
+            RebuildAll();
+        }
+    }
 
     private void Add(KnownObject known)
     {

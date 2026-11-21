@@ -30,6 +30,12 @@ internal sealed class EditorContext(GameState scenario, MapObjectCatalog catalog
     /// <summary>The session's selection editor, told when a thing leaves the map.</summary>
     public SelectionEditor? Selecting { get; set; }
 
+    /// <summary>The session's layers (ADR-262): what is hidden or locked cannot be selected or erased.</summary>
+    public MapLayers? Layers { get; set; }
+
+    /// <summary>The kinds that can be selected and erased now.</summary>
+    public MapLayer Editable => Layers?.Editable ?? MapLayer.All;
+
     public void BeginStroke(string description)
     {
         if (_stroke is not null)

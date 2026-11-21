@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
@@ -30,11 +31,20 @@ public partial class EventCellsView : Node3D
     {
         _context = context;
         context.LevelChanged += Rebuild;
-        TreeExiting += () => context.LevelChanged -= Rebuild;
+        context.HiddenChanged += ShowLayer;
+        TreeExiting += () =>
+        {
+            context.LevelChanged -= Rebuild;
+            context.HiddenChanged -= ShowLayer;
+        };
+        ShowLayer();
         this.SubscribeWhileInTree<MapEventsChanged>(context.Events, _ => Rebuild());
         this.SubscribeWhileInTree<GroundHeightsChanged>(context.Events, _ => Rebuild());
         Rebuild();
     }
+
+    /// <summary>The editor's layers (ADR-262): the view hides with its kind.</summary>
+    private void ShowLayer() => Visible = _context.Shows(MapLayer.Events);
 
     private void Rebuild()
     {

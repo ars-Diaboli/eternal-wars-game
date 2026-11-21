@@ -304,8 +304,14 @@ Top-down view); it goes out far enough to show a 256 × 256 map.
 - **Go to** (Ctrl+G, View > Go to…): type a tile ("12, 7", or "12, 7, 1" for the level; the shown level otherwise) or a name: the
   list follows as you type with the tile first, then the heroes, the named objects (every town) and the events with a cell whose names
   fit, as the command palette ranks them. Up and Down choose, Enter or a click goes there (a hero or an object also becomes the
-  selection), Escape closes it.
+  selection, unless its layer is hidden or locked), Escape closes it.
 - Going to a tile from Go to, the minimap, the Problems panel or the events puts it in the middle of the map's part of the window.
+- **Layers** (ADR-262, the Layers tab of the right region, View > Layers): a Show box for the terrain, roads, rivers, objects, scenery,
+  monsters, heroes, events, start zones and the grid, and a Locked box for the roads, rivers, objects, scenery, monsters, heroes and
+  events. A hidden or locked kind is not selected (a click, a box, Select all, a jump or Go to) and not erased; locking or hiding it lets
+  go of what was selected of it. A copy leaves out hidden or locked roads and rivers, and a paste does not paint over them. The brushes
+  still paint terrain, roads, rivers and start zones. The grid hides with the terrain. "Show and unlock all" undoes it all; every map
+  opened starts with everything shown and unlocked.
 
 The camera keys do nothing while a text field is being typed into, while a question, a dialog, the palette or Preferences is open,
 while Ctrl is held, and on the Template tab. A shortcut pressed in the middle of a stroke on the map is ignored.

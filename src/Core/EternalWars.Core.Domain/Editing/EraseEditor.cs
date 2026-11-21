@@ -25,11 +25,18 @@ public enum EraseKinds
 
 /// <summary>
 /// Erases by kind (EDIT-1, ADR-250): under a set of tiles (a brush) or over the selection. An object goes when any of its cells is
-/// there; what pointed at a removed gate loses its link, as with any removal. One call is one undo step; inside a stroke it joins the
-/// stroke.
+/// there; what pointed at a removed gate loses its link, as with any removal. A kind that is hidden or locked (<see cref="MapLayers"/>,
+/// ADR-262) is left as it is. One call is one undo step; inside a stroke it joins the stroke.
 /// </summary>
 public sealed class EraseEditor
 {
+    private static readonly (MapLayer Layer, EraseKinds Kind)[] ErasableKinds =
+    [
+        (MapLayer.Objects, EraseKinds.Objects), (MapLayer.Scenery, EraseKinds.Scenery), (MapLayer.Monsters, EraseKinds.Monsters),
+        (MapLayer.Heroes, EraseKinds.Heroes), (MapLayer.Roads, EraseKinds.Roads), (MapLayer.Rivers, EraseKinds.Rivers),
+        (MapLayer.Events, EraseKinds.Events),
+    ];
+
     private readonly EditorContext _context;
     private readonly TerrainEditor _terrain;
     private readonly ObjectEditor _objects;
@@ -67,6 +74,7 @@ public sealed class EraseEditor
         string description, HashSet<MapPosition> tiles, List<MapObjectId> selectedObjects, List<HeroId> selectedHeroes, List<string> selectedEvents,
         EraseKinds kinds)
     {
+        kinds &= Erasable(_context.Editable);
         var objects = tiles
             .Select(t => Scenario.ObjectCellAt(t)?.Object)
             .OfType<MapObject>()
@@ -105,10 +113,25 @@ public sealed class EraseEditor
         return erased;
     }
 
-    private static EraseKinds KindOf(MapObject mapObject) => mapObject.Definition.Kind switch
+    private static EraseKinds KindOf(MapObject mapObject) => MapLayers.Of(mapObject) switch
     {
-        MapObjectKind.Monster => EraseKinds.Monsters,
-        MapObjectKind.Scenery => EraseKinds.Scenery,
+        MapLayer.Monsters => EraseKinds.Monsters,
+        MapLayer.Scenery => EraseKinds.Scenery,
         _ => EraseKinds.Objects,
     };
+
+    /// <summary>The kinds the eraser may take with <paramref name="editable"/> layers.</summary>
+    private static EraseKinds Erasable(MapLayer editable)
+    {
+        var kinds = EraseKinds.None;
+        foreach (var (layer, kind) in ErasableKinds)
+        {
+            if (editable.HasFlag(layer))
+            {
+                kinds |= kind;
+            }
+        }
+
+        return kinds;
+    }
 }

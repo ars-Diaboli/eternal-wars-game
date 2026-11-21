@@ -10,10 +10,17 @@ namespace EternalWars.Core.Domain.Editing;
 /// Changes the session's <see cref="MapSelection"/> (EDIT-1, ADR-250) and works on what is selected. Finding things (<see cref="At"/>,
 /// <see cref="In"/>, <see cref="OfKind"/>, <see cref="Everything"/>) changes nothing; <see cref="Set"/>, <see cref="Add"/>,
 /// <see cref="Remove"/> and <see cref="Clear"/> change the selection and publish <see cref="SelectionChanged"/> when it differs, with no
-/// undo step; <see cref="Delete"/> and <see cref="Move"/> edit the map as one undo step.
+/// undo step; <see cref="Delete"/> and <see cref="Move"/> edit the map as one undo step. Nothing of a kind that is hidden or locked
+/// (<see cref="MapLayers"/>, ADR-262) is found or selected.
 /// </summary>
 public sealed class SelectionEditor
 {
+    private static readonly (MapLayer Layer, SelectionFilter Kind)[] SelectableKinds =
+    [
+        (MapLayer.Objects, SelectionFilter.Objects), (MapLayer.Heroes, SelectionFilter.Heroes), (MapLayer.Monsters, SelectionFilter.Monsters),
+        (MapLayer.Scenery, SelectionFilter.Scenery), (MapLayer.Events, SelectionFilter.Events),
+    ];
+
     private readonly EditorContext _context;
     private readonly ObjectEditor _objects;
     private readonly HeroEditor _heroes;
@@ -37,6 +44,7 @@ public sealed class SelectionEditor
     /// </summary>
     public SelectionItems At(MapPosition tile, SelectionFilter filter = SelectionFilter.All)
     {
+        filter &= Selectable();
         if (filter.HasFlag(SelectionFilter.Heroes) && Scenario.HeroAt(tile) is { } hero)
         {
             return SelectionItems.Of(hero.Id);
@@ -56,7 +64,9 @@ public sealed class SelectionEditor
     /// The tiles of <paramref name="area"/> that are on the map, and what <paramref name="filter"/> lets through of the things there: an
     /// object with any of its cells in the area, a hero standing in it, an event with a cell in it.
     /// </summary>
-    public SelectionItems In(TileArea area, SelectionFilter filter = SelectionFilter.All) => new(
+    public SelectionItems In(TileArea area, SelectionFilter filter = SelectionFilter.All) => InArea(area, filter & Selectable());
+
+    private SelectionItems InArea(TileArea area, SelectionFilter filter) => new(
         [.. area.Tiles().Where(Scenario.Map.Contains)],
         [.. Scenario.Objects.Where(o => filter.HasFlag(FilterOf(o)) && o.OccupiedCells().Any(c => area.Contains(c.Position))).Select(o => o.Id)],
         filter.HasFlag(SelectionFilter.Heroes) ? [.. Scenario.Heroes.Where(h => area.Contains(h.Position)).Select(h => h.Id)] : [],
@@ -64,7 +74,7 @@ public sealed class SelectionEditor
 
     /// <summary>Every object of the same definition as <paramref name="like"/> with a cell in <paramref name="area"/> (a double click: all of that kind in view).</summary>
     public SelectionItems OfKind(MapObjectId like, TileArea area) =>
-        _context.Object<MapObject>(like) is not { } sample
+        _context.Object<MapObject>(like) is not { } sample || !IsEditable(sample)
             ? SelectionItems.Empty
             : SelectionItems.Empty with
             {
@@ -80,7 +90,9 @@ public sealed class SelectionEditor
     /// Every thing on <paramref name="level"/> that <paramref name="filter"/> lets through (no tiles): the objects and heroes there,
     /// and the events with a cell there.
     /// </summary>
-    public SelectionItems Everything(int level, SelectionFilter filter = SelectionFilter.All) => new(
+    public SelectionItems Everything(int level, SelectionFilter filter = SelectionFilter.All) => EverythingOn(level, filter & Selectable());
+
+    private SelectionItems EverythingOn(int level, SelectionFilter filter) => new(
         [],
         [.. Scenario.Objects.Where(o => o.Position.Level == level && filter.HasFlag(FilterOf(o))).Select(o => o.Id)],
         filter.HasFlag(SelectionFilter.Heroes) ? [.. Scenario.Heroes.Where(h => h.Position.Level == level).Select(h => h.Id)] : [],
@@ -166,6 +178,17 @@ public sealed class SelectionEditor
 
     private List<MapObjectId> SelectedScenery() => [.. Objects().OfType<Scenery>().Select(s => s.Id)];
 
+    /// <summary>The layers changed: what is of a kind now hidden or locked leaves the selection.</summary>
+    internal void KeepEditable()
+    {
+        var editable = _context.Editable;
+        Remove(new SelectionItems(
+            [],
+            [.. Scenario.Objects.Where(o => Selection.Contains(o.Id) && !IsEditable(o)).Select(o => o.Id)],
+            editable.HasFlag(MapLayer.Heroes) ? [] : [.. Selection.Heroes],
+            editable.HasFlag(MapLayer.Events) ? [] : [.. Selection.Events]));
+    }
+
     /// <summary>A thing left the map: it is no longer selected.</summary>
     internal void Forget(MapObjectId mapObject) => Changed(Selection.Forget(mapObject));
 
@@ -176,20 +199,42 @@ public sealed class SelectionEditor
 
     private List<Hero> Heroes() => [.. Scenario.Heroes.Where(h => Selection.Contains(h.Id))];
 
-    /// <summary><paramref name="items"/> without what is not on the map (any more).</summary>
-    private SelectionItems Existing(SelectionItems items) => new(
-        [.. items.Tiles.Where(Scenario.Map.Contains)],
-        [.. items.Objects.Where(o => _context.Object<MapObject>(o) is not null)],
-        [.. items.Heroes.Where(h => _context.Hero(h) is not null)],
-        [.. items.Events.Where(name => Scenario.MapEvents.Set.Events.Any(e => e.Name == name))]);
+    /// <summary><paramref name="items"/> without what is not on the map (any more) and what is of a kind hidden or locked.</summary>
+    private SelectionItems Existing(SelectionItems items)
+    {
+        var editable = _context.Editable;
+        return new(
+            [.. items.Tiles.Where(Scenario.Map.Contains)],
+            [.. items.Objects.Where(o => _context.Object<MapObject>(o) is { } mapObject && IsEditable(mapObject))],
+            editable.HasFlag(MapLayer.Heroes) ? [.. items.Heroes.Where(h => _context.Hero(h) is not null)] : [],
+            editable.HasFlag(MapLayer.Events) ? [.. items.Events.Where(name => Scenario.MapEvents.Set.Events.Any(e => e.Name == name))] : []);
+    }
+
+    private bool IsEditable(MapObject mapObject) => _context.Editable.HasFlag(MapLayers.Of(mapObject));
+
+    /// <summary>What the layers let the selection hold now.</summary>
+    private SelectionFilter Selectable()
+    {
+        var editable = _context.Editable;
+        var filter = SelectionFilter.None;
+        foreach (var (layer, kind) in SelectableKinds)
+        {
+            if (editable.HasFlag(layer))
+            {
+                filter |= kind;
+            }
+        }
+
+        return filter;
+    }
 
     private IEnumerable<string> EventsOn(Func<MapEvents.EventCell, bool> where) =>
         Scenario.MapEvents.Set.Cells.Where(where).Select(c => c.Event).Distinct(StringComparer.Ordinal);
 
-    private static SelectionFilter FilterOf(MapObject mapObject) => mapObject.Definition.Kind switch
+    private static SelectionFilter FilterOf(MapObject mapObject) => MapLayers.Of(mapObject) switch
     {
-        MapObjectKind.Monster => SelectionFilter.Monsters,
-        MapObjectKind.Scenery => SelectionFilter.Scenery,
+        MapLayer.Monsters => SelectionFilter.Monsters,
+        MapLayer.Scenery => SelectionFilter.Scenery,
         _ => SelectionFilter.Objects,
     };
 

@@ -321,6 +321,11 @@ The editor's camera (ADR-260) is `EditorCamera` (Godot.Shared/Cameras), not the 
 view's rectangle (`Frame`); the selection's cells come from `MapSelection.Cells` (Core.Domain); bookmarks are `CameraBookmarks` (Godot.UI).
 The editor's minimap (ADR-261) is the HUD's `MinimapWidget` inside `MinimapPanel` (Godot.UI), a footer of the right region; Go to is
 `GoToBox` over `MapGoTo` (Core.Domain), whose results are the inspector's `MapLink`s.
+The editor's layers (ADR-262) are `MapLayers` in the session (Core.Domain), which the selection and the eraser consult; the shared map
+views leave out what `MapViewContext.Hidden` names, and `LayersPanel` (Godot.UI) is the tab that sets them.
+The map analysis (ADR-263) is `MapAnalysis` (Core.Domain/Analysis): reach in days through `PathFinder.CostsFor` for a scout that is not
+on the map, guard strength, treasure value and the fairness numbers per start; the generator's `MapFairness` takes its guard power
+from it.
 Single-value edits are `PropertyEdit<T>` commands; an edit to the value already there records no undo step and publishes
 nothing. The three tile layers paint through `PaintLayer<TValue, TEvent>`. `BeginStroke`/`EndStroke` merge a drag into
 one undo step. `MapValidator` reports what single edits cannot prevent. `MapConnectivity` tells where a hero can walk on a fresh

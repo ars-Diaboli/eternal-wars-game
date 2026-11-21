@@ -9,11 +9,18 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 4 task 4 (ADR-263): `MapAnalysis` (Core.Domain/Analysis) over any `GameState`: `Reach` in days by the game's
+  step costs for a scout of the start's faction that walks past guards and pickups (`PathFinder.CostsFor`, `passThrough`), `GuardStrength` per cell, `GuardPower`, `TreasureValue`, and `Fairness` per start
+  with warnings over 20 % from the mean. `MapFairness` and `TreasurePlacer` take guard power and gold values from it; `sim fairness
+  --verbose` prints it. Tests `MapAnalysisTests`. Next: step 4 task 5; step 3's done-when (the drop-downs below) is still open.
+- Editor overhaul, step 4 task 3 (ADR-262): layers. `MapLayers` (`MapEditorSession.Layers`, Core.Domain) hides and locks per `MapLayer`;
+  what is hidden or locked is not selected (`SelectionEditor`) or erased (`EraseEditor`), and leaves the selection when its layer
+  changes (`MapLayersChanged`). `MapViewContext.Hidden` hides kinds in the shared map views; the Layers tab is `LayersPanel`. Tests
+  `EditorLayersTests`; smoke `editor-layers`.
 - Editor overhaul, step 4 task 2 (ADR-261): the minimap `MinimapPanel` under the right region's tabs (`EditorWorkspace.SetFooter`; the
   HUD's `MinimapWidget` with `DragMoves`, `ViewFrame`, `GhostOtherLevel`, `Refresh`); Go to (Ctrl+G, `GoToBox` over `MapGoTo.Find`,
   results are `MapLink`s run through the inspector's jump). `EditorCamera.Centre` puts a tile in the middle of the map view (Go to, the
-  Problems panel, the events, the minimap, switching level). Tests `MapGoToTests`; smoke `editor-minimap`. Next: step 4 task 3
-  (layers); step 3's done-when (the drop-downs below) is still open.
+  Problems panel, the events, the minimap, switching level). Tests `MapGoToTests`; smoke `editor-minimap`.
 - Editor overhaul, step 4 task 1 (ADR-260): the editor's own camera `EditorCamera` (Godot.Shared, beside `StrategyCamera`): tilted or top
   down (View > Top-down view), middle-button drag, the wheel zooming by a share of the distance; F frames the selection
   (`MapSelection.Cells`), Home the whole level, both into `EditorWorkspace.MapView`; Ctrl+1 … 9 / 1 … 9 bookmarks (`CameraBookmarks`).
