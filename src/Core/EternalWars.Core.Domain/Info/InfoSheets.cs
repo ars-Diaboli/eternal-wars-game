@@ -164,6 +164,11 @@ public static partial class InfoSheets
             lines.Add($"Specialty: {specialty.Describe(state.Spells)}");
         }
 
+        if (detailed && hero.Biography is { } biography)
+        {
+            lines.Add(biography); // the map author's story of the hero (ADR-257)
+        }
+
         var skills = hero.Skills.Levels.Where(s => s.Value > SkillLevel.None).Select(s => $"{BuiltInSkills.Get(s.Key).Name} {s.Value}").ToList();
         lines.Add(skills.Count == 0 ? "No skills yet." : $"Skills: {string.Join(", ", skills)}");
         lines.Add($"Army: {ArmyText(state, hero.Army.Stacks.Select(s => s.Stack))}");

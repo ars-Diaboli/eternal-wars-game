@@ -32,6 +32,12 @@ public sealed class Player(PlayerId id, string name, bool isHuman, TeamId? team 
     /// <summary>The player's own hero limit (campaign-like maps, ADR-068); null = the map's <c>ScenarioRules.MaxHeroes</c>.</summary>
     public int? MaxHeroes { get; internal set; }
 
+    /// <summary>
+    /// The factions (town types) the player may take on a fixed map (ADR-257), in <c>BuiltInMapObjects.PlayableTowns</c>' order; null = any. The
+    /// new-game screen offers only these, and a random choice draws among them (<see cref="Game.PlayerFactions"/>).
+    /// </summary>
+    public IReadOnlyList<string>? Factions { get; internal set; }
+
     private readonly SortedSet<Objects.ObjectColour> _keys = [];
 
     /// <summary>The keys a Keymaster's Tent gave the player (ADR-071); every hero of the player holds them.</summary>

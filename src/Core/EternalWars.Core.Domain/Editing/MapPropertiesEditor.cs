@@ -32,7 +32,8 @@ public sealed class MapPropertiesEditor
     public EditResult SetRules(ScenarioRules rules)
     {
         ArgumentNullException.ThrowIfNull(rules);
-        if (rules.MaxHeroes is < 1 or > ScenarioRules.HeroLimit || rules.WeekEvents.Problem() is not null)
+        if (rules.MaxHeroes is < 1 or > ScenarioRules.HeroLimit || rules.WeekEvents.Problem() is not null
+            || rules.Rumours.Count > ScenarioRules.MaxRumours || rules.Rumours.Any(r => !ScenarioRules.IsFitRumour(r)))
         {
             return EditResult.InvalidValue;
         }
@@ -42,7 +43,9 @@ public sealed class MapPropertiesEditor
             return EditResult.HeroLimit;
         }
 
-        var what = Scenario.Rules with { Bans = rules.Bans } == rules ? "Edit the bans" : "Edit victory and defeat conditions";
+        var what = Scenario.Rules with { Bans = rules.Bans } == rules ? "Edit the bans"
+            : Scenario.Rules with { Rumours = rules.Rumours } == rules ? "Edit the rumours"
+            : "Edit victory and defeat conditions";
         _context.Edit(what, () => Scenario.Rules, value =>
         {
             Scenario.SetRules(value);

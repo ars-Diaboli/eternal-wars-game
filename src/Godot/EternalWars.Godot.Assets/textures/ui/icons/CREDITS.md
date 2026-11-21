@@ -1,6 +1,6 @@
 # UI icons
 
-Button icons, 128 × 128 with transparency, generated for this project by the owner (2026-11-05, 2026-11-11, 2026-11-17), cut from the
+Button icons, 128 × 128 with transparency, generated for this project by the owner (2026-11-05, 2026-11-11, 2026-11-17; the action and battle icons of sets 15–18 replaced 2026-11-21), cut from the
 sheets of [icon-prompts.md](../../../../../../docs/content/prompts/icon-prompts.md) (sets 15–22). Loaded through
 `EternalWars.Godot.UI.UiIcons`, which scales them to button size; a missing file leaves the button text-only.
 
@@ -19,10 +19,10 @@ sheets of [icon-prompts.md](../../../../../../docs/content/prompts/icon-prompts.
 | save.png (closed book) / load.png (open book) | Save and Load in the game menu and the map editor, the "Save and load" tab, the template editor's Save, "Save replay" |
 | undo.png / redo.png | the map editor's Undo and Redo |
 | zoom_in.png / zoom_out.png, lock.png / unlock.png | not used yet |
-| hourglass.png (brass hourglass) | Wait (W) in battle |
+| hourglass.png (brass hourglass on its side) | Wait (W) in battle |
 | end_turn.png (wooden hourglass) | End turn |
-| switch_level.png (surface over a cave, up and down arrows) | Switch level (L); the map editor's Level (L) |
-| spell_book.png (leather book with a blue rune, the Knowledge stat's art) | the map's "Spell book (C)" action button; the hero's mana in battle, before the spell buttons; the town's "Spell book (owned)" |
+| switch_level.png (cave mouth, up and down arrows) | Switch level (L); the map editor's Level (L) |
+| spell_book.png (purple leather book with a glowing rune) | the map's "Spell book (C)" action button; the hero's mana in battle, before the spell buttons; the town's "Spell book (owned)" |
 | spells.png (open) | the hero screen's spell list |
 | quests.png (sealed scroll) | Quests (Q) |
 | puzzle_map.png (open scroll) | Puzzle map (P) |
@@ -30,11 +30,13 @@ sheets of [icon-prompts.md](../../../../../../docs/content/prompts/icon-prompts.
 | kingdom.png (castle) | Kingdom (K) |
 | marketplace.png (balance scales) | Marketplace |
 | thieves_guild.png (hooded mask, daggers) | Thieves' guild (town, tavern) |
-| defend.png (round shield) | Defend (D) in battle |
+| defend.png (round red shield with a cross) | Defend (D) in battle |
 | warcry.png (war horn) | the warcry buttons in battle |
-| retreat.png (tattered white flag) | Retreat (R) |
+| retreat.png (tattered white flag on a spear) | Retreat (R) |
 | surrender.png (sword offered on open hands) | Surrender |
 | quick_combat.png (crossed swords, lightning) | Quick combat (Q) |
 | auto_combat.png (crossed swords, cogwheel) | Auto combat (the offer before a battle) |
+| move.png (horseshoe, hoofprints), next_hero.png (helmet, arrow), melee.png (dagger), shoot.png (arrow), cast.png (book over a hand) | not used yet |
+| difficulty_easy.png (pale wood pawn), difficulty_normal.png (knight), difficulty_hard.png (walnut bishop), difficulty_expert.png (rook), difficulty_master.png (blackened queen, gold crown) | the difficulty levels (ADR-225): the new-game screen's difficulty row, the victory screen, the leaderboard; cut from sheet 29 (2026-11-21), the sheet's spare queen unused |
 
 The resource icons are in `../resources/` (see its CREDITS.md).

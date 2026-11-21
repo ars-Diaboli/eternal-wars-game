@@ -67,6 +67,7 @@ public sealed class CarriedHeroService(GameState state, IEventPublisher events)
         }
 
         hero.IsPlaceholder = false;
+        (hero.Biography, hero.Portrait) = (null, null); // the carried hero, not the map's (ADR-257)
         hero.Name = carried.Name;
         hero.Level = carried.Level;
         hero.Experience = carried.Experience;

@@ -61,6 +61,7 @@ public sealed class PlaceholderService(GameState state, IEventPublisher events)
 
             var definition = pool[state.Random.Next(pool.Count)];
             hero.Apply(definition);
+            (hero.Biography, hero.Portrait) = (null, null); // it is that roster hero now (ADR-257)
             state.RefreshArtifacts(hero); // the hero's own town changed (the Crown of the Waning Eye's tie)
             if (hero.Army.IsEmpty && TavernRules.StarterStack(state, definition) is { } stack)
             {
@@ -89,7 +90,7 @@ public sealed class PlaceholderService(GameState state, IEventPublisher events)
             return faction;
         }
 
-        var towns = BuiltInMapObjects.PlayableTowns;
+        var towns = PlayerFactions.Allowed(state.GetPlayer(player));
         faction = state.Options.StartTowns?.GetValueOrDefault(player.Value) is { } chosen && towns.Contains(chosen)
             ? chosen
             : towns[state.Random.Next(towns.Count)];

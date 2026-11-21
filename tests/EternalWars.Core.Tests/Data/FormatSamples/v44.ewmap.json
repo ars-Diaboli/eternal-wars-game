@@ -1,5 +1,5 @@
 {
-  "formatVersion": 43,
+  "formatVersion": 44,
   "name": "Format sample",
   "description": "One object of every kind, for the format tests.",
   "width": 64,
@@ -279,7 +279,11 @@
   "players": [
     {
       "name": "Blue",
-      "isHuman": true
+      "isHuman": true,
+      "factions": [
+        "haven",
+        "inferno"
+      ]
     },
     {
       "name": "Red",
@@ -294,7 +298,11 @@
   "rules": {
     "standardVictory": true,
     "elimination": true,
-    "difficulty": "Master"
+    "difficulty": "Master",
+    "rumours": [
+      "They say the old bridge is guarded.",
+      "Gold flows east this season."
+    ]
   },
   "heroes": [
     {
@@ -317,7 +325,9 @@
       "level": 0,
       "attack": 0,
       "defense": 0,
-      "spellBook": false
+      "spellBook": false,
+      "biography": "Born under a red moon.",
+      "portrait": "haven.aldric"
     },
     {
       "id": 3,
@@ -475,7 +485,8 @@
       "definition": "sign",
       "x": 52,
       "y": 1,
-      "level": 0
+      "level": 0,
+      "name": "The old signpost"
     },
     {
       "kind": "observatory",

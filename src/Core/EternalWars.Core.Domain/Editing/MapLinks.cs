@@ -70,7 +70,7 @@ public static class MapLinks
     }
 
     private static MapLink To(string what, MapObject mapObject) =>
-        new($"{what} {mapObject.Definition.Name} #{mapObject.Id.Value} at {mapObject.VisitPosition}", mapObject.VisitPosition, mapObject.Id);
+        new($"{what} {mapObject.Definition.Name}{(mapObject.GivenName is { } name ? $" \"{name}\"" : "")} #{mapObject.Id.Value} at {mapObject.VisitPosition}", mapObject.VisitPosition, mapObject.Id);
 
     /// <summary>
     /// The monsters, heroes and towns the event's conditions name, each once, in the order they are named; an id that is not a monster

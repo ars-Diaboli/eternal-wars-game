@@ -13,12 +13,79 @@ namespace EternalWars.Godot.UI.Editor.Inspector;
 /// </summary>
 internal static class HeroInspector
 {
+    /// <summary>
+    /// The author's own hero (ADR-257): its name, the roster hero whose portrait it shows, its biography and its starting skills. A field applies on
+    /// Enter or when it is left. Tactics is with the stats.
+    /// </summary>
+    private static void Custom(InspectorForm form, VBoxContainer panel, Hero hero)
+    {
+        var heroes = form.Editor.Heroes;
+        var row = new HBoxContainer();
+        panel.AddChild(row);
+        row.AddChild(new Label { Text = "Name" });
+        var name = new LineEdit { Text = hero.Name, MaxLength = Hero.NameLength, CustomMinimumSize = new Vector2(UiTheme.InspectorNameWidth, 0) };
+        // A field applies only a change typed over the value shown, while the hero still has it: one freed after an undo must not apply again.
+        var shownName = hero.Name;
+        void ApplyName()
+        {
+            if (name.Text.Trim() != shownName && hero.Name == shownName)
+            {
+                shownName = name.Text.Trim();
+                form.Edit(() => heroes.SetName(hero.Id, name.Text));
+            }
+        }
+
+        name.TextSubmitted += _ => ApplyName();
+        name.FocusExited += ApplyName;
+        row.AddChild(name);
+        var portrait = PicturePicker.Add(row, "Portrait", [PickerItem.None("(its own)"), .. form.HeroItems()], hero.Portrait ?? "");
+        portrait.Picked += picked => form.Edit(() => heroes.SetPortrait(hero.Id, picked.Length > 0 ? picked : null));
+
+        var biography = new TextEdit
+        {
+            Text = hero.Biography ?? "",
+            PlaceholderText = "Biography (shown on the hero screen)",
+            WrapMode = TextEdit.LineWrappingMode.Boundary,
+            CustomMinimumSize = new Vector2(UiTheme.InspectorNoteWidth, 72),
+        };
+        var shownBiography = hero.Biography ?? "";
+        biography.FocusExited += () =>
+        {
+            if (biography.Text.Trim() != shownBiography && (hero.Biography ?? "") == shownBiography)
+            {
+                shownBiography = biography.Text.Trim();
+                form.Edit(() => heroes.SetBiography(hero.Id, biography.Text));
+            }
+        };
+        panel.AddChild(biography);
+
+        var skills = new HFlowContainer();
+        panel.AddChild(skills);
+        skills.AddChild(new Label { Text = "Skills" });
+        foreach (var (skill, level) in hero.Skills.Levels.Where(s => s.Key != BuiltInSkills.Tactics).OrderBy(s => BuiltInSkills.Get(s.Key).Name, StringComparer.Ordinal))
+        {
+            var definition = BuiltInSkills.Get(skill);
+            var choice = skills.AddChoice(definition.Name, Enum.GetValues<SkillLevel>().Where(l => l <= definition.MaxLevel).Select(l => (l == SkillLevel.None ? "(remove)" : l.ToString(), l)), level);
+            choice.Button.ItemSelected += _ => form.Edit(() => heroes.SetSkill(hero.Id, skill, choice.Value()));
+        }
+
+        var add = PicturePicker.Add(skills, null, [PickerItem.None("Add a skill…"), .. InspectorForm.SkillItems().Where(i => i.Key != BuiltInSkills.Tactics && !hero.Skills.Levels.ContainsKey(i.Key))], "");
+        add.Picked += picked =>
+        {
+            if (picked.Length > 0)
+            {
+                form.Edit(() => heroes.SetSkill(hero.Id, picked, SkillLevel.Basic));
+            }
+        };
+    }
+
     public static void Show(InspectorForm form, Hero hero)
     {
         var panel = form.In(InspectorPart.Identity);
         var scenario = form.Scenario;
         var heroes = form.Editor.Heroes;
         panel.AddChild(new Label { Text = $"{hero.Name} ({scenario.GetPlayer(hero.Owner).Name}) at {hero.Position}" });
+        Custom(form, panel, hero);
         var identity = new HBoxContainer();
         panel.AddChild(identity);
         var type = PicturePicker.Add(identity, "Hero", [PickerItem.None("(custom)"), .. form.HeroItems()], hero.Definition ?? "");

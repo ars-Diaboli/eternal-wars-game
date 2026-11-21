@@ -220,5 +220,5 @@ edges lit silver-violet, a faint second rift far behind it
 2. Put two schools side by side: no icon of one could pass for the other's.
 3. Check for a cartoon look (thick outlines, flat colour fills, bubbly shapes, plastic shine, doll-like faces) and regenerate such a
    sheet.
-4. Put the files in `src/Godot/EternalWars.Godot.Assets/textures/ui/spells/` *(proposal)* and add a line to its `CREDITS.md` with the
+4. Put the files, named by the spell id alone (`light.bless.png`), in `src/Godot/EternalWars.Godot.Assets/textures/ui/spells/` and add a line to its `CREDITS.md` with the
    tool and its licence terms.

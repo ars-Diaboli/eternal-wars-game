@@ -253,6 +253,21 @@ public sealed class Hero(
     /// </summary>
     public bool IsPlaceholder { get; internal set; }
 
+    /// <summary>The hero's story as the map's author wrote it (ADR-257), shown on the hero screen; null = none.</summary>
+    public string? Biography { get; internal set; }
+
+    /// <summary>The longest a hero's name may be, in characters.</summary>
+    public const int NameLength = 40;
+
+    /// <summary>The longest a biography may be, in characters.</summary>
+    public const int BiographyLength = 2000;
+
+    /// <summary>The roster hero whose portrait the hero shows (ADR-257); null = its own roster entry's (<see cref="Definition"/>).</summary>
+    public string? Portrait { get; internal set; }
+
+    /// <summary>The roster hero whose portrait is shown: <see cref="Portrait"/>, else <see cref="Definition"/>; null = none.</summary>
+    public string? PortraitHero => Portrait ?? Definition;
+
     public HeroClass Class { get; internal set; }
 
     /// <summary>Base id of the creature line (base and upgrade) that gets the preferred-creature bonus in battle.</summary>
@@ -305,8 +320,19 @@ public sealed class Hero(
         int morale = 0, int luck = 0, int? spellPower = null, int? knowledge = null,
         IEnumerable<Battles.WarMachineSlot>? warMachines = null,
         IEnumerable<Common.ArtifactId>? artifacts = null, IEnumerable<Common.ArtifactId>? backpack = null, ArtifactCatalog? catalog = null,
-        bool? spellBook = null, IEnumerable<Common.SpellId>? spells = null, Magic.SpellCatalog? spellCatalog = null, bool placeholder = false)
+        bool? spellBook = null, IEnumerable<Common.SpellId>? spells = null, Magic.SpellCatalog? spellCatalog = null, bool placeholder = false,
+        string? biography = null, string? portrait = null)
     {
+        if ((name ?? definition?.Name)?.Length > NameLength)
+        {
+            throw new ArgumentOutOfRangeException(nameof(name), $"A hero's name has at most {NameLength} characters.");
+        }
+
+        if (biography?.Length > BiographyLength)
+        {
+            throw new ArgumentOutOfRangeException(nameof(biography), $"A biography has at most {BiographyLength} characters.");
+        }
+
         if (spellPower < 0 || knowledge < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(spellPower), "Spell Power and Knowledge cannot be negative.");
@@ -359,6 +385,8 @@ public sealed class Hero(
         }
 
         hero.IsPlaceholder = placeholder;
+        hero.Biography = string.IsNullOrWhiteSpace(biography) ? null : biography;
+        hero.Portrait = portrait;
         return hero;
     }
 

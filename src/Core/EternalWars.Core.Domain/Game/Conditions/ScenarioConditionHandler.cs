@@ -57,7 +57,7 @@ internal abstract class ScenarioConditionHandler : IScenarioConditionHandler
         id is { } town && state.FindObject(town) is Towns.Town found ? found.Name : "a town";
 
     protected static string ObjectName(GameState state, MapObjectId? id) => id is { } target && state.FindObject(target) is { } found
-        ? found is Towns.Town town ? town.Name : $"the {found.Definition.Name} at {found.Position.X.ToString(CultureInfo.InvariantCulture)}, {found.Position.Y.ToString(CultureInfo.InvariantCulture)}"
+        ? found.Name ?? $"the {found.Definition.Name} at {found.Position.X.ToString(CultureInfo.InvariantCulture)}, {found.Position.Y.ToString(CultureInfo.InvariantCulture)}"
         : "an object";
 
     protected static string ArtifactName(GameState state, Common.ArtifactId? id) =>

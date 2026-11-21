@@ -99,6 +99,8 @@ ADR-060, ADR-070, ADR-081.
 - A hero costs **2500 gold** and appears on the town's entrance (must be free). A tavern offers **2**, the Brotherhood (level 2) **4**.
 - **Hero limit** (ADR-068, ADR-072): at most **8 heroes** a player, or the map's lower limit (1–8, also per player on campaign-like maps).
   Only heroes on the map count: not prisoners, garrison heroes, or heroes waiting in a tavern.
+- **Rumours** (ADR-257): a map may have rumours (one line each); every tavern (a town's and the map's) tells one a week, the map's first in the first week,
+  in order, starting over after the last. They are the same for every player and draw nothing.
 - **Offers**: a pool per player and town faction, reshuffled weekly (same offers in a player's towns of one faction); never heroes on the
   map. Ranked by the [ring](../content/lore.md): native, adjacent, not opposing, opposing (Stronghold, Swamp Bestiary: native, warriors,
   others); an empty rank falls through:

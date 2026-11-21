@@ -34,6 +34,43 @@ public abstract class MapObject
 
     public MapObjectKind Kind => Definition.Kind;
 
+    private string? _name;
+
+    /// <summary>The longest an object's name may be, in characters.</summary>
+    public const int NameLength = 60;
+
+    /// <summary>
+    /// Whether a trimmed name may be an object's (ADR-257): 1 to <see cref="NameLength"/> characters and not only digits, since a number where an
+    /// object is asked for is its id (<see cref="ObjectNames"/>).
+    /// </summary>
+    public static bool IsFitName(string name) =>
+        name is { Length: > 0 and <= NameLength } && !name.All(char.IsAsciiDigit);
+
+    /// <summary>
+    /// The object's name (ADR-257): one the author gave it, shown wherever the editor, the map events and the conditions name the object (they
+    /// still refer to it by id); null = none. A town always has one, its definition's by default.
+    /// </summary>
+    public virtual string? Name => _name;
+
+    /// <summary>The name as the map file keeps it: null when the author gave none (a town named as its definition).</summary>
+    public virtual string? GivenName => _name;
+
+    /// <summary>Sets the name, trimmed; blank or null = none (a town: its definition's).</summary>
+    internal virtual void Rename(string? name) => _name = string.IsNullOrWhiteSpace(name) ? null : name.Trim();
+
+    /// <summary>
+    /// Names an object that is being built and is not on a map yet (the map format and stamps read names this way, ADR-257); returns the object.
+    /// An object on a map is renamed through <c>MapEditorSession</c>.
+    /// </summary>
+    public MapObject WithName(string? name)
+    {
+        Rename(name);
+        return this;
+    }
+
+    /// <summary>The object as the editor and the map events name it: its name, else "the (definition) at x, y".</summary>
+    public string Label => Name ?? $"the {Definition.Name} at {VisitPosition.X}, {VisitPosition.Y}";
+
     /// <summary>Set only while the object is off the game's cell index (the editor's move takes it out, moves it and puts it back).</summary>
     public MapPosition Position { get; internal set; }
 

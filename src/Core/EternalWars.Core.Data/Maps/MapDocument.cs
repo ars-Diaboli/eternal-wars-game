@@ -52,12 +52,14 @@ namespace EternalWars.Core.Data.Maps;
 /// character per tile: <c>.</c> none, <c>0</c>–<c>7</c> the player's number; omitted = none; MP-4, ADR-197). 41 = the difficulty's names (<c>rules.difficulty</c>)
 /// are HoMM3's, Easy … Master; older maps' names move up one (ADR-225). 42 = + the map events' captured and battle events, dialogues and
 /// the end of the game (<c>dialogue</c>, <c>endGame</c>; ADR-242). 43 = + how scenery lies (<c>turns</c>: quarter turns clockwise, 1 to 3, and
-/// <c>mirrored</c> on a <c>scenery</c> object; omitted = as its definition draws it; ADR-252). Older versions still
+/// <c>mirrored</c> on a <c>scenery</c> object; omitted = as its definition draws it; ADR-252). 44 = + the map's rumours (<c>rules.rumours</c>),
+/// the factions a player may take (<c>factions</c> on a player slot), a name on any object (<c>name</c>, which towns had already) and a hero's
+/// <c>biography</c> and <c>portrait</c> (ADR-257). Older versions still
 /// load: <see cref="MapSerializer"/> upgrades their JSON first (<see cref="MapMigrations"/>, ADR-174), so this record is the current format only.
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 43;
+    public const int CurrentFormatVersion = 44;
 
     /// <summary>The format the document is in; a file read through <see cref="MapSerializer"/> has been upgraded to the current one.</summary>
     public int FormatVersion { get; init; } = CurrentFormatVersion;
@@ -126,7 +128,8 @@ public sealed record CellDocument(int X, int Y, int Level = 0);
 /// (the days a player that lost its last town has to own one again; 0 = no countdown). <see cref="MaxHeroes"/> (v15) omitted = 8
 /// (the most heroes a player may have at once). <see cref="WeekEvents"/> (v24) omitted = the default week and month events.
 /// <see cref="Difficulty"/> (v26) omitted = none (counts as Normal; names before v41 were one step lower, ADR-225). <see cref="Arena"/> (v38, ADR-097) true makes the map an
-/// arena (a day of preparation, then one battle decides the game; the conditions do not count); omitted = off.
+/// arena (a day of preparation, then one battle decides the game; the conditions do not count); omitted = off. <see cref="Rumours"/> (v44,
+/// ADR-257) the taverns tell one a week; omitted = none.
 /// </summary>
 public sealed record ScenarioRulesDocument(
     IReadOnlyList<ConditionDocument>? Victory = null,
@@ -138,7 +141,8 @@ public sealed record ScenarioRulesDocument(
     WeekEventsDocument? WeekEvents = null,
     Difficulty? Difficulty = null,
     BansDocument? Bans = null,
-    bool? Arena = null);
+    bool? Arena = null,
+    IReadOnlyList<string>? Rumours = null);
 
 /// <summary>The map's bans (v35, ADR-126): roster hero, artifact, spell and skill ids; each list omitted when empty, the whole omitted when nothing is banned.</summary>
 public sealed record BansDocument(
@@ -177,7 +181,8 @@ public sealed record ConditionDocument(
 /// <param name="IsHuman">Human or AI by default.</param>
 /// <param name="Team">Default team; null = a team of its own (free-for-all).</param>
 /// <param name="MaxHeroes">The player's own hero limit (v18, ADR-068); null = the map's.</param>
-public sealed record PlayerSlotDocument(string Name, bool IsHuman, int? Team = null, int? MaxHeroes = null);
+/// <param name="Factions">The factions (town types) the player may take (v44, ADR-257); null = any.</param>
+public sealed record PlayerSlotDocument(string Name, bool IsHuman, int? Team = null, int? MaxHeroes = null, IReadOnlyList<string>? Factions = null);
 
 /// <summary>
 /// A starting hero. Stats and army are v4; older maps place heroes without an army. <see cref="Type"/> (v5) names a hero
@@ -189,6 +194,8 @@ public sealed record PlayerSlotDocument(string Name, bool IsHuman, int? Team = n
 /// definition names) and <see cref="Backpack"/> are artifact ids (v11), omitted when empty. <see cref="SpellBook"/> and <see cref="Spells"/>
 /// (v29, ADR-120) replace the roster's book and spells; omitted = the roster's. <see cref="Placeholder"/> (v35, ADR-126): the hero becomes a
 /// random roster hero of its owner's faction when the game starts (its army, artifacts, place and level stay); omitted = false.
+/// <see cref="Biography"/> and <see cref="Portrait"/> (v44, ADR-257): the author's story of the hero and the roster hero whose portrait it shows;
+/// omitted = none and its own roster entry's.
 /// </summary>
 public sealed record HeroPlacementDocument(
     int Id,
@@ -211,7 +218,9 @@ public sealed record HeroPlacementDocument(
     IReadOnlyList<Domain.Common.ArtifactId>? Backpack = null,
     bool? SpellBook = null,
     IReadOnlyList<Domain.Common.SpellId>? Spells = null,
-    bool? Placeholder = null);
+    bool? Placeholder = null,
+    string? Biography = null,
+    string? Portrait = null);
 
 /// <summary>One occupied army slot (0–6).</summary>
 public sealed record ArmySlotDocument(int Slot, Domain.Common.CreatureId Creature, int Count);
@@ -235,6 +244,9 @@ public abstract record MapObjectDocument
     public required int Y { get; init; }
 
     public int Level { get; init; }
+
+    /// <summary>The name the author gave the object (v44, ADR-257; a town's since v6); omitted = none (a town: its definition's).</summary>
+    public string? Name { get; init; }
 }
 
 /// <summary>A creature dwelling on the map (v12); <see cref="Available"/> omitted = one week's growth when the game starts.</summary>
@@ -500,9 +512,6 @@ public sealed record MonsterDocument : MapObjectDocument
 public sealed record TownDocument : MapObjectDocument
 {
     public int? Owner { get; init; }
-
-    /// <summary>Omitted = the definition's name.</summary>
-    public string? Name { get; init; }
 
     public IReadOnlyDictionary<Domain.Common.BuildingId, int>? Buildings { get; init; }
 

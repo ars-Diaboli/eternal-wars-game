@@ -35,5 +35,8 @@ HoMM4-like (ADR-048, reworked ADR-069, built ADR-078).
   misc slots and a backpack of 50. Found on the map, looted from defeated heroes (the most valuable kept when the backpack is full, the rest
   lost), handed over in an exchange.
 - **Governing**: [towns-and-economy.md](towns-and-economy.md#governors).
+- **The map's own heroes** (ADR-257): a map hero may have its own name, starting skills and a biography (on the hero screen and the hero's
+  full information), and show the portrait of a roster hero. A placeholder that becomes a roster hero, or a map hero a campaign's carried hero takes over, drops the
+  biography and portrait.
 - **Hero screen** (H or the hero list): everything above plus mana and spell book. Artifacts are clicked or dragged (ADR-162): a worn one
   into the backpack takes it off, a carried one onto any doll slot puts it on.

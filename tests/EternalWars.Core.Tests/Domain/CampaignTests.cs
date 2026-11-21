@@ -79,6 +79,21 @@ public class CampaignTests
         Assert.Empty(session.State.CarriedWaiting);
     }
 
+    /// <summary>The carried hero is not the map's hero it takes over: the map author's biography and portrait go (ADR-257).</summary>
+    [Fact]
+    public void ACarriedHero_DropsTheMapHerosBiographyAndPortrait()
+    {
+        var session = Play(BorderWatchCampaign.AshenGate, new GameOptions { CarriedHeroes = [Veteran()], CampaignVariables = new Dictionary<string, int>() }, s =>
+        {
+            var placeholder = s.GetHero(new HeroId(1));
+            (placeholder.Biography, placeholder.Portrait) = ("A stranger from the south.", "haven.ansel");
+        });
+        var maren = session.State.GetHero(new HeroId(1));
+
+        Assert.Null(maren.Biography);
+        Assert.Equal(Maren, maren.PortraitHero);
+    }
+
     [Fact]
     public void ACarriedHero_BecomesThePersonsHeroOfItsRosterHero_AndKeepsTheMapsArmyWhenItsOwnIsNotCarried()
     {

@@ -3,6 +3,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.MapEvents;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
@@ -595,15 +596,15 @@ public partial class EventsPanel : ScrollContainer
         OptionButton? questKind = null;
         SpinBox? amount = null;
         LineEdit? questId = null;
-        var questKinds = (string[])["Reach a level", "Bring gold", "Bring creatures (id, count)", "Bring an artifact (id)", "Beat a monster (object id)",
-            "Beat a hero (hero id)", "Be the roster hero (id)", "Be a player (slot 1…)"];
+        var questKinds = (string[])["Reach a level", "Bring gold", "Bring creatures (id, count)", "Bring an artifact (id)", "Beat a monster (name or object id)",
+            "Beat a hero (name or hero id)", "Be the roster hero (id)", "Be a player (slot 1…)"];
         if (form == "quest")
         {
             var ask = Row();
             ask.AddChild(new Label { Text = "Asks" });
             questKind = ask.AddOptions(questKinds);
             amount = ask.AddSpin(null, 5, 0, 999_999);
-            questId = new LineEdit { PlaceholderText = "id", CustomMinimumSize = new Vector2(150, 0) };
+            questId = new LineEdit { PlaceholderText = "id or name", CustomMinimumSize = new Vector2(150, 0) };
             ask.AddChild(questId);
         }
 
@@ -659,7 +660,7 @@ public partial class EventsPanel : ScrollContainer
                         growth!.Value == 0 || line!.Value().Length == 0 ? new Dictionary<string, int>() : new Dictionary<string, int> { [line.Value()] = (int)growth.Value }),
                     _ => new MapEventDefinition(eventName, MapEventKind.Quest, [])
                     {
-                        Stages = [Quest(questKind!.Selected, (int)amount!.Value, questId!.Text.Trim(), message.Text, reward)],
+                        Stages = [Quest(_editor.Scenario, questKind!.Selected, (int)amount!.Value, questId!.Text.Trim(), message.Text, reward)],
                     },
                 };
             }
@@ -688,11 +689,15 @@ public partial class EventsPanel : ScrollContainer
     }
 
     /// <summary>The quest form's stage (<see cref="QuestForms"/>): what it asks, the proposal and the rewards.</summary>
-    private static QuestStage Quest(int kind, int amount, string id, string proposal, SimpleRewards rewards)
+    private static QuestStage Quest(GameState scenario, int kind, int amount, string id, string proposal, SimpleRewards rewards)
     {
         proposal = string.IsNullOrWhiteSpace(proposal) ? "Help me, traveller." : proposal;
         var given = rewards.Actions().ToArray();
-        int Number() => int.TryParse(id, out var n) ? n : throw new FormatException($"'{id}' is not a number.");
+        // A monster or a hero may be given by its name (ADR-257); the quest keeps the id.
+        int Monster() => ObjectNames.Find(scenario, id) is MonsterGuard monster ? monster.Id.Value
+            : throw new FormatException($"No one monster on the map has the name or id '{id}'.");
+        int Hero() => ObjectNames.FindHero(scenario, id) is { } hero ? hero.Id.Value
+            : throw new FormatException($"No one hero on the map has the name or id '{id}'.");
         string Id() => id.Length > 0 ? id : throw new FormatException("Give the id.");
         return kind switch
         {
@@ -700,8 +705,8 @@ public partial class EventsPanel : ScrollContainer
             1 => QuestForms.Resources(new ResourceSet(Gold: amount), proposal, given),
             2 => QuestForms.Creatures([new CreatureStack(Id(), Math.Max(1, amount))], proposal, given),
             3 => QuestForms.Artifacts([Id()], proposal, given),
-            4 => QuestForms.DefeatMonster(Number(), proposal, given),
-            5 => QuestForms.DefeatHero(Number(), proposal, given),
+            4 => QuestForms.DefeatMonster(Monster(), proposal, given),
+            5 => QuestForms.DefeatHero(Hero(), proposal, given),
             6 => QuestForms.BeHero(Id(), proposal, given),
             _ => QuestForms.BePlayer(Math.Max(1, amount) - 1, proposal, given),
         };

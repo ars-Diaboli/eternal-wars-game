@@ -142,6 +142,11 @@ public partial class SpellBookPanel : PanelContainer
         foreach (var school in battle.GroupBy(k => k.Spell.School).OrderBy(g => g.Key, StringComparer.Ordinal))
         {
             var row = new HFlowContainer();
+            if (HeroIcons.Skill(BuiltInSkills.SchoolGroup(school.Key), SpellIcons.ButtonSize) is { } emblem)
+            {
+                row.AddChild(new TextureRect { Texture = emblem, StretchMode = TextureRect.StretchModeEnum.KeepCentered });
+            }
+
             row.AddChild(new Label { Text = $"{Capitalized(school.Key)}:", CustomMinimumSize = new Vector2(110, 0) });
             foreach (var (spell, rank) in school.OrderBy(k => k.Spell.Level).ThenBy(k => k.Spell.Name, StringComparer.Ordinal))
             {
@@ -153,6 +158,7 @@ public partial class SpellBookPanel : PanelContainer
                         Flat = true,
                         TooltipText = $"Level {spell.Level}, {ManaRules.SpellCost(hero, spell.Mana)} mana. {spell.Notes}",
                     }
+                    .WithSpellIcon(spellId)
                     .WithInfo(detailed => InfoSheets.Spell(_session.State, spellId, known, detailed, hero)));
             }
 

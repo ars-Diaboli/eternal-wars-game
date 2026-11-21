@@ -30,11 +30,15 @@ public static class MapEventText
         FactionCondition faction => $"the player started as {faction.Town}",
         TeamCondition team => $"the player is on team {team.Team + 1}",
         AllyCondition ally => $"the player is an ally of player {ally.Player + 1}",
-        TownOwnerCondition owner => $"town {owner.Town} {(owner.Owner is { } slot ? $"belongs to player {slot + 1}" : "is neutral")}",
-        MonsterDefeatedCondition monster => $"monster {monster.Monster} was beaten by {(monster.Player is { } slot ? $"player {slot + 1}" : "the player")}",
+        TownOwnerCondition owner => $"town {Object(owner.Town, state)} {(owner.Owner is { } slot ? $"belongs to player {slot + 1}" : "is neutral")}",
+        MonsterDefeatedCondition monster => $"monster {Object(monster.Monster, state)} was beaten by {(monster.Player is { } slot ? $"player {slot + 1}" : "the player")}",
         HeroDefeatedCondition hero => $"hero {hero.Hero} was beaten by {(hero.Player is { } slot ? $"player {slot + 1}" : "the player")}",
         _ => condition.GetType().Name,
     };
+
+    /// <summary>An object a condition names by id: with a game state, its name and id when it has a name (ADR-257), else the id.</summary>
+    private static string Object(int id, GameState? state) =>
+        state?.FindObject(new Common.MapObjectId(id))?.Name is { } name ? $"{name} (#{id})" : id.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
     public static string Describe(EventExpr expr) => expr switch
     {

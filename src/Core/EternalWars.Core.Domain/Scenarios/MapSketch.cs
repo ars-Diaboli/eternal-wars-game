@@ -96,7 +96,8 @@ internal sealed class MapSketch
     public Town AddTown(string? type, int x, int y, PlayerId owner, string name)
     {
         var town = (Town)Place(BuiltInMapObjects.TownId(type ?? TownIds.Haven), x, y);
-        (town.Owner, town.Name, town.IsRandom) = (owner, name, type is null);
+        (town.Owner, town.IsRandom) = (owner, type is null);
+        town.Rename(name);
         return town;
     }
 

@@ -44,12 +44,12 @@ public sealed class TownEditor
             return EditResult.InvalidTarget;
         }
 
-        if (string.IsNullOrWhiteSpace(name))
+        if (string.IsNullOrWhiteSpace(name) || !MapObject.IsFitName(name.Trim()))
         {
             return EditResult.InvalidValue;
         }
 
-        Edit(town, "Rename town", () => town.Name, value => town.Name = value, name.Trim());
+        Edit(town, "Rename town", () => town.Name, town.Rename, name.Trim());
         return EditResult.Ok;
     }
 

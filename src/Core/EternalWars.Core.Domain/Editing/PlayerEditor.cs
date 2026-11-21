@@ -80,6 +80,33 @@ public sealed class PlayerEditor
         return EditResult.Ok;
     }
 
+    /// <summary>
+    /// Sets the factions a player may take on the map (ADR-257), null or every playable town for any. Refused for an empty list or a town that is
+    /// not playable.
+    /// </summary>
+    public EditResult SetFactions(PlayerId id, IReadOnlyCollection<string>? factions)
+    {
+        if (!Scenario.HasPlayer(id))
+        {
+            return EditResult.UnknownPlayer;
+        }
+
+        IReadOnlyList<string>? next;
+        try
+        {
+            next = PlayerFactions.Normalize(factions);
+        }
+        catch (ArgumentException)
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var player = Scenario.GetPlayer(id);
+        Edit($"Set factions of {player.Name}", () => player.Factions, value => Scenario.SetFactions(id, value), next,
+            (a, b) => a is null ? b is null : b is not null && a.SequenceEqual(b));
+        return EditResult.Ok;
+    }
+
     /// <summary>Sets a player's default team (the setup screen may still override it unless teams are locked).</summary>
     public EditResult SetTeam(PlayerId id, TeamId team)
     {
@@ -112,12 +139,12 @@ public sealed class PlayerEditor
         return true;
     }
 
-    private void Edit<T>(string description, Func<T> get, Action<T> set, T next) =>
+    private void Edit<T>(string description, Func<T> get, Action<T> set, T next, Func<T, T, bool>? equals = null) =>
         _context.Edit(description, get, value =>
         {
             set(value);
             _context.Publish(new PlayerSlotsChanged());
-        }, next);
+        }, next, equals);
 
     private void AddSlot(Player player)
     {

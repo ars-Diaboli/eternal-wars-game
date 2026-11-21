@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-257.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-258.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -283,3 +283,4 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [254](random-maps-and-editor.md#adr-254-thumbnails-are-renders-of-the-placeholder-model-cached-by-its-hash-the-inspector-has-six-parts-and-computed-jump-links-edit-1-adr-223-adr-245-adr-253-2026-11-21) | random-maps-and-editor | Thumbnails are renders of the placeholder model cached by its hash; the inspector has six parts and computed jump links (EDIT-1, ADR-223, ADR-245, ADR-253, 2026-11-21) | implemented |
 | [255](random-maps-and-editor.md#adr-255-multi-edit-writes-one-object-property-to-several-objects-of-one-kind-as-one-all-or-nothing-step-pickers-are-searchable-picture-grids-edit-1-adr-223-adr-245-adr-254-2026-11-21) | random-maps-and-editor | Multi-edit writes one object property to several objects of one kind as one all-or-nothing step; pickers are searchable picture grids (EDIT-1, ADR-223, ADR-245, ADR-254, 2026-11-21) | implemented |
 | [256](random-maps-and-editor.md#adr-256-the-map-settings-are-one-window-with-tabs-over-the-editor-each-tab-one-of-the-settings-panels-edit-1-adr-250-adr-255-2026-11-21) | random-maps-and-editor | The map settings are one window with tabs over the editor, each tab one of the settings panels (EDIT-1, ADR-250, ADR-255, 2026-11-21) | implemented |
+| [257](random-maps-and-editor.md#adr-257-the-map-content-rumours-a-players-factions-object-names-and-custom-heroes-in-one-format-bump-edit-12-adr-250-adr-256-2026-11-21) | random-maps-and-editor | The map content: rumours, a player's factions, object names and custom heroes, in one format bump (EDIT-12, ADR-250, ADR-256, 2026-11-21) | implemented |

@@ -302,6 +302,11 @@ $scenarios = @(
     # tab, both undone with the window's Undo; F7 closes it on the Bans tab and opens it again there.
     @{ Name = 'editor-map-settings'; App = 'EternalWars.MapEditor'; Frames = 60
        Input = '3:key:F7;6:click:@Players;10:click:@Add player;14:click:@Victory and loss;18:click:@Bans;22:click:@Week events;26:click:@General;30:click:@Arena: a day to prepare, then one battle decides the game;34:click:@Undo;38:click:@Undo;41:click:@Bans;44:key:F7;48:key:F7' },
+    # The map's content (EDIT-12, ADR-257) on a blank map: the map settings window's Rumours tab, a rumour typed and applied; the Players tab
+    # with its Factions column ("Any faction"); Escape closes the window. Then a treasure chest placed, selected and named "Hoard" in the
+    # inspector's Name field.
+    @{ Name = 'editor-map-content'; App = 'EternalWars.MapEditor'; Frames = 100
+       Input = '3:key:F7;6:click:@Rumours;10:click:800,330;13:text:They say the old bridge is guarded;50:click:@Apply rumours;54:click:@Players;60:key:Escape;63:click:@Object;66:click:900,450;70:click:@Select;73:click:900,450;79:click:1180,188;82:text:Hoard;90:key:Enter' },
     # The workspace's regions (EDIT-1, ADR-250) on Ember March: the Monster tool's options wrap in the left region; the right region's
     # splitter dragged to the left; the left region collapsed; F11 hides the others and brings them back; the left region opens again;
     # "From template" brings the Generate tab to the front. Then the menus built from the command registry: Edit (Undo and Redo greyed:

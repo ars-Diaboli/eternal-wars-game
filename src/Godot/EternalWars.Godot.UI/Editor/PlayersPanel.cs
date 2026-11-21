@@ -2,6 +2,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Objects;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.Shared.Map;
@@ -10,12 +11,12 @@ using Godot;
 namespace EternalWars.Godot.UI.Editor;
 
 /// <summary>
-/// The map settings window's Players tab: the player slots (name, human or computer by default, team, own hero limit; add a slot or remove
-/// the last one), whether the setup screen may change teams, and the team counts it must keep to (ADR-117).
+/// The map settings window's Players tab: the player slots (name, human or computer by default, team, own hero limit, the factions it may take,
+/// ADR-257; add a slot or remove the last one), whether the setup screen may change teams, and the team counts it must keep to (ADR-117).
 /// </summary>
 public partial class PlayersPanel : VBoxContainer
 {
-    private readonly GridContainer _rows = new() { Columns = 4 };
+    private readonly GridContainer _rows = new() { Columns = 5 };
     private readonly Label _status = new();
     private readonly CheckBox _teamsLocked = new() { Text = "Teams locked (setup cannot change them)" };
     private readonly SpinBox _minTeams = new() { MinValue = 0, MaxValue = 8, Step = 1, TooltipText = "The fewest teams a game of this map may have; 0 or 1 = no limit." };
@@ -67,6 +68,7 @@ public partial class PlayersPanel : VBoxContainer
         _rows.AddChild(new Label { Text = "Human" });
         _rows.AddChild(new Label { Text = "Team" });
         _rows.AddChild(new Label { Text = "Max heroes (0 = map's)" });
+        _rows.AddChild(new Label { Text = "Factions" });
         foreach (var player in _editor.Scenario.Players)
         {
             var id = player.Id;
@@ -91,7 +93,53 @@ public partial class PlayersPanel : VBoxContainer
                 heroes.SetValueNoSignal(_editor.Scenario.GetPlayer(id).MaxHeroes ?? 0);
             };
             _rows.AddChild(heroes);
+            _rows.AddChild(Factions(player));
         }
+    }
+
+    /// <summary>
+    /// The factions the player may take (ADR-257): a menu of the playable towns to tick, and "Any faction"; the new-game screen offers only the
+    /// ticked ones. The last one cannot be unticked.
+    /// </summary>
+    private MenuButton Factions(Core.Domain.Players.Player player)
+    {
+        var allowed = PlayerFactions.Allowed(player);
+        var towns = BuiltInMapObjects.PlayableTowns;
+        var button = new MenuButton
+        {
+            Text = player.Factions is null ? "Any faction" : string.Join(", ", allowed.Select(BuiltInMapObjects.TownName)),
+            Flat = false,
+            TooltipText = "The factions this player may take on the new-game screen.",
+            CustomMinimumSize = new Vector2(150, 0),
+        };
+        var menu = button.GetPopup();
+        menu.AddItem("Any faction", towns.Count);
+        menu.AddSeparator();
+        for (var i = 0; i < towns.Count; i++)
+        {
+            menu.AddCheckItem(BuiltInMapObjects.TownName(towns[i]), i);
+            menu.SetItemChecked(menu.GetItemIndex(i), allowed.Contains(towns[i]));
+            if (Heraldry.Crest(towns[i], UiIcons.ButtonSize) is { } crest)
+            {
+                menu.SetItemIcon(menu.GetItemIndex(i), crest);
+            }
+        }
+
+        var id = player.Id;
+        menu.IdPressed += pressed =>
+        {
+            if (pressed == towns.Count)
+            {
+                Report(_editor.Players.SetFactions(id, null));
+                return;
+            }
+
+            var town = towns[(int)pressed];
+            var now = PlayerFactions.Allowed(_editor.Scenario.GetPlayer(id));
+            var result = _editor.Players.SetFactions(id, now.Contains(town) ? [.. now.Where(t => t != town)] : [.. now, town]);
+            _status.Text = result == EditResult.InvalidValue ? "A player needs at least one faction it may take." : result == EditResult.Ok ? "" : result.ToString();
+        };
+        return button;
     }
 
     private void ApplyTeamCounts()

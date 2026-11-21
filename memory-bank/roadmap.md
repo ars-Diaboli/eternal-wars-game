@@ -272,7 +272,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       scenery rotation and mirroring (map format 43), resize / crop / shift, stamps; plan tasks 1 to 10; ADR-251, ADR-252)
 - [ ] Step 3 (built: the browser's data in the core and the `ObjectBrowser` panel with categories, search, terrain filter,
       favourites, recent and stamps, placed by the Object tool with a ghost; thumbnails; the inspector in sections with jump links,
-      multi-edit and picture pickers, the map settings window; plan tasks 1 to 7; ADR-253 to ADR-256), the new map content (rumours, allowed factions, object names, custom heroes; a format bump), the Texts
+      multi-edit and picture pickers, the map settings window, the map content: rumours, allowed factions, object names, custom heroes
+      (map format 44); plan tasks 1 to 8; ADR-253 to ADR-257), the Texts
       view, the new-map wizard
 - [ ] Step 4: minimap, go to, bookmarks, layers and overlays, fix-its, the fairness report, play-test from the editor
 - [ ] Step 5: the template workspace: undo, zone cards, multi-select and copy, presets, mirror tools, preview, Generate many

@@ -324,6 +324,17 @@ public sealed class GameState
         GetPlayer(owner).MaxHeroes = limit;
     }
 
+    /// <summary>Scenario setting (map loading, editor): the factions a player may take (ADR-257), null = any; see <see cref="PlayerFactions.Normalize"/>.</summary>
+    public void SetFactions(PlayerId owner, IEnumerable<string>? factions)
+    {
+        if (IsStarted)
+        {
+            throw new InvalidOperationException("A player's factions can only be changed before the game starts.");
+        }
+
+        GetPlayer(owner).Factions = PlayerFactions.Normalize(factions);
+    }
+
     /// <summary>How many times this game's heroes have moved (any <see cref="Hero.Position"/> set since they were added).</summary>
     internal HeroMoveCounter HeroMoves { get; } = new();
 
@@ -507,6 +518,16 @@ public sealed class GameState
         if (rules.MaxHeroes is < 1 or > ScenarioRules.HeroLimit)
         {
             throw new ArgumentOutOfRangeException(nameof(rules), rules.MaxHeroes, $"A player may have 1 to {ScenarioRules.HeroLimit} heroes.");
+        }
+
+        if (rules.Rumours.FirstOrDefault(r => !ScenarioRules.IsFitRumour(r)) is { } rumour)
+        {
+            throw new ArgumentException($"A rumour is one line of 1 to {ScenarioRules.RumourLength} characters: '{rumour}'.", nameof(rules));
+        }
+
+        if (rules.Rumours.Count > ScenarioRules.MaxRumours)
+        {
+            throw new ArgumentException($"A map has at most {ScenarioRules.MaxRumours} rumours.", nameof(rules));
         }
 
         Rules = rules;

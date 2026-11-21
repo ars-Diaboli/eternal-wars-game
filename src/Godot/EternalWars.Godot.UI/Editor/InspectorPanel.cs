@@ -1,6 +1,8 @@
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
+using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Towns;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.UI.Editor.Inspector;
@@ -93,6 +95,39 @@ public partial class InspectorPanel : VBoxContainer
         _form.Filling = false;
     }
 
+    /// <summary>
+    /// The object's name (ADR-257; a town's is in its own section): Enter or leaving the field sets it, blank takes it away. The map events, the
+    /// conditions and the quest form show it, and the quest form takes it in place of the id.
+    /// </summary>
+    private void NameRow(Container identity, MapObject mapObject)
+    {
+        var row = new HBoxContainer();
+        identity.AddChild(row);
+        row.AddChild(new Label { Text = "Name" });
+        var name = new LineEdit
+        {
+            Text = mapObject.Name ?? "",
+            PlaceholderText = "none",
+            MaxLength = MapObject.NameLength,
+            CustomMinimumSize = new Vector2(UiTheme.InspectorNameWidth, 0),
+            TooltipText = "A name of its own, unique on the map: the map events, the conditions and the quest form name the object by it.",
+        };
+        // Applies only a change typed over the name shown, while the object still has it: a field freed after an undo must not apply again.
+        var shown = mapObject.Name ?? "";
+        void Apply()
+        {
+            if (name.Text.Trim() != shown && (mapObject.Name ?? "") == shown)
+            {
+                shown = name.Text.Trim();
+                _form.Edit(() => _editor.Objects.SetName(mapObject.Id, name.Text));
+            }
+        }
+
+        name.TextSubmitted += _ => Apply();
+        name.FocusExited += Apply;
+        row.AddChild(name);
+    }
+
     private void ShowObjects(IReadOnlyList<MapObjectId> ids)
     {
         var scenario = _editor.Scenario;
@@ -114,10 +149,15 @@ public partial class InspectorPanel : VBoxContainer
         var name = objects.All(o => o.Definition.Id == first.Definition.Id) ? first.Definition.Name : first.GetType().Name;
         identity.AddChild(new Label
         {
-            Text = objects.Count == 1 ? $"{first.Definition.Name} #{first.Id.Value} at {first.Position}"
+            Text = objects.Count == 1 ? $"{first.Definition.Name}{(first.GivenName is { } given ? $" \"{given}\"" : "")} #{first.Id.Value} at {first.Position}"
                 : InspectorSections.Has(first.GetType()) ? $"{objects.Count} × {name}: a change applies to all of them"
                 : $"{objects.Count} × {name}: nothing to edit",
         });
+        if (objects.Count == 1 && first is not Town)
+        {
+            NameRow(identity, first);
+        }
+
         InspectorSections.For(first)?.Show(_form, objects);
         if (objects.Count == 1)
         {

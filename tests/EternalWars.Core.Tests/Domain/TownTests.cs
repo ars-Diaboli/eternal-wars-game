@@ -377,7 +377,7 @@ public class TownTests
     {
         var state = Create(Rows);
         var town = AddTown(state, TownIds.Inferno, 0, 0, Red);
-        town.Name = "Ashgate";
+        town.Rename("Ashgate");
         town.SetLevel(BuiltInBuildings.Blacksmith, 1);
         town.SetDwelling("inferno.imp", 2);
         town.SetAvailable("inferno.imp", 7);

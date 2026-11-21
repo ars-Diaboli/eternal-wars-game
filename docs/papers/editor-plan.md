@@ -579,7 +579,7 @@ again offers the lost work.
    - **allowed factions per player** on a fixed map: in the Players tab; the new-game screen offers only those;
    - **object names**: a name field in the inspector; events and quests can refer to a named object; names are unique (a validator
      check);
-   - **custom heroes**: a name, biography and starting skills in the hero inspector; the portrait from the roster.
+   - **custom heroes**: a name, biography and starting skills in the hero inspector; the portrait from the roster. *Done.*
 9. **Texts** (EDIT-11): a core list of every text in a map (name, description, event texts, messages, signs, rumours, hero names and
    biographies) with a setter for each, and a Texts tab that edits them in place. A test fails when a text field is missing from
    the list.

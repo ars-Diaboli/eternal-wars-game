@@ -23,6 +23,7 @@
 | [254](#adr-254-thumbnails-are-renders-of-the-placeholder-model-cached-by-its-hash-the-inspector-has-six-parts-and-computed-jump-links-edit-1-adr-223-adr-245-adr-253-2026-11-21) | Thumbnails are renders of the placeholder model cached by its hash; the inspector has six parts and computed jump links (EDIT-1, ADR-223, ADR-245, ADR-253, 2026-11-21) | implemented |
 | [255](#adr-255-multi-edit-writes-one-object-property-to-several-objects-of-one-kind-as-one-all-or-nothing-step-pickers-are-searchable-picture-grids-edit-1-adr-223-adr-245-adr-254-2026-11-21) | Multi-edit writes one object property to several objects of one kind as one all-or-nothing step; pickers are searchable picture grids (EDIT-1, ADR-223, ADR-245, ADR-254, 2026-11-21) | implemented |
 | [256](#adr-256-the-map-settings-are-one-window-with-tabs-over-the-editor-each-tab-one-of-the-settings-panels-edit-1-adr-250-adr-255-2026-11-21) | The map settings are one window with tabs over the editor, each tab one of the settings panels (EDIT-1, ADR-250, ADR-255, 2026-11-21) | implemented |
+| [257](#adr-257-the-map-content-rumours-a-players-factions-object-names-and-custom-heroes-in-one-format-bump-edit-12-adr-250-adr-256-2026-11-21) | The map content: rumours, a player's factions, object names and custom heroes, in one format bump (EDIT-12, ADR-250, ADR-256, 2026-11-21) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -549,3 +550,28 @@ ADR when it is built.
   own Undo and Redo (and Ctrl+Z, Ctrl+Y outside a text field), since the editor takes no other input while it is open.
 - **The panels stay the units**: each tab is a panel bound to the session (`GeneralSettingsPanel`, `PlayersPanel`, `ConditionsPanel`,
   `BansPanel`, `WeekEventsPanel`), so the window holds no rule and no state of the map.
+
+### ADR-257: The map content: rumours, a player's factions, object names and custom heroes, in one format bump (EDIT-12, ADR-250, ADR-256, 2026-11-21)
+**Status**: implemented (plan step 3, task 8).
+
+- **One format bump, no migration step**: map format 44 only adds fields (`rules.rumours`, `factions` on a player slot, `name` on any
+  object, `biography` and `portrait` on a hero). A town's `name` keeps its key and meaning, now read for every object, so older files read
+  as they are (ADR-174's rule for added fields); the v43 sample became the v44 one with every new field.
+- **Rumours** are a list in the rules, at most 100, each one line of at most 500 characters. Every tavern, a town's and the map's, tells one a week: the
+  map's rumours in order by the week of the game, starting over after the last. No draw, so no randomness changes and every player hears
+  the same one. Edited in the map settings window's Rumours tab, one a line, as one undo step.
+- **A player's factions** (a fixed map's slot): a list of playable towns, kept in their order; null and every town both mean any, and an
+  empty list is refused. The new-game screen's crest picker offers only these; a choice outside them, or Random, is drawn among them when
+  the game starts, in the same draw as before (the same result when every town is allowed). They only narrow a choice: a fixed town of
+  another faction stays the player's, which Problems warns of. Edited in the Players tab.
+- **Object names**: every object may have a name of its own, at most 60 characters and not only digits (a number where an object is asked
+  for is its id); a town's name is that name, its faction's when it has none. The editor refuses a name that does not fit, the loader too. References stay ids (events, quests, conditions), so a rename breaks nothing; what names an object shows its name (the event lines,
+  the conditions' texts and lists, the inspector's links), and the quest form takes a monster's or hero's name for the id. Names are
+  unique, ignoring case: Problems reports as an error a given name that another object's name, a default town name too, matches. Copies keep the name, so a pasted named object is reported
+  until renamed. The format reads a name through a public `MapObject.WithName`, for objects not on a map yet: `Core.Data` uses only the
+  domain's public members.
+- **Custom heroes**: any map hero may have its own name (at most 40 characters, not only digits), skills (one at a time, keeping the group limit), a
+  biography (at most 2000 characters, shown on the hero screen and in its full information) and a roster hero's portrait (null: its own
+  roster entry's). Portraits are not drawn yet (ADR-245's placeholders); the editor's picker shows the roster hero's. A placeholder that
+  becomes a roster hero, or a map hero a campaign's carried hero takes over, drops the biography and the portrait.
+- **Not here**: the Texts tab (EDIT-11) lists these texts with the others.
