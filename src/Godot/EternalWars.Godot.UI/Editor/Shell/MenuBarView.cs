@@ -75,11 +75,7 @@ public partial class MenuBarView : MenuBar
                 }
 
                 popup.SetItemIcon(index, PlaceholderIcons.Of(command));
-                if (command.Shortcut is { } shortcut)
-                {
-                    popup.SetItemAccelerator(index, Accelerator(shortcut));
-                    popup.SetItemShortcutDisabled(index, true); // shown, not handled: the registry runs the shortcuts
-                }
+                popup.SetItemShortcutDisabled(index, true); // shown, not handled: the registry runs the shortcuts
 
                 ids.Add(id);
             }
@@ -125,6 +121,7 @@ public partial class MenuBarView : MenuBar
             var whyNot = command.WhyNot?.Invoke();
             popup.SetItemDisabled(index, whyNot is not null);
             popup.SetItemTooltip(index, whyNot ?? "");
+            popup.SetItemAccelerator(index, command.Shortcut is { } shortcut ? Accelerator(shortcut) : Key.None); // the user may rebind it (ADR-275)
             if (command.IsOn is { } isOn)
             {
                 popup.SetItemChecked(index, isOn());

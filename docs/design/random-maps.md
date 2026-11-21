@@ -119,7 +119,7 @@ draws their direction). It draws only from its own streams (`heights` per level,
 it. The ground under each multi-tile object's footprint is then levelled to its entrance's height; roads and rivers follow the ground.
 
 ## Editor
-"Generate" (`EditorMapGenerator.Generate`, ADR-087) opens a new map (and undo history) like "New": a template (refused with errors), a size,
+**Generate** (the Generate tab, `EditorMapGenerator.Generate`, ADR-087) opens a new map (and undo history) like "New": a template (refused with errors), a size,
 a seed, how many start slots get a player (default all; the rest neutral) and optionally a town per slot (else drawn; start zones are
 painted native to it and keep that terrain if the town is changed later, RMG-7). Players are named by colour (Blue, Red, Yellow, Green,
 Orange, Purple, Teal, Pink); start slots are human up to max humans, AI-only slots computer; template teams may be overridden (ADR-070).

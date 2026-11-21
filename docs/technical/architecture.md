@@ -272,7 +272,10 @@ so `IsDirty` is exact and `UnsavedWorkChanged` tells when it flips; the editor's
 dialogs, the recent files (`RecentFiles`, kept in `EditorSettingsFile`), the questions over unsaved work (`QuestionBox`), the autosave
 timer and the recovery offer, and reads and writes through the app's `IMapFiles` (the map format, and `MapAutosaves` in Core.Data:
 the autosave folder and its session marker); `CommandPalette` searches the `CommandRegistry` with `CommandSearch`; the user's
-`EditorPreferences` are edited in `PreferencesWindow`, kept by `PreferencesStore` and applied by the app; `EditorWorkspace` holds the
+`EditorPreferences` are edited in `PreferencesWindow`, kept by `PreferencesStore` and applied by the app, and the user's shortcuts
+in its `ShortcutEditor` (the rules in `ShortcutBindings`, Core.Domain.Editing; kept by `ShortcutStore`, put over the defaults by
+`CommandRegistry.UseShortcuts`); the F1 help's `HelpWindow` shows the `HelpBook` (Core.Domain.Editing) that `EditorHelp` makes from the
+design documents built into Godot.UI, at the page for the hovered control; `EditorWorkspace` holds the
 Map and Template pages) and publishes the same kind of events as the game, so editor views are ordinary
 subscribers. The session is a facade: edits live in per-area editors (`Terrain`, `Objects`, `Contents`, `Monsters`, `Towns`,
 `Heroes`, `MapEvents`, `Players`, `Map`, `Selecting`) over one internal `EditorContext` (scenario, catalog, bus, history, open stroke,

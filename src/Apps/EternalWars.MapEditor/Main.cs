@@ -18,6 +18,7 @@ using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.Shared.Map;
 using EternalWars.Godot.UI;
 using EternalWars.Godot.UI.Editor;
+using EternalWars.Godot.UI.Editor.Help;
 using EternalWars.Godot.UI.Editor.Shell;
 using EternalWars.Godot.UI.Editor.Tools;
 using Godot;
@@ -230,13 +231,22 @@ public partial class Main : Node3D
 
         var window = new PreferencesWindow { Name = "Preferences" };
         _overlays.AddChild(window);
-        window.Bind(_preferences, chosen =>
+        window.Bind(_preferences, _commands, (chosen, keys) =>
         {
             _preferences = chosen;
             PreferencesStore.Write(_settings, chosen);
+            ShortcutStore.Write(_settings, _commands.Defaults, keys);
             ApplyPreferences();
+            UseShortcuts();
             Say("Preferences kept");
         });
+    }
+
+    /// <summary>The user's shortcuts (ADR-275) over the commands' defaults; the tool buttons name them.</summary>
+    private void UseShortcuts()
+    {
+        _commands.UseShortcuts(ShortcutStore.Read(_settings));
+        _tools.ShowShortcuts(tool => _commands[ToolCommand(tool)].Shortcut?.Text);
     }
 
     public override void _Notification(int what)
@@ -247,9 +257,44 @@ public partial class Main : Node3D
         }
     }
 
-    /// <summary>Alt+Enter switches the window mode wherever the focus is, a text field included.</summary>
+    /// <summary>Where the pointer last was over the window, as the mouse events say it.</summary>
+    private Vector2 _pointer;
+
+    /// <summary>
+    /// The help (ADR-276) at the page for <paramref name="hovered"/> (null: the first page), the Template tab's pages first there. Not
+    /// while a question or a file dialog is open, nor a second help; over the palette or a window it opens on top.
+    /// </summary>
+    private void OpenHelp(Control? hovered)
+    {
+        if (_files.IsBusy || _templateFiles.IsBusy || _overlays.GetChildren().OfType<HelpWindow>().Any())
+        {
+            return;
+        }
+
+        var page = EditorHelp.PageAt(hovered, _pointer, OnTemplateTab ? EditorHelp.RandomMaps : EditorHelp.Tools);
+        var help = new HelpWindow { Name = "Help" };
+        _overlays.AddChild(help);
+        help.Bind(EditorHelp.Book, page);
+    }
+
+    /// <summary>
+    /// Alt+Enter switches the window mode wherever the focus is, a text field included; the help's key (F1) opens the help at what is under
+    /// the pointer, over a window too.
+    /// </summary>
     public override void _Input(InputEvent @event)
     {
+        if (@event is InputEventMouse mouse)
+        {
+            _pointer = mouse.Position; // where the GUI sees the pointer, for the help's page under it
+        }
+
+        if (@event is InputEventKey key && _commands?["help.help"].Shortcut is { } help && help.Matches(key) && !IsTextKey(key)) // a plain key rebound to it stays a text field's
+        {
+            GetViewport().SetInputAsHandled();
+            OpenHelp(GetViewport().GuiGetHoveredControl());
+            return;
+        }
+
         if (!WindowModes.IsToggleKey(@event))
         {
             return;
@@ -782,7 +827,7 @@ public partial class Main : Node3D
         _workspace.AddTab(EditorRegion.Right, _fairness);
         _fairness.Bind(_editor);
         _fairness.StartSelected += ShowTile;
-        _events = new EventsPanel { Name = "Events" };
+        _events = new EventsPanel { Name = "Events" }.Tag("Map events"); // F1 (ADR-276): not the inspector's Events section
         _workspace.AddTab(EditorRegion.Right, _events, UiIcon.Events);
         _events.Bind(_editor, MapEventNodeJson.Instance);
         _generate = new GeneratePanel { Name = "Generate" }; // the new-map wizard ends in it with a template
@@ -860,6 +905,7 @@ public partial class Main : Node3D
             });
         }
 
+        UseShortcuts();
         menuBar.Bind(_commands,
         [
             new("File", ["file.new", null, "file.open", ">Open recent", null, "file.save", "file.save-as", null, "file.export-report", "file.export-picture", null, "file.quit"])
@@ -875,8 +921,8 @@ public partial class Main : Node3D
             {
                 Lists =
                 [
-                    new("Bookmarks", () => [.. _bookmarks.Stored.Select(n => ($"Bookmark {n} (key {n})", (Action)(() => _commands.Run($"view.bookmark-{n}"))))],
-                        "No view is stored yet: Ctrl+1 … 9 store one"),
+                    new("Bookmarks", () => [.. _bookmarks.Stored.Select(n => (KeyHint($"Bookmark {n}", $"view.bookmark-{n}"), (Action)(() => _commands.Run($"view.bookmark-{n}"))))],
+                        "No view is stored yet: Store bookmark (View menu, or its key) stores one"),
                     new("Overlay", () => [.. OverlaysPanel.Names.Select(o => (o.Text, (Action)(() => _overlayPanel.Choose(o.Kind))))], "No overlay"),
                 ],
             },
@@ -903,6 +949,13 @@ public partial class Main : Node3D
     }
 
     private static string ToolCommand(IEditorTool tool) => $"tool.{tool.Name.ToLowerInvariant()}";
+
+    /// <summary>"<paramref name="text"/> (key)" with the key in effect of command <paramref name="id"/> (ADR-275); the text alone without one.</summary>
+    private string KeyHint(string text, string id) => _commands[id].Shortcut is { } key ? $"{text} ({key.Text})" : text;
+
+    /// <summary>What stores bookmark <paramref name="n"/>, as a hint says it: its key (the user may rebind it, ADR-275).</summary>
+    private string StoreBookmarkKey(int n) =>
+        _commands[$"view.store-bookmark-{n}"].Shortcut is { } key ? $"{key.Text} stores" : $"Store bookmark {n} stores";
 
     /// <summary>Registers a command. <paramref name="onMap"/>: it works on the map's view, so it cannot run while the Template tab shows.</summary>
     private void Command(
@@ -991,7 +1044,9 @@ public partial class Main : Node3D
             var n = slot;
             Command($"view.store-bookmark-{n}", $"Store bookmark {n}", () => StoreBookmark(n), shortcut: new(Key.Key0 + n, Ctrl: true), onMap: true);
             Command($"view.bookmark-{n}", $"Go to bookmark {n}", () => GoToBookmark(n), shortcut: new(Key.Key0 + n),
-                whyNot: () => _bookmarks[n] is null ? $"Bookmark {n} is not stored: Ctrl+{n} stores the view" : null, onMap: true);
+                whyNot: () => _bookmarks[n] is null
+                    ? $"Bookmark {n} is not stored: {StoreBookmarkKey(n)} the view"
+                    : null, onMap: true);
         }
 
         Command("view.left", "Left panel", () => _workspace.SetOpen(EditorRegion.Left, !_workspace.IsShown(EditorRegion.Left)),
@@ -1002,7 +1057,7 @@ public partial class Main : Node3D
             isOn: () => _workspace.IsShown(EditorRegion.Right), onMap: true, icon: UiIcon.PanelRight);
         Command("view.panels", "Hide all panels", _workspace.ToggleAll, shortcut: new(Key.F11), isOn: () => _workspace.AllHidden, onMap: true, icon: UiIcon.PanelsHide);
         Command("test.play", "Test the map…", OpenPlayTest, shortcut: new(Key.F5), onMap: true, icon: UiIcon.Play);
-        Command("help.help", "Help", () => { }, shortcut: new(Key.F1), whyNot: () => "The editor's help is not written yet", icon: UiIcon.Help);
+        Command("help.help", "Help", () => OpenHelp(null), shortcut: new(Key.F1), icon: UiIcon.Help);
     }
 
     /// <summary>Runs <paramref name="template"/> on the Template tab, else <paramref name="map"/>.</summary>
@@ -1069,7 +1124,7 @@ public partial class Main : Node3D
         _clipboard.Fragment = fragment;
         _commands.NotifyStateChanged();
         _tools.Tool.Refresh();
-        Say($"{(cut && fragment.Objects.Count > 0 ? "Cut" : "Copied")} {fragment.Tiles.Count} tile(s) and {fragment.Objects.Count} object(s); Ctrl+V pastes");
+        Say($"{(cut && fragment.Objects.Count > 0 ? "Cut" : "Copied")} {fragment.Tiles.Count} tile(s) and {fragment.Objects.Count} object(s); {(_commands["edit.paste"].Shortcut is { } paste ? $"{paste.Text} pastes" : "Paste pastes")}");
     }
 
     /// <summary>Paste or Duplicate: the Paste tool takes the clipboard or a copy of the selection, and every click puts it on the map.</summary>

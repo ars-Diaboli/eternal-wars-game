@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Editing;
+using EternalWars.Godot.UI.Editor.Help;
 using Godot;
 
 namespace EternalWars.Godot.UI.Editor.Shell;
@@ -37,9 +38,11 @@ public static class PreferencesStore
 }
 
 /// <summary>
-/// The Preferences window (EDIT-1, ADR-250), a box over the whole editor: the UI's scale, the autosave interval, the camera's speeds, a
-/// new map's size and the game the Test starts (ADR-267). "OK" hands the preferences to the app, which keeps and applies them; "Defaults" puts a new installation's values into
-/// the fields; "Cancel" or Escape closes the window with nothing changed.
+/// The Preferences window (EDIT-1, ADR-250), a box over the whole editor. The General tab: the UI's scale, the autosave interval, the
+/// camera's speeds, a new map's size and the game the Test starts (ADR-267); the Shortcuts tab: every command's key (ADR-275,
+/// <see cref="ShortcutEditor"/>). "OK" hands the preferences and the keys to the app, which keeps and applies them, and cannot while two
+/// commands share a key; "Defaults" puts a new installation's values into the tab shown; "Cancel" or Escape closes the window with
+/// nothing changed.
 /// </summary>
 public partial class PreferencesWindow : Control
 {
@@ -55,14 +58,32 @@ public partial class PreferencesWindow : Control
         TooltipText = "The game Test starts: an exported game's program, or the game's Godot project (its folder or project.godot)",
     };
 
-    public void Bind(EditorPreferences current, Action<EditorPreferences> apply)
+    private readonly ShortcutEditor _shortcuts = new() { Name = "Shortcuts" };
+    private readonly TabContainer _tabs = new() { Name = "Tabs" };
+
+    /// <summary>
+    /// Shows <paramref name="current"/> and the <paramref name="commands"/>' keys; OK hands <paramref name="apply"/> the chosen preferences
+    /// and every command's chosen key by id.
+    /// </summary>
+    public void Bind(EditorPreferences current, CommandRegistry commands, Action<EditorPreferences, IReadOnlyDictionary<string, KeyChord?>> apply)
     {
         var rows = EditorOverlay.Build(this);
         rows.AddChild(new Label { Text = "Preferences", HorizontalAlignment = HorizontalAlignment.Center });
-        var grid = new GridContainer { Columns = 2 };
+        rows.AddChild(_tabs);
+        var grid = new GridContainer { Name = "General", Columns = 2 }.Tag("Preferences"); // F1 (ADR-276): not the map settings' General
         grid.AddThemeConstantOverride("h_separation", UiSpacing.Section);
         grid.AddThemeConstantOverride("v_separation", UiSpacing.Row);
-        rows.AddChild(grid);
+        _tabs.AddChild(grid);
+        _tabs.AddChild(_shortcuts.Tag("Shortcuts"));
+        _tabs.TabChanged += tab =>
+        {
+            _shortcuts.StopWaiting();
+            if (tab == _shortcuts.GetIndex())
+            {
+                _shortcuts.FocusFilter();
+            }
+        };
+        _shortcuts.Bind([.. commands.All.Select(c => (c.Id, c.Name))], commands.Defaults, commands.Shortcuts);
         foreach (var scale in EditorPreferences.UiScales)
         {
             _scale.AddItem($"{scale} %", scale);
@@ -79,21 +100,41 @@ public partial class PreferencesWindow : Control
 
         var buttons = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
         rows.AddChild(buttons);
-        Button(buttons, "OK", () =>
+        var ok = Button(buttons, "OK", () =>
         {
             var chosen = Chosen();
-            if (EditorOverlay.Close(this))
+            var keys = new Dictionary<string, KeyChord?>(_shortcuts.Bindings);
+            if (_shortcuts.Conflicts.Count == 0 && EditorOverlay.Close(this))
             {
-                apply(chosen);
+                apply(chosen, keys);
             }
-        }).CallDeferred(Control.MethodName.GrabFocus);
-        Button(buttons, "Defaults", () => Show(new EditorPreferences()));
+        });
+        ok.CallDeferred(Control.MethodName.GrabFocus);
+        void Allow()
+        {
+            ok.Disabled = _shortcuts.Conflicts.Count > 0;
+            ok.TooltipText = ok.Disabled ? "Two commands share a key (the Shortcuts tab)" : "";
+        }
+
+        _shortcuts.Changed += Allow;
+        Allow();
+        Button(buttons, "Defaults", () =>
+        {
+            if (_tabs.CurrentTab == _shortcuts.GetIndex())
+            {
+                _shortcuts.ShowDefaults();
+            }
+            else
+            {
+                Show(new EditorPreferences());
+            }
+        }).TooltipText = "A new installation's values in the tab shown";
         Button(buttons, "Cancel", () => EditorOverlay.Close(this));
     }
 
     public override void _Input(InputEvent @event)
     {
-        if (@event is InputEventKey { Pressed: true, Keycode: Key.Escape })
+        if (@event is InputEventKey { Pressed: true, Keycode: Key.Escape } && !_shortcuts.IsWaiting) // Escape then stops waiting for a key
         {
             GetViewport()?.SetInputAsHandled();
             EditorOverlay.Close(this);

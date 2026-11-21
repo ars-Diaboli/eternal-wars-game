@@ -41,6 +41,8 @@
 | [272](#adr-272-template-mirror-tools-adr-117-adr-271-2026-11-21) | Template mirror tools (ADR-117, ADR-271, 2026-11-21) | implemented |
 | [273](#adr-273-the-template-inspectors-pickers-and-zone-presets-adr-117-adr-250-2026-11-21) | The template inspector's pickers and zone presets (ADR-117, ADR-250, 2026-11-21) | implemented |
 | [274](#adr-274-the-template-preview-and-generate-many-adr-087-adr-117-2026-11-21) | The template preview and Generate many (ADR-087, ADR-117, 2026-11-21) | implemented |
+| [275](#adr-275-the-shortcut-editor-adr-250-2026-11-21) | The shortcut editor (ADR-250, 2026-11-21) | implemented |
+| [276](#adr-276-the-editors-f1-help-made-from-the-design-documents-adr-250-2026-11-21) | The editor's F1 help, made from the design documents (ADR-250, 2026-11-21) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -964,3 +966,46 @@ ADR when it is built.
   their results (`ConcurrentQueue`) and the panel drains the queue in `_Process` while one runs, dropping a Generate older than the newest
   and what belongs to an older batch. A batch runs on while the panel leaves the tree (it does at every map open) and stops only when
   the panel is freed. Handed-over maps are remembered weakly, so the panel keeps no closed map alive.
+
+### ADR-275: The shortcut editor (ADR-250, 2026-11-21)
+**Status**: implemented (plan step 6, task 1).
+
+- **Any command can be rebound**, in Preferences' Shortcuts tab; the keys are the command registry's, so the menus, the toolbar's
+  tooltips, the palette and the tool buttons show the key in effect. A command's registered key is its default
+  (`EditorCommand.DefaultShortcut`); the registry puts the user's keys over the defaults (`CommandRegistry.UseShortcuts`).
+- **The rules are in the core** (`KeyChord`, `ShortcutBindings`, Core.Domain.Editing): a chord is a key name with Ctrl, Shift and Alt,
+  kept as text ("Ctrl+Shift+S"); `Conflicts` lists the chords several commands share; `Changes` is what differs from the defaults;
+  `Resolve` puts kept changes over the defaults, dropping changes for commands that no longer exist and changes giving one chord to
+  several commands (a hand-edited file), and taking a default chord from its command when the user gave it to another (the user's
+  choice wins, so a later default never silently steals a user's key). No chord is ever two commands'.
+- **Conflicts are shown, not allowed**: both commands in red, each naming the other, a line over the list; OK is disabled until every
+  key is one command's. The editor never runs a shared key ambiguously.
+- **Kept in the editor settings** (`editor-settings.cfg`, section `shortcuts`): only the changes, by command id; an empty value is no
+  key, and a key the engine does not know counts as none.
+- **Capturing**: a click on a key waits for the next key press; Escape gives up waiting, so binding Escape itself is only by
+  "Default" (Deselect's default). Only the commands are rebindable; the camera's keys and the panels' own keys stay as they are.
+
+### ADR-276: The editor's F1 help, made from the design documents (ADR-250, 2026-11-21)
+**Status**: implemented (plan step 6, task 2).
+
+- **One text**: the help's pages are the design documents' own paragraphs, so the docs stay the one statement of the rules and the help
+  never drifts from them. `docs/design/tools.md` (section "Map editor") and `random-maps.md` ("The template", "Editor", "Template
+  editor") are built into Godot.UI as embedded resources; no second copy is kept in `res://`.
+- **Pages by structure** (`HelpBook`, Core.Domain.Editing): a heading, and every paragraph or bullet that starts with a bold term
+  (optionally after "The"), is a page titled with the term; a bullet with a term under a paragraph, or nested under such a bullet, is
+  its child; text without a term at its start belongs to the page above. An anchor before a page is its id (so the docs' own
+  `#editor-…` links open pages); other bold terms in a page are its aliases (the Terrain, Road and River tools find Brushes). The
+  decision and question numbers are left out of the shown text. The docs are written so this works: each tool and each kind of
+  problem has a paragraph or bullet led by its name, and new editor text keeps doing so.
+- **The page for what is hovered** (`EditorHelp`, Godot.UI): from the hovered control outwards, a control's own topics
+  (`IHelpTopics`: the Problems list gives the row's kind, "Hero problems"), a topic set with `Tag`, for a tab the topic of what it
+  shows, the hovered control's text (a button, a label, a tab; an icon button's tooltip), then the node names ("Inspector",
+  "Problems"). Where a word means two things the control is tagged: the Events panel ("Map events", not the inspector's Events), the
+  workspace's page tabs, the Preferences' tabs. Links resolve anchors and `file.md#heading` targets of the two documents. A topic matches a page id, then a title, then an alias,
+  ignoring case, articles, a trailing "tool" or "tab" and a plural; the Template tab prefers random-maps.md's pages, the Map tab
+  tools.md's. Nothing found: the first page.
+- **F1 is the Help command's key** (rebindable, ADR-275), taken in the app's `_Input` so it also works over a window (Preferences, the
+  map settings) and inside text fields (a plain key rebound to it stays the field's); the Help menu opens the first page. The help window lists the pages by document and as
+  sub-pages, searches titles as the command palette does, and links the page's parent, children and the docs' links.
+- **Tests on the real documents**: every tool name, every kind of problem, the panels and the template's fields find a page, and no
+  page shows a decision number; a doc change that breaks one fails the build's tests.

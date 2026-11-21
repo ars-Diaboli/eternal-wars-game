@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Editing;
 using Godot;
 
 namespace EternalWars.Godot.UI.Editor.Shell;
@@ -20,7 +21,28 @@ public sealed class CommandRegistry
 
     public EditorCommand this[string id] => _byId[id];
 
-    /// <summary>Adds <paramref name="command"/>. Its id and its shortcut must be its own.</summary>
+    /// <summary>Every command's default shortcut (ADR-275), by id in the commands' order.</summary>
+    public IReadOnlyDictionary<string, KeyChord?> Defaults => _all.ToDictionary(c => c.Id, c => c.DefaultShortcut?.Chord);
+
+    /// <summary>Every command's shortcut in effect, by id in the commands' order.</summary>
+    public IReadOnlyDictionary<string, KeyChord?> Shortcuts => _all.ToDictionary(c => c.Id, c => c.Shortcut?.Chord);
+
+    /// <summary>
+    /// Puts the user's <paramref name="kept"/> shortcuts over the defaults (<see cref="ShortcutBindings.Resolve"/>): a chord whose key the
+    /// engine does not know counts as none. The views showing the commands follow.
+    /// </summary>
+    public void UseShortcuts(IReadOnlyDictionary<string, KeyChord?> kept)
+    {
+        var known = kept.ToDictionary(k => k.Key, k => CommandShortcut.Of(k.Value)?.Chord);
+        foreach (var (id, chord) in ShortcutBindings.Resolve(Defaults, known))
+        {
+            _byId[id].Rebind(CommandShortcut.Of(chord));
+        }
+
+        NotifyStateChanged();
+    }
+
+    /// <summary>Adds <paramref name="command"/>. Its id and its default shortcut must be its own.</summary>
     public EditorCommand Register(EditorCommand command)
     {
         if (command.Shortcut is { } shortcut && _all.FirstOrDefault(c => c.Shortcut == shortcut) is { } taken)

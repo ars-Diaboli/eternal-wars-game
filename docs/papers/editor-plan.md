@@ -639,9 +639,10 @@ and the game uses them.
 
 ### Step 6: Polish
 
-1. **Shortcut editor**: rebind any command in Preferences, with conflicts shown; kept in the editor settings.
+1. **Shortcut editor**: rebind any command in Preferences, with conflicts shown; kept in the editor settings. Smoke
+   `editor-shortcuts`. *Done.*
 2. **F1 help**: short in-app pages for tools, fields and problems, made from the text of [tools.md](../design/tools.md) and
-   [random-maps.md](../design/random-maps.md); F1 opens the page for what is hovered.
+   [random-maps.md](../design/random-maps.md); F1 opens the page for what is hovered. Smoke `editor-help`. *Done.*
 3. **Sample maps**: in the Help menu and the empty state.
 4. **UI scale**: every panel checked at 100, 150 and 200 %; the theme's contrast setting.
 5. **Performance**: a 256 × 256 two-level generated map timed for opening (under 3 s), painting (60 fps) and validation (never

@@ -29,6 +29,30 @@ public sealed class EditorSettingsFile
     public void Set(string section, string key, Variant value)
     {
         _file.SetValue(section, key, value);
+        Save();
+    }
+
+    /// <summary>The keys <paramref name="section"/> holds; none when it is not there.</summary>
+    public IReadOnlyList<string> Keys(string section) => _file.HasSection(section) ? _file.GetSectionKeys(section) : [];
+
+    /// <summary><paramref name="section"/> holds <paramref name="values"/> and nothing else (none: the section goes).</summary>
+    public void Replace(string section, IReadOnlyDictionary<string, Variant> values)
+    {
+        if (_file.HasSection(section))
+        {
+            _file.EraseSection(section);
+        }
+
+        foreach (var (key, value) in values)
+        {
+            _file.SetValue(section, key, value);
+        }
+
+        Save();
+    }
+
+    private void Save()
+    {
         if (_path is not null && _file.Save(_path) != Error.Ok)
         {
             GD.PushWarning($"Could not keep the editor's settings in {_path}.");

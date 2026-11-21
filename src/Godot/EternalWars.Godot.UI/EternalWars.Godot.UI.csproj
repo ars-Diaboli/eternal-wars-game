@@ -4,6 +4,12 @@
     <Description>Reusable Godot UI components (HUD widgets, panels, dialogs) bound to core events.</Description>
   </PropertyGroup>
 
+  <!-- The editor's F1 help is made from these design documents (ADR-276): built in, so it always says what they say. -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\..\docs\design\tools.md" LogicalName="help/tools.md" />
+    <EmbeddedResource Include="..\..\..\docs\design\random-maps.md" LogicalName="help/random-maps.md" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\EternalWars.Godot.Shared\EternalWars.Godot.Shared.csproj" />
     <ProjectReference Include="..\..\Core\EternalWars.Core.Generation\EternalWars.Core.Generation.csproj" />

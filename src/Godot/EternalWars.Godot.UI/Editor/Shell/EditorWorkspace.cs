@@ -1,3 +1,4 @@
+using EternalWars.Godot.UI.Editor.Help;
 using Godot;
 
 namespace EternalWars.Godot.UI.Editor.Shell;
@@ -41,7 +42,8 @@ public partial class EditorWorkspace : Control
     private readonly Dictionary<Control, Control> _tabOf = [];
     private EditorSettingsFile _settings = null!;
     private readonly List<Control> _pages = [];
-    private readonly TabBar _pageTabs = new() { Name = "Pages", ClipTabs = false, FocusMode = FocusModeEnum.None, SizeFlagsVertical = SizeFlags.ShrinkEnd };
+    private readonly TabBar _pageTabs = new TabBar { Name = "Pages", ClipTabs = false, FocusMode = FocusModeEnum.None, SizeFlagsVertical = SizeFlags.ShrinkEnd }
+        .Tag("tools-map-and-template-tabs"); // F1 (ADR-276)
     private readonly Control _body = new() { Name = "Body", MouseFilter = MouseFilterEnum.Ignore, SizeFlagsVertical = SizeFlags.ExpandFill };
     private bool _allHidden;
     private bool _addingTab;

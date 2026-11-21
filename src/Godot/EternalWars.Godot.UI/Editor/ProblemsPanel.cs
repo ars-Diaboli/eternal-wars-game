@@ -2,6 +2,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Godot.Shared.Events;
+using EternalWars.Godot.UI.Editor.Help;
 using Godot;
 
 namespace EternalWars.Godot.UI.Editor;
@@ -10,9 +11,10 @@ namespace EternalWars.Godot.UI.Editor;
 /// The map's problems (EDIT-1, ADR-250): <see cref="MapValidator"/>'s issues, checked a moment after every change, on a snapshot of the map
 /// and off the main thread; the result comes back on the main thread. The two count buttons show and hide the errors and the warnings, the
 /// list beside them picks one kind. Selecting an issue reports its tile; activating (double click) an event's issue opens the event. An
-/// issue with a clear fix (ADR-265) says so in its row, and the Fix button runs the selected one's as one undo step.
+/// issue with a clear fix (ADR-265) says so in its row, and the Fix button runs the selected one's as one undo step. F1 over a row opens
+/// the help on its kind of problem (ADR-276).
 /// </summary>
-public partial class ProblemsPanel : VBoxContainer
+public partial class ProblemsPanel : VBoxContainer, IHelpTopics
 {
     /// <summary>How long after the last change the map is checked, in seconds: a burst of edits is checked once.</summary>
     private const double Delay = 0.2;
@@ -28,10 +30,33 @@ public partial class ProblemsPanel : VBoxContainer
     private Func<Func<IReadOnlyList<MapIssue>>> _snapshot = null!;
     private MapEditorSession _editor = null!;
     private IssueKind? _kind;
+
     private int _check;
 
     /// <summary>The issues of the last finished check, in the validator's order.</summary>
     public IReadOnlyList<MapIssue> Issues { get; private set; } = [];
+
+    /// <summary>The help page of the problem row at <paramref name="position"/>: its kind's ("Hero problems"); null off the rows.</summary>
+    public string? HelpTopicAt(Vector2 position)
+    {
+        if (!_list.GetGlobalRect().HasPoint(position))
+        {
+            return null;
+        }
+
+        var index = _list.GetItemAtPosition(_list.GetGlobalTransformWithCanvas().AffineInverse() * position, exact: true);
+        return index >= 0 && index < _shown.Count ? _shown[index].Kind switch
+        {
+            IssueKind.Heroes => "Hero problems",
+            IssueKind.Objects => "Object problems",
+            IssueKind.Ground => "Ground problems",
+            IssueKind.Players => "Player problems",
+            IssueKind.Rules => "Rule problems",
+            IssueKind.Content => "Content problems",
+            IssueKind.Events => "Event problems",
+            _ => null,
+        } : null;
+    }
 
     public int Errors => Issues.Count(i => i.Severity == IssueSeverity.Error);
 

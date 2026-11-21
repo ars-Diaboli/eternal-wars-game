@@ -374,6 +374,14 @@ $scenarios = @(
     # what was kept.
     @{ Name = 'editor-preferences'; App = 'EternalWars.MapEditor'; Frames = 40
        Input = '3:key:Ctrl+Comma;9:click:@100 %;13:choose:150 %;19:click:@OK;28:key:Ctrl+Comma' },
+    # The shortcut editor (ADR-275): Preferences' Shortcuts tab, "undo" in the filter; Undo's key gets Ctrl+S, Save's (the conflict in
+    # red, OK disabled), then Ctrl+U; OK keeps it; the tab again shows Undo on Ctrl+U.
+    @{ Name = 'editor-shortcuts'; App = 'EternalWars.MapEditor'; Frames = 50
+       Input = '3:key:Ctrl+Comma;8:click:@Shortcuts;12:text:undo;16:click:@Ctrl+Z;19:key:Ctrl+S;24:click:@Ctrl+S;27:key:Ctrl+U;31:click:@OK;36:key:Ctrl+Comma;40:click:@Shortcuts;44:text:undo' },
+    # F1 help (ADR-276): F1 over the Erase tool's button opens the help at the Erase page (made from tools.md); Escape closes it; F1 over
+    # the Events tab opens Map events (not the inspector's Events); on the Template tab F1 over the Preview tab opens Preview (random-maps.md).
+    @{ Name = 'editor-help'; App = 'EternalWars.MapEditor'; Frames = 60
+       Input = '3:click:@Erase;8:key:F1;20:key:Escape;22:click:@Events#2;26:key:F1;34:key:Escape;38:click:@Template;44:click:@Preview;48:key:F1' },
     # Selection and move (EDIT-1, ADR-250) on a blank map: two chests are placed; the Select tool (V) drags a rectangle over them (the
     # marquee, then tiles and chests selected); a drag from a selected chest moves both (the ghost, then the move); Ctrl+A selects
     # everything, Escape nothing; the Move tool (M) drags one chest onto the other (red ghost, refused); a click selects it, Delete removes it.

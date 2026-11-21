@@ -47,6 +47,15 @@ public partial class ToolPalette : VBoxContainer
         ShowOptions();
     }
 
+    /// <summary>The buttons' tooltips name each tool's shortcut as <paramref name="shortcutOf"/> gives it (the user may rebind them, ADR-275).</summary>
+    public void ShowShortcuts(Func<IEditorTool, string?> shortcutOf)
+    {
+        foreach (var (tool, button) in _buttons)
+        {
+            button.TooltipText = shortcutOf(tool) is { } key ? $"{tool.Name} ({key})" : tool.Name;
+        }
+    }
+
     /// <summary>Puts <paramref name="tool"/> (one of <see cref="Tools"/>) in use.</summary>
     public void Use(IEditorTool tool)
     {

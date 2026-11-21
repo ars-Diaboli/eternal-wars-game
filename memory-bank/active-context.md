@@ -9,12 +9,20 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 6 task 2 (ADR-276): F1 help. `HelpBook` (Core.Domain.Editing) makes pages from tools.md and random-maps.md
+  (bold-led paragraphs and bullets, anchors as ids, aliases, decision numbers dropped), built into Godot.UI as embedded resources;
+  `EditorHelp` finds the page for the hovered control (`IHelpTopics`, tags, text, node names; the Template tab prefers random-maps.md);
+  `HelpWindow` lists, searches and links the pages. tools.md gained leads for Start zones, Height, Link gates, the Grail and each kind
+  of problem. Tests `HelpBookTests` (on the real docs); smoke `editor-help`. Next: step 6 task 3 (sample maps).
+- Editor overhaul, step 6 task 1 (ADR-275): the shortcut editor. Preferences has a Shortcuts tab (`ShortcutEditor`): click a key, press
+  the new one; None, Default, a filter; conflicts in red and OK disabled while any. The rules in the core (`KeyChord`,
+  `ShortcutBindings`: Resolve, Changes, Conflicts); the registry's `UseShortcuts`, the commands' `DefaultShortcut`; the changes kept in
+  `editor-settings.cfg` (`ShortcutStore`). Tests `ShortcutBindingsTests`; smoke `editor-shortcuts`.
 - Editor overhaul, step 5 tasks 7 and 8 (ADR-274): Generate in the template editor runs off the main thread and shows the map in the
   Preview tab beside the graph (`ZonePicture` in the core, `ZonePictureView`; zones outlined and named; Open in map editor through
   `TemplateEditorHost.Open`). The Seeds tab's Generate many runs `TemplateBatch.RunAsync` (N seeds, capped parallel, cancellable; each
   map's `sim maps` checks and fairness imbalances) into a gallery of thumbnails with the spread over the batch. Tests
-  `TemplateBatchTests`; smoke `editor-template-preview`, `editor-template-batch`. Step 5 is done. Next: step 6 (polish), or step 3's
-  drop-downs.
+  `TemplateBatchTests`; smoke `editor-template-preview`, `editor-template-batch`. Step 5 is done.
 - Editor overhaul, step 5 task 6 (ADR-273): the template inspector edits every field: tick-box pickers for a zone's terrains and neutral
   town types, the week events' factions and the roads' mines; start buildings by level and start dwellings by tier; road type and gates,
   weeks before events. Zone presets: `ZonePresets` (Rich treasure, Mine junction, Guarded start), the session's `AddZone(preset)` and

@@ -5,9 +5,10 @@
 ## Map editor
 A **separate standalone app**, not an in-game mode (ADR-023). Core `MapEditorSession` (undo / redo) with Godot UI (tool palette, inspector,
 problems panel, map settings window):
-- terrain painting, roads and rivers with a [brush](#editor-brushes) (drag strokes, lines, flood fill); **start zones** (the Start zone tool: a player's zone or Erase, shown as
-  tiles of the player's colour; MP-4, ADR-197), where a player's day stays its own in a simultaneous first week;
-- the ground's height (ADR-181, ADR-182), the "Height" tool: raise, lower, level (towards the height where the stroke started) and smooth
+- terrain painting, roads and rivers with a [brush](#editor-brushes) (drag strokes, lines, flood fill);
+- **Start zones** (the Start zone tool; MP-4, ADR-197): a player's zone, or Erase, painted with the brush and shown as tiles of the
+  player's colour, where a player's day stays its own in a simultaneous first week;
+- **Height** (the Height tool; ADR-181, ADR-182): the ground's height: raise, lower, level (towards the height where the stroke started) and smooth
   with a round brush (the radius, and a strength of 1–8 eighths of a cell width a dab, fading over one tile at the edge); "From terrain"
   under the brush and a "Heights from terrain" button for the whole map; an **"Auto height"** switch (on by default) that gives newly
   painted terrain its height there and about 3 tiles around. Placing an object of more than one tile levels the ground under it at its
@@ -21,7 +22,8 @@ problems panel, map settings window):
   tier), towns (buildings, dwellings, garrison, guild spells, random faction);
 - the map settings window: map name and description, player slots and teams, victory and defeat conditions (ADR-057), the map's bans
   ([adventure-map.md](adventure-map.md#map-bans-and-random-placeholders), ADR-133) and the week events;
-- map events, the "Events" tab ([adventure-map.md](adventure-map.md#pandoras-box-and-map-events), ADR-129);
+- **Map events** (the Events tab, ADR-129): the map's events in the order they run, each with its trigger, cells and actions, made
+  and edited there; what they can do is in [adventure-map.md](adventure-map.md#pandoras-box-and-map-events);
 - validation; [generate from a template and the template editor](random-maps.md#editor).
 
 **The window** (EDIT-1, ADR-250): a bar on top (the menus, the Map and Template tabs, the toolbar), three docked regions around the map
@@ -90,9 +92,9 @@ placeholder, a coloured tile with the name's two letters.
 
 **Commands**: every action is a command with a name, an icon, an optional shortcut, and a check whether it can run now. The menus
 (File, Edit, View, Map, Tools, Templates, Test, Help) and the toolbar are built from the commands; an item that cannot run is greyed
-and says why in its tooltip. Shortcuts: the File menu's, Ctrl+Z undo, Ctrl+Y redo, Ctrl+X cut, Ctrl+C copy, Ctrl+V paste, Ctrl+D duplicate, Delete, Ctrl+A select all, Escape
+and says why in its tooltip. Shortcuts (each can be rebound in Preferences): the File menu's, Ctrl+Z undo, Ctrl+Y redo, Ctrl+X cut, Ctrl+C copy, Ctrl+V paste, Ctrl+D duplicate, Delete, Ctrl+A select all, Escape
 deselect, Ctrl+R rotate scenery, Ctrl+M mirror scenery, the tools' keys (T Terrain, O Object, E Erase, V Select, M Move), L the next level, F11 the panels, F7 the map settings, Ctrl+Shift+P the command palette, Ctrl+, Preferences. The Map
-menu opens the map settings (at a tab) and the Events tab, the Tools menu picks a tool. F5 is Test (below). Help (F1) is in its menu and greyed until it is built.
+menu opens the map settings (at a tab) and the Events tab, the Tools menu picks a tool. F5 is Test (below), F1 [help](#editor-help).
 
 **Selection** (EDIT-1, ADR-250). The selection holds tiles, objects, heroes and map events. It is not an undo step, and a thing that
 leaves the map leaves the selection.
@@ -216,8 +218,14 @@ them.
 Before the click a ghost shows the tiles it would take, red where it does not fit; all of them are red when the map may hold no
 more of the thing (a player's heroes, the obelisks, the Eyes of one colour). A monster is placed aggressive with its number
 left to the game's start, a dwelling and an artifact pickup already hold their creature or artifact (one undo step), and a hero is
-placed for the player picked in the tool's options and opens in the inspector. The Monster and Hero tools place the same things with
+placed for the player picked in the tool's options and opens in the inspector. The **Monster** and **Hero** tools place the same things with
 their own options.
+
+**Link gates** (the LinkGates tool): a click on a two-way gate or a one-way entrance, then one on its partner or its exit, links the
+two as one undo step; a first click on anything else says what to click.
+
+**The Grail** (the Grail tool, ADR-140): a click on open ground at least 10 cells from the edges buries the Grail there, and a click
+on it again takes it away. Left unset, it is drawn at the game's start on maps with obelisks.
 
 <a id="editor-scatter"></a>
 **Scatter** (EDIT-6, ADR-252). The Scatter tool puts scenery on the tiles its brush is dragged over, when the button comes up;
@@ -259,7 +267,7 @@ the box round the selected tiles the map; the box must be at least 16 tiles a si
 - With the middle anchor and an odd change of size, the odd tile is added (or cut) on the right and at the bottom.
 
 <a id="editor-brushes"></a>
-**Brushes** (EDIT-1, ADR-250). The Terrain, Road, River, Start zone and Erase tools share one brush: a size of 1 to 9 tiles across,
+**Brushes** (EDIT-1, ADR-250). The **Terrain**, **Road**, **River**, Start zone and Erase tools share one brush: a size of 1 to 9 tiles across,
 square or round.
 - The tiles under the brush are outlined in white before the click. A stroke is one undo step.
 - A drag paints along the straight line between the tiles the pointer passes, so a fast drag leaves no gaps. Shift + click draws a
@@ -278,7 +286,7 @@ icon and shortcut. Typing narrows the list as you type: every typed word must fi
 before one that has it at a word's start, then inside a word, then as letters in order ("svas" finds "Save as"). Up and Down move
 through the list, Enter or a click runs the command, Escape closes the palette.
 
-**Preferences** (Edit > Preferences, Ctrl+,), kept in `editor-settings.cfg` and applied on "OK":
+**Preferences** (Edit > Preferences, Ctrl+,), kept in `editor-settings.cfg` and applied on "OK". The General tab:
 
 | Preference | Range | At start |
 |---|---|---|
@@ -290,7 +298,15 @@ through the list, Enter or a click runs the command, Escape closes the palette.
 | New map's size | 16 to 256 tiles a side | 36 |
 | Game (for Test) | an exported game's program, or the game's Godot project (its folder or `project.godot`) | empty: the game project beside the editor's |
 
-"Defaults" puts the values of a new installation into the fields; "Cancel" or Escape changes nothing.
+The **Shortcuts** tab (ADR-275) lists every command with its key. A click on the key waits for the next key press with its
+modifiers (Ctrl, Shift, Alt) and makes it the command's; Escape, a click elsewhere or another tab gives up waiting, so Escape itself
+is given back only by "Default". Alt+Enter stays the window mode's, and plain keys run no command while a text field has the focus.
+"None" takes the command's key away, "Default" gives back its own. The filter finds commands by name or key. A key two commands share
+is shown in red on both, each naming the other, with a line over the list saying which; "OK" cannot be pressed until every key is
+one command's. Only the keys that differ from the defaults are kept; a default key the user gave another command is taken from the
+command that had it.
+
+"Defaults" puts the values of a new installation into the tab shown; "Cancel" or Escape changes nothing.
 
 **The camera** (ADR-260) looks at the map tilted, 15° to 30° from straight down (more tilted closer), or straight down (View >
 Top-down view); it goes out far enough to show a 256 × 256 map.
@@ -309,6 +325,8 @@ Top-down view); it goes out far enough to show a 256 × 256 map.
   fit, as the command palette ranks them. Up and Down choose, Enter or a click goes there (a hero or an object also becomes the
   selection, unless its layer is hidden or locked), Escape closes it.
 - Going to a tile from Go to, the minimap, the Problems panel or the events puts it in the middle of the map's part of the window.
+
+**Views and checks of the map**, in the right region's tabs, and the map's test and exports:
 - **Layers** (ADR-262, the Layers tab of the right region, View > Layers): a Show box for the terrain, roads, rivers, objects, scenery,
   monsters, heroes, events, start zones and the grid, and a Locked box for the roads, rivers, objects, scenery, monsters, heroes and
   events. A hidden or locked kind is not selected (a click, a box, Select all, a jump or Go to) and not erased; locking or hiding it lets
@@ -349,8 +367,29 @@ while Ctrl is held, and on the Template tab. A shortcut pressed in the middle of
   names it (ADR-265): link an unlinked gate with its only possible partner, point a one-way entrance at the only free exit, make what
   belongs to a missing player neutral, give a player without a start the one neutral town in its start zone. The Fix button runs the
   selected problem's fix as one undo step; if the map changed since it was checked, nothing happens and Output says so.
+  - **Hero problems**: an owner that does not exist; a hero on impassable ground or inside an object (its own town's entrance
+    excepted), without an army, or with known spells and no spell book; unknown hero types, creatures or artifacts.
+  - **Object problems**: an entrance no one can reach; each kind's own (owners, gate links, creatures, artifacts and heroes, prisons,
+    garrisons, towns, Pandora's Boxes, quest objects without a quest); a name two objects share; more than four Eyes of the Magi of a
+    colour, a border post without its colour's Keymaster's Tent; a buried Grail no hero can dig up or too near the edge, more than 25
+    obelisks, obelisks on a map too small for the Grail, and a buried Grail with no obelisks to find it by.
+  - **Ground problems**: roads and rivers on impassable terrain.
+  - **Player problems**: a player without a starting hero or town; a start zone of a player the map lacks, a player without a start
+    zone on a map that has them, a zone without its player's towns; a town given to a player whose factions do not include its own.
+  - **Rule problems**: victory and loss conditions that point at nothing, or a game that cannot end; the grace period on for a player
+    who starts without a town; more heroes than a player may have; an arena map without a combat place, or whose enemies meet on day 1.
+  - **Content problems**: a ban naming nothing, or something the author placed by hand; a random monster whose tier has no creatures.
+  - **Event problems**: what stops a map event loading (errors) and its warnings, such as a place an action names that is off the map.
 - **History**: the start, then every undo step, oldest first; the undone steps are dim. A click on a row jumps there.
 - **Output**: the editor's messages with their time (what was saved, opened, autosaved or generated, why an edit was refused).
+
+<a id="editor-help"></a>
+**Help** (F1, or Help > Help; ADR-276): F1 opens the help at the page for what is under the pointer: a tool, a panel or its tab, a
+field's label, a problem in the Problems list, or the template editor's parts (on the Template tab the template's pages come first).
+Over nothing with a page, or from the menu, it opens at the editor's first page. The pages are this document's and
+[random-maps.md](random-maps.md)'s own paragraphs: each one that starts with a bold term is a page, the bullets with a bold term under it
+its sub-pages, and the decision numbers are left out. The help lists the pages by document, finds them by title, and its links open
+the page they name; Escape or Close closes it.
 
 **The status bar**, left to right: the tile under the pointer (x, y, level, terrain, height, the hero, town or object there); the
 last message; "Checking the map…" while the problems are being checked; the counts of errors and warnings (a click opens Problems);
