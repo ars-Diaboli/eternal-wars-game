@@ -22,7 +22,7 @@ internal sealed class PandorasBoxInspector : InspectorSection<PandorasBox>
 
     private static void ShowContents(InspectorForm form, PandorasBox box)
     {
-        var panel = form.Box;
+        var panel = form.In(InspectorPart.Contents);
         var scenario = form.Scenario;
         var c = box.Contents;
         var changed = new List<Action<Action>>();
@@ -87,8 +87,10 @@ internal sealed class PandorasBoxInspector : InspectorSection<PandorasBox>
         }
 
         var joining = StackRows("Creatures that join the hero", c.Creatures);
-        var guard = StackRows("Guard (fought after \"open?\"; none = unguarded)", box.Guard);
+        panel = form.In(InspectorPart.Guard);
+        var guard = StackRows("Fought after \"open?\"; none = unguarded", box.Guard);
 
+        panel = form.In(InspectorPart.Messages);
         var messageRow = new HBoxContainer();
         panel.AddChild(messageRow);
         messageRow.AddChild(new Label { Text = "Message" });

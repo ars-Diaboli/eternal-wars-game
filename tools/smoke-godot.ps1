@@ -348,6 +348,11 @@ $scenarios = @(
     # with a click and made a favourite with a right click; then a monster is chosen from its faction and placed; Undo takes it back.
     @{ Name = 'editor-browser-place'; App = 'EternalWars.MapEditor'; Frames = 70
        Input = '3:click:@Object;7:click:@Mines and providers;12:click:@Gold mine;18:click:700,500;24:rclick:@Gold mine;30:click:@Mines and providers;34:click:@Monsters;40:click:@Dwarf;46:click:900,500;54:click:@Undo;62:click:@Redo' },
+    # The inspector's sections and jump links (EDIT-1, ADR-254) on a blank map: "portal" is typed into the browser's search, two
+    # Portals are placed and linked with the LinkGates tool; the Select tool takes the first and the Inspector tab shows it with its
+    # Identity and Links sections; the jump link selects the partner and shows it; the Links section is closed.
+    @{ Name = 'editor-inspector-sections'; App = 'EternalWars.MapEditor'; Frames = 84
+       Input = '3:click:@Object;6:click:160,354;8:text:portal;18:click:@Portal;22:click:600,400;26:click:900,520;30:click:@LinkGates;33:click:600,400;36:click:900,520;40:click:@Select;43:click:600,400;47:click:@Inspector;56:click:@Leads to Portal #2 at (20,21,L0);66:click:@Links' },
     # Scatter and scenery rotation (EDIT-6, ADR-252) on a blank map: the Scatter tool with only walls ticked and a brush of 5 tiles is
     # dragged over the grass (pieces of wall, ways kept open); the Select tool's rectangle takes them; Ctrl+R turns them a quarter
     # turn, Ctrl+M mirrors them; Undo takes the mirroring back.
@@ -381,7 +386,7 @@ $results = $selected | ForEach-Object -ThrottleLimit ([Math]::Max(1, $Jobs)) -Pa
     # The editor keeps its workspace layout beside the settings file: every scenario starts from the default layout.
     Remove-Item (Join-Path $dir 'editor-settings.cfg') -ErrorAction SilentlyContinue
     # ... and its maps folder and its autosaves with the session marker, which a run ended by --quit-after leaves behind.
-    Remove-Item (Join-Path $dir 'maps'), (Join-Path $dir 'autosave'), (Join-Path $dir 'stamps') -Recurse -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $dir 'maps'), (Join-Path $dir 'autosave'), (Join-Path $dir 'stamps'), (Join-Path $dir 'cache') -Recurse -ErrorAction SilentlyContinue
     if ($scenario.Recovery) {
         $autosave = Join-Path $dir 'autosave'
         New-Item -ItemType Directory -Force $autosave | Out-Null

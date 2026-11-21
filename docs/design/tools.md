@@ -137,9 +137,27 @@ everything that can be put on the map. A click on an entry makes it the Object t
   settings, so they are the same in every map.
 - **Stamps**: the saved [stamps](#editor-stamps), under their own heading above the categories; the search lists, after the
   entries, the stamps whose name holds every typed word.
-- **The card** at the bottom shows the entry under the pointer, or the chosen one: its footprint (the entrance lighter), its category
-  and group, its size, a one-line rule and, for scenery, its terrains. The pictures are coloured tiles with two letters until
-  thumbnails exist.
+- **The card** at the bottom shows the entry under the pointer, or the chosen one: its picture, its footprint (the entrance
+  lighter), its category and group, its size, a one-line rule and, for scenery, its terrains.
+- **Pictures** (ADR-254): an entry shows its icon where one exists (a town's crest, a resource pile's resource, the hero), else a
+  thumbnail of its model. A thumbnail is rendered once, the first time its entry is listed, and kept in `user://cache/thumbs/`
+  under the model's hash; a model that changes gets a new picture, and deleting the folder only costs rendering again. Monsters
+  and named artifacts show a coloured tile with two letters until their portraits exist, because their models are all alike.
+
+<a id="editor-inspector"></a>
+**The inspector** (ADR-254) shows the selected hero or object in sections; a click on a section's heading closes or opens it, and
+what is closed is kept in the editor's settings. A section shows only when the thing has something for it.
+- **Identity**: what it is and whose (a hero's type and stats, a town's owner, name and faction, a monster's creature and number).
+- **Contents**: what it holds or gives (an army, spells, artifacts, buildings, a box's gifts, a chest's values).
+- **Guard**: who must be fought for it (a garrison, a mine's or a box's guard, a monster's disposition and guard mode).
+- **Messages**: the texts it shows (a sign, a box's message, a sphinx's riddle).
+- **Links**: jump links to the things it is tied to. A click selects the linked object or hero, shows it in the inspector and
+  moves the view there; a link to an event cell moves the view. The links are:
+  - a gate's partner or exit, and for an exit every gate that leads to it;
+  - what a quest object's quest names: the monster or hero to beat, the town to hold;
+  - the cells that run the same event as a Pandora's box;
+  - for a monster, a hero or a town an event names: the quest object, box or cell that runs that event.
+- **Events**: the map events it runs (a box's hero event, a quest object's quest, a town's events), each with "Edit".
 
 **The Object tool** (O) places the browser's choice with its top-left tile where clicked; the treasure chest is chosen at the start.
 Before the click a ghost shows the tiles it would take, red where it does not fit; all of them are red when the map may hold no

@@ -7,14 +7,15 @@ using Godot;
 namespace EternalWars.Godot.UI.Editor.Inspector;
 
 /// <summary>
-/// A hero on the map (ADR-223: the hero's section; the objects' are <see cref="InspectorSections"/>): type or placeholder, stats, Tactics, morale
-/// and luck, war machines, seven army slots, the spell book and spells (ADR-120), worn and carried artifacts (ADR-061).
+/// A hero on the map (ADR-223: the hero's form; the objects' are <see cref="InspectorSections"/>). Identity: type or placeholder, stats,
+/// Tactics, morale and luck. Contents: war machines, seven army slots, the spell book and spells (ADR-120), worn and carried artifacts
+/// (ADR-061).
 /// </summary>
 internal static class HeroInspector
 {
     public static void Show(InspectorForm form, Hero hero)
     {
-        var panel = form.Box;
+        var panel = form.In(InspectorPart.Identity);
         var scenario = form.Scenario;
         var heroes = form.Editor.Heroes;
         panel.AddChild(new Label { Text = $"{hero.Name} ({scenario.GetPlayer(hero.Owner).Name}) at {hero.Position}" });
@@ -65,6 +66,7 @@ internal static class HeroInspector
         morale.ValueChanged += _ => ApplySpirit();
         luck.ValueChanged += _ => ApplySpirit();
 
+        panel = form.In(InspectorPart.Contents);
         var machines = new HBoxContainer();
         panel.AddChild(machines);
         machines.AddChild(new Label { Text = "War machines" });

@@ -4,6 +4,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.UI.Editor.Inspector;
+using EternalWars.Godot.UI.Editor.Shell;
 using Godot;
 
 namespace EternalWars.Godot.UI.Editor;
@@ -14,9 +15,15 @@ namespace EternalWars.Godot.UI.Editor;
 /// message; gate links are shown; links to the events a box runs, a quest object asks and a town has).
 /// Every change is an undoable editor edit. The hero's fields are <see cref="HeroInspector"/>, an object's the section of its type
 /// (<see cref="InspectorSections"/>, ADR-223); the panel fills again once a frame after edits, undo and redo.
+/// The rows stand in parts that open and close (identity, contents, guard, messages, links, events; ADR-254); which are closed is
+/// kept in the editor's settings. The Links part holds jump links (<see cref="MapLinks"/>): a click asks for the linked thing to be
+/// selected and shown (<see cref="LinkRequested"/>).
 /// </summary>
 public partial class InspectorPanel : VBoxContainer
 {
+    private const string SettingsSection = "inspector";
+    private const string ClosedKey = "closed";
+
     private MapEditorSession _editor = null!;
     private InspectorForm _form = null!;
     private HeroId? _hero;
@@ -25,10 +32,22 @@ public partial class InspectorPanel : VBoxContainer
     /// <summary>"Edit" on an event link: the editor opens that event in the "Events" tab.</summary>
     public event Action<string>? EventRequested;
 
-    public void Bind(MapEditorSession editor)
+    /// <summary>A jump link was clicked: the editor selects its object or hero and shows its tile.</summary>
+    public event Action<MapLink>? LinkRequested;
+
+    public void Bind(MapEditorSession editor, EditorSettingsFile? settings = null)
     {
         _editor = editor;
-        _form = new InspectorForm(this, editor, name => EventRequested?.Invoke(name));
+        _form = new InspectorForm(this, editor, name => EventRequested?.Invoke(name), link => LinkRequested?.Invoke(link));
+        foreach (var name in settings?.Get(SettingsSection, ClosedKey, System.Array.Empty<string>()).AsStringArray() ?? [])
+        {
+            if (Enum.TryParse<InspectorPart>(name, out var part))
+            {
+                _form.Closed.Add(part);
+            }
+        }
+
+        _form.ClosedChanged += () => settings?.Set(SettingsSection, ClosedKey, _form.Closed.Order().Select(p => p.ToString()).ToArray());
         Refresh();
         new RefreshScheduler(this, Refresh).On<UndoHistoryChanged>(editor.Events);
     }
@@ -49,22 +68,26 @@ public partial class InspectorPanel : VBoxContainer
     {
         _form.Filling = true;
         this.ClearChildren();
+        _form.Begin();
 
         var scenario = _editor.Scenario;
         if (_hero is { } heroId && scenario.Heroes.FirstOrDefault(h => h.Id == heroId) is { } hero)
         {
             HeroInspector.Show(_form, hero);
+            _form.Links(MapLinks.Of(scenario, hero));
         }
         else if (_object is { } objectId && scenario.FindObject(objectId) is { } mapObject)
         {
-            AddChild(new Label { Text = $"{mapObject.Definition.Name} #{mapObject.Id.Value} at {mapObject.Position}" });
+            _form.In(InspectorPart.Identity).AddChild(new Label { Text = $"{mapObject.Definition.Name} #{mapObject.Id.Value} at {mapObject.Position}" });
             InspectorSections.For(mapObject)?.Show(_form, mapObject);
+            _form.Links(MapLinks.Of(scenario, mapObject));
         }
         else
         {
             AddChild(new Label { Text = "Use the Select tool and click a hero or object." });
         }
 
+        _form.End();
         _form.Filling = false;
     }
 }

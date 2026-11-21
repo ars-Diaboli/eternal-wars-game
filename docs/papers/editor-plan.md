@@ -565,10 +565,10 @@ again offers the lost work.
    settings), a terrain filter, and the stamps; hovering shows a larger preview, the footprint and a one-line rule. The Object tool
    places the browser's choice with a ghost. The drop-down goes. Smoke `editor-browser-place`. *Done.*
 3. **Thumbnails**: `ThumbnailRenderer` renders each model once in a hidden `SubViewport` and caches it in `user://cache/thumbs/` by
-   the model's hash; icons are used where they exist (ADR-245), placeholders otherwise.
+   the model's hash; icons are used where they exist (ADR-245), placeholders otherwise. *Done.*
 4. **Inspector sections**: `InspectorForm` gets collapsible sections (identity, contents, guard, messages, links, events); today's
    forms (hero, town, monster, Pandora's box, sphinx, owned objects) move into them. Jump links select the linked thing and move the
-   view.
+   view. *Done.*
 5. **Multi-edit**: a property edit over a list of objects of one kind as one step; differing values show "—". Tests.
 6. **Picture pickers**: searchable grids for creatures, heroes, artifacts, spells and skills, with their icons or placeholders,
    replacing the drop-downs.

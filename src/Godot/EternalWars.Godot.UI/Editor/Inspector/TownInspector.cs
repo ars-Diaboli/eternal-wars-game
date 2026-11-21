@@ -44,6 +44,7 @@ internal sealed class TownInspector : InspectorSection<Town>
         random.Toggled += on => form.Edit(() => editor.Towns.SetRandom(town.Id, on));
         panel.AddChild(random);
 
+        panel = form.In(InspectorPart.Contents);
         panel.AddHeading("Buildings (level, 0 = not built)");
         var buildings = new HFlowContainer();
         panel.AddChild(buildings);
@@ -66,7 +67,7 @@ internal sealed class TownInspector : InspectorSection<Town>
         }
 
         ShowGuildSpells(form, town);
-        form.GarrisonRows(town.Id, town.Garrison);
+        form.GarrisonRows(town.Id, town.Garrison); // the Guard part
         ShowTownEvents(form, town);
     }
 
@@ -107,7 +108,7 @@ internal sealed class TownInspector : InspectorSection<Town>
     private static void ShowTownEvents(InspectorForm form, Town town)
     {
         var row = new HFlowContainer();
-        form.Box.AddChild(row);
+        form.In(InspectorPart.Events).AddChild(row);
         row.AddChild(new Label { Text = "Town events" });
         foreach (var definition in form.Scenario.MapEvents.Set.Events.Where(e => e.Kind == MapEventKind.Town && e.Towns.Contains(town.Id.Value)))
         {

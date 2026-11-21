@@ -15,7 +15,7 @@ internal sealed class DwellingInspector : InspectorSection<CreatureDwelling>
         var creature = row.AddChoice("Creature", lines, dwelling.Creature.Value);
         var owner = row.AddOwnerChoice(form.Scenario.Players, dwelling.Owner);
         var amountRow = new HBoxContainer();
-        form.Box.AddChild(amountRow);
+        form.In(InspectorPart.Contents).AddChild(amountRow);
         var amount = amountRow.AddSpin("Waiting (-1 = one week's growth)", dwelling.Available ?? -1, -1, 9999);
         void Apply() => form.Edit(() => form.Editor.Objects.SetDwelling(dwelling.Id, creature.Value(), owner.Value(), amount.Value >= 0 ? (int)amount.Value : null));
         creature.Button.ItemSelected += _ => Apply();
@@ -47,7 +47,7 @@ internal sealed class MineInspector : InspectorSection<Mine>
         owner.Button.ItemSelected += _ => form.Edit(() => form.Editor.Objects.SetMineOwner(mine.Id, owner.Value()));
 
         var guardRow = new HBoxContainer();
-        form.Box.AddChild(guardRow);
+        form.In(InspectorPart.Guard).AddChild(guardRow);
         var guardCreature = guardRow.AddChoice("Guard", new[] { ("None", "") }.Concat(form.Creatures()), mine.Guard?.Creature.Value ?? "");
         var guardCount = guardRow.AddSpin("Count (0 = rolled)", mine.Guard?.Count ?? 0, 0, 999);
         void ApplyGuard() => form.Edit(() => form.Editor.Objects.SetMineGuard(mine.Id, guardCreature.Value() is { Length: > 0 } id

@@ -20,6 +20,7 @@
 | [251](#adr-251-map-resize-reframes-the-map-in-place-stamps-are-fragments-in-a-file-format-of-their-own-edit-8-adr-015-adr-250-2026-11-21) | Map resize reframes the map in place; stamps are fragments in a file format of their own (EDIT-8, ADR-015, ADR-250, 2026-11-21) | implemented |
 | [252](#adr-252-scenery-has-an-orientation-stored-in-map-format-43-scatter-is-the-generators-scenery-choice-run-through-the-editor-session-edit-6-adr-079-adr-157-adr-174-adr-250-2026-11-21) | Scenery has an orientation, stored in map format 43; scatter is the generator's scenery choice run through the editor session (EDIT-6, ADR-079, ADR-157, ADR-174, ADR-250, 2026-11-21) | implemented |
 | [253](#adr-253-the-object-browser-lists-entries-built-in-the-core-the-object-tool-places-its-choice-edit-1-adr-166-adr-250-2026-11-21) | The object browser lists entries built in the core; the Object tool places its choice (EDIT-1, ADR-166, ADR-250, 2026-11-21) | implemented |
+| [254](#adr-254-thumbnails-are-renders-of-the-placeholder-model-cached-by-its-hash-the-inspector-has-six-parts-and-computed-jump-links-edit-1-adr-223-adr-245-adr-253-2026-11-21) | Thumbnails are renders of the placeholder model cached by its hash; the inspector has six parts and computed jump links (EDIT-1, ADR-223, ADR-245, ADR-253, 2026-11-21) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -476,3 +477,27 @@ ADR when it is built.
   a drawing. Pictures are the placeholder tiles until thumbnails exist (plan step 3, task 3).
 - **AutoInput**: a button whose centre a scroll box has scrolled out of view is no longer "visible" to an aimed click; the click
   would land on whatever is drawn there, and the scenario would pass without doing what it says.
+
+### ADR-254: Thumbnails are renders of the placeholder model cached by its hash; the inspector has six parts and computed jump links (EDIT-1, ADR-223, ADR-245, ADR-253, 2026-11-21)
+**Status**: implemented (plan step 3, tasks 3 and 4).
+
+- **One description of the model**: there are no model files yet; an object is drawn as blocks on its footprint, with extra shapes
+  for the quest objects. That drawing moved out of `MapObjectsView` into `PlaceholderModel` (a list of `ModelPart`s), which the
+  map view draws and the thumbnails are rendered from, so the two cannot drift apart. When art lands, the model file takes the
+  parts' place and its hash theirs.
+- **Rendered once, cached by hash**: `ThumbnailRenderer` renders a model in a hidden `SubViewport` with a world of its own (six at
+  a time, a picture after two frames) and writes a 96 pixel PNG named by the hash of the parts plus a version of the renderer's
+  look. Definitions drawn alike share a file; a changed model or look gets a new name, so nothing has to be invalidated. The
+  folder is `user://cache/thumbs/`; a file that cannot be read or written only costs a render. Pictures are asked for when an
+  entry is listed, not for the whole catalog at start.
+- **Which picture an entry shows**: its icon where one exists (a town's crest, a resource, the hero's icon), else the rendered
+  model, else the lettered placeholder. Monsters and named artifacts keep the placeholder: every monster's model is the same
+  block, and a tile with the name's letters tells them apart until portraits and artifact icons exist (ADR-245).
+- **Six parts, not a form per kind**: the inspector's rows go into identity, contents, guard, messages, links and events
+  (`InspectorPart`). The per-type forms of ADR-223 stay as they are and say which part their rows belong to (`InspectorForm.In`);
+  a part without rows is not shown. Which parts are closed is the editor's setting, not the map's.
+- **Jump links are computed, not stored**: `MapLinks.Of` reads a thing's links from the scenario each time the inspector fills:
+  the gate links, what a quest's conditions name, the cells of a box's event, and the reverse (what runs an event that names the
+  thing). Nothing new is saved and no format changes; a link whose target is gone is left out, and the validator reports it.
+- **A jump selects**: the link's object or hero becomes the selection and the inspected thing, and the view goes to it; a cell
+  only moves the view, since the Events tab is where cells are edited.

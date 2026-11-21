@@ -8,6 +8,7 @@ internal sealed class SphinxInspector : InspectorSection<Sphinx>
 {
     protected override void Show(InspectorForm form, Sphinx sphinx)
     {
+        form.In(InspectorPart.Messages);
         var own = new CheckBox { Text = "Author's riddle (else drawn from the riddle table)", ButtonPressed = sphinx.Riddle is not null };
         form.Box.AddChild(own);
         LineEdit Field(string label, string value, string hint)
