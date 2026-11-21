@@ -4,7 +4,7 @@ Prompts for the **UI icons** (ADR-116, ADR-204): resources, primary stats, skill
 actions, plain icon buttons, the faction heraldry and the five difficulty levels. They are generated as **sheets of 4 (2 × 2) or 6
 (2 × 3)**, the shapes the image model handles best, and cut into one file per icon. A sheet groups icons of the **same level of detail and
 the same use**, so they come out matching. Other icon sets have their own files: [cursor-prompts.md](cursor-prompts.md),
-[spell-icon-prompts.md](spell-icon-prompts.md), [creature-icon-prompts.md](creature-icon-prompts.md).
+[spell-icon-prompts.md](spell-icon-prompts.md), [creature-icon-prompts.md](creature-icon-prompts.md), [editor-icon-prompts.md](editor-icon-prompts.md).
 
 ## Use a prompt
 
