@@ -9,7 +9,7 @@ namespace EternalWars.Godot.Shared.Controls;
 /// <c>frame:kind:argument</c>; kinds are <c>click</c>/<c>rclick</c> (screen x,y), <c>key</c> (a Godot
 /// <see cref="Key"/> name, with its modifiers before it: <c>key:Ctrl+Shift+P</c>), <c>text</c> (letters typed into the focused text field, one a frame), <c>touch</c> (<c>x,y,frames</c>: one finger down there, lifted that many frames later; a long press
 /// opens the information window through <see cref="TouchInput"/>), <c>hold</c> (<c>Key,frames</c>: held down that long), <c>wheel</c> (<c>up|down,count</c>) and
-/// <c>drag</c>/<c>rdrag</c> (<c>x1,y1,x2,y2</c>: left or right button pressed, moved, released over three frames), <c>press</c> (a visible,
+/// <c>drag</c>/<c>rdrag</c>/<c>mdrag</c> (<c>x1,y1,x2,y2</c>: left, right or middle button pressed, moved, released over three frames), <c>press</c> (a visible,
 /// enabled button by its text or, without one, its tooltip; the topmost: exact, else the first that contains it, ignoring case; scrolled into view, then clicked at its centre the next
 /// frame; an error when there is none) and <c>dump</c> (prints the visible buttons' texts (a text-less button by its tooltip), centres and sizes, and the tabs, for writing scripts). A click,
 /// right click or drag may name buttons instead of points, so a layout change does not move its target: <c>click:@Close</c>,
@@ -49,16 +49,16 @@ public partial class AutoInput : Node
                     _script.Add((frame, new InputEventMouseButton { ButtonIndex = button, Pressed = true, Position = at, GlobalPosition = at }));
                     _script.Add((frame + 1, new InputEventMouseButton { ButtonIndex = button, Pressed = false, Position = at, GlobalPosition = at }));
                     break;
-                case "drag" or "rdrag":
+                case "drag" or "rdrag" or "mdrag":
                     // drag:x1,y1,x2,y2 presses at the first point, moves to the second the next frame and releases there the frame after.
                     var points = parts[2].Split(',').Select(v => float.Parse(v, CultureInfo.InvariantCulture)).ToArray();
                     var (from, to) = (new Vector2(points[0], points[1]), new Vector2(points[2], points[3]));
-                    var dragButton = parts[1] == "drag" ? MouseButton.Left : MouseButton.Right;
+                    var dragButton = parts[1] switch { "drag" => MouseButton.Left, "rdrag" => MouseButton.Right, _ => MouseButton.Middle };
                     _script.Add((frame, new InputEventMouseButton { ButtonIndex = dragButton, Pressed = true, Position = from, GlobalPosition = from }));
                     _script.Add((frame + 1, new InputEventMouseMotion
                     {
                         Position = to, GlobalPosition = to, Relative = to - from,
-                        ButtonMask = dragButton == MouseButton.Left ? MouseButtonMask.Left : MouseButtonMask.Right, // held, as a real drag reports it
+                        ButtonMask = dragButton switch { MouseButton.Left => MouseButtonMask.Left, MouseButton.Right => MouseButtonMask.Right, _ => MouseButtonMask.Middle }, // held, as a real drag reports it
                     }));
                     _script.Add((frame + 2, new InputEventMouseButton { ButtonIndex = dragButton, Pressed = false, Position = to, GlobalPosition = to }));
                     break;

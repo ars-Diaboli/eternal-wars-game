@@ -317,6 +317,10 @@ Map texts (ADR-258): `MapTexts.List` lists every text of a map with an id; `MapT
 calling the editor that owns it, so the Texts tab adds no rule of its own. `MapTextsTests` checks every string the map file writes.
 New maps (ADR-259): the wizard (`NewMapWizard`, Godot.UI) collects a `NewMapSettings` (Core.Domain) for `BlankScenario.Create`, or presets
 the `GeneratePanel`; the app opens the result through `FileService.OpenNew`. `SampleMaps` lists the shipped maps the empty state offers.
+The editor's camera (ADR-260) is `EditorCamera` (Godot.Shared/Cameras), not the game's `StrategyCamera`: it frames an area into the map
+view's rectangle (`Frame`); the selection's cells come from `MapSelection.Cells` (Core.Domain); bookmarks are `CameraBookmarks` (Godot.UI).
+The editor's minimap (ADR-261) is the HUD's `MinimapWidget` inside `MinimapPanel` (Godot.UI), a footer of the right region; Go to is
+`GoToBox` over `MapGoTo` (Core.Domain), whose results are the inspector's `MapLink`s.
 Single-value edits are `PropertyEdit<T>` commands; an edit to the value already there records no undo step and publishes
 nothing. The three tile layers paint through `PaintLayer<TValue, TEvent>`. `BeginStroke`/`EndStroke` merge a drag into
 one undo step. `MapValidator` reports what single edits cannot prevent. `MapConnectivity` tells where a hero can walk on a fresh

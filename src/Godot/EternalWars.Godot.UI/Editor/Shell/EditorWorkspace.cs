@@ -35,6 +35,7 @@ public partial class EditorWorkspace : Control
 
     private readonly Dictionary<EditorRegion, TabContainer> _regions = [];
     private readonly Dictionary<EditorRegion, PanelContainer> _panels = [];
+    private readonly Dictionary<EditorRegion, VBoxContainer> _footers = [];
     private readonly Dictionary<EditorRegion, bool> _open = [];
     private readonly Dictionary<EditorRegion, string> _savedTabs = [];
     private readonly Dictionary<Control, Control> _tabOf = [];
@@ -142,6 +143,22 @@ public partial class EditorWorkspace : Control
         _addingTab = false;
     }
 
+    /// <summary>
+    /// Shows <paramref name="footer"/> under <paramref name="region"/>'s tabs, whichever tab is open (the minimap under the right region's),
+    /// in place of the one shown before, which is freed.
+    /// </summary>
+    public void SetFooter(EditorRegion region, Control footer)
+    {
+        var holder = _footers[region];
+        foreach (var old in holder.GetChildren())
+        {
+            holder.RemoveChild(old);
+            old.QueueFree();
+        }
+
+        holder.AddChild(footer);
+    }
+
     /// <summary>Puts the app's menus first in the <see cref="MenuRow"/>.</summary>
     public void SetMenus(Control menus)
     {
@@ -233,8 +250,13 @@ public partial class EditorWorkspace : Control
             Name = region.ToString(),
             CustomMinimumSize = horizontal ? new Vector2(160, 0) : new Vector2(0, 80),
         });
-        var tabs = new TabContainer { Name = "Tabs" };
-        panel.AddChild(tabs);
+        var column = new VBoxContainer { Name = "Column" };
+        panel.AddChild(column);
+        var tabs = new TabContainer { Name = "Tabs", SizeFlagsVertical = SizeFlags.ExpandFill };
+        column.AddChild(tabs);
+        var footer = new VBoxContainer { Name = "Footer" };
+        column.AddChild(footer);
+        _footers[region] = footer;
         _panels[region] = panel;
         tabs.TabChanged += index =>
         {

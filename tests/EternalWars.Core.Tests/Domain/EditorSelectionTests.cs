@@ -407,6 +407,26 @@ public class EditorSelectionTests
         Assert.Empty(editor.Selection.Events);
     }
 
+    [Fact]
+    public void Cells_AreTheTilesAndEveryCellOfTheSelectedThings_EachOnce()
+    {
+        var editor = Editor();
+        var town = Place(editor, BuiltInMapObjects.TownId(TownIds.Haven), 10, 10);
+        Assert.Equal(EditResult.Ok, editor.MapEvents.Add(new MapEventDefinition("trap", MapEventKind.Hero, [])));
+        Assert.Equal(EditResult.Ok, editor.MapEvents.SetCell(new MapPosition(30, 5), "trap"));
+        var hero = editor.Scenario.Heroes[0];
+        var townCells = editor.Scenario.GetObject(town).OccupiedCells().Select(c => c.Position).ToList();
+        Assert.True(editor.Selecting.Set(new SelectionItems([new MapPosition(2, 2), townCells[0]], [town], [hero.Id], ["trap"])));
+
+        var cells = editor.Selection.Cells(editor.Scenario);
+
+        Assert.Equal(cells.Count, cells.Distinct().Count());
+        Assert.Equal(
+            [new MapPosition(2, 2), hero.Position, new MapPosition(30, 5), .. townCells],
+            cells.OrderBy(c => c == new MapPosition(2, 2) ? 0 : c == hero.Position ? 1 : c == new MapPosition(30, 5) ? 2 : 3 + townCells.IndexOf(c)));
+        Assert.Empty(new MapSelection().Cells(editor.Scenario));
+    }
+
     private static MapEditorSession Editor() => new(BlankScenario.Create(40, 30));
 
     private static MapObjectId Place(MapEditorSession editor, string definition, int x, int y)
