@@ -1,7 +1,7 @@
 # Creature portraits
 
 Painted creature portraits with transparency (512 × 512, facing right) and one opaque painted backdrop a faction (1024 × 1024), generated
-for this project by the owner (2026-11-21: Academy, Conflux, Dragon Utopia, Dungeon, Necropolis, neutral) as portrait sheets and cut into one file per creature (prompts in
+for this project by the owner (2026-11-21: Academy, Conflux, Dragon Utopia, Dungeon, Inferno, Necropolis, neutral) as portrait sheets and cut into one file per creature (prompts in
 `docs/content/prompts/creature-icon-prompts.md` and its faction files). Not shown in the game yet: the army slots and the creature windows
 still use the lettered placeholders.
 
@@ -15,6 +15,8 @@ still use the lettered placeholders.
 | creature_backdrop_dragon-utopia.png | the backdrop behind the Dragon Utopia portraits and Dragon Utopia heroes |
 | icon_creature_dungeon.<creature id>.png | the eighteen Dungeon creatures (sheets D1–D3) |
 | creature_backdrop_dungeon.png | the backdrop behind the Dungeon portraits and Dungeon heroes |
+| icon_creature_inferno.<creature id>.png | the eighteen Inferno creatures (sheets I1–I3) |
+| creature_backdrop_inferno.png | the backdrop behind the Inferno portraits and Inferno heroes |
 | icon_creature_necropolis.<creature id>.png | the eighteen Necropolis creatures (sheets N1–N3) |
 | creature_backdrop_necropolis.png | the backdrop behind the Necropolis portraits and Necropolis heroes |
 | icon_creature_neutral.<creature id>.png | fourteen of the sixteen neutral creatures (sheets X1–X3) |
