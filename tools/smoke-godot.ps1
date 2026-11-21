@@ -202,10 +202,10 @@ $scenarios = @(
     # Inspector rows (ADR-114) on Ember March: Select, the Inspector tab, a Minor artifact pickup, the witch hut, the sphinx, the hero (artifacts).
     @{ Name = 'editor-inspector-objects'; App = 'EternalWars.MapEditor'; Frames = 38; Map = $emberMap
        Input = '3:click:@Select;6:click:@Inspector;9:click:616,230;16:click:645,382;23:click:965,552;30:click:352,244' },
-    # The tools on a blank map: roads, a river, an object, the gate link tool. Then the week event settings on the conditions tab
-    # (ADR-084): tick Conflux for the weekly events, one more skipped week, undo both.
-    @{ Name = 'editor-tools'; App = 'EternalWars.MapEditor'; Frames = 76
-       Input = '3:click:@Road;6:click:700,600;9:click:740,600;12:click:@River;15:click:800,500;18:click:@Object;21:click:900,450;24:click:@LinkGates;27:click:900,450;30:click:1500,67;39:click:@Conditions;44:click:@conflux;50:click:1576,387;56:click:@Undo;62:click:@Undo' },
+    # The tools on a blank map: roads, a river, an object, the gate link tool. Then the map settings window's Week events tab (F7, ADR-084,
+    # ADR-256): tick Conflux for the weekly events, switch the events off, undo both with the window's Undo, Escape closes it.
+    @{ Name = 'editor-tools'; App = 'EternalWars.MapEditor'; Frames = 80
+       Input = '3:click:@Road;6:click:700,600;9:click:740,600;12:click:@River;15:click:800,500;18:click:@Object;21:click:900,450;24:click:@LinkGates;27:click:900,450;30:click:1500,67;39:key:F7;42:click:@Week events;46:click:@conflux;50:click:@Week and month events;56:click:@Undo;62:click:@Undo;70:key:Escape' },
     # The height tools (ADR-182 g) on a blank map: radius 2, strength 8 (the spin boxes' up arrows), raise two strokes, lower one and undo
     # it; then highlands painted with Auto height on.
     # Then generate from a template (ADR-087): "From template", Sylvan for Blue, Generate (Two against two at 128), then the tab again: the settings stay.
@@ -218,13 +218,14 @@ $scenarios = @(
     # The Events tab (EVT-6) on the quests map: open the tab, pick the first event (its tree), then its first action (the node text).
     @{ Name = 'editor-events'; App = 'EternalWars.MapEditor'; Frames = 30; Map = $questsMap
        Input = '3:click:@Events;8:click:1096,170;14:click:1145,436' },
-    # Bans and placeholders (ADR-126) on the placeholders map: the Bans tab, ban the first hero, undo it; Select, the Inspector tab, the random town.
-    @{ Name = 'editor-bans'; App = 'EternalWars.MapEditor'; Frames = 30; Map = $placeholdersMap
-       Input = '3:click:@Bans;7:click:@Agathe Sorrel (haven, Mage);11:click:@Undo;15:click:@Select;18:click:@Inspector;21:click:420,300' },
-    # The arena switch (ARN-2) on the arena map: the Conditions tab (the switch on, the other victory rows off), untick it: Problems, in the
-    # bottom region, says the combat place now does nothing.
-    @{ Name = 'editor-arena'; App = 'EternalWars.MapEditor'; Frames = 20; Map = $arenaMap
-       Input = '3:click:@Conditions;6:click:@Arena: a day to prepare, then one battle decides the game' }
+    # Bans and placeholders (ADR-126) on the placeholders map: the map settings window's Bans tab, ban the first hero, undo it, close; Select,
+    # the Inspector tab, the random town.
+    @{ Name = 'editor-bans'; App = 'EternalWars.MapEditor'; Frames = 36; Map = $placeholdersMap
+       Input = '3:key:F7;6:click:@Bans;10:click:@Agathe Sorrel (haven, Mage);14:click:@Undo;17:key:Escape;21:click:@Select;24:click:@Inspector;27:click:420,300' },
+    # The arena switch (ARN-2) on the arena map: the map settings window's Victory and loss tab (the arena note, the victory rows off), the
+    # General tab, untick the switch, close: Problems, in the bottom region, says the combat place now does nothing.
+    @{ Name = 'editor-arena'; App = 'EternalWars.MapEditor'; Frames = 26; Map = $arenaMap
+       Input = '3:key:F7;6:click:@Victory and loss;10:click:@General;13:click:@Arena: a day to prepare, then one battle decides the game;17:key:Escape' }
     # The scenarios below find buttons by their text (press:) rather than by pixel.
     # Unique buildings (ADR-138, ADR-143): Orrin enters the Necropolis town, ticks a garrison and a hero stack for the Undead Transformer and
     # transforms them; Ilya enters the Sylvan town (Elder Grove: a notice and a level-up). Stables and the Marketplace screen (ADR-067):
@@ -293,10 +294,14 @@ $scenarios = @(
        Input = '3:key:Enter;10:key:Up;62:key:D;72:click:958,432' },
     @{ Name = 'game-siege-earthquake'; App = 'EternalWars.Game'; Frames = 150; Map = $siegeMagicMap
        Input = '3:key:Enter;10:key:Up;62:press:Earthquake;100:key:D;110:key:D;120:key:D;135:key:D' },
-    # The editor's Grail tool, the conditions panel's difficulty and hero limit rows (ADR-083, ADR-103) and the town inspector's faction and
-    # guild spells (ADR-083, ADR-123).
-    @{ Name = 'editor-grail-and-town'; App = 'EternalWars.MapEditor'; Frames = 38; Map = $grailMap
-       Input = '5:click:@Conditions;10:press:Grail;14:click:400,450;20:press:Select;24:click:720,560;28:click:@Inspector' },
+    # The editor's Grail tool, the map settings window's difficulty and hero limit rows (ADR-083, ADR-103) and the town inspector's faction
+    # and guild spells (ADR-083, ADR-123).
+    @{ Name = 'editor-grail-and-town'; App = 'EternalWars.MapEditor'; Frames = 42; Map = $grailMap
+       Input = '3:key:F7;6:click:@General;9:key:Escape;12:press:Grail;16:click:400,450;22:press:Select;26:click:720,560;30:click:@Inspector' },
+    # The map settings window (F7, ADR-256) on a blank map: every tab; a player added on the Players tab, the arena switch on the General
+    # tab, both undone with the window's Undo; F7 closes it on the Bans tab and opens it again there.
+    @{ Name = 'editor-map-settings'; App = 'EternalWars.MapEditor'; Frames = 60
+       Input = '3:key:F7;6:click:@Players;10:click:@Add player;14:click:@Victory and loss;18:click:@Bans;22:click:@Week events;26:click:@General;30:click:@Arena: a day to prepare, then one battle decides the game;34:click:@Undo;38:click:@Undo;41:click:@Bans;44:key:F7;48:key:F7' },
     # The workspace's regions (EDIT-1, ADR-250) on Ember March: the Monster tool's options wrap in the left region; the right region's
     # splitter dragged to the left; the left region collapsed; F11 hides the others and brings them back; the left region opens again;
     # "From template" brings the Generate tab to the front. Then the menus built from the command registry: Edit (Undo and Redo greyed:

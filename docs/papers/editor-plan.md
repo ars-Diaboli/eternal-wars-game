@@ -573,7 +573,7 @@ again offers the lost work.
 6. **Picture pickers**: searchable grids for creatures, heroes, artifacts, spells and skills, with their icons or placeholders,
    replacing the drop-downs. *Done.*
 7. **Map settings window** (F7): General, Players, Victory and loss, Bans and Week events tabs, made from today's Map, Players,
-   Conditions and Bans panels, which then leave the right region.
+   Conditions and Bans panels, which then leave the right region. *Done.*
 8. **Map content** (EDIT-12): an ADR and one format bump with a sample and a migration, then each part with its rules and tests:
    - **rumours**: a list per map, edited in a Rumours tab; the game's tavern shows them;
    - **allowed factions per player** on a fixed map: in the Players tab; the new-game screen offers only those;

@@ -360,5 +360,5 @@ HoMM3 and HotA (ADR-126, built ADR-133; map format v35).
   gets the hero's starter stack. A campaign puts a carried hero there first (ADR-241).
 - **Order**: the placeholders are drawn first when the game starts, from the game's random numbers: towns, then monsters, then heroes; then
   everything else (prisons, guilds, pickups).
-- **Editor**: the "Bans" tab (one list per kind with a filter; ticking bans), "Random faction" on a town, "Random" (any tier or a tier) on a
+- **Editor**: the map settings window's "Bans" tab (one list per kind with a filter; ticking bans), "Random faction" on a town, "Random" (any tier or a tier) on a
   monster, "Placeholder" on a hero; the map shows random towns and monsters by caption.

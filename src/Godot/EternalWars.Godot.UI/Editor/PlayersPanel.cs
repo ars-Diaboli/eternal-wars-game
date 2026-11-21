@@ -9,11 +9,17 @@ using Godot;
 
 namespace EternalWars.Godot.UI.Editor;
 
-/// <summary>Player slots: name, human/computer default, default team; add a slot or remove the last one.</summary>
+/// <summary>
+/// The map settings window's Players tab: the player slots (name, human or computer by default, team, own hero limit; add a slot or remove
+/// the last one), whether the setup screen may change teams, and the team counts it must keep to (ADR-117).
+/// </summary>
 public partial class PlayersPanel : VBoxContainer
 {
-    private readonly GridContainer _rows = new() { Columns = 3 };
+    private readonly GridContainer _rows = new() { Columns = 4 };
     private readonly Label _status = new();
+    private readonly CheckBox _teamsLocked = new() { Text = "Teams locked (setup cannot change them)" };
+    private readonly SpinBox _minTeams = new() { MinValue = 0, MaxValue = 8, Step = 1, TooltipText = "The fewest teams a game of this map may have; 0 or 1 = no limit." };
+    private readonly SpinBox _maxTeams = new() { MinValue = 0, MaxValue = 8, Step = 1, TooltipText = "The most teams a game of this map may have; 0 or 1 = no limit." };
     private MapEditorSession _editor = null!;
 
     public void Bind(MapEditorSession editor)
@@ -29,6 +35,20 @@ public partial class PlayersPanel : VBoxContainer
         remove.Pressed += () => Report(_editor.Players.RemoveLast());
         buttons.AddChild(remove);
         AddChild(_status);
+        AddChild(new HSeparator());
+        _teamsLocked.Toggled += locked => _editor.Players.SetTeamsLocked(locked);
+        AddChild(_teamsLocked);
+
+        // Team counts (ADR-117): 0 = no limit; a generated map starts with the template's, which this overrides.
+        var counts = new HBoxContainer();
+        counts.AddChild(new Label { Text = "Teams from" });
+        counts.AddChild(_minTeams);
+        counts.AddChild(new Label { Text = "to" });
+        counts.AddChild(_maxTeams);
+        counts.AddChild(new Label { Text = "(0 = any)" });
+        _minTeams.ValueChanged += _ => ApplyTeamCounts();
+        _maxTeams.ValueChanged += _ => ApplyTeamCounts();
+        AddChild(counts);
 
         Refresh();
         this.SubscribeWhileInTree<PlayerSlotsChanged>(editor.Events, _ => Refresh());
@@ -37,6 +57,10 @@ public partial class PlayersPanel : VBoxContainer
 
     private void Refresh()
     {
+        var scenario = _editor.Scenario;
+        _teamsLocked.SetPressedNoSignal(scenario.TeamsLocked);
+        _minTeams.SetValueNoSignal(scenario.MinTeams ?? 0);
+        _maxTeams.SetValueNoSignal(scenario.MaxTeams ?? 0);
         _rows.ClearChildren();
 
         _rows.AddChild(new Label { Text = "Name" });
@@ -67,6 +91,15 @@ public partial class PlayersPanel : VBoxContainer
                 heroes.SetValueNoSignal(_editor.Scenario.GetPlayer(id).MaxHeroes ?? 0);
             };
             _rows.AddChild(heroes);
+        }
+    }
+
+    private void ApplyTeamCounts()
+    {
+        int? Count(SpinBox box) => box.Value < 2 ? null : (int)box.Value;
+        if (!_editor.Players.SetTeamCounts(Count(_minTeams), Count(_maxTeams)))
+        {
+            Refresh(); // the fewest above the most: back to what the map has
         }
     }
 
