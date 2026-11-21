@@ -606,12 +606,12 @@ and the game uses them.
 6. **Fix-its**: `MapIssue` gets an optional fix, an edit the session runs as one step; fixes where the answer is clear (link an
    unlinked gate, give a start town its owner). The Problems panel shows a Fix button. Tests per fix. *Done.*
 7. **Fairness report and exports**: a Fairness panel from `MapAnalysis`; File → Export writes the report with the problems as
-   Markdown, and the whole map top-down as a PNG.
+   Markdown, and the whole map top-down as a PNG. *Done.*
 8. **Play-test** (EDIT-5): the game app reads new launch arguments (`--player=`, `--others=ai|off`, `--reveal`, `--start=x,y,level`,
    `--day=`, `--cheats`) in `LaunchArguments` and its composition; the cheat panel exists only with `--cheats` and changes the game
    through commands (ADR-036); a play-tested game is not ranked. Test (F5) saves to a temporary file and starts the game as a
    separate process (the game's path in Preferences); the editor stays where it was. Tests for the cheat commands; smoke
-   `editor-playtest-args` checks the arguments a play-test passes.
+   `editor-playtest-args` checks the arguments a play-test passes. *Done.*
 
 **Done when**: a map can be checked for fairness and played from the editor in one click.
 

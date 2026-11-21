@@ -2,6 +2,7 @@ using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Data.Settings;
 using EternalWars.Core.Data.Stamps;
 using EternalWars.Core.Data.Templates;
+using EternalWars.Core.Domain.Analysis;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
@@ -28,7 +29,8 @@ namespace EternalWars.MapEditor;
 /// the views and panels live in the libraries (the window layout is <see cref="EditorWorkspace"/>); this class composes them, registers
 /// the editor's commands (<see cref="CommandRegistry"/>: the menus, the toolbar and the shortcuts run them), routes the pointer to the tool
 /// in use (<see cref="IEditorTool"/>); the map's files, the autosave and the questions over unsaved work are the <see cref="FileService"/>'s.
-/// It applies the user's <see cref="EditorPreferences"/> (the UI's scale, the autosave interval, the camera's speeds, a new map's size).
+/// It applies the user's <see cref="EditorPreferences"/> (the UI's scale, the autosave interval, the camera's speeds, a new map's size, the
+/// game the Test starts).
 /// Alt+Enter switches the window mode (ADR-186), kept in the editor's own settings file.
 /// </summary>
 public partial class Main : Node3D
@@ -52,12 +54,16 @@ public partial class Main : Node3D
     private EventsPanel _events = null!;
     private LayersPanel _layers = null!;
     private OverlaysPanel _overlayPanel = null!;
+    private FairnessPanel _fairness = null!;
     private OverlayView _overlayView = null!;
     private EventCellsView _eventCells = null!;
     private SelectionView _selectionView = null!;
     private FileService _files = null!;
     private EditorSettingsFile _settings = null!;
     private EditorPreferences _preferences = new();
+
+    /// <summary>The choices of the last Test (ADR-267), offered again by the next.</summary>
+    private PlayTestArguments? _lastPlayTest;
 
     /// <summary>The command palette and the Preferences window while one is open: over the editor's UI, kept from map to map.</summary>
     private readonly CanvasLayer _overlays = new() { Name = "Overlays", Layer = 40 };
@@ -440,6 +446,109 @@ public partial class Main : Node3D
         _commands.NotifyStateChanged();
     }
 
+    /// <summary>File → Export report (ADR-266): the problems of the map as it is now and its fairness numbers, as Markdown.</summary>
+    private void ExportReport() => _files.PickExport("Export the map report", " report", ".md", "Markdown", path =>
+    {
+        var state = _editor.Scenario;
+        string report;
+        try
+        {
+            report = MapReport.Markdown(state, new MapAnalysis(state).Fairness(), ProblemsPanel.Validate(state));
+        }
+        catch (Exception e)
+        {
+            Say($"Could not export the report: the map could not be analysed ({e.Message}).");
+            return;
+        }
+
+        try
+        {
+            File.WriteAllText(path, report);
+            Say($"Exported the report to {path}");
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            Say($"Could not export the report: {e.Message}");
+        }
+    });
+
+    /// <summary>File → Export map picture (ADR-266): the level shown, top-down, as a PNG; the selection's marks and the captions are left out.</summary>
+    private void ExportPicture() => _files.PickExport("Export the map picture", "", ".png", "PNG pictures", path =>
+    {
+        var level = _context.Level;
+        MapPicture.Take(this, _editor.Scenario.Map, level, _world!, [_selectionView], image =>
+        {
+            if (image is null)
+            {
+                Say("Could not export the map picture: nothing was drawn.");
+                return;
+            }
+
+            var saved = image.SavePng(path);
+            Say(saved == Error.Ok
+                ? $"Exported the map picture ({image.GetWidth()} × {image.GetHeight()}, level {level + 1}) to {path}"
+                : $"Could not export the map picture: {saved}");
+        });
+    });
+
+    /// <summary>Test (F5, ADR-267): the Test window; its Test saves the map to a temporary file and starts the game on it.</summary>
+    private void OpenPlayTest()
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        var errors = ProblemsPanel.Validate(_editor.Scenario).Count(i => i.Severity == IssueSeverity.Error);
+        var window = new PlayTestWindow { Name = "PlayTest" };
+        _overlays.AddChild(window);
+        window.Bind(_editor, _lastPlayTest, errors, PlayTestCommandFor, RunPlayTest);
+    }
+
+    /// <summary>Where Test saves the map: one file in the system's temporary folder, written again by every Test.</summary>
+    private static string PlayTestMap => Path.Combine(Path.GetTempPath(), "EternalWars", "playtest" + MapSerializer.FileExtension);
+
+    /// <summary>The game Test starts: the one in Preferences, else the game project beside the editor's when there is one.</summary>
+    private string? GamePath
+    {
+        get
+        {
+            if (_preferences.GamePath.Length > 0)
+            {
+                return _preferences.GamePath;
+            }
+
+            var beside = Path.GetFullPath(Path.Combine(ProjectSettings.GlobalizePath("res://"), "..", "EternalWars.Game"));
+            return File.Exists(Path.Combine(beside, PlayTestLaunch.ProjectFile)) ? beside : null;
+        }
+    }
+
+    private (PlayTestCommand? Command, string? Error) PlayTestCommandFor(PlayTestArguments test) =>
+        PlayTestLaunch.For(GamePath, OS.GetExecutablePath(), PlayTestMap, test);
+
+    /// <summary>Saves the map as it is to <see cref="PlayTestMap"/> and starts the game on it as a separate process; the editor stays as it is.</summary>
+    private void RunPlayTest(PlayTestArguments test)
+    {
+        _lastPlayTest = test;
+        if (PlayTestCommandFor(test) is not ({ } command, _))
+        {
+            Say($"Cannot test the map: {PlayTestCommandFor(test).Error}");
+            return;
+        }
+
+        try
+        {
+            _files.SaveCopy(PlayTestMap);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or FormatException)
+        {
+            Say($"Could not save the map for the test: {e.Message}");
+            return;
+        }
+
+        Say(PlayTestWindow.Start(command) is { } error ? $"Could not start the test: {error}" : $"Testing the map as player {test.Player}: {command.Line}");
+    }
+
     private void OpenResize()
     {
         if (IsBusy)
@@ -593,6 +702,10 @@ public partial class Main : Node3D
         _overlayPanel = new OverlaysPanel { Name = "Overlays" };
         _workspace.AddTab(EditorRegion.Right, _overlayPanel);
         _overlayPanel.Bind(_editor, state => GeneratedZones.Read(state, _generatorTemplates, GameContent.All), _workspace.MapView);
+        _fairness = new FairnessPanel { Name = "Fairness" };
+        _workspace.AddTab(EditorRegion.Right, _fairness);
+        _fairness.Bind(_editor);
+        _fairness.StartSelected += ShowTile;
         _events = new EventsPanel { Name = "Events" };
         _workspace.AddTab(EditorRegion.Right, _events);
         _events.Bind(_editor, MapEventNodeJson.Instance);
@@ -661,6 +774,7 @@ public partial class Main : Node3D
         Command("view.inspector", "Inspector", () => _workspace.ShowTab(_inspector));
         Command("view.layers", "Layers", () => _workspace.ShowTab(_layers));
         Command("view.overlays", "Overlays", () => _workspace.ShowTab(_overlayPanel));
+        Command("view.fairness", "Fairness", () => _workspace.ShowTab(_fairness));
         foreach (var tool in _tools.Tools)
         {
             _commands.Register(new EditorCommand(ToolCommand(tool), tool.Name, () => _tools.Use(tool))
@@ -671,7 +785,7 @@ public partial class Main : Node3D
 
         menuBar.Bind(_commands,
         [
-            new("File", ["file.new", null, "file.open", ">Open recent", null, "file.save", "file.save-as", null, "file.quit"])
+            new("File", ["file.new", null, "file.open", ">Open recent", null, "file.save", "file.save-as", null, "file.export-report", "file.export-picture", null, "file.quit"])
             {
                 Lists =
                 [
@@ -680,7 +794,7 @@ public partial class Main : Node3D
             },
             new("Edit", ["edit.undo", "edit.redo", null, "edit.cut", "edit.copy", "edit.paste", "edit.duplicate", "edit.delete", "edit.save-stamp", null, "edit.rotate", "edit.mirror", null, "edit.select-all", "edit.deselect", null, "edit.preferences"]),
             new("View", ["view.palette", null, "view.map-tab", "templates.editor", null, "view.level", "view.grid", null, "view.top-down",
-                "view.focus", "view.whole-map", "view.go-to", ">Bookmarks", null, ">Overlay", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.layers", "view.overlays", "view.problems", "view.history", "view.output"])
+                "view.focus", "view.whole-map", "view.go-to", ">Bookmarks", null, ">Overlay", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.layers", "view.overlays", "view.fairness", "view.problems", "view.history", "view.output"])
             {
                 Lists =
                 [
@@ -689,7 +803,7 @@ public partial class Main : Node3D
                     new("Overlay", () => [.. OverlaysPanel.Names.Select(o => (o.Text, (Action)(() => _overlayPanel.Choose(o.Kind))))], "No overlay"),
                 ],
             },
-            new("Map", ["map.settings", "map.general", "map.players", "map.conditions", "map.bans", "map.week-events", "map.rumours", "map.texts", null, "map.events", null, "map.resize", "map.crop", null, "view.problems"]),
+            new("Map", ["map.settings", "map.general", "map.players", "map.conditions", "map.bans", "map.week-events", "map.rumours", "map.texts", null, "map.events", null, "map.resize", "map.crop", null, "view.problems", "view.fairness"]),
             new("Tools", [.. _tools.Tools.Select(ToolCommand)]),
             new("Templates", ["templates.editor"]),
             new("Test", ["test.play"]),
@@ -725,6 +839,8 @@ public partial class Main : Node3D
         Command("file.open", "Open", () => _files.Open(), UiIcon.Load, new(Key.O, Ctrl: true));
         Command("file.save", "Save", () => _files.Save(), UiIcon.Save, new(Key.S, Ctrl: true));
         Command("file.save-as", "Save as", () => _files.SaveAs(), shortcut: new(Key.S, Ctrl: true, Shift: true));
+        Command("file.export-report", "Export report (Markdown)…", ExportReport);
+        Command("file.export-picture", "Export map picture (PNG)…", ExportPicture, onMap: true);
         Command("file.quit", "Quit", _files.Quit, shortcut: new(Key.Q, Ctrl: true));
         Command("edit.undo", "Undo", () => _editor.Undo(), UiIcon.Undo, new(Key.Z, Ctrl: true),
             () => _editor.History.CanUndo ? null : "Nothing to undo", onMap: true);
@@ -787,7 +903,7 @@ public partial class Main : Node3D
         Command("view.right", "Right panel", () => _workspace.SetOpen(EditorRegion.Right, !_workspace.IsShown(EditorRegion.Right)),
             isOn: () => _workspace.IsShown(EditorRegion.Right), onMap: true);
         Command("view.panels", "Hide all panels", _workspace.ToggleAll, shortcut: new(Key.F11), isOn: () => _workspace.AllHidden, onMap: true);
-        Command("test.play", "Test the map", () => { }, shortcut: new(Key.F5), whyNot: () => "Play-testing from the editor is not built yet");
+        Command("test.play", "Test the map…", OpenPlayTest, shortcut: new(Key.F5), onMap: true);
         Command("help.help", "Help", () => { }, shortcut: new(Key.F1), whyNot: () => "The editor's help is not written yet");
     }
 

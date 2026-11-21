@@ -751,7 +751,7 @@ object WitchHutDocument
   x: Int32 (required)
   y: Int32 (required)
 
-# Saves and replays (*.ewsave.json, *.ewreplay.json), format v6
+# Saves and replays (*.ewsave.json, *.ewreplay.json), format v7
 object AllCondition
   conditions: IReadOnlyList<EventCondition>
 object AllyCondition
@@ -960,6 +960,18 @@ object CellDocument
 object CellPosition
   x: Int32
   y: Int32
+object CheatCreaturesCommand
+  count: Int32
+  creature: String
+  hero: HeroId
+  player: PlayerId
+object CheatLevelsCommand
+  hero: HeroId
+  levels: Int32
+  player: PlayerId
+object CheatResourcesCommand
+  amount: ResourceSet
+  player: PlayerId
 object ChooseBattleWidthCommand
   player: PlayerId
   width: Int32
@@ -1166,6 +1178,9 @@ object GameCommand
   type=buyWarMachine -> BuyWarMachineCommand
   type=cartographer -> AnswerCartographerCommand
   type=castAdventureSpell -> CastAdventureSpellCommand
+  type=cheatCreatures -> CheatCreaturesCommand
+  type=cheatLevels -> CheatLevelsCommand
+  type=cheatResources -> CheatResourcesCommand
   type=chest -> ResolveTreasureChestCommand
   type=chooseSkill -> ChooseSkillCommand
   type=closeExchange -> CompleteExchangeCommand
@@ -1220,6 +1235,7 @@ object GameOptions
   difficulty: Difficulty?
   fogMode: FogMode
   hostPlayer: PlayerId?
+  playTest: PlayTestRules
   refogMargin: Int32
   seed: UInt64
   simultaneousFirstWeek: Boolean
@@ -1595,6 +1611,12 @@ object PandorasBoxDocument
   spellPower: Int32?
   x: Int32 (required)
   y: Int32 (required)
+object PlayTestRules
+  cheats: Boolean
+  day: Int32
+  othersIdle: Boolean
+  reveal: Boolean
+  start: MapPosition?
 object PlayTurnByTurnCommand
   player: PlayerId
   reason: String
@@ -1692,6 +1714,14 @@ object ResourceProviderDocument
   owner: Int32?
   x: Int32 (required)
   y: Int32 (required)
+object ResourceSet
+  crystal: Int32
+  gold: Int32
+  isEmpty: Boolean
+  lumber: Int32
+  mercury: Int32
+  ore: Int32
+  sulfur: Int32
 enum ResourceType: Gold, Lumber, Ore, Crystal, Mercury, Sulfur
 object RespondToGuardCommand
   accept: Boolean

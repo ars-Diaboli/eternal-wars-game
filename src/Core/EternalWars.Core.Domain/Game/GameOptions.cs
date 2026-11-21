@@ -101,4 +101,7 @@ public sealed record GameOptions(
     /// so the host's screen is its player's. Null: the first open turn is.
     /// </summary>
     public Common.PlayerId? HostPlayer { get; init; }
+
+    /// <summary>A play-test's rules (EDIT-5, ADR-267): set by the game started from the editor's Test; null for every other game.</summary>
+    public PlayTestRules? PlayTest { get; init; }
 }

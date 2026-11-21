@@ -139,11 +139,14 @@ public partial class ProblemsPanel : VBoxContainer
     }
 
     /// <summary>The live scenario's issues, on the main thread; a validator that throws is itself the one problem shown.</summary>
-    private IReadOnlyList<MapIssue> CheckLive()
+    private IReadOnlyList<MapIssue> CheckLive() => Validate(_editor.Scenario);
+
+    /// <summary><paramref name="state"/>'s issues; a validator that throws is itself the one problem (the report lists it too).</summary>
+    public static IReadOnlyList<MapIssue> Validate(Core.Domain.Game.GameState state)
     {
         try
         {
-            return MapValidator.Validate(_editor.Scenario);
+            return MapValidator.Validate(state);
         }
         catch (Exception e)
         {

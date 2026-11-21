@@ -329,6 +329,12 @@ from it.
 The editor's overlays (ADR-264) are computed by `MapOverlays` (Core.Domain/Analysis) as tinted tiles or lines with a legend; a generated
 map's zones come from `GeneratedZones` (Core.Generation), which lays the zones out again from the map's description. `OverlayView`
 (Godot.Shared) draws one as a multimesh, and `OverlaysPanel` (Godot.UI) chooses it, computes it again after edits and shows the legend.
+The fairness report (ADR-266) is laid out by `MapReport` (Core.Domain/Analysis: the table and the Markdown with the problems);
+`FairnessPanel` (Godot.UI) shows the table, and `MapPicture` (Godot.UI) renders the map top-down in a viewport that shares the map's world
+for File > Export.
+A play-test (ADR-267) is `PlayTestArguments` (Core.Domain/Game: the game's launch arguments and the setup) with `PlayTestRules` in
+`GameOptions.PlayTest`, which `GameSession.Start` and `GameDirector` apply; its cheats are commands. The editor's Test builds the game's
+command with `PlayTestLaunch` (Core.Domain/Editing) and starts it from the app; `PlayTestWindow` (Godot.UI) chooses the options.
 Single-value edits are `PropertyEdit<T>` commands; an edit to the value already there records no undo step and publishes
 nothing. The three tile layers paint through `PaintLayer<TValue, TEvent>`. `BeginStroke`/`EndStroke` merge a drag into
 one undo step. `MapValidator` reports what single edits cannot prevent; an issue with a clear answer carries a `MapFix` (ADR-265), data

@@ -87,6 +87,22 @@ public sealed partial class AdventureAi
     }
 
     /// <summary>
+    /// Ends the current computer player's turn without playing it (a play-test's others off, ADR-267), once what it is asked is answered as in
+    /// <see cref="PlayTurn"/> (a map event's question, a level-up). True when the turn is over; false when it has to wait for a human.
+    /// </summary>
+    public bool PassTurn()
+    {
+        if (!IsMyTurn)
+        {
+            return false;
+        }
+
+        var player = _state.CurrentPlayer.Id;
+        return _decisions.ResolvePending(player)
+            && (_state.CurrentPlayer.Id != player || _ai.Session.Execute(new Commands.EndTurnCommand(player)).IsAccepted);
+    }
+
+    /// <summary>
     /// Plays the rest of the current player's turn. True when the turn is over (it ended, or the player was defeated or
     /// the game ended meanwhile); false when it has to wait for a human or got stuck.
     /// </summary>

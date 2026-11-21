@@ -12,6 +12,17 @@ namespace EternalWars.Core.Domain.Commands;
 /// <param name="Player">Who issues the command; checked against whose turn (or battle side) it is.</param>
 public abstract record GameCommand(PlayerId Player);
 
+// Play-test cheats (EDIT-5, ADR-267): refused unless the game is a play-test started with cheats (Game.PlayTestRules.Cheats) -----------
+
+/// <summary>Gives the player <paramref name="Amount"/> (no amount negative).</summary>
+public sealed record CheatResourcesCommand(PlayerId Player, Economy.ResourceSet Amount) : GameCommand(Player);
+
+/// <summary>Gives the hero the experience of <paramref name="Levels"/> more levels (1 to 10); the level-ups are offered as usual.</summary>
+public sealed record CheatLevelsCommand(PlayerId Player, HeroId Hero, int Levels) : GameCommand(Player), IHeroCommand;
+
+/// <summary>Adds <paramref name="Count"/> (1 to 9999) creatures of a kind to the hero's army, merged with a stack of them or in a free slot.</summary>
+public sealed record CheatCreaturesCommand(PlayerId Player, HeroId Hero, CreatureId Creature, int Count) : GameCommand(Player), IHeroCommand;
+
 // Adventure map ----------------------------------------------------------------------------------------
 
 /// <summary>One step in a direction (keyboard movement).</summary>

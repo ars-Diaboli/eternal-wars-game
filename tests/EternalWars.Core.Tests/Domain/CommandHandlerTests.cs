@@ -50,7 +50,11 @@ public class CommandHandlerTests
         var hero = Commands.Where(t => typeof(IHeroCommand).IsAssignableFrom(t)).ToList();
 
         Assert.Equal(
-            new[] { nameof(CastAdventureSpellCommand), nameof(DigCommand), nameof(MoveHeroCommand), nameof(MoveStackCommand), nameof(StepHeroCommand) },
+            new[]
+            {
+                nameof(CastAdventureSpellCommand), nameof(CheatCreaturesCommand), nameof(CheatLevelsCommand), nameof(DigCommand), nameof(MoveHeroCommand),
+                nameof(MoveStackCommand), nameof(StepHeroCommand),
+            },
             hero.Select(t => t.Name).Order());
         Assert.DoesNotContain(hero, t => typeof(IBattleCommand).IsAssignableFrom(t));
 
