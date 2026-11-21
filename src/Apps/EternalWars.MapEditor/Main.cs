@@ -77,6 +77,9 @@ public partial class Main : Node3D
     private EditorWorkspace _workspace = null!;
     private GeneratePanel _generate = null!;
 
+    /// <summary>The empty state (ADR-259) is still to show: the editor started on a blank map and no other map was opened since.</summary>
+    private bool _emptyState = LaunchArguments.MapPath is null;
+
     /// <summary>The template being edited: kept while maps are opened and generated (the editor itself is rebuilt with the UI).</summary>
     private readonly TemplateEditorSession _templates = new(content: GameContent.All);
 
@@ -115,9 +118,38 @@ public partial class Main : Node3D
         _files.Start(LaunchArguments.MapPath is { } path ? MapFiles.Read(path) : Blank(), LaunchArguments.MapPath);
     }
 
-    /// <summary>A new, empty map of the size the preferences say.</summary>
-    private GameState Blank(int levels = 1) =>
-        BlankScenario.Create(_preferences.DefaultMapSize, _preferences.DefaultMapSize, levels, content: GameContent.All);
+    /// <summary>The map the editor starts with: blank, of the size the preferences say.</summary>
+    private GameState Blank() =>
+        BlankScenario.Create(_preferences.DefaultMapSize, _preferences.DefaultMapSize, content: GameContent.All);
+
+    /// <summary>The new-map wizard (ADR-259): it ends on a blank map or in the Generate tab, set to the chosen template.</summary>
+    private void OpenWizard()
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        var wizard = new NewMapWizard { Name = "NewMap" };
+        _overlays.AddChild(wizard);
+        wizard.Bind(_preferences.DefaultMapSize, GeneratorTemplates(), request =>
+        {
+            if (request.Template is { } template)
+            {
+                _workspace.ShowPage(EditorWorkspace.MapPage);
+                _generate.Preset(template, request.Size, request.Settings.Humans.Count, request.Settings.Humans);
+                _workspace.ShowTab(_generate);
+            }
+            else
+            {
+                _files.OpenNew(BlankScenario.Create(request.Settings, GameContent.All));
+            }
+        });
+    }
+
+    /// <summary>A sample map (ADR-259) opened as a new, unsaved map, through the map format like a file.</summary>
+    private void OpenSample(SampleMap sample) =>
+        _files.OpenNew(MapConverter.ToGameState(MapConverter.ToDocument(sample.Create(GameContent.All)), GameContent.All));
 
     /// <summary>The preferences take effect: the UI's scale, the autosave interval and the camera's speeds (a new map reads its size when it is made).</summary>
     private void ApplyPreferences()
@@ -525,7 +557,7 @@ public partial class Main : Node3D
         left.AddChild(_browser);
         _workspace.AddTab(EditorRegion.Left, left);
 
-        // Right: the inspector, the events and "From template"; the map's settings are a window of their own (F7).
+        // Right: the inspector, the events and Generate; the map's settings are a window of their own (F7).
         _inspector = new InspectorPanel { Name = "Inspector" };
         _workspace.AddTab(EditorRegion.Right, _inspector);
         _inspector.Bind(_editor, _settings);
@@ -544,13 +576,27 @@ public partial class Main : Node3D
         _events = new EventsPanel { Name = "Events" };
         _workspace.AddTab(EditorRegion.Right, _events);
         _events.Bind(_editor, MapEventNodeJson.Instance);
-        _generate = new GeneratePanel { Name = "Generate" }; // "From template" opens it
+        _generate = new GeneratePanel { Name = "Generate" }; // the new-map wizard ends in it with a template
         _workspace.AddTab(EditorRegion.Right, _generate);
         _generatorTemplates = [.. BuiltInTemplates.All, .. UserTemplates().Select(u => u.Template).Where(t => TemplateValidator.IsValid(t))];
         _generate.Bind(
-            _generatorTemplates.Select(t => new GeneratorTemplate(t.Name, t.Description, t.Sizes, t.MinPlayers, t.MaxHeroes, StartSlots.Of(t).Select(s => s.Name).ToList())).ToList(),
+            GeneratorTemplates(),
             Generate,
             _lastGenerate);
+
+        // The empty state (ADR-259): over the blank map the editor starts with, until its first edit or another map.
+        if (_emptyState)
+        {
+            _emptyState = false;
+            var card = new EmptyStateCard { SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter };
+            var top = new MarginContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
+            top.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.CenterTop);
+            top.GrowHorizontal = Control.GrowDirection.Both;
+            top.AddThemeConstantOverride("margin_top", 16);
+            _workspace.MapView.AddChild(top);
+            top.AddChild(card);
+            card.Bind(_editor, OpenWizard, () => _files.Open(), SampleMaps.All, OpenSample);
+        }
 
         // Bottom: the map's problems, the undo history and the editor's messages. Each scrolls by itself.
         var problems = new ProblemsPanel { Name = "Problems" };
@@ -602,7 +648,7 @@ public partial class Main : Node3D
 
         menuBar.Bind(_commands,
         [
-            new("File", ["file.new", "file.new-two-levels", "file.generate", null, "file.open", ">Open recent", null, "file.save", "file.save-as", null, "file.quit"])
+            new("File", ["file.new", null, "file.open", ">Open recent", null, "file.save", "file.save-as", null, "file.quit"])
             {
                 Lists =
                 [
@@ -611,15 +657,15 @@ public partial class Main : Node3D
             },
             new("Edit", ["edit.undo", "edit.redo", null, "edit.cut", "edit.copy", "edit.paste", "edit.duplicate", "edit.delete", "edit.save-stamp", null, "edit.rotate", "edit.mirror", null, "edit.select-all", "edit.deselect", null, "edit.preferences"]),
             new("View", ["view.palette", null, "view.map-tab", "templates.editor", null, "view.level", "view.grid", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.problems", "view.history", "view.output"]),
-            new("Map", ["map.settings", "map.general", "map.players", "map.conditions", "map.bans", "map.week-events", "map.rumours", null, "map.events", null, "map.resize", "map.crop", null, "view.problems"]),
+            new("Map", ["map.settings", "map.general", "map.players", "map.conditions", "map.bans", "map.week-events", "map.rumours", "map.texts", null, "map.events", null, "map.resize", "map.crop", null, "view.problems"]),
             new("Tools", [.. _tools.Tools.Select(ToolCommand)]),
-            new("Templates", ["templates.editor", "file.generate"]),
+            new("Templates", ["templates.editor"]),
             new("Test", ["test.play"]),
             new("Help", ["help.help"]),
         ]);
         toolbar.Bind(_commands,
         [
-            "file.new", "file.new-two-levels", "file.generate", "templates.editor", "file.open", "file.save", null,
+            "file.new", "templates.editor", "file.open", "file.save", null,
             "edit.undo", "edit.redo", null, "view.level", "view.grid", null, "view.left", "view.bottom", "view.right",
         ]);
         _workspace.RegionsChanged += _commands.NotifyStateChanged;
@@ -643,9 +689,7 @@ public partial class Main : Node3D
     private void RegisterCommands()
     {
         _commands = new CommandRegistry();
-        Command("file.new", "New", () => _files.OpenNew(Blank()), shortcut: new(Key.N, Ctrl: true));
-        Command("file.new-two-levels", "New (2 levels)", () => _files.OpenNew(Blank(levels: 2)));
-        Command("file.generate", "From template", () => _workspace.ShowTab(_generate));
+        Command("file.new", "New map…", OpenWizard, shortcut: new(Key.N, Ctrl: true));
         Command("file.open", "Open", () => _files.Open(), UiIcon.Load, new(Key.O, Ctrl: true));
         Command("file.save", "Save", () => _files.Save(), UiIcon.Save, new(Key.S, Ctrl: true));
         Command("file.save-as", "Save as", () => _files.SaveAs(), shortcut: new(Key.S, Ctrl: true, Shift: true));
@@ -678,6 +722,7 @@ public partial class Main : Node3D
         Command("map.bans", "Bans", () => OpenSettings(MapSettingsTab.Bans), UiIcon.Ban);
         Command("map.week-events", "Week events", () => OpenSettings(MapSettingsTab.WeekEvents));
         Command("map.rumours", "Rumours", () => OpenSettings(MapSettingsTab.Rumours));
+        Command("map.texts", "Texts", () => OpenSettings(MapSettingsTab.Texts));
         Command("map.resize", "Resize map", OpenResize, onMap: true);
         Command("map.crop", "Crop to selection", Crop,
             whyNot: () => _editor.Selection.Tiles.Count > 0 ? null : "No tile is selected", onMap: true);
@@ -867,7 +912,11 @@ public partial class Main : Node3D
         return errors == 0 ? $"Saved {path}" : $"Saved {path} with {errors} error(s): it cannot generate until they are fixed.";
     }
 
-    /// <summary>"Generate" in the template editor: the template as it is, every slot a player, towns drawn; opens the map like "From template".</summary>
+    /// <summary>The templates the Generate tab and the new-map wizard offer, as the panels show them.</summary>
+    private List<GeneratorTemplate> GeneratorTemplates() =>
+        [.. _generatorTemplates.Select(t => new GeneratorTemplate(t.Name, t.Description, t.Sizes, t.MinPlayers, t.MaxHeroes, StartSlots.Of(t).Select(s => s.Name).ToList()))];
+
+    /// <summary>"Generate" in the template editor: the template as it is, every slot a player, towns drawn; opens the map like the Generate tab.</summary>
     private string? GenerateFromEditor(MapTemplate template, int size, ulong seed)
     {
         EditorMap map;
@@ -903,7 +952,7 @@ public partial class Main : Node3D
         try
         {
             map = EditorMapGenerator.Generate(
-                template, request.Size, request.Seed, request.Players, request.Towns, GameContent.All, request.MaxHeroes);
+                template, request.Size, request.Seed, request.Players, request.Towns, GameContent.All, request.MaxHeroes, request.Humans);
         }
         catch (ArgumentException e)
         {

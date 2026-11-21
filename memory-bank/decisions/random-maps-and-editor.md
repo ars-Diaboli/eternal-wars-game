@@ -24,6 +24,8 @@
 | [255](#adr-255-multi-edit-writes-one-object-property-to-several-objects-of-one-kind-as-one-all-or-nothing-step-pickers-are-searchable-picture-grids-edit-1-adr-223-adr-245-adr-254-2026-11-21) | Multi-edit writes one object property to several objects of one kind as one all-or-nothing step; pickers are searchable picture grids (EDIT-1, ADR-223, ADR-245, ADR-254, 2026-11-21) | implemented |
 | [256](#adr-256-the-map-settings-are-one-window-with-tabs-over-the-editor-each-tab-one-of-the-settings-panels-edit-1-adr-250-adr-255-2026-11-21) | The map settings are one window with tabs over the editor, each tab one of the settings panels (EDIT-1, ADR-250, ADR-255, 2026-11-21) | implemented |
 | [257](#adr-257-the-map-content-rumours-a-players-factions-object-names-and-custom-heroes-in-one-format-bump-edit-12-adr-250-adr-256-2026-11-21) | The map content: rumours, a player's factions, object names and custom heroes, in one format bump (EDIT-12, ADR-250, ADR-256, 2026-11-21) | implemented |
+| [258](#adr-258-the-maps-texts-one-core-list-with-a-setter-each-and-the-texts-tab-edit-11-adr-256-adr-257-2026-11-21) | The map's texts: one core list with a setter each, and the Texts tab (EDIT-11, ADR-256, ADR-257, 2026-11-21) | implemented |
+| [259](#adr-259-the-new-map-wizard-and-the-empty-state-adr-250-adr-087-2026-11-21) | The new-map wizard and the empty state (ADR-250, ADR-087, 2026-11-21) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -575,3 +577,44 @@ ADR when it is built.
   roster entry's). Portraits are not drawn yet (ADR-245's placeholders); the editor's picker shows the roster hero's. A placeholder that
   becomes a roster hero, or a map hero a campaign's carried hero takes over, drops the biography and the portrait.
 - **Not here**: the Texts tab (EDIT-11) lists these texts with the others.
+
+### ADR-258: The map's texts: one core list with a setter each, and the Texts tab (EDIT-11, ADR-256, ADR-257, 2026-11-21)
+**Status**: implemented (plan step 3, task 9).
+
+- **One list in the core**: `MapTexts.List` gives every text of a map, each with an id that names its place (a rumour's number, an event
+  action's path, so an edit that adds or moves things may give it another text), its
+  group, where it is and whether it may have line breaks: the map's name and description, the players' names, the names authors gave
+  objects and every town's name, the heroes' names and biographies, sign and Pandora's Box messages, an author's sphinx riddle (its
+  question and three answers), the rumours, and the map events' texts (messages, questions and answers, dialogue lines, speakers that are
+  not roster heroes, end-of-game texts, a quest stage's proposal, progress and completion). Event names, variable names and content ids
+  are not texts: things are found by them.
+- **A setter for each, through the panels' edits**: `MapTextEditor.Set(id, text)` (the session's `Texts`) makes the edit the text's own
+  panel makes, so its rules hold (a name's length, a rumour on one line, a riddle's different answers) and the change is one undo step;
+  texts that must not be blank are refused blank (the map's, a player's and a hero's names, an event's message, question, answer and dialogue
+  line, a quest stage's proposal). An id the map no longer has is refused, and so is one whose text is not the one the caller expected
+  (the Texts tab passes the text it showed); a text the map would keep as it is, trimmed where the panel trims, records nothing.
+- **The test that keeps it whole**: every string the map file writes is either a text, which a test writes with the editor and then finds
+  in the list and changes through its setter (one undo step), or named in the test as not a text. A new string field fails the test
+  until it is one or the other.
+- **The Texts tab** of the map settings window lists them by group with a search box; each is edited in place, applied on Enter or when
+  the field is left, with the shown-value guard of the inspector's fields (ADR-257) so a field freed after an undo does not apply again.
+- **One language**: a text has one value until the game's localisation decision (ADR-239); the list is where a translation will start.
+
+### ADR-259: The new-map wizard and the empty state (ADR-250, ADR-087, 2026-11-21)
+**Status**: implemented (plan step 3, task 10).
+
+- **One way to start a map**: File → New map (Ctrl+N) opens the wizard, which replaces New, New (2 levels) and From template. Three steps:
+  the size (the presets 48 to 256, or any size from 16 to 256 a side, square or not), the levels (the surface, or with the underground)
+  and the ground (a terrain a hero can walk on, not the underground's); the players (1 to 8) and their kind, a person or the computer by
+  default; a template, or none. Everything is picked from buttons; the players' count is a number box.
+- **The ends**: without a template, a blank map (`BlankScenario.Create(NewMapSettings)`): the ground, the underground below, the players
+  named by colour, each with a hero (the first two in opposite corners, then the other corners, then the middles of the sides). With one,
+  the Generate tab, set to the template at its size nearest the chosen (`MapSizes.Nearest`, the smaller of two as near) and to the chosen
+  players within the template's range; the designer presses Generate. The template decides the ground and the levels. The kinds go with the
+  request: a player the wizard made a computer one is generated as one (`EditorMapGenerator`'s `humans`); a person's slot is still a player
+  start within the template's human limit.
+- **The empty state**: the editor still starts on a blank map, with a card over it ("Start with a template, or paint a terrain.") that offers
+  the wizard, Open and the sample maps. The map under it takes clicks at once; the card goes at the first edit, with its close button or
+  when another map opens, and does not come back until the next start.
+- **Sample maps** (`SampleMaps`): the shipped hand-made maps (Ember March, Two Towns, the three arenas), opened through the map format as a
+  new, unsaved map. The Help menu's sample maps and their own files come with step 6.

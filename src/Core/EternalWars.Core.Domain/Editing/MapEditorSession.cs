@@ -31,6 +31,7 @@ public sealed class MapEditorSession
         MapEvents = new MapEventEditor(_context);
         Players = new PlayerEditor(_context);
         Map = new MapPropertiesEditor(_context);
+        Texts = new MapTextEditor(this);
         Placing = new EntryEditor(_context, Objects, Contents, Monsters, Heroes);
         Selecting = new SelectionEditor(_context, Objects, Heroes, mover);
         _context.Selecting = Selecting;
@@ -89,6 +90,9 @@ public sealed class MapEditorSession
 
     /// <summary>Map name and description, scenario rules and the Grail.</summary>
     public MapPropertiesEditor Map { get; }
+
+    /// <summary>Every text of the map in one list, each set with its own panel's edit (EDIT-11).</summary>
+    public MapTextEditor Texts { get; }
 
     /// <summary>
     /// What <see cref="Resize"/> would do: refused (<see cref="EditResult.InvalidValue"/>) unless both sides are

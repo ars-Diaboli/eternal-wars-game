@@ -208,9 +208,10 @@ $scenarios = @(
        Input = '3:click:@Road;6:click:700,600;9:click:740,600;12:click:@River;15:click:800,500;18:click:@Object;21:click:900,450;24:click:@LinkGates;27:click:900,450;30:click:1500,67;39:key:F7;42:click:@Week events;46:click:@conflux;50:click:@Week and month events;56:click:@Undo;62:click:@Undo;70:key:Escape' },
     # The height tools (ADR-182 g) on a blank map: radius 2, strength 8 (the spin boxes' up arrows), raise two strokes, lower one and undo
     # it; then highlands painted with Auto height on.
-    # Then generate from a template (ADR-087): "From template", Sylvan for Blue, Generate (Two against two at 128), then the tab again: the settings stay.
-    @{ Name = 'editor-heights'; App = 'EternalWars.MapEditor'; Frames = 106
-       Input = '3:click:@Height;5:click:304,243;7:click:304,243;9:click:144,274;10:click:144,274;11:click:144,274;12:click:144,274;13:click:144,274;14:click:144,274;17:drag:460,600,900,600;21:drag:460,620,900,620;26:click:@Raise;29:choose:Lower;33:drag:460,560,900,560;38:click:@Undo;42:click:@Terrain;45:click:@Highlands;48:click:400,400;59:click:@From template;64:click:@Random;68:choose:sylvan;72:click:@Generate;86:click:@From template' },
+    # Then generate from a template (ADR-087): the Generate tab, Sylvan for Blue, Generate (Two against two at 128), then the Inspector and the
+    # Generate tab again: the settings stay.
+    @{ Name = 'editor-heights'; App = 'EternalWars.MapEditor'; Frames = 110
+       Input = '3:click:@Height;5:click:304,243;7:click:304,243;9:click:144,274;10:click:144,274;11:click:144,274;12:click:144,274;13:click:144,274;14:click:144,274;17:drag:460,600,900,600;21:drag:460,620,900,620;26:click:@Raise;29:choose:Lower;33:drag:460,560,900,560;38:click:@Undo;42:click:@Terrain;45:click:@Highlands;48:click:400,400;59:click:@Generate;64:click:@Random;68:choose:sylvan;72:click:@Generate;86:click:@Inspector;90:click:@Generate' },
     # The template editor (ADR-117) in the workspace's Template tab (EDIT-3): the tab, select the middle zone (its obelisk count, ADR-140), add a treasure zone, drag it,
     # right-drag it onto start-1 to connect, Generate (the map opens in the Map tab).
     @{ Name = 'editor-template-editor'; App = 'EternalWars.MapEditor'; Frames = 70
@@ -307,21 +308,29 @@ $scenarios = @(
     # inspector's Name field.
     @{ Name = 'editor-map-content'; App = 'EternalWars.MapEditor'; Frames = 100
        Input = '3:key:F7;6:click:@Rumours;10:click:800,330;13:text:They say the old bridge is guarded;50:click:@Apply rumours;54:click:@Players;60:key:Escape;63:click:@Object;66:click:900,450;70:click:@Select;73:click:900,450;79:click:1180,188;82:text:Hoard;90:key:Enter' },
+    # The map's texts (EDIT-11, ADR-258) on a blank map: the map settings window's Texts tab; the second player's name edited in place and
+    # applied with Enter; the search keeps the rows with "Banner"; the window's Undo takes the name back.
+    @{ Name = 'editor-texts'; App = 'EternalWars.MapEditor'; Frames = 44
+       Input = '3:key:F7;6:click:@Texts;10:click:930,466;13:text: Banner;20:key:Enter;24:click:800,276;27:text:Banner;36:click:@Undo' },
+    # The empty state and the new-map wizard (ADR-259): the editor starts on a blank map with the empty state's card; Ctrl+N opens the wizard:
+    # 96 × 96, two levels, snow; Red a computer player; Create map. Then the wizard again with the Duel template: it ends in the Generate tab.
+    @{ Name = 'editor-new-map'; App = 'EternalWars.MapEditor'; Frames = 76
+       Input = '6:key:Ctrl+N;10:click:@96 × 96;13:click:@The surface and the underground;16:click:@Snow;20:click:@Next;24:click:@Computer#2;28:click:@Next;32:click:@Create map;44:key:Ctrl+N;48:click:@Next;51:click:@Next;55:click:@Duel;59:click:@Go to Generate' },
     # The workspace's regions (EDIT-1, ADR-250) on Ember March: the Monster tool's options wrap in the left region; the right region's
     # splitter dragged to the left; the left region collapsed; F11 hides the others and brings them back; the left region opens again;
-    # "From template" brings the Generate tab to the front. Then the menus built from the command registry: Edit (Undo and Redo greyed:
+    # the Generate tab is brought to the front. Then the menus built from the command registry: Edit (Undo and Redo greyed:
     # nothing to undo), and Tools, where Hero is picked (the palette follows).
     @{ Name = 'editor-shell'; App = 'EternalWars.MapEditor'; Frames = 54; Map = $emberMap
-       Input = '4:click:@Monster;8:drag:1036,400,936,400;14:click:@Left panel;19:key:F11;24:key:F11;29:click:@Left panel;33:click:@From template;37:click:60,22;42:key:Escape;45:click:190,22;48:choose:Hero' },
+       Input = '4:click:@Monster;8:drag:1036,400,936,400;14:click:@Left panel;19:key:F11;24:key:F11;29:click:@Left panel;33:click:@Generate;37:click:60,22;42:key:Escape;45:click:190,22;48:choose:Hero' },
     # The bottom panels and the status bar (EDIT-1, ADR-250) on a blank map: a road, a river and an object are three steps; History lists
     # them and a click on the first jumps back to it (the river and the object are undone and dim); Output keeps the messages (the gate link tool, clicked on empty ground, says what it needs); the status
     # bar's problem counts open Problems, where the warnings are hidden and shown again and the kind Heroes is picked.
     @{ Name = 'editor-bottom-panels'; App = 'EternalWars.MapEditor'; Frames = 66
        Input = '3:click:@Road;6:click:700,600;9:click:@River;12:click:800,500;15:click:@Object;18:click:900,450;21:click:@LinkGates;24:click:1000,300;27:click:@History;31:click:500,736;36:click:@Output;43:click:1327,877;47:click:478,708;51:click:478,708;55:click:604,708;59:choose:Heroes (2)' },
-    # The editor's files (EDIT-1, ADR-250) on a blank map: a road makes unsaved work; File > New asks over it and Cancel stays; New
-    # again and "Don't save" opens the new map ("Not saved"); File > Save as shows the file dialog in the scenario's own maps folder, and Enter saves the map there ("Saved" with the time).
+    # The editor's files (EDIT-1, ADR-250) on a blank map: a road makes unsaved work; File > New map, the wizard's Create map asks over it
+    # and Cancel stays; Ctrl+N and Create map again, and "Don't save" opens the new map ("Not saved"); File > Save as shows the file dialog in the scenario's own maps folder, and Enter saves the map there ("Saved" with the time).
     @{ Name = 'editor-files'; App = 'EternalWars.MapEditor'; Frames = 60
-       Input = '3:click:@Road;6:click:700,600;10:click:24,24;13:choose:New;20:click:@Cancel;24:click:24,24;27:choose:New;33:click:@Don''t save;40:click:24,24;43:choose:Save as;49:key:Enter' },
+       Input = '3:click:@Road;6:click:700,600;10:click:24,24;13:choose:New map…;16:click:@Create map;20:click:@Cancel;24:key:Ctrl+N;28:click:@Create map;33:click:@Don''t save;40:click:24,24;43:choose:Save as;49:key:Enter' },
     # Recovery (EDIT-1, ADR-250): a session marker and an autosave (Ember March) are planted, as a crashed editor leaves them; the editor
     # starts on its blank map and offers the autosave; Restore opens it as unsaved work.
     @{ Name = 'editor-recovery'; App = 'EternalWars.MapEditor'; Frames = 30; Recovery = $emberMap

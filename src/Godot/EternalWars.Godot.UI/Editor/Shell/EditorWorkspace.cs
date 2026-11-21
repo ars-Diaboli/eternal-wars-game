@@ -63,6 +63,9 @@ public partial class EditorWorkspace : Control
     /// <summary>The bar under the regions: the app adds its status bar here.</summary>
     public HBoxContainer StatusBar { get; } = new() { Name = "StatusBar", SizeFlagsHorizontal = SizeFlags.ExpandFill };
 
+    /// <summary>The room the map shows through, between the regions; it lets the pointer through (what is put on it may take it).</summary>
+    public Control MapView { get; } = new() { Name = "MapView", MouseFilter = MouseFilterEnum.Ignore, SizeFlagsVertical = SizeFlags.ExpandFill };
+
     /// <summary>
     /// Builds the regions and applies the layout kept in <paramref name="settings"/>. Add the tabs after this.
     /// </summary>
@@ -96,7 +99,7 @@ public partial class EditorWorkspace : Control
         outer.AddChild(inner);
         var centre = Splitter(new VSplitContainer { Name = "Centre", SizeFlagsHorizontal = SizeFlags.ExpandFill }, EditorRegion.Bottom);
         inner.AddChild(centre);
-        centre.AddChild(new Control { Name = "MapView", MouseFilter = MouseFilterEnum.Ignore, SizeFlagsVertical = SizeFlags.ExpandFill });
+        centre.AddChild(MapView);
         centre.AddChild(Region(EditorRegion.Bottom));
         inner.AddChild(Region(EditorRegion.Right));
 

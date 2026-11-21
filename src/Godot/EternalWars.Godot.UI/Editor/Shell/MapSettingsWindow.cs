@@ -14,17 +14,18 @@ public enum MapSettingsTab
     Bans,
     WeekEvents,
     Rumours,
+    Texts,
 }
 
 /// <summary>
 /// The map settings window (EDIT-1, ADR-256), opened from Map → Map settings or F7: the map's settings in tabs over the editor (General,
-/// Players, Victory and loss, Bans, Week events, Rumours). Each change is an undoable session edit at once, as in a panel; Undo and Redo (also
+/// Players, Victory and loss, Bans, Week events, Rumours, Texts). Each change is an undoable session edit at once, as in a panel; Undo and Redo (also
 /// Ctrl+Z and Ctrl+Y outside a text field) take them back while the window is open. Close, Escape or F7 closes it; the next opening shows
 /// the tab shown last.
 /// </summary>
 public partial class MapSettingsWindow : Control
 {
-    private static readonly string[] Titles = ["General", "Players", "Victory and loss", "Bans", "Week events", "Rumours"];
+    private static readonly string[] Titles = ["General", "Players", "Victory and loss", "Bans", "Week events", "Rumours", "Texts"];
 
     /// <summary>The tab shown last, for the next opening (kept while the editor runs).</summary>
     private static MapSettingsTab _last = MapSettingsTab.General;
@@ -51,6 +52,7 @@ public partial class MapSettingsWindow : Control
         Page(MapSettingsTab.Bans, new BansPanel()).Bind(editor);
         Page(MapSettingsTab.WeekEvents, new WeekEventsPanel()).Bind(editor);
         Page(MapSettingsTab.Rumours, new RumoursPanel()).Bind(editor);
+        Page(MapSettingsTab.Texts, new TextsPanel()).Bind(editor);
         _last = tab ?? _last;
         _tabs.CurrentTab = (int)_last;
         _tabs.TabChanged += index =>

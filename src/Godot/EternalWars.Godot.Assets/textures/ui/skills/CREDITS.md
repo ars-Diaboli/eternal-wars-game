@@ -1,6 +1,6 @@
 # Skill icons
 
-Painted skill icons, 128 × 128 with transparency, generated for this project by the owner (2026-11-16; the magic schools 2026-11-21, sets 9–14) as icon sheets and cut into one
+Painted skill icons, 128 × 128 with transparency, generated for this project by the owner (2026-11-16, sets 3–6 replaced 2026-11-21; the magic schools 2026-11-21, sets 9–14) as icon sheets and cut into one
 file per skill (prompts in `docs/content/prompts/icon-prompts.md`). Each file is named by its skill id (`offense.melee.png`). Loaded through
 `EternalWars.Godot.UI.HeroIcons`; a skill without a file shows its text alone.
 

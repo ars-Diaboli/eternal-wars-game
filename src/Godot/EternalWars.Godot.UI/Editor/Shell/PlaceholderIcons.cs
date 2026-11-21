@@ -4,7 +4,7 @@ namespace EternalWars.Godot.UI.Editor.Shell;
 
 /// <summary>
 /// Stand-in icons for the editor's tools and commands until their art exists (EDIT-1, ADR-250): a tile in a colour of the name's own
-/// with the name's two letters ("Save as": SA, "Road": RO, "New (2 levels)": N2), drawn in code with a 5 × 7 pixel font. The same name
+/// with the name's two letters ("Save as": SA, "Road": RO, "New map…": NM), drawn in code with a 5 × 7 pixel font. The same name
 /// gives the same picture on every run. <see cref="Of(EditorCommand, int)"/> is a command's real icon when it has one.
 /// </summary>
 public static class PlaceholderIcons

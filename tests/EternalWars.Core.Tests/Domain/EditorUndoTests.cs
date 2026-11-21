@@ -306,6 +306,8 @@ public class EditorUndoTests
         ["ObjectEditor.SetName (town)"] = f => Ok(f.Editor.Objects.SetName(f.Town, null)),
         ["HeroEditor.SetName"] = f => Ok(f.Editor.Heroes.SetName(f.Hero, "Mira the Bold")),
         ["HeroEditor.SetBiography"] = f => Ok(f.Editor.Heroes.SetBiography(f.Hero, "A wanderer from the north.")),
+        ["MapTextEditor.Set"] = f => Ok(f.Editor.Texts.Set("map.name", "The Renamed Map")),
+        ["MapTextEditor.Set (hero)"] = f => Ok(f.Editor.Texts.Set($"hero.{f.Hero.Value}.biography", "Told in the Texts tab.")),
         ["HeroEditor.SetPortrait"] = f => Ok(f.Editor.Heroes.SetPortrait(f.Hero, "haven.aldric")),
         ["HeroEditor.SetSkill"] = f => Ok(f.Editor.Heroes.SetSkill(f.Hero, BuiltInSkills.Scouting, SkillLevel.Advanced)),
         ["HeroEditor.SetSpells"] = f => Ok(f.Editor.Heroes.SetSpells(f.Hero, true, [f.Spell(1), f.Spell(2)])),
@@ -370,7 +372,7 @@ public class EditorUndoTests
     [
         typeof(TerrainEditor), typeof(HeightEditor),typeof(ObjectEditor), typeof(ObjectContentsEditor), typeof(MonsterEditor), typeof(TownEditor),
         typeof(HeroEditor), typeof(MapEventEditor), typeof(PlayerEditor), typeof(MapPropertiesEditor), typeof(SelectionEditor),
-        typeof(FragmentEditor), typeof(EraseEditor), typeof(EntryEditor),
+        typeof(FragmentEditor), typeof(EraseEditor), typeof(EntryEditor), typeof(MapTextEditor),
     ];
 
     private static readonly BrowserCatalog Browser = new(MapObjectCatalog.Default, CreatureCatalog.Default, Core.Domain.Artifacts.ArtifactCatalog.Default);

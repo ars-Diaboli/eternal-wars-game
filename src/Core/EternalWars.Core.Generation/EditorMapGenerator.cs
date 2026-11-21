@@ -31,8 +31,13 @@ public static class EditorMapGenerator
     /// <summary>Player names by slot, in the order of the editor's player colours.</summary>
     public static IReadOnlyList<string> PlayerNames => Domain.Players.Player.ColourNames;
 
-    /// <summary>The players the editor generates for: <paramref name="players"/> start slots from slot 0 (null = every slot of the template).</summary>
-    public static IReadOnlyList<PlayerSetup> Players(MapTemplate template, int? players = null, IReadOnlyDictionary<int, string>? towns = null)
+    /// <summary>
+    /// The players the editor generates for: <paramref name="players"/> start slots from slot 0 (null = every slot of the template).
+    /// <paramref name="humans"/> (the new-map wizard's kinds, ADR-259) makes a slot's player a computer one with false (a slot it does not
+    /// reach keeps its default); a person's slot is still a player start within the template's human limit.
+    /// </summary>
+    public static IReadOnlyList<PlayerSetup> Players(
+        MapTemplate template, int? players = null, IReadOnlyDictionary<int, string>? towns = null, IReadOnlyList<bool>? humans = null)
     {
         ArgumentNullException.ThrowIfNull(template);
         var count = players ?? template.MaxPlayers;
@@ -46,12 +51,12 @@ public static class EditorMapGenerator
             throw new ArgumentException($"Start slot {slot} has no player.", nameof(towns));
         }
 
-        var humans = template.MaxHumans ?? int.MaxValue;
+        var people = template.MaxHumans ?? int.MaxValue;
         var setups = new List<PlayerSetup>();
         for (var slot = 0; slot < count; slot++)
         {
             var zone = template.Zones.FirstOrDefault(z => z.Owner == slot && z.Type is ZoneType.PlayerStart or ZoneType.AiStart);
-            var human = zone?.Type == ZoneType.PlayerStart && humans-- > 0;
+            var human = zone?.Type == ZoneType.PlayerStart && (humans is null || slot >= humans.Count || humans[slot]) && people-- > 0;
             setups.Add(new PlayerSetup(slot, slot < PlayerNames.Count ? PlayerNames[slot] : $"Player {slot + 1}", human,
                 towns?.GetValueOrDefault(slot) ?? PlayerSetup.RandomTown));
         }
@@ -62,7 +67,8 @@ public static class EditorMapGenerator
     /// <summary>
     /// Generates the map. Refuses (with <see cref="ArgumentException"/>) a template with errors, a size the template does not support, and the
     /// player and town choices <see cref="Players"/> or <see cref="ScenarioAssembler"/> refuse. <paramref name="maxHeroes"/> overrides the template's
-    /// hero limit (ADR-068). <paramref name="content"/> is the content tables to generate from (the built-in tables when left out).
+    /// hero limit (ADR-068). <paramref name="content"/> is the content tables to generate from (the built-in tables when left out); <paramref name="humans"/>
+    /// are the players' kinds (<see cref="Players"/>).
     /// </summary>
     public static EditorMap Generate(
         MapTemplate template,
@@ -71,7 +77,8 @@ public static class EditorMapGenerator
         int? players = null,
         IReadOnlyDictionary<int, string>? towns = null,
         ContentCatalogs? content = null,
-        int? maxHeroes = null)
+        int? maxHeroes = null,
+        IReadOnlyList<bool>? humans = null)
     {
         ArgumentNullException.ThrowIfNull(template);
         content ??= ContentCatalogs.Default;
@@ -85,7 +92,7 @@ public static class EditorMapGenerator
             throw new ArgumentOutOfRangeException(nameof(size), size, $"{template.Name} supports the sizes {string.Join(", ", template.Sizes)}.");
         }
 
-        var (scenario, generation) = MapGenerator.Build(template, size, seed, Players(template, players, towns), new GameOptions(Seed: seed), content, maxHeroes);
+        var (scenario, generation) = MapGenerator.Build(template, size, seed, Players(template, players, towns, humans), new GameOptions(Seed: seed), content, maxHeroes);
         scenario.Map.Description = Describe(template, size, seed, generation);
         return new EditorMap(scenario, generation, MapValidator.Validate(scenario));
     }
