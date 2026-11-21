@@ -12,12 +12,14 @@ public sealed class ObjectEditor
     private readonly EditorContext _context;
     private readonly HeightEditor _heights;
     private readonly MapMover _mover;
+    private readonly SceneryTurner _turner;
 
-    internal ObjectEditor(EditorContext context, HeightEditor heights, MapMover mover)
+    internal ObjectEditor(EditorContext context, HeightEditor heights, MapMover mover, SceneryTurner turner)
     {
         _context = context;
         _heights = heights;
         _mover = mover;
+        _turner = turner;
     }
 
     private Game.GameState Scenario => _context.Scenario;
@@ -97,6 +99,42 @@ public sealed class ObjectEditor
         _context.Object<MapObject>(id) is not { } mapObject ? EditResult.InvalidTarget
         : topLeft.Level != mapObject.Position.Level ? EditResult.InvalidValue
         : _mover.Move($"Move {mapObject.Definition.Name}", [mapObject], [], topLeft.X - mapObject.Position.X, topLeft.Y - mapObject.Position.Y);
+
+    /// <summary>
+    /// Whether the pieces of scenery <paramref name="ids"/> can be turned a quarter turn clockwise (<paramref name="mirror"/>: mirrored
+    /// left to right instead), and the cells they would take. <see cref="EditResult.InvalidTarget"/> when there is none or one of them is
+    /// not scenery: game objects keep their facing.
+    /// </summary>
+    public MoveCheck CheckTurn(IEnumerable<MapObjectId> ids, bool mirror = false) =>
+        Pieces(ids) is { } pieces ? _turner.Check(pieces, mirror) : new MoveCheck(EditResult.InvalidTarget, []);
+
+    /// <summary>
+    /// Turns the pieces of scenery a quarter turn clockwise (EDIT-6, ADR-252), each round the middle of its own box, as one undo step.
+    /// The turned shapes must fit as placed ones do (on the map, on no other object or hero); when one does not, nothing is turned.
+    /// </summary>
+    public EditResult Rotate(IEnumerable<MapObjectId> ids) => Turn(ids, mirror: false);
+
+    /// <summary>Mirrors the pieces of scenery left to right, each in its own box, as one undo step; the rules are <see cref="Rotate"/>'s.</summary>
+    public EditResult Mirror(IEnumerable<MapObjectId> ids) => Turn(ids, mirror: true);
+
+    private EditResult Turn(IEnumerable<MapObjectId> ids, bool mirror)
+    {
+        if (Pieces(ids) is not { } pieces)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        var verb = mirror ? "Mirror" : "Rotate";
+        return _turner.Turn(pieces.Count == 1 ? $"{verb} {pieces[0].Definition.Name}" : $"{verb} {pieces.Count} pieces of scenery", pieces, mirror);
+    }
+
+    /// <summary>The scenery of those ids in the scenario's order; null when there is none or an id is not scenery on the map.</summary>
+    private List<Scenery>? Pieces(IEnumerable<MapObjectId> ids)
+    {
+        var wanted = ids.ToHashSet();
+        var pieces = Scenario.Objects.OfType<Scenery>().Where(s => wanted.Contains(s.Id)).ToList();
+        return pieces.Count == 0 || pieces.Count != wanted.Count ? null : pieces;
+    }
 
     public EditResult Remove(MapObjectId id)
     {

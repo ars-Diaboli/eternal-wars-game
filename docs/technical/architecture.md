@@ -285,6 +285,12 @@ through the other editors, then `GameState.Reframe` makes the same `AdventureMap
 would be removed. A map's `Width` and `Height` therefore change only there, before a game starts; on `MapResized` the editor app
 builds the map's views again. Stamps are `MapFragment`s in files of their own versioned format (`StampDocument`, `StampSerializer`,
 `StampFolder` in Core.Data; the objects are written as the map format writes them).
+Scenery has an `Orientation` (ADR-252: mirrored, then 0 to 3 quarter turns clockwise). `MapObject.Footprint` is the shape as the
+object lies (`Footprint.Oriented`), and the cell index, the fog's memory (`KnownObject`) and the map view read that, not the
+definition's footprint; `ObjectEditor.Rotate` / `Mirror` (`SceneryTurner`) change it, `SelectionEditor.Rotate` / `Mirror` for the
+selected scenery. `ScatterEditor` (Core.Generation, beside `EditorMapGenerator`) scatters scenery over an area through the session,
+with `SceneryPlacer`'s choice of pieces; it draws from the scenario's random numbers inside
+`MapEditorSession.AsOneStep(description, random => …)`, whose undo also puts the generator back.
 Single-value edits are `PropertyEdit<T>` commands; an edit to the value already there records no undo step and publishes
 nothing. The three tile layers paint through `PaintLayer<TValue, TEvent>`. `BeginStroke`/`EndStroke` merge a drag into
 one undo step. `MapValidator` reports what single edits cannot prevent. `MapConnectivity` tells where a hero can walk on a fresh

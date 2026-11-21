@@ -343,7 +343,12 @@ $scenarios = @(
     # "Save selection as stamp" (the palette) asks for a name and Enter takes "Stamp 1"; Ctrl+C and Ctrl+V paste a copy; the Object
     # tool lists the stamp, a click on it puts it on the pointer and a click on the map stamps it; Undo takes the stamp off.
     @{ Name = 'editor-select-move-paste'; App = 'EternalWars.MapEditor'; Frames = 100
-       Input = '3:click:@Object;6:click:700,500;9:click:760,500;12:key:V;15:drag:640,440,820,560;22:drag:700,500,700,400;30:key:Ctrl+Shift+P;33:text:stamp;41:key:Enter;48:key:Enter;54:key:Ctrl+C;57:key:Ctrl+V;60:click:950,330;66:key:Escape;70:click:@Object;76:click:@Stamp 1;82:click:560,600;90:click:@Undo' }
+       Input = '3:click:@Object;6:click:700,500;9:click:760,500;12:key:V;15:drag:640,440,820,560;22:drag:700,500,700,400;30:key:Ctrl+Shift+P;33:text:stamp;41:key:Enter;48:key:Enter;54:key:Ctrl+C;57:key:Ctrl+V;60:click:950,330;66:key:Escape;70:click:@Object;76:click:@Stamp 1;82:click:560,600;90:click:@Undo' },
+    # Scatter and scenery rotation (EDIT-6, ADR-252) on a blank map: the Scatter tool with only walls ticked and a brush of 5 tiles is
+    # dragged over the grass (pieces of wall, ways kept open); the Select tool's rectangle takes them; Ctrl+R turns them a quarter
+    # turn, Ctrl+M mirrors them; Undo takes the mirroring back.
+    @{ Name = 'editor-scatter-rotate'; App = 'EternalWars.MapEditor'; Frames = 70
+       Input = '3:click:@Scatter;7:click:@None;11:click:@Wall;14:click:112,302;17:click:112,302;20:click:112,302;23:click:112,302;27:drag:620,470,900,470;36:key:V;40:drag:560,360,960,620;48:key:Ctrl+R;56:key:Ctrl+M;64:click:@Undo' }
 )
 
 # Every scenario has a seed of its own, so its games and battles are the same on every run (ADR-239): the entry's Seed, else one made from

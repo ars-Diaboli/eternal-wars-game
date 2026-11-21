@@ -17,6 +17,12 @@ public class StampFormatTests
 
     private static string SamplePath(int version) => Path.Combine(Samples, $"v{version:00}{StampSerializer.FileExtension}");
 
+    /// <summary>A sample of a stamp format written when the map format was an older one: its objects are upgraded as an older map's are.</summary>
+    private static string SamplePath(int version, int mapFormat) => Path.Combine(Samples, $"v{version:00}-map{mapFormat}{StampSerializer.FileExtension}");
+
+    /// <summary>The map formats, older than the current one, that stamp samples were written in.</summary>
+    private static readonly (int Version, int MapFormat)[] OlderMapFormats = [(1, 42)];
+
     [Fact]
     public void TheFormat_WritesTheSampleFragmentAsPinned()
     {
@@ -33,14 +39,19 @@ public class StampFormatTests
     {
         var files = Directory.GetFiles(Samples, "*" + StampSerializer.FileExtension).Order(StringComparer.Ordinal).ToList();
         Assert.Equal(
-            Enumerable.Range(1, StampDocument.CurrentFormatVersion).Select(SamplePath).Order(StringComparer.Ordinal), files);
+            Enumerable.Range(1, StampDocument.CurrentFormatVersion).Select(v => SamplePath(v))
+                .Concat(OlderMapFormats.Select(o => SamplePath(o.Version, o.MapFormat))).Order(StringComparer.Ordinal),
+            files);
         foreach (var file in files)
         {
+            var isOlderMap = OlderMapFormats.Any(o => SamplePath(o.Version, o.MapFormat) == file);
+            Assert.Equal(isOlderMap, File.ReadAllText(file).Contains($"\"mapFormat\": {MapDocument.CurrentFormatVersion}", StringComparison.Ordinal) == false);
             var document = StampSerializer.Load(file);
+            Assert.Equal(MapDocument.CurrentFormatVersion, document.MapFormat);
             var fragment = StampSerializer.ToFragment(document, BlankScenario.Create(20, 20));
             var saved = StampSerializer.Serialize(StampSerializer.ToDocument(fragment, document.Name));
 
-            var pinned = document.FormatVersion == StampDocument.CurrentFormatVersion
+            var pinned = document.FormatVersion == StampDocument.CurrentFormatVersion && !isOlderMap
                 ? file
                 : file[..^StampSerializer.FileExtension.Length] + ".upgraded.json";
             Pinned.Check(pinned, saved, $"Reading {Path.GetFileName(file)} and saving it gives another file than before: an older stamp would now load differently.");

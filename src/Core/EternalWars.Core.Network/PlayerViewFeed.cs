@@ -262,7 +262,9 @@ internal sealed class PlayerViewFeed(GameState state, PlayerId viewer)
     {
         try
         {
-            var bare = MapObject.Create(known.Id, known.Definition, known.Position);
+            var bare = known.Definition.Kind == MapObjectKind.Scenery
+                ? new Scenery(known.Id, known.Definition, known.Position, known.Orientation)
+                : MapObject.Create(known.Id, known.Definition, known.Position);
             if (known.Owner is { } owner && bare.GetType().GetProperty(nameof(IFlaggable.Owner)) is { CanWrite: true } flag)
             {
                 flag.SetValue(bare, owner);

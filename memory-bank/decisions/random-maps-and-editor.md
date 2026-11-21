@@ -18,6 +18,7 @@
 | [247](#adr-247-map-and-template-editor-overhaul-a-creator-app-workspace-planned-in-seven-steps-owner-adr-015-adr-023-adr-117-2026-11-20) | Map and template editor overhaul: a creator-app workspace, planned in seven steps (owner, ADR-015, ADR-023, ADR-117, 2026-11-20) | accepted |
 | [250](#adr-250-edit-1--edit-12-answered-the-editor-plans-proposals-adopted-template-undo-scenery-rotation-new-map-content-owner-adr-117-adr-247-2026-11-20) | EDIT-1 … EDIT-12 answered: the editor plan's proposals adopted; template undo; scenery rotation; new map content (owner, ADR-117, ADR-247, 2026-11-20) | accepted |
 | [251](#adr-251-map-resize-reframes-the-map-in-place-stamps-are-fragments-in-a-file-format-of-their-own-edit-8-adr-015-adr-250-2026-11-21) | Map resize reframes the map in place; stamps are fragments in a file format of their own (EDIT-8, ADR-015, ADR-250, 2026-11-21) | implemented |
+| [252](#adr-252-scenery-has-an-orientation-stored-in-map-format-43-scatter-is-the-generators-scenery-choice-run-through-the-editor-session-edit-6-adr-079-adr-157-adr-174-adr-250-2026-11-21) | Scenery has an orientation, stored in map format 43; scatter is the generator's scenery choice run through the editor session (EDIT-6, ADR-079, ADR-157, ADR-174, ADR-250, 2026-11-21) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -416,3 +417,34 @@ ADR when it is built.
 - **Stamps**: a stamp is a `MapFragment` in `*.ewstamp.json` with its own format version (1). Its objects are written as the map
   format writes them, and the file names that map format (`mapFormat`), so a later map format change can upgrade old stamps. Tiles the
   fragment does not have are spaces in the rows. No migration framework yet: there is one version.
+
+### ADR-252: Scenery has an orientation, stored in map format 43; scatter is the generator's scenery choice run through the editor session (EDIT-6, ADR-079, ADR-157, ADR-174, ADR-250, 2026-11-21)
+**Status**: implemented (plan step 2, tasks 7 and 8).
+
+- **Orientation**: a piece of scenery lies mirrored left to right, then turned clockwise by 0 to 3 quarter turns (`Orientation`).
+  Its cells are the definition's footprint so transformed, from its position as the top-left tile of the box. Only scenery has
+  one: an object with an entrance keeps its facing, as EDIT-6 decided.
+- **One shape to read**: `MapObject.Footprint` (and `KnownObject.Footprint`) is the shape as the object lies. Everything that asks
+  where an object is (the cell index, movement, the fog's memory, the minimap, the view) reads it; the definition's footprint is
+  the shape as drawn. A separate rotated definition per orientation was rejected: it would multiply the scenery table by eight.
+- **Turning**: a quarter turn is round the middle of the piece's box (half an odd difference rounds towards 0, so four turns
+  return it exactly); a mirroring stays in the box. The turned shapes must fit as placement demands, all pieces or none. The view
+  is told with `MapObjectMoved`, also when the top-left tile stays.
+- **Format 43**: `turns` (1 to 3) and `mirrored` on a `scenery` object, omitted when not set. Older files need no change to load;
+  the step `OlderSceneryIsNotTurned` removes those two names from an older file's scenery, so nothing an older file happened to
+  carry there turns a piece. A game's digest names the orientation only when there is one, so older replays keep their digests.
+- **Stamps follow the map format**: a stamp written under an older map format has its objects upgraded by the map's own steps when
+  it is read (ADR-251 promised this); the stamp format itself stays at 1.
+- **Scatter**: `ScatterEditor` (Core.Generation) reuses `SceneryPlacer`'s choice (a kind by weight on the terrain, then the largest
+  piece that fits) and places through `ObjectEditor.Place`, so it is ordinary undoable edits. The generator's own placement is
+  unchanged, and scattered scenery is not turned. Density picks which free tiles are covered; pieces must lie on picked tiles.
+- **Keep paths open** is a local rule: a cell is blocked only when the open ground among its eight neighbours stays one piece
+  without it and every entrance beside it keeps open ground of that piece beside it. It is stricter than needed (it can leave a
+  tile free that could have been blocked) and cheap; a whole-map reachability check per piece was rejected for its cost.
+- **Randomness**: the draws come from `GameState.Random`, handed to the edit by `MapEditorSession.AsOneStep(description, random =>
+  …)`. The step's undo restores the generator's state, and draws that led to no edit are taken back, so the same map and seed
+  give the same scatter, also after an undo. A map file keeps no random state: the generator starts from the seed when a map is
+  opened.
+- **No key for the tool**: the plan's S is the camera's pan key in the editor, so Scatter is picked from the palette or the menu.
+- **The tool scatters on release**, over all the tiles of the stroke: pieces of several tiles fit across the brush's dabs, and the
+  result depends on the tiles alone, not on how the brush was dragged.

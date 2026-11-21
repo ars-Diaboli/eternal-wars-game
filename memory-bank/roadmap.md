@@ -267,9 +267,9 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       `IEditorTool`, `CommandRegistry`, the history's steps and `UndoTo`, Problems / History / Output, the status bar, `IsDirty`, `FileService` with the file dialogs, recent files, the
       unsaved marker, autosave and crash recovery, `CommandPalette`, `PreferencesWindow`, the compact theme and placeholder icons,
       the Map / Template tabs; plan tasks 1 to 12)
-- [ ] Step 2: selection and editing (built: `MapSelection`, the Select tool with marquee, filter and multi-select, Delete, Move
-      with its ghost, `MapFragment` with copy, cut, paste and duplicate, brushes with size, shape, line and fill, erase by kind,
-      resize / crop / shift, stamps; plan tasks 1 to 6, 9 and 10; ADR-251): scatter (task 7), scenery rotation (task 8, a format bump)
+- [x] Step 2: selection and editing (`MapSelection`, the Select tool with marquee, filter and multi-select, Delete, Move with its
+      ghost, `MapFragment` with copy, cut, paste and duplicate, brushes with size, shape, line and fill, erase by kind, scatter,
+      scenery rotation and mirroring (map format 43), resize / crop / shift, stamps; plan tasks 1 to 10; ADR-251, ADR-252)
 - [ ] Step 3: the object browser (thumbnails, search, favourites), the inspector in sections with multi-edit and picture pickers, the
       map settings window, the new map content (rumours, allowed factions, object names, custom heroes; a format bump), the Texts
       view, the new-map wizard

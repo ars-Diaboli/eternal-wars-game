@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Game;
@@ -13,7 +14,8 @@ namespace EternalWars.Core.Data.Stamps;
 /// </summary>
 /// <remarks>
 /// Version history: 1 = terrain, roads, rivers, corner heights and objects. The objects are written as a map writes them, in the map
-/// format <see cref="MapFormat"/> names.
+/// format <see cref="MapFormat"/> names; a stamp of an older map format has its objects upgraded as an older map's are when it is read
+/// (<see cref="MapMigrations"/>, ADR-174), so this record holds the current map format only.
 /// </remarks>
 public sealed record StampDocument
 {
@@ -21,7 +23,7 @@ public sealed record StampDocument
 
     public int FormatVersion { get; init; } = CurrentFormatVersion;
 
-    /// <summary>The map format (<see cref="MapDocument.CurrentFormatVersion"/>) the <see cref="Objects"/> were written in.</summary>
+    /// <summary>The map format (<see cref="MapDocument.CurrentFormatVersion"/>) the <see cref="Objects"/> are written in; a file read through <see cref="StampSerializer"/> has been upgraded to the current one.</summary>
     public int MapFormat { get; init; } = MapDocument.CurrentFormatVersion;
 
     public required string Name { get; init; }
@@ -170,13 +172,40 @@ public static class StampSerializer
     {
         try
         {
-            return JsonSerializer.Deserialize<StampDocument>(json, JsonDefaults.Options) ?? throw new FormatException("Stamp file is empty.");
+            return (Upgraded(json) is { } upgraded
+                ? upgraded.Deserialize<StampDocument>(JsonDefaults.Options)
+                : JsonSerializer.Deserialize<StampDocument>(json, JsonDefaults.Options)) ?? throw new FormatException("Stamp file is empty.");
         }
-        catch (Exception e) when (e is JsonException or NotSupportedException)
+        catch (Exception e) when (e is JsonException or NotSupportedException or InvalidOperationException or ArgumentException)
         {
-            // NotSupportedException: an object without its "kind".
+            // NotSupportedException: an object without its "kind". ArgumentException: a name written twice.
             throw new FormatException($"Not a stamp file: {e.Message}", e);
         }
+    }
+
+    /// <summary>
+    /// The stamp's JSON with its objects upgraded to the current map format, by the steps that upgrade an older map's; null when the
+    /// stamp is of the current map format (or names none a number can be read from: the reader then says what is wrong).
+    /// </summary>
+    private static JsonObject? Upgraded(string json)
+    {
+        if (JsonNode.Parse(json, new JsonNodeOptions { PropertyNameCaseInsensitive = true }) is not JsonObject stamp
+            || stamp["mapFormat"] is not JsonValue value
+            || !(value.TryGetValue<int>(out var mapFormat) || (value.TryGetValue<string>(out var text) && int.TryParse(text, out mapFormat)))
+            || mapFormat >= MapDocument.CurrentFormatVersion)
+        {
+            return null;
+        }
+
+        var objects = stamp["objects"];
+        stamp.Remove("objects");
+        var map = new JsonObject { ["objects"] = objects };
+        MapMigrations.Upgrade(map, mapFormat);
+        objects = map["objects"];
+        map.Remove("objects");
+        stamp["objects"] = objects;
+        stamp["mapFormat"] = MapDocument.CurrentFormatVersion;
+        return stamp;
     }
 
     public static void Save(StampDocument document, string path) => File.WriteAllText(path, Serialize(document));

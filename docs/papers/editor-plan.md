@@ -542,10 +542,10 @@ again offers the lost work.
    Tests. *Done.*
 7. **Scatter** (S): `ScatterEditor` beside `EditorMapGenerator` in `Core.Generation`, reusing the generator's scenery choice
    (`SceneryPlacer`, ADR-157) on a brush area or the selection, with density, kinds and "keep paths open"; it draws from the
-   scenario's `GameState.Random`, so the same seed gives the same result. Tests.
+   scenario's `GameState.Random`, so the same seed gives the same result. Tests. *Done.*
 8. **Scenery rotation and mirroring** (EDIT-6): an ADR and a format bump with a sample and a migration (older scenery gets no
    rotation); the map view draws the rotation and the mirror; Rotate and Mirror commands on a scenery selection, one step each. The
-   generator is unchanged. Tests: a save and load round trip, undo.
+   generator is unchanged. Tests: a save and load round trip, undo. *Done.*
 9. **Resize, crop and shift** (EDIT-8): `MapEditorSession.Resize(width, height, anchor)` with a nine-point anchor and any size from
    16 to 256 a side; `Crop` to the selection; `Shift`. Heights, start zones, event cells, roads and rivers are cut or extended;
    objects that end up outside are listed in a dialog, then removed in the same step. Check that a non-square map plays (the

@@ -23,7 +23,7 @@ public sealed class MapEditorSession
         var mover = new MapMover(_context);
         Heights = new HeightEditor(_context);
         Terrain = new TerrainEditor(_context, Heights);
-        Objects = new ObjectEditor(_context, Heights, mover);
+        Objects = new ObjectEditor(_context, Heights, mover, new SceneryTurner(_context));
         Contents = new ObjectContentsEditor(_context);
         Monsters = new MonsterEditor(_context, Objects);
         Towns = new TownEditor(_context);
@@ -121,6 +121,18 @@ public sealed class MapEditorSession
     /// what leaves on one side is cut as <see cref="Resize"/> cuts, and new ground comes in on the other.
     /// </summary>
     public EditResult Shift(int dx, int dy) => _resizer.Apply($"Shift by {dx}, {dy}", CheckShift(dx, dy));
+
+    /// <summary>
+    /// Runs <paramref name="edits"/> (calls of the editors) as one undo step named <paramref name="description"/>; inside an open stroke
+    /// they join the stroke. The edits may draw from the scenario's random numbers (<c>GameState.Random</c>), which they are handed:
+    /// undoing the step puts the generator back where it was, so the same edit made again gives the same result. Edits that change
+    /// nothing record nothing.
+    /// </summary>
+    public void AsOneStep(string description, Action<Common.GameRandom> edits)
+    {
+        ArgumentNullException.ThrowIfNull(edits);
+        _context.AsOneStep(description, edits);
+    }
 
     /// <summary>Groups all following edits into a single undo step until <see cref="EndStroke"/> (mouse down … mouse up).</summary>
     public void BeginStroke(string description) => _context.BeginStroke(description);

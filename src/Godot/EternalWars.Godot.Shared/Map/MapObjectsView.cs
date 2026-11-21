@@ -71,7 +71,7 @@ public partial class MapObjectsView : Node3D
         {
             if (e.Level == _level)
             {
-                Known().Where(k => k.Definition.Footprint.OccupiedCells.Any(c => ReliefSurface.Reach(e.Area).Touches(k.Position.Offset(c.Dx, c.Dy))))
+                Known().Where(k => k.Footprint.OccupiedCells.Any(c => ReliefSurface.Reach(e.Area).Touches(k.Position.Offset(c.Dx, c.Dy))))
                     .Select(k => k.Id).ToList().ForEach(Rebuild);
             }
         });
@@ -162,7 +162,7 @@ public partial class MapObjectsView : Node3D
         var cells = new List<(CellBatch Batch, int Slot)>();
         var tiles = new List<MapPosition>();
         void Cell(Vector3 size, Vector3 position, Color tint) => cells.Add(Batch(size).Add(position, tint));
-        foreach (var (dx, dy, cell) in known.Definition.Footprint.OccupiedCells)
+        foreach (var (dx, dy, cell) in known.Footprint.OccupiedCells)
         {
             var tile = known.Position.Offset(dx, dy);
             _objectAt[tile] = known.Id;
@@ -179,7 +179,7 @@ public partial class MapObjectsView : Node3D
             }
         }
 
-        var top = MapSpace.ToGround(map, known.Position) + new Vector3((known.Definition.Footprint.Width - 1) / 2f, 0.9f, 0);
+        var top = MapSpace.ToGround(map, known.Position) + new Vector3((known.Footprint.Width - 1) / 2f, 0.9f, 0);
         if (known.Definition.Kind is MapObjectKind.Mine or MapObjectKind.Town or MapObjectKind.Dwelling or MapObjectKind.ResourceProvider)
         {
             Cell(new Vector3(0.3f, 0.3f, 0.05f), top, known.Owner is { } owner ? Palette.ForPlayer(_context.State, owner) : Palette.Neutral);
@@ -386,5 +386,5 @@ internal sealed class CellBatch
 internal static class KnownObjectExtensions
 {
     public static MapPosition VisitPosition(this KnownObject known) =>
-        known.Position.Offset(known.Definition.Footprint.VisitOffset.Dx, known.Definition.Footprint.VisitOffset.Dy);
+        known.Position.Offset(known.Footprint.VisitOffset.Dx, known.Footprint.VisitOffset.Dy);
 }

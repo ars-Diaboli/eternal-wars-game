@@ -80,6 +80,39 @@ internal sealed class EditorContext(GameState scenario, MapObjectCatalog catalog
         }
     }
 
+    /// <summary>
+    /// <see cref="AsOneStep(string, Action)"/> for edits that draw from the scenario's random numbers: undoing the step puts the generator
+    /// back where it was, so the same edit made again gives the same result. Draws that led to no edit are taken back at once.
+    /// </summary>
+    public void AsOneStep(string description, Action<GameRandom> edits) => AsOneStep(description, () =>
+    {
+        var random = Scenario.Random;
+        var (before, recorded) = (random.State, _stroke!.Count);
+        try
+        {
+            edits(random);
+        }
+        catch when (_stroke.Count == recorded)
+        {
+            random.Restore(before); // nothing was edited: the draws are taken back too
+            throw;
+        }
+
+        var after = random.State;
+        if (after == before)
+        {
+            return;
+        }
+
+        if (_stroke.Count == recorded)
+        {
+            random.Restore(before);
+            return;
+        }
+
+        Done(new DelegateCommand("Random numbers", () => random.Restore(after), () => random.Restore(before)));
+    });
+
     public bool ChangeHistory(Func<bool> change)
     {
         if (_stroke is not null)

@@ -33,6 +33,9 @@ public sealed class GameRandom(ulong state)
         return min + Next(max - min + 1);
     }
 
+    /// <summary>Puts the generator at <paramref name="state"/> (the editor's undo of an edit that drew from it).</summary>
+    internal void Restore(ulong state) => State = state;
+
     /// <summary>An independent generator seeded from this one (e.g. one per battle).</summary>
     public GameRandom Fork() => new(NextUInt64());
 }

@@ -39,7 +39,10 @@ public sealed record HeroPlaced(HeroId Hero, PlayerId Owner, MapPosition Positio
 [SeenBy(Audience.Witnesses)]
 public sealed record HeroRemoved(HeroId Hero) : IEvent;
 
-/// <summary>The editor moved an object (its id, links, owner and contents stay); <paramref name="From"/> and <paramref name="To"/> are its top-left tiles.</summary>
+/// <summary>
+/// The editor moved an object (its id, links, owner and contents stay) or turned a piece of scenery, which may stay where it is;
+/// <paramref name="From"/> and <paramref name="To"/> are its top-left tiles.
+/// </summary>
 [SeenBy(Audience.Nobody)]
 public sealed record MapObjectMoved(MapObjectId Object, MapPosition From, MapPosition To) : IEvent;
 

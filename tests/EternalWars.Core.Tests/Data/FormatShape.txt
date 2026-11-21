@@ -1,4 +1,4 @@
-# Map files (*.ewmap.json), format v42
+# Map files (*.ewmap.json), format v43
 object AllCondition
   conditions: IReadOnlyList<EventCondition>
 object AllyCondition
@@ -584,6 +584,8 @@ object SceneryDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  mirrored: Boolean?
+  turns: Int32?
   x: Int32 (required)
   y: Int32 (required)
 object SetVariableAction
@@ -1659,6 +1661,8 @@ object SceneryDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  mirrored: Boolean?
+  turns: Int32?
   x: Int32 (required)
   y: Int32 (required)
 object SendTroopsCommand

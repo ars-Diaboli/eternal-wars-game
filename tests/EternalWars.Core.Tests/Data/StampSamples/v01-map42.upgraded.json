@@ -1,0 +1,104 @@
+{
+  "formatVersion": 1,
+  "mapFormat": 43,
+  "name": "Sample",
+  "width": 14,
+  "height": 8,
+  "terrain": [
+    "nggggggggggggg",
+    "gggggggggggggg",
+    "gggggggggggggg",
+    "gggggggggggggg",
+    "gggggggggggggg",
+    "gggggggggggggg",
+    "gggggggggggggg",
+    "              "
+  ],
+  "roads": [
+    ".c............",
+    "..............",
+    "..............",
+    "..............",
+    "..............",
+    "..............",
+    "..............",
+    "              "
+  ],
+  "rivers": [
+    "..............",
+    "c.............",
+    "..............",
+    "..............",
+    "..............",
+    "..............",
+    "..............",
+    "              "
+  ],
+  "heights": [
+    "888888888888888",
+    "888888888888888",
+    "888888888888888",
+    "889988888888888",
+    "8CEEC8888888888",
+    "9CCDD9888888888",
+    "99CBB9888888888",
+    "99CBB9888888888",
+    "               "
+  ],
+  "objects": [
+    {
+      "kind": "chest",
+      "gold": 1500,
+      "experience": 1000,
+      "id": 1,
+      "definition": "chest",
+      "x": 0,
+      "y": 4,
+      "level": 0
+    },
+    {
+      "kind": "gate",
+      "linkedGate": 3,
+      "id": 2,
+      "definition": "monolith.two-way",
+      "x": 0,
+      "y": 6,
+      "level": 0
+    },
+    {
+      "kind": "gate",
+      "linkedGate": 2,
+      "id": 3,
+      "definition": "monolith.two-way",
+      "x": 3,
+      "y": 6,
+      "level": 0
+    },
+    {
+      "kind": "monster",
+      "creature": "neutral.wolf",
+      "count": 12,
+      "disposition": "Hostile",
+      "neverFlees": true,
+      "id": 4,
+      "definition": "monster",
+      "x": 1,
+      "y": 5,
+      "level": 0
+    },
+    {
+      "kind": "town",
+      "name": "Brightwater",
+      "buildings": {
+        "fort": 1,
+        "tavern": 1,
+        "town-hall": 1
+      },
+      "id": 5,
+      "definition": "town.haven",
+      "x": 6,
+      "y": 0,
+      "level": 0
+    }
+  ]
+}

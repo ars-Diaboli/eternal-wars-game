@@ -19,6 +19,8 @@ public enum FootprintCell
 /// </summary>
 public sealed class Footprint
 {
+    private readonly Footprint?[] _oriented = new Footprint?[8];
+
     public Footprint(IReadOnlyList<string> rows)
         : this(rows, needsVisit: true)
     {
@@ -81,6 +83,37 @@ public sealed class Footprint
 
     /// <summary>A shape with no entrance that only blocks (scenery, ADR-079): <c>B</c> and <c>.</c> cells only.</summary>
     public static Footprint Obstacle(IReadOnlyList<string> rows) => new(rows, needsVisit: false);
+
+    /// <summary>
+    /// The shape lying as <paramref name="orientation"/> says (EDIT-6, ADR-252): mirrored left to right, then turned clockwise; a turned
+    /// shape of 3 × 1 cells is 1 × 3. The same instance for the same orientation, this one for none.
+    /// </summary>
+    public Footprint Oriented(Orientation orientation)
+    {
+        if (orientation.IsNone)
+        {
+            return this;
+        }
+
+        var slot = orientation.Turns + (orientation.Mirrored ? 4 : 0);
+        lock (_oriented)
+        {
+            return _oriented[slot] ??= new Footprint(Turned(orientation), HasVisit);
+        }
+    }
+
+    private string[] Turned(Orientation orientation)
+    {
+        var rows = orientation.Mirrored ? Rows.Select(r => new string([.. r.Reverse()])).ToArray() : [.. Rows];
+        for (var turn = 0; turn < orientation.Turns; turn++)
+        {
+            // Clockwise: the left column, read from the bottom, becomes the top row.
+            var (width, height) = (rows[0].Length, rows.Length);
+            rows = [.. Enumerable.Range(0, width).Select(x => new string([.. Enumerable.Range(0, height).Select(y => rows[height - 1 - y][x])]))];
+        }
+
+        return rows;
+    }
 
     /// <summary>Whether heroes can visit the object; false for scenery.</summary>
     public bool HasVisit { get; }

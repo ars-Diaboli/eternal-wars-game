@@ -35,7 +35,7 @@ is used instead).
 | Replays | `*.ewreplay.json` (`GameRecord`) |
 | Ranking (ADR-101) | `ranking.json` in the user data folder (`RankingFile`), each row's record in `ranking/*.ewreplay.json` |
 | Templates | `*.ewtemplate.json`; shipped ones in `src/Core/data/templates` |
-| Stamps | `*.ewstamp.json`, `StampDocument` (its own format version; samples in `tests/.../Data/StampSamples`); the editor saves to `user://stamps/` |
+| Stamps | `*.ewstamp.json`, `StampDocument` (its own format version; its objects are in the map format the file names, upgraded like an older map's; samples in `tests/.../Data/StampSamples`, `vNN-mapMM` for one written under an older map format); the editor saves to `user://stamps/` |
 | Content tables | `src/Core/data/*.csv`, embedded at build time (see below) |
 | JSON overrides | `CreatureDefinitionSerializer`, `TerrainDefinitionSerializer`, `MapObjectDefinitionSerializer` (ids in `BuiltInMapObjects`) |
 

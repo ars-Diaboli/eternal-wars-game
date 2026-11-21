@@ -11,6 +11,7 @@ public static class EditorTools
         new StartZoneTool(context),
         new HeightTool(context),
         new ObjectTool(context),
+        new ScatterTool(context),
         new MonsterTool(context),
         new HeroTool(context),
         new EraseTool(context),

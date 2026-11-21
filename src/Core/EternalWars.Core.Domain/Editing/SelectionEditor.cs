@@ -152,6 +152,20 @@ public sealed class SelectionEditor
         return result;
     }
 
+    /// <summary>
+    /// Turns the selected scenery a quarter turn clockwise as one undo step (<see cref="ObjectEditor.Rotate"/>); the other selected
+    /// things stay as they are. <see cref="EditResult.InvalidTarget"/> when no scenery is selected.
+    /// </summary>
+    public EditResult Rotate() => _objects.Rotate(SelectedScenery());
+
+    /// <summary>Mirrors the selected scenery left to right as one undo step (<see cref="ObjectEditor.Mirror"/>).</summary>
+    public EditResult Mirror() => _objects.Mirror(SelectedScenery());
+
+    /// <summary>Whether the selected scenery can be turned (<paramref name="mirror"/>: mirrored), and the cells it would take.</summary>
+    public MoveCheck CheckTurn(bool mirror = false) => _objects.CheckTurn(SelectedScenery(), mirror);
+
+    private List<MapObjectId> SelectedScenery() => [.. Objects().OfType<Scenery>().Select(s => s.Id)];
+
     /// <summary>A thing left the map: it is no longer selected.</summary>
     internal void Forget(MapObjectId mapObject) => Changed(Selection.Forget(mapObject));
 
