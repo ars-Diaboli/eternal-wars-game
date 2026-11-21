@@ -20,6 +20,7 @@ public static class PreferencesStore
             CameraRotateSpeed = settings.Get(Section, "camera_rotate_speed", defaults.CameraRotateSpeed).AsInt32(),
             CameraZoomSpeed = settings.Get(Section, "camera_zoom_speed", defaults.CameraZoomSpeed).AsInt32(),
             DefaultMapSize = settings.Get(Section, "default_map_size", defaults.DefaultMapSize).AsInt32(),
+            GamePath = settings.Get(Section, "game_path", defaults.GamePath).AsString(),
         }.Normalized();
     }
 
@@ -31,12 +32,13 @@ public static class PreferencesStore
         settings.Set(Section, "camera_rotate_speed", preferences.CameraRotateSpeed);
         settings.Set(Section, "camera_zoom_speed", preferences.CameraZoomSpeed);
         settings.Set(Section, "default_map_size", preferences.DefaultMapSize);
+        settings.Set(Section, "game_path", preferences.GamePath);
     }
 }
 
 /// <summary>
-/// The Preferences window (EDIT-1, ADR-250), a box over the whole editor: the UI's scale, the autosave interval, the camera's speeds and a
-/// new map's size. "OK" hands the preferences to the app, which keeps and applies them; "Defaults" puts a new installation's values into
+/// The Preferences window (EDIT-1, ADR-250), a box over the whole editor: the UI's scale, the autosave interval, the camera's speeds, a
+/// new map's size and the game the Test starts (ADR-267). "OK" hands the preferences to the app, which keeps and applies them; "Defaults" puts a new installation's values into
 /// the fields; "Cancel" or Escape closes the window with nothing changed.
 /// </summary>
 public partial class PreferencesWindow : Control
@@ -47,6 +49,11 @@ public partial class PreferencesWindow : Control
     private readonly SpinBox _rotate = Spin(EditorPreferences.MinRotateSpeed, EditorPreferences.MaxRotateSpeed);
     private readonly SpinBox _zoom = Spin(EditorPreferences.MinZoomSpeed, EditorPreferences.MaxZoomSpeed);
     private readonly SpinBox _mapSize = Spin(EditorPreferences.MinMapSize, EditorPreferences.MaxMapSize);
+    private readonly LineEdit _game = new()
+    {
+        Name = "GamePath", PlaceholderText = "The game project beside the editor's", CustomMinimumSize = new Vector2(320, 0),
+        TooltipText = "The game Test starts: an exported game's program, or the game's Godot project (its folder or project.godot)",
+    };
 
     public void Bind(EditorPreferences current, Action<EditorPreferences> apply)
     {
@@ -67,6 +74,7 @@ public partial class PreferencesWindow : Control
         Row(grid, "Camera turn speed (degrees a second)", _rotate);
         Row(grid, $"Camera zoom speed ({EditorPreferences.MinZoomSpeed} to {EditorPreferences.MaxZoomSpeed})", _zoom);
         Row(grid, "New map's size (tiles a side)", _mapSize);
+        Row(grid, "Game (for Test, F5)", _game);
         Show(current);
 
         var buttons = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
@@ -102,6 +110,7 @@ public partial class PreferencesWindow : Control
         _rotate.Value = preferences.CameraRotateSpeed;
         _zoom.Value = preferences.CameraZoomSpeed;
         _mapSize.Value = preferences.DefaultMapSize;
+        _game.Text = preferences.GamePath;
     }
 
     private EditorPreferences Chosen()
@@ -119,6 +128,7 @@ public partial class PreferencesWindow : Control
             CameraRotateSpeed = (int)_rotate.Value,
             CameraZoomSpeed = (int)_zoom.Value,
             DefaultMapSize = (int)_mapSize.Value,
+            GamePath = _game.Text,
         }.Normalized();
     }
 

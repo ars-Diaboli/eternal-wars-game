@@ -32,6 +32,8 @@
 | [263](#adr-263-the-map-analysis-in-the-core-adr-117-adr-250-2026-11-21) | The map analysis in the core (ADR-117, ADR-250, 2026-11-21) | implemented |
 | [264](#adr-264-the-editors-overlays-adr-262-adr-263-2026-11-21) | The editor's overlays (ADR-262, ADR-263, 2026-11-21) | implemented |
 | [265](#adr-265-fix-its-for-the-maps-problems-adr-250-2026-11-21) | Fix-its for the map's problems (ADR-250, 2026-11-21) | implemented |
+| [266](#adr-266-the-fairness-report-and-the-exports-adr-263-2026-11-21) | The fairness report and the exports (ADR-263, 2026-11-21) | implemented |
+| [267](#adr-267-play-test-from-the-editor-adr-250-2026-11-21) | Play-test from the editor (ADR-250, 2026-11-21) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -757,3 +759,50 @@ ADR when it is built.
   refuses (`InvalidTarget`, nothing changed).
 - **The Problems panel** names a problem's fix in its row; the Fix button runs the selected problem's fix (it is off while the map is
   being checked) and the editor's messages say what was done or why not. The map is checked again after it, refused or not.
+
+### ADR-266: The fairness report and the exports (ADR-263, 2026-11-21)
+**Status**: implemented (plan step 4, task 7).
+
+- **The Fairness tab** of the right region (View > Fairness, Map > Fairness) shows `MapAnalysis.Fairness` (ADR-263): a row per start
+  with its player (numbered as the warnings name it, and its name), its tile, the days to the nearest town, mine of each resource the map has and resource provider (— where none is
+  reached), the treasure and guards within 3 and 7 days, and the mines within 3 days (the start town's surroundings); under it the
+  warnings and what the columns mean. Selecting a row shows the start on the map. The numbers are computed again a moment after the
+  edits stop, and only while the tab shows; a hidden tab computes when it is shown.
+- **The layout is the core's** (`MapReport`, Core.Domain/Analysis): `Table` gives the headers and the rows' texts that the panel and the
+  report share, `Markdown` the whole report.
+- **File > Export report (Markdown)** writes the report of the map as it is now: its name and size, its problems (validated again,
+  errors first, each with its kind, tile and fix), the fairness table, what the columns mean, and the warnings.
+- **File > Export map picture (PNG)** writes the level shown, top-down and north up: a hidden viewport that shares the map view's world
+  renders it with an orthographic camera (`MapPicture`), 4 to 32 pixels a tile so the longer side is at most 4096. What the map view
+  draws is in it (an overlay shown, the grid); the selection's marks and the objects' captions are left out.
+- Both ask for the file with a save dialog that starts beside the map's file (else in the maps folder) with a name made from the map's,
+  and say in the editor's messages where they wrote. Exports change nothing in the map and add no undo step.
+
+### ADR-267: Play-test from the editor (ADR-250, 2026-11-21)
+**Status**: implemented (plan step 4, task 8; EDIT-5).
+
+- **The game's play-test arguments** (after `--`, read by `PlayTestArguments.Parse` in Core.Domain, exposed as `LaunchArguments.PlayTest`):
+  `--player=N` (the player number played, 1 for the first; it makes the run a play-test), `--others=ai|off`, `--reveal`,
+  `--start=x,y[,level]`, `--day=N` (1 to 9999), `--cheats`; the map is `--map=`. A play-test starts that map at once, with no menu; an
+  argument that cannot be read, a missing map or a start that cannot be used opens the main menu with a window that says why.
+- **Setup**: the play-tester's player is played by a person, every other by the computer (`PlayTestArguments.Prepare`). The rest are the
+  game's options (`GameOptions.PlayTest`, `PlayTestRules`), kept in saves and replays (save format 7) and applied when the game starts:
+  the starting day; the first person's first hero (after the hero placeholders are drawn) on the start tile, unless a hero of theirs
+  stands there, which is then the hero selected; the whole map revealed to the people playing. A start must be on the map, on walkable
+  ground and free of objects and of other players' heroes; an arena map starts on day 1.
+- **Others off**: the players nobody plays end each turn at once (`AdventureAi.PassTurn`: what they are asked is answered as the AI
+  answers it, then their turn ends).
+- **Cheats are commands** (ADR-036): `CheatResourcesCommand` (no amount negative), `CheatLevelsCommand` (1 to 10 levels' experience; the
+  level-ups are offered as usual), `CheatCreaturesCommand` (1 to 9999, merged or in a free slot). Each is refused unless the game is a
+  play-test with cheats. The cheat panel (`CheatPanel`, Godot.UI) exists only then, over the map's left edge, for the player whose turn
+  it is and the selected hero: Resources (10 000 gold, 20 lumber and ore, 10 of each other), +1 level, +10 of the hero's first creature.
+- **Not ranked**: a play-test never scores (`ScoreRules.IsRanked`), so the ranking never gets it.
+- **The editor's Test** (F5, Test > Test the map): a window with the player, the others off, where the hero starts (where the map puts it,
+  the selected hero, whose owner is then played, or the first selected cell), the starting day, reveal and cheats, and the command the game
+  is started with. A map with errors is not tested. Test saves the map to `playtest.ewmap.json` in the system's temporary folder
+  (`EternalWars/`) and starts the game as a separate process; the editor stays as it is, and the choices are offered again by the next
+  Test. The game is the path in Preferences: an exported game's program, run as it is, or the game's Godot project (its folder or its
+  `project.godot`), run in the Godot the editor runs in (`PlayTestLaunch`; an exported editor is no Godot, so it needs an exported game);
+  empty, the game project beside the editor's where there is one. The window refuses choices the game would refuse (a start the player
+  cannot use, an arena map not on day 1). A play-test keeps its saves in the temporary folder (`EternalWars/playtest-saves`), apart from
+  the player's; its cheats wait for a battle or a question to end and are refused in a LAN game.

@@ -235,8 +235,38 @@ public partial class FileService : Node
         box.Bind(title, text, answers);
     }
 
+    /// <summary>
+    /// Writes the map as it is to <paramref name="path"/> (the folder made when missing) without making it the map's file: the map's file and
+    /// its save state stay as they are (the Test's copy, ADR-267).
+    /// </summary>
+    public void SaveCopy(string path)
+    {
+        Directory.CreateDirectory(System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(path))!);
+        _maps.Save(_editor.Scenario, path);
+    }
+
     /// <summary>The file dialog; <paramref name="picked"/> gets the chosen path (a map file's, whatever was typed).</summary>
-    private void Pick(bool save, Action<string> picked)
+    private void Pick(bool save, Action<string> picked) => ShowDialog(
+        save ? "Save the map as" : "Open a map", save, $"*{_maps.Extension};Eternal Wars maps", save ? MapTitle + _maps.Extension : null,
+        path => picked(save ? WithExtension(path) : path));
+
+    /// <summary>
+    /// File → Export (ADR-266): a save dialog for a file of another kind, named after the map plus <paramref name="suffix"/> and
+    /// <paramref name="extension"/> (".md", ".png"), beside the map's file (else in the maps folder); <paramref name="picked"/> gets the
+    /// chosen path, with the extension added when it was typed without it. The dialog asks before it overwrites a file.
+    /// </summary>
+    public void PickExport(string title, string suffix, string extension, string kind, Action<string> picked)
+    {
+        ArgumentNullException.ThrowIfNull(picked);
+        ShowDialog(title, save: true, $"*{extension};{kind}", MapTitle + suffix + extension,
+            path => picked(path.EndsWith(extension, StringComparison.OrdinalIgnoreCase) ? path : path + extension));
+    }
+
+    /// <summary>The map's file's name without its extension, else a file name made from the map's name.</summary>
+    private string MapTitle => Path is null ? SafeName(_editor.Scenario.Map.Name) : FileTitle(Path);
+
+    /// <summary>A file dialog in the map's folder (else the maps folder), one at a time; <paramref name="picked"/> gets the path chosen.</summary>
+    private void ShowDialog(string title, bool save, string filter, string? file, Action<string> picked)
     {
         if (IsBusy)
         {
@@ -247,16 +277,16 @@ public partial class FileService : Node
         Directory.CreateDirectory(_maps.Folder);
         var dialog = new FileDialog
         {
-            Title = save ? "Save the map as" : "Open a map",
+            Title = title,
             FileMode = save ? FileDialog.FileModeEnum.SaveFile : FileDialog.FileModeEnum.OpenFile,
             Access = FileDialog.AccessEnum.Filesystem,
             UseNativeDialog = _systemDialogs,
-            Filters = [$"*{_maps.Extension};Eternal Wars maps"],
+            Filters = [filter],
             CurrentDir = Directory.Exists(folder) ? folder : _maps.Folder,
         };
-        if (save)
+        if (file is not null)
         {
-            dialog.CurrentFile = (Path is null ? SafeName(_editor.Scenario.Map.Name) : FileTitle(Path)) + _maps.Extension;
+            dialog.CurrentFile = file;
         }
 
         _dialog = dialog;
@@ -264,7 +294,7 @@ public partial class FileService : Node
         dialog.FileSelected += path =>
         {
             CloseDialog();
-            picked(save ? WithExtension(path) : path);
+            picked(path);
         };
         dialog.Canceled += CloseDialog;
         dialog.PopupCentered(new Vector2I(900, 600));

@@ -402,6 +402,18 @@ $scenarios = @(
     # laid out again from its description.
     @{ Name = 'editor-overlays'; App = 'EternalWars.MapEditor'; Frames = 100; Map = $emberMap
        Input = '3:key:Home;6:click:@Overlays;10:click:@Passability;18:click:@Owners;26:click:@Guard strength;34:click:@Reach;42:click:@Height contours;50:click:@Zones;58:click:@Generate;62:click:@Generate;80:click:@Overlays;84:click:@Zones' }
+    # The Fairness tab (EDIT-9, ADR-266) on Ember March: each start's numbers and the warnings. File > Export report writes the Markdown
+    # beside the map (Enter in the file dialog), File > Export map picture the level shown top-down as a PNG.
+    @{ Name = 'editor-fairness'; App = 'EternalWars.MapEditor'; Frames = 80; Map = $emberMap; Clean = @('ember report.md', 'ember.png')
+       Input = '3:key:Home;6:click:@Fairness;16:click:24,24;20:choose:Export report (Markdown)…;30:key:Enter;44:click:24,24;48:choose:Export map picture (PNG)…;58:key:Enter' }
+    # Test (EDIT-5, ADR-267) on Ember March: F5 opens the Test window; player 2, the others off, the map revealed and the cheats change the
+    # command it shows, seen in the frames (PlayTestTests checks the arguments themselves). Cancel closes it: nothing is started.
+    @{ Name = 'editor-playtest-args'; App = 'EternalWars.MapEditor'; Frames = 40; Map = $emberMap
+       Input = '3:key:F5;8:click:@2 Red;12:click:@The other players do nothing (off);16:click:@Reveal the map;20:click:@Cheat panel (resources, levels, creatures);32:click:@Cancel' }
+    # A play-test as the editor's Test starts it (ADR-267): Ember March at once as player 1 on day 8, the others off, the map revealed, the
+    # cheat panel; Resources gives the resources.
+    @{ Name = 'game-playtest'; App = 'EternalWars.Game'; Frames = 40; Map = $emberMap; Args = @('--player=1', '--others=off', '--reveal', '--day=8', '--cheats')
+       Input = '20:click:@Resources' }
 )
 
 # Every scenario has a seed of its own, so its games and battles are the same on every run (ADR-239): the entry's Seed, else one made from
@@ -431,6 +443,8 @@ $results = $selected | ForEach-Object -ThrottleLimit ([Math]::Max(1, $Jobs)) -Pa
     Remove-Item (Join-Path $dir 'editor-settings.cfg') -ErrorAction SilentlyContinue
     # ... and its maps folder and its autosaves with the session marker, which a run ended by --quit-after leaves behind.
     Remove-Item (Join-Path $dir 'maps'), (Join-Path $dir 'autosave'), (Join-Path $dir 'stamps'), (Join-Path $dir 'cache') -Recurse -ErrorAction SilentlyContinue
+    # ... and the files it writes beside its map (exports), so no save dialog asks to overwrite them.
+    foreach ($file in @($scenario.Clean)) { if ($file) { Remove-Item (Join-Path $using:Out $file) -ErrorAction SilentlyContinue } }
     if ($scenario.Recovery) {
         $autosave = Join-Path $dir 'autosave'
         New-Item -ItemType Directory -Force $autosave | Out-Null
@@ -443,6 +457,7 @@ $results = $selected | ForEach-Object -ThrottleLimit ([Math]::Max(1, $Jobs)) -Pa
     if ($scenario.Map) { $userArgs += "--map=$($scenario.Map)" }
     $userArgs += "--seed=$($scenario.Seed)"
     if ($scenario.Replay) { $userArgs += "--replay=$($scenario.Replay)" }
+    if ($scenario.Args) { $userArgs += $scenario.Args } # further launch arguments (a play-test's, ADR-267)
     # The game opens on the main menu; the scenarios start on the new-game screen unless they test the menu.
     if ($scenario.App -eq 'EternalWars.Game' -and -not $scenario.MainMenu) { $userArgs += '--new-game' }
     $fps = if ($scenario.Fps) { $scenario.Fps } else { 10 }

@@ -95,7 +95,9 @@ public partial class Main : Node3D
             AddChild(autoInput);
         }
 
-        _saveFolder = LaunchArguments.SavesPath ?? ProjectSettings.GlobalizePath(SavesFolder);
+        // A play-test's saves and autosaves are its own: they never replace the player's (ADR-267).
+        _saveFolder = LaunchArguments.SavesPath
+            ?? (LaunchArguments.PlayTest.Arguments is not null ? PlayTestSaves : ProjectSettings.GlobalizePath(SavesFolder));
         BuildMenu();
         if (LaunchArguments.ReplayPath is { } replay)
         {
@@ -109,6 +111,10 @@ public partial class Main : Node3D
         else if (LaunchArguments.Host)
         {
             HostLobby(saved: false);
+        }
+        else if (LaunchArguments.PlayTest is var (test, error) && (test is not null || error is not null))
+        {
+            StartPlayTest(test, error); // from the map editor's Test (ADR-267)
         }
         else if (LaunchArguments.NewGame)
         {
@@ -403,6 +409,10 @@ public partial class Main : Node3D
         {
             BuildResult(director);
             BuildTimer();
+            if (state.Options.PlayTest is { Cheats: true })
+            {
+                BuildCheats(); // a play-test's cheats (ADR-267)
+            }
         }
         else
         {

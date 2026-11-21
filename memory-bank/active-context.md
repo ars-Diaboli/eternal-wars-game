@@ -9,11 +9,21 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 4 task 8 (ADR-267), which closes step 4: play-test. `PlayTestArguments` (Core.Domain/Game) reads the game's
+  `--player= --others= --reveal --start= --day= --cheats` (`LaunchArguments.PlayTest`) and prepares the map; `PlayTestRules` in
+  `GameOptions.PlayTest` (save format 7) sets the day, the start tile and the reveal at `GameSession.Start`, and idles the others in
+  `GameDirector`; cheat commands `CheatResourcesCommand`, `CheatLevelsCommand`, `CheatCreaturesCommand`; never ranked
+  (`ScoreRules.IsRanked`). The game starts a play-test at once (`Main.PlayTest.cs`) with `CheatPanel`; the editor's Test (F5,
+  `PlayTestWindow`) saves to a temporary file and starts the game (`PlayTestLaunch`, `EditorPreferences.GamePath`). Tests
+  `PlayTestTests`; smokes `editor-playtest-args`, `game-playtest`. Next: step 3's done-when (the drop-downs below), then step 5.
+- Editor overhaul, step 4 task 7 (ADR-266): the fairness report and the exports. `MapReport` (Core.Domain/Analysis) lays out
+  `MapAnalysis.Fairness` as a table (`FairnessTable`) and the whole report as Markdown with the problems; `FairnessPanel` (Godot.UI, a
+  right-region tab) shows it and computes it while shown; File > Export report (Markdown) and Export map picture (PNG, `MapPicture`: a
+  viewport sharing the map's world, top-down) through `FileService.PickExport`. Tests `MapReportTests`; smoke `editor-fairness`.
 - Editor overhaul, step 4 task 6 (ADR-265): fix-its. `MapIssue.Fix` (`MapFix`: `LinkGatesFix`, `GateExitFix`, `OwnerFix`) where the
   answer is clear (gates with one possible partner, a missing player's things made neutral, a player's only neutral start-zone town);
   `MapEditorSession.Fix` runs one as an undo step and refuses it when the map changed since the check. The Problems panel's Fix button
-  runs the selected one. Tests `MapFixTests`. Next: step 4 task 7 (the fairness report and exports); step 3's done-when (the
-  drop-downs below) is still open.
+  runs the selected one. Tests `MapFixTests`.
 - Editor overhaul, step 4 task 5 (ADR-264): overlays. `MapOverlays` (Core.Domain/Analysis) computes passability, owners, guard strength,
   reach from a `MapAnalysis.Starts` start or a cell, zones and height contours per level as tinted cells or lines with a legend;
   `GeneratedZones` (Core.Generation) lays a generated map's zones out again from its description. `OverlayView` (Godot.Shared) draws

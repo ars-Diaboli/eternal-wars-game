@@ -19,11 +19,11 @@ namespace EternalWars.Core.Data.Records;
 /// start, the game options (incl. the seed) and every accepted command. <see cref="FinalDigest"/> lets a replay prove it
 /// reached the same state. Version 2 adds <see cref="Save"/>, version 3 <see cref="Generated"/>, version 4 <see cref="DigestVersion"/>, version 5
 /// names the options' <c>difficulty</c> HoMM3's way (was <c>complexity</c>, one step lower; ADR-225), version 6 adds <see cref="Campaign"/> and the
-/// options' carried heroes (ADR-241); older files still load.
+/// options' carried heroes (ADR-241), version 7 the options' play-test rules and the cheat commands (ADR-267); older files still load.
 /// </summary>
 public sealed record GameRecordDocument
 {
-    public const int CurrentFormatVersion = 6;
+    public const int CurrentFormatVersion = 7;
 
     /// <summary>The first version whose options name the difficulty <c>difficulty</c>, Easy … Master (ADR-225).</summary>
     internal const int DifficultyVersion = 5;
@@ -166,6 +166,9 @@ public static class GameRecordSerializer
         (typeof(HandToComputerCommand), "handToComputer"),
         (typeof(HandToPersonCommand), "handToPerson"),
         (typeof(PlayTurnByTurnCommand), "turnByTurn"),
+        (typeof(CheatResourcesCommand), "cheatResources"),
+        (typeof(CheatLevelsCommand), "cheatLevels"),
+        (typeof(CheatCreaturesCommand), "cheatCreatures"),
         (typeof(ResolveTreasureChestCommand), "chest"),
         (typeof(ChooseTrainingCommand), "training"),
         (typeof(AnswerCartographerCommand), "cartographer"),

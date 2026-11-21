@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Game;
 using Godot;
 
 namespace EternalWars.Godot.Shared;
@@ -56,6 +57,12 @@ public static class LaunchArguments
     /// run (ADR-235); null when not given or not a number.
     /// </summary>
     public static ulong? Seed => ulong.TryParse(Value("--seed="), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var seed) ? seed : null;
+
+    /// <summary>
+    /// A play-test from the map editor (EDIT-5, ADR-267): <c>--player=N</c> with <c>--others=ai|off</c>, <c>--reveal</c>,
+    /// <c>--start=x,y,level</c>, <c>--day=N</c>, <c>--cheats</c>; both null when there is no <c>--player=</c>, the reason when one cannot be read.
+    /// </summary>
+    public static (PlayTestArguments? Arguments, string? Error) PlayTest => PlayTestArguments.Parse(OS.GetCmdlineUserArgs());
 
     /// <summary>Scripted input for smoke tests (<see cref="Controls.AutoInput"/>).</summary>
     public static string? AutoInput => Value("--autoinput=");

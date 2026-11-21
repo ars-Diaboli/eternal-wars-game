@@ -160,7 +160,7 @@ public sealed class GameDirector
     }
 
     /// <summary>
-    /// The computer players play one turn when it is theirs, unless <paramref name="screensOpen"/> (a person's battle or question may be open),
+    /// The computer players play one turn when it is theirs (in a play-test whose others are off, they end it at once), unless <paramref name="screensOpen"/> (a person's battle or question may be open),
     /// the game is paused, or a battle waits for players elsewhere. True when the computer played.
     /// </summary>
     public bool PlayComputer(bool screensOpen)
@@ -169,6 +169,12 @@ public sealed class GameDirector
         if (Ai is null || screensOpen || !AdventureAi.IsComputerTurn(state) || IsPaused || (_seats.ComputersWaitForBattles && state.Battle is not null))
         {
             return false;
+        }
+
+        if (state.Options.PlayTest is { OthersIdle: true })
+        {
+            // A play-test's others are off (ADR-267): what they are asked is answered, then their turn ends at once.
+            return Ai.PassTurn();
         }
 
         Ai.PlayTurn();

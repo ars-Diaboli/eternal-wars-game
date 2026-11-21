@@ -23,7 +23,8 @@ replay viewer on a replay or save),
 `--scenario=`, `--settings=`, `--saves=<folder>` (the game's saves and autosaves go there), `--autoinput=` (smoke tests), LAN games (ADR-194): `--host[=<port>]` (opens the host's lobby, default port
 47820, discovery on the next port), `--join=<address>[:<port>]` (joins that host's lobby or game), `--name=<player>`, and content overrides `--creatures=`, `--heroes=`,
 `--buildings=`, `--artifacts=`, `--artifact-sets=` (a bad file is reported with line and column; the embedded copy
-is used instead).
+is used instead). A play-test (the editor's Test, ADR-267): `--player=N` with the map, and `--others=ai|off`, `--reveal`,
+`--start=x,y[,level]`, `--day=N`, `--cheats`; the game starts the map at once.
 
 ## Files and locations
 

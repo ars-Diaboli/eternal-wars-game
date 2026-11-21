@@ -90,7 +90,7 @@ placeholder, a coloured tile with the name's two letters.
 (File, Edit, View, Map, Tools, Templates, Test, Help) and the toolbar are built from the commands; an item that cannot run is greyed
 and says why in its tooltip. Shortcuts: the File menu's, Ctrl+Z undo, Ctrl+Y redo, Ctrl+X cut, Ctrl+C copy, Ctrl+V paste, Ctrl+D duplicate, Delete, Ctrl+A select all, Escape
 deselect, Ctrl+R rotate scenery, Ctrl+M mirror scenery, the tools' keys (T Terrain, O Object, E Erase, V Select, M Move), L the next level, F11 the panels, F7 the map settings, Ctrl+Shift+P the command palette, Ctrl+, Preferences. The Map
-menu opens the map settings (at a tab) and the Events tab, the Tools menu picks a tool. Test (F5) and Help (F1) are in their menus and greyed until they are built.
+menu opens the map settings (at a tab) and the Events tab, the Tools menu picks a tool. F5 is Test (below). Help (F1) is in its menu and greyed until it is built.
 
 **Selection** (EDIT-1, ADR-250). The selection holds tiles, objects, heroes and map events. It is not an undo step, and a thing that
 leaves the map leaves the selection.
@@ -286,6 +286,7 @@ through the list, Enter or a click runs the command, Escape closes the palette.
 | Camera turn speed | 30 to 180 degrees a second | 90 |
 | Camera zoom speed | 1 to 5 (a notch of the wheel divides or multiplies the camera's distance by 1.05 to 1.25) | 3 |
 | New map's size | 16 to 256 tiles a side | 36 |
+| Game (for Test) | an exported game's program, or the game's Godot project (its folder or `project.godot`) | empty: the game project beside the editor's |
 
 "Defaults" puts the values of a new installation into the fields; "Cancel" or Escape changes nothing.
 
@@ -320,6 +321,21 @@ Top-down view); it goes out far enough to show a 256 × 256 map.
   "more"; Zones shows a generated map's zones, laid out again from what its description records, and otherwise the start zones;
   Height contours draws a line every half cell of height, thicker at each whole cell. An overlay follows every edit and the level
   shown, and changes nothing on the map.
+- **Fairness** (ADR-266, the Fairness tab of the right region, View > Fairness or Map > Fairness): a row per start (a player's first
+  town, else its first hero) with the days to the nearest town, mine of each resource and resource provider ("—": none reached), the
+  treasure in gold and the guards' army power within 3 and 7 days, and the mines within 3 days; under it the warnings, where a start is
+  more than 20 % from the starts' mean or reaches nothing another start reaches. A click on a row shows the start. The numbers follow
+  the edits while the tab shows.
+- **Test** (ADR-267, F5 or Test > Test the map): a window to play the map in the game, started as a separate program while the editor
+  stays as it is. It chooses the player played (the others are the computer, or off: they end every turn at once), where the hero
+  starts (where the map puts it, at the selected hero, whose owner is then played, or on the selected cell), the starting day, the map
+  revealed, and a cheat panel in the game (resources, a level, more of the hero's first creature). The window shows the command the game
+  starts with; a map with errors, or choices the game would refuse (a start the player cannot use, an arena map not on day 1), is not
+  tested. The game opens the map at once, keeps its saves in the temporary folder apart from the player's, and never ranks the game.
+- **Export** (File menu): Export report (Markdown) writes the map's problems and its fairness table with the warnings; Export map
+  picture (PNG) writes the level shown top-down, north up, with what the map view draws (an overlay, the grid) but not the selection
+  or the objects' captions.
+  Both ask for the file, beside the map's own by default.
 
 The camera keys do nothing while a text field is being typed into, while a question, a dialog, the palette or Preferences is open,
 while Ctrl is held, and on the Template tab. A shortcut pressed in the middle of a stroke on the map is ignored.

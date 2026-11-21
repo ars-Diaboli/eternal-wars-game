@@ -28,6 +28,8 @@ public sealed class GameSession
     private readonly EventBus _outside = new(); // Events: everyone outside the rules
     private int _unheard;
     private readonly ViewSink? _viewSink;
+    private readonly VisibilityService _visibility;
+    private readonly PlayTestService _playTest;
 
     /// <summary>The runtime switch that turns on <see cref="CheckRefusals"/> (ADR-239).</summary>
     internal const string CheckRefusalsSwitch = "EternalWars.CheckRefusals";
@@ -55,6 +57,7 @@ public sealed class GameSession
         // Core handlers subscribe first so their follow-up events are queued before views react. A LAN client's session runs no rules, so
         // nothing of the rules listens to the events its host sends (nor reveals anything: its fog is the host's).
         var visibility = new VisibilityService(State, Bus);
+        _visibility = visibility;
         if (!followsHost)
         {
             visibility.SubscribeTo(Bus);
@@ -116,6 +119,10 @@ public sealed class GameSession
         });
         _handlers.Add<HandToPersonCommand>(c => Flow.HandToPerson(c.Player));
         _handlers.Add<PlayTurnByTurnCommand>(c => Turns.PlayTurnByTurn(c.Reason));
+        _playTest = new PlayTestService(State, Bus, visibility, Economy, Progression);
+        _handlers.Add<CheatResourcesCommand>(_playTest.Resources);
+        _handlers.Add<CheatLevelsCommand>(_playTest.Levels);
+        _handlers.Add<CheatCreaturesCommand>(_playTest.Creatures);
 
         // Everyone outside the rules (views, tools, a LAN host) hears the rules' events after the rules have, on a bus of their own, so they can be
         // left out while the game is moved on unheard (Unheard, ADR-234). Last, so each event reaches them after every rule, as before.
@@ -244,19 +251,23 @@ public sealed class GameSession
         }
     }
 
-    /// <summary>Starts the game: day 1, the first player's turn. Part of every game, so it is not a command.</summary>
+    /// <summary>
+    /// Starts the game: day 1 (a play-test's day, ADR-267), the first player's turn. Part of every game, so it is not a command.
+    /// </summary>
     public void Start()
     {
         new Campaigns.CarriedHeroService(State, Bus).Place(); // before the placeholders: a carried hero takes one of its person's (ADR-241)
         new PlaceholderService(State, Bus).Resolve();
         Grail.Bury();
         Flow.RemoveSurplusHeroes();
+        _playTest.PrepareStart(); // a play-test's day and start tile (ADR-267)
         Flow.Begin();
         Artifacts.RollUnsetPickups();
         ObjectLifecycle.PreparePrisons();
         ObjectLifecycle.PrepareObjects();
         Towns.DrawGuilds();
         Turns.StartGame();
+        _playTest.RevealOnStart();
         Settle();
         Days.Started(_log.Count);
     }
@@ -287,6 +298,12 @@ public sealed class GameSession
         if (Authorize(command) is { } refusal)
         {
             return CommandResult.Rejected(refusal);
+        }
+
+        // A play-test's cheats are for one computer: a LAN game refuses them (ADR-267).
+        if (Route is not null && command is CheatResourcesCommand or CheatLevelsCommand or CheatCreaturesCommand)
+        {
+            return CommandResult.Rejected("Cheats are not allowed in a LAN game.");
         }
 
         if (Route?.Route(command) is { } routed)
