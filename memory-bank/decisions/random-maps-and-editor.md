@@ -38,6 +38,8 @@
 | [269](#adr-269-template-files-adr-250-2026-11-21) | Template files (ADR-250, 2026-11-21) | implemented |
 | [270](#adr-270-the-template-graph-zone-cards-labelled-connections-grid-align-and-spread-adr-117-adr-250-2026-11-21) | The template graph: zone cards, labelled connections, grid, align and spread (ADR-117, ADR-250, 2026-11-21) | implemented |
 | [271](#adr-271-the-template-graphs-selection-and-clipboard-adr-268-adr-270-2026-11-21) | The template graph's selection and clipboard (ADR-268, ADR-270, 2026-11-21) | implemented |
+| [272](#adr-272-template-mirror-tools-adr-117-adr-271-2026-11-21) | Template mirror tools (ADR-117, ADR-271, 2026-11-21) | implemented |
+| [273](#adr-273-the-template-inspectors-pickers-and-zone-presets-adr-117-adr-250-2026-11-21) | The template inspector's pickers and zone presets (ADR-117, ADR-250, 2026-11-21) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -892,3 +894,48 @@ ADR when it is built.
   when it is over the graph, else to the view's middle, on the grid; Duplicate goes one unit right and one and a half down. The
   clipboard belongs to the template editor, so it survives opening another template (zones go from one template to another) and is apart
   from the map's.
+
+### ADR-272: Template mirror tools (ADR-117, ADR-271, 2026-11-21)
+**Status**: implemented (plan step 5, task 5).
+
+- **Make the images** (`TemplateEditorSession.MakeMirror`): only in a template with a symmetry, only for zones that name no mirror and
+  that no zone names (`MirrorRefusal` says why not; the Mirror button shows it). One image per step of the symmetry (one, or three for a
+  quarter turn) per zone, as one step "Mirror zone x" / "Mirror N zones": a copy with a new id (as Paste, ADR-271), the lowest free player
+  slot for a start zone and no team (an image is another player, no ally unless set so), and the zones linked in a cycle (zone → first image → … → zone). The images' graph places are the
+  zone's place under the symmetry around the middle of the other zones (a random axis draws as the vertical one); an image that would
+  cover a card (`TemplateGraph.CardRoom`) moves down until it does not. Graph places are only a picture, so this keeps them readable
+  rather than exact.
+- **Connections follow**: each connection of a mirrored zone gets its images, to the other zone's image when that zone is mirrored (or
+  among the zones mirrored) and to the zone itself when it is its own image; a connection whose other end is in a broken chain gets none.
+- **In sync while the cycle is closed** (`TemplateMirrors.Cycle`): an edit of a zone carries only the fields it changed to its images
+  (`TemplateMirrors.Carry`), so a field an image has differently (from a file) stays until it is edited; the id, player slot, team,
+  mirror and graph place are always each zone's own. A zone turned into a start zone gives its images the lowest free slots (refused when
+  too few are free); turned into another type, they drop slot and team; without a change of type, slots and teams stay. A zone naming
+  itself as its mirror counts as its own image, as the validator reads it. An edit that changes the zone's mirror itself carries nothing. Connect, a change of a connection
+  (while its ends stay) and Disconnect apply to the connection's images (`ImagePairs`) in the same step. Moving, renaming and removing
+  zones are not mirrored: removing one leaves the validator to report the broken cycle.
+- **Break mirror** (`BreakMirror`) unlinks a whole cycle as one step, so zones that should differ can be edited apart. The inspector's
+  Mirror field names a mirror by hand.
+- The graph draws a thin dotted line from each zone to its mirror.
+
+### ADR-273: The template inspector's pickers and zone presets (ADR-117, ADR-250, 2026-11-21)
+**Status**: implemented (plan step 5, task 6).
+
+- **Every field in the inspector**: each field of the file has a control. Lists of choices are **tick-box pickers**, not drop-downs:
+  a zone's terrains (the terrains the session's tables, `TemplateEditorSession.Content`, call passable), its neutral town types (the
+  playable towns), the week events' factions (`WeekEventSettings.Factions`) and the roads' mines. None ticked means any for terrains and
+  town types (kept as null); factions ticked as the playable towns are kept as null, the default. A start zone's start buildings are a
+  level per town building (0: not built; the Grail is left out) and its start dwellings a count per tier (two for tiers 1 to 4, one for
+  tier 5); the validator judges the whole (ADR-030). Roads get their type, mines and gates; week events the weeks before the first.
+- **Zone presets** (`ZonePreset`, `ZonePresets`, Core.Generation): a name and a zone's settings without what belongs to the zone (id,
+  slot, team, mirror, level, graph place). Built in: Rich treasure, Mine junction, Guarded start. The session's `AddZone(preset, x, y)`
+  ("Add zone x (preset)") and `ApplyPreset(id, preset)` ("Apply preset p to zone x") are one step each; applying keeps the zone's own
+  fields, gives a zone made a start zone the lowest free slot (refused when none is free) and drops slot and team otherwise, and goes
+  through the mirror sync (ADR-272).
+- **User presets are files** (`ZonePresetFolder`, Core.Data): `*.ewzone.json` holding the template format's version, the name and the
+  zone, in `user://template-presets/` (the app's `ZonePresetFiles` behind the panel's `IZonePresetFiles`, since Godot.UI does not use
+  Core.Data). The name makes the file name (characters a file name cannot have become `_`); saving over a name replaces it; a file that
+  cannot be read, or one of a newer template format, is left out of the list; a list, range or band a hand-edited file leaves null is
+  made empty (`ZonePresets.Settings`, which also copies the tables, so zones made from one preset share none), and Delete finds a preset
+  whose file was renamed by hand. The lists are read each time a preset menu opens, so
+  presets saved elsewhere show without a restart.

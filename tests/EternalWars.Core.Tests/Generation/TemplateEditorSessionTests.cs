@@ -118,6 +118,8 @@ public class TemplateEditorSessionTests
         { "remove several zones", "Remove 2 zones" },
         { "paste zones", "Paste 2 zones" },
         { "duplicate a zone", "Duplicate zone middle-1" },
+        { "add a zone from a preset", "Add zone treasure-1 (Rich treasure)" },
+        { "apply a preset", "Apply preset Mine junction to zone middle" },
     };
 
     private static void Make(TemplateEditorSession session, string change)
@@ -140,6 +142,8 @@ public class TemplateEditorSessionTests
             "remove several zones" => session.RemoveZones(["start-2", "middle"]) == 2,
             "paste zones" => session.Paste(session.Copy(["start-1", "middle"])!, 0, 5) is not null,
             "duplicate a zone" => session.Duplicate(["middle"]) is not null,
+            "add a zone from a preset" => session.AddZone(ZonePresets.BuiltIn[0], 4, 4) is not null,
+            "apply a preset" => session.ApplyPreset("middle", ZonePresets.BuiltIn[1]),
             _ => throw new ArgumentOutOfRangeException(nameof(change)),
         };
         Assert.True(applied);

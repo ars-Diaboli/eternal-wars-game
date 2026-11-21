@@ -16,6 +16,16 @@ public static class TemplateGraph
     /// <summary>The graph editor's grid: half a graph unit.</summary>
     public const double Grid = 0.5;
 
+    /// <summary>The room a zone's card takes at the editor's usual zoom, in graph units: zones nearer than this across and down overlap.</summary>
+    public static readonly (double X, double Y) CardRoom = (2.2, 1.3);
+
+    /// <summary>Whether a zone at <paramref name="place"/> would overlap a card at one of <paramref name="places"/>.</summary>
+    public static bool Crowded((double X, double Y) place, IEnumerable<(double X, double Y)> places)
+    {
+        ArgumentNullException.ThrowIfNull(places);
+        return places.Any(p => Math.Abs(p.X - place.X) < CardRoom.X && Math.Abs(p.Y - place.Y) < CardRoom.Y);
+    }
+
     /// <summary><paramref name="value"/> on the nearest line of a grid of <paramref name="grid"/> units; unchanged (but rounded) without a grid (0).</summary>
     public static double Snap(double value, double grid) =>
         grid <= 0 ? Math.Round(value, 2) : Math.Round(Math.Round(value / grid) * grid, 2);

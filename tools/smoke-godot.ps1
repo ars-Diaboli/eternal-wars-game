@@ -221,6 +221,14 @@ $scenarios = @(
     # the History tab, Ctrl+A, Delete removes every zone as one step, Ctrl+Z brings them back.
     @{ Name = 'editor-template-graph'; App = 'EternalWars.MapEditor'; Frames = 50
        Input = '3:click:@Template;6:mdrag:300,560,300,400;10:drag:420,190,800,320;14:key:Ctrl+C;17:click:680,420;21:key:Ctrl+V;26:key:Ctrl+D;31:click:@History;34:key:Ctrl+A;38:key:Delete;42:key:Ctrl+Z' },
+    # Mirror tools (ADR-272): open the shipped Mirror duel (mirrored by an axis), add a treasure zone and press Mirror: its image comes in on the
+    # other side with a dotted mirror line, both selected; the History tab shows the step.
+    @{ Name = 'editor-template-mirror'; App = 'EternalWars.MapEditor'; Frames = 34
+       Input = '3:click:@Template;8:click:@Shipped…;11:choose:Mirror duel;16:click:@+ Treasure;20:click:@Mirror;25:click:@History' },
+    # The inspector's pickers and zone presets (ADR-273): add a treasure zone (its inspector: terrains, town types, presets), apply the
+    # built-in Rich treasure, save it as a preset of the user's (Enter takes the proposed name), add a zone from that preset with + Preset.
+    @{ Name = 'editor-template-presets'; App = 'EternalWars.MapEditor'; Frames = 44
+       Input = '3:click:@Template;8:click:@+ Treasure;12:press:Apply preset;16:choose:Rich treasure;20:press:Save as preset…;25:key:Enter;29:click:@+ Preset;32:choose:My zone 1 (yours);38:click:@History' },
     # Template undo (EDIT-2, ADR-250): on the Template tab add a treasure zone and a junction, open the template's History under the graph;
     # Ctrl+Z twice undoes both (dim in the list), Ctrl+Y redoes the treasure zone; on the Map tab Undo is the map's (nothing to undo).
     @{ Name = 'editor-template-undo'; App = 'EternalWars.MapEditor'; Frames = 44

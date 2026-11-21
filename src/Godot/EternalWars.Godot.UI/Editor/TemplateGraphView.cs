@@ -52,6 +52,7 @@ public partial class TemplateGraphView : Control
     private static readonly Color CardBody = new(0.15f, 0.16f, 0.19f);
     private static readonly Color CardText = new(0.85f, 0.86f, 0.88f);
     private static readonly Color Selected = Colors.Yellow;
+    private static readonly Color MirrorLine = new(0.35f, 0.75f, 0.85f, 0.7f);
 
     private TemplateEditorSession _session = null!;
     private Vector2 _pan;
@@ -184,7 +185,7 @@ public partial class TemplateGraphView : Control
     {
         var (x, y) = ToGraph(Size / 2);
         (x, y) = (TemplateGraph.Snap(x, Grid), TemplateGraph.Snap(y, Grid));
-        while (_session.Template.Zones.Any(z => Math.Abs((z.GraphX ?? 0) - x) < 2.2 && Math.Abs((z.GraphY ?? 0) - y) < 1.3)) // a card's size in graph units
+        while (TemplateGraph.Crowded((x, y), _session.Template.Zones.Select(TemplateGraph.Place)))
         {
             x += 1;
             y += 1.5;
@@ -391,6 +392,15 @@ public partial class TemplateGraphView : Control
         for (var i = 0; i < template.Connections.Count; i++)
         {
             DrawConnection(template, i);
+        }
+
+        // A zone and its mirror (ADR-117, ADR-272): a thin dotted line, under the cards.
+        foreach (var zone in template.Zones)
+        {
+            if (zone.Mirror is { } mirror && mirror != zone.Id && template.Zone(mirror) is { } image)
+            {
+                DrawDashedLine(ToScreen(zone), ToScreen(image), MirrorLine, 1, 3);
+            }
         }
 
         if (_connectFrom is { } start && template.Zone(start) is { } origin)

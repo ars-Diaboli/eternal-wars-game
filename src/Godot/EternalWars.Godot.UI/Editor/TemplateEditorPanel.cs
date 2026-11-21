@@ -4,6 +4,8 @@ using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Towns;
+using EternalWars.Core.Domain.Turns;
 using EternalWars.Core.Generation;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.UI.Editor.Shell;
@@ -13,10 +15,26 @@ using Godot;
 namespace EternalWars.Godot.UI.Editor;
 
 /// <summary>
-/// What the app does for the template editor: the template's files (<see cref="TemplateFileService"/>), and generating a map from a template in
-/// the map editor (returns null when the map is open, else why not).
+/// What the app does for the template editor: the template's files (<see cref="TemplateFileService"/>), generating a map from a template in
+/// the map editor (returns null when the map is open, else why not), and the user's zone presets (ADR-273; none kept when left out).
 /// </summary>
-public sealed record TemplateEditorHost(TemplateFileService Files, Func<MapTemplate, int, ulong, string?> Generate);
+public sealed record TemplateEditorHost(TemplateFileService Files, Func<MapTemplate, int, ulong, string?> Generate, IZonePresetFiles? Presets = null);
+
+/// <summary>The user's zone presets (ADR-273), kept by the app (the editor's <c>user://template-presets/</c>).</summary>
+public interface IZonePresetFiles
+{
+    /// <summary>The presets kept, by name; a file that cannot be read is left out.</summary>
+    IReadOnlyList<ZonePreset> Load();
+
+    /// <summary>Whether a preset of that name is kept (Save would replace it).</summary>
+    bool Exists(string name);
+
+    /// <summary>Keeps the preset, over one of the same name. Throws <see cref="IOException"/> or <see cref="UnauthorizedAccessException"/> when it cannot.</summary>
+    void Save(ZonePreset preset);
+
+    /// <summary>Forgets the preset of that name; false when there is none.</summary>
+    bool Delete(string name);
+}
 
 /// <summary>
 /// The template editor (ADR-070 RMG-10, ADR-117), like HotA's: the zone graph on the left (<see cref="TemplateGraphView"/>), on the right the
@@ -51,6 +69,7 @@ public partial class TemplateEditorPanel : PanelContainer
     private Button _alignColumn = null!;
     private Button _spreadRow = null!;
     private Button _spreadColumn = null!;
+    private Button _mirror = null!;
     private TemplateEditorSession _session = null!;
     private TemplateEditorHost _host = null!;
     private RefreshScheduler _replaced = null!;
@@ -95,6 +114,7 @@ public partial class TemplateEditorPanel : PanelContainer
         Button(top, "+ AI start", () => Add(ZoneType.AiStart), ZoneIcon(ZoneType.AiStart));
         Button(top, "+ Treasure", () => Add(ZoneType.Treasure), ZoneIcon(ZoneType.Treasure));
         Button(top, "+ Junction", () => Add(ZoneType.Junction), ZoneIcon(ZoneType.Junction));
+        top.AddChild(PresetMenu("+ Preset", "Add a zone with a preset's settings", AddPreset, userOnly: false));
         top.AddChild(new VSeparator());
         top.AddChild(_size);
         _seed.Text = ((ulong)System.Random.Shared.NextInt64()).ToString(CultureInfo.InvariantCulture);
@@ -115,6 +135,8 @@ public partial class TemplateEditorPanel : PanelContainer
         _alignColumn = ToolButton(tools, "Align in a column", "The selected zones one above the other", () => Align(GraphLine.Column));
         _spreadRow = ToolButton(tools, "Spread across", "The selected zones evenly from left to right, the outer two staying", () => Spread(GraphLine.Row));
         _spreadColumn = ToolButton(tools, "Spread down", "The selected zones evenly from top to bottom, the outer two staying", () => Spread(GraphLine.Column));
+        _mirror = ToolButton(tools, "Mirror", "", () => _message.Text = Mirror(_graph.Selection.Zones));
+        _mirror.WithIcon(UiIcon.MirrorVertical, keepText: true);
         tools.AddChild(new VSeparator());
         Button(tools, "Arrange", () =>
         {
@@ -152,6 +174,7 @@ public partial class TemplateEditorPanel : PanelContainer
         {
             _graph.Refresh();
             ShowIssues(e.Issues);
+            ShowTools(); // the symmetry or a mirror may have changed
             if (e.Replaced)
             {
                 _replaced.Request();
@@ -176,12 +199,36 @@ public partial class TemplateEditorPanel : PanelContainer
         return button;
     }
 
-    /// <summary>Align takes two selected zones, Spread three.</summary>
+    /// <summary>Align takes two selected zones, Spread three, Mirror zones not mirrored yet in a template with a symmetry.</summary>
     private void ShowTools()
     {
         var count = _graph.Selection.Zones.Count;
         _alignRow.Disabled = _alignColumn.Disabled = count < 2;
         _spreadRow.Disabled = _spreadColumn.Disabled = count < 3;
+        var refusal = _session.MirrorRefusal(_graph.Selection.Zones);
+        _mirror.Disabled = refusal is not null;
+        _mirror.TooltipText = refusal ?? $"Add the selected zones' images under the template's symmetry ({_session.Template.Symmetry}); an edit of one carries to its images";
+    }
+
+    /// <summary>The selected zones get their images (ADR-272), which join the selection. Returns what happened.</summary>
+    private string Mirror(IReadOnlyList<string> ids)
+    {
+        _graph.EndDrag();
+        if (_session.MirrorRefusal(ids) is { } refusal)
+        {
+            return refusal;
+        }
+
+        var images = _session.MakeMirror(ids)!;
+        _graph.Select(GraphSelection.Of([.. ids, .. images]));
+        return $"Mirrored {Zones(ids.Count)} as {string.Join(", ", images)}; an edit of one carries to its images";
+    }
+
+    /// <summary>The zone's mirror cycle is unlinked: its zones are edited apart from now on.</summary>
+    private string BreakMirror(string id)
+    {
+        _graph.EndDrag();
+        return _session.BreakMirror(id) ? $"The mirror of {id} is broken: its zones are edited apart" : $"Zone {id} has no mirror";
     }
 
     private void Align(GraphLine line)
@@ -366,6 +413,113 @@ public partial class TemplateEditorPanel : PanelContainer
         }
     }
 
+    // Zone presets (ADR-273) ------------------------------------------------------------------------
+
+    /// <summary>The built-in presets, then the user's.</summary>
+    private IReadOnlyList<ZonePreset> Presets() => [.. ZonePresets.BuiltIn, .. UserPresets()];
+
+    private IReadOnlyList<ZonePreset> UserPresets() => _host.Presets?.Load() ?? [];
+
+    /// <summary>A drop-down button listing the presets (only the user's with <paramref name="userOnly"/>), read anew each time it opens.</summary>
+    private MenuButton PresetMenu(string text, string tooltip, Action<ZonePreset> picked, bool userOnly)
+    {
+        var menu = new MenuButton { Text = text, TooltipText = tooltip, Flat = false };
+        var shown = new List<ZonePreset>();
+        menu.AboutToPopup += () =>
+        {
+            var popup = menu.GetPopup();
+            popup.Clear();
+            shown.Clear();
+            shown.AddRange(userOnly ? UserPresets() : Presets());
+            for (var i = 0; i < shown.Count; i++)
+            {
+                if (i > 0 && shown[i].BuiltIn != shown[i - 1].BuiltIn)
+                {
+                    popup.AddSeparator();
+                }
+
+                popup.AddItem(shown[i].BuiltIn ? shown[i].Name : $"{shown[i].Name} (yours)", i);
+            }
+
+            if (shown.Count == 0)
+            {
+                popup.AddItem("(no presets of yours yet: Save as preset in a zone's inspector)", -1);
+                popup.SetItemDisabled(0, true);
+            }
+        };
+        menu.GetPopup().IdPressed += id =>
+        {
+            if (id >= 0 && id < shown.Count)
+            {
+                picked(shown[(int)id]);
+            }
+        };
+        return menu;
+    }
+
+    private void AddPreset(ZonePreset preset)
+    {
+        _graph.EndDrag();
+        var (x, y) = _graph.FreeSpot();
+        if (_session.AddZone(preset, x, y) is { } id)
+        {
+            _graph.Select(GraphSelection.Of(id));
+            _message.Text = $"Added {id} as {preset.Name}";
+        }
+        else
+        {
+            _message.Text = "Every player slot (8) has a start zone already.";
+        }
+    }
+
+    private void ApplyPreset(string id, ZonePreset preset)
+    {
+        _graph.EndDrag();
+        _message.Text = _session.ApplyPreset(id, preset)
+            ? $"Zone {id} has the settings of {preset.Name}"
+            : $"No room: {preset.Name} makes start zones of {id} and its mirror images, and too few of the 8 player slots are free";
+        ShowInspector();
+    }
+
+    /// <summary>Asks for a name and keeps the zone's settings as a preset of the user's.</summary>
+    private void SaveAsPreset(string id)
+    {
+        if (_host.Presets is not { } files || _session.Template.Zone(id) is not { } zone)
+        {
+            return;
+        }
+
+        var box = new NameBox { Name = "PresetName" };
+        AddChild(box);
+        var taken = UserPresets().Select(p => p.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var proposal = Enumerable.Range(1, taken.Count + 1).Select(n => $"My zone {n}").First(n => !taken.Contains(n));
+        box.Bind($"Save the settings of zone {id} as a preset", proposal, name =>
+        {
+            try
+            {
+                var replaced = files.Exists(name);
+                files.Save(ZonePresets.Of(name, zone));
+                _message.Text = $"{(replaced ? "Replaced" : "Saved")} preset {name}; + Preset and Apply preset list it";
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                _message.Text = $"Could not save the preset: {e.Message}";
+            }
+        });
+    }
+
+    private void DeletePreset(ZonePreset preset)
+    {
+        try
+        {
+            _message.Text = _host.Presets?.Delete(preset.Name) == true ? $"Deleted preset {preset.Name}" : $"No preset {preset.Name} to delete";
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            _message.Text = $"Could not delete the preset: {e.Message}";
+        }
+    }
+
     private void ShowSizes()
     {
         _size.Clear();
@@ -487,6 +641,26 @@ public partial class TemplateEditorPanel : PanelContainer
         _inspector.AddRow(label, labelWidth: 150).AddChild(box);
     }
 
+    /// <summary>
+    /// A labelled grid of tick boxes, one per value; a tick or an untick gives the ticked values, in the order of <paramref name="values"/>
+    /// (the pickers of terrains, town types, factions and road mines).
+    /// </summary>
+    private void Ticks<T>(string label, IReadOnlyList<T> values, IEnumerable<T> ticked, Action<IReadOnlyList<T>> changed, Func<T, string>? name = null, int columns = 3)
+    {
+        var on = ticked.ToHashSet();
+        var grid = new GridContainer { Columns = columns };
+        var boxes = new List<(T Value, CheckBox Box)>();
+        foreach (var value in values)
+        {
+            var box = new CheckBox { Text = name?.Invoke(value) ?? value?.ToString() ?? "", ButtonPressed = on.Contains(value) };
+            box.Toggled += _ => changed([.. boxes.Where(b => b.Box.ButtonPressed).Select(b => b.Value)]);
+            boxes.Add((value, box));
+            grid.AddChild(box);
+        }
+
+        _inspector.AddRow(label, labelWidth: 150).AddChild(grid);
+    }
+
     private void Text(string label, string value, Action<string> submitted, bool multiline = false)
     {
         if (multiline)
@@ -535,7 +709,18 @@ public partial class TemplateEditorPanel : PanelContainer
         Choice("Connection guard", Enum.GetValues<ConnectionGuard>(), t.ConnectionGuard, v => _session.UpdateTemplate(x => x with { ConnectionGuard = v }),
             icon: g => GuardIcon(g));
         Check("Roads", t.Roads.Enabled, v => _session.UpdateTemplate(x => x with { Roads = x.Roads with { Enabled = v } }));
+        Choice("Road type", Enum.GetValues<RoadType>(), t.Roads.Type,
+            v => _session.UpdateTemplate(x => x with { Roads = x.Roads with { Type = v } }));
+        Ticks("Roads to mines", Enum.GetValues<ResourceType>(), t.Roads.Mines,
+            v => _session.UpdateTemplate(x => x with { Roads = x.Roads with { Mines = v } }));
+        Check("Roads to gates", t.Roads.Gates, v => _session.UpdateTemplate(x => x with { Roads = x.Roads with { Gates = v } }));
         Check("Week events", t.WeekEvents.Enabled, v => _session.UpdateTemplate(x => x with { WeekEvents = x.WeekEvents with { Enabled = v } }));
+        Spin("Weeks before events", t.WeekEvents.SkipWeeks, 0, WeekEventSettings.MaxSkipWeeks,
+            v => _session.UpdateTemplate(x => x with { WeekEvents = x.WeekEvents with { SkipWeeks = v } }));
+        Ticks("Weekly factions", WeekEventSettings.Factions, t.WeekEvents.ToSettings().Weekly,
+            v => _session.UpdateTemplate(x => x with { WeekEvents = x.WeekEvents with { WeeklyFactions = Factions(v) } }), FactionName);
+        Ticks("Monthly factions", WeekEventSettings.Factions, t.WeekEvents.ToSettings().Monthly,
+            v => _session.UpdateTemplate(x => x with { WeekEvents = x.WeekEvents with { MonthlyFactions = Factions(v) } }), FactionName);
         var sizes = _inspector.AddRow("Sizes", labelWidth: 150);
         var grid = new GridContainer { Columns = 4 };
         sizes.AddChild(grid);
@@ -550,6 +735,12 @@ public partial class TemplateEditorPanel : PanelContainer
             grid.AddChild(box);
         }
     }
+
+    /// <summary>Week event factions as kept: null when they are the playable towns (the default).</summary>
+    private static IReadOnlyList<string>? Factions(IReadOnlyList<string> ticked) =>
+        ticked.Order(StringComparer.Ordinal).SequenceEqual(BuiltInMapObjects.PlayableTowns.Order(StringComparer.Ordinal)) ? null : ticked;
+
+    private static string FactionName(string faction) => faction == WeekEventSettings.Neutral ? "Neutral" : BuiltInMapObjects.TownName(faction);
 
     private void Zone(string id, Func<TemplateZone, TemplateZone> change)
     {
@@ -595,6 +786,22 @@ public partial class TemplateEditorPanel : PanelContainer
         var mirrors = new List<string?> { null };
         mirrors.AddRange(_session.Template.Zones.Select(o => (string?)o.Id));
         Choice("Mirror", mirrors, z.Mirror, v => Zone(id, x => x with { Mirror = v }), v => v ?? "(its own image)");
+        var mirrorRow = _inspector.AddRow("", labelWidth: 150);
+        if (TemplateMirrors.Cycle(_session.Template, id) is { } cycle)
+        {
+            mirrorRow.AddChild(new Label { Text = $"In sync with {string.Join(", ", cycle.Skip(1))}" });
+        }
+
+        if (!TemplateMirrors.IsOwnImage(z) || TemplateMirrors.IsNamed(_session.Template, id))
+        {
+            Button(mirrorRow, "Break mirror", () => _message.Text = BreakMirror(id));
+        }
+        else
+        {
+            var button = new Button { Text = "Make mirror image", Disabled = _session.MirrorRefusal([id]) is not null, TooltipText = _session.MirrorRefusal([id]) ?? "" };
+            button.Pressed += () => _message.Text = Mirror([id]);
+            mirrorRow.AddChild(button);
+        }
 
         Heading("Mines (at least)");
         foreach (var resource in Enum.GetValues<ResourceType>())
@@ -651,9 +858,89 @@ public partial class TemplateEditorPanel : PanelContainer
             row.AddChild(count);
         }
 
-        var town = _inspector.AddRow("Neutral town types", labelWidth: 150);
-        town.AddChild(new Label { Text = z.TownTypes is { Count: > 0 } types ? string.Join(", ", types) : "any playable town (edit the file to limit)" });
+        Heading("Terrains and towns (none ticked: any)");
+        var passable = Enum.GetValues<TerrainType>().Where(_session.Content.Terrains.IsPassable).ToList();
+        Ticks("Terrains", passable, z.Terrains ?? [], v => Zone(id, x => x with { Terrains = v.Count == 0 ? null : v }));
+        Ticks("Neutral town types", BuiltInMapObjects.PlayableTowns, z.TownTypes ?? [],
+            v => Zone(id, x => x with { TownTypes = v.Count == 0 ? null : v }), BuiltInMapObjects.TownName);
+        if (z.Type is ZoneType.PlayerStart or ZoneType.AiStart)
+        {
+            ShowStartBuildings(id, z);
+        }
+
+        Heading("Presets");
+        var presets = new HBoxContainer();
+        _inspector.AddChild(presets);
+        presets.AddChild(PresetMenu("Apply preset", "Give this zone a preset's settings (its id, slot, team, mirror, level and place stay)", p => ApplyPreset(id, p), userOnly: false));
+        if (_host.Presets is not null)
+        {
+            Button(presets, "Save as preset…", () => SaveAsPreset(id));
+            presets.AddChild(PresetMenu("Delete preset", "Forget one of your presets", DeletePreset, userOnly: true));
+        }
+
         Button(_inspector, "Remove zone (Del)", () => _message.Text = Delete());
+    }
+
+    /// <summary>A start zone's buildings besides the default start (each at a level, 0: not built) and its dwellings by tier (ADR-030).</summary>
+    private void ShowStartBuildings(string id, TemplateZone z)
+    {
+        Heading("Start buildings besides the default (0: not built)");
+        var catalog = _session.Content.Buildings;
+        var grid = new GridContainer { Columns = 4 };
+        _inspector.AddChild(grid);
+        foreach (var building in catalog.TownBuildings.Where(b => b.Value != BuiltInBuildings.Grail).OrderBy(b => b.Value, StringComparer.Ordinal))
+        {
+            var key = building.Value;
+            grid.AddChild(new Label { Text = catalog.Get(building, 1).Name, CustomMinimumSize = new Vector2(120, 0), ClipText = true, TooltipText = key });
+            var spin = new SpinBox { MinValue = 0, MaxValue = catalog.MaxLevel(building), Value = z.StartBuildings?.GetValueOrDefault(key) ?? 0 };
+            spin.ValueChanged += v =>
+            {
+                if (_rebuilding)
+                {
+                    return;
+                }
+
+                Zone(id, x =>
+                {
+                    var buildings = (x.StartBuildings ?? new Dictionary<string, int>()).ToDictionary(p => p.Key, p => p.Value);
+                    if (v < 1)
+                    {
+                        buildings.Remove(key);
+                    }
+                    else
+                    {
+                        buildings[key] = (int)v;
+                    }
+
+                    return x with { StartBuildings = buildings.Count == 0 ? null : buildings };
+                });
+            };
+            grid.AddChild(spin);
+        }
+
+        Heading("Start dwellings by tier (without tier 1, the player picks one)");
+        var tiers = new HBoxContainer();
+        _inspector.AddChild(tiers);
+        for (var tier = 1; tier <= 5; tier++)
+        {
+            var at = tier;
+            tiers.AddChild(new Label { Text = $"T{at}" });
+            var spin = new SpinBox { MinValue = 0, MaxValue = at == 5 ? 1 : 2, Value = z.StartDwellings?.Count(t => t == at) ?? 0, TooltipText = $"Tier-{at} dwellings built at the start" };
+            spin.ValueChanged += v =>
+            {
+                if (_rebuilding)
+                {
+                    return;
+                }
+
+                Zone(id, x =>
+                {
+                    var dwellings = (x.StartDwellings ?? []).Where(t => t != at).Concat(Enumerable.Repeat(at, (int)v)).Order().ToList();
+                    return x with { StartDwellings = dwellings.Count == 0 ? null : dwellings };
+                });
+            };
+            tiers.AddChild(spin);
+        }
     }
 
     /// <summary>Several zones selected (ADR-271): which, and what can be done with all of them.</summary>
@@ -678,6 +965,10 @@ public partial class TemplateEditorPanel : PanelContainer
         Button(edit, "Copy (Ctrl+C)", () => _message.Text = Copy(cut: false), UiIcon.Copy);
         Button(edit, "Duplicate (Ctrl+D)", () => _message.Text = Duplicate(), UiIcon.Duplicate);
         Button(edit, "Remove zones (Del)", () => _message.Text = Delete(), UiIcon.Delete);
+        var refusal = _session.MirrorRefusal(ids);
+        var mirror = new Button { Text = "Make mirror images", Disabled = refusal is not null, TooltipText = refusal ?? "" };
+        mirror.Pressed += () => _message.Text = Mirror(ids);
+        _inspector.AddChild(mirror);
     }
 
     private int FreeSlot()
