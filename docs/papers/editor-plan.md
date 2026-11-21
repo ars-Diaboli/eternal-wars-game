@@ -623,8 +623,9 @@ and the game uses them.
 2. **Template files**: open, save, save as, Recent, the unsaved marker and autosave as for maps; shipped templates open read-only and
    are saved as a copy. Smoke `editor-template-files`. *Done.*
 3. **Graph**: zones as cards (type, owner colour, size, towns, mines, monster strength), connections labelled (kind, guard value,
-   passages, chance), snapping to a grid, align and spread, auto-arrange as now.
+   passages, chance), snapping to a grid, align and spread, auto-arrange as now. *Done.*
 4. **Multi-select and copy**: marquee in the graph; copy, paste and duplicate zones with their inner connections and new ids. Tests.
+   Smoke `editor-template-graph`. *Done.*
 5. **Mirror tools**: make a zone's mirror image and keep it in sync (`mirror`). Tests.
 6. **Inspector and presets**: every field, including terrains and neutral town types, with pickers; zone presets (rich treasure, mine
    junction, guarded start) and user presets in `user://template-presets/`.

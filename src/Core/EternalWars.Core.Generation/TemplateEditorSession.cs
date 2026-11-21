@@ -26,6 +26,9 @@ public sealed record TemplateChanged(MapTemplate Template, IReadOnlyList<Templat
 /// <list type="bullet">
 /// <item>Zones: <see cref="AddZone"/> (a new id, a start zone takes the next free player slot), <see cref="UpdateZone"/>, <see cref="RenameZone"/>
 /// (connections and mirrors follow), <see cref="MoveZone"/> (its place in the graph), <see cref="RemoveZone"/> (with its connections).</item>
+/// <item>Several zones (a selection in the graph): <see cref="MoveZones"/>, <see cref="AlignZones"/> and <see cref="SpreadZones"/> (ADR-270),
+/// <see cref="RemoveZones"/>, and <see cref="Copy"/>, <see cref="Paste"/> and <see cref="Duplicate"/> with their inner connections and new ids
+/// (ADR-271).</item>
 /// <item>Connections: <see cref="Connect"/>, <see cref="UpdateConnection"/>, <see cref="Disconnect"/>.</item>
 /// <item>The template's own settings: <see cref="UpdateTemplate"/> (zones and connections are kept).</item>
 /// </list>
@@ -73,8 +76,8 @@ public sealed class TemplateEditorSession : IUndoSession
         Zones =
         [
             StartZone("start-1", 0) with { GraphX = 0, GraphY = 0 },
-            StartZone("start-2", 1) with { GraphX = 4, GraphY = 0 },
-            new TemplateZone { Id = "middle", Type = ZoneType.Junction, Size = 2, Monsters = MonsterStrength.Average, GraphX = 2, GraphY = 0 },
+            StartZone("start-2", 1) with { GraphX = 6, GraphY = 0 },
+            new TemplateZone { Id = "middle", Type = ZoneType.Junction, Size = 2, Monsters = MonsterStrength.Average, GraphX = 3, GraphY = 0 },
         ],
         Connections =
         [
@@ -264,20 +267,156 @@ public sealed class TemplateEditorSession : IUndoSession
         return ReplaceZone(zone with { GraphX = x, GraphY = y }, $"Move zone {id}");
     }
 
-    /// <summary>Removes a zone, its connections and the mirrors that name it.</summary>
-    public bool RemoveZone(string id)
+    /// <summary>
+    /// Moves several zones' nodes at once (a selection dragged, ADR-271): each id to its place. False when an id is unknown (nothing moves); one
+    /// step "Move zone x" or "Move N zones".
+    /// </summary>
+    public bool MoveZones(IReadOnlyDictionary<string, (double X, double Y)> places)
     {
-        if (Template.Zone(id) is null)
+        ArgumentNullException.ThrowIfNull(places);
+        if (places.Count == 0 || places.Keys.Any(id => Template.Zone(id) is null))
         {
             return false;
         }
 
-        ChangeSynced($"Remove zone {id}", Template with
+        return ReplaceZones([.. places.Select(p => Template.Zone(p.Key)! with { GraphX = p.Value.X, GraphY = p.Value.Y })], Moved([.. places.Keys]));
+    }
+
+    /// <summary>
+    /// Puts the zones on one row (one height) or column (one x), at their mean, snapped to <paramref name="grid"/> (ADR-270). False for fewer
+    /// than two known zones.
+    /// </summary>
+    public bool AlignZones(IEnumerable<string> ids, GraphLine line, double grid = 0)
+    {
+        var zones = Known(ids);
+        return zones.Count >= 2
+            && ReplaceZones(TemplateGraph.Align(zones, line, grid), $"Align {zones.Count} zones in a {(line == GraphLine.Row ? "row" : "column")}");
+    }
+
+    /// <summary>Spaces the zones evenly along a row or a column, the outer two staying (ADR-270). False for fewer than three known zones.</summary>
+    public bool SpreadZones(IEnumerable<string> ids, GraphLine line)
+    {
+        var zones = Known(ids);
+        return zones.Count >= 3
+            && ReplaceZones(TemplateGraph.Spread(zones, line), $"Spread {zones.Count} zones {(line == GraphLine.Row ? "across" : "down")}");
+    }
+
+    /// <summary>The known zones of <paramref name="ids"/>, in the template's order, each once.</summary>
+    private List<TemplateZone> Known(IEnumerable<string> ids)
+    {
+        ArgumentNullException.ThrowIfNull(ids);
+        var wanted = ids.ToHashSet();
+        return [.. Template.Zones.Where(z => wanted.Contains(z.Id))];
+    }
+
+    private static string Moved(IReadOnlyCollection<string> ids) => ids.Count == 1 ? $"Move zone {ids.First()}" : $"Move {ids.Count} zones";
+
+    /// <summary>Replaces the zones of the same ids (graph places only change) as one step; true, also when nothing changed (no step then).</summary>
+    private bool ReplaceZones(IReadOnlyList<TemplateZone> zones, string description)
+    {
+        var byId = zones.ToDictionary(z => z.Id);
+        var changed = Template with { Zones = [.. Template.Zones.Select(z => byId.GetValueOrDefault(z.Id, z))] };
+        if (!changed.Zones.SequenceEqual(Template.Zones))
         {
-            Zones = [.. Template.Zones.Where(z => z.Id != id).Select(z => z.Mirror == id ? z with { Mirror = null } : z)],
-            Connections = [.. Template.Connections.Where(c => c.From != id && c.To != id)],
-        });
+            Change(description, changed);
+        }
+
         return true;
+    }
+
+    /// <summary>Removes a zone, its connections and the mirrors that name it.</summary>
+    public bool RemoveZone(string id) => Template.Zone(id) is not null && RemoveAll([id], $"Remove zone {id}") > 0;
+
+    /// <summary>Removes the zones (a selection), their connections and the mirrors that name them, as one step; returns how many were removed.</summary>
+    public int RemoveZones(IEnumerable<string> ids)
+    {
+        var zones = Known(ids);
+        return zones.Count == 0 ? 0 : RemoveAll(zones.Select(z => z.Id), zones.Count == 1 ? $"Remove zone {zones[0].Id}" : $"Remove {zones.Count} zones");
+    }
+
+    private int RemoveAll(IEnumerable<string> ids, string description)
+    {
+        var gone = ids.ToHashSet();
+        ChangeSynced(description, Template with
+        {
+            Zones = [.. Template.Zones.Where(z => !gone.Contains(z.Id)).Select(z => z.Mirror is { } m && gone.Contains(m) ? z with { Mirror = null } : z)],
+            Connections = [.. Template.Connections.Where(c => !gone.Contains(c.From) && !gone.Contains(c.To))],
+        });
+        return gone.Count;
+    }
+
+    /// <summary>The zones of <paramref name="ids"/> with the connections between them, for the clipboard (ADR-271); null when none is known.</summary>
+    public TemplateFragment? Copy(IEnumerable<string> ids) => TemplateFragment.Of(Template, ids);
+
+    /// <summary>
+    /// Adds the fragment's zones with the connections between them, as one step "Paste N zones", centred on <paramref name="x"/>,
+    /// <paramref name="y"/> in the graph (ADR-271). Each zone gets a new id (its name's stem and the next free number: <c>treasure-3</c>), a start
+    /// zone the lowest free player slot (its team kept); a mirror inside the fragment follows its zone, one outside is dropped. Returns the new
+    /// ids, or null when the fragment is empty or the free player slots are too few for its start zones (nothing changes then).
+    /// </summary>
+    public IReadOnlyList<string>? Paste(TemplateFragment fragment, double x, double y) => PasteAs(fragment, x, y, "Paste");
+
+    /// <summary>Pastes a copy of the zones beside them (<paramref name="dx"/>, <paramref name="dy"/> graph units off), as <see cref="Paste"/> does, as one step "Duplicate N zones".</summary>
+    public IReadOnlyList<string>? Duplicate(IEnumerable<string> ids, double dx = 1, double dy = 1)
+    {
+        if (Copy(ids) is not { } fragment)
+        {
+            return null;
+        }
+
+        var (cx, cy) = fragment.Centre;
+        return PasteAs(fragment, cx + dx, cy + dy, "Duplicate");
+    }
+
+    private IReadOnlyList<string>? PasteAs(TemplateFragment fragment, double x, double y, string verb)
+    {
+        ArgumentNullException.ThrowIfNull(fragment);
+        var used = Template.Zones.Select(z => z.Owner).OfType<int>().ToHashSet();
+        var slots = new Queue<int>(Enumerable.Range(0, GameState.MaxPlayers).Where(s => !used.Contains(s)));
+        if (fragment.Zones.Count == 0 || fragment.StartZones > slots.Count)
+        {
+            return null;
+        }
+
+        var taken = Template.Zones.Select(z => z.Id).ToHashSet();
+        var ids = new Dictionary<string, string>();
+        foreach (var zone in fragment.Zones)
+        {
+            var stem = Stem(zone.Id);
+            var id = Enumerable.Range(1, int.MaxValue - 1).Select(n => $"{stem}-{n}").First(candidate => !taken.Contains(candidate));
+            taken.Add(id);
+            ids[zone.Id] = id;
+        }
+
+        var (cx, cy) = fragment.Centre;
+        var zones = fragment.Zones.Select(zone =>
+        {
+            var (zx, zy) = TemplateGraph.Place(zone);
+            return zone with
+            {
+                Id = ids[zone.Id],
+                Owner = zone.Type is ZoneType.PlayerStart or ZoneType.AiStart ? slots.Dequeue() : zone.Owner,
+                Mirror = zone.Mirror is { } m && ids.TryGetValue(m, out var image) ? image : null,
+                GraphX = Math.Round(zx - cx + x, 2),
+                GraphY = Math.Round(zy - cy + y, 2),
+            };
+        }).ToList();
+        var connections = fragment.Connections
+            .Where(c => ids.ContainsKey(c.From) && ids.ContainsKey(c.To))
+            .Select(c => c with { From = ids[c.From], To = ids[c.To] });
+        ChangeSynced(zones.Count == 1 ? $"{verb} zone {zones[0].Id}" : $"{verb} {zones.Count} zones", Template with
+        {
+            Zones = [.. Template.Zones, .. zones],
+            Connections = [.. Template.Connections, .. connections],
+        });
+        return [.. zones.Select(z => z.Id)];
+    }
+
+    /// <summary>A zone id without its number: <c>treasure-2</c> → <c>treasure</c>; <c>middle</c> stays.</summary>
+    private static string Stem(string id)
+    {
+        var dash = id.LastIndexOf('-');
+        return dash > 0 && dash < id.Length - 1 && id[(dash + 1)..].All(char.IsAsciiDigit) ? id[..dash] : id;
     }
 
     /// <summary>Joins two zones by a normal connection guarded by <paramref name="guardValue"/>; refused for a zone to itself or a pair already joined.</summary>

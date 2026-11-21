@@ -128,10 +128,29 @@ generator version, and the generator's problems and validator issues are shown. 
 
 ## Template editor
 The map editor's **Template** tab (RMG-10, ADR-117, EDIT-3) is a HotA-like editor: a zone graph, a top row (the template's name, New,
-Open, Shipped, Save, Save as, add zones, arrange, size, seed, Generate), an inspector for the template, a zone or a connection, and under
-the graph the validator's issues and the template's undo history; terrains and neutral town types are edited in the file. Core
-`TemplateEditorSession`: every change publishes `TemplateChanged` with the validator's issues and is one named undo step (EDIT-2,
-ADR-268); dragging a zone is one step. Ctrl+Z and Ctrl+Y undo and redo on the Template tab, and a click in the History list jumps.
+Open, Shipped, Save, Save as, add zones, size, seed, Generate), the graph's tools over it, an inspector for the template, a zone, several
+zones or a connection, and under the graph the validator's issues and the template's undo history; terrains and neutral town types are
+edited in the file. Core `TemplateEditorSession`: every change publishes `TemplateChanged` with the validator's issues and is one named
+undo step (EDIT-2, ADR-268); dragging a zone (or a selection) is one step. Ctrl+Z and Ctrl+Y undo and redo on the Template tab, and a
+click in the History list jumps.
+
+**The graph** (ADR-270):
+- each zone is a **card**: a header in its type's colour (a start zone in its player's, darker for an AI start) with its icon and id
+  ("(U)" underground), then its type with owner and team and its size, the monster strength, the towns (own and neutral) and the mines
+  (G, W for lumber, O, C, M, S with counts); zoomed far out, only the header;
+- each connection is a line (wide: thick, gate and portal: dashed) with a **label**: its kind, its guard when a normal connection's is not
+  monsters, the guard value, passages above one and a chance below 100;
+- **Snap to grid** (on by default): dragged zones, new zones and aligned rows land on a grid of half a graph unit, drawn under the cards;
+  pasted zones move by whole grid steps; a drag starts a few pixels from the press, so a click moves nothing;
+- **Align in a row / column** puts the selected zones (two or more) at their mean height or x; **Spread across / down** spaces three or
+  more evenly between the outer two; **Arrange** places every zone on rings around the best connected one.
+
+**Selection and copy** (ADR-271): a click selects a zone or a connection; Ctrl or Shift + click adds or drops a zone; a drag on empty
+ground draws a marquee (with Ctrl or Shift it adds); dragging a selected zone moves the whole selection. A middle drag, or a right drag
+on empty ground, pans. On the Template tab the Edit menu's Select all, Deselect, Cut, Copy, Paste, Duplicate and Delete (Ctrl+A,
+Escape, Ctrl+X, C, V, D, Delete) work on the graph: copied zones take the connections between them; Paste puts them under the pointer and
+Duplicate beside the originals, each zone with a new id (its name's stem and the next free number), a start zone with the lowest free
+player slot (refused when too few are free), a mirror kept only inside the copy. The clipboard stays while another template is opened.
 
 **Files** (ADR-269), as for maps: Open and Save as with the file dialog (the user's templates folder first), Save, recent templates
 (Templates menu), an asterisk over unsaved work ("Template*" on the tab), the question before unsaved work is left, an autosave every

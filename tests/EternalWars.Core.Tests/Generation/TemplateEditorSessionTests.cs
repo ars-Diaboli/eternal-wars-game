@@ -113,6 +113,11 @@ public class TemplateEditorSessionTests
         { "remove a connection", "Remove connection start-2 – middle" },
         { "change the template's settings", "Change the template's settings" },
         { "arrange the graph", "Arrange the graph" },
+        { "move several zones", "Move 2 zones" },
+        { "align zones", "Align 2 zones in a column" },
+        { "remove several zones", "Remove 2 zones" },
+        { "paste zones", "Paste 2 zones" },
+        { "duplicate a zone", "Duplicate zone middle-1" },
     };
 
     private static void Make(TemplateEditorSession session, string change)
@@ -130,6 +135,11 @@ public class TemplateEditorSessionTests
             "remove a connection" => session.Disconnect(1),
             "change the template's settings" => Apply(() => session.UpdateTemplate(t => t with { Name = "Renamed" })),
             "arrange the graph" => Apply(() => session.ArrangeGraph(all: true)),
+            "move several zones" => session.MoveZones(new Dictionary<string, (double X, double Y)> { ["start-1"] = (1, 1), ["middle"] = (2, 2) }),
+            "align zones" => session.AlignZones(["start-1", "middle"], GraphLine.Column),
+            "remove several zones" => session.RemoveZones(["start-2", "middle"]) == 2,
+            "paste zones" => session.Paste(session.Copy(["start-1", "middle"])!, 0, 5) is not null,
+            "duplicate a zone" => session.Duplicate(["middle"]) is not null,
             _ => throw new ArgumentOutOfRangeException(nameof(change)),
         };
         Assert.True(applied);

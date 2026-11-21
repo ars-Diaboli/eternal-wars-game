@@ -429,6 +429,9 @@ public partial class Main : Node3D
     /// <summary>The Template tab shows: Undo, Redo, Open and Save work on the template.</summary>
     private bool OnTemplateTab => _workspace.Page == _templatePage;
 
+    /// <summary>The template editor of the Template tab (built with the first map's UI, before any command can run).</summary>
+    private TemplateEditorPanel TemplatePanel => _templateEditor!;
+
     /// <summary>The history the Undo and Redo commands work on: the template's on the Template tab, else the map's.</summary>
     private IUndoSession Undoable => OnTemplateTab ? _templates : _editor;
 
@@ -928,20 +931,29 @@ public partial class Main : Node3D
         // Undo and Redo work on the tab shown (ADR-268): the map's history, or the template's on the Template tab.
         Command("edit.undo", "Undo", () => Undoable.Undo(), UiIcon.Undo, new(Key.Z, Ctrl: true), () => WhyNoHistory(Undoable.History.CanUndo, "undo"));
         Command("edit.redo", "Redo", () => Undoable.Redo(), UiIcon.Redo, new(Key.Y, Ctrl: true), () => WhyNoHistory(Undoable.History.CanRedo, "redo"));
-        Command("edit.select-all", "Select all", () =>
+        // The selection commands work on the tab shown (ADR-271): the map's selection and clipboard, or the template graph's zones on the
+        // Template tab.
+        Command("edit.select-all", "Select all", () => OnTab(TemplatePanel.SelectAll, () =>
             {
                 _editor.Selecting.Set(_editor.Selecting.Everything(_context.Level, _toolContext.Filter));
                 Say(EditorToolContext.Describe(_editor.Selection));
-            }, shortcut: new(Key.A, Ctrl: true), onMap: true, icon: UiIcon.SelectAll);
-        Command("edit.deselect", "Deselect", Deselect, shortcut: new(Key.Escape),
-            whyNot: () => _editor.Selection.IsEmpty && _tools.Tool is not PasteTool ? "Nothing is selected" : null, onMap: true, icon: UiIcon.Deselect);
-        Command("edit.cut", "Cut", () => Copy(cut: true), shortcut: new(Key.X, Ctrl: true), whyNot: NothingToCopy, onMap: true, icon: UiIcon.Cut);
-        Command("edit.copy", "Copy", () => Copy(cut: false), shortcut: new(Key.C, Ctrl: true), whyNot: NothingToCopy, onMap: true, icon: UiIcon.Copy);
-        Command("edit.paste", "Paste", () => Paste(duplicate: false), shortcut: new(Key.V, Ctrl: true),
-            whyNot: () => _clipboard.Fragment is null ? "Nothing was copied" : null, onMap: true, icon: UiIcon.Paste);
-        Command("edit.duplicate", "Duplicate", () => Paste(duplicate: true), shortcut: new(Key.D, Ctrl: true), whyNot: NothingToCopy, onMap: true, icon: UiIcon.Duplicate);
-        Command("edit.delete", "Delete", () => Say($"Deleted {_editor.Selecting.Delete()} thing(s)"), shortcut: new(Key.Delete),
-            whyNot: () => _editor.Selection.HasThings ? null : "No object or hero is selected", onMap: true, icon: UiIcon.Delete);
+            }), shortcut: new(Key.A, Ctrl: true), whyNot: () => OnTemplateTab ? null : OnMapTab(), icon: UiIcon.SelectAll);
+        Command("edit.deselect", "Deselect", () => OnTab(TemplatePanel.Deselect, Deselect), shortcut: new(Key.Escape),
+            whyNot: () => OnTemplateTab ? TemplatePanel.WhyNothingSelected()
+                : OnMapTab() ?? (_editor.Selection.IsEmpty && _tools.Tool is not PasteTool ? "Nothing is selected" : null), icon: UiIcon.Deselect);
+        Command("edit.cut", "Cut", () => OnTab(() => Say(TemplatePanel.Copy(cut: true)), () => Copy(cut: true)), shortcut: new(Key.X, Ctrl: true),
+            whyNot: () => OnTemplateTab ? TemplatePanel.WhyNoZones() : OnMapTab() ?? NothingToCopy(), icon: UiIcon.Cut);
+        Command("edit.copy", "Copy", () => OnTab(() => Say(TemplatePanel.Copy(cut: false)), () => Copy(cut: false)), shortcut: new(Key.C, Ctrl: true),
+            whyNot: () => OnTemplateTab ? TemplatePanel.WhyNoZones() : OnMapTab() ?? NothingToCopy(), icon: UiIcon.Copy);
+        Command("edit.paste", "Paste", () => OnTab(() => Say(TemplatePanel.Paste()), () => Paste(duplicate: false)), shortcut: new(Key.V, Ctrl: true),
+            whyNot: () => OnTemplateTab ? (TemplatePanel.Clipboard is null ? "Nothing was copied" : null)
+                : OnMapTab() ?? (_clipboard.Fragment is null ? "Nothing was copied" : null), icon: UiIcon.Paste);
+        Command("edit.duplicate", "Duplicate", () => OnTab(() => Say(TemplatePanel.Duplicate()), () => Paste(duplicate: true)), shortcut: new(Key.D, Ctrl: true),
+            whyNot: () => OnTemplateTab ? TemplatePanel.WhyNoZones() : OnMapTab() ?? NothingToCopy(), icon: UiIcon.Duplicate);
+        Command("edit.delete", "Delete", () => OnTab(() => Say(TemplatePanel.Delete()), () => Say($"Deleted {_editor.Selecting.Delete()} thing(s)")),
+            shortcut: new(Key.Delete),
+            whyNot: () => OnTemplateTab ? TemplatePanel.WhyNothingSelected() : OnMapTab() ?? (_editor.Selection.HasThings ? null : "No object or hero is selected"),
+            icon: UiIcon.Delete);
         Command("edit.save-stamp", "Save selection as stamp", SaveStamp, whyNot: NothingToCopy, onMap: true, icon: UiIcon.ToolStamp);
         Command("edit.rotate", "Rotate scenery", () => Turn(mirror: false), shortcut: new(Key.R, Ctrl: true), whyNot: NoScenery, onMap: true, icon: UiIcon.Rotate);
         Command("edit.mirror", "Mirror scenery", () => Turn(mirror: true), shortcut: new(Key.M, Ctrl: true), whyNot: NoScenery, onMap: true, icon: UiIcon.Mirror);

@@ -36,6 +36,8 @@
 | [267](#adr-267-play-test-from-the-editor-adr-250-2026-11-21) | Play-test from the editor (ADR-250, 2026-11-21) | implemented |
 | [268](#adr-268-template-undo-edit-2-adr-250-2026-11-21) | Template undo (EDIT-2, ADR-250, 2026-11-21) | implemented |
 | [269](#adr-269-template-files-adr-250-2026-11-21) | Template files (ADR-250, 2026-11-21) | implemented |
+| [270](#adr-270-the-template-graph-zone-cards-labelled-connections-grid-align-and-spread-adr-117-adr-250-2026-11-21) | The template graph: zone cards, labelled connections, grid, align and spread (ADR-117, ADR-250, 2026-11-21) | implemented |
+| [271](#adr-271-the-template-graphs-selection-and-clipboard-adr-268-adr-270-2026-11-21) | The template graph's selection and clipboard (ADR-268, ADR-270, 2026-11-21) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -849,3 +851,44 @@ ADR when it is built.
 - **Commands**: Templates > New template, Open template…, Recent templates, Shipped templates, Save template, Save template as… (each
   shows the Template tab first). File > Open, Save and Save as, and their shortcuts, work on the tab shown; New map… stays the map's.
   The template editor's top row has New, Open…, Shipped…, Save and Save as.
+
+### ADR-270: The template graph: zone cards, labelled connections, grid, align and spread (ADR-117, ADR-250, 2026-11-21)
+**Status**: implemented (plan step 5, task 3).
+
+- **Cards, not circles** (`TemplateGraphView`): a zone is a fixed-size card (150 × 84 pixels; header only below a zoom of 50 pixels per
+  graph unit) whose header has the type's colour, icon and the id, and whose lines give the type with owner and team, the size, the
+  monster strength, the towns and the mines. The size no longer draws as the node's radius: it is written, since a card's area would
+  not read as a weight anyway. A connection's label (kind, guard, value, passages, chance) is drawn over the cards so that it always
+  reads, and a click on it selects the connection.
+- **The blank template spaces its zones three graph units apart** (was two), so the cards do not overlap at the default zoom; new zones
+  look for a free spot a card's size away.
+- **Geometry in the core** (`TemplateGraph`, Core.Generation): `Snap` to a grid (`Grid` = half a graph unit), `Align` (a row at the
+  zones' mean height or a column at their mean x, snapped) and `Spread` (even steps between the outer two, in their order along the
+  line). The session's `AlignZones` (two zones or more) and `SpreadZones` (three or more) apply them as one step; they change only graph
+  places, never the map.
+- **Snap to grid** is a view setting, on by default and not saved: dragging snaps the held zone and moves the rest of the selection by
+  the same step, so zones off the grid keep their offsets; nothing moves until the pointer is 4 pixels from the press, so a click on a
+  zone off the grid does not snap it. Align snaps; Spread does not (it would break the even steps); Paste moves the zones by whole grid
+  steps from where they were copied. A drag whose step an undo or a load ended moves nothing more.
+- **Graph tools** sit in a row over the graph: Snap to grid, Align in a row, Align in a column, Spread across, Spread down, Arrange
+  (moved from the top row; auto-arrange is unchanged).
+
+### ADR-271: The template graph's selection and clipboard (ADR-268, ADR-270, 2026-11-21)
+**Status**: implemented (plan step 5, task 4).
+
+- **Selection** (`GraphSelection`): several zones, or one connection, or nothing. Click selects, Ctrl or Shift + click adds or drops a
+  zone, a left drag on empty ground draws a marquee (adding with Ctrl or Shift); pressing a zone of a multi-selection drags all of it
+  (`MoveZones`, one step "Move N zones"), and a click on it without a drag keeps only that zone. Panning moved to the middle button and a
+  right drag on empty ground, since a left drag there is the marquee. Several selected zones show their own inspector (the ids, the
+  connections between them, align, spread, copy, duplicate, remove).
+- **Clipboard in the core** (`TemplateFragment`, Core.Generation): the zones and the connections with both ends among them.
+  `TemplateEditorSession.Copy`, `Paste(fragment, x, y)` (centred there) and `Duplicate(ids, dx, dy)` are one step each ("Paste N zones",
+  "Duplicate zone x"). Pasted zones get new ids (the id's stem without its number plus the next free number: `treasure-2` → `treasure-3`,
+  `middle` → `middle-1`), start zones the lowest free player slots with their teams kept (the whole paste is refused when the slots are
+  too few), a mirror only when its image is in the fragment, and every other field as copied. `RemoveZones` removes a selection with its
+  connections and the mirrors naming it as one step.
+- **Commands**: Edit > Select all, Deselect, Cut, Copy, Paste, Duplicate and Delete (and their shortcuts) work on the tab shown, the
+  graph's selection on the Template tab, as Undo does (ADR-268); the graph no longer handles Delete itself. Paste goes under the pointer
+  when it is over the graph, else to the view's middle, on the grid; Duplicate goes one unit right and one and a half down. The
+  clipboard belongs to the template editor, so it survives opening another template (zones go from one template to another) and is apart
+  from the map's.

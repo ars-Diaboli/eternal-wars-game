@@ -9,6 +9,13 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 5 tasks 3 and 4 (ADR-270, ADR-271): the template graph. Zones are cards (type colour and icon, owner, team,
+  size, monsters, towns, mines), connections carry labels (kind, guard, value, passages, chance); Snap to grid, Align in a row / column,
+  Spread across / down and Arrange sit over the graph (`TemplateGraph` in Core.Generation holds the geometry). Multi-select with
+  Ctrl/Shift + click and a marquee; a selection drags as one step (`MoveZones`); `TemplateFragment` with the session's `Copy`, `Paste`,
+  `Duplicate` and `RemoveZones` (new ids, free player slots, inner connections and mirrors). Edit > Select all / Deselect / Cut / Copy /
+  Paste / Duplicate / Delete follow the tab shown. The blank template's zones are 3 units apart. Tests `TemplateGraphTests` and the
+  undo theory; smoke `editor-template-graph`. Next: step 5 task 5 (mirror tools), or step 3's drop-downs.
 - Editor overhaul, step 5 task 2 (ADR-269): template files. `TemplateFileService` (Godot.UI, Editor/Shell) over the app's
   `ITemplateFiles` (`TemplateFiles` in the editor): New, Open, Save, Save as, recent, shipped templates read-only (saved as a copy),
   "Template*" over unsaved work, the question before leaving it (quitting asks for the template first), the autosave and its recovery
@@ -18,8 +25,7 @@ Detail: [roadmap.md](roadmap.md).
 - Editor overhaul, step 5 task 1 (ADR-268): template undo. `TemplateEditorSession` records every change as a named step of whole
   templates (`UndoHistory`, `IUndoSession` shared with `MapEditorSession`), `BeginStep`/`EndStep` for a drag, `Load` starts the history
   anew, `TemplateChanged.Replaced` after an undo; the template editor shows its History beside the Issues, and Undo / Redo follow the tab
-  shown. Tests in `TemplateEditorSessionTests`; smoke `editor-template-undo`. Next: step 5 task 3 (zones as cards), or step 3's
-  drop-downs.
+  shown. Tests in `TemplateEditorSessionTests`; smoke `editor-template-undo`.
 - Editor icons: 77 files cut from the owner's sheets of `editor-icon-prompts.md` (all but C4 and C7) into `textures/ui/icons/`;
   `UiIcon` has their values (the file name is the value in snake case), `IEditorTool.Icon` gives each tool its own, and the commands,
   panel tabs, problems, layers, favourites, brush and height options and the template editor's lists show them. The view and map
