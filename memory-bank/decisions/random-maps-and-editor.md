@@ -43,6 +43,7 @@
 | [274](#adr-274-the-template-preview-and-generate-many-adr-087-adr-117-2026-11-21) | The template preview and Generate many (ADR-087, ADR-117, 2026-11-21) | implemented |
 | [275](#adr-275-the-shortcut-editor-adr-250-2026-11-21) | The shortcut editor (ADR-250, 2026-11-21) | implemented |
 | [276](#adr-276-the-editors-f1-help-made-from-the-design-documents-adr-250-2026-11-21) | The editor's F1 help, made from the design documents (ADR-250, 2026-11-21) | implemented |
+| [277](#adr-277-the-editors-ui-scale-and-contrast-adr-250-2026-11-21) | The editor's UI scale and contrast (ADR-250, 2026-11-21) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -1009,3 +1010,23 @@ ADR when it is built.
   sub-pages, searches titles as the command palette does, and links the page's parent, children and the docs' links.
 - **Tests on the real documents**: every tool name, every kind of problem, the panels and the template's fields find a page, and no
   page shows a decision number; a doc change that breaks one fails the build's tests.
+
+### ADR-277: The editor's UI scale and contrast (ADR-250, 2026-11-21)
+**Status**: implemented (plan step 6, task 4).
+
+- **Fit any window at any scale**: the scale is the window's content scale, so a large scale leaves few points (1600 × 900 pixels at
+  200 % is 800 × 450). Rather than refuse a scale, the editor fits: when the layout is applied (at start, and when the window or the
+  scale changes) the left region takes at most 30 % of the width, the right 35 %, the bottom 40 % of the height, while the kept sizes stay
+  in the settings for a larger window; the boxes over the editor scroll inside the window (`EditorOverlay`); the Template tab's bars and
+  the Problems filters wrap (flow containers); tab rows scroll with their arrows.
+- **High contrast** is a preference (`EditorPreferences.HighContrast`), not a second theme file: `UiTheme` picks its colours by
+  `UiTheme.HighContrast` (opaque near-black grounds, light frames, white text, lighter quiet and disabled text, a 2-pixel focus frame),
+  and `UiTheme.Apply` again switches a running editor: every theme item is set in both looks except the text colours, which go back to
+  Godot's own. The editor's panels built in code take their look from theme variations (`RegionPanel`, `DialogPanel`, `CardPanel`,
+  `TilePanel`, `PagePanel`, `QuietLabel`), so they follow a switch without being rebuilt; drawn controls redraw, the Problems rows and
+  the status bar's counts are shown again, and other rows coloured in code (the history, the seeds) take the new tones at their next
+  refresh. The game keeps the normal look.
+- **Checked by smoke at every scale**: Movie Maker records at the project's window size whatever is asked, so the scales are checked
+  at 1600 × 900: the same tour of every panel and window at 100, 150 and 200 % and in high contrast, turned off at the end. AutoInput's
+  points are the UI's (turned into window pixels when sent) and it scrolls a tab out of sight into view before clicking it, so one
+  script runs at every scale.

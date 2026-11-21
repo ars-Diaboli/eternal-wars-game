@@ -16,6 +16,7 @@ public static class PreferencesStore
         return new EditorPreferences
         {
             UiScalePercent = settings.Get(Section, "ui_scale", defaults.UiScalePercent).AsInt32(),
+            HighContrast = settings.Get(Section, "high_contrast", defaults.HighContrast).AsBool(),
             AutosaveMinutes = settings.Get(Section, "autosave_minutes", defaults.AutosaveMinutes).AsInt32(),
             CameraPanSpeed = settings.Get(Section, "camera_pan_speed", defaults.CameraPanSpeed).AsInt32(),
             CameraRotateSpeed = settings.Get(Section, "camera_rotate_speed", defaults.CameraRotateSpeed).AsInt32(),
@@ -28,6 +29,7 @@ public static class PreferencesStore
     public static void Write(EditorSettingsFile settings, EditorPreferences preferences)
     {
         settings.Set(Section, "ui_scale", preferences.UiScalePercent);
+        settings.Set(Section, "high_contrast", preferences.HighContrast);
         settings.Set(Section, "autosave_minutes", preferences.AutosaveMinutes);
         settings.Set(Section, "camera_pan_speed", preferences.CameraPanSpeed);
         settings.Set(Section, "camera_rotate_speed", preferences.CameraRotateSpeed);
@@ -38,7 +40,7 @@ public static class PreferencesStore
 }
 
 /// <summary>
-/// The Preferences window (EDIT-1, ADR-250), a box over the whole editor. The General tab: the UI's scale, the autosave interval, the
+/// The Preferences window (EDIT-1, ADR-250), a box over the whole editor. The General tab: the UI's scale and contrast (ADR-277), the autosave interval, the
 /// camera's speeds, a new map's size and the game the Test starts (ADR-267); the Shortcuts tab: every command's key (ADR-275,
 /// <see cref="ShortcutEditor"/>). "OK" hands the preferences and the keys to the app, which keeps and applies them, and cannot while two
 /// commands share a key; "Defaults" puts a new installation's values into the tab shown; "Cancel" or Escape closes the window with
@@ -47,6 +49,7 @@ public static class PreferencesStore
 public partial class PreferencesWindow : Control
 {
     private readonly OptionButton _scale = new();
+    private readonly CheckBox _contrast = new() { Text = "High contrast", TooltipText = "Opaque grounds, light frames and white text" };
     private readonly SpinBox _autosave = Spin(EditorPreferences.MinAutosaveMinutes, EditorPreferences.MaxAutosaveMinutes);
     private readonly SpinBox _pan = Spin(EditorPreferences.MinPanSpeed, EditorPreferences.MaxPanSpeed);
     private readonly SpinBox _rotate = Spin(EditorPreferences.MinRotateSpeed, EditorPreferences.MaxRotateSpeed);
@@ -90,6 +93,7 @@ public partial class PreferencesWindow : Control
         }
 
         Row(grid, "UI scale", _scale);
+        Row(grid, "Contrast", _contrast);
         Row(grid, "Autosave every (minutes)", _autosave);
         Row(grid, "Camera move speed (tiles a second)", _pan);
         Row(grid, "Camera turn speed (degrees a second)", _rotate);
@@ -146,6 +150,7 @@ public partial class PreferencesWindow : Control
         // The offered scale nearest to the kept one (a file may hold any percent).
         var nearest = EditorPreferences.UiScales.MinBy(s => Math.Abs(s - preferences.UiScalePercent));
         _scale.Select(_scale.GetItemIndex(nearest));
+        _contrast.ButtonPressed = preferences.HighContrast;
         _autosave.Value = preferences.AutosaveMinutes;
         _pan.Value = preferences.CameraPanSpeed;
         _rotate.Value = preferences.CameraRotateSpeed;
@@ -164,6 +169,7 @@ public partial class PreferencesWindow : Control
         return new EditorPreferences
         {
             UiScalePercent = _scale.GetSelectedId(),
+            HighContrast = _contrast.ButtonPressed,
             AutosaveMinutes = (int)_autosave.Value,
             CameraPanSpeed = (int)_pan.Value,
             CameraRotateSpeed = (int)_rotate.Value,

@@ -6,8 +6,8 @@ namespace EternalWars.Core.Domain.Scenarios;
 public sealed record SampleMap(string Name, string About, Func<ContentCatalogs?, GameState> Create);
 
 /// <summary>
-/// The sample maps (ADR-259): the shipped hand-made maps, which the editor's empty state offers to open as a new, unsaved map to look at or
-/// change. The game lists the same maps on its new-game screen.
+/// The sample maps (ADR-259): the shipped hand-made maps, which the editor offers (its empty state, Help &gt; Sample maps) to open as a new,
+/// unsaved map to look at or change. The game lists the same maps on its new-game screen.
 /// </summary>
 public static class SampleMaps
 {

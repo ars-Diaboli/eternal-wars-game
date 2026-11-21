@@ -66,5 +66,12 @@ public class EditorShellTests
     [Fact]
     public void Preferences_Defaults_AreInsideTheirRanges() => Assert.Equal(new EditorPreferences(), new EditorPreferences().Normalized());
 
+    [Fact]
+    public void Preferences_HighContrast_IsOffAtStartAndKeptByNormalized()
+    {
+        Assert.False(new EditorPreferences().HighContrast);
+        Assert.True(new EditorPreferences { HighContrast = true }.Normalized().HighContrast);
+    }
+
     private static string[] Found(string query) => [.. CommandSearch.Find(query, Names).Select(i => Names[i])];
 }

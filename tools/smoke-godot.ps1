@@ -382,6 +382,21 @@ $scenarios = @(
     # the Events tab opens Map events (not the inspector's Events); on the Template tab F1 over the Preview tab opens Preview (random-maps.md).
     @{ Name = 'editor-help'; App = 'EternalWars.MapEditor'; Frames = 60
        Input = '3:click:@Erase;8:key:F1;20:key:Escape;22:click:@Events#2;26:key:F1;34:key:Escape;38:click:@Template;44:click:@Preview;48:key:F1' },
+    # The UI's scale and contrast (ADR-277) on Ember March: every panel and window in turn (the left region with the Object tool, the right
+    # and bottom tabs, the map settings, Preferences, the wizard, the palette, the help, the Template tab's panels) at 100, 150 and 200 %
+    # and in high contrast, which Preferences then turns off in the running editor. Points are the UI's, so the same script runs at every
+    # scale.
+    @{ Name = 'editor-scale-100'; App = 'EternalWars.MapEditor'; Frames = 100; Map = $emberMap
+       Input = '4:click:@Object;8:click:@Layers;11:click:@Overlays;14:click:@Fairness;18:click:@Events;22:click:@Generate;26:click:@History;29:click:@Output;32:click:@Problems;36:key:F7;40:click:@Players;44:click:@Texts;48:key:Escape;51:key:Ctrl+Comma;55:click:@Shortcuts;59:key:Escape;62:key:Ctrl+N;66:key:Escape;69:key:Ctrl+Shift+P;73:key:Escape;76:key:F1;80:key:Escape;83:click:@Template;88:click:@Preview;92:click:@Seeds;96:click:@Graph' },
+    @{ Name = 'editor-scale-150'; App = 'EternalWars.MapEditor'; Frames = 100; Map = $emberMap; Preferences = 'ui_scale=150'
+       Input = '4:click:@Object;8:click:@Layers;11:click:@Overlays;14:click:@Fairness;18:click:@Events;22:click:@Generate;26:click:@History;29:click:@Output;32:click:@Problems;36:key:F7;40:click:@Players;44:click:@Texts;48:key:Escape;51:key:Ctrl+Comma;55:click:@Shortcuts;59:key:Escape;62:key:Ctrl+N;66:key:Escape;69:key:Ctrl+Shift+P;73:key:Escape;76:key:F1;80:key:Escape;83:click:@Template;88:click:@Preview;92:click:@Seeds;96:click:@Graph' },
+    @{ Name = 'editor-scale-200'; App = 'EternalWars.MapEditor'; Frames = 100; Map = $emberMap; Preferences = 'ui_scale=200'
+       Input = '4:click:@Object;8:click:@Layers;11:click:@Overlays;14:click:@Fairness;18:click:@Events;22:click:@Generate;26:click:@History;29:click:@Output;32:click:@Problems;36:key:F7;40:click:@Players;44:click:@Texts;48:key:Escape;51:key:Ctrl+Comma;55:click:@Shortcuts;59:key:Escape;62:key:Ctrl+N;66:key:Escape;69:key:Ctrl+Shift+P;73:key:Escape;76:key:F1;80:key:Escape;83:click:@Template;88:click:@Preview;92:click:@Seeds;96:click:@Graph' },
+    @{ Name = 'editor-contrast'; App = 'EternalWars.MapEditor'; Frames = 118; Map = $emberMap; Preferences = 'high_contrast=true'
+       Input = '4:click:@Object;8:click:@Layers;11:click:@Overlays;14:click:@Fairness;18:click:@Events;22:click:@Generate;26:click:@History;29:click:@Output;32:click:@Problems;36:key:F7;40:click:@Players;44:click:@Texts;48:key:Escape;51:key:Ctrl+Comma;55:click:@Shortcuts;59:key:Escape;62:key:Ctrl+N;66:key:Escape;69:key:Ctrl+Shift+P;73:key:Escape;76:key:F1;80:key:Escape;83:click:@Template;88:click:@Preview;92:click:@Seeds;96:click:@Graph;100:key:Ctrl+Comma;105:click:@High contrast;109:click:@OK' },
+    # Sample maps (ADR-259) from the Help menu: on the Template tab, Help > Sample maps > Two Towns opens it as a new map on the Map tab.
+    @{ Name = 'editor-samples'; App = 'EternalWars.MapEditor'; Frames = 40
+       Input = '3:click:@Template;8:click:345,22;12:choose:Sample maps;16:choose:Two Towns' },
     # Selection and move (EDIT-1, ADR-250) on a blank map: two chests are placed; the Select tool (V) drags a rectangle over them (the
     # marquee, then tiles and chests selected); a drag from a selected chest moves both (the ghost, then the move); Ctrl+A selects
     # everything, Escape nothing; the Move tool (M) drags one chest onto the other (red ghost, refused); a click selects it, Delete removes it.
@@ -480,6 +495,8 @@ $results = $selected | ForEach-Object -ThrottleLimit ([Math]::Max(1, $Jobs)) -Pa
     Remove-Item $settings -ErrorAction SilentlyContinue
     # The editor keeps its workspace layout beside the settings file: every scenario starts from the default layout.
     Remove-Item (Join-Path $dir 'editor-settings.cfg') -ErrorAction SilentlyContinue
+    # ... unless the scenario starts with preferences of its own (the UI's scale, the contrast: ADR-277).
+    if ($scenario.Preferences) { Set-Content (Join-Path $dir 'editor-settings.cfg') "[preferences]`n$($scenario.Preferences)" }
     # ... and its maps folder and its autosaves with the session marker, which a run ended by --quit-after leaves behind.
     Remove-Item (Join-Path $dir 'maps'), (Join-Path $dir 'autosave'), (Join-Path $dir 'stamps'), (Join-Path $dir 'cache'), (Join-Path $dir 'templates'), (Join-Path $dir 'template-autosave') -Recurse -ErrorAction SilentlyContinue
     # ... and the files it writes beside its map (exports), so no save dialog asks to overwrite them.

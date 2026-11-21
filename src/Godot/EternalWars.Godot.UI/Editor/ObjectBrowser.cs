@@ -109,8 +109,7 @@ public partial class ObjectBrowser : VBoxContainer
         scroll.AddChild(_list);
         AddChild(scroll);
 
-        var card = new PanelContainer();
-        card.AddThemeStyleboxOverride("panel", UiTheme.Box(UiTheme.ButtonFace, UiTheme.BorderDim, UiSpacing.Padding));
+        var card = new PanelContainer { ThemeTypeVariation = UiTheme.TilePanel };
         var row = new HBoxContainer();
         card.AddChild(row);
         row.AddChild(_preview);
@@ -121,8 +120,8 @@ public partial class ObjectBrowser : VBoxContainer
         title.AddChild(_picture);
         title.AddChild(_favourite);
         text.AddChild(title);
-        _detail.AddThemeColorOverride("font_color", UiTheme.TextQuiet);
-        _detail.CustomMinimumSize = new Vector2(120, 0);
+        _detail.ThemeTypeVariation = UiTheme.QuietLabel;
+        _detail.CustomMinimumSize = new Vector2(100, 0);
         text.AddChild(_detail);
         AddChild(card);
         _favourite.WithIcon(UiIcons.Get(UiIcon.FavouriteOff, UiIcons.ButtonSize) ?? PlaceholderIcons.Of("Favourite"), UiIcons.ButtonSize);
@@ -420,9 +419,10 @@ public partial class ObjectBrowser : VBoxContainer
 
     private static Label Quiet(string text)
     {
-        var label = new Label { Text = text, AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(120, 0) };
-        label.AddThemeColorOverride("font_color", UiTheme.TextQuiet);
-        return label;
+        return new Label
+        {
+            Text = text, AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(100, 0), ThemeTypeVariation = UiTheme.QuietLabel,
+        };
     }
 
     /// <summary><c>ForestFloor</c> → <c>Forest floor</c>.</summary>

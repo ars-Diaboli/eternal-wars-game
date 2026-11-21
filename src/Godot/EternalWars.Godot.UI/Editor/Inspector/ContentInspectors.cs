@@ -95,7 +95,7 @@ internal sealed class ShrineInspector : InspectorSection<Shrine>
         form.In(InspectorPart.Contents).AddChild(row);
         if (shrines.Select(s => s.SpellLevel).Distinct().Count() > 1)
         {
-            row.AddChild(new Label { Text = "The shrines are of different levels: select shrines of one level to set their spell", Modulate = UiTheme.TextQuiet });
+            row.AddChild(new Label { Text = "The shrines are of different levels: select shrines of one level to set their spell", ThemeTypeVariation = UiTheme.QuietLabel });
             return;
         }
 

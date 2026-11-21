@@ -151,8 +151,7 @@ internal sealed partial class PicturePicker : Button
         _grid = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         var search = new LineEdit { PlaceholderText = "Search…", ClearButtonEnabled = true, SizeFlagsHorizontal = SizeFlags.ExpandFill };
         var list = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
-        var panel = new PanelContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
-        panel.AddThemeStyleboxOverride("panel", UiTheme.Box(UiTheme.ButtonFace, UiTheme.BorderDim, UiSpacing.Padding));
+        var panel = new PanelContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, ThemeTypeVariation = UiTheme.TilePanel };
         var inner = new VBoxContainer();
         var top = new HBoxContainer();
         top.AddChild(search);
@@ -208,7 +207,7 @@ internal sealed partial class PicturePicker : Button
         {
             if (group.Key.Length > 0)
             {
-                list.AddChild(new Label { Text = group.Key, Modulate = UiTheme.TextQuiet });
+                list.AddChild(new Label { Text = group.Key, ThemeTypeVariation = UiTheme.QuietLabel });
             }
 
             var flow = new HFlowContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
@@ -230,11 +229,11 @@ internal sealed partial class PicturePicker : Button
 
         if (found.Count > MaxShown)
         {
-            list.AddChild(new Label { Text = $"{found.Count - MaxShown} more: type to narrow the list", Modulate = UiTheme.TextQuiet });
+            list.AddChild(new Label { Text = $"{found.Count - MaxShown} more: type to narrow the list", ThemeTypeVariation = UiTheme.QuietLabel });
         }
         else if (found.Count == 0)
         {
-            list.AddChild(new Label { Text = "Nothing found", Modulate = UiTheme.TextQuiet });
+            list.AddChild(new Label { Text = "Nothing found", ThemeTypeVariation = UiTheme.QuietLabel });
         }
     }
 

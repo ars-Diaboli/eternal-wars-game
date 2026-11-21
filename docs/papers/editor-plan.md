@@ -643,8 +643,9 @@ and the game uses them.
    `editor-shortcuts`. *Done.*
 2. **F1 help**: short in-app pages for tools, fields and problems, made from the text of [tools.md](../design/tools.md) and
    [random-maps.md](../design/random-maps.md); F1 opens the page for what is hovered. Smoke `editor-help`. *Done.*
-3. **Sample maps**: in the Help menu and the empty state.
-4. **UI scale**: every panel checked at 100, 150 and 200 %; the theme's contrast setting.
+3. **Sample maps**: in the Help menu and the empty state. Smoke `editor-samples`. *Done.*
+4. **UI scale**: every panel checked at 100, 150 and 200 %; the theme's contrast setting. Smoke `editor-scale-100`, `-150`, `-200`
+   and `editor-contrast`. *Done.*
 5. **Performance**: a 256 × 256 two-level generated map timed for opening (under 3 s), painting (60 fps) and validation (never
    stalls); a script in `tools/` runs the timing, and the hot spots are fixed.
 6. **First-use test**: one person makes a playable two-player map in 15 minutes with the wizard and the browser, without a manual;

@@ -80,11 +80,20 @@ public partial class ProblemsPanel : VBoxContainer, IHelpTopics
     /// <paramref name="snapshot"/> runs on the main thread and copies the map; the work it returns validates the copy and runs on a task, so it
     /// must not touch the live scenario.
     /// </summary>
+    /// <summary>A contrast switch (ADR-277): the rows again, in the new tones.</summary>
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged && _editor is not null)
+        {
+            ShowList();
+        }
+    }
+
     public void Bind(MapEditorSession editor, Func<Func<IReadOnlyList<MapIssue>>> snapshot)
     {
         _snapshot = snapshot;
         _editor = editor;
-        var filters = new HBoxContainer();
+        var filters = new HFlowContainer(); // wraps when the region is narrow (ADR-277)
         AddChild(filters);
         _errors.Icon = UiIcons.Get(UiIcon.Error);
         _warnings.Icon = UiIcons.Get(UiIcon.Warning);

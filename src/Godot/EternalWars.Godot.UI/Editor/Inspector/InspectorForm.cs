@@ -314,7 +314,7 @@ internal sealed class InspectorForm(VBoxContainer panel, MapEditorSession editor
             return objects[0];
         }
 
-        Box.AddChild(new Label { Text = $"{Capital(what)}: select one to edit", Modulate = UiTheme.TextQuiet });
+        Box.AddChild(new Label { Text = $"{Capital(what)}: select one to edit", ThemeTypeVariation = UiTheme.QuietLabel });
         return null;
     }
 

@@ -15,8 +15,9 @@ namespace EternalWars.Godot.Shared.Controls;
 /// right click or drag may name buttons instead of points, so a layout change does not move its target: <c>click:@Close</c>,
 /// <c>rclick:@Head: —#2</c> (the second button labelled so, enabled or not, in tree order), <c>drag:@Rusted Blade&gt;@Head: —#2</c> or
 /// <c>drag:@Axe&gt;1048,456</c> (a button onto a point); a label is the one <c>dump</c> prints, line breaks as " | ", or a tab's title
-/// (<c>click:@Settings</c>). <c>choose:Slow</c> picks an item of the open drop-down list by its text. Events go through
-/// Godot's normal input pipeline, so they hit the same handlers as a real mouse and keyboard. Does nothing without the argument.
+/// (<c>click:@Settings</c>). <c>choose:Slow</c> picks an item of the open drop-down list by its text. Points are the UI's, whatever its
+/// scale. Events go through Godot's normal input pipeline, so they hit the same handlers as a real mouse and keyboard. Does nothing
+/// without the argument.
 /// </summary>
 public partial class AutoInput : Node
 {
@@ -145,9 +146,9 @@ public partial class AutoInput : Node
                     GD.Print($"autoinput: button '{Shown(button)}' at {rect.GetCenter().Round()} size {rect.Size.Round()}{(button.Disabled ? " (disabled)" : "")}");
                 }
 
-                foreach (var (title, centre) in VisibleTabs(GetTree().Root))
+                foreach (var (bar, index) in VisibleTabs(GetTree().Root))
                 {
-                    GD.Print($"autoinput: tab '{title}' at {centre.Round()}");
+                    GD.Print($"autoinput: tab '{bar.GetTabTitle(index)}' at {(bar.GetGlobalTransformWithCanvas() * bar.GetTabRect(index).GetCenter()).Round()}");
                 }
             }
             else if (Find(argument) is { } button)
@@ -187,13 +188,20 @@ public partial class AutoInput : Node
                 turn.Position = turn.GlobalPosition = GetViewport().GetVisibleRect().Size / 2;
             }
 
-            if (@event is InputEventMouseButton mouse)
+            // The script's points are the UI's; the window takes its own pixels, which differ under a UI scale (the editor's preference).
+            var window = GetViewport().GetFinalTransform();
+            if (@event is InputEventMouse pointer)
             {
-                GetViewport().WarpMouse(mouse.Position);
+                GetViewport().WarpMouse(pointer.Position);
+                pointer.Position = pointer.GlobalPosition = window * pointer.Position;
+                if (pointer is InputEventMouseMotion motion)
+                {
+                    motion.Relative = window.BasisXform(motion.Relative);
+                }
             }
-            else if (@event is InputEventMouseMotion motion)
+            else if (@event is InputEventScreenTouch touch)
             {
-                GetViewport().WarpMouse(motion.Position);
+                touch.Position = window * touch.Position;
             }
 
             Input.ParseInputEvent(@event);
@@ -259,7 +267,8 @@ public partial class AutoInput : Node
 
         var matches = VisibleButtons().Where(b => string.Equals(Shown(b), label, StringComparison.OrdinalIgnoreCase) && InView(b))
             .Select(b => b.GetGlobalRect().GetCenter())
-            .Concat(VisibleTabs(GetTree().Root).Where(t => string.Equals(t.Title, label, StringComparison.OrdinalIgnoreCase)).Select(t => t.Centre))
+            .Concat(VisibleTabs(GetTree().Root).Where(t => string.Equals(t.Bar.GetTabTitle(t.Index), label, StringComparison.OrdinalIgnoreCase))
+                .Select(t => TabCentre(t.Bar, t.Index)))
             .ToList();
         if (matches.Count < nth)
         {
@@ -270,8 +279,18 @@ public partial class AutoInput : Node
         return matches[nth - 1];
     }
 
-    /// <summary>The tabs of the visible tab bars, by title, with their centres on the screen (tabs are not buttons).</summary>
-    private static IEnumerable<(string Title, Vector2 Centre)> VisibleTabs(Node node)
+    /// <summary>
+    /// The centre of a tab on the screen. A tab the bar has scrolled out of sight (behind its arrows, on a narrow window or at a large UI scale)
+    /// is scrolled into it first, as a person would with the arrows.
+    /// </summary>
+    private static Vector2 TabCentre(TabBar bar, int index)
+    {
+        bar.EnsureTabVisible(index); // nothing changes for a tab in sight
+        return bar.GetGlobalTransformWithCanvas() * bar.GetTabRect(index).GetCenter();
+    }
+
+    /// <summary>The tabs of the visible tab bars (tabs are not buttons).</summary>
+    private static IEnumerable<(TabBar Bar, int Index)> VisibleTabs(Node node)
     {
         if (node is CanvasItem { Visible: false } or CanvasLayer { Visible: false })
         {
@@ -282,7 +301,7 @@ public partial class AutoInput : Node
         {
             for (var i = 0; i < bar.TabCount; i++)
             {
-                yield return (bar.GetTabTitle(i), bar.GetGlobalTransformWithCanvas() * bar.GetTabRect(i).GetCenter());
+                yield return (bar, i);
             }
         }
 

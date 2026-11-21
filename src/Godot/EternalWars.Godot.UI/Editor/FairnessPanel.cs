@@ -48,7 +48,7 @@ public partial class FairnessPanel : VBoxContainer
         AddChild(_table);
         AddChild(new Label { Text = "Warnings", ThemeTypeVariation = "HeaderSmall" });
         AddChild(_warnings);
-        AddChild(new Label { Text = MapReport.Legend, AutowrapMode = TextServer.AutowrapMode.WordSmart, Modulate = new Color(1, 1, 1, 0.7f) });
+        AddChild(new Label { Text = MapReport.Legend, AutowrapMode = TextServer.AutowrapMode.WordSmart, ThemeTypeVariation = UiTheme.QuietLabel });
         AddChild(_timer);
 
         _table.ItemSelected += () =>

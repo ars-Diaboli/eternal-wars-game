@@ -427,7 +427,7 @@ public partial class TemplateGraphView : Control
 
         DrawString(ThemeDB.FallbackFont, new Vector2(8, Size.Y - 8),
             "LMB select / drag · Ctrl+click: add · drag empty: marquee · RMB zone→zone: connect · MMB or RMB empty: pan · wheel: zoom",
-            fontSize: 12, modulate: new Color(0.7f, 0.7f, 0.7f));
+            fontSize: 12, modulate: UiTheme.TextQuiet);
     }
 
     /// <summary>The snapping grid: a line every grid step, a brighter one every graph unit; too dense when zoomed far out, only the units.</summary>

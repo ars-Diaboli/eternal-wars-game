@@ -9,11 +9,15 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 6 tasks 3 and 4: Help > Sample maps (smoke `editor-samples`); UI scale and contrast (ADR-277): the editor fits
+  any window at any scale (regions capped to a share of the room, overlay boxes scroll, Template and Problems bars wrap), a High contrast
+  preference switched live through `UiTheme.Apply` and theme variations; AutoInput points are UI points and reveal hidden tabs. Smoke
+  `editor-scale-100/150/200`, `editor-contrast`. Next: step 6 task 5 (performance).
 - Editor overhaul, step 6 task 2 (ADR-276): F1 help. `HelpBook` (Core.Domain.Editing) makes pages from tools.md and random-maps.md
   (bold-led paragraphs and bullets, anchors as ids, aliases, decision numbers dropped), built into Godot.UI as embedded resources;
   `EditorHelp` finds the page for the hovered control (`IHelpTopics`, tags, text, node names; the Template tab prefers random-maps.md);
   `HelpWindow` lists, searches and links the pages. tools.md gained leads for Start zones, Height, Link gates, the Grail and each kind
-  of problem. Tests `HelpBookTests` (on the real docs); smoke `editor-help`. Next: step 6 task 3 (sample maps).
+  of problem. Tests `HelpBookTests` (on the real docs); smoke `editor-help`.
 - Editor overhaul, step 6 task 1 (ADR-275): the shortcut editor. Preferences has a Shortcuts tab (`ShortcutEditor`): click a key, press
   the new one; None, Default, a filter; conflicts in red and OK disabled while any. The rules in the core (`KeyChord`,
   `ShortcutBindings`: Resolve, Changes, Conflicts); the registry's `UseShortcuts`, the commands' `DefaultShortcut`; the changes kept in

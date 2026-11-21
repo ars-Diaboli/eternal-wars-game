@@ -87,11 +87,11 @@ public partial class TemplateEditorPanel : PanelContainer
     {
         _session = session;
         _host = host;
-        this.UseOpaqueBackground();
+        ThemeTypeVariation = UiTheme.PagePanel;
 
         var rows = new VBoxContainer();
         AddChild(rows);
-        var top = new HBoxContainer();
+        var top = new HFlowContainer(); // wraps on a narrow window or at a large UI scale (ADR-277)
         rows.AddChild(top);
         top.AddChild(_title);
         Button(top, "New", () => _host.Files.New(), UiIcon.New);
@@ -127,12 +127,12 @@ public partial class TemplateEditorPanel : PanelContainer
 
         var body = new HSplitContainer { SizeFlagsVertical = SizeFlags.ExpandFill };
         rows.AddChild(body);
-        var left = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        var left = new VSplitContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         body.AddChild(left);
         // The graph with its tools over it (ADR-270, for the selected zones), beside the preview and the batch's seeds (ADR-274).
         var graph = new VBoxContainer();
         left.AddChild(Views(graph));
-        var tools = new HBoxContainer();
+        var tools = new HFlowContainer();
         graph.AddChild(tools);
         _snap.Toggled += on => _graph.SnapToGrid = on;
         tools.AddChild(_snap);
@@ -151,14 +151,16 @@ public partial class TemplateEditorPanel : PanelContainer
         }, UiIcon.Arrange);
         graph.AddChild(_graph);
         // Under the graph: the live issues, and the template's undo history (EDIT-2: the bottom region's History is the map's).
-        var below = new TabContainer { CustomMinimumSize = new Vector2(0, 160) };
-        left.AddChild(below);
+        var under = new VBoxContainer();
+        left.AddChild(under);
+        var below = new TabContainer { CustomMinimumSize = new Vector2(0, 120), SizeFlagsVertical = SizeFlags.ExpandFill };
+        under.AddChild(below);
         below.AddChild(_issues);
         below.WithTabIcon(0, UiIcon.Error);
         below.AddChild(_history);
         below.WithTabIcon(1, UiIcon.History);
         _history.Bind(session, "template");
-        left.AddChild(_message);
+        under.AddChild(_message);
         var scroll = new ScrollContainer { CustomMinimumSize = new Vector2(450, 0), HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
         body.AddChild(scroll);
         scroll.AddChild(_inspector);

@@ -29,8 +29,8 @@ public partial class NewMapWizard : Control
     private readonly Button _back = new() { Text = "Back", CustomMinimumSize = new Vector2(110, 0) };
     private readonly Button _next = new() { Text = "Next", CustomMinimumSize = new Vector2(110, 0) };
     private readonly Button _finish = new() { CustomMinimumSize = new Vector2(150, 0) };
-    private readonly SpinBox _width = new() { MinValue = MapSizes.MinDimension, MaxValue = MapSizes.MaxDimension, Prefix = "width" };
-    private readonly SpinBox _height = new() { MinValue = MapSizes.MinDimension, MaxValue = MapSizes.MaxDimension, Prefix = "height" };
+    private readonly SpinBox _width = new() { MinValue = MapSizes.MinDimension, MaxValue = MapSizes.MaxDimension, Prefix = "width", CustomMinimumSize = new Vector2(120, 0) };
+    private readonly SpinBox _height = new() { MinValue = MapSizes.MinDimension, MaxValue = MapSizes.MaxDimension, Prefix = "height", CustomMinimumSize = new Vector2(120, 0) };
     private readonly HBoxContainer _otherSize = new();
     private readonly SpinBox _players = new() { MinValue = 1, MaxValue = GameState.MaxPlayers, Step = 1 };
     private readonly VBoxContainer _kinds = new();

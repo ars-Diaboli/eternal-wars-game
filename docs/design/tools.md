@@ -73,9 +73,10 @@ placeholder, a coloured tile with the name's two letters.
   ground, the underground below, the players named by colour, each with a hero. With one it ends in the Generate tab, set to the
   template at its size nearest the chosen one and to the players (the template decides the ground and the levels); Generate makes
   the map. Cancel or Escape closes the wizard.
-- **The empty state**: the editor starts on a blank map with a card over it that offers the wizard, Open and the sample maps (Ember
-  March, Two Towns and the arenas, each opened as a new, unsaved map). The map can be painted at once; the card goes at the first edit,
-  with its close button or when another map opens.
+- **The empty state**: the editor starts on a blank map with a card over it that offers the wizard, Open and the sample maps. The map
+  can be painted at once; the card goes at the first edit, with its close button or when another map opens.
+- **Sample maps** (the empty state, or Help > Sample maps at any time): Ember March, Two Towns and the arenas, each opened as a new,
+  unsaved map on the Map tab, to look at or change.
 - **Open** (Ctrl+O), **Save** (Ctrl+S) and **Save as** (Ctrl+Shift+S) use a file dialog, the system's own where there is one. It
   starts in the maps folder (`user://maps`), or in the folder of the map's file. Save writes to the map's file; a map without a file
   asks for one. The dialog asks before it overwrites a file.
@@ -291,6 +292,7 @@ through the list, Enter or a click runs the command, Escape closes the palette.
 | Preference | Range | At start |
 |---|---|---|
 | UI scale | 100, 125, 150, 175 or 200 % | 100 % |
+| Contrast | normal, or high: opaque near-black grounds, light frames, white text, the quiet and greyed text lightened | normal |
 | Autosave interval | 1 to 30 minutes | 2 |
 | Camera move speed | 4 to 40 tiles a second (at 100 % zoom) | 12 |
 | Camera turn speed | 30 to 180 degrees a second | 90 |
@@ -307,6 +309,12 @@ one command's. Only the keys that differ from the defaults are kept; a default k
 command that had it.
 
 "Defaults" puts the values of a new installation into the tab shown; "Cancel" or Escape changes nothing.
+
+**Scale and contrast** (ADR-277): both take effect at once, without a restart. At every scale the editor fits its window, however few
+points that leaves (a 1600 × 900 window at 200 % is 800 × 450): when the window gets smaller or the scale larger, the left region takes
+at most 30 % of the width, the right 35 % and the bottom 40 % of the height, so the map keeps room (a region dragged wider stays so
+until then); the boxes over the editor (the map settings, Preferences, the wizard, the help) scroll inside the window; tab rows that do
+not fit show arrows; the rows of buttons on the Template tab and over the Problems list wrap.
 
 **The camera** (ADR-260) looks at the map tilted, 15° to 30° from straight down (more tilted closer), or straight down (View >
 Top-down view); it goes out far enough to show a 256 × 256 map.

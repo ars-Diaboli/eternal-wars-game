@@ -2,8 +2,8 @@
 
 Painted creature portraits with transparency (512 × 512, facing right) and one opaque painted backdrop a faction (1024 × 1024), generated
 for this project by the owner (2026-11-21: Academy, Conflux, Dragon Utopia, Dungeon, Haven, Inferno, Necropolis, neutral, Sylvan) as portrait sheets and cut into one file per creature (prompts in
-`docs/content/prompts/creature-icon-prompts.md` and its faction files). Not shown in the game yet: the army slots and the creature windows
-still use the lettered placeholders.
+`docs/content/prompts/creature-icon-prompts.md` and its faction files). Shown in the battle's initiative bar; the army slots and the creature
+windows still use the lettered placeholders.
 
 | File | Used for |
 |---|---|

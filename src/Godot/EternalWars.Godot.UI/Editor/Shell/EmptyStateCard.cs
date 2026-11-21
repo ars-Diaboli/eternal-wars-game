@@ -16,7 +16,7 @@ public partial class EmptyStateCard : PanelContainer
     public void Bind(MapEditorSession editor, Action newMap, Action open, IReadOnlyList<SampleMap> samples, Action<SampleMap> openSample)
     {
         Name = "EmptyState";
-        AddThemeStyleboxOverride("panel", UiTheme.Box(new Color(UiTheme.PanelBackground, 0.94f), UiTheme.Border, UiSpacing.Padding * 2));
+        ThemeTypeVariation = UiTheme.CardPanel;
         var rows = new VBoxContainer();
         AddChild(rows);
 

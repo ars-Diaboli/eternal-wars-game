@@ -13,7 +13,7 @@ namespace EternalWars.Godot.UI.Battle;
 
 /// <summary>
 /// Screen overlay of the 3D battle scene: the sides and round, an initiative timeline (active unit, then the queue,
-/// then waiting units), the combat log as the animation plays it, the hovered or active unit's stats, action buttons
+/// then waiting units; each stack's portrait and count, its name while it has no portrait), the combat log as the animation plays it, the hovered or active unit's stats, action buttons
 /// (wait, defend, retreat, surrender, quick combat), "Start battle" during the deployment step (ADR-072), the result screen and, after it, the
 /// Necromancy screen (ADR-072, MAG-7). Refreshes when <see cref="BattleView3D"/> is idle, so it
 /// matches what is shown. Buttons are commands; the root lets mouse input through to the battlefield.
@@ -64,7 +64,7 @@ public partial class BattleHud : Control
     private BattleView3D _view = null!;
 
     /// <summary>Height the bottom initiative bar takes: the log and the actions stand above it.</summary>
-    private const float BottomBarHeight = 60;
+    private const float BottomBarHeight = 96; // a portrait and the count under it
 
     /// <summary>
     /// The layout settings (the "Layout" tab, ADR-156): the initiative bar runs under the title at the top, or along the bottom with the log
@@ -533,7 +533,26 @@ public partial class BattleHud : Control
         style.SetBorderWidthAll(active ? 2 : 0);
         var panel = new PanelContainer { MouseFilter = MouseFilterEnum.Ignore };
         panel.AddThemeStyleboxOverride("panel", style);
-        panel.AddChild(new Label { Text = $"{unit.Creature.Name}\n×{unit.Count}{(waiting ? "  (w)" : string.Empty)}", HorizontalAlignment = HorizontalAlignment.Center });
+        var count = $"×{unit.Count}{(waiting ? "  (w)" : string.Empty)}";
+        if (CreatureIcons.Of(unit) is not { } portrait)
+        {
+            panel.AddChild(new Label { Text = $"{unit.Creature.Name}\n{count}", HorizontalAlignment = HorizontalAlignment.Center, MouseFilter = MouseFilterEnum.Ignore });
+            return panel;
+        }
+
+        // The portrait faces right, like the attacker; the defender's is mirrored to face its enemy.
+        var column = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
+        column.AddThemeConstantOverride("separation", 0);
+        panel.AddChild(column);
+        column.AddChild(new TextureRect
+        {
+            Texture = portrait,
+            FlipH = unit.Side == BattleSide.Defender,
+            StretchMode = TextureRect.StretchModeEnum.KeepCentered,
+            CustomMinimumSize = new Vector2(CreatureIcons.TimelineSize, CreatureIcons.TimelineSize),
+            MouseFilter = MouseFilterEnum.Ignore,
+        });
+        column.AddChild(new Label { Text = count, HorizontalAlignment = HorizontalAlignment.Center, MouseFilter = MouseFilterEnum.Ignore });
         return panel;
     }
 

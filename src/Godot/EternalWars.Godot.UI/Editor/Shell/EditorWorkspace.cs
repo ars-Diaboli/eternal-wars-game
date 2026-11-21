@@ -34,6 +34,18 @@ public partial class EditorWorkspace : Control
         [EditorRegion.Bottom] = -200,
     };
 
+    /// <summary>
+    /// The most of the room a region takes when the layout is applied (at start, and when the window or the UI's scale changes, ADR-277), so
+    /// the map keeps room on a small window or at a large scale; a region dragged wider stays so until then.
+    /// </summary>
+    private static readonly Dictionary<EditorRegion, float> MostOfRoom = new()
+    {
+        [EditorRegion.Left] = 0.3f,
+        [EditorRegion.Right] = 0.35f,
+        [EditorRegion.Bottom] = 0.4f,
+    };
+
+    private readonly Dictionary<EditorRegion, SplitContainer> _splitters = [];
     private readonly Dictionary<EditorRegion, TabContainer> _regions = [];
     private readonly Dictionary<EditorRegion, PanelContainer> _panels = [];
     private readonly Dictionary<EditorRegion, VBoxContainer> _footers = [];
@@ -110,6 +122,24 @@ public partial class EditorWorkspace : Control
         rows.AddChild(status);
         status.AddChild(StatusBar);
         ApplyVisibility();
+        _body.Resized += FitRegions;
+    }
+
+    /// <summary>Each region at its kept size, or at its share of the room when that is less (<see cref="MostOfRoom"/>).</summary>
+    private void FitRegions()
+    {
+        var room = _body.Size;
+        if (room.X <= 0 || room.Y <= 0)
+        {
+            return;
+        }
+
+        foreach (var (region, splitter) in _splitters)
+        {
+            var kept = _settings.Get(Section, SettingKey(region, "offset"), DefaultOffsets[region]).AsInt32();
+            var most = (int)((region == EditorRegion.Bottom ? room.Y : room.X) * MostOfRoom[region]);
+            splitter.SplitOffsets = [kept < 0 ? -Math.Min(-kept, most) : Math.Min(kept, most)];
+        }
     }
 
     /// <summary>
@@ -240,6 +270,7 @@ public partial class EditorWorkspace : Control
     {
         splitter.MouseFilter = MouseFilterEnum.Ignore; // the draggers are controls of their own
         splitter.SplitOffsets = [_settings.Get(Section, SettingKey(region, "offset"), DefaultOffsets[region]).AsInt32()];
+        _splitters[region] = splitter;
         splitter.DragEnded += () =>
         {
             _settings.Set(Section, SettingKey(region, "offset"), splitter.SplitOffsets[0]);
@@ -312,7 +343,7 @@ public partial class EditorWorkspace : Control
     /// <summary>A docked panel hides the map behind it (the theme's panels over the map let it show through).</summary>
     private static PanelContainer Opaque(PanelContainer panel)
     {
-        panel.AddThemeStyleboxOverride("panel", UiTheme.Box(new Color(UiTheme.PanelBackground, 1), UiTheme.Border, UiSpacing.Padding));
+        panel.ThemeTypeVariation = UiTheme.RegionPanel;
         return panel;
     }
 

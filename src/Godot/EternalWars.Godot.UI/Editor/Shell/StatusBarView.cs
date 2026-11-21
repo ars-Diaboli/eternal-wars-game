@@ -73,8 +73,20 @@ public partial class StatusBarView : HBoxContainer
     /// <summary>What runs in the background ("Checking the map…"), or null when nothing does.</summary>
     public void ShowWork(string? work) => _work.Text = work ?? "";
 
+    private (int Errors, int Warnings)? _counts;
+
+    /// <summary>A contrast switch (ADR-277): the counts again, in the new tones.</summary>
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged && _counts is { } counts)
+        {
+            ShowProblems(counts.Errors, counts.Warnings);
+        }
+    }
+
     public void ShowProblems(int errors, int warnings)
     {
+        _counts = (errors, warnings);
         _problems.Text = $"Errors: {errors}  Warnings: {warnings}";
         var colour = errors > 0 ? UiTheme.IssueError : warnings > 0 ? UiTheme.IssueWarning : UiTheme.TextQuiet;
         _problems.AddThemeColorOverride("font_color", colour);

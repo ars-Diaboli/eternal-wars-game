@@ -3,7 +3,7 @@ using EternalWars.Core.Domain.Map;
 namespace EternalWars.Core.Domain.Editing;
 
 /// <summary>
-/// What the map editor's user sets in Preferences (EDIT-1, ADR-250): the UI's scale, how often unsaved work is autosaved, the camera's
+/// What the map editor's user sets in Preferences (EDIT-1, ADR-250): the UI's scale and contrast (ADR-277), how often unsaved work is autosaved, the camera's
 /// speeds, the size of a new map and the game the Test starts (ADR-267). The values are what a new installation starts with; <see cref="Normalized"/> brings values read
 /// from a file or typed into a field into their ranges.
 /// </summary>
@@ -28,6 +28,9 @@ public sealed record EditorPreferences
 
     /// <summary>The size of the editor's UI, in percent of its design size.</summary>
     public int UiScalePercent { get; init; } = 100;
+
+    /// <summary>The theme's high contrast (ADR-277): opaque grounds, light frames, white text.</summary>
+    public bool HighContrast { get; init; }
 
     /// <summary>The minutes between two autosaves of a map with unsaved work.</summary>
     public int AutosaveMinutes { get; init; } = 2;

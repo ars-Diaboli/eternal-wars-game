@@ -171,14 +171,22 @@ public partial class Main : Node3D
         });
     }
 
-    /// <summary>A sample map (ADR-259) opened as a new, unsaved map, through the map format like a file.</summary>
+    /// <summary>A sample map (ADR-259) opened as a new, unsaved map, through the map format like a file: from the empty state or Help → Sample maps.</summary>
     private void OpenSample(SampleMap sample) =>
         _files.OpenNew(MapConverter.ToGameState(MapConverter.ToDocument(sample.Create(GameContent.All)), GameContent.All));
 
-    /// <summary>The preferences take effect: the UI's scale, the autosave interval and the camera's speeds (a new map reads its size when it is made).</summary>
+    /// <summary>
+    /// The preferences take effect: the UI's scale and contrast (ADR-277), the autosave interval and the camera's speeds (a new map reads its
+    /// size when it is made).
+    /// </summary>
     private void ApplyPreferences()
     {
         GetWindow().ContentScaleFactor = _preferences.UiScalePercent / 100f;
+        if (UiTheme.HighContrast != _preferences.HighContrast)
+        {
+            UiTheme.Apply(compact: true, _preferences.HighContrast);
+        }
+
         _files.AutosaveMinutes = _preferences.AutosaveMinutes;
         _templateFiles.AutosaveMinutes = _preferences.AutosaveMinutes;
         _camera.PanSpeed = _preferences.CameraPanSpeed;
@@ -938,7 +946,10 @@ public partial class Main : Node3D
                 ],
             },
             new("Test", ["test.play"]),
-            new("Help", ["help.help"]),
+            new("Help", ["help.help", null, ">Sample maps"])
+            {
+                Lists = [new("Sample maps", () => [.. SampleMaps.All.Select(m => (m.Name, (Action)(() => OpenSample(m))))], "None")],
+            },
         ]);
         toolbar.Bind(_commands,
         [

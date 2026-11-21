@@ -22,7 +22,7 @@ public sealed class ToolOptions(Container row)
     {
         Text = text,
         AutowrapMode = TextServer.AutowrapMode.WordSmart,
-        CustomMinimumSize = new Vector2(220, 0), // a wrapping label in a flow needs a width, or it wraps every letter
+        CustomMinimumSize = new Vector2(160, 0), // a wrapping label in a flow needs a width, or it wraps every letter
         SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
     });
 

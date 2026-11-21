@@ -377,7 +377,10 @@ into Core.Domain; `data/templates` into Core.Data. Apps use the embedded copy (`
   `Screens.UseMenuPanel` for one over the main menu's picture; code that places controls itself uses `UiSpacing.ScreenEdge`.
 - **Look** (ADR-191, ADR-223): `UiTheme` holds the colours (panels, frames, buttons, text tints such as `TextCaution` or `IssueError`) and
   the panels' widths and slot sizes (`ScreenTextWidth`, `TownSlotSize`, `InspectorTextWidth`, ...); panels name a token instead of a
-  literal. Drawing code (the battle board, the template graph) keeps its own palette.
+  literal. Drawing code (the battle board, the template graph's zones and connections) keeps its own palette. The editor's high contrast
+  (ADR-277) switches a running UI through `UiTheme.Apply`: editor panels take their frames and quiet text from the theme's variations
+  (`RegionPanel`, `DialogPanel`, `CardPanel`, `TilePanel`, `PagePanel`, `QuietLabel`), never from stylebox or colour overrides, so they
+  follow the switch.
 
 ## 5. Threading model
 Single-threaded on Godot's main thread; `EventBus` is deliberately not thread-safe. Heavy work may later run on a
