@@ -42,6 +42,15 @@ public partial class TemplateEditorPanel : PanelContainer
     private readonly OptionButton _size = new();
     private readonly LineEdit _seed = new() { CustomMinimumSize = new Vector2(170, 0) };
     private readonly Label _message = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+    private readonly CheckBox _snap = new()
+    {
+        Text = "Snap to grid", ButtonPressed = true, TooltipText = "Dragged zones and aligned rows land on a grid of half a graph unit",
+    };
+
+    private Button _alignRow = null!;
+    private Button _alignColumn = null!;
+    private Button _spreadRow = null!;
+    private Button _spreadColumn = null!;
     private TemplateEditorSession _session = null!;
     private TemplateEditorHost _host = null!;
     private RefreshScheduler _replaced = null!;
@@ -86,7 +95,6 @@ public partial class TemplateEditorPanel : PanelContainer
         Button(top, "+ AI start", () => Add(ZoneType.AiStart), ZoneIcon(ZoneType.AiStart));
         Button(top, "+ Treasure", () => Add(ZoneType.Treasure), ZoneIcon(ZoneType.Treasure));
         Button(top, "+ Junction", () => Add(ZoneType.Junction), ZoneIcon(ZoneType.Junction));
-        Button(top, "Arrange", () => _session.ArrangeGraph(all: true), UiIcon.Arrange);
         top.AddChild(new VSeparator());
         top.AddChild(_size);
         _seed.Text = ((ulong)System.Random.Shared.NextInt64()).ToString(CultureInfo.InvariantCulture);
@@ -97,6 +105,22 @@ public partial class TemplateEditorPanel : PanelContainer
         rows.AddChild(body);
         var left = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         body.AddChild(left);
+        // Over the graph: its tools (ADR-270), for the selected zones.
+        var tools = new HBoxContainer();
+        left.AddChild(tools);
+        _snap.Toggled += on => _graph.SnapToGrid = on;
+        tools.AddChild(_snap);
+        tools.AddChild(new VSeparator());
+        _alignRow = ToolButton(tools, "Align in a row", "The selected zones at one height", () => Align(GraphLine.Row));
+        _alignColumn = ToolButton(tools, "Align in a column", "The selected zones one above the other", () => Align(GraphLine.Column));
+        _spreadRow = ToolButton(tools, "Spread across", "The selected zones evenly from left to right, the outer two staying", () => Spread(GraphLine.Row));
+        _spreadColumn = ToolButton(tools, "Spread down", "The selected zones evenly from top to bottom, the outer two staying", () => Spread(GraphLine.Column));
+        tools.AddChild(new VSeparator());
+        Button(tools, "Arrange", () =>
+        {
+            _graph.EndDrag();
+            _session.ArrangeGraph(all: true);
+        }, UiIcon.Arrange);
         left.AddChild(_graph);
         // Under the graph: the live issues, and the template's undo history (EDIT-2: the bottom region's History is the map's).
         var below = new TabContainer { CustomMinimumSize = new Vector2(0, 160) };
@@ -112,7 +136,11 @@ public partial class TemplateEditorPanel : PanelContainer
         scroll.AddChild(_inspector);
 
         _graph.Bind(session);
-        _graph.SelectionChanged += _ => ShowInspector();
+        _graph.SelectionChanged += _ =>
+        {
+            ShowInspector();
+            ShowTools();
+        };
         // An undo, a redo or another template: the inspector and the sizes show it once, at the end of the frame (the history may be moving
         // through several steps, and the change can come from a control of the inspector itself).
         _replaced = new RefreshScheduler(this, () =>
@@ -137,7 +165,127 @@ public partial class TemplateEditorPanel : PanelContainer
         ShowSizes();
         ShowIssues(session.Issues);
         ShowInspector();
+        ShowTools();
     }
+
+    private static Button ToolButton(Container parent, string text, string tooltip, Action pressed)
+    {
+        var button = new Button { Text = text, TooltipText = tooltip };
+        button.Pressed += pressed;
+        parent.AddChild(button);
+        return button;
+    }
+
+    /// <summary>Align takes two selected zones, Spread three.</summary>
+    private void ShowTools()
+    {
+        var count = _graph.Selection.Zones.Count;
+        _alignRow.Disabled = _alignColumn.Disabled = count < 2;
+        _spreadRow.Disabled = _spreadColumn.Disabled = count < 3;
+    }
+
+    private void Align(GraphLine line)
+    {
+        _graph.EndDrag();
+        _session.AlignZones(_graph.Selection.Zones, line, _graph.Grid);
+    }
+
+    private void Spread(GraphLine line)
+    {
+        _graph.EndDrag();
+        _session.SpreadZones(_graph.Selection.Zones, line);
+    }
+
+    // The selection and the clipboard (ADR-271): the editor's Edit commands call these on the Template tab ---------------------------
+
+    /// <summary>
+    /// The zones last copied or cut, with the connections between them; kept while another template is opened (the panel lives as long as the
+    /// editor), so zones go from one template to another.
+    /// </summary>
+    public TemplateFragment? Clipboard { get; private set; }
+
+    /// <summary>Why Delete cannot run now; null when a zone or a connection is selected.</summary>
+    public string? WhyNothingSelected() =>
+        _graph.Selection.Zones.Count > 0 || _graph.Selection.Connection is not null ? null : "No zone and no connection is selected";
+
+    /// <summary>Why Copy, Cut and Duplicate cannot run: they take zones.</summary>
+    public string? WhyNoZones() => _graph.Selection.Zones.Count > 0 ? null : "No zone is selected";
+
+    public void SelectAll() => _graph.SelectAll();
+
+    public void Deselect() => _graph.Select(GraphSelection.None);
+
+    /// <summary>The selected zones and the connections between them go to <see cref="Clipboard"/>; Cut also removes them. Returns what happened.</summary>
+    public string Copy(bool cut)
+    {
+        _graph.EndDrag();
+        if (_session.Copy(_graph.Selection.Zones) is not { } fragment)
+        {
+            return "No zone is selected";
+        }
+
+        Clipboard = fragment;
+        if (cut)
+        {
+            _session.RemoveZones(fragment.Zones.Select(z => z.Id));
+            _graph.Select(GraphSelection.None);
+        }
+
+        return $"{(cut ? "Cut" : "Copied")} {Zones(fragment.Zones.Count)} and {fragment.Connections.Count} connection(s) between them; Ctrl+V pastes";
+    }
+
+    /// <summary>The clipboard's zones come in under the pointer (or in the middle of the view) with new ids, and are selected.</summary>
+    public string Paste()
+    {
+        _graph.EndDrag();
+        if (Clipboard is not { } fragment)
+        {
+            return "Nothing was copied";
+        }
+
+        var (x, y) = _graph.PasteSpot(fragment);
+        return Placed(_session.Paste(fragment, x, y), fragment, "Pasted");
+    }
+
+    /// <summary>A copy of the selected zones beside them, selected.</summary>
+    public string Duplicate()
+    {
+        _graph.EndDrag();
+        if (_session.Copy(_graph.Selection.Zones) is not { } fragment)
+        {
+            return "No zone is selected";
+        }
+
+        return Placed(_session.Duplicate(fragment.Zones.Select(z => z.Id), 1, 1.5), fragment, "Duplicated"); // below and right, clear of the cards
+    }
+
+    private string Placed(IReadOnlyList<string>? ids, TemplateFragment fragment, string verb)
+    {
+        if (ids is null)
+        {
+            return $"No room: {fragment.StartZones} start zone(s) need a free player slot each, of 8";
+        }
+
+        _graph.Select(GraphSelection.Of(ids));
+        return $"{verb} {Zones(ids.Count)}";
+    }
+
+    /// <summary>Removes the selected zones (one step) or the selected connection.</summary>
+    public string Delete()
+    {
+        _graph.EndDrag(); // a removal is a step of its own, not part of a drag
+        var selection = _graph.Selection;
+        _graph.Select(GraphSelection.None);
+        if (selection.Connection is { } index && _session.Disconnect(index))
+        {
+            return "Removed the connection";
+        }
+
+        var removed = _session.RemoveZones(selection.Zones);
+        return removed == 0 ? "Nothing is selected" : $"Removed {Zones(removed)}";
+    }
+
+    private static string Zones(int count) => count == 1 ? "1 zone" : $"{count} zones";
 
     /// <summary>A button; <paramref name="icon"/> stands before its text ("Save" shows only its icon).</summary>
     private static void Button(Container parent, string text, Action pressed, UiIcon? icon = null)
@@ -210,7 +358,7 @@ public partial class TemplateEditorPanel : PanelContainer
         var (x, y) = _graph.FreeSpot();
         if (_session.AddZone(type, x, y) is { } id)
         {
-            _graph.Select(new GraphSelection(id, null));
+            _graph.Select(GraphSelection.Of(id));
         }
         else
         {
@@ -281,6 +429,10 @@ public partial class TemplateEditorPanel : PanelContainer
         if (_graph.Selection.Zone is { } zone && _session.Template.Zone(zone) is not null)
         {
             ShowZone(zone);
+        }
+        else if (_graph.Selection.Zones.Count > 1)
+        {
+            ShowZones(_graph.Selection.Zones);
         }
         else if (_graph.Selection.Connection is { } connection && connection < _session.Template.Connections.Count)
         {
@@ -415,7 +567,7 @@ public partial class TemplateEditorPanel : PanelContainer
         {
             if (v.Trim() != id && _session.RenameZone(id, v))
             {
-                _graph.Select(new GraphSelection(v.Trim(), null));
+                _graph.Select(GraphSelection.Of(v.Trim()));
             }
         });
         Choice("Type", Enum.GetValues<ZoneType>(), z.Type, v =>
@@ -501,11 +653,31 @@ public partial class TemplateEditorPanel : PanelContainer
 
         var town = _inspector.AddRow("Neutral town types", labelWidth: 150);
         town.AddChild(new Label { Text = z.TownTypes is { Count: > 0 } types ? string.Join(", ", types) : "any playable town (edit the file to limit)" });
-        Button(_inspector, "Remove zone (Del)", () =>
+        Button(_inspector, "Remove zone (Del)", () => _message.Text = Delete());
+    }
+
+    /// <summary>Several zones selected (ADR-271): which, and what can be done with all of them.</summary>
+    private void ShowZones(IReadOnlyList<string> ids)
+    {
+        Heading($"{ids.Count} zones selected");
+        _inspector.AddChild(new Label { Text = string.Join(", ", ids), AutowrapMode = TextServer.AutowrapMode.WordSmart });
+        var inner = _session.Copy(ids)?.Connections.Count ?? 0;
+        _inspector.AddChild(new Label { Text = $"{inner} connection(s) between them go with a copy." });
+        var align = new HBoxContainer();
+        _inspector.AddChild(align);
+        Button(align, "Align in a row", () => Align(GraphLine.Row));
+        Button(align, "Align in a column", () => Align(GraphLine.Column));
+        if (ids.Count >= 3)
         {
-            _session.RemoveZone(id);
-            _graph.Select(GraphSelection.None);
-        });
+            Button(align, "Spread across", () => Spread(GraphLine.Row));
+            Button(align, "Spread down", () => Spread(GraphLine.Column));
+        }
+
+        var edit = new HBoxContainer();
+        _inspector.AddChild(edit);
+        Button(edit, "Copy (Ctrl+C)", () => _message.Text = Copy(cut: false), UiIcon.Copy);
+        Button(edit, "Duplicate (Ctrl+D)", () => _message.Text = Duplicate(), UiIcon.Duplicate);
+        Button(edit, "Remove zones (Del)", () => _message.Text = Delete(), UiIcon.Delete);
     }
 
     private int FreeSlot()
@@ -555,10 +727,6 @@ public partial class TemplateEditorPanel : PanelContainer
             }
         }
 
-        Button(_inspector, "Remove connection (Del)", () =>
-        {
-            _session.Disconnect(index);
-            _graph.Select(GraphSelection.None);
-        });
+        Button(_inspector, "Remove connection (Del)", () => _message.Text = Delete());
     }
 }

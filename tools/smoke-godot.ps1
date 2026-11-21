@@ -212,10 +212,15 @@ $scenarios = @(
     # Generate tab again: the settings stay.
     @{ Name = 'editor-heights'; App = 'EternalWars.MapEditor'; Frames = 110
        Input = '3:click:@Height;5:click:304,243;7:click:304,243;9:click:144,274;10:click:144,274;11:click:144,274;12:click:144,274;13:click:144,274;14:click:144,274;17:drag:460,600,900,600;21:drag:460,620,900,620;26:click:@Raise;29:choose:Lower;33:drag:460,560,900,560;38:click:@Undo;42:click:@Terrain;45:click:@Highlands;48:click:400,400;59:click:@Generate;64:click:@Random;68:choose:sylvan;72:click:@Generate;86:click:@Inspector;90:click:@Generate' },
-    # The template editor (ADR-117) in the workspace's Template tab (EDIT-3): the tab, select the middle zone (its obelisk count, ADR-140), add a treasure zone, drag it,
-    # right-drag it onto start-1 to connect, Generate (the map opens in the Map tab).
+    # The template editor (ADR-117) in the workspace's Template tab (EDIT-3): the tab, select the middle zone's card (its obelisk count, ADR-140),
+    # add a treasure zone, drag it (on the grid, ADR-270), right-drag it onto start-1 to connect, Generate (the map opens in the Map tab).
     @{ Name = 'editor-template-editor'; App = 'EternalWars.MapEditor'; Frames = 70
-       Input = '3:click:@Template;10:click:710,405;18:click:@+ Treasure;24:drag:626,440,710,590;30:rdrag:710,590,570,405;44:click:@Generate' },
+       Input = '3:click:@Template;10:click:781,405;18:click:@+ Treasure;24:drag:641,510,781,600;30:rdrag:781,600,571,405;44:click:@Generate' },
+    # The template graph's selection and clipboard (ADR-270, ADR-271): pan up with the middle button, a marquee round start-1 and middle, Ctrl+C,
+    # a click on empty ground, Ctrl+V pastes them there (new ids, the connection between them), Ctrl+D duplicates the pasted pair beside it;
+    # the History tab, Ctrl+A, Delete removes every zone as one step, Ctrl+Z brings them back.
+    @{ Name = 'editor-template-graph'; App = 'EternalWars.MapEditor'; Frames = 50
+       Input = '3:click:@Template;6:mdrag:300,560,300,400;10:drag:420,190,800,320;14:key:Ctrl+C;17:click:680,420;21:key:Ctrl+V;26:key:Ctrl+D;31:click:@History;34:key:Ctrl+A;38:key:Delete;42:key:Ctrl+Z' },
     # Template undo (EDIT-2, ADR-250): on the Template tab add a treasure zone and a junction, open the template's History under the graph;
     # Ctrl+Z twice undoes both (dim in the list), Ctrl+Y redoes the treasure zone; on the Map tab Undo is the map's (nothing to undo).
     @{ Name = 'editor-template-undo'; App = 'EternalWars.MapEditor'; Frames = 44
