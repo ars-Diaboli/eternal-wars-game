@@ -21,10 +21,8 @@ internal static class HeroInspector
         panel.AddChild(new Label { Text = $"{hero.Name} ({scenario.GetPlayer(hero.Owner).Name}) at {hero.Position}" });
         var identity = new HBoxContainer();
         panel.AddChild(identity);
-        var type = identity.AddChoice("Hero", new[] { ("(custom)", (string?)null) }
-            .Concat(scenario.HeroRoster.All.OrderBy(h => h.Town).ThenBy(h => h.Name)
-                .Select(h => ($"{h.Name} ({h.Town}, {h.Class})", (string?)h.Id))), hero.Definition);
-        type.Button.ItemSelected += _ => form.Edit(() => heroes.SetType(hero.Id, type.Value()));
+        var type = PicturePicker.Add(identity, "Hero", [PickerItem.None("(custom)"), .. form.HeroItems()], hero.Definition ?? "");
+        type.Picked += picked => form.Edit(() => heroes.SetType(hero.Id, picked.Length > 0 ? picked : null));
         var placeholder = new CheckBox
         {
             Text = "Placeholder",
@@ -82,18 +80,18 @@ internal static class HeroInspector
         }
 
         panel.AddHeading("Army");
-        var creatures = new[] { ("— empty —", "") }.Concat(form.Creatures()).ToList();
+        var creatures = form.ArmyItems();
         for (var slot = 0; slot < Army.SlotCount; slot++)
         {
             var row = new HBoxContainer();
             panel.AddChild(row);
             var stack = hero.Army[slot];
-            var creature = row.AddChoice($"{slot + 1}", creatures, stack?.Creature.Value ?? "");
+            var creature = PicturePicker.Add(row, $"{slot + 1}", creatures, stack?.Creature.Value ?? "");
             var count = row.AddSpin("×", stack?.Count ?? 1, 1, 9999);
             var index = slot;
             void ApplySlot() => form.Edit(() => heroes.SetArmySlot(
                 hero.Id, index, creature.Value() is { Length: > 0 } id ? new CreatureStack(id, (int)count.Value) : null));
-            creature.Button.ItemSelected += _ => ApplySlot();
+            creature.Picked += _ => ApplySlot();
             count.ValueChanged += _ => ApplySlot();
         }
 
@@ -106,19 +104,17 @@ internal static class HeroInspector
     {
         var book = new CheckBox { Text = "Spell book", ButtonPressed = hero.HasSpellBook };
         form.Box.AddChild(book);
-        var items = new[] { ("— none —", "") }
-            .Concat(form.Scenario.Spells.All.OrderBy(s => s.Level).ThenBy(s => s.Name).Select(s => ($"{s.Name} (L{s.Level}, {s.School})", s.Id.Value)))
-            .ToList();
+        List<PickerItem> items = [PickerItem.None("— none —"), .. InspectorForm.SpellItems(form.Scenario.Spells.All)];
         var rows = new HFlowContainer();
         form.Box.AddChild(rows);
-        var choices = hero.Spells.Keys.Select(k => k.Value).Append("").Select(id => rows.AddChoice("", items, id)).ToList();
+        var choices = hero.Spells.Keys.Select(k => k.Value).Append("").Select(id => PicturePicker.Add(rows, null, items, id)).ToList();
         rows.Visible = hero.HasSpellBook;
         void Apply() => form.Edit(() => form.Editor.Heroes.SetSpells(
             hero.Id, book.ButtonPressed, book.ButtonPressed ? [.. choices.Select(c => c.Value()).Where(s => s.Length > 0).Distinct()] : []));
         book.Toggled += _ => Apply();
         foreach (var choice in choices)
         {
-            choice.Button.ItemSelected += _ => Apply();
+            choice.Picked += _ => Apply();
         }
     }
 
@@ -129,25 +125,23 @@ internal static class HeroInspector
     private static void ShowArtifacts(InspectorForm form, Hero hero)
     {
         var scenario = form.Scenario;
-        var items = new[] { ("— none —", "") }
-            .Concat(scenario.Artifacts.All.OrderBy(a => a.Slot).ThenBy(a => a.Tier).ThenBy(a => a.Name).Select(a => ($"{a.Name} ({a.Slot}, {a.Tier})", a.Id.Value)))
-            .ToList();
+        List<PickerItem> items = [PickerItem.None("— none —"), .. form.ArtifactItems(bySlot: true)];
 
         // Written scrolls the hero has (ADR-136) are not catalog rows; list them so an edit keeps them. A blank scroll gets its spell at game start.
-        foreach (var id in hero.Artifacts.AllWorn.Select(w => w.Id).Concat(hero.Artifacts.Backpack).Select(a => a.Value).Where(id => items.All(i => i.Item2 != id)).Distinct())
+        foreach (var id in hero.Artifacts.AllWorn.Select(w => w.Id).Concat(hero.Artifacts.Backpack).Select(a => a.Value).Where(id => items.All(i => i.Key != id)).Distinct())
         {
-            items.Add((scenario.Artifacts.TryGet(id, out var written) ? $"{written.Name} ({written.Slot}, {written.Tier})" : id, id));
+            items.Add(scenario.Artifacts.TryGet(id, out var written) ? PickerItem.Of(id, written.Name, $"{written.Slot}") : PickerItem.Of(id, id, ""));
         }
 
-        var changed = new List<Choice<string>>();
-        List<Choice<string>> Rows(string title, IEnumerable<string> ids)
+        var changed = new List<PicturePicker>();
+        List<PicturePicker> Rows(string title, IEnumerable<string> ids)
         {
             form.Box.AddChild(new Label { Text = title });
             var rows = new HFlowContainer();
             form.Box.AddChild(rows);
             return ids.Append("").Select(id =>
             {
-                var choice = rows.AddChoice("", items, id);
+                var choice = PicturePicker.Add(rows, null, items, id);
                 changed.Add(choice);
                 return choice;
             }).ToList();
@@ -161,7 +155,7 @@ internal static class HeroInspector
             [.. backpack.Select(b => b.Value()).Where(a => a.Length > 0)]));
         foreach (var choice in changed)
         {
-            choice.Button.ItemSelected += _ => Apply();
+            choice.Picked += _ => Apply();
         }
     }
 }

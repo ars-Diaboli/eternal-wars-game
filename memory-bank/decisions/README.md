@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-255.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-256.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -281,3 +281,4 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [252](random-maps-and-editor.md#adr-252-scenery-has-an-orientation-stored-in-map-format-43-scatter-is-the-generators-scenery-choice-run-through-the-editor-session-edit-6-adr-079-adr-157-adr-174-adr-250-2026-11-21) | random-maps-and-editor | Scenery has an orientation, stored in map format 43; scatter is the generator's scenery choice run through the editor session (EDIT-6, ADR-079, ADR-157, ADR-174, ADR-250, 2026-11-21) | implemented |
 | [253](random-maps-and-editor.md#adr-253-the-object-browser-lists-entries-built-in-the-core-the-object-tool-places-its-choice-edit-1-adr-166-adr-250-2026-11-21) | random-maps-and-editor | The object browser lists entries built in the core; the Object tool places its choice (EDIT-1, ADR-166, ADR-250, 2026-11-21) | implemented |
 | [254](random-maps-and-editor.md#adr-254-thumbnails-are-renders-of-the-placeholder-model-cached-by-its-hash-the-inspector-has-six-parts-and-computed-jump-links-edit-1-adr-223-adr-245-adr-253-2026-11-21) | random-maps-and-editor | Thumbnails are renders of the placeholder model cached by its hash; the inspector has six parts and computed jump links (EDIT-1, ADR-223, ADR-245, ADR-253, 2026-11-21) | implemented |
+| [255](random-maps-and-editor.md#adr-255-multi-edit-writes-one-object-property-to-several-objects-of-one-kind-as-one-all-or-nothing-step-pickers-are-searchable-picture-grids-edit-1-adr-223-adr-245-adr-254-2026-11-21) | random-maps-and-editor | Multi-edit writes one object property to several objects of one kind as one all-or-nothing step; pickers are searchable picture grids (EDIT-1, ADR-223, ADR-245, ADR-254, 2026-11-21) | implemented |

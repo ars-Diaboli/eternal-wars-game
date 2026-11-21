@@ -271,9 +271,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       ghost, `MapFragment` with copy, cut, paste and duplicate, brushes with size, shape, line and fill, erase by kind, scatter,
       scenery rotation and mirroring (map format 43), resize / crop / shift, stamps; plan tasks 1 to 10; ADR-251, ADR-252)
 - [ ] Step 3 (built: the browser's data in the core and the `ObjectBrowser` panel with categories, search, terrain filter,
-      favourites, recent and stamps, placed by the Object tool with a ghost; thumbnails; the inspector in sections with jump links;
-      plan tasks 1 to 4; ADR-253, ADR-254): multi-edit and picture pickers in the inspector, the
-      map settings window, the new map content (rumours, allowed factions, object names, custom heroes; a format bump), the Texts
+      favourites, recent and stamps, placed by the Object tool with a ghost; thumbnails; the inspector in sections with jump links,
+      multi-edit and picture pickers; plan tasks 1 to 6; ADR-253, ADR-254, ADR-255): the map settings window, the new map content (rumours, allowed factions, object names, custom heroes; a format bump), the Texts
       view, the new-map wizard
 - [ ] Step 4: minimap, go to, bookmarks, layers and overlays, fix-its, the fairness report, play-test from the editor
 - [ ] Step 5: the template workspace: undo, zone cards, multi-select and copy, presets, mirror tools, preview, Generate many

@@ -14,8 +14,8 @@ namespace EternalWars.Godot.UI.Editor;
 /// choice (<see cref="BrowserChoice"/>); a right click adds it to the favourites or takes it out. The card at the bottom shows the
 /// entry under the pointer, or the chosen one: its picture, its footprint, its size and a one-line rule. An entry's picture
 /// (ADR-254) is its icon where one exists (a town's crest, a resource, the hero), else its model rendered by
-/// <see cref="ThumbnailRenderer"/>; a monster and a named artifact, whose models are all alike and whose portraits do not exist yet,
-/// keep the lettered placeholder.
+/// <see cref="ThumbnailRenderer"/> when no other entry is drawn alike, else the lettered placeholder: a picture shared by many entries
+/// (the dwellings, the mines, every monster) would not tell them apart, the letters of their names do.
 /// </summary>
 public partial class ObjectBrowser : VBoxContainer
 {
@@ -69,6 +69,9 @@ public partial class ObjectBrowser : VBoxContainer
     private IReadOnlyList<string> _recent = [];
     private TerrainType? _pointed;
 
+    /// <summary>The models (<see cref="ThumbnailRenderer.KeyOf"/>) that two or more entries share.</summary>
+    private HashSet<string> _alike = [];
+
     /// <summary>
     /// Shows <paramref name="catalog"/>; a click chooses through <paramref name="choice"/>, the kept lists are read from and written to
     /// <paramref name="settings"/>; <paramref name="stampNames"/> lists the saved stamps and <paramref name="pasteStamp"/> puts one on
@@ -81,6 +84,11 @@ public partial class ObjectBrowser : VBoxContainer
         AddChild(_thumbnails);
         _thumbnails.Bind(thumbnailFolder);
         (_catalog, _choice, _settings, _stampNames, _pasteStamp) = (catalog, choice, settings, stampNames, pasteStamp);
+        _alike =
+        [
+            .. catalog.Entries.Select(e => e.Definition is { } d ? ThumbnailRenderer.KeyOf(d) : null).OfType<string>()
+                .GroupBy(k => k).Where(g => g.Count() > 1).Select(g => g.Key),
+        ];
         _favourites = settings.Get(Section, FavouritesKey, System.Array.Empty<string>()).AsStringArray();
         _recent = settings.Get(Section, RecentKey, System.Array.Empty<string>()).AsStringArray();
 
@@ -325,8 +333,8 @@ public partial class ObjectBrowser : VBoxContainer
     }
 
     /// <summary>
-    /// The entry's picture: its icon, else its rendered model, else (and until the model is rendered, when <paramref name="whenRendered"/>
-    /// gets it) the lettered placeholder, drawn at <paramref name="placeholderSize"/> pixels.
+    /// The entry's picture: its icon, else its rendered model when no other entry is drawn alike, else (and until the model is
+    /// rendered, when <paramref name="whenRendered"/> gets it) the lettered placeholder, drawn at <paramref name="placeholderSize"/> pixels.
     /// </summary>
     private Texture2D Picture(BrowserEntry entry, int placeholderSize, Action<Texture2D> whenRendered)
     {
@@ -337,9 +345,9 @@ public partial class ObjectBrowser : VBoxContainer
             { Definition: { Kind: MapObjectKind.ResourcePile, Resource: { } resource } } => ResourceIcons.Get(resource, CardPicture),
             _ => null,
         };
-        var portrayed = entry.Placement == BrowserPlacement.Monster || entry.Artifact is not null; // their models are all alike
+        var own = entry.Definition is { } definition && ThumbnailRenderer.KeyOf(definition) is { } key && !_alike.Contains(key);
         return icon
-            ?? (entry.Definition is { } definition && !portrayed ? _thumbnails.Get(definition, whenRendered) : null)
+            ?? (own ? _thumbnails.Get(entry.Definition!, whenRendered) : null)
             ?? PlaceholderIcons.Of(entry.Name, placeholderSize);
     }
 

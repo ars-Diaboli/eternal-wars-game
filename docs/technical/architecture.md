@@ -300,6 +300,12 @@ An object's stand-in model is `PlaceholderModel` (Godot.Shared, ADR-254): a list
 `ThumbnailRenderer` (Godot.UI) renders for the browser in hidden `SubViewport`s, kept as PNG files under the parts' hash.
 The inspector's forms put their rows into `InspectorPart`s through `InspectorForm.In(part)` (ADR-254); its jump links are
 `MapLinks.Of(scenario, thing)` (Core.Domain.Editing), computed from the scenario each time and never stored.
+Multi-edit (ADR-255): `ObjectProperty<TObject, TValue>` is one field of one object type, read from an object and written through
+the session's editors; `ObjectProperties` lists the fields edited over several objects; `MapEditorSession.EditAll` writes to a
+list of objects as one undo step, all or none, and `ObjectsOfOneKind` gives the objects the inspector may edit together. The
+inspector's sections take a list of objects (`IInspectorSection.Show`), and `InspectorForm` binds controls to properties with "—"
+for values that differ. `PicturePicker` (Godot.UI) is the searchable picture grid that replaces the drop-downs for creatures,
+heroes, artifacts, spells and skills; `PickerItems` builds its lists.
 Single-value edits are `PropertyEdit<T>` commands; an edit to the value already there records no undo step and publishes
 nothing. The three tile layers paint through `PaintLayer<TValue, TEvent>`. `BeginStroke`/`EndStroke` merge a drag into
 one undo step. `MapValidator` reports what single edits cannot prevent. `MapConnectivity` tells where a hero can walk on a fresh

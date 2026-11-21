@@ -115,4 +115,7 @@ public sealed class EditorToolContext(MapEditorSession editor, InspectorPanel in
         inspector.InspectObject(mapObject.Id);
         status($"Inspecting {mapObject}");
     }
+
+    /// <summary>Several objects in the inspector: of one kind they are edited together (ADR-255). The status line stays as it is.</summary>
+    public void Inspect(IReadOnlyCollection<MapObjectId> objects) => inspector.InspectObjects(objects);
 }

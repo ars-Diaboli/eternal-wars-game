@@ -138,6 +138,47 @@ internal sealed class EditorContext(GameState scenario, MapObjectCatalog catalog
 
     public void Run(string description, Action execute, Action undo) => Run(new DelegateCommand(description, execute, undo));
 
+    /// <summary>
+    /// Runs <paramref name="edit"/> on each of <paramref name="ids"/> as one undo step (<see cref="AsOneStep(string, Action)"/>): all of
+    /// them, or none when one is refused (what the others did is taken back and the refusal returned). An id that is not on the map is
+    /// <see cref="EditResult.InvalidTarget"/>.
+    /// </summary>
+    public EditResult AllOrNothing(string description, IReadOnlyCollection<MapObjectId> ids, Func<MapObject, EditResult> edit)
+    {
+        var result = EditResult.Ok;
+        AsOneStep(description, () =>
+        {
+            var start = _stroke!.Count;
+            try
+            {
+                foreach (var id in ids)
+                {
+                    result = Object<MapObject>(id) is { } mapObject ? edit(mapObject) : EditResult.InvalidTarget;
+                    if (result != EditResult.Ok)
+                    {
+                        TakeBack(start);
+                        return;
+                    }
+                }
+            }
+            catch
+            {
+                TakeBack(start); // an edit that throws leaves nothing done either
+                throw;
+            }
+        });
+        return result;
+
+        void TakeBack(int start)
+        {
+            for (var i = _stroke!.Count - 1; i >= start; i--)
+            {
+                _stroke[i].Undo();
+                _stroke.RemoveAt(i);
+            }
+        }
+    }
+
     /// <summary>Records a command that has already run (one that had to run to learn whether it changes anything).</summary>
     public void Done(IEditorCommand command)
     {
@@ -186,6 +227,17 @@ internal sealed class EditorContext(GameState scenario, MapObjectCatalog catalog
         Bus.Publish(new MapObjectRemoved(mapObject.Id));
         Selecting?.Forget(mapObject.Id);
         return index;
+    }
+
+    /// <summary>
+    /// Puts <paramref name="to"/> in <paramref name="from"/>'s place in the object list. They have one id, so a selection of it stays
+    /// (a town retyped is still the town that was selected).
+    /// </summary>
+    public void ReplaceObject(MapObject from, MapObject to)
+    {
+        var index = Scenario.RemoveObject(from);
+        Bus.Publish(new MapObjectRemoved(from.Id));
+        AddObject(to, index);
     }
 
     /// <summary>Adds the hero at the end of the scenario's heroes, or back at <paramref name="index"/> when undoing its removal.</summary>

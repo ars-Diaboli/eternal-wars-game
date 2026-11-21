@@ -89,6 +89,29 @@ public class EditorLinksTests
     }
 
     [Fact]
+    public void QuestObject_NeverLinksToItself_NorToAnIdOfTheWrongKind()
+    {
+        var editor = Editor();
+        var hut = Place(editor, BuiltInMapObjects.SeerHut, 10, 20);
+        var chest = Place(editor, BuiltInMapObjects.TreasureChest, 20, 20);
+        var quest = new MapEventDefinition("odd", MapEventKind.Quest, [])
+        {
+            Stages =
+            [
+                new QuestStage(
+                    new AllCondition([new MonsterDefeatedCondition(hut.Value), new MonsterDefeatedCondition(chest.Value), new TownOwnerCondition(chest.Value, null)]),
+                    "Nothing real.",
+                    []),
+            ],
+        };
+        Assert.Equal(EditResult.Ok, editor.MapEvents.Add(quest));
+        Assert.Equal(EditResult.Ok, editor.Contents.SetQuestSiteQuest(hut, "odd"));
+
+        Assert.Empty(Links(editor, hut));
+        Assert.Empty(Links(editor, chest));
+    }
+
+    [Fact]
     public void PandorasBox_LinksToTheCellsOfItsEvent()
     {
         var editor = Editor();

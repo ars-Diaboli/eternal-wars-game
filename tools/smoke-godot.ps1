@@ -284,10 +284,10 @@ $scenarios = @(
     # A dug hole on the map: Digger digs (G), the turn ends, and on day 2 Digger steps west off the hole.
     @{ Name = 'game-dug-hole'; App = 'EternalWars.Game'; Frames = 70; Map = $spellsMap; Seed = 1
        Input = '3:key:Enter;8:press:Digger;12:key:G;20:press:End turn;44:press:Digger;50:key:Left' },
-    # A guild spell set by hand in the editor: select Emberkeep, open the inspector, scroll to the guild spells (a press on a
-    # slot further down, closed again), pick Brand for the first level-1 slot.
+    # A guild spell set by hand in the editor: select Emberkeep, open the inspector, open a guild slot's picker (the press scrolls the slots into
+    # view), then the first level-1 slot's, which closes the other, and pick Brand from its grid (ADR-255).
     @{ Name = 'editor-guild-spell'; App = 'EternalWars.MapEditor'; Frames = 40; Map = $spellsMap
-       Input = '5:press:Select;10:click:400,300;16:click:@Inspector;20:press:drawn;23:key:Escape;26:click:1143,748;30:choose:Brand' },
+       Input = '5:press:Select;10:click:400,300;16:click:@Inspector;20:press:— drawn —;26:click:@— drawn —#1;34:press:Brand' },
     # The siege's gate, keep and towers and Earthquake (ADR-120): the ballista breaks the gate; a second run casts Earthquake.
     @{ Name = 'game-siege-gate'; App = 'EternalWars.Game'; Frames = 104; Map = $siegeMagicMap
        Input = '3:key:Enter;10:key:Up;62:key:D;72:click:958,432' },
@@ -353,6 +353,12 @@ $scenarios = @(
     # Identity and Links sections; the jump link selects the partner and shows it; the Links section is closed.
     @{ Name = 'editor-inspector-sections'; App = 'EternalWars.MapEditor'; Frames = 84
        Input = '3:click:@Object;6:click:160,354;8:text:portal;18:click:@Portal;22:click:600,400;26:click:900,520;30:click:@LinkGates;33:click:600,400;36:click:900,520;40:click:@Select;43:click:600,400;47:click:@Inspector;56:click:@Leads to Portal #2 at (20,21,L0);66:click:@Links' },
+    # Multi-edit and the picture pickers (EDIT-1, ADR-255) on a blank map: two Dwarves are placed from the browser; the Select tool
+    # takes the first and the inspector makes it Friendly; a rectangle takes both, the inspector shows "2 × Monster" with "—" for the
+    # differing disposition, and Hostile is set on both; the creature picker opens its grid, "timber" narrows it and the Timber Wolf is picked
+    # for both; Undo takes the wolves back.
+    @{ Name = 'editor-multi-edit'; App = 'EternalWars.MapEditor'; Frames = 110
+       Input = '3:click:@Object;6:click:160,354;8:text:dwarf;18:click:@Dwarf;22:click:600,400;26:click:800,400;30:click:@Select;33:click:600,400;36:click:@Inspector;42:click:@Aggressive;46:choose:Friendly;52:drag:540,340,880,470;58:click:@—;62:choose:Hostile;70:click:@Dwarf (T1);76:text:timber;84:click:@Timber Wolf (T1);94:click:@Undo' },
     # Scatter and scenery rotation (EDIT-6, ADR-252) on a blank map: the Scatter tool with only walls ticked and a brush of 5 tiles is
     # dragged over the grass (pieces of wall, ways kept open); the Select tool's rectangle takes them; Ctrl+R turns them a quarter
     # turn, Ctrl+M mirrors them; Undo takes the mirroring back.

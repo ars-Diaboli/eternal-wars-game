@@ -8,43 +8,51 @@ using Godot;
 
 namespace EternalWars.Godot.UI.Editor.Inspector;
 
-/// <summary>A town: owner, name, faction (or random), pre-built buildings and dwellings (7-of-9 rule), fixed guild spells, garrison, town events.</summary>
+/// <summary>
+/// Towns: owner, faction (or random) for one or several (ADR-255); for one town also its name, pre-built buildings and dwellings
+/// (7-of-9 rule), fixed guild spells, garrison and town events.
+/// </summary>
 internal sealed class TownInspector : InspectorSection<Town>
 {
-    protected override void Show(InspectorForm form, Town town)
+    protected override void Show(InspectorForm form, IReadOnlyList<Town> towns)
     {
         var panel = form.Box;
-        var scenario = form.Scenario;
-        var editor = form.Editor;
         var row = new HBoxContainer();
         panel.AddChild(row);
-        var owner = row.AddOwnerChoice(scenario.Players, town.Owner);
-        owner.Button.ItemSelected += _ => form.Edit(() => editor.Towns.SetOwner(town.Id, owner.Value()));
-        row.AddChild(new Label { Text = "Name" });
-        var name = new LineEdit { Text = town.Name, CustomMinimumSize = new Vector2(UiTheme.InspectorNameWidth, 0) };
-        name.TextSubmitted += text => form.Edit(() => editor.Towns.SetName(town.Id, text));
-        row.AddChild(name);
-        var type = row.AddChoice(town.IsRandom ? "Shown as" : "Faction", BuiltInMapObjects.PlayableTowns.Select(t => (t, t)), town.TownType);
-        for (var i = 0; i < BuiltInMapObjects.PlayableTowns.Count; i++)
+        form.Owner(row, ObjectProperties.TownOwner, towns);
+        var one = towns.Count == 1 ? towns[0] : null;
+        if (one is not null)
         {
-            if (Heraldry.Crest(BuiltInMapObjects.PlayableTowns[i], UiIcons.ButtonSize) is { } crest)
+            row.AddChild(new Label { Text = "Name" });
+            var name = new LineEdit { Text = one.Name, CustomMinimumSize = new Vector2(UiTheme.InspectorNameWidth, 0) };
+            name.TextSubmitted += text => form.Edit(() => form.Editor.Towns.SetName(one.Id, text));
+            row.AddChild(name);
+        }
+
+        var shown = towns.All(t => t.IsRandom) ? "Shown as" : "Faction";
+        var type = form.Choice(row, shown, BuiltInMapObjects.PlayableTowns.Select(t => (t, t)), ObjectProperties.TownFaction, towns);
+        for (var i = 0; i < type.Items.Count; i++)
+        {
+            if (type.Items[i].Text != InspectorForm.Differs && Heraldry.Crest(type.Items[i].Value, UiIcons.ButtonSize) is { } crest)
             {
                 type.Button.SetItemIcon(i, crest);
             }
         }
 
-        type.Button.ItemSelected += _ => form.Edit(() => editor.Towns.SetType(town.Id, type.Value()));
-        var random = new CheckBox
-        {
-            Text = "Random faction",
-            ButtonPressed = town.IsRandom,
-            TooltipText = "Drawn when the game starts: an owned town takes its owner's chosen faction, a neutral one a random playable faction. " +
-                          "Buildings carry over; dwellings move to the drawn faction's lines of the same tier.",
-        };
-        random.Toggled += on => form.Edit(() => editor.Towns.SetRandom(town.Id, on));
-        panel.AddChild(random);
+        var random = form.Check(panel, "Random faction", ObjectProperties.TownRandom, towns);
+        random.TooltipText = "Drawn when the game starts: an owned town takes its owner's chosen faction, a neutral one a random playable faction. " +
+                             "Buildings carry over; dwellings move to the drawn faction's lines of the same tier.";
 
         panel = form.In(InspectorPart.Contents);
+        if (form.Single(towns, "buildings, dwellings and guild spells") is not { } town)
+        {
+            form.In(InspectorPart.Guard);
+            form.Single(towns, "the garrison");
+            return;
+        }
+
+        var scenario = form.Scenario;
+        var editor = form.Editor;
         panel.AddHeading("Buildings (level, 0 = not built)");
         var buildings = new HFlowContainer();
         panel.AddChild(buildings);
@@ -84,23 +92,23 @@ internal sealed class TownInspector : InspectorSection<Town>
         }
 
         form.Box.AddHeading("Guild spells (— drawn — = drawn when the game starts)");
-        var choices = new List<Choice<string>>();
+        var choices = new List<PicturePicker>();
         for (var level = 1; level <= MagicRules.GuildSpellsPerLevel.Count; level++)
         {
-            var items = new[] { ("— drawn —", "") }.Concat(spells.Of(town.TownType, level).OrderBy(s => s.Name).Select(s => (s.Name, s.Id.Value))).ToList();
+            List<PickerItem> items = [PickerItem.None("— drawn —"), .. InspectorForm.SpellItems(spells.Of(town.TownType, level))];
             var fixedHere = town.FixedGuildSpells.Where(s => spells.TryGet(s, out var spell) && spell.Level == level).ToList();
             var row = new HFlowContainer();
             form.Box.AddChild(row);
             for (var slot = 0; slot < MagicRules.GuildSpellsPerLevel[level - 1]; slot++)
             {
-                choices.Add(row.AddChoice(slot == 0 ? $"L{level}" : "", items, fixedHere.Select(s => s.Value).ElementAtOrDefault(slot) ?? ""));
+                choices.Add(PicturePicker.Add(row, slot == 0 ? $"L{level}" : null, items, fixedHere.Select(s => s.Value).ElementAtOrDefault(slot) ?? ""));
             }
         }
 
         void Apply() => form.Edit(() => form.Editor.Towns.SetGuildSpells(town.Id, [.. choices.Select(c => c.Value()).Where(s => s.Length > 0).Distinct()]));
         foreach (var choice in choices)
         {
-            choice.Button.ItemSelected += _ => Apply();
+            choice.Picked += _ => Apply();
         }
     }
 

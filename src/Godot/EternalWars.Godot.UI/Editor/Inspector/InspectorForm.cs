@@ -2,7 +2,10 @@ using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Magic;
 using EternalWars.Core.Domain.MapEvents;
+using EternalWars.Core.Domain.Objects;
 using EternalWars.Godot.Shared.Controls;
 using Godot;
 
@@ -32,7 +35,9 @@ internal enum InspectorPart
 
 /// <summary>
 /// What the inspector's forms (ADR-223) fill and edit through: the parts of the panel (ADR-254), the editor, the edits (skipped while the
-/// form is being filled) and the rows several kinds share (a garrison's slots, a link to one of the map's events, jump links).
+/// form is being filled) and the rows several kinds share (a garrison's slots, a link to one of the map's events, jump links). Fields
+/// bound to an <see cref="ObjectProperty{TObject, TValue}"/> edit every object shown at once and show "—" where they differ (ADR-255);
+/// creatures, heroes, artifacts, spells and skills are chosen with <see cref="PicturePicker"/>s.
 /// </summary>
 internal sealed class InspectorForm(VBoxContainer panel, MapEditorSession editor, Action<string> openEvent, Action<MapLink> jump)
 {
@@ -137,9 +142,181 @@ internal sealed class InspectorForm(VBoxContainer panel, MapEditorSession editor
     /// <summary>True while the form is being filled: setting the fields' values then edits nothing.</summary>
     public bool Filling { get; set; }
 
-    /// <summary>The creatures by town and tier, as drop-down items.</summary>
-    public List<(string Text, string Id)> Creatures() =>
-        [.. Scenario.Creatures.All.OrderBy(c => c.Town ?? "~").ThenBy(c => c.Tier).Select(c => ($"{c.Name} (T{c.Tier})", c.Id.Value))];
+    /// <summary>The text that stands for values that differ between the objects edited together.</summary>
+    public const string Differs = "—";
+
+    /// <summary>The creatures by town and tier, as picker items (<paramref name="where"/> narrows them).</summary>
+    public List<PickerItem> CreatureItems(Func<Core.Domain.Creatures.CreatureDefinition, bool>? where = null) => PickerItems.Creatures(Scenario, where);
+
+    /// <summary>The roster's heroes by town, as picker items.</summary>
+    public List<PickerItem> HeroItems() => PickerItems.Heroes(Scenario);
+
+    /// <summary>The artifacts by slot (else by tier), as picker items.</summary>
+    public List<PickerItem> ArtifactItems(bool bySlot = false) => PickerItems.Artifacts(Scenario, bySlot);
+
+    /// <summary><paramref name="spells"/> by level and school, as picker items.</summary>
+    public static List<PickerItem> SpellItems(IEnumerable<SpellDefinition> spells) => PickerItems.Spells(spells);
+
+    /// <summary>The secondary skills by group, as picker items.</summary>
+    public static List<PickerItem> SkillItems() => PickerItems.Skills();
+
+    private static string Capital(string text) => PickerItems.Capital(text);
+
+    /// <summary>The objects' one field as a drop-down of <paramref name="items"/>; "—" first while they differ. A pick sets it on all.</summary>
+    public Choice<TValue> Choice<TObject, TValue>(
+        Container row, string? label, IEnumerable<(string Text, TValue Value)> items, ObjectProperty<TObject, TValue> property, IReadOnlyList<TObject> objects)
+        where TObject : MapObject
+    {
+        var shared = property.Shared(objects);
+        var list = items.ToList();
+        if (shared.Differs)
+        {
+            list.Insert(0, (Differs, shared.Value));
+        }
+
+        var choice = row.AddChoice(label, list, shared.Value);
+        if (shared.Differs)
+        {
+            choice.Button.Selected = 0;
+        }
+
+        choice.Button.ItemSelected += index =>
+        {
+            if (!shared.Differs || index > 0)
+            {
+                Edit(() => property.Apply(editor, objects, choice.Value()));
+            }
+        };
+        return choice;
+    }
+
+    /// <summary>The objects' owner (no owner first); "—" while they differ.</summary>
+    public Choice<PlayerId?> Owner<TObject>(Container row, ObjectProperty<TObject, PlayerId?> property, IReadOnlyList<TObject> objects, string noOwner = "Unowned")
+        where TObject : MapObject =>
+        Choice(row, "Owner", new[] { (noOwner, (PlayerId?)null) }.Concat(Scenario.Players.Select(p => (p.Name, (PlayerId?)p.Id))), property, objects);
+
+    /// <summary>
+    /// The objects' one field as a <see cref="PicturePicker"/> of <paramref name="items"/>, keyed by <paramref name="key"/> and read back
+    /// with <paramref name="value"/>; "—" while they differ. A pick sets it on all.
+    /// </summary>
+    public PicturePicker Picker<TObject, TValue>(
+        Container row, string? label, IReadOnlyList<PickerItem> items, ObjectProperty<TObject, TValue> property, IReadOnlyList<TObject> objects,
+        Func<TValue, string> key, Func<string, TValue> value)
+        where TObject : MapObject
+    {
+        var shared = property.Shared(objects);
+        var picker = PicturePicker.Add(row, label, items, shared.Differs ? null : key(shared.Value));
+        picker.Picked += picked => Edit(() => property.Apply(editor, objects, value(picked)));
+        return picker;
+    }
+
+    /// <summary>
+    /// The objects' whole-number field (<paramref name="show"/> turns the value into the box's number, <paramref name="value"/> back);
+    /// while they differ the box shows "—" until a number is set.
+    /// </summary>
+    public SpinBox Spin<TObject, TValue>(
+        Container row, string? label, int min, int max, ObjectProperty<TObject, TValue> property, IReadOnlyList<TObject> objects,
+        Func<TValue, int> show, Func<int, TValue> value)
+        where TObject : MapObject
+    {
+        var shared = property.Shared(objects);
+        var spin = row.AddSpin(label, show(shared.Value), min, max);
+        OnNumber(spin, shared.Differs, number => Edit(() => property.Apply(editor, objects, value(number))));
+        return spin;
+    }
+
+    /// <summary>
+    /// Calls <paramref name="apply"/> with each number the box is set to. While <paramref name="differs"/> the box shows "—" and stands
+    /// for no number: a number typed there is applied on Enter or when the box is left, even one equal to the first object's value that
+    /// the box holds underneath (which a value change would not report); leaving it at "—" applies nothing.
+    /// </summary>
+    public static void OnNumber(SpinBox spin, bool differs, Action<int> apply)
+    {
+        spin.ValueChanged += number => apply((int)number);
+        if (!differs)
+        {
+            return;
+        }
+
+        ShowDiffers(spin);
+        var line = spin.GetLineEdit();
+        var (min, max) = ((int)spin.MinValue, (int)spin.MaxValue);
+        string? typed = null;
+        line.TextChanged += text => typed = text; // only the user's typing, not the box's own text
+        void Typed()
+        {
+            if (int.TryParse(typed?.Trim(), out var number))
+            {
+                typed = null;
+                apply(Math.Clamp(number, min, max));
+            }
+        }
+
+        line.TextSubmitted += _ => Typed();
+        line.FocusExited += Typed;
+    }
+
+    /// <summary>The objects' yes-or-no field; while they differ its text ends in "(—)" and a click sets it on all.</summary>
+    public CheckBox Check<TObject>(Container row, string text, ObjectProperty<TObject, bool> property, IReadOnlyList<TObject> objects)
+        where TObject : MapObject
+    {
+        var shared = property.Shared(objects);
+        var box = new CheckBox { Text = shared.Differs ? $"{text} ({Differs})" : text, ButtonPressed = shared.Value && !shared.Differs };
+        box.Toggled += on => Edit(() => property.Apply(editor, objects, on));
+        row.AddChild(box);
+        return box;
+    }
+
+    /// <summary>The objects' text field, set when Enter is pressed or the field is left; empty with "—" as its hint while they differ.</summary>
+    public LineEdit Text<TObject>(Container row, string? label, ObjectProperty<TObject, string> property, IReadOnlyList<TObject> objects, string hint, int width)
+        where TObject : MapObject
+    {
+        if (label is not null)
+        {
+            row.AddChild(new Label { Text = label });
+        }
+
+        var shared = property.Shared(objects);
+        var text = new LineEdit
+        {
+            Text = shared.Differs ? "" : shared.Value, PlaceholderText = shared.Differs ? Differs : hint, CustomMinimumSize = new Vector2(width, 0),
+        };
+        void Apply(string value)
+        {
+            if (!shared.Differs || value.Length > 0)
+            {
+                Edit(() => property.Apply(editor, objects, value));
+            }
+        }
+
+        text.TextSubmitted += Apply;
+        text.FocusExited += () => Apply(text.Text);
+        row.AddChild(text);
+        return text;
+    }
+
+    /// <summary>A number box that stands for values that differ: it shows "—" until a number is typed or stepped to.</summary>
+    public static void ShowDiffers(SpinBox spin)
+    {
+        var line = spin.GetLineEdit();
+        spin.Ready += () => Callable.From(() => line.Text = Differs).CallDeferred();
+    }
+
+    /// <summary>
+    /// The one object a field for a single object stands for, or null when several are shown: then a note in the current part says the
+    /// field is edited one object at a time.
+    /// </summary>
+    public T? Single<T>(IReadOnlyList<T> objects, string what)
+        where T : MapObject
+    {
+        if (objects.Count == 1)
+        {
+            return objects[0];
+        }
+
+        Box.AddChild(new Label { Text = $"{Capital(what)}: select one to edit", Modulate = UiTheme.TextQuiet });
+        return null;
+    }
 
     /// <summary>Applies an edit unless the form is just filling its fields.</summary>
     public void Edit(Func<EditResult> edit)
@@ -157,8 +334,13 @@ internal sealed class InspectorForm(VBoxContainer panel, MapEditorSession editor
     /// A row that picks one of the map's events of a kind by name (a box's hero event, a quest object's quest), or none; "New" writes a blank event
     /// of the kind and picks it (one undo step), "Edit" opens the picked one in the "Events" tab.
     /// </summary>
-    public void EventChoice(string label, MapEventKind kind, string? current, Func<string?, EditResult> set)
+    public void EventChoice(string label, MapEventKind kind, string? current, Func<string?, EditResult> set) =>
+        EventChoice(label, kind, new SharedValue<string?>(false, current), set);
+
+    /// <summary><see cref="EventChoice(string, MapEventKind, string?, Func{string?, EditResult})"/> for several objects: "—" while they differ.</summary>
+    public void EventChoice(string label, MapEventKind kind, SharedValue<string?> shared, Func<string?, EditResult> set)
     {
+        var current = shared.Differs ? null : shared.Value;
         var names = Scenario.MapEvents.Set.Events.Where(e => e.Kind == kind).Select(e => e.Name).ToList();
         if (current is not null && !names.Contains(current))
         {
@@ -167,8 +349,20 @@ internal sealed class InspectorForm(VBoxContainer panel, MapEditorSession editor
 
         var row = new HBoxContainer();
         In(InspectorPart.Events).AddChild(row);
-        var choice = row.AddChoice(label, new[] { ("— none —", "") }.Concat(names.Select(n => (n, n))), current ?? "");
-        choice.Button.ItemSelected += _ => Edit(() => set(choice.Value().Length == 0 ? null : choice.Value()));
+        var items = new[] { ("— none —", "") }.Concat(names.Select(n => (n, n))).ToList();
+        if (shared.Differs)
+        {
+            items.Insert(0, (Differs, Differs));
+        }
+
+        var choice = row.AddChoice(label, items, shared.Differs ? Differs : current ?? "");
+        choice.Button.ItemSelected += _ =>
+        {
+            if (choice.Value() != Differs)
+            {
+                Edit(() => set(choice.Value().Length == 0 ? null : choice.Value()));
+            }
+        };
         var create = new Button { Text = "New" };
         create.Pressed += () => Edit(() => NewEvent(kind, set));
         row.AddChild(create);
@@ -201,19 +395,47 @@ internal sealed class InspectorForm(VBoxContainer panel, MapEditorSession editor
     {
         var box = In(InspectorPart.Guard);
         box.AddHeading("Garrison");
-        var creatures = new[] { ("— empty —", "") }.Concat(Creatures()).ToList();
+        var creatures = ArmyItems();
         for (var slot = 0; slot < Army.SlotCount; slot++)
         {
             var slotRow = new HBoxContainer();
             box.AddChild(slotRow);
             var stack = troops[slot];
-            var creature = slotRow.AddChoice($"{slot + 1}", creatures, stack?.Creature.Value ?? "");
+            var creature = PicturePicker.Add(slotRow, $"{slot + 1}", creatures, stack?.Creature.Value ?? "");
             var count = slotRow.AddSpin("×", stack?.Count ?? 1, 1, 9999);
             var index = slot;
             void ApplySlot() => Edit(() => editor.Towns.SetGarrisonSlot(
                 holder, index, creature.Value() is { Length: > 0 } id ? new CreatureStack(id, (int)count.Value) : null));
-            creature.Button.ItemSelected += _ => ApplySlot();
+            creature.Picked += _ => ApplySlot();
             count.ValueChanged += _ => ApplySlot();
         }
     }
+
+    /// <summary>The creatures for an army slot, "— empty —" first.</summary>
+    public List<PickerItem> ArmyItems() => [PickerItem.None("— empty —"), .. CreatureItems()];
+
+    /// <summary>
+    /// Rows of creature stacks (a box's gifts or guard): one per stack and, while there are fewer than seven, an empty one to add another;
+    /// "— none —" removes a stack. <paramref name="changed"/> is called after any change; read the rows with <see cref="Stacks"/>.
+    /// </summary>
+    public List<(PicturePicker Creature, SpinBox Count)> StackRows(VBoxContainer panel, string title, IReadOnlyList<CreatureStack> stacks, Action changed)
+    {
+        panel.AddChild(new Label { Text = title });
+        List<PickerItem> items = [PickerItem.None("— none —"), .. CreatureItems()];
+        var shown = stacks.Count < Army.SlotCount ? stacks.Append(null) : stacks.Cast<CreatureStack?>();
+        return shown.Select(stack =>
+        {
+            var row = new HBoxContainer();
+            panel.AddChild(row);
+            var creature = PicturePicker.Add(row, null, items, stack?.Creature.Value ?? "");
+            var count = row.AddSpin("×", stack?.Count ?? 1, 1, 99999);
+            creature.Picked += _ => changed();
+            count.ValueChanged += _ => changed();
+            return (creature, count);
+        }).ToList();
+    }
+
+    /// <summary>The stacks <see cref="StackRows"/> show.</summary>
+    public static List<CreatureStack> Stacks(List<(PicturePicker Creature, SpinBox Count)> rows) =>
+        [.. rows.Where(r => r.Creature.Value().Length > 0).Select(r => new CreatureStack(r.Creature.Value(), (int)r.Count.Value))];
 }

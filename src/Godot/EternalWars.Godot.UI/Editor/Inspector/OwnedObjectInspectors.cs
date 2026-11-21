@@ -1,72 +1,71 @@
+using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Objects;
-using EternalWars.Godot.Shared.Controls;
 using Godot;
 
 namespace EternalWars.Godot.UI.Editor.Inspector;
 
-/// <summary>A creature dwelling: its line (base creatures only, ADR-073), owner and the creatures waiting (-1 = one week's growth).</summary>
+/// <summary>Creature dwellings: line (base creatures only, ADR-073), owner and the creatures waiting (-1 = one week's growth).</summary>
 internal sealed class DwellingInspector : InspectorSection<CreatureDwelling>
 {
-    protected override void Show(InspectorForm form, CreatureDwelling dwelling)
+    protected override void Show(InspectorForm form, IReadOnlyList<CreatureDwelling> dwellings)
     {
         var row = new HBoxContainer();
         form.Box.AddChild(row);
-        var lines = form.Creatures().Where(c => !form.Scenario.Creatures.IsUpgrade(c.Id)).ToList();
-        var creature = row.AddChoice("Creature", lines, dwelling.Creature.Value);
-        var owner = row.AddOwnerChoice(form.Scenario.Players, dwelling.Owner);
+        var lines = form.CreatureItems(c => !form.Scenario.Creatures.IsUpgrade(c.Id.Value));
+        form.Picker(row, "Creature", lines, ObjectProperties.DwellingCreature, dwellings, c => c.Value, k => new CreatureId(k));
+        form.Owner(row, ObjectProperties.DwellingOwner, dwellings);
         var amountRow = new HBoxContainer();
         form.In(InspectorPart.Contents).AddChild(amountRow);
-        var amount = amountRow.AddSpin("Waiting (-1 = one week's growth)", dwelling.Available ?? -1, -1, 9999);
-        void Apply() => form.Edit(() => form.Editor.Objects.SetDwelling(dwelling.Id, creature.Value(), owner.Value(), amount.Value >= 0 ? (int)amount.Value : null));
-        creature.Button.ItemSelected += _ => Apply();
-        owner.Button.ItemSelected += _ => Apply();
-        amount.ValueChanged += _ => Apply();
+        form.Spin(amountRow, "Waiting (-1 = one week's growth)", -1, 9999, ObjectProperties.DwellingAvailable, dwellings, a => a ?? -1, n => n >= 0 ? n : null);
     }
 }
 
-/// <summary>A resource provider's owner (ADR-079).</summary>
+/// <summary>Resource providers' owner (ADR-079).</summary>
 internal sealed class ProviderInspector : InspectorSection<ResourceProvider>
 {
-    protected override void Show(InspectorForm form, ResourceProvider provider)
+    protected override void Show(InspectorForm form, IReadOnlyList<ResourceProvider> providers)
     {
         var row = new HBoxContainer();
         form.Box.AddChild(row);
-        var owner = row.AddOwnerChoice(form.Scenario.Players, provider.Owner);
-        owner.Button.ItemSelected += _ => form.Edit(() => form.Editor.Objects.SetProviderOwner(provider.Id, owner.Value()));
+        form.Owner(row, ObjectProperties.ProviderOwner, providers);
     }
 }
 
-/// <summary>A mine's owner and guard (none, or a creature with a fixed or rolled count).</summary>
+/// <summary>Mines' owner and guard (none, or a creature with a fixed or rolled count).</summary>
 internal sealed class MineInspector : InspectorSection<Mine>
 {
-    protected override void Show(InspectorForm form, Mine mine)
+    protected override void Show(InspectorForm form, IReadOnlyList<Mine> mines)
     {
         var row = new HBoxContainer();
         form.Box.AddChild(row);
-        var owner = row.AddOwnerChoice(form.Scenario.Players, mine.Owner);
-        owner.Button.ItemSelected += _ => form.Edit(() => form.Editor.Objects.SetMineOwner(mine.Id, owner.Value()));
+        form.Owner(row, ObjectProperties.MineOwner, mines);
 
+        // A creature picked keeps each mine's own count; a count is set on the guarded mines.
         var guardRow = new HBoxContainer();
         form.In(InspectorPart.Guard).AddChild(guardRow);
-        var guardCreature = guardRow.AddChoice("Guard", new[] { ("None", "") }.Concat(form.Creatures()), mine.Guard?.Creature.Value ?? "");
-        var guardCount = guardRow.AddSpin("Count (0 = rolled)", mine.Guard?.Count ?? 0, 0, 999);
-        void ApplyGuard() => form.Edit(() => form.Editor.Objects.SetMineGuard(mine.Id, guardCreature.Value() is { Length: > 0 } id
-            ? new GuardStack(id, guardCount.Value > 0 ? (int)guardCount.Value : null)
-            : null));
-        guardCreature.Button.ItemSelected += _ => ApplyGuard();
-        guardCount.ValueChanged += _ => ApplyGuard();
+        form.Picker(guardRow, "Guard", [PickerItem.None("None"), .. form.CreatureItems()], ObjectProperties.MineGuardCreature, mines,
+            c => c?.Value ?? "", k => k.Length > 0 ? new CreatureId(k) : (CreatureId?)null);
+        if (mines.Any(m => m.Guard is not null))
+        {
+            var guarded = mines.Where(m => m.Guard is not null).ToList();
+            form.Spin(guardRow, "Count (0 = rolled)", 0, 999, ObjectProperties.MineGuardCount, guarded, c => c ?? 0, n => n > 0 ? n : null);
+        }
     }
 }
 
-/// <summary>A map garrison's owner (neutral or a player) and troops (ADR-070).</summary>
+/// <summary>Map garrisons' owner (neutral or a player); the troops of one garrison (ADR-070).</summary>
 internal sealed class MapGarrisonInspector : InspectorSection<MapGarrison>
 {
-    protected override void Show(InspectorForm form, MapGarrison garrison)
+    protected override void Show(InspectorForm form, IReadOnlyList<MapGarrison> garrisons)
     {
         var row = new HBoxContainer();
         form.Box.AddChild(row);
-        var owner = row.AddOwnerChoice(form.Scenario.Players, garrison.Owner, noOwner: "Neutral");
-        owner.Button.ItemSelected += _ => form.Edit(() => form.Editor.Objects.SetGarrisonOwner(garrison.Id, owner.Value()));
-        form.GarrisonRows(garrison.Id, garrison.Troops);
+        form.Owner(row, ObjectProperties.GarrisonOwner, garrisons, noOwner: "Neutral");
+        form.In(InspectorPart.Guard);
+        if (form.Single(garrisons, "the troops") is { } garrison)
+        {
+            form.GarrisonRows(garrison.Id, garrison.Troops);
+        }
     }
 }

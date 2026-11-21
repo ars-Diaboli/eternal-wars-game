@@ -153,7 +153,10 @@ public class SelectTool(EditorToolContext context) : EditorTool(context)
         }
     }
 
-    /// <summary>The status line counts what is selected; one object or one hero as the only thing opens in the inspector (which says so).</summary>
+    /// <summary>
+    /// The status line counts what is selected; one object or one hero as the only thing opens in the inspector (which says so), and
+    /// several objects with no hero open there together (ADR-255).
+    /// </summary>
     private void Tell()
     {
         var selection = Editor.Selection;
@@ -165,6 +168,10 @@ public class SelectTool(EditorToolContext context) : EditorTool(context)
         else if (selection.Heroes.Count == 1 && selection.Objects.Count == 0)
         {
             Context.Inspect(selection.Heroes.First());
+        }
+        else if (selection.Objects.Count > 1 && selection.Heroes.Count == 0)
+        {
+            Context.Inspect([.. selection.Objects.OrderBy(o => o.Value)]);
         }
     }
 }
