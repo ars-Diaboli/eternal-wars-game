@@ -35,6 +35,8 @@ public sealed class MapEditorSession
         Placing = new EntryEditor(_context, Objects, Contents, Monsters, Heroes);
         Selecting = new SelectionEditor(_context, Objects, Heroes, mover);
         _context.Selecting = Selecting;
+        Layers = new MapLayers(_context, Selecting);
+        _context.Layers = Layers;
         Fragments = new FragmentEditor(_context, Terrain, Objects, Selecting, copier);
         Erasing = new EraseEditor(_context, Terrain, Objects, Heroes, MapEvents, Selecting);
         _resizer = new MapResizer(_context, Objects, Heroes, MapEvents, Map);
@@ -53,6 +55,9 @@ public sealed class MapEditorSession
 
     /// <summary>Finds things to select, changes the <see cref="Selection"/>, and deletes or moves what is selected.</summary>
     public SelectionEditor Selecting { get; }
+
+    /// <summary>Which kinds are shown and which locked (ADR-262); what is hidden or locked cannot be selected or erased.</summary>
+    public MapLayers Layers { get; }
 
     /// <summary>Copy, cut, paste and duplicate: the selection as a <see cref="MapFragment"/> and back onto a map.</summary>
     public FragmentEditor Fragments { get; }

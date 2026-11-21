@@ -596,11 +596,11 @@ and the game uses them.
    the middle button pans, the wheel zooms; Ctrl+1 … 9 store bookmarks and 1 … 9 return to them. *Done.*
 2. **Minimap and Go to**: `MinimapWidget` reused in the right region (a click or drag moves the view, the view's frame drawn); Ctrl+G
    goes to a tile or a named object, searching as you type; the other level can show ghosted. *Done.*
-3. **Layers**: show, hide and lock per kind; the core's selection and erase skip locked kinds. Tests.
+3. **Layers**: show, hide and lock per kind; the core's selection and erase skip locked kinds. Tests. *Done.*
 4. **Analysis in the core**: `MapAnalysis` over a `GameState`: reach in days from a tile with the game's pathfinding, guard strength
    per cell, and the fairness numbers per start (EDIT-9): days to the nearest town, mines and providers; treasure value and guard
    strength within 3 and 7 days; the resources around the start town; a warning when a start is more than 20 % from the mean
-   *(placeholder)*. `MapFairness` and `sim` use it where the numbers mean the same. Tests on `TestWorld` maps.
+   *(placeholder)*. `MapFairness` and `sim` use it where the numbers mean the same. Tests on `TestWorld` maps. *Done.*
 5. **Overlays**: `OverlayView` (one multimesh per overlay) with a legend, one at a time: passability, owners, guard strength, reach
    from a chosen start, zones, height contours. Smoke `editor-overlays`.
 6. **Fix-its**: `MapIssue` gets an optional fix, an edit the session runs as one step; fixes where the answer is clear (link an

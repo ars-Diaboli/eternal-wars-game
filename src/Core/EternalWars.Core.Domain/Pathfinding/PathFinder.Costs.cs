@@ -20,6 +20,19 @@ public sealed partial class PathFinder
     }
 
     /// <summary>
+    /// <see cref="CostsFrom"/> for a hero that need not be on the map: the map analysis's scout (ADR-263). With
+    /// <paramref name="passThrough"/>, a route goes on past what would end it in the game: a guarded tile and a monster (as if fought), a
+    /// pickup or another visit (as if taken or done); the costs of the steps are the game's.
+    /// </summary>
+    public CostMap CostsFor(Hero hero, MapPosition from, bool respectFog, bool passThrough = false, CostMap? reuse = null)
+    {
+        ArgumentNullException.ThrowIfNull(hero);
+        var map = reuse ?? new CostMap();
+        map.Begin(this, hero, from, respectFog, passThrough);
+        return map;
+    }
+
+    /// <summary>
     /// The costs of the hero's cheapest routes to <paramref name="target"/> from every tile, for weighing many starting points with one search
     /// (the AI's Dimension Door landings): <see cref="ReverseCostMap.CostFrom"/> gives what <see cref="FindPath"/> with that <c>from</c> would
     /// give as the route's <see cref="HeroPath.TotalCost"/>, while the game does not change.
@@ -173,11 +186,13 @@ public sealed partial class PathFinder
         private int[] _endStamp = [];
         private int _start;
         private MapPosition _origin;
+        private bool _passThrough;
 
-        internal void Begin(PathFinder finder, Hero hero, MapPosition origin, bool respectFog)
+        internal void Begin(PathFinder finder, Hero hero, MapPosition origin, bool respectFog, bool passThrough = false)
         {
             Begin(finder, hero, respectFog);
             _origin = origin;
+            _passThrough = passThrough;
             _start = finder.Node(origin, teleported: false);
             Relax(_start, 0);
         }
@@ -231,7 +246,10 @@ public sealed partial class PathFinder
                     }
                 }
 
-                return;
+                if (!_passThrough) // the analysis's scout fights and walks on (ADR-263)
+                {
+                    return;
+                }
             }
 
             if (node != _start && !teleported && Finder.VisitAt(Hero, position) is { } visit)
@@ -246,7 +264,7 @@ public sealed partial class PathFinder
                     return;
                 }
 
-                if (visit.EndsRoute)
+                if (visit.EndsRoute && !_passThrough)
                 {
                     return;
                 }

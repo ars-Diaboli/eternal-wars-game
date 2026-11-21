@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Settings;
@@ -14,6 +15,7 @@ public sealed class MapViewContext(GameState state, IEventSubscriber events, Pla
 {
     private FogLook _fogLook = FogLook.Dark;
     private bool _showGrid;
+    private MapLayer _hidden;
 
     public GameState State { get; } = state;
 
@@ -80,6 +82,23 @@ public sealed class MapViewContext(GameState state, IEventSubscriber events, Pla
         }
     }
 
+    /// <summary>The kinds the views leave out: the map editor's hidden layers (ADR-262); the game hides none.</summary>
+    public MapLayer Hidden
+    {
+        get => _hidden;
+        set
+        {
+            if (value != _hidden)
+            {
+                _hidden = value;
+                HiddenChanged?.Invoke();
+            }
+        }
+    }
+
+    /// <summary>Whether the views draw <paramref name="layer"/>.</summary>
+    public bool Shows(MapLayer layer) => (_hidden & layer) == 0;
+
     /// <summary>The tile under the pointer on the shown level, or null; the input sets it, and the objects view shows that tile's caption from afar.</summary>
     public MapPosition? Pointed { get; private set; }
 
@@ -91,6 +110,9 @@ public sealed class MapViewContext(GameState state, IEventSubscriber events, Pla
 
     /// <summary>The grid was switched on or off.</summary>
     public event Action? ShowGridChanged;
+
+    /// <summary>Other kinds are hidden (<see cref="Hidden"/>).</summary>
+    public event Action? HiddenChanged;
 
     /// <summary>The pointer came over another tile (<see cref="Pointed"/>).</summary>
     public event Action? PointedChanged;

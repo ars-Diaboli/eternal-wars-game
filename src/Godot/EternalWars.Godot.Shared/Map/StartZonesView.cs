@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Godot.Shared.Events;
@@ -23,7 +24,13 @@ public partial class StartZonesView : Node3D
     {
         _context = context;
         context.LevelChanged += Rebuild;
-        TreeExiting += () => context.LevelChanged -= Rebuild;
+        context.HiddenChanged += ShowLayer;
+        TreeExiting += () =>
+        {
+            context.LevelChanged -= Rebuild;
+            context.HiddenChanged -= ShowLayer;
+        };
+        ShowLayer();
         this.SubscribeWhileInTree<StartZonesPainted>(context.Events, _ => Rebuild());
         this.SubscribeWhileInTree<GroundHeightsChanged>(context.Events, e =>
         {
@@ -34,6 +41,9 @@ public partial class StartZonesView : Node3D
         });
         Rebuild();
     }
+
+    /// <summary>The editor's layers (ADR-262): the view hides with its kind.</summary>
+    private void ShowLayer() => Visible = _context.Shows(MapLayer.StartZones);
 
     private void Rebuild()
     {

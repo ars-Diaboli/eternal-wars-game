@@ -54,6 +54,10 @@ public sealed record HeroRepositioned(HeroId Hero, MapPosition From, MapPosition
 [SeenBy(Audience.Nobody)]
 public sealed record SelectionChanged : IEvent;
 
+/// <summary>The editor's layers changed (ADR-262): which kinds are hidden and which locked.</summary>
+[SeenBy(Audience.Nobody)]
+public sealed record MapLayersChanged(Editing.MapLayer Hidden, Editing.MapLayer Locked) : IEvent;
+
 [SeenBy(Audience.Nobody)]
 public sealed record MapPropertiesChanged(string Name, string Description) : IEvent;
 

@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Events;
@@ -84,6 +85,22 @@ public partial class AdventureMapView : Node3D
         _rivers.InstanceCount = map.Width * map.Height;
         RefreshRoads(map.Positions(level));
         RefreshRivers(map.Positions(level));
+
+        // The editor's layers (ADR-262): the ground, the roads and the rivers each hide.
+        void ShowLayers()
+        {
+            foreach (var chunk in _chunks)
+            {
+                chunk.Visible = context.Shows(MapLayer.Terrain);
+            }
+
+            GetNode<Node3D>("Roads").Visible = context.Shows(MapLayer.Roads);
+            GetNode<Node3D>("Rivers").Visible = context.Shows(MapLayer.Rivers);
+        }
+
+        ShowLayers();
+        context.HiddenChanged += ShowLayers;
+        TreeExiting += () => context.HiddenChanged -= ShowLayers;
 
         // Painting changes texels of the terrain map (the painted tiles' bytes; the texture is uploaded whole, Godot has no partial update);
         // only a change of heights needs new meshes.

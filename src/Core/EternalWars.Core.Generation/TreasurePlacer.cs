@@ -55,21 +55,11 @@ public static class TreasurePlacer
 
     public const int GuardShareMax = 60;
 
-    /// <summary>What a unit of a resource is worth in gold for treasure (placeholder until marketplace rates, TOWN-2).</summary>
-    public static int GoldValue(ResourceType resource) => resource switch
-    {
-        ResourceType.Gold => 1,
-        ResourceType.Lumber or ResourceType.Ore => 100,
-        _ => 200,
-    };
+    /// <summary>What a unit of a resource is worth in gold for treasure: the map analysis's (ADR-263).</summary>
+    public static int GoldValue(ResourceType resource) => Domain.Analysis.MapAnalysis.GoldValue(resource);
 
-    /// <summary>The value an artifact of a tier is worth.</summary>
-    public static int ArtifactValue(ArtifactTier tier) => tier switch
-    {
-        ArtifactTier.Minor => 4000,
-        ArtifactTier.Major => 8000,
-        _ => 15000,
-    };
+    /// <summary>The value an artifact of a tier is worth: the map analysis's (ADR-263).</summary>
+    public static int ArtifactValue(ArtifactTier tier) => Domain.Analysis.MapAnalysis.ArtifactValue(tier);
 
     /// <summary>Guard power for an item: 0 below the threshold or without monsters; less in start zones.</summary>
     public static int GuardValue(int value, MonsterStrength strength, bool startZone, int sharePercent)

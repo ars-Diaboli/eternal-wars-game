@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Heroes;
@@ -130,10 +131,12 @@ public partial class HeroView : Node3D
         {
             context.ViewerChanged += UpdateVisibility;
             context.LevelChanged += UpdateVisibility;
+            context.HiddenChanged += UpdateVisibility;
             TreeExiting += () =>
             {
                 context.ViewerChanged -= UpdateVisibility;
                 context.LevelChanged -= UpdateVisibility;
+                context.HiddenChanged -= UpdateVisibility;
             };
         }
 
@@ -200,7 +203,7 @@ public partial class HeroView : Node3D
     }
 
     private void UpdateVisibility() =>
-        Visible = _context is null || (_shownPosition.Level == _context.Level && _context.CanSee(_hero));
+        Visible = _context is null || (_shownPosition.Level == _context.Level && _context.CanSee(_hero) && _context.Shows(MapLayer.Heroes));
 
     private Vector3 OnGround(MapPosition position) => MapSpace.ToGround(_context!.State.Map, position);
 

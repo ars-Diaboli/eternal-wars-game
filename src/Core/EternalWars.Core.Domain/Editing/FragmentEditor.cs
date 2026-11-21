@@ -31,7 +31,8 @@ public sealed class FragmentEditor
 
     /// <summary>
     /// The selected tiles and objects as a fragment; null when neither is selected. A selection over several levels gives the lowest
-    /// level's part. Selected heroes and events are left out.
+    /// level's part. Selected heroes and events are left out, and so are roads and rivers while their layers are hidden or locked
+    /// (ADR-262), which a paste then leaves as they are too.
     /// </summary>
     public MapFragment? Copy()
     {
@@ -65,7 +66,10 @@ public sealed class FragmentEditor
         return new MapFragment(
             cells.Max(c => c.X) - left + 1,
             cells.Max(c => c.Y) - top + 1,
-            [.. tiles.Select(t => new FragmentTile(t.X - left, t.Y - top, Map.GetTerrain(t), Map.GetRoad(t), Map.GetRiver(t)))],
+            [.. tiles.Select(t => new FragmentTile(
+                t.X - left, t.Y - top, Map.GetTerrain(t),
+                Locked().HasFlag(FragmentLayers.Roads) ? RoadType.None : Map.GetRoad(t),
+                Locked().HasFlag(FragmentLayers.Rivers) ? RiverType.None : Map.GetRiver(t)))],
             corners,
             objects);
     }
@@ -170,6 +174,11 @@ public sealed class FragmentEditor
     public EditResult DuplicateAt(MapPosition origin, FragmentLayers layers = FragmentLayers.All) =>
         Copy() is { } fragment ? PasteAs(fragment, origin, layers, "Duplicate") : EditResult.InvalidTarget;
 
+    /// <summary>The roads and rivers when their layers are hidden or locked (ADR-262): a paste leaves them, a copy does not take them.</summary>
+    private FragmentLayers Locked() =>
+        (_context.Editable.HasFlag(MapLayer.Roads) ? FragmentLayers.None : FragmentLayers.Roads)
+        | (_context.Editable.HasFlag(MapLayer.Rivers) ? FragmentLayers.None : FragmentLayers.Rivers);
+
     private EditResult PasteAs(MapFragment fragment, MapPosition origin, FragmentLayers layers, string description)
     {
         if (CheckPaste(fragment, origin, layers).Result is var check && check != EditResult.Ok)
@@ -199,6 +208,7 @@ public sealed class FragmentEditor
             }
         }
 
+        layers &= ~Locked(); // what is hidden or locked is not painted over (ADR-262)
         var tiles = fragment.Tiles.Select(t => (Tile: t, At: origin.Offset(t.X, t.Y))).Where(t => Map.Contains(t.At)).ToList();
         var withHeights = layers.HasFlag(FragmentLayers.Heights);
         _context.AsOneStep(description, () =>

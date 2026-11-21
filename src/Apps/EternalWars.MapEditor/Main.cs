@@ -50,6 +50,7 @@ public partial class Main : Node3D
     private ToolPalette _tools = null!;
     private InspectorPanel _inspector = null!;
     private EventsPanel _events = null!;
+    private LayersPanel _layers = null!;
     private EventCellsView _eventCells = null!;
     private SelectionView _selectionView = null!;
     private FileService _files = null!;
@@ -379,6 +380,7 @@ public partial class Main : Node3D
         });
         _ui!.SubscribeWhileInTree<MapResized>(_editor.Events, _ => ShowResizedMap());
         _ui!.SubscribeWhileInTree<SelectionChanged>(_editor.Events, _ => _commands.NotifyStateChanged());
+        _ui!.SubscribeWhileInTree<MapLayersChanged>(_editor.Events, e => _context.Hidden = e.Hidden); // the views leave out the hidden kinds (ADR-262)
 
         _camera.FocusOn(MapSpace.ToWorld(new(state.Map.Width / 2, state.Map.Height / 2)));
         _bookmarks.Clear();
@@ -419,7 +421,7 @@ public partial class Main : Node3D
         // A view context of their own for the new views: the old ones' handlers stay behind with the old context.
         _pressed = false;
         var level = _context.Level;
-        _context = new MapViewContext(_editor.Scenario, _editor.Events) { ShowGrid = _showGrid };
+        _context = new MapViewContext(_editor.Scenario, _editor.Events) { ShowGrid = _showGrid, Hidden = _editor.Layers.Hidden };
         _context.SetLevel(level);
         BuildWorld();
         BuildMinimap(); // of the new size, on the new view context
@@ -579,6 +581,9 @@ public partial class Main : Node3D
         _browser.Bind(catalog, _choice, _settings, () => StampFolder.Names(StampsFolder), PasteStamp, ThumbnailsFolder);
         _choice.Changed += UseChoice;
         _browser.TreeExiting += () => _choice.Changed -= UseChoice; // this UI goes when another map is opened; the choice stays
+        _layers = new LayersPanel { Name = "Layers" };
+        _workspace.AddTab(EditorRegion.Right, _layers);
+        _layers.Bind(_editor, _showGrid, ShowGrid);
         _events = new EventsPanel { Name = "Events" };
         _workspace.AddTab(EditorRegion.Right, _events);
         _events.Bind(_editor, MapEventNodeJson.Instance);
@@ -644,6 +649,7 @@ public partial class Main : Node3D
         Command("view.history", "History", () => _workspace.ShowTab(history));
         Command("view.output", "Output", () => _workspace.ShowTab(output));
         Command("view.inspector", "Inspector", () => _workspace.ShowTab(_inspector));
+        Command("view.layers", "Layers", () => _workspace.ShowTab(_layers));
         foreach (var tool in _tools.Tools)
         {
             _commands.Register(new EditorCommand(ToolCommand(tool), tool.Name, () => _tools.Use(tool))
@@ -663,7 +669,7 @@ public partial class Main : Node3D
             },
             new("Edit", ["edit.undo", "edit.redo", null, "edit.cut", "edit.copy", "edit.paste", "edit.duplicate", "edit.delete", "edit.save-stamp", null, "edit.rotate", "edit.mirror", null, "edit.select-all", "edit.deselect", null, "edit.preferences"]),
             new("View", ["view.palette", null, "view.map-tab", "templates.editor", null, "view.level", "view.grid", null, "view.top-down",
-                "view.focus", "view.whole-map", "view.go-to", ">Bookmarks", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.problems", "view.history", "view.output"])
+                "view.focus", "view.whole-map", "view.go-to", ">Bookmarks", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.layers", "view.problems", "view.history", "view.output"])
             {
                 Lists =
                 [
@@ -748,7 +754,7 @@ public partial class Main : Node3D
             isOn: () => _workspace.Page == _templatePage, isChoice: true);
         Command("view.level", "Switch level", SwitchLevel, UiIcon.SwitchLevel, new(Key.L),
             () => _editor.Scenario.Map.Levels > 1 ? null : "The map has one level", onMap: true);
-        Command("view.grid", "Grid", () => _context.ShowGrid = _showGrid = !_showGrid, isOn: () => _showGrid, onMap: true);
+        Command("view.grid", "Grid", () => ShowGrid(!_showGrid), isOn: () => _showGrid, onMap: true);
         Command("view.top-down", "Top-down view", () => _camera.TopDown = !_camera.TopDown, isOn: () => _camera.TopDown, onMap: true);
         Command("view.focus", "Focus the selection", FocusSelection, shortcut: new(Key.F),
             whyNot: () => _editor.Selection.Cells(_editor.Scenario).Count > 0 ? null : "Nothing is selected", onMap: true);
@@ -837,6 +843,14 @@ public partial class Main : Node3D
         {
             _editor.Selecting.Clear();
         }
+    }
+
+    /// <summary>The tile grid on or off, kept from map to map: the view, the Layers tab and the commands follow.</summary>
+    private void ShowGrid(bool on)
+    {
+        _context.ShowGrid = _showGrid = on;
+        _layers.ShowGrid(on);
+        _commands.NotifyStateChanged();
     }
 
     /// <summary>The next level of the map, with the camera on its middle.</summary>
@@ -958,7 +972,13 @@ public partial class Main : Node3D
             _tools.Use(_tools.Tools.OfType<SelectTool>().First()); // the next click selects, not places or links
         }
 
-        if (link.Object is { } id && _editor.Scenario.FindObject(id) is { } mapObject)
+        // A thing whose layer is hidden or locked (ADR-262) is shown but not selected; the selection stays as it was.
+        var layer = link.Object is { } linked && _editor.Scenario.FindObject(linked) is { } found ? MapLayers.Of(found) : MapLayer.Heroes;
+        if (target && !_editor.Layers.IsEditable(layer))
+        {
+            Say($"{link.Text}: shown, not selected, as its layer is hidden or locked");
+        }
+        else if (link.Object is { } id && _editor.Scenario.FindObject(id) is { } mapObject)
         {
             _editor.Selecting.Set(new SelectionItems([], [id], [], []));
             _toolContext.Inspect(mapObject);

@@ -28,6 +28,8 @@
 | [259](#adr-259-the-new-map-wizard-and-the-empty-state-adr-250-adr-087-2026-11-21) | The new-map wizard and the empty state (ADR-250, ADR-087, 2026-11-21) | implemented |
 | [260](#adr-260-the-editors-camera-framing-and-bookmarks-adr-022-adr-250-2026-11-21) | The editor's camera: framing and bookmarks (ADR-022, ADR-250, 2026-11-21) | implemented |
 | [261](#adr-261-the-editors-minimap-and-go-to-adr-260-2026-11-21) | The editor's minimap and Go to (ADR-260, 2026-11-21) | implemented |
+| [262](#adr-262-the-editors-layers-adr-250-2026-11-21) | The editor's layers (ADR-250, 2026-11-21) | implemented |
+| [263](#adr-263-the-map-analysis-in-the-core-adr-117-adr-250-2026-11-21) | The map analysis in the core (ADR-117, ADR-250, 2026-11-21) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -656,3 +658,54 @@ ADR when it is built.
   objects (a town always has a name) and the events with a cell, ranked as the command palette ranks commands (`CommandSearch`); an
   empty text lists them all, at most 50. A result is a `MapLink`, so going there is the inspector's jump: the view shows it and a hero or
   an object becomes the selection.
+
+### ADR-262: The editor's layers (ADR-250, 2026-11-21)
+**Status**: implemented (plan step 4, task 3).
+
+- **Layers in the core**: `MapLayers` (`MapEditorSession.Layers`, Core.Domain) holds which kinds (`MapLayer`: terrain, roads, rivers,
+  objects, scenery, monsters, heroes, events, start zones) are hidden and which locked, and publishes `MapLayersChanged`. They belong to
+  the session: no undo step, not saved, back to all shown and unlocked with every map opened.
+- **Hidden or locked cannot be selected or erased**: the selection finds nothing of such a kind (`At`, `In`, `OfKind`, `Everything`),
+  `Set` and `Add` leave it out, and a change of the layers lets go of what the selection held of it (the selection is trimmed before
+  `MapLayersChanged` is published); the eraser leaves it, under the brush and over the selection. So Delete, Move, Rotate, Mirror and
+  Cut, which work on the selected things, never touch it either. A copy takes no road or river while their layer is hidden or locked,
+  and a paste or a duplicate does not paint over them. A hidden kind counts as locked: what cannot be seen is not changed by a box drawn
+  over it. Tiles are no kind and stay selectable.
+- **Jumps**: a jump link or Go to on a thing of such a kind shows it but neither selects nor inspects it, and the selection stays.
+- **What locks**: only the kinds something selects or erases (`MapLayers.Lockable`: roads, rivers, objects, scenery, monsters, heroes,
+  events). The terrain and the start zones only hide. The brushes (terrain, roads, rivers, start zones) and the placing tools are
+  picked on purpose and work whatever the layers say; what a paste places is not selected when its kind is locked.
+- **The views**: `MapViewContext.Hidden` tells the shared map views what to leave out (the ground, roads, rivers, objects by kind,
+  heroes, event cells, start zones); the game never sets it. The objects are drawn again only when an object layer changes. The grid
+  is drawn on the ground, so it hides with the terrain. The Layers tab (`LayersPanel`, Godot.UI) in the right region has a Show box per
+  kind, a Locked box per lockable kind, the grid's box, and "Show and unlock all".
+
+### ADR-263: The map analysis in the core (ADR-117, ADR-250, 2026-11-21)
+**Status**: implemented (plan step 4, task 4; EDIT-9).
+
+- **`MapAnalysis`** (Core.Domain, `Analysis`) measures any `GameState`, a scenario in the editor or a game, and changes nothing:
+  - **Reach**: the days from a tile to every other, by the game's step costs (`PathFinder.CostsFor`, the cost flood the AI uses) for a
+    scout of the player: a hero without skill or artifact whose army is one creature of the start town's faction, so it is at home on
+    that faction's terrain (100 a step there, the terrain's own cost elsewhere) as a start hero is; a day is 1500 points
+    (`MovementAllowance.NoArmyBase`) whatever the army, so factions compare. Unlike a route in the game, the scout's goes on past
+    guards (fought), pickups and other visits (`passThrough`), as a hero that fights and takes walks on; heroes on the map stand in its
+    way, and fog is ignored. Days are a route's cost over a day's movement, rounded up: the game lets a day's last step run over, so
+    this is an upper bound.
+  - **Guard strength** of a cell: the army power (count × fight value) of the monsters whose zone it is in and of one standing on it.
+    `GuardPower` is the strength of a monster or a garrison; an open count is the middle of its tier's rolled range, a random monster
+    the mean of the creatures it may become. The guards of mines, creature banks and dwellings are not counted (the generator's
+    measure leaves them out too).
+  - **Treasure value** in gold: resource piles (an open amount as the middle of its range), chests (fixed gold or experience, the more;
+    else the rolls' average), artifacts on the ground, Pandora's boxes (resources, experience and artifacts; not creatures or stats). Resources and
+    artifacts are worth what the generator gives them (`GoldValue`, `ArtifactValue`, which `TreasurePlacer` reads from here).
+  - **Fairness** per start (a player's first town's entrance, else its first hero and its army's faction): days to the nearest town
+    (not its own), to the nearest mine of each resource the map has and to the nearest resource provider; treasure value and guard
+    strength of what is reached within 3 and within 7 days (a garrison that lets the player through is no guard to it); how many mines
+    of each resource lie within 3 days. A warning names each number where a start is more than 20 % from the starts' mean
+    *(placeholder)*, and for days also more than a day, as days are whole numbers; or where it reaches none and another start does.
+- **Shared where the numbers mean the same**: the generator's `MapFairness` takes its guard power from `GuardPower` (the generator sets
+  every count, so its numbers do not change) and its treasure values from the same gold values. Its own measures stay: they compare
+  zones the template makes alike, by walking distance in tiles, which is not days of a hero's movement. `sim fairness --verbose` also
+  prints the analysis of the game of each seed with every slot taken (built as the new-game screen builds it, which may be another
+  attempt than the single map measured; its time is not counted in a seed's).
+- The editor's fairness report and overlays (plan step 4) are views of these numbers.

@@ -201,12 +201,8 @@ public static class MapFairness
                     _stops[visit] = true;
                 }
 
-                var power = mapObject switch
-                {
-                    MonsterGuard guard => (guard.Count ?? 1) * creatures.Get(guard.Creature).FightValue,
-                    MapGarrison garrison => garrison.Troops.Stacks.Sum(s => s.Stack.Count * creatures.Get(s.Stack.Creature).FightValue),
-                    _ => 0,
-                };
+                // The map analysis's strength (ADR-263); the generator always sets the count.
+                var power = (int)Math.Min(int.MaxValue, Domain.Analysis.MapAnalysis.GuardPower(mapObject, creatures));
                 if (power <= 0)
                 {
                     continue;
