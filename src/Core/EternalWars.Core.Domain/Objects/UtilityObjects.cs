@@ -27,12 +27,24 @@ public sealed class Observatory(MapObjectId id, MapObjectDefinition definition, 
     public const int Radius = 20;
 }
 
-/// <summary>Scenery (ADR-079, MAP-25): a rock, a tree, a pond, a ruin, a piece of wall… It only blocks; it has no entrance and no data.</summary>
-public sealed class Scenery(MapObjectId id, MapObjectDefinition definition, MapPosition position)
+/// <summary>
+/// Scenery (ADR-079, MAP-25): a rock, a tree, a pond, a ruin, a piece of wall… It only blocks; it has no entrance and no data but how it
+/// lies (<see cref="Orientation"/>, EDIT-6, ADR-252).
+/// </summary>
+public sealed class Scenery(MapObjectId id, MapObjectDefinition definition, MapPosition position, Orientation orientation = default)
     : MapObject(id, definition, position, MapObjectKind.Scenery)
 {
+    /// <summary>
+    /// How the piece lies: its cells are the definition's footprint mirrored and turned, from <see cref="MapObject.Position"/> as their
+    /// box's top-left tile. Set only while the object is off the game's cell index (the editor's turn takes it out and puts it back).
+    /// </summary>
+    public Orientation Orientation { get; internal set; } = orientation;
+
     /// <inheritdoc/>
-    internal override string DigestState() => "";
+    public override Footprint Footprint => Definition.Footprint.Oriented(Orientation);
+
+    /// <inheritdoc/>
+    internal override string DigestState() => Orientation.IsNone ? "" : $"turns {Orientation.Turns} mirrored {Orientation.Mirrored}";
 }
 
 /// <summary>The Den of Thieves (ADR-079, TOWN-11): every visit shows the whole Thieves' Guild table; nothing is kept.</summary>

@@ -575,7 +575,7 @@ public partial class Main : Node3D
                     new("Open recent", () => [.. _files.Recent.Select(path => (path, (Action)(() => _files.Open(path))))], "No file was opened or saved yet"),
                 ],
             },
-            new("Edit", ["edit.undo", "edit.redo", null, "edit.cut", "edit.copy", "edit.paste", "edit.duplicate", "edit.delete", "edit.save-stamp", null, "edit.select-all", "edit.deselect", null, "edit.preferences"]),
+            new("Edit", ["edit.undo", "edit.redo", null, "edit.cut", "edit.copy", "edit.paste", "edit.duplicate", "edit.delete", "edit.save-stamp", null, "edit.rotate", "edit.mirror", null, "edit.select-all", "edit.deselect", null, "edit.preferences"]),
             new("View", ["view.palette", null, "view.map-tab", "templates.editor", null, "view.level", "view.grid", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.problems", "view.history", "view.output"]),
             new("Map", ["map.properties", "map.players", "map.conditions", "map.events", "map.bans", null, "map.resize", "map.crop", null, "view.problems"]),
             new("Tools", [.. _tools.Tools.Select(ToolCommand)]),
@@ -635,6 +635,8 @@ public partial class Main : Node3D
         Command("edit.delete", "Delete", () => Say($"Deleted {_editor.Selecting.Delete()} thing(s)"), shortcut: new(Key.Delete),
             whyNot: () => _editor.Selection.HasThings ? null : "No object or hero is selected", onMap: true);
         Command("edit.save-stamp", "Save selection as stamp", SaveStamp, whyNot: NothingToCopy, onMap: true);
+        Command("edit.rotate", "Rotate scenery", () => Turn(mirror: false), shortcut: new(Key.R, Ctrl: true), whyNot: NoScenery, onMap: true);
+        Command("edit.mirror", "Mirror scenery", () => Turn(mirror: true), shortcut: new(Key.M, Ctrl: true), whyNot: NoScenery, onMap: true);
         Command("map.resize", "Resize map", OpenResize, onMap: true);
         Command("map.crop", "Crop to selection", Crop,
             whyNot: () => _editor.Selection.Tiles.Count > 0 ? null : "No tile is selected", onMap: true);
@@ -661,6 +663,23 @@ public partial class Main : Node3D
     /// <summary>Why Copy, Cut and Duplicate cannot run: a fragment holds tiles and objects, and none is selected.</summary>
     private string? NothingToCopy() =>
         _editor.Selection.Tiles.Count + _editor.Selection.Objects.Count > 0 ? null : "No tile and no object is selected";
+
+    /// <summary>Why Rotate and Mirror cannot run: only scenery turns, and none is selected.</summary>
+    private string? NoScenery() =>
+        _editor.Selection.Objects.Any(id => _editor.Scenario.FindObject(id) is Scenery) ? null : "No scenery is selected";
+
+    /// <summary>Rotate or Mirror: the selected scenery turns a quarter turn clockwise, or is mirrored left to right.</summary>
+    private void Turn(bool mirror)
+    {
+        var pieces = _editor.Selection.Objects.Count(id => _editor.Scenario.FindObject(id) is Scenery);
+        Say((mirror ? _editor.Selecting.Mirror() : _editor.Selecting.Rotate()) switch
+        {
+            EditResult.Ok => $"{(mirror ? "Mirrored" : "Rotated")} {pieces} piece(s) of scenery",
+            EditResult.Overlaps => "No room: turned, a piece would lie on another object or a hero",
+            EditResult.OutOfBounds => "No room: turned, a piece would reach off the map",
+            var refused => $"Refused: {refused}",
+        });
+    }
 
     /// <summary>Copy or Cut: the selection goes to the clipboard as a fragment.</summary>
     private void Copy(bool cut)

@@ -67,6 +67,6 @@ public static class AdventureCursors
     }
 
     private static bool IsVisitCell(Visibility.KnownObject known, MapPosition cell) =>
-        known.Definition.Footprint.HasVisit
-        && known.Position.Offset(known.Definition.Footprint.VisitOffset.Dx, known.Definition.Footprint.VisitOffset.Dy) == cell;
+        known.Footprint.HasVisit
+        && known.Position.Offset(known.Footprint.VisitOffset.Dx, known.Footprint.VisitOffset.Dy) == cell;
 }

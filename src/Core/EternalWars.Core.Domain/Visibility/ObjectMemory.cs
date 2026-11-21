@@ -8,10 +8,19 @@ namespace EternalWars.Core.Domain.Visibility;
 public sealed record KnownObject(MapObjectId Id, MapObjectDefinition Definition, MapPosition Position, PlayerId? Owner)
 {
     public static KnownObject Of(MapObject mapObject) =>
-        new(mapObject.Id, mapObject.Definition, mapObject.Position, (mapObject as IFlaggable)?.Owner);
+        new(mapObject.Id, mapObject.Definition, mapObject.Position, (mapObject as IFlaggable)?.Owner)
+        {
+            Orientation = (mapObject as Scenery)?.Orientation ?? default,
+        };
+
+    /// <summary>How a piece of scenery lay (ADR-252); none for everything else.</summary>
+    public Orientation Orientation { get; init; }
+
+    /// <summary>The object's shape as it lay on the map.</summary>
+    public Footprint Footprint => Definition.Footprint.Oriented(Orientation);
 
     public IEnumerable<MapPosition> Cells() =>
-        Definition.Footprint.OccupiedCells.Select(c => Position.Offset(c.Dx, c.Dy));
+        Footprint.OccupiedCells.Select(c => Position.Offset(c.Dx, c.Dy));
 }
 
 /// <summary>
@@ -59,7 +68,7 @@ public sealed class ObjectMemory
         List<MapObjectId>? changed = null;
         foreach (var mapObject in state.Objects)
         {
-            if (IsInSight(state, player, mapObject.Position, mapObject.Definition))
+            if (IsInSight(state, player, mapObject.Position, mapObject.Footprint))
             {
                 Notice(known, mapObject, ref changed);
             }
@@ -116,13 +125,14 @@ public sealed class ObjectMemory
     private static void Notice(Dictionary<MapObjectId, KnownObject> known, MapObject mapObject, ref List<MapObjectId>? changed)
     {
         var owner = (mapObject as IFlaggable)?.Owner;
+        var orientation = (mapObject as Scenery)?.Orientation ?? default;
         if (known.TryGetValue(mapObject.Id, out var remembered) && remembered.Position == mapObject.Position && remembered.Owner == owner &&
-            Equals(remembered.Definition, mapObject.Definition))
+            remembered.Orientation == orientation && Equals(remembered.Definition, mapObject.Definition))
         {
             return;
         }
 
-        known[mapObject.Id] = new KnownObject(mapObject.Id, mapObject.Definition, mapObject.Position, owner);
+        known[mapObject.Id] = KnownObject.Of(mapObject);
         (changed ??= []).Add(mapObject.Id);
     }
 
@@ -132,7 +142,7 @@ public sealed class ObjectMemory
         List<MapObjectId>? gone = null;
         foreach (var remembered in known.Values)
         {
-            if (state.FindObject(remembered.Id) is null && IsInSight(state, player, remembered.Position, remembered.Definition))
+            if (state.FindObject(remembered.Id) is null && IsInSight(state, player, remembered.Position, remembered.Footprint))
             {
                 (gone ??= []).Add(remembered.Id);
             }
@@ -145,9 +155,9 @@ public sealed class ObjectMemory
         }
     }
 
-    private static bool IsInSight(GameState state, PlayerId player, MapPosition position, MapObjectDefinition definition)
+    private static bool IsInSight(GameState state, PlayerId player, MapPosition position, Footprint footprint)
     {
-        foreach (var (dx, dy, _) in definition.Footprint.OccupiedCells)
+        foreach (var (dx, dy, _) in footprint.OccupiedCells)
         {
             if (state.Fog.IsInSight(player, position.Offset(dx, dy)))
             {

@@ -86,10 +86,19 @@ public class EditorUndoTests
             e.Map.SetProperties("Fixture", "Built by the editor.");
             Assert.Equal(1, e.Terrain.PaintRoad(new MapPosition(30, 24), RoadType.Dirt));
             Assert.True(e.Heights.Raise(Hill, 1, 8) > 0);
+
+            // Scenery with room to turn: nothing beside it, low on the map where the other cases put nothing.
+            var wallAt = e.Scenario.Map.Positions(0).First(p => p.Y == 28 && p.X is > 3 and < 30
+                && new TileArea(p.X - 1, p.Y - 1, p.X + 3, p.Y + 1, 0).Tiles().All(t => e.Scenario.ObjectCellAt(t) is null && e.Scenario.HeroAt(t) is null));
+            Ok(e.Objects.Place("scenery.wall.h3", wallAt, out var wall));
+            Wall = wall;
             e.History.Clear();
         }
 
         public MapEditorSession Editor { get; }
+
+        /// <summary>A piece of scenery, three tiles in a row.</summary>
+        public MapObjectId Wall { get; }
 
         public HeroId Hero { get; }
 
@@ -265,6 +274,10 @@ public class EditorUndoTests
             && f.Editor.Fragments.Copy() is { } fragment && Ok(f.Editor.Fragments.Paste(fragment, new MapPosition(0, 15))),
         ["FragmentEditor.DuplicateAt"] = f => f.Editor.Selecting.Set(new SelectionItems([Fixture.Hill, new MapPosition(30, 24)], [f.Town, f.GateA, f.GateB], [], []))
             && Ok(f.Editor.Fragments.DuplicateAt(new MapPosition(2, 16))),
+        ["ObjectEditor.Rotate"] = f => Ok(f.Editor.Objects.Rotate([f.Wall])),
+        ["ObjectEditor.Mirror"] = f => Ok(f.Editor.Objects.Mirror([f.Wall])),
+        ["SelectionEditor.Rotate"] = f => f.Editor.Selecting.Set(new SelectionItems([], [f.Wall, f.Chest], [f.Hero], [])) && Ok(f.Editor.Selecting.Rotate()),
+        ["SelectionEditor.Mirror"] = f => f.Editor.Selecting.Set(new SelectionItems([], [f.Wall], [], [])) && Ok(f.Editor.Selecting.Mirror()),
         ["EraseEditor.Erase"] = f => f.Editor.Erasing.Erase(new TileArea(0, 0, 39, 29, 0).Tiles(), EraseKinds.All) > 20,
         ["EraseEditor.EraseSelection"] = f => f.Editor.Selecting.Set(new SelectionItems([new MapPosition(30, 24)], [f.Chest, f.GateA, f.Monster], [f.Hero], ["hero event"]))
             && f.Editor.Erasing.EraseSelection(EraseKinds.All) == 6,

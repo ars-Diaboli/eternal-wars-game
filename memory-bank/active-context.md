@@ -1,6 +1,6 @@
 # Active context
 
-**As of 2026-11-20.** Refresh this file at the end of every piece of work: replace, do not append.
+**As of 2026-11-21.** Refresh this file at the end of every piece of work: replace, do not append.
 
 ## Where the project is
 Phases 0–4 are done and closed out (ADR-114, ADR-117). Phase 5 (content and polish) is in progress: magic, sieges, relics, map events,
@@ -9,7 +9,17 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
-- Editor overhaul, step 2 tasks 9 and 10 (ADR-250, ADR-251); tasks 7 (scatter) and 8 (scenery rotation) are still open. Core:
+- Editor overhaul, step 2 tasks 7 and 8 (ADR-252); step 2 is complete. Scenery orientation: `Orientation` (mirrored, then 0 to 3
+  quarter turns clockwise) on `Scenery`; `MapObject.Footprint` / `KnownObject.Footprint` are the shape as it lies
+  (`Footprint.Oriented`), read by the cell index, the fog's memory, the minimap and `MapObjectsView`; `ObjectEditor.Rotate` /
+  `Mirror` / `CheckTurn` (`SceneryTurner`: round the middle of the box, all or none, one step, `MapObjectMoved` per piece) and
+  `SelectionEditor.Rotate` / `Mirror`. Map format 43 (`turns`, `mirrored` on scenery; step `OlderSceneryIsNotTurned`; sample v43;
+  stamps of an older map format are upgraded on reading, sample `v01-map42`). Scatter: `ScatterEditor` in Core.Generation
+  (`ScatterOptions`: density, kinds, keep paths open; `SceneryPlacer.Pick`), through `MapEditorSession.AsOneStep(description,
+  random => …)`, whose undo restores the random state. UI: `ScatterTool` (no key: S pans the camera; scatters on release over the stroke's tiles), commands
+  Rotate scenery (Ctrl+R) and Mirror scenery (Ctrl+M). Tests `SceneryOrientationTests`, `ScatterEditorTests`, cases in
+  `EditorUndoTests`; smoke `editor-scatter-rotate`. Next: step 3 of the plan.
+- Editor overhaul, step 2 tasks 9 and 10 (ADR-250, ADR-251). Core:
   `MapEditorSession.Resize(width, height, anchor)`, `Crop()`, `Shift(dx, dy)` and their `Check…` (a `ResizeCheck`: the new frame and
   what would leave the map), all through `MapResizer`: what is outside is removed by the other editors, then one command reframes
   the map in place (`AdventureMap.Reframed` / `TakeFrom`, `GameState.Reframe`: objects, heroes, the guard index), moves the event
@@ -18,7 +28,7 @@ Detail: [roadmap.md](roadmap.md).
   pinned sample in `tests/.../Data/StampSamples`). UI: `ResizeWindow` (size, presets, anchor, shift, the list of what is removed),
   `NameBox`, commands Resize map, Crop to selection, Save selection as stamp; the Object tool lists the stamps and hands one to the
   Paste tool; the app builds the world's views again on `MapResized` (a new `MapViewContext`). Tests `EditorResizeTests`,
-  `StampFormatTests`, cases in `EditorUndoTests`; smokes `editor-resize`, `editor-select-move-paste`. Next: step 2 tasks 7 and 8.
+  `StampFormatTests`, cases in `EditorUndoTests`; smokes `editor-resize`, `editor-select-move-paste`.
 - Editor overhaul, step 2 tasks 4 to 6 (ADR-250). Core: `MapFragment` and `FragmentEditor` (`session.Fragments`: `Copy`, `Cut`,
   `CheckPaste`, `Paste` with `FragmentLayers`, `DuplicateAt`; new ids, links remapped inside, dropped to outside; no heroes, start
   zones or event cells); objects are copied through `IMapObjectCopier`, implemented in Core.Data by `MapObjectCopier` over the map

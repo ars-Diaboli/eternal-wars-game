@@ -109,7 +109,15 @@ public static partial class MapConverter
         Codec<DenOfThieves, DenOfThievesDocument>("denOfThieves", (_, d) => d, (_, c) => new DenOfThieves(c.Id, c.Definition, c.Position)),
         Codec<AstrologersTower, AstrologersTowerDocument>("astrologersTower", (_, d) => d, (_, c) => new AstrologersTower(c.Id, c.Definition, c.Position)),
         Codec<Sanctuary, SanctuaryDocument>("sanctuary", (_, d) => d, (_, c) => new Sanctuary(c.Id, c.Definition, c.Position)),
-        Codec<Scenery, SceneryDocument>("scenery", (_, d) => d, (_, c) => new Scenery(c.Id, c.Definition, c.Position)),
+        Codec<Scenery, SceneryDocument>(
+            "scenery",
+            (scenery, d) => d with
+            {
+                Turns = scenery.Orientation.Turns == 0 ? null : scenery.Orientation.Turns, Mirrored = scenery.Orientation.Mirrored ? true : null,
+            },
+            (d, c) => d.Turns is < 0 or > 3
+                ? throw new FormatException($"Scenery {d.Id} is turned by {d.Turns} quarter turns; it is 0 to 3.")
+                : new Scenery(c.Id, c.Definition, c.Position, new Orientation(d.Turns ?? 0, d.Mirrored ?? false))),
         Codec<Cartographer, CartographerDocument>("cartographer", (_, d) => d, (_, c) => new Cartographer(c.Id, c.Definition, c.Position)),
         Codec<ArtifactMerchant, ArtifactMerchantDocument>("artifactMerchant", (_, d) => d, (_, c) => new ArtifactMerchant(c.Id, c.Definition, c.Position)),
         Codec<RefugeeCamp, RefugeeCampDocument>("refugeeCamp", (_, d) => d, (_, c) => new RefugeeCamp(c.Id, c.Definition, c.Position)),

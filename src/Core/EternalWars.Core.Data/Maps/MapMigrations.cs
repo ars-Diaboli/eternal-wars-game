@@ -26,7 +26,7 @@ internal static class MapMigrations
     public const int UnversionedFormatVersion = 1;
 
     /// <summary>The steps, oldest first.</summary>
-    public static IReadOnlyList<IMapMigration> Steps { get; } = [new SkillsReplaceTactics(), new GuardModePerMonster(), new RuinsAreTheCrypt(), new HeightsFromTerrain(), new DifficultyNamedHoMM3sWay()];
+    public static IReadOnlyList<IMapMigration> Steps { get; } = [new SkillsReplaceTactics(), new GuardModePerMonster(), new RuinsAreTheCrypt(), new HeightsFromTerrain(), new DifficultyNamedHoMM3sWay(), new OlderSceneryIsNotTurned()];
 
     private static readonly JsonNodeOptions NodeOptions = new() { PropertyNameCaseInsensitive = true };
 
@@ -205,6 +205,24 @@ internal static class MapMigrations
 
             ReliefShaper.FromTerrain(ground);
             map["heights"] = new JsonArray([.. MapConverter.WriteHeights(ground).Select(l => (JsonNode)new JsonArray([.. l.Select(r => (JsonNode)JsonValue.Create(r))]))]);
+        }
+    }
+
+    /// <summary>
+    /// v43 (ADR-252): scenery says how it lies (<c>turns</c>, <c>mirrored</c>). Older scenery lies as its definition draws it, whatever an
+    /// older file wrote under those names: the reader ignored them then, so they mean nothing now.
+    /// </summary>
+    private sealed class OlderSceneryIsNotTurned : IMapMigration
+    {
+        public int Version => 43;
+
+        public void Apply(JsonObject map)
+        {
+            foreach (var scenery in Items(map, "objects").Where(o => IsKind(o, "scenery")))
+            {
+                scenery.Remove("turns");
+                scenery.Remove("mirrored");
+            }
         }
     }
 

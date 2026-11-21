@@ -51,12 +51,13 @@ namespace EternalWars.Core.Data.Maps;
 /// (<c>heights</c>, one character per tile corner, ADR-182; omitted = flat at 0; older maps get their terrain's heights). 40 = + start zones (<c>startZones</c>, one
 /// character per tile: <c>.</c> none, <c>0</c>–<c>7</c> the player's number; omitted = none; MP-4, ADR-197). 41 = the difficulty's names (<c>rules.difficulty</c>)
 /// are HoMM3's, Easy … Master; older maps' names move up one (ADR-225). 42 = + the map events' captured and battle events, dialogues and
-/// the end of the game (<c>dialogue</c>, <c>endGame</c>; ADR-242). Older versions still
+/// the end of the game (<c>dialogue</c>, <c>endGame</c>; ADR-242). 43 = + how scenery lies (<c>turns</c>: quarter turns clockwise, 1 to 3, and
+/// <c>mirrored</c> on a <c>scenery</c> object; omitted = as its definition draws it; ADR-252). Older versions still
 /// load: <see cref="MapSerializer"/> upgrades their JSON first (<see cref="MapMigrations"/>, ADR-174), so this record is the current format only.
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 42;
+    public const int CurrentFormatVersion = 43;
 
     /// <summary>The format the document is in; a file read through <see cref="MapSerializer"/> has been upgraded to the current one.</summary>
     public int FormatVersion { get; init; } = CurrentFormatVersion;
@@ -356,7 +357,14 @@ public sealed record AstrologersTowerDocument : MapObjectDocument;
 public sealed record SanctuaryDocument : MapObjectDocument;
 
 /// <summary>Scenery (v22, ADR-079): which piece comes from its definition.</summary>
-public sealed record SceneryDocument : MapObjectDocument;
+public sealed record SceneryDocument : MapObjectDocument
+{
+    /// <summary>Quarter turns clockwise, 1 to 3, made after the mirroring (v43, ADR-252); omitted = none.</summary>
+    public int? Turns { get; init; }
+
+    /// <summary>Whether the piece is mirrored left to right (v43, ADR-252); omitted = not.</summary>
+    public bool? Mirrored { get; init; }
+}
 
 /// <summary>A cartographer (v22, ADR-079); the level comes from its definition.</summary>
 public sealed record CartographerDocument : MapObjectDocument;

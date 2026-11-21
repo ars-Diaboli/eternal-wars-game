@@ -30,8 +30,8 @@ public static partial class InfoSheets
             return Hero(state, hero, viewer, detailed);
         }
 
-        var known = state.Memory.Of(viewer).FirstOrDefault(k => k.Cells().Contains(cell) || (k.Definition.Footprint.HasVisit && k.Position.Offset(
-            k.Definition.Footprint.VisitOffset.Dx, k.Definition.Footprint.VisitOffset.Dy) == cell));
+        var known = state.Memory.Of(viewer).FirstOrDefault(k => k.Cells().Contains(cell) || (k.Footprint.HasVisit && k.Position.Offset(
+            k.Footprint.VisitOffset.Dx, k.Footprint.VisitOffset.Dy) == cell));
         if (known is not null)
         {
             var inSight = known.Cells().Any(c => state.Fog.IsInSight(viewer, c));
@@ -92,7 +92,7 @@ public static partial class InfoSheets
         AddVisits(state, viewer, mapObject, lines);
         if (detailed)
         {
-            lines.Add($"Id {definition.Id}   Visits: {definition.VisitScope}   Size {N(definition.Footprint.Width)}×{N(definition.Footprint.Height)}");
+            lines.Add($"Id {definition.Id}   Visits: {definition.VisitScope}   Size {N(mapObject.Footprint.Width)}×{N(mapObject.Footprint.Height)}");
         }
 
         if (lines.Count == 0)

@@ -69,7 +69,7 @@ public static class SceneryPlacer
     };
 
     /// <summary>A kind drawn by <see cref="Weight"/> among those with a piece that fits, then that kind's largest fitting piece.</summary>
-    private static MapObjectDefinition Pick(List<MapObjectDefinition> fitting, TerrainType terrain, GameRandom random)
+    internal static MapObjectDefinition Pick(List<MapObjectDefinition> fitting, TerrainType terrain, GameRandom random)
     {
         var kinds = fitting.GroupBy(KindOf).OrderBy(g => g.Key, StringComparer.Ordinal).ToList();
         var roll = random.Next(kinds.Sum(g => Weight(g.Key, terrain)));
@@ -80,13 +80,13 @@ public static class SceneryPlacer
     }
 
     /// <summary>Where the definition's top-left goes so its first blocked cell (row by row) lands on <paramref name="tile"/>.</summary>
-    private static MapPosition Anchor(MapObjectDefinition definition, MapPosition tile)
+    internal static MapPosition Anchor(MapObjectDefinition definition, MapPosition tile)
     {
         var (dx, dy, _) = definition.Footprint.OccupiedCells.OrderBy(c => c.Dy).ThenBy(c => c.Dx).First();
         return tile.Offset(-dx, -dy);
     }
 
-    private static IEnumerable<MapPosition> Cells(MapObjectDefinition definition, MapPosition topLeft) =>
+    internal static IEnumerable<MapPosition> Cells(MapObjectDefinition definition, MapPosition topLeft) =>
         definition.Footprint.OccupiedCells.Select(c => topLeft.Offset(c.Dx, c.Dy));
 
     /// <summary>The most common ground among the tile's neighbours in its zone (rock and other clump tiles aside; ties by terrain order).</summary>

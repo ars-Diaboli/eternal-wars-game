@@ -15,6 +15,7 @@ properties, players, validation and conditions panels):
   [relief's limits](presentation.md#art-direction) (walkable 0–4, water below 0, impassable rock above 4) and nothing more; the validator
   does not warn about height;
 - the map's size: [resize, crop and shift](#editor-resize); [stamps](#editor-stamps) of map pieces;
+- scenery: [scatter](#editor-scatter) over an area, [rotation and mirroring](#editor-scenery-turn);
 - objects: placement and removal ([erase by kind](#editor-brushes)), gate linking, mine owners and guards, map dwellings, artifact pickups, riddles, witch huts, shrines;
 - heroes (type, army, war machines, morale and luck, artifacts, spell book, placeholder), monsters (with guard mode, ADR-065; random by
   tier), towns (buildings, dwellings, garrison, guild spells, random faction);
@@ -59,7 +60,7 @@ placeholder, a coloured tile with the name's two letters.
 **Commands**: every action is a command with a name, an icon, an optional shortcut, and a check whether it can run now. The menus
 (File, Edit, View, Map, Tools, Templates, Test, Help) and the toolbar are built from the commands; an item that cannot run is greyed
 and says why in its tooltip. Shortcuts: the File menu's, Ctrl+Z undo, Ctrl+Y redo, Ctrl+X cut, Ctrl+C copy, Ctrl+V paste, Ctrl+D duplicate, Delete, Ctrl+A select all, Escape
-deselect, the tools' keys (T Terrain, E Erase, V Select, M Move), L the next level, F11 the panels, Ctrl+Shift+P the command palette, Ctrl+, Preferences. The Map menu opens the map's
+deselect, Ctrl+R rotate scenery, Ctrl+M mirror scenery, the tools' keys (T Terrain, E Erase, V Select, M Move), L the next level, F11 the panels, Ctrl+Shift+P the command palette, Ctrl+, Preferences. The Map menu opens the map's
 tabs, the Tools menu picks a tool. Test (F5) and Help (F1) are in their menus and greyed until they are built.
 
 **Selection** (EDIT-1, ADR-250). The selection holds tiles, objects, heroes and map events. It is not an undo step, and a thing that
@@ -115,6 +116,32 @@ as Copy makes it, to a stamp file in the editor's `stamps` folder; a stamp saved
   stamp, the layer boxes, Escape to end. The clipboard stays as it was.
 - A stamp belongs to no map, so it can be used in every map. What a map does not have is taken from the stamped objects as from
   pasted ones.
+
+<a id="editor-scatter"></a>
+**Scatter** (EDIT-6, ADR-252). The Scatter tool puts scenery on the tiles its brush is dragged over, when the button comes up;
+"Scatter in selection" does the same over the selected tiles. The scenery is chosen as the random map generator chooses it
+(ADR-157): for each tile a kind drawn by its weight on the tile's terrain, then that kind's largest piece that fits.
+- **Free tiles only**: passable ground with no object, hero, road, river or event cell. A terrain none of the ticked kinds is made
+  for stays free.
+- **Density** (1 to 100 %, 35 at first): how many of the free tiles are covered. Pieces of several tiles lie where covered tiles
+  are side by side.
+- **Kinds**: a box for each kind of scenery (trees, rocks, walls…), with All and None.
+- **Keep paths open** (on at first): a piece is left out where it would close a way between the tiles round it, or the way to an
+  entrance beside it. Whatever could be walked to before can be walked to after.
+- The draws come from the map's own random numbers, which start from the map's seed each time the map is opened: the same
+  edits on the same map give the same scenery. A scatter is one undo step, and undoing it puts the random numbers back, so the
+  same scatter comes again.
+
+<a id="editor-scenery-turn"></a>
+**Scenery rotation and mirroring** (EDIT-6, ADR-252). "Rotate scenery" (Ctrl+R) turns the selected scenery a quarter turn
+clockwise, each piece round the middle of its own box; "Mirror scenery" (Ctrl+M) flips each left to right. Both are in the Edit
+menu and are one undo step each.
+- A turned piece takes the cells of its turned shape: a wall of 3 × 1 tiles becomes 1 × 3. Four turns bring it back to its place.
+- The turned shapes must fit as placed objects do: on the map, on no other object or hero. When one piece does not fit, none is
+  turned. Pieces turned together may take each other's old cells.
+- Only scenery turns. Game objects keep their facing; selected with scenery, they stay as they are.
+- The map file keeps how each piece lies; copies, pastes and stamps lie as their original. Scenery a random map is generated with
+  is not turned.
 
 <a id="editor-resize"></a>
 **Resize, crop and shift** (EDIT-8, ADR-250, ADR-251). "Resize map" (Map menu) opens a window with the new width and height, 16 to
@@ -177,7 +204,7 @@ last message; "Checking the map…" while the problems are being checked; the co
 the save state ("Not saved" for a map without a file, "No changes" after a file is opened, "Saved" with the time, and "Unsaved changes" whenever the map
 differs from the saved one: undoing back to the saved step clears it); the zoom in percent.
 
-*Planned*: scatter, scenery rotation, and the rest of an overhaul of the map and template editors into one creator-app workspace (ADR-247,
+*Planned*: the rest of an overhaul of the map and template editors into one creator-app workspace (ADR-247,
 [plan](../papers/editor-plan.md)).
 
 ## 2D harness and simulator

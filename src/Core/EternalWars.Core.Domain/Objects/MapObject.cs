@@ -37,10 +37,13 @@ public abstract class MapObject
     /// <summary>Set only while the object is off the game's cell index (the editor's move takes it out, moves it and puts it back).</summary>
     public MapPosition Position { get; internal set; }
 
-    public MapPosition VisitPosition => Position.Offset(Definition.Footprint.VisitOffset.Dx, Definition.Footprint.VisitOffset.Dy);
+    /// <summary>The object's shape as it lies on the map: the definition's, turned for scenery that has an <see cref="Orientation"/> (ADR-252).</summary>
+    public virtual Footprint Footprint => Definition.Footprint;
+
+    public MapPosition VisitPosition => Position.Offset(Footprint.VisitOffset.Dx, Footprint.VisitOffset.Dy);
 
     public IEnumerable<(MapPosition Position, FootprintCell Cell)> OccupiedCells() =>
-        Definition.Footprint.OccupiedCells.Select(c => (Position.Offset(c.Dx, c.Dy), c.Cell));
+        Footprint.OccupiedCells.Select(c => (Position.Offset(c.Dx, c.Dy), c.Cell));
 
     /// <summary>
     /// Whether stepping onto the entrance ends a route (ADR-013: visiting is mandatory). Objects whose visit
