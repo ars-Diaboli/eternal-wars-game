@@ -3,6 +3,7 @@ using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.MapEvents;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Towns;
 
 namespace EternalWars.Core.Domain.Editing;
 
@@ -43,7 +44,7 @@ public static class MapLinks
         var events = scenario.MapEvents.Set;
         if (mapObject is QuestSite { Quest: { } quest } && events.Find(quest) is { } definition)
         {
-            links.AddRange(Named(scenario, definition, "Quest target"));
+            links.AddRange(Named(scenario, definition, "Quest names", mapObject.Id));
         }
 
         if (mapObject is PandorasBox { Event: { } run })
@@ -53,8 +54,8 @@ public static class MapLinks
 
         links.AddRange(NamedBy(scenario, c => c switch
         {
-            MonsterDefeatedCondition monster => monster.Monster == mapObject.Id.Value,
-            TownOwnerCondition town => town.Town == mapObject.Id.Value,
+            MonsterDefeatedCondition monster => mapObject is MonsterGuard && monster.Monster == mapObject.Id.Value,
+            TownOwnerCondition town => mapObject is Town && town.Town == mapObject.Id.Value,
             _ => false,
         }, except: mapObject.Id));
         return links;
@@ -71,16 +72,20 @@ public static class MapLinks
     private static MapLink To(string what, MapObject mapObject) =>
         new($"{what} {mapObject.Definition.Name} #{mapObject.Id.Value} at {mapObject.VisitPosition}", mapObject.VisitPosition, mapObject.Id);
 
-    /// <summary>The monsters, heroes and towns the event's conditions name, each once, in the order they are named.</summary>
-    private static List<MapLink> Named(GameState scenario, MapEventDefinition definition, string what)
+    /// <summary>
+    /// The monsters, heroes and towns the event's conditions name, each once, in the order they are named; an id that is not a monster
+    /// (or not a town) on the map, or is <paramref name="self"/>, gives no link.
+    /// </summary>
+    private static List<MapLink> Named(GameState scenario, MapEventDefinition definition, string what, MapObjectId self)
     {
         var links = new List<MapLink>();
         foreach (var condition in MapEventTree.Conditions(definition))
         {
             var link = condition switch
             {
-                MonsterDefeatedCondition monster when scenario.FindObject(new MapObjectId(monster.Monster)) is { } found => To(what + ":", found),
-                TownOwnerCondition town when scenario.FindObject(new MapObjectId(town.Town)) is { } found => To(what + ":", found),
+                MonsterDefeatedCondition monster when monster.Monster != self.Value && scenario.FindObject(new MapObjectId(monster.Monster)) is MonsterGuard found =>
+                    To(what + ":", found),
+                TownOwnerCondition town when town.Town != self.Value && scenario.FindObject(new MapObjectId(town.Town)) is Town found => To(what + ":", found),
                 HeroDefeatedCondition beaten when scenario.Heroes.FirstOrDefault(h => h.Id.Value == beaten.Hero) is { } hero =>
                     new MapLink($"{what}: {hero.Name} at {hero.Position}", hero.Position, Hero: hero.Id),
                 _ => null,

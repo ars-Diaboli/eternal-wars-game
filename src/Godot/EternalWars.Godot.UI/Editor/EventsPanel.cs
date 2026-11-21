@@ -567,7 +567,7 @@ public partial class EventsPanel : ScrollContainer
 
         var towns = new List<(CheckBox Box, int Id)>();
         LineEdit? buildings = null;
-        OptionButton? line = null;
+        Inspector.PicturePicker? line = null;
         SpinBox? growth = null;
         var lines = scenario.Creatures.All.Where(c => !scenario.Creatures.IsUpgrade(c.Id)).OrderBy(c => c.Town).ThenBy(c => c.Tier).ToList();
         if (form == "town")
@@ -588,7 +588,7 @@ public partial class EventsPanel : ScrollContainer
             build.AddChild(buildings);
             var hire = Row();
             hire.AddChild(new Label { Text = "More to hire" });
-            line = hire.AddOptions([.. lines.Select(c => $"{c.Name} ({c.Town})")]);
+            line = Inspector.PicturePicker.Add(hire, null, Inspector.PickerItems.Creatures(scenario, c => !scenario.Creatures.IsUpgrade(c.Id)), lines.FirstOrDefault()?.Id.Value ?? "");
             growth = hire.AddSpin(null, 0, -999, 999);
         }
 
@@ -620,12 +620,11 @@ public partial class EventsPanel : ScrollContainer
         var luck = rewards.AddSpin("Luck", 0, -3, 3);
         var creatureRow = Row();
         creatureRow.AddChild(new Label { Text = "Creatures" });
-        var creatures = scenario.Creatures.All.OrderBy(c => c.Town).ThenBy(c => c.Tier).ThenBy(c => c.Id).ToList();
-        var creature = creatureRow.AddOptions([.. creatures.Select(c => $"{c.Name} ({c.Town})")]);
+        var creatureItems = Inspector.PickerItems.Creatures(scenario);
+        var creature = Inspector.PicturePicker.Add(creatureRow, null, creatureItems, creatureItems.FirstOrDefault()?.Key ?? "");
         var count = creatureRow.AddSpin(null, 0, -9999, 9999);
         creatureRow.AddChild(new Label { Text = "Artifact" });
-        var artifacts = scenario.Artifacts.All.OrderBy(a => a.Name).ToList();
-        var artifact = creatureRow.AddOptions(["— none —", .. artifacts.Select(a => a.Name)]);
+        var artifact = Inspector.PicturePicker.Add(creatureRow, null, [Inspector.PickerItem.None("— none —"), .. Inspector.PickerItems.Artifacts(scenario)], "");
 
         var buttons = Row();
         var problem = new Label { Modulate = ErrorColour };
@@ -641,8 +640,8 @@ public partial class EventsPanel : ScrollContainer
                 Knowledge = (int)knowledge.Value,
                 Morale = (int)morale.Value,
                 Luck = (int)luck.Value,
-                Creatures = count.Value == 0 || creatures.Count == 0 ? [] : [new CreatureStack(creatures[creature.Selected].Id, (int)count.Value)],
-                Artifacts = artifact.Selected <= 0 ? [] : [artifacts[artifact.Selected - 1].Id],
+                Creatures = count.Value == 0 || creature.Value().Length == 0 ? [] : [new CreatureStack(creature.Value(), (int)count.Value)],
+                Artifacts = artifact.Value().Length == 0 ? [] : [new ArtifactId(artifact.Value())],
             };
             var who = new EventTriggers([.. players.Select((p, i) => (p, i)).Where(p => p.p.ButtonPressed).Select(p => p.i)],
                 people?.ButtonPressed ?? true, computers?.ButtonPressed ?? false);
@@ -657,7 +656,7 @@ public partial class EventsPanel : ScrollContainer
                     "town" => SimpleEventForms.Town(eventName, [.. towns.Where(t => t.Box.ButtonPressed).Select(t => t.Id)], message.Text, (int)first!.Value,
                         (int)every!.Value, who, reward,
                         [.. buildings!.Text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)],
-                        growth!.Value == 0 || lines.Count == 0 ? new Dictionary<string, int>() : new Dictionary<string, int> { [lines[line!.Selected].Id.Value] = (int)growth.Value }),
+                        growth!.Value == 0 || line!.Value().Length == 0 ? new Dictionary<string, int>() : new Dictionary<string, int> { [line.Value()] = (int)growth.Value }),
                     _ => new MapEventDefinition(eventName, MapEventKind.Quest, [])
                     {
                         Stages = [Quest(questKind!.Selected, (int)amount!.Value, questId!.Text.Trim(), message.Text, reward)],

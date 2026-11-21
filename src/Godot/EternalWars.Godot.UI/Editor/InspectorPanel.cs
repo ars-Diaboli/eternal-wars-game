@@ -17,7 +17,8 @@ namespace EternalWars.Godot.UI.Editor;
 /// (<see cref="InspectorSections"/>, ADR-223); the panel fills again once a frame after edits, undo and redo.
 /// The rows stand in parts that open and close (identity, contents, guard, messages, links, events; ADR-254); which are closed is
 /// kept in the editor's settings. The Links part holds jump links (<see cref="MapLinks"/>): a click asks for the linked thing to be
-/// selected and shown (<see cref="LinkRequested"/>).
+/// selected and shown (<see cref="LinkRequested"/>). Several objects of one kind are edited together (<see cref="InspectObjects"/>,
+/// ADR-255): a field set applies to all of them as one undo step, and a field whose values differ shows "—".
 /// </summary>
 public partial class InspectorPanel : VBoxContainer
 {
@@ -27,7 +28,7 @@ public partial class InspectorPanel : VBoxContainer
     private MapEditorSession _editor = null!;
     private InspectorForm _form = null!;
     private HeroId? _hero;
-    private MapObjectId? _object;
+    private IReadOnlyList<MapObjectId> _objects = [];
 
     /// <summary>"Edit" on an event link: the editor opens that event in the "Events" tab.</summary>
     public event Action<string>? EventRequested;
@@ -54,13 +55,16 @@ public partial class InspectorPanel : VBoxContainer
 
     public void InspectHero(HeroId hero)
     {
-        (_hero, _object) = (hero, null);
+        (_hero, _objects) = (hero, []);
         Refresh();
     }
 
-    public void InspectObject(MapObjectId mapObject)
+    public void InspectObject(MapObjectId mapObject) => InspectObjects([mapObject]);
+
+    /// <summary>Shows <paramref name="objects"/>: one object's form, or, for several of one kind, the fields they share.</summary>
+    public void InspectObjects(IReadOnlyCollection<MapObjectId> objects)
     {
-        (_hero, _object) = (null, mapObject);
+        (_hero, _objects) = (null, [.. objects]);
         Refresh();
     }
 
@@ -76,11 +80,9 @@ public partial class InspectorPanel : VBoxContainer
             HeroInspector.Show(_form, hero);
             _form.Links(MapLinks.Of(scenario, hero));
         }
-        else if (_object is { } objectId && scenario.FindObject(objectId) is { } mapObject)
+        else if (_objects.Where(id => scenario.FindObject(id) is not null).ToList() is { Count: > 0 } present)
         {
-            _form.In(InspectorPart.Identity).AddChild(new Label { Text = $"{mapObject.Definition.Name} #{mapObject.Id.Value} at {mapObject.Position}" });
-            InspectorSections.For(mapObject)?.Show(_form, mapObject);
-            _form.Links(MapLinks.Of(scenario, mapObject));
+            ShowObjects(present);
         }
         else
         {
@@ -89,5 +91,37 @@ public partial class InspectorPanel : VBoxContainer
 
         _form.End();
         _form.Filling = false;
+    }
+
+    private void ShowObjects(IReadOnlyList<MapObjectId> ids)
+    {
+        var scenario = _editor.Scenario;
+        var identity = _form.In(InspectorPart.Identity);
+        if (_editor.ObjectsOfOneKind(ids) is not { } objects)
+        {
+            var kinds = ids.Select(id => scenario.FindObject(id)!.Definition.Name).GroupBy(n => n).OrderByDescending(g => g.Count()).ThenBy(g => g.Key);
+            identity.AddChild(new Label
+            {
+                Text = $"{ids.Count} objects of different kinds: {string.Join(", ", kinds.Select(g => $"{g.Count()} × {g.Key}"))}. "
+                       + "Select objects of one kind to edit them together.",
+                AutowrapMode = TextServer.AutowrapMode.WordSmart,
+                CustomMinimumSize = new Vector2(UiTheme.InspectorNoteWidth, 0),
+            });
+            return;
+        }
+
+        var first = objects[0];
+        var name = objects.All(o => o.Definition.Id == first.Definition.Id) ? first.Definition.Name : first.GetType().Name;
+        identity.AddChild(new Label
+        {
+            Text = objects.Count == 1 ? $"{first.Definition.Name} #{first.Id.Value} at {first.Position}"
+                : InspectorSections.Has(first.GetType()) ? $"{objects.Count} × {name}: a change applies to all of them"
+                : $"{objects.Count} × {name}: nothing to edit",
+        });
+        InspectorSections.For(first)?.Show(_form, objects);
+        if (objects.Count == 1)
+        {
+            _form.Links(MapLinks.Of(scenario, first));
+        }
     }
 }

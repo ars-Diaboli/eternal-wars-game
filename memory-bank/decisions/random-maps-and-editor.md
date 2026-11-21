@@ -21,6 +21,7 @@
 | [252](#adr-252-scenery-has-an-orientation-stored-in-map-format-43-scatter-is-the-generators-scenery-choice-run-through-the-editor-session-edit-6-adr-079-adr-157-adr-174-adr-250-2026-11-21) | Scenery has an orientation, stored in map format 43; scatter is the generator's scenery choice run through the editor session (EDIT-6, ADR-079, ADR-157, ADR-174, ADR-250, 2026-11-21) | implemented |
 | [253](#adr-253-the-object-browser-lists-entries-built-in-the-core-the-object-tool-places-its-choice-edit-1-adr-166-adr-250-2026-11-21) | The object browser lists entries built in the core; the Object tool places its choice (EDIT-1, ADR-166, ADR-250, 2026-11-21) | implemented |
 | [254](#adr-254-thumbnails-are-renders-of-the-placeholder-model-cached-by-its-hash-the-inspector-has-six-parts-and-computed-jump-links-edit-1-adr-223-adr-245-adr-253-2026-11-21) | Thumbnails are renders of the placeholder model cached by its hash; the inspector has six parts and computed jump links (EDIT-1, ADR-223, ADR-245, ADR-253, 2026-11-21) | implemented |
+| [255](#adr-255-multi-edit-writes-one-object-property-to-several-objects-of-one-kind-as-one-all-or-nothing-step-pickers-are-searchable-picture-grids-edit-1-adr-223-adr-245-adr-254-2026-11-21) | Multi-edit writes one object property to several objects of one kind as one all-or-nothing step; pickers are searchable picture grids (EDIT-1, ADR-223, ADR-245, ADR-254, 2026-11-21) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -501,3 +502,35 @@ ADR when it is built.
   thing). Nothing new is saved and no format changes; a link whose target is gone is left out, and the validator reports it.
 - **A jump selects**: the link's object or hero becomes the selection and the inspected thing, and the view goes to it; a cell
   only moves the view, since the Events tab is where cells are edited.
+
+### ADR-255: Multi-edit writes one object property to several objects of one kind as one all-or-nothing step; pickers are searchable picture grids (EDIT-1, ADR-223, ADR-245, ADR-254, 2026-11-21)
+**Status**: implemented (plan step 3, tasks 5 and 6).
+
+- **One kind is one object type**: the inspector edits objects together when they are all of one type (all monsters, all mines,
+  all towns), whatever their definitions; the fields are the type's. A selection of several types lists them by kind and edits
+  nothing. Heroes are edited one at a time.
+- **A field is an object property**: `ObjectProperty<TObject, TValue>` reads one value from an object and writes it through the
+  editor that owns it, passing the object's own values of the fields that editor sets together with it (a monster's creature,
+  count, disposition and never-flees), so a multi-edit of one field never copies the others from the first object. The fields
+  edited together are listed once in `ObjectProperties` (core, tested); fields that only make sense for one object (names,
+  buildings, contents, troops) are not properties and show for one object only.
+- **One step, all or nothing**: `MapEditorSession.EditAll` runs the edit on each object inside one undo step; when one object refuses,
+  what the others did is undone within the step and the refusal returned, so a multi-edit never leaves the map half changed.
+  Values the objects already have record nothing.
+- **"—" for values that differ**: `SharedValue<T>` gives the common value or that they differ (lists compare by their items). A
+  drop-down gets a "—" item, a picker and a text field show "—", a number box shows "—" until a number is typed (applied on Enter
+  or when the box is left, whatever number the box holds underneath), a tick box ends its text in "(—)". A field shown as "—" is
+  set only by choosing a value, never by leaving it, and setting one field never writes another field's hidden value: a mine's
+  guard is two fields (the creature keeps each mine's count; the count is set on the guarded mines), and chests' fixed values,
+  which are one value, are typed after "Fixed values" is ticked.
+- **A refused or failed multi-edit leaves nothing**: an edit that is refused or throws is taken back within the step; a town
+  retyped (one id, a new object) stays selected.
+- **Pickers are grids under the row, not windows**: `PicturePicker` opens a search field and the items by group, each with its
+  picture, inside the inspector (the panel refills after every edit, which closes it). The pictures are the lettered placeholders
+  until portraits and icons exist (ADR-245); `PickerItems` is the one place that builds the lists, so art lands in one place.
+- **Thumbnails only where they tell entries apart** (refines ADR-254): the browser shows a rendered model only when no other entry
+  is drawn alike; entries that share a model (every monster, the dwellings, the mines, the banks) keep their lettered tiles, which
+  differ. A model that could not be rendered is not asked for again in that run, and a picture is written beside its file and then
+  moved into place.
+- **Jump links name only what a quest can mean**: a quest's monster or town link is offered only when the id is a monster or town on
+  the map and not the quest object itself; a jump to an object or hero switches to the Select tool, so the next click selects.

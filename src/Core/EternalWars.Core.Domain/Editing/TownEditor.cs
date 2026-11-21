@@ -83,7 +83,7 @@ public sealed class TownEditor
         return EditResult.Ok;
 
         // The new town takes the old one's place in the object list, so retyping (and undoing it) keeps the order.
-        void Swap(Town from, Town to) => _context.AddObject(to, _context.RemoveObject(from));
+        void Swap(Town from, Town to) => _context.ReplaceObject(from, to);
     }
 
     /// <summary>

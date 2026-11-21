@@ -9,12 +9,20 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 3 tasks 5 and 6 (ADR-255). Multi-edit: `ObjectProperty<TObject, TValue>` and `SharedValue<T>`, the field
+  list `ObjectProperties`, `MapEditorSession.EditAll` (one undo step, all or none) and `ObjectsOfOneKind`; the inspector's
+  sections take a list of objects, `InspectorForm` binds fields with "—" for differing values, the Select tool opens several
+  objects in the inspector. Pickers: `PicturePicker` / `PickerItems` (Godot.UI) for creatures, heroes, artifacts, spells and
+  skills in the inspector and the Events tab's event form. Also from the review of tasks 3 and 4: thumbnails only for models no
+  other entry shares, quest links never to the quest object itself or to an id of the wrong kind, a jump switches to the Select
+  tool, a gate's missing target is named. Tests `EditorMultiEditTests`, `EditorLinksTests`; smoke `editor-multi-edit`. Next: step 3
+  task 7 (map settings window).
 - Editor overhaul, step 3 tasks 3 and 4 (ADR-254). Thumbnails: `PlaceholderModel` (Godot.Shared: the parts of an object's
   stand-in model, drawn by `MapObjectsView`), `ThumbnailRenderer` (hidden `SubViewport`s, PNG cache by the model's hash in
   `user://cache/thumbs/`), used by `ObjectBrowser` after icons and before the lettered placeholder. Inspector: `InspectorPart`
   (identity, contents, guard, messages, links, events) with `InspectorForm.In`, closed parts kept in the settings; jump links
   from `MapLinks` (Core.Domain.Editing), `InspectorPanel.LinkRequested`. Tests `EditorLinksTests`; smoke
-  `editor-inspector-sections`. Next: step 3 task 5 (multi-edit).
+  `editor-inspector-sections`.
 - Editor overhaul, step 3 tasks 1 and 2 (ADR-253). Core: `BrowserCatalog` / `BrowserEntry` / `BrowserCategory` (every map object
   kind has a category; monsters and dwellings per creature, pickups per artifact, the hero), `BrowserCatalog.Search`, `BrowserLists`
   (favourites, recent), `EntryEditor` (`session.Placing`: `Check` for the ghost, `Place` as one step), `HeroEditor.CanPlace`,

@@ -790,6 +790,12 @@ public partial class Main : Node3D
     private void Jump(MapLink link)
     {
         ShowTile(link.Position);
+        var target = link.Object is not null || link.Hero is not null;
+        if (target && _tools.Tool is not SelectTool)
+        {
+            _tools.Use(_tools.Tools.OfType<SelectTool>().First()); // the next click selects, not places or links
+        }
+
         if (link.Object is { } id && _editor.Scenario.FindObject(id) is { } mapObject)
         {
             _editor.Selecting.Set(new SelectionItems([], [id], [], []));

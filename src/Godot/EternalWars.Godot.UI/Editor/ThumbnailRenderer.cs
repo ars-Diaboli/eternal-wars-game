@@ -33,6 +33,9 @@ public partial class ThumbnailRenderer : Node
     private readonly List<Stage> _stages = [];
     private readonly Queue<string> _waiting = new();
     private readonly Dictionary<string, Job> _jobs = [];
+
+    /// <summary>The models that could not be rendered in this run (no display): not asked for again.</summary>
+    private readonly HashSet<string> _failed = [];
     private string? _folder;
 
     /// <summary>The pictures are kept in <paramref name="folder"/> (made when the first is written); null keeps none on disk.</summary>
@@ -41,19 +44,24 @@ public partial class ThumbnailRenderer : Node
     /// <summary>How many pictures are being rendered or wait for it.</summary>
     public int Pending => _jobs.Count;
 
+    /// <summary>The name of <paramref name="definition"/>'s picture: definitions drawn alike share it; null when there is no model to draw.</summary>
+    public static string? KeyOf(MapObjectDefinition definition)
+    {
+        var parts = PlaceholderModel.Of(definition, definition.Footprint);
+        return parts.Count == 0 ? null : $"{PlaceholderModel.Hash(parts)}-{Look}-{Size}";
+    }
+
     /// <summary>
     /// The picture of <paramref name="definition"/>'s model, or null when it has to be rendered first: <paramref name="whenReady"/> is
     /// then called with it some frames later (not at all where nothing can be rendered, as without a display).
     /// </summary>
     public Texture2D? Get(MapObjectDefinition definition, Action<Texture2D> whenReady)
     {
-        var parts = PlaceholderModel.Of(definition, definition.Footprint);
-        if (parts.Count == 0)
+        if (KeyOf(definition) is not { } hash || _failed.Contains(hash))
         {
             return null;
         }
 
-        var hash = $"{PlaceholderModel.Hash(parts)}-{Look}-{Size}";
         if (Known.TryGetValue(hash, out var known))
         {
             return known;
@@ -66,7 +74,7 @@ public partial class ThumbnailRenderer : Node
 
         if (!_jobs.TryGetValue(hash, out var job))
         {
-            _jobs[hash] = job = new Job(parts);
+            _jobs[hash] = job = new Job(PlaceholderModel.Of(definition, definition.Footprint));
             _waiting.Enqueue(hash);
         }
 
@@ -107,7 +115,8 @@ public partial class ThumbnailRenderer : Node
         _jobs.Remove(hash, out var job);
         if (image is null || image.IsEmpty() || job is null)
         {
-            return; // nothing was drawn (no display): the placeholder stays
+            _failed.Add(hash); // nothing was drawn (no display): the placeholder stays
+            return;
         }
 
         var texture = ImageTexture.CreateFromImage(image);
@@ -127,7 +136,9 @@ public partial class ThumbnailRenderer : Node
         }
 
         var image = new Image();
-        return image.Load(PathOf(hash)) == Error.Ok && image.GetWidth() == Size ? ImageTexture.CreateFromImage(image) : null; // a broken file is rendered again
+        return image.Load(PathOf(hash)) == Error.Ok && image.GetWidth() == Size && image.GetHeight() == Size
+            ? ImageTexture.CreateFromImage(image)
+            : null; // a broken file is rendered again
     }
 
     private void Write(string hash, Image image)
@@ -137,14 +148,23 @@ public partial class ThumbnailRenderer : Node
             return;
         }
 
+        // Written beside its place and then moved there, so another editor never reads half a file.
+        var path = PathOf(hash);
+        var partial = path + ".part.png";
         try
         {
             Directory.CreateDirectory(_folder);
-            image.SavePng(PathOf(hash));
+            if (image.SavePng(partial) is not Error.Ok and var error)
+            {
+                GD.PushWarning($"Thumbnail not kept: {error}"); // it is rendered again next time
+                return;
+            }
+
+            File.Move(partial, path, overwrite: true);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            GD.PushWarning($"Thumbnail not kept: {e.Message}"); // it is rendered again next time
+            GD.PushWarning($"Thumbnail not kept: {e.Message}");
         }
     }
 

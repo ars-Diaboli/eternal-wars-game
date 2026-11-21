@@ -569,9 +569,9 @@ again offers the lost work.
 4. **Inspector sections**: `InspectorForm` gets collapsible sections (identity, contents, guard, messages, links, events); today's
    forms (hero, town, monster, Pandora's box, sphinx, owned objects) move into them. Jump links select the linked thing and move the
    view. *Done.*
-5. **Multi-edit**: a property edit over a list of objects of one kind as one step; differing values show "—". Tests.
+5. **Multi-edit**: a property edit over a list of objects of one kind as one step; differing values show "—". Tests. *Done.*
 6. **Picture pickers**: searchable grids for creatures, heroes, artifacts, spells and skills, with their icons or placeholders,
-   replacing the drop-downs.
+   replacing the drop-downs. *Done.*
 7. **Map settings window** (F7): General, Players, Victory and loss, Bans and Week events tabs, made from today's Map, Players,
    Conditions and Bans panels, which then leave the right region.
 8. **Map content** (EDIT-12): an ADR and one format bump with a sample and a migration, then each part with its rules and tests:

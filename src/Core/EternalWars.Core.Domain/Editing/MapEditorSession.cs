@@ -138,6 +138,40 @@ public sealed class MapEditorSession
         _context.AsOneStep(description, edits);
     }
 
+    /// <summary>
+    /// Multi-edit (EDIT-1, ADR-255): runs <paramref name="edit"/> on each of the objects as one undo step named
+    /// <paramref name="description"/>: all of them, or none when one is refused (the refusal is returned; an id that is not on the map is
+    /// <see cref="EditResult.InvalidTarget"/>). Inside an open stroke the edits join it. <see cref="ObjectProperty{TObject, TValue}"/>
+    /// is the usual caller.
+    /// </summary>
+    public EditResult EditAll(string description, IReadOnlyCollection<Common.MapObjectId> objects, Func<MapObject, EditResult> edit)
+    {
+        ArgumentNullException.ThrowIfNull(objects);
+        ArgumentNullException.ThrowIfNull(edit);
+        return objects.Count == 0 ? EditResult.InvalidTarget : _context.AllOrNothing(description, objects, edit);
+    }
+
+    /// <summary>
+    /// The objects with <paramref name="ids"/> when they are all on the map and of one kind (one object type: all monsters, all mines),
+    /// in the order given; else null. These are what the inspector edits together.
+    /// </summary>
+    public IReadOnlyList<MapObject>? ObjectsOfOneKind(IEnumerable<Common.MapObjectId> ids)
+    {
+        ArgumentNullException.ThrowIfNull(ids);
+        var objects = new List<MapObject>();
+        foreach (var id in ids)
+        {
+            if (Scenario.FindObject(id) is not { } mapObject || (objects.Count > 0 && mapObject.GetType() != objects[0].GetType()))
+            {
+                return null;
+            }
+
+            objects.Add(mapObject);
+        }
+
+        return objects.Count == 0 ? null : objects;
+    }
+
     /// <summary>Groups all following edits into a single undo step until <see cref="EndStroke"/> (mouse down … mouse up).</summary>
     public void BeginStroke(string description) => _context.BeginStroke(description);
 

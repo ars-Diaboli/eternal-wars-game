@@ -139,10 +139,11 @@ everything that can be put on the map. A click on an entry makes it the Object t
   entries, the stamps whose name holds every typed word.
 - **The card** at the bottom shows the entry under the pointer, or the chosen one: its picture, its footprint (the entrance
   lighter), its category and group, its size, a one-line rule and, for scenery, its terrains.
-- **Pictures** (ADR-254): an entry shows its icon where one exists (a town's crest, a resource pile's resource, the hero), else a
-  thumbnail of its model. A thumbnail is rendered once, the first time its entry is listed, and kept in `user://cache/thumbs/`
-  under the model's hash; a model that changes gets a new picture, and deleting the folder only costs rendering again. Monsters
-  and named artifacts show a coloured tile with two letters until their portraits exist, because their models are all alike.
+- **Pictures** (ADR-254, ADR-255): an entry shows its icon where one exists (a town's crest, a resource pile's resource, the hero),
+  else a thumbnail of its model when no other entry is drawn alike, else a coloured tile with two letters of its name. A thumbnail
+  is rendered once, the first time its entry is listed, and kept in `user://cache/thumbs/` under the model's hash; a model that
+  changes gets a new picture, and deleting the folder only costs rendering again. Entries whose models are alike (every monster,
+  the dwellings, the mines, the named artifacts) keep their letters until their own portraits and icons exist.
 
 <a id="editor-inspector"></a>
 **The inspector** (ADR-254) shows the selected hero or object in sections; a click on a section's heading closes or opens it, and
@@ -158,6 +159,20 @@ what is closed is kept in the editor's settings. A section shows only when the t
   - the cells that run the same event as a Pandora's box;
   - for a monster, a hero or a town an event names: the quest object, box or cell that runs that event.
 - **Events**: the map events it runs (a box's hero event, a quest object's quest, a town's events), each with "Edit".
+
+**Several objects** (ADR-255): when the selection is two or more objects of one kind (all monsters, all mines, all towns) and no
+hero, the inspector shows them together. A field set there is set on every one of them as one undo step, and each keeps its own
+values of the other fields; a field whose values differ shows "—" until it is set. If one of the objects refuses the value, none
+of them changes. A mine's guard creature keeps each mine's own count; chests' gold and experience are typed after "Fixed values"
+is ticked. The fields that only make sense for one object (a town's name, buildings, dwellings, guild spells and garrison,
+a box's contents, guard and message, a garrison's troops, a scroll's spell) say "select one to edit". Shrines of different levels
+are given a spell one level at a time. Objects of different kinds are listed by kind, with nothing to edit.
+
+**Pickers** (ADR-255): creatures, heroes, artifacts, spells and skills are chosen with a button that shows the chosen one's picture
+and name. A click opens a grid under the row: a search field (Enter takes the first found), and the items by group (creatures by
+town, heroes by town and class, artifacts by tier or by slot, spells by level and school, skills by group), each with its picture.
+The pictures are the lettered tiles until portraits and icons exist (ADR-245). The inspector and the Events tab's event form use
+them.
 
 **The Object tool** (O) places the browser's choice with its top-left tile where clicked; the treasure chest is chosen at the start.
 Before the click a ghost shows the tiles it would take, red where it does not fit; all of them are red when the map may hold no
