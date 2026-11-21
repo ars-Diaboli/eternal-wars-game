@@ -419,15 +419,6 @@ public partial class TemplateFileService : Node
         return name.EndsWith(_files.Extension, StringComparison.OrdinalIgnoreCase) ? name[..^_files.Extension.Length] : name;
     }
 
-    /// <summary>A template file's path: the extension is added to a name typed without it (".json" alone is completed, not doubled).</summary>
-    private string WithExtension(string path)
-    {
-        if (path.EndsWith(_files.Extension, StringComparison.OrdinalIgnoreCase))
-        {
-            return path;
-        }
-
-        const string Json = ".json";
-        return (path.EndsWith(Json, StringComparison.OrdinalIgnoreCase) ? path[..^Json.Length] : path) + _files.Extension;
-    }
+    /// <summary>A template file's path with the template extension once (<see cref="RecentFiles.WithExtension"/>).</summary>
+    private string WithExtension(string path) => RecentFiles.SavePath(path, _files.Extension, File.Exists);
 }

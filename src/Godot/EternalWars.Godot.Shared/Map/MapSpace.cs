@@ -48,14 +48,10 @@ public static class MapSpace
     public static (float Low, float High) GroundRange(AdventureMap map, int level)
     {
         int low = int.MaxValue, high = int.MinValue;
-        for (var cy = 0; cy <= map.Height; cy++)
+        foreach (var h in map.Corners(level)) // read straight from the map: the fog asks after every reshape (ADR-278)
         {
-            for (var cx = 0; cx <= map.Width; cx++)
-            {
-                var h = map.GetCorner(level, cx, cy);
-                low = Math.Min(low, h);
-                high = Math.Max(high, h);
-            }
+            low = Math.Min(low, h);
+            high = Math.Max(high, h);
         }
 
         var floor = -level * LevelSpacing;

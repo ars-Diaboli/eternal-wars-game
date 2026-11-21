@@ -72,6 +72,8 @@ public partial class Main : Node3D
     private readonly CanvasLayer _overlays = new() { Name = "Overlays", Layer = 40 };
     private int _templatePage;
     private StatusBarView _statusBar = null!;
+    private ProblemsPanel _problems = null!;
+    private MapFiles _mapFiles = null!;
 
     /// <summary>The editor's messages: kept while maps are opened and closed, shown by the Output panel.</summary>
     private readonly EditorLog _log = new();
@@ -122,7 +124,7 @@ public partial class Main : Node3D
         _files = new FileService { Name = "Files" };
         AddChild(_files);
         _files.Bind(
-            new FileServiceHost(Open, Say), _settings, new MapFiles(MapsFolder, AutosaveFolder),
+            new FileServiceHost(Open, Say), _settings, _mapFiles = new MapFiles(MapsFolder, AutosaveFolder),
             systemDialogs: LaunchArguments.AutoInput is null); // a scripted run sees only Godot's own dialog
         _files.Changed += ShowFile;
         _templateFiles = new TemplateFileService { Name = "TemplateFiles" };
@@ -134,12 +136,32 @@ public partial class Main : Node3D
         ApplyPreferences();
         _camera.KeysBlocked = () => IsBusy || _workspace.Page != EditorWorkspace.MapPage;
 
+        // --perf=report times opening the --map= file, painting and validating (ADR-278): the editor starts blank and the probe opens it.
+        if (LaunchArguments.PerfReport is { } report && LaunchArguments.MapPath is { } timed)
+        {
+            StartPerfProbe(timed, report);
+            _files.Start(Blank(), null);
+            return;
+        }
+
         // --map=file opens that map (the smoke scenarios), else a blank one.
         _files.Start(LaunchArguments.MapPath is { } path ? MapFiles.Read(path) : Blank(), LaunchArguments.MapPath);
         if (!_files.IsBusy)
         {
             _templateFiles.OfferRestore(); // else when the Template tab first shows, not over the map's question
         }
+    }
+
+    /// <summary>The editor's timing (ADR-278): the probe opens the map like File → Open, paints with the Terrain tool and waits for the Problems panel.</summary>
+    private void StartPerfProbe(string map, string report)
+    {
+        var probe = new EditorPerfProbe { Name = "PerfProbe" };
+        AddChild(probe);
+        probe.Bind(
+            new EditorPerfHost(
+                path => _files.Open(path), () => _mapFiles.LastLoadMs, () => _editor.Scenario.Map, () => _workspace.MapView.GetGlobalRect(),
+                () => _commands.Run("tool.terrain"), () => _problems, ValidationOfSnapshot),
+            Path.GetFullPath(map), Path.GetFullPath(report));
     }
 
     /// <summary>The map the editor starts with: blank, of the size the preferences say.</summary>
@@ -166,7 +188,10 @@ public partial class Main : Node3D
             }
             else
             {
-                _files.OpenNew(BlankScenario.Create(request.Settings, GameContent.All));
+                // The next steps for a first map (ADR-279): what the blank map lacks to be played.
+                _files.OpenNew(BlankScenario.Create(request.Settings, GameContent.All), () => Say(
+                    "A blank map with a hero for each player. Next: give each player a town (browser → Towns, the Owner in the tool's options); "
+                    + "Problems lists what is left, many with a Fix; then Test (F5)."));
             }
         });
     }
@@ -861,7 +886,7 @@ public partial class Main : Node3D
         }
 
         // Bottom: the map's problems, the undo history and the editor's messages. Each scrolls by itself.
-        var problems = new ProblemsPanel { Name = "Problems" };
+        var problems = _problems = new ProblemsPanel { Name = "Problems" };
         _workspace.AddTab(EditorRegion.Bottom, problems, UiIcon.Error, scroll: false);
         problems.Changed += () =>
         {

@@ -10,7 +10,8 @@ namespace EternalWars.Godot.UI.Hud;
 /// <summary>
 /// Minimap of the shown level through the context's viewer (<see cref="Minimap.Build"/>): unexplored black,
 /// terrain colours, objects and heroes as markers in owner colours. Clicking reports the tile. The tiles are an image, one pixel each, of which
-/// only the changed pixels are written again; it is rebuilt once a frame however many events ask for it, and heroes are drawn over it.
+/// only the changed pixels are written again; it is rebuilt once a frame however many events ask for it, and heroes are drawn over it. Painted
+/// terrain only writes the painted tiles' pixels (ADR-278: a whole picture of a large map for every dab of a brush cost a frame).
 /// The map editor (ADR-261) also has it follow a drag (<see cref="DragMoves"/>), draw the view's frame (<see cref="ViewFrame"/>) and show
 /// the other level faintly through the shown one (<see cref="GhostOtherLevel"/>).
 /// </summary>
@@ -23,6 +24,7 @@ public partial class MinimapWidget : Control
     private ImageTexture? _texture;
     private readonly List<(int Index, Color Color)> _heroes = [];
     private RefreshScheduler? _rebuild;
+    private RefreshScheduler? _upload;
     private Vector2[]? _frame;
     private bool _ghost;
     private bool _dragging;
@@ -83,11 +85,60 @@ public partial class MinimapWidget : Control
             .On<HeroMoved>(context.Events)
             .On<HeroTeleported>(context.Events)
             .On<HeroDefeated>(context.Events)
-            .On<TerrainPainted>(context.Events)
             .On<MapObjectPlaced>(context.Events)
             .On<MapObjectRemoved>(context.Events)
             .On<HeroPlaced>(context.Events)
             .On<HeroRemoved>(context.Events);
+        _upload = new RefreshScheduler(this, () =>
+        {
+            _texture?.Update(_image);
+            QueueRedraw();
+        });
+        this.SubscribeWhileInTree<TerrainPainted>(context.Events, e => Repaint(e.Positions));
+    }
+
+    /// <summary>Painted tiles change only their terrain: their cells and pixels are written again, and the picture goes up once this frame.</summary>
+    private void Repaint(IEnumerable<MapPosition> painted)
+    {
+        var map = _context.State.Map;
+        if (_image is null || _image.GetWidth() != map.Width || _image.GetHeight() != map.Height || _cells.Length != map.Width * map.Height)
+        {
+            _rebuild?.Request();
+            return;
+        }
+
+        var ghostLevel = _context.Level == 0 ? 1 : 0;
+        var changed = false;
+        foreach (var position in painted)
+        {
+            if (!map.Contains(position))
+            {
+                continue;
+            }
+
+            var i = (position.Y * map.Width) + position.X;
+            if (position.Level == _context.Level)
+            {
+                _cells[i] = _cells[i] with { Terrain = map.GetTerrain(position) };
+            }
+            else if (_ghostCells is not null && position.Level == ghostLevel)
+            {
+                _ghostCells[i] = _ghostCells[i] with { Terrain = map.GetTerrain(position) };
+            }
+            else
+            {
+                continue;
+            }
+
+            var colour = ColorOf(_cells[i]);
+            _image.SetPixel(position.X, position.Y, _ghostCells is null ? colour : colour.Lerp(ColorOf(_ghostCells[i]), GhostShare));
+            changed = true;
+        }
+
+        if (changed)
+        {
+            _upload!.Request();
+        }
     }
 
     public override void _Draw()

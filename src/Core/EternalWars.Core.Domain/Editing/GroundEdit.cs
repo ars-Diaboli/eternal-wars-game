@@ -21,21 +21,19 @@ internal sealed class GroundEdit(EditorContext context, Action shape)
     {
         if (_changed is null)
         {
-            var before = Snapshot();
+            // The levels copied whole and compared a run of equal bytes at a time: on a large map the shaping touches a few corners of many
+            // (ADR-278).
+            var before = Enumerable.Range(0, Map.Levels).Select(level => Map.Corners(level).ToArray()).ToArray();
             shape();
             _changed = [];
-            var i = 0;
+            var stride = Map.Width + 1;
             for (var level = 0; level < Map.Levels; level++)
             {
-                for (var y = 0; y <= Map.Height; y++)
+                var now = Map.Corners(level);
+                ReadOnlySpan<sbyte> was = before[level];
+                for (var i = now.CommonPrefixLength(was); i < now.Length; i += 1 + now[(i + 1)..].CommonPrefixLength(was[(i + 1)..]))
                 {
-                    for (var x = 0; x <= Map.Width; x++, i++)
-                    {
-                        if (Map.GetCorner(level, x, y) is var height && height != before[i])
-                        {
-                            _changed.Add(new Corner(level, x, y, height, before[i]));
-                        }
-                    }
+                    _changed.Add(new Corner(level, i % stride, i / stride, now[i], was[i]));
                 }
             }
         }
@@ -55,25 +53,6 @@ internal sealed class GroundEdit(EditorContext context, Action shape)
         }
 
         Publish();
-    }
-
-    /// <summary>Every corner's height, level by level, row by row.</summary>
-    private sbyte[] Snapshot()
-    {
-        var heights = new sbyte[(Map.Width + 1) * (Map.Height + 1) * Map.Levels];
-        var i = 0;
-        for (var level = 0; level < Map.Levels; level++)
-        {
-            for (var y = 0; y <= Map.Height; y++)
-            {
-                for (var x = 0; x <= Map.Width; x++)
-                {
-                    heights[i++] = (sbyte)Map.GetCorner(level, x, y);
-                }
-            }
-        }
-
-        return heights;
     }
 
     private void Publish()

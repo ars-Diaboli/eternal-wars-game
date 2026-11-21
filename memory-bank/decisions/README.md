@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-278.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-280.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -304,3 +304,5 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [275](random-maps-and-editor.md#adr-275-the-shortcut-editor-adr-250-2026-11-21) | random-maps-and-editor | The shortcut editor (ADR-250, 2026-11-21) | implemented |
 | [276](random-maps-and-editor.md#adr-276-the-editors-f1-help-made-from-the-design-documents-adr-250-2026-11-21) | random-maps-and-editor | The editor's F1 help, made from the design documents (ADR-250, 2026-11-21) | implemented |
 | [277](random-maps-and-editor.md#adr-277-the-editors-ui-scale-and-contrast-adr-250-2026-11-21) | random-maps-and-editor | The editor's UI scale and contrast (ADR-250, 2026-11-21) | implemented |
+| [278](random-maps-and-editor.md#adr-278-the-editors-timing-on-a-large-map-adr-250-2026-11-21) | random-maps-and-editor | The editor's timing on a large map (ADR-250, 2026-11-21) | implemented |
+| [279](random-maps-and-editor.md#adr-279-a-first-map-without-a-manual-adr-250-2026-11-21) | random-maps-and-editor | A first map without a manual (ADR-250, 2026-11-21) | implemented |

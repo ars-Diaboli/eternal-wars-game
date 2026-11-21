@@ -647,9 +647,10 @@ and the game uses them.
 4. **UI scale**: every panel checked at 100, 150 and 200 %; the theme's contrast setting. Smoke `editor-scale-100`, `-150`, `-200`
    and `editor-contrast`. *Done.*
 5. **Performance**: a 256 × 256 two-level generated map timed for opening (under 3 s), painting (60 fps) and validation (never
-   stalls); a script in `tools/` runs the timing, and the hot spots are fixed.
+   stalls); a script in `tools/` runs the timing, and the hot spots are fixed. `tools/perf-editor.ps1`. *Done.*
 6. **First-use test**: one person makes a playable two-player map in 15 minutes with the wizard and the browser, without a manual;
-   what they trip over gets fixed.
+   what they trip over gets fixed. A scripted first use stands in for now (smoke `editor-first-use`, ADR-279): a town is placed for its
+   owner, the wizard's warnings have fixes, the blank map names the next steps. *The timed test with a person is still to do.*
 7. **Close**: the [target](#target) list ticked; [tools.md](../design/tools.md) and [random-maps.md](../design/random-maps.md) hold
    the rules; ADR-247 marked implemented; this file moves to `archive/`.
 

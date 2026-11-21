@@ -44,6 +44,8 @@
 | [275](#adr-275-the-shortcut-editor-adr-250-2026-11-21) | The shortcut editor (ADR-250, 2026-11-21) | implemented |
 | [276](#adr-276-the-editors-f1-help-made-from-the-design-documents-adr-250-2026-11-21) | The editor's F1 help, made from the design documents (ADR-250, 2026-11-21) | implemented |
 | [277](#adr-277-the-editors-ui-scale-and-contrast-adr-250-2026-11-21) | The editor's UI scale and contrast (ADR-250, 2026-11-21) | implemented |
+| [278](#adr-278-the-editors-timing-on-a-large-map-adr-250-2026-11-21) | The editor's timing on a large map (ADR-250, 2026-11-21) | implemented |
+| [279](#adr-279-a-first-map-without-a-manual-adr-250-2026-11-21) | A first map without a manual (ADR-250, 2026-11-21) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -1030,3 +1032,48 @@ ADR when it is built.
   at 1600 × 900: the same tour of every panel and window at 100, 150 and 200 % and in high contrast, turned off at the end. AutoInput's
   points are the UI's (turned into window pixels when sent) and it scrolls a tab out of sight into view before clicking it, so one
   script runs at every scale.
+
+### ADR-278: The editor's timing on a large map (ADR-250, 2026-11-21)
+**Status**: implemented (plan step 6, task 5).
+
+- **Timed in the editor itself, in real time**: `tools/perf-editor.ps1` generates a 256 × 256 two-level map (`ffa-8`) and runs the
+  editor with `--perf=<report>`; `EditorPerfProbe` (Godot.UI, added by the editor's composition) opens it the way File → Open does,
+  paints with the Terrain tool through real mouse events (a stroke over new ground every frame, Auto height on) and waits for the
+  Problems panel. The statistics and the budgets are engine-free (`FrameStats`, `EditorTimings` in Core.Domain.Editing): open within
+  3 s to the first frame drawn, paint at a mean of 60 fps, no frame over 50 ms while validating. Not under Movie Maker (its fixed
+  frame rate hides the work) and not in CI (no GPU): run by hand, numbers compared on one machine.
+- **The hot spots fixed**, each found by timing the frame's parts:
+  - an Auto-height dab copied and compared every corner of the map one call at a time (`GroundEdit`): now each level's corners are
+    copied whole and compared a run of equal bytes at a time (`AdventureMap.Corners`), from about 8 ms a dab to under 1 ms;
+  - the minimap made its whole picture again for every `TerrainPainted`: now the painted tiles' pixels only, the texture sent once a
+    frame;
+  - the ground's chunks are worked out side by side on the thread pool (the meshes still made on the main thread), at opening and
+    when a reshape spans chunks, from rented arrays passed to Godot as spans (new large arrays per stroke kept the collector doing full
+    collections);
+  - roads and rivers fill their multimeshes through one buffer at opening rather than one call a tile;
+  - the fog's height range reads the corners straight from the map.
+- **Measured** on the development machine: open 2.4 s → 1.3 s; painting 67 → about 110 fps (95th percentile 30 → 17 ms); the
+  validation's copy on the main thread about 25 ms, its check about 100 ms on a task.
+
+### ADR-279: A first map without a manual (ADR-250, 2026-11-21)
+**Status**: implemented (plan step 6, task 6); the timed test with a person is still to do.
+
+- **A scripted first use stands in until a person tries it**: smoke `editor-first-use` walks the path a newcomer takes (the wizard's
+  blank two-player map, a town for each player from the browser, the Problems panel's fixes, Save, Test). What it tripped over is fixed;
+  the plan's 15-minute test with someone who has not seen the editor stays open.
+- **Things with an owner are placed for one**: the Object tool names an owner (Neutral at the start, or a player) for a town, mine,
+  resource provider, garrison or dwelling (`EntryEditor.HasOwner`), and `EntryEditor.Place` sets it in the placement's undo step (an
+  unknown player is refused before anything is placed).
+  Before, a town was always placed neutral and its owner was found only through the Select tool and the Inspector.
+- **The wizard's warnings come with fixes** (ADR-265's rule: only where the answer is clear):
+  - a player without a town is offered the neutral town nearest its heroes on their level, unless another neutral town or another
+    townless player's hero is as near (`OwnerFix`);
+  - a hero without an army is offered what a hired hero brings: its type's starter stack (`TavernRules.StarterStack`), or, for a hero of
+    no type, a week of the first creature with a growth of its owner's nearest town on its level, a random town not counted
+    (`HeroArmyFix`); no fix when neither tells the creature, nor for a hero of an unknown type.
+  A blank map with a town for each player and these fixes has no problem left (`FirstMapTests`).
+- **The blank map says what comes next**: after the wizard's blank map the status bar names the steps (a town for each player, Problems,
+  Test).
+- **A file name gets its extension once** (`RecentFiles.WithExtension`, for maps and templates): a name typed over the suggested one can
+  keep its ".json" and the dialog add its own; "name.json.ewmap.json" is saved as "name.ewmap.json", unless that file exists (the
+  dialog asked about the other name), then as picked (`RecentFiles.SavePath`).

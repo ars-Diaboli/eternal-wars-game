@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
@@ -42,6 +43,13 @@ public sealed record GateExitFix(string Text, MapObjectId Entrance, MapObjectId 
         && !session.Scenario.ObjectsOf<OneWayGateEntrance>().Any(e => e.Exit == Exit)
             ? session.Objects.SetGateExit(Entrance, Exit)
             : EditResult.InvalidTarget;
+}
+
+/// <summary>Gives a hero without an army a starter stack (ADR-279): refused once the hero has an army.</summary>
+public sealed record HeroArmyFix(string Text, HeroId Hero, CreatureStack Stack) : MapFix(Text)
+{
+    internal override EditResult Apply(MapEditorSession session) =>
+        session.Scenario.Heroes.FirstOrDefault(h => h.Id == Hero) is { Army.IsEmpty: true } ? session.Heroes.SetArmySlot(Hero, 0, Stack) : EditResult.InvalidTarget;
 }
 
 /// <summary>

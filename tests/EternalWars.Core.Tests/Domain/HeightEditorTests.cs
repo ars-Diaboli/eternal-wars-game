@@ -194,6 +194,29 @@ public class HeightEditorTests
     }
 
     [Fact]
+    public void PaintingTheUnderground_WithAutoHeight_ShapesOnlyItsLevel_AndUndoAndRedoGiveBackEachCorner()
+    {
+        var editor = TestEditor.Blank(24, 24, levels: 2);
+        var (surface, underground) = (Corners(editor), Corners(editor, 1));
+        var events = new List<GroundHeightsChanged>();
+        editor.Events.Subscribe<GroundHeightsChanged>(events.Add);
+
+        editor.Terrain.Paint(Middle with { Level = 1 }, TerrainType.Snow, radius: 1);
+        var shaped = Corners(editor, 1);
+
+        Assert.Equal(surface, Corners(editor));
+        Assert.NotEqual(underground, shaped);
+        Assert.Equal(0, editor.Scenario.Map.GetCorner(1, 0, 0) - underground[0]); // far away: as it was
+        var e = Assert.Single(events);
+        Assert.Equal(1, e.Level);
+        Assert.True(e.Area.Contains(10, 10) && e.Area.Contains(11, 11));
+        Assert.True(editor.Undo());
+        Assert.Equal(underground, Corners(editor, 1));
+        Assert.True(editor.Redo());
+        Assert.Equal(shaped, Corners(editor, 1));
+    }
+
+    [Fact]
     public void PaintingTerrain_WithoutAutoHeight_LeavesTheGround()
     {
         var editor = Editor();

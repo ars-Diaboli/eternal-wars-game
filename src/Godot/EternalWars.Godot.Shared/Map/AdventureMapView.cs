@@ -1,3 +1,4 @@
+using System.Buffers;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
@@ -23,6 +24,8 @@ public partial class AdventureMapView : Node3D
 {
     private const float RoadWidth = 0.45f;
     private const float RiverWidth = 0.8f;
+    private const float RoadLift = 0.035f;
+    private const float RiverLift = 0.02f;
     private const string TextureFolder = "res://shared/textures/terrain/";
 
     /// <summary>How many tiles one texture repeat covers (32 squares of the mesh; the shader hides the repeat, ADR-212).</summary>
@@ -59,14 +62,17 @@ public partial class AdventureMapView : Node3D
         _terrainTexture = ImageTexture.CreateFromImage(_terrainImage);
         _material = TerrainSplat.Material(_terrainTexture, map.Width, map.Height, TilesPerTextureRepeat * MapSpace.TileSize);
         _chunks = new MeshInstance3D[(map.Width + ChunkTiles - 1) / ChunkTiles, (map.Height + ChunkTiles - 1) / ChunkTiles];
+        var all = new List<(int X, int Y)>();
         for (var cy = 0; cy < _chunks.GetLength(1); cy++)
         {
             for (var cx = 0; cx < _chunks.GetLength(0); cx++)
             {
                 AddChild(_chunks[cx, cy] = new MeshInstance3D { Name = $"Ground{cx}_{cy}" });
-                RebuildChunk(cx, cy);
+                all.Add((cx, cy));
             }
         }
+
+        RebuildChunks(all);
 
         AddChild(_apron);
         RebuildApron();
@@ -83,8 +89,8 @@ public partial class AdventureMapView : Node3D
         _roads.InstanceCount = map.Width * map.Height;
         _rivers = Layer(new StandardMaterial3D { VertexColorUseAsAlbedo = true }, new Vector3(RiverWidth, 0.015f, RiverWidth), "Rivers");
         _rivers.InstanceCount = map.Width * map.Height;
-        RefreshRoads(map.Positions(level));
-        RefreshRivers(map.Positions(level));
+        FillPlates(_roads, RoadLift, p => map.GetRoad(p) is var road && road != RoadType.None ? Palette.ForRoad(road) : null);
+        FillPlates(_rivers, RiverLift, p => map.GetRiver(p) is var river && river != RiverType.None ? Palette.ForRiver(river) : null);
 
         // The editor's layers (ADR-262): the ground, the roads and the rivers each hide.
         void ShowLayers()
@@ -212,13 +218,16 @@ public partial class AdventureMapView : Node3D
         // The tiles with a corner in the reach: x from Left - 1 to Right, y from Top - 1 to Bottom, within the map.
         var (left, top) = (Math.Max(reach.Left - 1, 0), Math.Max(reach.Top - 1, 0));
         var (right, bottom) = (Math.Min(reach.Right, map.Width - 1), Math.Min(reach.Bottom, map.Height - 1));
+        var chunks = new List<(int X, int Y)>();
         for (var cy = top / ChunkTiles; cy <= bottom / ChunkTiles; cy++)
         {
             for (var cx = left / ChunkTiles; cx <= right / ChunkTiles; cx++)
             {
-                RebuildChunk(cx, cy);
+                chunks.Add((cx, cy));
             }
         }
+
+        RebuildChunks(chunks);
 
         if (reach.Left <= 0 || reach.Top <= 0 || reach.Right >= map.Width || reach.Bottom >= map.Height)
         {
@@ -239,12 +248,23 @@ public partial class AdventureMapView : Node3D
         RefreshRivers(tiles);
     }
 
-    /// <summary>One chunk of the ground (<see cref="Ground"/>).</summary>
-    private void RebuildChunk(int chunkX, int chunkY)
+    /// <summary>
+    /// Chunks of the ground (<see cref="Surface"/>): their surfaces worked out side by side on the thread pool, the meshes made on the main
+    /// thread (ADR-278: a large map opens, and a reshape across chunks redraws, in a fraction of the time one after another takes).
+    /// </summary>
+    private void RebuildChunks(IReadOnlyList<(int X, int Y)> chunks)
     {
         var map = _map!;
-        var (x0, y0) = (chunkX * ChunkTiles, chunkY * ChunkTiles);
-        _chunks[chunkX, chunkY].Mesh = Ground([(x0, y0, Math.Min(ChunkTiles, map.Width - x0), Math.Min(ChunkTiles, map.Height - y0))]);
+        var surfaces = new GroundSurface[chunks.Count];
+        Parallel.For(0, chunks.Count, i =>
+        {
+            var (x0, y0) = (chunks[i].X * ChunkTiles, chunks[i].Y * ChunkTiles);
+            surfaces[i] = Surface([(x0, y0, Math.Min(ChunkTiles, map.Width - x0), Math.Min(ChunkTiles, map.Height - y0))]);
+        });
+        for (var i = 0; i < chunks.Count; i++)
+        {
+            _chunks[chunks[i].X, chunks[i].Y].Mesh = ToMesh(surfaces[i]);
+        }
     }
 
     /// <summary>
@@ -254,9 +274,9 @@ public partial class AdventureMapView : Node3D
     private void RebuildApron()
     {
         var (width, height) = (_map!.Width, _map.Height);
-        _apron.Mesh = Ground([
+        _apron.Mesh = ToMesh(Surface([
             (-ApronTiles, -ApronTiles, width + (2 * ApronTiles), ApronTiles), (-ApronTiles, height, width + (2 * ApronTiles), ApronTiles),
-            (-ApronTiles, 0, ApronTiles, height), (width, 0, ApronTiles, height)]);
+            (-ApronTiles, 0, ApronTiles, height), (width, 0, ApronTiles, height)]));
     }
 
     /// <summary>
@@ -266,7 +286,7 @@ public partial class AdventureMapView : Node3D
     /// come from the surface's heights half a square either way, so light runs smoothly over the slopes and a vertex on a chunk's edge is
     /// worked out the same in both chunks: they meet without a seam.
     /// </summary>
-    private ArrayMesh Ground(ReadOnlySpan<(int Left, int Top, int Width, int Height)> rectangles)
+    private GroundSurface Surface((int Left, int Top, int Width, int Height)[] rectangles)
     {
         const int steps = Subdivisions * 2; // samples per tile: the squares' corners and centres
         const float step = MapSpace.TileSize / steps;
@@ -276,10 +296,12 @@ public partial class AdventureMapView : Node3D
             count += r.Width * r.Height;
         }
 
+        // The arrays come from a pool and go back once the mesh is made: a chunk's are too large for the young heap, and new ones for every
+        // stroke kept the collector doing full collections while painting (ADR-278).
         var squares = count * Subdivisions * Subdivisions;
-        var vertices = new Vector3[squares + (count * (Subdivisions + 1) * (Subdivisions + 1))]; // an overestimate of the shared corners
-        var normals = new Vector3[vertices.Length];
-        var indices = new int[squares * 12];
+        var vertices = ArrayPool<Vector3>.Shared.Rent(squares + (count * (Subdivisions + 1) * (Subdivisions + 1))); // an overestimate of the shared corners
+        var normals = ArrayPool<Vector3>.Shared.Rent(vertices.Length);
+        var indices = ArrayPool<int>.Shared.Rent(squares * 12);
         var (used, next) = (0, 0);
         var floor = MapSpace.ToWorld(new MapPosition(0, 0, _level)).Y;
         foreach (var (left, top, width, height) in rectangles)
@@ -324,15 +346,57 @@ public partial class AdventureMapView : Node3D
             }
         }
 
+        return new GroundSurface(vertices, normals, used, indices, next);
+    }
+
+    /// <summary>A piece of the ground as a mesh with the terrain's material (on the main thread).</summary>
+    private ArrayMesh ToMesh(GroundSurface surface)
+    {
         var arrays = new global::Godot.Collections.Array();
         arrays.Resize((int)Mesh.ArrayType.Max);
-        arrays[(int)Mesh.ArrayType.Vertex] = vertices[..used];
-        arrays[(int)Mesh.ArrayType.Normal] = normals[..used];
-        arrays[(int)Mesh.ArrayType.Index] = indices;
+        arrays[(int)Mesh.ArrayType.Vertex] = Variant.CreateFrom(surface.Vertices.AsSpan(0, surface.VertexCount));
+        arrays[(int)Mesh.ArrayType.Normal] = Variant.CreateFrom(surface.Normals.AsSpan(0, surface.VertexCount));
+        arrays[(int)Mesh.ArrayType.Index] = Variant.CreateFrom(surface.Indices.AsSpan(0, surface.IndexCount));
         var mesh = new ArrayMesh();
         mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
         mesh.SurfaceSetMaterial(0, _material);
+        ArrayPool<Vector3>.Shared.Return(surface.Vertices);
+        ArrayPool<Vector3>.Shared.Return(surface.Normals);
+        ArrayPool<int>.Shared.Return(surface.Indices);
         return mesh;
+    }
+
+    /// <summary>The vertices, normals and triangles of a piece of the ground, before it is a mesh: the first counts of pooled arrays.</summary>
+    private sealed record GroundSurface(Vector3[] Vertices, Vector3[] Normals, int VertexCount, int[] Indices, int IndexCount);
+
+    /// <summary>
+    /// Every plate of a layer (roads or rivers) at once, through the multimesh's buffer in one call rather than a call a tile (ADR-278): the
+    /// tiles <paramref name="colour"/> gives a colour lie on their slope, the others are scaled to nothing.
+    /// </summary>
+    private void FillPlates(MultiMesh plates, float lift, Func<MapPosition, Color?> colour)
+    {
+        const int stride = 16; // a Transform3D's 12 floats, row by row with the origin last in each, then the colour's 4
+        var map = _map!;
+        var buffer = new float[map.Width * map.Height * stride];
+        for (var y = 0; y < map.Height; y++)
+        {
+            for (var x = 0; x < map.Width; x++)
+            {
+                var position = new MapPosition(x, y, _level);
+                if (colour(position) is not { } shown)
+                {
+                    continue; // all zero: no size, at the origin
+                }
+
+                var t = OnTile(position, lift, shown: true);
+                var (b, o) = (t.Basis, t.Origin);
+                ((ReadOnlySpan<float>)[
+                    b.Row0.X, b.Row0.Y, b.Row0.Z, o.X, b.Row1.X, b.Row1.Y, b.Row1.Z, o.Y, b.Row2.X, b.Row2.Y, b.Row2.Z, o.Z,
+                    shown.R, shown.G, shown.B, shown.A]).CopyTo(buffer.AsSpan(((y * map.Width) + x) * stride, stride));
+            }
+        }
+
+        plates.Buffer = buffer;
     }
 
     /// <summary>A plate lying on the tile's slope, just above the ground at its centre.</summary>
@@ -350,7 +414,7 @@ public partial class AdventureMapView : Node3D
         {
             var river = map.GetRiver(position);
             var index = (position.Y * map.Width) + position.X;
-            _rivers!.SetInstanceTransform(index, OnTile(position, 0.02f, river != RiverType.None));
+            _rivers!.SetInstanceTransform(index, OnTile(position, RiverLift, river != RiverType.None));
             _rivers.SetInstanceColor(index, Palette.ForRiver(river));
         }
     }
@@ -363,7 +427,7 @@ public partial class AdventureMapView : Node3D
             // Hidden road instances are scaled to nothing; MultiMesh instances cannot be removed individually.
             var road = map.GetRoad(position);
             var index = (position.Y * map.Width) + position.X;
-            _roads!.SetInstanceTransform(index, OnTile(position, 0.035f, road != RoadType.None));
+            _roads!.SetInstanceTransform(index, OnTile(position, RoadLift, road != RoadType.None));
             _roads.SetInstanceColor(index, Palette.ForRoad(road));
         }
     }

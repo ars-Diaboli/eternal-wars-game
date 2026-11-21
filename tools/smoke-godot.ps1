@@ -397,6 +397,11 @@ $scenarios = @(
     # Sample maps (ADR-259) from the Help menu: on the Template tab, Help > Sample maps > Two Towns opens it as a new map on the Map tab.
     @{ Name = 'editor-samples'; App = 'EternalWars.MapEditor'; Frames = 40
        Input = '3:click:@Template;8:click:345,22;12:choose:Sample maps;16:choose:Two Towns' },
+    # A first map (ADR-279), as a newcomer makes it: the empty state's New map…, the wizard's defaults (two players, blank); Academy from the
+    # browser's Towns placed for Blue (the Object tool's Owner) and Dungeon for Red; the two heroes' army warnings fixed from the Problems
+    # panel (no problem left); saved as first-map; Test (F5) shows its window and is cancelled.
+    @{ Name = 'editor-first-use'; App = 'EternalWars.MapEditor'; Frames = 166
+       Input = '6:click:@New map…;14:click:@Next;22:click:@Next;30:click:@Create map;40:click:@Towns;46:click:@Academy;50:click:@Neutral;54:choose:Blue;60:click:600,250;66:click:@Dungeon;70:click:@Blue;74:choose:Red;80:click:1000,600;90:click:700,738;94:click:@Fix;104:click:700,738;108:click:@Fix;118:key:Ctrl+S;124:text:first-map;140:key:Enter;150:key:F5;160:click:@Cancel' },
     # Selection and move (EDIT-1, ADR-250) on a blank map: two chests are placed; the Select tool (V) drags a rectangle over them (the
     # marquee, then tiles and chests selected); a drag from a selected chest moves both (the ghost, then the move); Ctrl+A selects
     # everything, Escape nothing; the Move tool (M) drags one chest onto the other (red ghost, refused); a click selects it, Delete removes it.

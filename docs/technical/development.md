@@ -88,6 +88,16 @@ the script under Movie Maker and saves frames to `.shots/<scenario>/`. **A pass 
 - Maps live in `tools/smoke/` (or come from `sim generate` / `sim export`); `SmokeMapTests` checks they still do what
   the scripts expect.
 
+## Editor timing
+`./tools/perf-editor.ps1 -Godot <Godot .NET console exe> [-NoBuild] [-Runs N] [-Map <file>] [-Size N] [-Seed S] [-TimeoutSeconds N]` times the map editor on a
+large map (ADR-278): it generates a 256 × 256 two-level map from `ffa-8` into `.perf/` (once), then runs the editor in a real window with
+vsync off and `--map=<file> --perf=<report>`. `EditorPerfProbe` opens the map as File → Open does, times idle frames, paints a Terrain
+stroke of real mouse events that crosses new ground every frame, waits for the Problems panel's check, and writes `EditorTimings` to
+`.perf/run<N>/report.txt`. The budgets: open within 3 s (from the command to the first frame that shows the map), paint at a mean of
+60 fps, and no frame over 50 ms while the map is validated (nor the validation's copy on the main thread). A missed budget or an error
+in the log fails the script, as does a map that did not open or a run past the timeout (300 s). The numbers are this computer's: compare
+runs on one machine.
+
 CI (`.github/workflows/ci.yml`) runs build + test + `sim selftest`, and a parallel `generated-maps` job; no Godot.
 
 ## Conventions

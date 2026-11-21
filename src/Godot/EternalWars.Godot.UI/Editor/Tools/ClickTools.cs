@@ -7,12 +7,16 @@ namespace EternalWars.Godot.UI.Editor.Tools;
 
 /// <summary>
 /// Places what is chosen in the object browser (EDIT-1, ADR-253), its top-left tile where clicked. Before the click a ghost shows the
-/// cells it would take, red where it does not fit. A hero is placed for the player the tool's options name and opens in the inspector.
+/// cells it would take, red where it does not fit. A hero is placed for the player the tool's options name and opens in the inspector; a
+/// thing with an owner (a town, a mine, a dwelling, …) for the player they name, or neutral (ADR-279).
 /// </summary>
 public sealed class ObjectTool(EditorToolContext context) : EditorTool(context)
 {
     private PlayerId _owner = context.Editor.Scenario.Players[0].Id;
     private MapPosition? _hovered;
+
+    /// <summary>Who a thing with an owner is placed for; null: neutral.</summary>
+    private PlayerId? _thingOwner;
 
     public override string Name => "Object";
 
@@ -24,6 +28,12 @@ public sealed class ObjectTool(EditorToolContext context) : EditorTool(context)
 
     /// <summary>The player a hero is placed for: the picked one, or the first when that player has left the map.</summary>
     private PlayerId Owner => Editor.Scenario.HasPlayer(_owner) ? _owner : Editor.Scenario.Players[0].Id;
+
+    /// <summary>The owner a click places the chosen entry for: a hero's player, a thing's owner (null: neutral, also once that player has left).</summary>
+    private PlayerId? OwnerOf(BrowserEntry entry) =>
+        entry.Placement == BrowserPlacement.Hero ? Owner
+        : EntryEditor.HasOwner(entry) && _thingOwner is { } player && Editor.Scenario.HasPlayer(player) ? player
+        : null;
 
     public override void BuildOptions(ToolOptions options)
     {
@@ -40,6 +50,13 @@ public sealed class ObjectTool(EditorToolContext context) : EditorTool(context)
                 _owner = p;
                 ShowGhost(_hovered);
             });
+        }
+
+        else if (EntryEditor.HasOwner(entry))
+        {
+            options.Choice(
+                "Owner", Editor.Scenario.Players.Select(p => (p.Name, (PlayerId?)p.Id)).Prepend(("Neutral", null)),
+                OwnerOf(entry), p => _thingOwner = p);
         }
 
         options.Hint($"Places {entry.Name} where clicked: the ghost shows its tiles, red where it does not fit.");
@@ -61,7 +78,7 @@ public sealed class ObjectTool(EditorToolContext context) : EditorTool(context)
             return;
         }
 
-        if (Context.Report(Editor.Placing.Place(entry, tile, out var placed, Owner)))
+        if (Context.Report(Editor.Placing.Place(entry, tile, out var placed, OwnerOf(entry))))
         {
             Context.Choice.NotePlaced(entry);
             if (placed.Hero is { } hero)
@@ -82,7 +99,7 @@ public sealed class ObjectTool(EditorToolContext context) : EditorTool(context)
     private void ShowGhost(MapPosition? tile)
     {
         _hovered = tile;
-        Context.Marks?.ShowMove(tile is { } at && Entry is { } entry ? Editor.Placing.Check(entry, at, Owner) : null);
+        Context.Marks?.ShowMove(tile is { } at && Entry is { } entry ? Editor.Placing.Check(entry, at, OwnerOf(entry)) : null);
     }
 }
 

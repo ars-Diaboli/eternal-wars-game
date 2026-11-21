@@ -9,10 +9,19 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 6 task 6 (ADR-279): a scripted first use (smoke `editor-first-use`) and its fixes: the Object tool places a
+  town, mine, provider, garrison or dwelling for an owner (`EntryEditor.HasOwner`); fixes for a player without a town (nearest neutral
+  town) and a hero without an army (`HeroArmyFix`, the starter stack); the blank map's next steps in the status bar; one extension on a
+  saved name (`RecentFiles.WithExtension`). Tests `FirstMapTests`. The timed test with a person is still to do. Next: step 6 task 7
+  (close).
+- Editor overhaul, step 6 task 5 (ADR-278): `tools/perf-editor.ps1` times the editor on a generated 256 × 256 two-level map
+  (`--perf=`, `EditorPerfProbe`; `FrameStats` and `EditorTimings` with the budgets in the core, tests `EditorTimingsTests`). Hot spots
+  fixed: `GroundEdit` compares whole corner arrays (`AdventureMap.Corners`), the minimap repaints only painted tiles, ground chunks are
+  computed in parallel from pooled arrays, roads and rivers filled in one buffer. Open 2.4 → 1.3 s, painting 67 → ~110 fps.
 - Editor overhaul, step 6 tasks 3 and 4: Help > Sample maps (smoke `editor-samples`); UI scale and contrast (ADR-277): the editor fits
   any window at any scale (regions capped to a share of the room, overlay boxes scroll, Template and Problems bars wrap), a High contrast
   preference switched live through `UiTheme.Apply` and theme variations; AutoInput points are UI points and reveal hidden tabs. Smoke
-  `editor-scale-100/150/200`, `editor-contrast`. Next: step 6 task 5 (performance).
+  `editor-scale-100/150/200`, `editor-contrast`.
 - Editor overhaul, step 6 task 2 (ADR-276): F1 help. `HelpBook` (Core.Domain.Editing) makes pages from tools.md and random-maps.md
   (bold-led paragraphs and bullets, anchors as ids, aliases, decision numbers dropped), built into Godot.UI as embedded resources;
   `EditorHelp` finds the page for the hovered control (`IHelpTopics`, tags, text, node names; the Template tab prefers random-maps.md);

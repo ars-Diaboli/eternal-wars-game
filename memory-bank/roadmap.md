@@ -283,7 +283,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       (template undo, the template's files, the graph's cards, grid and align, multi-select and copy, mirror tools, the full inspector
       and zone presets, the preview and Generate many; plan tasks 1 to 8; ADR-268 to ADR-274)
 - [ ] Step 6: F1 help, sample maps, UI scale, shortcut editor, performance on 256 × 256, a first-use test; the plan's target list ticked
-      (built: the shortcut editor, F1 help, sample maps in the Help menu, UI scale and contrast; plan tasks 1 to 4; ADR-275 to ADR-277)
+      (built: the shortcut editor, F1 help, sample maps in the Help menu, UI scale and contrast, the timing on 256 × 256, the scripted
+      first use and its fixes; plan tasks 1 to 6 (the timed test with a person still to do); ADR-275 to ADR-279)
 
 ### Platform and art
 - [x] Built: speed settings (ADR-095, UI-1)

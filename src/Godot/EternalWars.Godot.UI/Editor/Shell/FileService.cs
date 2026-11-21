@@ -458,15 +458,6 @@ public partial class FileService : Node
         return name.EndsWith(_maps.Extension, StringComparison.OrdinalIgnoreCase) ? name[..^_maps.Extension.Length] : name;
     }
 
-    /// <summary>A map file's path: the map extension is added to a name typed without it (".json" alone is completed, not doubled).</summary>
-    private string WithExtension(string path)
-    {
-        if (path.EndsWith(_maps.Extension, StringComparison.OrdinalIgnoreCase))
-        {
-            return path;
-        }
-
-        const string Json = ".json";
-        return (path.EndsWith(Json, StringComparison.OrdinalIgnoreCase) ? path[..^Json.Length] : path) + _maps.Extension;
-    }
+    /// <summary>A map file's path with the map extension once (<see cref="RecentFiles.WithExtension"/>).</summary>
+    private string WithExtension(string path) => RecentFiles.SavePath(path, _maps.Extension, File.Exists);
 }

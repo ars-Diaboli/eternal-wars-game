@@ -93,6 +93,12 @@ public sealed class AdventureMap
     public void SetCorner(int level, int cx, int cy, int eighths) =>
         _ground[level][CornerIndex(level, cx, cy)] = (sbyte)Math.Clamp(eighths, ReliefLimits.StoredMin, ReliefLimits.StoredMax);
 
+    /// <summary>
+    /// The heights of every corner of a level, row by row (<see cref="Width"/> + 1 to a row): read at the speed of a memory copy, for the
+    /// editor's undo of a reshape on a large map (ADR-278).
+    /// </summary>
+    public ReadOnlySpan<sbyte> Corners(int level) => _ground[level];
+
     /// <summary>Whether any corner is off 0; a map whose ground was never shaped has none.</summary>
     public bool HasGroundHeights => _ground.Any(level => level.Any(h => h != 0));
 

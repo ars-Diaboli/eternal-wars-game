@@ -72,7 +72,8 @@ placeholder, a coloured tile with the name's two letters.
   the players (1 to 8), each a person or the computer by default; a template, or none. Without a template it makes a blank map: the
   ground, the underground below, the players named by colour, each with a hero. With one it ends in the Generate tab, set to the
   template at its size nearest the chosen one and to the players (the template decides the ground and the levels); Generate makes
-  the map. Cancel or Escape closes the wizard.
+  the map. Cancel or Escape closes the wizard. After a blank map the status bar names the next steps: a town for each player, then
+  Problems and Test.
 - **The empty state**: the editor starts on a blank map with a card over it that offers the wizard, Open and the sample maps. The map
   can be painted at once; the card goes at the first edit, with its close button or when another map opens.
 - **Sample maps** (the empty state, or Help > Sample maps at any time): Ember March, Two Towns and the arenas, each opened as a new,
@@ -219,7 +220,9 @@ them.
 Before the click a ghost shows the tiles it would take, red where it does not fit; all of them are red when the map may hold no
 more of the thing (a player's heroes, the obelisks, the Eyes of one colour). A monster is placed aggressive with its number
 left to the game's start, a dwelling and an artifact pickup already hold their creature or artifact (one undo step), and a hero is
-placed for the player picked in the tool's options and opens in the inspector. The **Monster** and **Hero** tools place the same things with
+placed for the player picked in the tool's options and opens in the inspector. A thing with an owner (a town, a mine, a resource
+provider, a garrison, a dwelling) is placed for the owner the tool's options name, Neutral at the start, in the same undo step: a
+player's town is where that player starts. The **Monster** and **Hero** tools place the same things with
 their own options.
 
 **Link gates** (the LinkGates tool): a click on a two-way gate or a one-way entrance, then one on its partner or its exit, links the
@@ -373,7 +376,10 @@ while Ctrl is held, and on the Template tab. A shortcut pressed in the middle of
   the counts show and hide the errors and the warnings; a list picks one kind (heroes, objects, ground, players, rules, content,
   events). A click on a problem shows its tile; a double click on an event's problem opens the event. Where the fix is clear the row
   names it (ADR-265): link an unlinked gate with its only possible partner, point a one-way entrance at the only free exit, make what
-  belongs to a missing player neutral, give a player without a start the one neutral town in its start zone. The Fix button runs the
+  belongs to a missing player neutral, give a player without a start the one neutral town in its start zone, give a player without a
+  town the neutral town nearest its heroes (when no other neutral town and no other such player's hero is as near), give a hero without an army what a hired hero
+  brings (its type's starter stack; for a hero of no type, a week of the first creature with a growth of its owner's nearest town on its
+  level, not a random one). The Fix button runs the
   selected problem's fix as one undo step; if the map changed since it was checked, nothing happens and Output says so.
   - **Hero problems**: an owner that does not exist; a hero on impassable ground or inside an object (its own town's entrance
     excepted), without an army, or with known spells and no spell book; unknown hero types, creatures or artifacts.

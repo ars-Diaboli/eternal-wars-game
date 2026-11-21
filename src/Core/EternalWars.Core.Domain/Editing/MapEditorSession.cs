@@ -32,7 +32,7 @@ public sealed class MapEditorSession : IUndoSession
         Players = new PlayerEditor(_context);
         Map = new MapPropertiesEditor(_context);
         Texts = new MapTextEditor(this);
-        Placing = new EntryEditor(_context, Objects, Contents, Monsters, Heroes);
+        Placing = new EntryEditor(_context, Objects, Contents, Monsters, Heroes, Towns);
         Selecting = new SelectionEditor(_context, Objects, Heroes, mover);
         _context.Selecting = Selecting;
         Layers = new MapLayers(_context, Selecting);

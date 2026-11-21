@@ -64,6 +64,12 @@ public static class LaunchArguments
     /// </summary>
     public static (PlayTestArguments? Arguments, string? Error) PlayTest => PlayTestArguments.Parse(OS.GetCmdlineUserArgs());
 
+    /// <summary>
+    /// <c>--perf=&lt;report&gt;</c>: the map editor times opening the <c>--map=</c> file, painting and validating, writes the report there and quits
+    /// (ADR-278, <c>tools/perf-editor.ps1</c>).
+    /// </summary>
+    public static string? PerfReport => Value("--perf=");
+
     /// <summary>Scripted input for smoke tests (<see cref="Controls.AutoInput"/>).</summary>
     public static string? AutoInput => Value("--autoinput=");
 
