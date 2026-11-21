@@ -51,7 +51,7 @@ public sealed class Town : MapObject, IFlaggable, Battles.IBattleGuard
         : base(id, definition, position, MapObjectKind.Town)
     {
         Owner = owner;
-        Name = name ?? definition.Name;
+        _name = name ?? definition.Name;
         _buildings = Copy(buildings ?? BuiltInBuildings.DefaultStart);
         _dwellings = Copy(dwellings);
         _available = Copy(available);
@@ -90,7 +90,16 @@ public sealed class Town : MapObject, IFlaggable, Battles.IBattleGuard
     /// <summary>The middle of the town's footprint, where its sight is measured from (not its entrance, which is on the bottom edge).</summary>
     public MapPosition SightCenter => Position.Offset(Definition.Footprint.Width / 2, Definition.Footprint.Height / 2);
 
-    public string Name { get; internal set; }
+    private string _name;
+
+    /// <summary>The town's name: its definition's unless the author gave it one (ADR-257).</summary>
+    public override string Name => _name;
+
+    /// <inheritdoc/>
+    public override string? GivenName => _name == Definition.Name ? null : _name;
+
+    /// <inheritdoc/>
+    internal override void Rename(string? name) => _name = string.IsNullOrWhiteSpace(name) ? Definition.Name : name.Trim();
 
     /// <summary>Built level per building id (dwellings are in <see cref="Dwellings"/>); absent = not built.</summary>
     public IReadOnlyDictionary<Common.BuildingId, int> Buildings => _buildings;

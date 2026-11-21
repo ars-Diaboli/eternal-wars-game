@@ -611,7 +611,7 @@ public partial class Main : Node3D
             },
             new("Edit", ["edit.undo", "edit.redo", null, "edit.cut", "edit.copy", "edit.paste", "edit.duplicate", "edit.delete", "edit.save-stamp", null, "edit.rotate", "edit.mirror", null, "edit.select-all", "edit.deselect", null, "edit.preferences"]),
             new("View", ["view.palette", null, "view.map-tab", "templates.editor", null, "view.level", "view.grid", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.problems", "view.history", "view.output"]),
-            new("Map", ["map.settings", "map.general", "map.players", "map.conditions", "map.bans", "map.week-events", null, "map.events", null, "map.resize", "map.crop", null, "view.problems"]),
+            new("Map", ["map.settings", "map.general", "map.players", "map.conditions", "map.bans", "map.week-events", "map.rumours", null, "map.events", null, "map.resize", "map.crop", null, "view.problems"]),
             new("Tools", [.. _tools.Tools.Select(ToolCommand)]),
             new("Templates", ["templates.editor", "file.generate"]),
             new("Test", ["test.play"]),
@@ -677,6 +677,7 @@ public partial class Main : Node3D
         Command("map.conditions", "Victory and loss", () => OpenSettings(MapSettingsTab.VictoryAndLoss));
         Command("map.bans", "Bans", () => OpenSettings(MapSettingsTab.Bans), UiIcon.Ban);
         Command("map.week-events", "Week events", () => OpenSettings(MapSettingsTab.WeekEvents));
+        Command("map.rumours", "Rumours", () => OpenSettings(MapSettingsTab.Rumours));
         Command("map.resize", "Resize map", OpenResize, onMap: true);
         Command("map.crop", "Crop to selection", Crop,
             whyNot: () => _editor.Selection.Tiles.Count > 0 ? null : "No tile is selected", onMap: true);

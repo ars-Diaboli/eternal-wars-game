@@ -62,6 +62,7 @@ internal sealed class SpellBookSection(HeroPanel panel) : HeroSection(panel)
         {
             var id = spell.Id;
             Row.AddChild(new Button { Text = MagicRules.NameAtRank(spell, rank), Flat = true, TooltipText = spell.Notes }
+                .WithSpellIcon(id)
                 .WithInfo(detailed => InfoSheets.Spell(Panel.Session.State, id, rank, detailed, hero)));
         }
     }

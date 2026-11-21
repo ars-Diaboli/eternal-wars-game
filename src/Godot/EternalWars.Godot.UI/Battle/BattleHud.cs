@@ -389,7 +389,7 @@ public partial class BattleHud : Control
             var cast = new Button { Text = $"{active.Creature.Name}: {own.Spell.Name} ({casts} left)", TooltipText = $"The stack casts it as its action. {own.Spell.Notes}" };
             cast.Pressed += () => ArmCreature(own);
             var ownId = own.Spell.Id;
-            cast.WithInfo(detailed => Core.Domain.Info.InfoSheets.Spell(_session.State, ownId, 1, detailed));
+            cast.WithSpellIcon(ownId).WithInfo(detailed => Core.Domain.Info.InfoSheets.Spell(_session.State, ownId, 1, detailed));
             _spells.AddChild(cast);
         }
 
@@ -410,7 +410,7 @@ public partial class BattleHud : Control
             button.Pressed += () => Arm(known);
             var spellId = known.Spell.Id;
             var rank = known.Rank;
-            button.WithInfo(detailed => Core.Domain.Info.InfoSheets.Spell(_session.State, spellId, rank, detailed));
+            button.WithSpellIcon(spellId).WithInfo(detailed => Core.Domain.Info.InfoSheets.Spell(_session.State, spellId, rank, detailed));
             _spells.AddChild(button);
         }
     }

@@ -299,7 +299,8 @@ public static class BuiltInMapObjects
     /// <summary>Definition id of a town type's town: <c>town.haven</c>.</summary>
     public static string TownId(string town) => $"town.{town}";
 
-    private static string TownName(string town) =>
+    /// <summary>A town type as players read it: <c>swamp-bestiary</c> is "Swamp Bestiary".</summary>
+    public static string TownName(string town) =>
         string.Join(' ', town.Split('-').Select(w => char.ToUpperInvariant(w[0]) + w[1..]));
 
     public static string PileId(ResourceType resource) => $"pile.{resource.ToString().ToLowerInvariant()}";

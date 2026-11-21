@@ -208,6 +208,7 @@ public static partial class MapConverter
         var blank = (MapObjectDocument)Activator.CreateInstance(codec.DocumentType)! with
         {
             Id = mapObject.Id.Value, Definition = mapObject.Definition.Id, X = mapObject.Position.X, Y = mapObject.Position.Y, Level = mapObject.Position.Level,
+            Name = mapObject.GivenName,
         };
         return codec.Save(mapObject, blank);
     }
@@ -224,9 +225,14 @@ public static partial class MapConverter
                     ?? throw new FormatException($"Unsupported object kind {document.GetType().Name}.");
         var context = new ObjectContext(
             new MapObjectId(document.Id), definition, new MapPosition(document.X, document.Y, document.Level), creatures, spells);
+        if (document.Name is { } name && !string.IsNullOrWhiteSpace(name) && !MapObject.IsFitName(name.Trim()))
+        {
+            throw new FormatException($"Object {document.Id} is named '{name}'; a name has at most {MapObject.NameLength} characters and not only digits.");
+        }
+
         try
         {
-            return codec.Load(document, context);
+            return codec.Load(document, context).WithName(document.Name);
         }
         catch (ArgumentException e)
         {
@@ -258,7 +264,6 @@ public static partial class MapConverter
     private static TownDocument ToDocument(Town town, TownDocument document) => document with
     {
         Owner = town.Owner?.Value,
-        Name = town.Name == town.Definition.Name ? null : town.Name,
         Buildings = Sorted(town.Buildings),
         Dwellings = town.Dwellings.Count == 0 ? null : Sorted(town.Dwellings),
         Available = town.Available.Count == 0 ? null : Sorted(town.Available),

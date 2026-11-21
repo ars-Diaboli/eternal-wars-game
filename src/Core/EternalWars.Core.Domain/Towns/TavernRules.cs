@@ -17,6 +17,17 @@ namespace EternalWars.Core.Domain.Towns;
 /// </summary>
 public static class TavernRules
 {
+    /// <summary>
+    /// The rumour the taverns tell this week (ADR-257): the map's rumours in turn, the first in the first week, starting over after the last; null
+    /// when the map has none. It draws nothing, so it is the same in every tavern and for every player.
+    /// </summary>
+    public static string? Rumour(GameState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        var rumours = state.Rules.Rumours;
+        return rumours.Count == 0 ? null : rumours[(state.Date.AbsoluteWeek - 1) % rumours.Count];
+    }
+
     /// <summary>What hiring a hero costs.</summary>
     public static ResourceSet HeroCost { get; } = new(Gold: 2500);
 

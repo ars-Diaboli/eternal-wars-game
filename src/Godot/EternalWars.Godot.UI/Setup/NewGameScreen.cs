@@ -661,7 +661,7 @@ public partial class NewGameScreen : PanelContainer
 
     /// <summary>
     /// The player's faction (ADR-126): a choice when the map leaves it open (a random town of the player's, or a hero placeholder without a fixed
-    /// town), else the type of its first town, or a dash.
+    /// town) among the factions the map lets the player take (ADR-257), else the type of its first town, or a dash.
     /// </summary>
     private Control TownChoice(GameState preview, PlayerId player)
     {
@@ -672,7 +672,7 @@ public partial class NewGameScreen : PanelContainer
             return towns.FirstOrDefault()?.TownType is { } type ? Heraldry.Titled(type, type) : new Label { Text = "—" };
         }
 
-        var choice = new CrestPicker();
+        var choice = new CrestPicker { Towns = PlayerFactions.Allowed(preview.GetPlayer(player)) };
         choice.Changed += Changed;
         _startTowns[player.Value] = choice;
         return choice;

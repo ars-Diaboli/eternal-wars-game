@@ -146,8 +146,21 @@ public sealed record ScenarioRules(
     /// </summary>
     public bool Arena { get; init; }
 
+    /// <summary>The map's rumours (ADR-257): the taverns tell one a week, in turn (<see cref="Towns.TavernRules.Rumour"/>); none by default.</summary>
+    public IReadOnlyList<string> Rumours { get; init; } = [];
+
+    /// <summary>The longest a rumour may be, in characters.</summary>
+    public const int RumourLength = 500;
+
+    /// <summary>The most rumours a map may have.</summary>
+    public const int MaxRumours = 100;
+
+    /// <summary>Whether a text may be a rumour: not blank, at most <see cref="RumourLength"/> characters, on one line.</summary>
+    public static bool IsFitRumour(string rumour) =>
+        !string.IsNullOrWhiteSpace(rumour) && rumour.Length <= RumourLength && rumour.IndexOfAny(['\n', '\r']) < 0;
+
     public bool IsDefault => Victory.Count == 0 && Defeat.Count == 0 && StandardVictory && Elimination && GraceDays == DefaultGraceDays
-        && MaxHeroes == HeroLimit && WeekEvents.IsDefault && Difficulty is null && Bans.IsEmpty && !Arena;
+        && MaxHeroes == HeroLimit && WeekEvents.IsDefault && Difficulty is null && Bans.IsEmpty && !Arena && Rumours.Count == 0;
 
     /// <summary>Whether a scenario with these rules can be won at all.</summary>
     public bool CanBeWon => Arena || StandardVictory || Victory.Count > 0;

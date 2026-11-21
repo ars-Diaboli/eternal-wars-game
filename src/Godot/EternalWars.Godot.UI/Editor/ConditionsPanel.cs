@@ -148,7 +148,7 @@ public partial class ConditionsPanel : VBoxContainer
         Fill(_hero, Scenario.Heroes.Select(h => (h.Id.Value, h.Name)));
         // Towns have their own kind; the other objects with a flag: mines, dwellings, providers, garrisons (ADR-073).
         Fill(_object, Scenario.Objects.Where(o => o is IFlaggable and not Town)
-            .Select(o => (o.Id.Value, $"{o.Definition.Name} ({o.Position.X}, {o.Position.Y})")));
+            .Select(o => (o.Id.Value, $"{(o.Name is { } name ? $"{name}, " : "")}{o.Definition.Name} ({o.Position.X}, {o.Position.Y})")));
         Fill(_prison, Scenario.ObjectsOf<Prison>()
             .Select(p => (p.Id.Value, $"{(p.Hero is { } h && Scenario.HeroRoster.Contains(h) ? Scenario.HeroRoster.Get(h).Name : "Drawn prisoner")} ({p.Position.X}, {p.Position.Y})")));
         _artifactIds = Scenario.Artifacts.All.OrderBy(a => a.Name, StringComparer.Ordinal).Select(a => a.Id.Value).ToList();

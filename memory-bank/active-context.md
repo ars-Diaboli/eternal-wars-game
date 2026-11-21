@@ -9,13 +9,19 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 3 task 8 (ADR-257, map format 44): rumours (`ScenarioRules.Rumours`, the Rumours tab `RumoursPanel`, the taverns
+  show `TavernRules.Rumour`), a player's factions (`Player.Factions`, `PlayerFactions`, the Players tab's Factions menu, the new-game
+  screen's `CrestPicker.Towns`, a random choice drawn among them), object names (`MapObject.Name`/`GivenName`/`Label`, a town's is its
+  name; `ObjectEditor.SetName`, the inspector's Name field, `ObjectNames`, the quest form takes names, `NameCheck`), custom heroes
+  (`Hero.Biography`, `Hero.Portrait`, `HeroEditor.SetName`/`SetBiography`/`SetPortrait`/`SetSkill`; the hero screen shows the
+  biography). `FactionsCheck` warns of a fixed town outside a player's factions. Tests `MapContentTests`; smoke `editor-map-content`.
+  Next: step 3 task 9 (Texts, EDIT-11).
 - Editor overhaul, step 3 task 7 (ADR-256): the map settings window `MapSettingsWindow` (F7, Map menu) with the tabs General
   (`GeneralSettingsPanel`: name, description, difficulty, hero limit, arena), Players (`PlayersPanel`, now with teams locked and team
   counts), Victory and loss (`ConditionsPanel`), Bans (`BansPanel`) and Week events (`WeekEventsPanel`); the right region keeps
   Inspector, Events and Generate; `MapPropertiesPanel` is gone. Also from the review of tasks 5 and 6: a mine's guard is two fields
   (`MineGuardCreature`, `MineGuardCount`), a "—" number box applies a typed number on Enter, chests' values wait for "Fixed values", a
   multi-edit that throws is taken back, a retyped town stays selected (`EditorContext.ReplaceObject`). Smoke `editor-map-settings`.
-  Next: step 3 task 8 (map content, EDIT-12).
 - Editor overhaul, step 3 tasks 5 and 6 (ADR-255). Multi-edit: `ObjectProperty<TObject, TValue>` and `SharedValue<T>`, the field
   list `ObjectProperties`, `MapEditorSession.EditAll` (one undo step, all or none) and `ObjectsOfOneKind`; the inspector's
   sections take a list of objects, `InspectorForm` binds fields with "—" for differing values, the Select tool opens several

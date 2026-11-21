@@ -18,7 +18,7 @@ A planning list (ADR-116), not a plan; updated 2026-11-04. Rows leave when built
 | Scholar (one-time stat, skill or spell) | HoMM3 | Missing | Small one-time object like the Learning Stone |
 | Pyramid (a level-4 spell behind a guard) | HoMM3 | Missing | Shrines exist (ADR-120); a guarded spell object is the step up; **candidate** |
 | Freelancer's Guild / selling creatures | HoMM3 | Missing | The Sacrificial Altar takes creatures for experience instead |
-| Tavern rumours | HoMM3 | Missing | Flavour text in the tavern screen (ADR-114); **candidate** |
+| Tavern rumours | HoMM3 | Done | The map's rumours, one a week in every tavern (ADR-257) |
 | Hero sleep / wake; next-hero cycle skips sleepers | HoMM3 | Missing | UI only |
 | Town conversion to your own faction | HoMM5 | Missing | Big rule; needs the per-town building tables mapped |
 | Castle Gate town building (move between own towns) | HoMM3, HoMM5 | Partly | The map's Town Gate (ADR-068) and Town Portal spell (ADR-120) exist |

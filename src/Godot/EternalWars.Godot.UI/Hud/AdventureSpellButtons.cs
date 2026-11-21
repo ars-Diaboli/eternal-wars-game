@@ -34,7 +34,7 @@ internal static class AdventureSpellButtons
                 TooltipText = refusal ?? spell.Notes,
             };
             var id = spell.Id;
-            button.WithInfo(detailed => InfoSheets.Spell(state, id, rank, detailed, hero));
+            button.WithSpellIcon(id).WithInfo(detailed => InfoSheets.Spell(state, id, rank, detailed, hero));
             button.Pressed += () =>
             {
                 if (AdventureMagic.NeedsTarget(state, hero, id))

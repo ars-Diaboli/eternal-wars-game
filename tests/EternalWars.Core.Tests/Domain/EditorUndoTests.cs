@@ -46,12 +46,15 @@ public class EditorUndoTests
 
             Ok(e.Heroes.SetArmySlot(Hero, 0, new CreatureStack(BuiltInCreatures.Pikeman, 10)));
             Ok(e.Heroes.SetArtifacts(Hero, [], ["iron-band"]));
+            Ok(e.Heroes.SetBiography(Hero, "Born under a red moon."));
+            Ok(e.Players.SetFactions(Red, [TownIds.Inferno]));
 
             Monster = Ok(e.Monsters.Place(new MapPosition(20, 14), BuiltInCreatures.Wolf, 10, GuardDisposition.Aggressive, false, out var monster), monster);
             Chest = Put(BuiltInMapObjects.TreasureChest);
             Pickup = Put(BuiltInMapObjects.ArtifactId(ArtifactTier.Minor));
             Sign = Put(BuiltInMapObjects.Sign);
             Ok(e.Contents.SetSignMessage(Sign, "Welcome."));
+            Ok(e.Objects.SetName(Sign, "The old signpost"));
             Box = Put(BuiltInMapObjects.PandorasBox);
             Ok(e.Contents.SetPandorasBox(Box, new BoxContents { Experience = 100 }, [], null));
             SeerHut = Put(BuiltInMapObjects.SeerHut);
@@ -298,6 +301,13 @@ public class EditorUndoTests
         ["HeroEditor.SetType"] = f => Ok(f.Editor.Heroes.SetType(f.Hero, "inferno.azgaroth")),
         ["HeroEditor.SetPlaceholder"] = f => Ok(f.Editor.Heroes.SetPlaceholder(f.Hero, true)),
         ["HeroEditor.SetArmySlot"] = f => Ok(f.Editor.Heroes.SetArmySlot(f.Hero, 0, new CreatureStack(BuiltInCreatures.Griffin, 4))),
+        ["ObjectEditor.SetName"] = f => Ok(f.Editor.Objects.SetName(f.Chest, "Hoard")),
+        ["ObjectEditor.SetName (clear)"] = f => Ok(f.Editor.Objects.SetName(f.Sign, null)),
+        ["ObjectEditor.SetName (town)"] = f => Ok(f.Editor.Objects.SetName(f.Town, null)),
+        ["HeroEditor.SetName"] = f => Ok(f.Editor.Heroes.SetName(f.Hero, "Mira the Bold")),
+        ["HeroEditor.SetBiography"] = f => Ok(f.Editor.Heroes.SetBiography(f.Hero, "A wanderer from the north.")),
+        ["HeroEditor.SetPortrait"] = f => Ok(f.Editor.Heroes.SetPortrait(f.Hero, "haven.aldric")),
+        ["HeroEditor.SetSkill"] = f => Ok(f.Editor.Heroes.SetSkill(f.Hero, BuiltInSkills.Scouting, SkillLevel.Advanced)),
         ["HeroEditor.SetSpells"] = f => Ok(f.Editor.Heroes.SetSpells(f.Hero, true, [f.Spell(1), f.Spell(2)])),
 
         // Map events
@@ -322,6 +332,8 @@ public class EditorUndoTests
         ["PlayerEditor.RemoveLast"] = f => Ok(f.Editor.Players.RemoveLast()),
         ["PlayerEditor.Update"] = f => Ok(f.Editor.Players.Update(Red, "Crimson", false)),
         ["PlayerEditor.SetHeroLimit"] = f => Ok(f.Editor.Players.SetHeroLimit(Red, 3)),
+        ["PlayerEditor.SetFactions"] = f => Ok(f.Editor.Players.SetFactions(Blue, [TownIds.Haven, TownIds.Sylvan])),
+        ["PlayerEditor.SetFactions (any)"] = f => Ok(f.Editor.Players.SetFactions(Red, null)),
         ["PlayerEditor.SetTeam"] = f => Ok(f.Editor.Players.SetTeam(Red, new TeamId(3))),
         ["PlayerEditor.SetTeamsLocked"] = f =>
         {
@@ -337,6 +349,7 @@ public class EditorUndoTests
             return true;
         },
         ["MapPropertiesEditor.SetRules"] = f => Ok(f.Editor.Map.SetRules(f.Editor.Scenario.Rules with { Difficulty = Difficulty.Expert, MaxHeroes = 4 })),
+        ["MapPropertiesEditor.SetRules (rumours)"] = f => Ok(f.Editor.Map.SetRules(f.Editor.Scenario.Rules with { Rumours = ["The bridge is guarded.", "Gold flows east."] })),
         ["MapPropertiesEditor.SetGrail"] = f => Ok(f.Editor.Map.SetGrail(new MapPosition(20, 19))),
     };
 

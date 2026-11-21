@@ -41,12 +41,14 @@ settings window shows the Map tab.
 open it at a tab). Its tabs:
 - **General**: the map's name and description ("Apply name and description" sets both), its difficulty (ADR-101), the hero limit per
   player (ADR-068) and the arena switch (ADR-161);
-- **Players**: the player slots (name, human or computer by default, team, own hero limit; add a slot, remove the last), whether the
-  setup screen may change teams, and the team counts it must keep to (ADR-117);
+- **Players**: the player slots (name, human or computer by default, team, own hero limit, the factions it may take; add a slot,
+  remove the last), whether the setup screen may change teams, and the team counts it must keep to (ADR-117). The factions are a menu of
+  the playable towns to tick, or "Any faction"; the new-game screen offers only the ticked ones (ADR-257);
 - **Victory and loss** (ADR-057): the default rules and the special conditions; on an arena map they are kept but greyed out;
 - **Bans** (ADR-133);
 - **Week events** (ADR-084): on or off, the weeks without events at the start, the factions whose creatures the weekly and the monthly
-  events pick.
+  events pick;
+- **Rumours** (ADR-257): one rumour a line; "Apply rumours" sets them. The game's taverns tell one a week, in this order.
 
 Each change is an undo step at once, as in a panel. The window's Undo and Redo (also Ctrl+Z and Ctrl+Y outside a text field) take
 back any step while it is open; nothing else in the editor takes input then. Close, Escape or F7 closes it; it opens again at the tab
@@ -162,7 +164,14 @@ everything that can be put on the map. A click on an entry makes it the Object t
 <a id="editor-inspector"></a>
 **The inspector** (ADR-254) shows the selected hero or object in sections; a click on a section's heading closes or opens it, and
 what is closed is kept in the editor's settings. A section shows only when the thing has something for it.
-- **Identity**: what it is and whose (a hero's type and stats, a town's owner, name and faction, a monster's creature and number).
+- **Identity**: what it is and whose (a hero's type and stats, a town's owner, name and faction, a monster's creature and number). A
+  single selected object other than a town has a **Name** field (ADR-257): a name of its own, up to 60 characters and not only digits,
+  applied on Enter or when the field is left, blank for none.
+  The map events, the conditions and the quest form show it, and the quest form takes a monster's or a hero's name in place of its id;
+  the map keeps the id, so a rename changes nothing. Names must be unique (Problems reports a given name that another object also has,
+  ignoring case, a town named as its faction too; two such towns are not reported). A hero has its name, the roster hero whose portrait it shows ("(its own)" for its roster
+  entry's), a biography for the hero screen, and its skills, each with a level ("(remove)" unlearns it) and "Add a skill…"; Tactics is
+  with the stats.
 - **Contents**: what it holds or gives (an army, spells, artifacts, buildings, a box's gifts, a chest's values).
 - **Guard**: who must be fought for it (a garrison, a mine's or a box's guard, a monster's disposition and guard mode).
 - **Messages**: the texts it shows (a sign, a box's message, a sphinx's riddle).

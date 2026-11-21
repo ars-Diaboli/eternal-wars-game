@@ -97,6 +97,85 @@ public sealed class HeroEditor
         return EditResult.Ok;
     }
 
+    /// <summary>Renames a hero (ADR-257): trimmed, 1 to <see cref="Hero.NameLength"/> characters, not only digits (a number is a hero's id).</summary>
+    public EditResult SetName(HeroId id, string name)
+    {
+        if (_context.Hero(id) is not { } hero)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (string.IsNullOrWhiteSpace(name) || name.Trim().Length > Hero.NameLength || name.Trim().All(char.IsAsciiDigit))
+        {
+            return EditResult.InvalidValue;
+        }
+
+        Edit(hero, $"Rename {hero.Name}", () => hero.Name, value => hero.Name = value, name.Trim());
+        return EditResult.Ok;
+    }
+
+    /// <summary>A hero's biography (ADR-257), at most <see cref="Hero.BiographyLength"/> characters; blank takes it away.</summary>
+    public EditResult SetBiography(HeroId id, string? biography)
+    {
+        if (_context.Hero(id) is not { } hero)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        var next = string.IsNullOrWhiteSpace(biography) ? null : biography.Trim();
+        if (next?.Length > Hero.BiographyLength)
+        {
+            return EditResult.InvalidValue;
+        }
+
+        Edit(hero, $"Edit {hero.Name}'s biography", () => hero.Biography, value => hero.Biography = value, next);
+        return EditResult.Ok;
+    }
+
+    /// <summary>The roster hero whose portrait a hero shows (ADR-257); null = its own roster entry's. Refused for a hero not in the roster.</summary>
+    public EditResult SetPortrait(HeroId id, string? rosterHero)
+    {
+        if (_context.Hero(id) is not { } hero)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (rosterHero is not null && !Scenario.HeroRoster.Contains(rosterHero))
+        {
+            return EditResult.InvalidValue;
+        }
+
+        Edit(hero, $"Set {hero.Name}'s portrait", () => hero.Portrait, value => hero.Portrait = value, rosterHero);
+        return EditResult.Ok;
+    }
+
+    /// <summary>
+    /// A hero's level in one skill (ADR-257's starting skills), <see cref="SkillLevel.None"/> to unlearn it. Refused for an unknown skill, a level
+    /// above the skill's maximum, or a new group when the hero already has <see cref="HeroSkills.MaxGroups"/>.
+    /// </summary>
+    public EditResult SetSkill(HeroId id, string skill, SkillLevel level)
+    {
+        if (_context.Hero(id) is not { } hero)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (!BuiltInSkills.Contains(skill) || !Enum.IsDefined(level) || level > BuiltInSkills.Get(skill).MaxLevel)
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var group = BuiltInSkills.Get(skill).Group;
+        if (level != SkillLevel.None && hero.Skills.Level(skill) == SkillLevel.None && !hero.Skills.Groups.Contains(group)
+            && hero.Skills.Groups.Count() >= HeroSkills.MaxGroups)
+        {
+            return EditResult.InvalidValue;
+        }
+
+        Edit(hero, $"Set {hero.Name}'s {BuiltInSkills.Get(skill).Name}", () => hero.Skills.Level(skill), value => hero.Skills.Set(skill, value), level);
+        return EditResult.Ok;
+    }
+
     /// <summary>Sets which war machines a hero owns (ADR-056).</summary>
     public EditResult SetWarMachines(HeroId id, IReadOnlySet<WarMachineSlot> machines)
     {

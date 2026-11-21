@@ -110,6 +110,7 @@ public partial class HeroPanel : PanelContainer
         box.AddChild(_stats.Badges);
         box.AddChild(_stats.Stats);
         box.AddChild(_stats.Specialty);
+        box.AddChild(_stats.Biography);
         box.AddHeading("Skills");
         box.AddChild(_skills.Rows);
         box.AddHeading("Army");

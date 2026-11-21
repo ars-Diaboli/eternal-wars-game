@@ -1,5 +1,5 @@
 {
-  "formatVersion": 43,
+  "formatVersion": 44,
   "name": "Version 12 sample",
   "description": "",
   "width": 16,
@@ -94,7 +94,6 @@
     {
       "kind": "town",
       "owner": 0,
-      "name": "Old Keep",
       "buildings": {
         "fort": 1,
         "tavern": 1,
@@ -104,7 +103,8 @@
       "definition": "town.haven",
       "x": 2,
       "y": 3,
-      "level": 0
+      "level": 0,
+      "name": "Old Keep"
     },
     {
       "kind": "monster",

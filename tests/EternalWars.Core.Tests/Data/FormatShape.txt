@@ -1,4 +1,4 @@
-# Map files (*.ewmap.json), format v43
+# Map files (*.ewmap.json), format v44
 object AllCondition
   conditions: IReadOnlyList<EventCondition>
 object AllyCondition
@@ -21,6 +21,7 @@ object ArtifactMerchantDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object ArtifactPickupDocument
@@ -28,12 +29,14 @@ object ArtifactPickupDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object AstrologersTowerDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object AvailableCreaturesAction
@@ -50,12 +53,14 @@ object BorderPostDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object BuffSiteDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object BuildAction
@@ -65,6 +70,7 @@ object CartographerDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object CellDocument
@@ -75,6 +81,7 @@ object CombatPlaceDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object CompareCondition
@@ -98,6 +105,7 @@ object CreatureBankDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object CreatureStack
@@ -110,12 +118,14 @@ object DenOfThievesDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object DepositDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object DialogueAction
@@ -130,6 +140,7 @@ object DwellingDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   owner: Int32?
   x: Int32 (required)
   y: Int32 (required)
@@ -207,6 +218,7 @@ object GarrisonDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   owner: Int32?
   troops: IReadOnlyList<ArmySlotDocument>
   x: Int32 (required)
@@ -216,6 +228,7 @@ object GateDocument
   id: Int32 (required)
   level: Int32
   linkedGate: Int32?
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object GateEntranceDocument
@@ -223,12 +236,14 @@ object GateEntranceDocument
   exit: Int32?
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object GateExitDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object GiveHeroAction
@@ -256,6 +271,7 @@ object HeroPlacementDocument
   artifacts: IReadOnlyList<String>
   attack: Int32
   backpack: IReadOnlyList<String>
+  biography: String
   defense: Int32
   id: Int32
   knowledge: Int32?
@@ -265,6 +281,7 @@ object HeroPlacementDocument
   name: String
   owner: Int32
   placeholder: Boolean?
+  portrait: String
   skills: IReadOnlyDictionary<String, SkillLevel>
   spellBook: Boolean?
   spellPower: Int32?
@@ -277,6 +294,7 @@ object HillFortDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object IfAction
@@ -287,24 +305,28 @@ object KeymasterDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object LootSiteDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object MagiEyeDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object MagiWindowDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object ManaAction
@@ -393,6 +415,7 @@ object MapObjectDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object MapPosition
@@ -403,12 +426,14 @@ object MapTavernDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object MarketplaceDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object MessageAction
@@ -419,6 +444,7 @@ object MineDocument
   guard: GuardDocument
   id: Int32 (required)
   level: Int32
+  name: String
   owner: Int32?
   x: Int32 (required)
   y: Int32 (required)
@@ -433,6 +459,7 @@ object MonsterDocument
   id: Int32 (required)
   level: Int32
   mode: GuardMode?
+  name: String
   neverFlees: Boolean
   randomTier: Int32?
   x: Int32 (required)
@@ -450,12 +477,14 @@ object ObeliskDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object ObservatoryDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object PandorasBoxDocument
@@ -474,6 +503,7 @@ object PandorasBoxDocument
   mana: Int32?
   message: String
   morale: Int32?
+  name: String
   resources: IReadOnlyDictionary<ResourceType, Int32>
   skills: IReadOnlyDictionary<String, SkillLevel>
   spellPower: Int32?
@@ -483,6 +513,7 @@ object PlayerIsCondition
   player: Int32
 object PlayerIsHumanCondition
 object PlayerSlotDocument
+  factions: IReadOnlyList<String>
   isHuman: Boolean
   maxHeroes: Int32?
   name: String
@@ -496,6 +527,7 @@ object PrisonDocument
   hero: String
   id: Int32 (required)
   level: Int32
+  name: String
   prisonerLevel: Int32?
   x: Int32 (required)
   y: Int32 (required)
@@ -507,6 +539,7 @@ object QuestSiteDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   quest: String
   x: Int32 (required)
   y: Int32 (required)
@@ -526,6 +559,7 @@ object RefugeeCampDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object RemoveCellAction
@@ -540,12 +574,14 @@ object ResourcePileDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object ResourceProviderDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   owner: Int32?
   x: Int32 (required)
   y: Int32 (required)
@@ -561,12 +597,14 @@ object SacrificialAltarDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object SanctuaryDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object ScenarioRulesDocument
@@ -577,6 +615,7 @@ object ScenarioRulesDocument
   elimination: Boolean
   graceDays: Int32?
   maxHeroes: Int32?
+  rumours: IReadOnlyList<String>
   standardVictory: Boolean
   victory: IReadOnlyList<ConditionDocument>
   weekEvents: WeekEventsDocument
@@ -585,6 +624,7 @@ object SceneryDocument
   id: Int32 (required)
   level: Int32
   mirrored: Boolean?
+  name: String
   turns: Int32?
   x: Int32 (required)
   y: Int32 (required)
@@ -596,6 +636,7 @@ object ShrineDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   spell: String
   x: Int32 (required)
   y: Int32 (required)
@@ -604,6 +645,7 @@ object SignDocument
   id: Int32 (required)
   level: Int32
   message: String
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object SkillAction
@@ -614,6 +656,7 @@ object SkillSchoolDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object SpellAction
@@ -624,6 +667,7 @@ object SphinxDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   question: String
   wrong1: String
   wrong2: String
@@ -654,6 +698,7 @@ object TownGateDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object TownOwnerCondition
@@ -663,6 +708,7 @@ object TrainingSiteDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object TreasureChestDocument
@@ -671,6 +717,7 @@ object TreasureChestDocument
   gold: Int32?
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object VariableExpr
@@ -683,6 +730,7 @@ object WarMachineFactoryDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 enum WarMachineSlot: Offensive, Tent, Cart
@@ -698,6 +746,7 @@ object WitchHutDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   skills: IReadOnlyList<String>
   x: Int32 (required)
   y: Int32 (required)
@@ -744,6 +793,7 @@ object ArtifactMerchantDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object ArtifactPickupDocument
@@ -751,6 +801,7 @@ object ArtifactPickupDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object AssembleRelicCommand
@@ -761,6 +812,7 @@ object AstrologersTowerDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 enum AutoCombatMode: Off, Ask, Always
@@ -824,12 +876,14 @@ object BorderPostDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object BuffSiteDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object BuildAction
@@ -891,6 +945,7 @@ object CartographerDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object CastAdventureSpellCommand
@@ -927,6 +982,7 @@ object CombatPlaceDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object CompareCondition
@@ -952,6 +1008,7 @@ object CreatureBankDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 enum CreatureCategory: None, A, B
@@ -965,12 +1022,14 @@ object DenOfThievesDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object DepositDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object DialogueAction
@@ -992,6 +1051,7 @@ object DwellingDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   owner: Int32?
   x: Int32 (required)
   y: Int32 (required)
@@ -1179,6 +1239,7 @@ object GarrisonDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   owner: Int32?
   troops: IReadOnlyList<ArmySlotDocument>
   x: Int32 (required)
@@ -1188,6 +1249,7 @@ object GateDocument
   id: Int32 (required)
   level: Int32
   linkedGate: Int32?
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object GateEntranceDocument
@@ -1195,12 +1257,14 @@ object GateEntranceDocument
   exit: Int32?
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object GateExitDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object GenerationInfo
@@ -1252,6 +1316,7 @@ object HeroPlacementDocument
   artifacts: IReadOnlyList<String>
   attack: Int32
   backpack: IReadOnlyList<String>
+  biography: String
   defense: Int32
   id: Int32
   knowledge: Int32?
@@ -1261,6 +1326,7 @@ object HeroPlacementDocument
   name: String
   owner: Int32
   placeholder: Boolean?
+  portrait: String
   skills: IReadOnlyDictionary<String, SkillLevel>
   spellBook: Boolean?
   spellPower: Int32?
@@ -1273,6 +1339,7 @@ object HillFortDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object HireAtMapTavernCommand
@@ -1291,6 +1358,7 @@ object KeymasterDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object LeaveGarrisonCommand
@@ -1300,18 +1368,21 @@ object LootSiteDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object MagiEyeDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object MagiWindowDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object ManaAction
@@ -1400,6 +1471,7 @@ object MapObjectDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 value MapObjectId
@@ -1411,12 +1483,14 @@ object MapTavernDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object MarketplaceDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object MessageAction
@@ -1427,6 +1501,7 @@ object MineDocument
   guard: GuardDocument
   id: Int32 (required)
   level: Int32
+  name: String
   owner: Int32?
   x: Int32 (required)
   y: Int32 (required)
@@ -1441,6 +1516,7 @@ object MonsterDocument
   id: Int32 (required)
   level: Int32
   mode: GuardMode?
+  name: String
   neverFlees: Boolean
   randomTier: Int32?
   x: Int32 (required)
@@ -1482,12 +1558,14 @@ object ObeliskDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object ObservatoryDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object OrderCaravanCommand
@@ -1511,6 +1589,7 @@ object PandorasBoxDocument
   mana: Int32?
   message: String
   morale: Int32?
+  name: String
   resources: IReadOnlyDictionary<ResourceType, Int32>
   skills: IReadOnlyDictionary<String, SkillLevel>
   spellPower: Int32?
@@ -1524,6 +1603,7 @@ object PlayerIsCondition
   player: Int32
 object PlayerIsHumanCondition
 object PlayerSlotDocument
+  factions: IReadOnlyList<String>
   isHuman: Boolean
   maxHeroes: Int32?
   name: String
@@ -1537,6 +1617,7 @@ object PrisonDocument
   hero: String
   id: Int32 (required)
   level: Int32
+  name: String
   prisonerLevel: Int32?
   x: Int32 (required)
   y: Int32 (required)
@@ -1548,6 +1629,7 @@ object QuestSiteDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   quest: String
   x: Int32 (required)
   y: Int32 (required)
@@ -1581,6 +1663,7 @@ object RefugeeCampDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object RemoveCellAction
@@ -1598,12 +1681,14 @@ object ResourcePileDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object ResourceProviderDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   owner: Int32?
   x: Int32 (required)
   y: Int32 (required)
@@ -1631,12 +1716,14 @@ object SacrificialAltarDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object SanctuaryDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object SaveInfo
@@ -1654,6 +1741,7 @@ object ScenarioRulesDocument
   elimination: Boolean
   graceDays: Int32?
   maxHeroes: Int32?
+  rumours: IReadOnlyList<String>
   standardVictory: Boolean
   victory: IReadOnlyList<ConditionDocument>
   weekEvents: WeekEventsDocument
@@ -1662,6 +1750,7 @@ object SceneryDocument
   id: Int32 (required)
   level: Int32
   mirrored: Boolean?
+  name: String
   turns: Int32?
   x: Int32 (required)
   y: Int32 (required)
@@ -1682,6 +1771,7 @@ object ShrineDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   spell: String
   x: Int32 (required)
   y: Int32 (required)
@@ -1690,6 +1780,7 @@ object SignDocument
   id: Int32 (required)
   level: Int32
   message: String
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object SkillAction
@@ -1700,6 +1791,7 @@ object SkillSchoolDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object SpellAction
@@ -1710,6 +1802,7 @@ object SphinxDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   question: String
   wrong1: String
   wrong2: String
@@ -1753,6 +1846,7 @@ object TownGateDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object TownOwnerCondition
@@ -1770,6 +1864,7 @@ object TrainingSiteDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 object TransformCreaturesCommand
@@ -1786,6 +1881,7 @@ object TreasureChestDocument
   gold: Int32?
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 enum TreasureChestReward: Gold, Experience
@@ -1812,6 +1908,7 @@ object WarMachineFactoryDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   x: Int32 (required)
   y: Int32 (required)
 enum WarMachineSlot: Offensive, Tent, Cart
@@ -1828,6 +1925,7 @@ object WitchHutDocument
   definition: String (required)
   id: Int32 (required)
   level: Int32
+  name: String
   skills: IReadOnlyList<String>
   x: Int32 (required)
   y: Int32 (required)

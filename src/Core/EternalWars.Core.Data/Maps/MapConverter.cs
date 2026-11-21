@@ -21,7 +21,7 @@ public static partial class MapConverter
         ToDocument(state.Map) with
         {
             Players = state.Players
-                .Select(p => new PlayerSlotDocument(p.Name, p.IsHuman, p.Team.Value == p.Id.Value ? null : p.Team.Value, p.MaxHeroes))
+                .Select(p => new PlayerSlotDocument(p.Name, p.IsHuman, p.Team.Value == p.Id.Value ? null : p.Team.Value, p.MaxHeroes, p.Factions?.ToList()))
                 .ToList(),
             TeamsLocked = state.TeamsLocked,
             MinTeams = state.MinTeams,
@@ -43,7 +43,9 @@ public static partial class MapConverter
                     h.Artifacts.Backpack.Count == 0 ? null : h.Artifacts.Backpack.ToList(),
                     h.HasSpellBook,
                     h.HasSpellBook ? h.Spells.Keys.ToList() : null,
-                    h.IsPlaceholder ? true : null))
+                    h.IsPlaceholder ? true : null,
+                    h.Biography,
+                    h.Portrait))
                 .ToList(),
             Objects = state.Objects.Select(ToDocument).ToList(),
             Events = state.MapEvents.Set.IsEmpty ? null : state.MapEvents.Set,
@@ -143,6 +145,7 @@ public static partial class MapConverter
             for (var i = 0; i < document.Players.Count; i++)
             {
                 state.SetHeroLimit(new PlayerId(i), document.Players[i].MaxHeroes);
+                state.SetFactions(new PlayerId(i), document.Players[i].Factions);
             }
 
             return state;
@@ -167,7 +170,8 @@ public static partial class MapConverter
             rules.Bans.Artifacts.Count == 0 ? null : rules.Bans.Artifacts,
             rules.Bans.Spells.Count == 0 ? null : rules.Bans.Spells,
             rules.Bans.Skills.Count == 0 ? null : rules.Bans.Skills),
-        rules.Arena ? true : null);
+        rules.Arena ? true : null,
+        rules.Rumours.Count == 0 ? null : rules.Rumours.ToList());
 
     private static WeekEventsDocument ToDocument(WeekEventSettings events) => new(
         events.Enabled,
@@ -201,6 +205,7 @@ public static partial class MapConverter
             Difficulty = document.Difficulty,
             Bans = ToBans(document.Bans),
             Arena = document.Arena == true,
+            Rumours = document.Rumours?.ToList() ?? [],
         };
 
     /// <summary>The map's bans (v35); skill ids are resolved like everywhere else, and each list is sorted without repeats.</summary>
@@ -235,13 +240,18 @@ public static partial class MapConverter
             throw new FormatException($"Hero {h.Name} is of unknown type '{type}'.");
         }
 
+        if (h.Portrait is { } portrait && !heroRoster.Contains(portrait))
+        {
+            throw new FormatException($"Hero {h.Name} shows the portrait of '{portrait}', who is not in the roster.");
+        }
+
         var skills = h.Skills ?? (h.Type is null ? new Dictionary<string, SkillLevel>() : null);
         try
         {
             var hero = Hero.Create(
                 new HeroId(h.Id), new PlayerId(h.Owner), new MapPosition(h.X, h.Y, h.Level), ToArmy(h, creatures),
                 h.Type is { } id ? heroRoster.Get(id) : null, h.Name, h.Attack, h.Defense, skills, h.Morale ?? 0, h.Luck ?? 0, h.SpellPower, h.Knowledge, h.WarMachines,
-                h.Artifacts, h.Backpack, artifacts, h.SpellBook, h.Spells, placeholder: h.Placeholder == true);
+                h.Artifacts, h.Backpack, artifacts, h.SpellBook, h.Spells, placeholder: h.Placeholder == true, biography: h.Biography, portrait: h.Portrait);
             return hero;
         }
         catch (Exception e) when (e is KeyNotFoundException or ArgumentOutOfRangeException or InvalidOperationException)

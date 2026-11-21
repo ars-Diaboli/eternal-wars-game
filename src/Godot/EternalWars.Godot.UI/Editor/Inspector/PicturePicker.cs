@@ -47,7 +47,12 @@ internal static class PickerItems
 
     /// <summary><paramref name="spells"/> by level and school.</summary>
     public static List<PickerItem> Spells(IEnumerable<SpellDefinition> spells) =>
-        [.. spells.OrderBy(s => s.Level).ThenBy(s => s.School).ThenBy(s => s.Name).Select(s => PickerItem.Of(s.Id.Value, s.Name, $"Level {s.Level}, {s.School}"))];
+    [
+        .. spells.OrderBy(s => s.Level).ThenBy(s => s.School).ThenBy(s => s.Name).Select(s =>
+            SpellIcons.Get(s.Id, PickerItem.PictureSize) is { } icon
+                ? new PickerItem(s.Id.Value, s.Name, $"Level {s.Level}, {s.School}", icon)
+                : PickerItem.Of(s.Id.Value, s.Name, $"Level {s.Level}, {s.School}")),
+    ];
 
     /// <summary>The secondary skills by group.</summary>
     public static List<PickerItem> Skills() =>

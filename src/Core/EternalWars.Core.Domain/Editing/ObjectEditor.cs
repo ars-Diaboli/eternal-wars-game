@@ -174,6 +174,37 @@ public sealed class ObjectEditor
         return EditResult.Ok;
     }
 
+    /// <summary>
+    /// Names an object (ADR-257), trimmed (<see cref="MapObject.IsFitName"/>: at most <see cref="MapObject.NameLength"/> characters, not only
+    /// digits); blank takes the name away (a town's goes back to its definition's). Names should be unique: <see cref="MapValidator"/> reports two
+    /// objects of one name.
+    /// </summary>
+    public EditResult SetName(MapObjectId id, string? name)
+    {
+        if (_context.Object<MapObject>(id) is not { } mapObject)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        var next = string.IsNullOrWhiteSpace(name) ? null : name.Trim();
+        if (next is not null && !MapObject.IsFitName(next))
+        {
+            return EditResult.InvalidValue;
+        }
+
+        if (mapObject is Towns.Town && next == mapObject.Definition.Name)
+        {
+            next = null; // a town named as its definition has no name of its own
+        }
+
+        _context.Edit($"Rename the {mapObject.Definition.Name}", () => mapObject.GivenName, value =>
+        {
+            mapObject.Rename(value);
+            _context.Publish(new MapObjectChanged(mapObject.Id));
+        }, next);
+        return EditResult.Ok;
+    }
+
     /// <summary>Points a one-way entrance at an exit (or clears it with null).</summary>
     public EditResult SetGateExit(MapObjectId entranceId, MapObjectId? exitId)
     {

@@ -130,8 +130,9 @@ public partial class ColourPicker : Button
 }
 
 /// <summary>
-/// A player's town on the new-game screen (ADR-225): the chosen town's crest ("?" for Random), which opens the eight towns' crests in a 2 × 4
-/// panel with a "Random" button under it. Hovering a crest puts the town's name on the status bar.
+/// A player's town on the new-game screen (ADR-225): the chosen town's crest ("?" for Random), which opens the towns' crests, four a row, with
+/// a "Random" button under it; <see cref="Towns"/> are those the map lets the player take (ADR-257). Hovering a crest puts the town's name on the
+/// status bar.
 /// </summary>
 public partial class CrestPicker : Button
 {
@@ -155,6 +156,9 @@ public partial class CrestPicker : Button
 
     /// <summary>The town picked (another than the one shown).</summary>
     public event Action? Changed;
+
+    /// <summary>The towns offered, in their order (the map's factions for the player, ADR-257); Random draws among them.</summary>
+    public IReadOnlyList<string> Towns { get; init; } = BuiltInMapObjects.PlayableTowns;
 
     /// <summary>The chosen town type (<see cref="BuiltInMapObjects.PlayableTowns"/>); null is Random.</summary>
     public string? Town
@@ -183,7 +187,7 @@ public partial class CrestPicker : Button
         var grid = new GridContainer { Columns = 4 };
         grid.AddThemeConstantOverride("h_separation", UiSpacing.Gap);
         grid.AddThemeConstantOverride("v_separation", UiSpacing.Gap);
-        foreach (var town in BuiltInMapObjects.PlayableTowns)
+        foreach (var town in Towns)
         {
             var name = NameOf(town);
             var crest = new Button { FocusMode = FocusModeEnum.None, TooltipText = name, ToggleMode = true, ButtonPressed = town == _town };
@@ -204,7 +208,7 @@ public partial class CrestPicker : Button
         }
 
         box.AddChild(grid);
-        var random = new Button { Text = "Random", FocusMode = FocusModeEnum.None, TooltipText = "A town drawn when the game starts." };
+        var random = new Button { Text = "Random", FocusMode = FocusModeEnum.None, TooltipText = Towns.Count == BuiltInMapObjects.PlayableTowns.Count ? "A town drawn when the game starts." : "One of these towns, drawn when the game starts." };
         random.Pressed += () => Pick(random, null);
         box.AddChild(random);
         return box;

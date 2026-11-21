@@ -24,6 +24,9 @@ public partial class TavernPanel : PanelContainer
     private readonly HBoxContainer _balance = new();
     private readonly HBoxContainer _cards = new();
     private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(500, 0) };
+
+    /// <summary>This week's rumour (ADR-257), hidden when the map has none.</summary>
+    private readonly Label _rumour = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(500, 0), Modulate = UiTheme.TextQuiet };
     private GameSession _session = null!;
     private MapObjectId? _town;
 
@@ -45,6 +48,7 @@ public partial class TavernPanel : PanelContainer
         header.AddChild(guild);
         header.AddCloseButton(Close);
         box.AddChild(_cards);
+        box.AddChild(_rumour);
         box.AddChild(_status);
         Visible = false;
 
@@ -95,6 +99,8 @@ public partial class TavernPanel : PanelContainer
         _balance.AddChild(ResourceIcons.Balance(state.CurrentPlayer.Resources.Gold));
         _cards.ClearChildren(detach: true);
 
+        _rumour.Text = TavernRules.Rumour(state) is { } rumour ? $"Rumour has it: {rumour}" : "";
+        _rumour.Visible = _rumour.Text.Length > 0;
         var offers = TavernRules.Offers(state, state.CurrentPlayer.Id, town);
         if (offers.Count == 0)
         {

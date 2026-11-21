@@ -20,7 +20,7 @@ public enum HeroStatIcon
 /// <summary>
 /// The hero's painted icons: one per skill in <c>res://shared/textures/ui/skills/</c> (named by the skill id, <c>offense.melee.png</c>), one
 /// per stat in <c>res://shared/textures/ui/stats/</c> and one per war machine in <c>res://shared/textures/ui/machines/</c>. Scaled once per size and cached, like <see cref="UiIcons"/>; a missing file gives
-/// null, and callers show the text alone (skills without art yet, such as the magic schools').
+/// null, and callers show the text alone (skills without art yet).
 /// </summary>
 public static class HeroIcons
 {

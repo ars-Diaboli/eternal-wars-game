@@ -10,7 +10,7 @@ namespace EternalWars.Godot.UI.Hud.HeroScreen;
 
 /// <summary>
 /// The four primary stats (with what artifacts add), mana and experience, each after its icon; morale, luck, movement, scouting and waiting
-/// level-ups; what the artifacts give; the specialty.
+/// level-ups; what the artifacts give; the specialty; the biography the map's author wrote (ADR-257).
 /// </summary>
 internal sealed class HeroStatsSection(HeroPanel panel) : HeroSection(panel)
 {
@@ -19,6 +19,11 @@ internal sealed class HeroStatsSection(HeroPanel panel) : HeroSection(panel)
     public Label Stats { get; } = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(UiTheme.ScreenTextWidth, 0) };
 
     public Label Specialty { get; } = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(UiTheme.ScreenTextWidth, 0) };
+
+    public Label Biography { get; } = new()
+    {
+        AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(UiTheme.ScreenTextWidth, 0), Modulate = UiTheme.TextQuiet,
+    };
 
     protected override Node Anchor => Stats;
 
@@ -34,6 +39,8 @@ internal sealed class HeroStatsSection(HeroPanel panel) : HeroSection(panel)
         Badges.AddChild(HeroIcons.StatBadge(HeroStatIcon.Experience, "Experience", $"{hero.Experience}/{ExperienceTable.For(hero.Level + 1)}"));
         Stats.Text = StatsText(hero, State.Spells);
         Specialty.Text = hero.Specialty is { } specialty ? $"Specialty: {specialty.Describe(State.Spells)}" : "No specialty.";
+        Biography.Text = hero.Biography ?? "";
+        Biography.Visible = hero.Biography is not null;
     }
 
     /// <summary>The artifacts and the hero's state, and the army (its morale).</summary>

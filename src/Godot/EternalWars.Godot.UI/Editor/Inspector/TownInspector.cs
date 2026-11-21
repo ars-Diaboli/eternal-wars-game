@@ -24,7 +24,7 @@ internal sealed class TownInspector : InspectorSection<Town>
         if (one is not null)
         {
             row.AddChild(new Label { Text = "Name" });
-            var name = new LineEdit { Text = one.Name, CustomMinimumSize = new Vector2(UiTheme.InspectorNameWidth, 0) };
+            var name = new LineEdit { Text = one.Name, MaxLength = MapObject.NameLength, CustomMinimumSize = new Vector2(UiTheme.InspectorNameWidth, 0) };
             name.TextSubmitted += text => form.Edit(() => form.Editor.Towns.SetName(one.Id, text));
             row.AddChild(name);
         }

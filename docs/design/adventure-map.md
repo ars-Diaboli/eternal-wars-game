@@ -355,7 +355,8 @@ HoMM3 and HotA (ADR-126, built ADR-133; map format v35).
   author's; buildings carry over and dwellings move to the faction's lines of the same tier, as with the editor's type change. Making a town
   random drops its fixed guild spells.
 - **Hero placeholder**: at game start it becomes a free roster hero (not on the map, in a prison or waiting in a tavern; not banned) of its
-  owner's faction: the type of the owner's first town, else the faction chosen on the new-game screen, else one drawn. Any free hero when its
+  owner's faction: the type of the owner's first town, else the faction chosen on the new-game screen, else one drawn; the choice and the
+  draw keep to the factions the map lets the player take (ADR-257). Any free hero when its
   faction has none. It keeps its place, army and artifacts and takes the roster hero's name, class, stats, skills and spells; an empty army
   gets the hero's starter stack. A campaign puts a carried hero there first (ADR-241).
 - **Order**: the placeholders are drawn first when the game starts, from the game's random numbers: towns, then monsters, then heroes; then

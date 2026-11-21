@@ -149,7 +149,8 @@ public static class EmberMarchScenario
         Town Town(string type, MapPosition topLeft, PlayerId? owner, string name)
         {
             var town = (Town)Place(BuiltInMapObjects.TownId(type), topLeft);
-            (town.Owner, town.Name) = (owner, name);
+            town.Owner = owner;
+            town.Rename(name);
             return town;
         }
 
