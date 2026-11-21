@@ -34,6 +34,8 @@
 | [265](#adr-265-fix-its-for-the-maps-problems-adr-250-2026-11-21) | Fix-its for the map's problems (ADR-250, 2026-11-21) | implemented |
 | [266](#adr-266-the-fairness-report-and-the-exports-adr-263-2026-11-21) | The fairness report and the exports (ADR-263, 2026-11-21) | implemented |
 | [267](#adr-267-play-test-from-the-editor-adr-250-2026-11-21) | Play-test from the editor (ADR-250, 2026-11-21) | implemented |
+| [268](#adr-268-template-undo-edit-2-adr-250-2026-11-21) | Template undo (EDIT-2, ADR-250, 2026-11-21) | implemented |
+| [269](#adr-269-template-files-adr-250-2026-11-21) | Template files (ADR-250, 2026-11-21) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -806,3 +808,44 @@ ADR when it is built.
   empty, the game project beside the editor's where there is one. The window refuses choices the game would refuse (a start the player
   cannot use, an arena map not on day 1). A play-test keeps its saves in the temporary folder (`EternalWars/playtest-saves`), apart from
   the player's; its cheats wait for a battle or a question to end and are refused in a LAN game.
+
+### ADR-268: Template undo (EDIT-2, ADR-250, 2026-11-21)
+**Status**: implemented (plan step 5, task 1).
+
+- **Every change is one named step** (`TemplateEditorSession`, Core.Generation): the session keeps an `UndoHistory` whose steps hold the
+  template before and after (templates are values, so a step keeps both and puts one back whole). Names: "Add zone treasure-1",
+  "Change zone middle", "Rename zone a to b", "Move zone x", "Remove zone x", "Connect a – b", "Change connection a – b",
+  "Remove connection a – b", "Change the template's settings", "Arrange the graph". A change that leaves the template as it is (a field
+  left as it was, a zone moved to where it is) records nothing.
+- **Undo, Redo, UndoTo** put a kept template back and publish `TemplateChanged` with `Replaced`, so the views show every part again;
+  `UndoHistoryChanged` and `UnsavedWorkChanged` are the map's events, published on the template's bus. `IUndoSession` (Core.Domain) is
+  what the map's and the template's sessions share for the History list.
+- **A drag is one step**: `BeginStep` / `EndStep` gather the changes between them (the graph opens one when a zone is pressed and closes it
+  on the release, when it is hidden, and before a Delete or a connection); a drag that ends where it began records nothing. An undo, a
+  redo, a load or the question over unsaved work ends an open step first.
+- **Loading** (New, a file, a shipped template, a restored autosave) starts the history anew and counts as saved; zones without a graph
+  place are placed as part of the load (`Load(arrange: true)`), not as a step.
+- **The editor**: Edit > Undo and Redo (Ctrl+Z, Ctrl+Y) work on the tab shown, the template's history on the Template tab. The template
+  editor shows the template's History beside its Issues under the graph (the bottom region's History belongs to the Map tab); a click on a
+  row jumps there. A field of the inspector (text or number) that loses the focus while an undo rebuilds the inspector does not apply
+  what was typed in it.
+
+### ADR-269: Template files (ADR-250, 2026-11-21)
+**Status**: implemented (plan step 5, task 2).
+
+- **`TemplateFileService`** (Godot.UI, Editor/Shell) does for the template what `FileService` does for the map: which file the template
+  is, New, Open and Save as with the file dialog (in the user's templates folder, `user://templates`), Save to the file, the recent files
+  (the editor settings' `template-files` section), the question before unsaved work is left (another template, quitting: the template's
+  question comes first, then the map's), and the autosave every few minutes (the Preferences' interval) while there is unsaved work.
+  The formats are the app's (`ITemplateFiles`, implemented by the editor's `TemplateFiles` with `TemplateSerializer`).
+- **The unsaved marker**: the Template tab reads "Template*", and the template editor's top row names the template with an asterisk.
+- **Shipped templates** open read-only (the top row's Shipped list, Templates > Shipped templates): they have no file, the name says
+  "(shipped, read-only)", and Save asks where to keep a copy.
+- **Autosaves and recovery**: `AutosaveFolder` (Core.Data) holds the session marker and the timed autosaves for both editors;
+  `MapAutosaves` and `TemplateAutosaves` are its two kinds, each in its own folder (`templates/.autosave` for templates). A template
+  autosave left by a session that did not close is offered at start when the map asks nothing, else when the Template tab first shows
+  (never over the map's question); quitting before then offers it first. Until it is offered the session is not marked safe, so a
+  second crash still finds it. A Templates-menu command chosen while that question is open is not run.
+- **Commands**: Templates > New template, Open template…, Recent templates, Shipped templates, Save template, Save template as… (each
+  shows the Template tab first). File > Open, Save and Save as, and their shortcuts, work on the tab shown; New map… stays the map's.
+  The template editor's top row has New, Open…, Shipped…, Save and Save as.

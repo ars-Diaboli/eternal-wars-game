@@ -180,6 +180,9 @@ public partial class EditorWorkspace : Control
         return _pages.Count - 1;
     }
 
+    /// <summary>Gives a page's tab another title (the Template tab's asterisk over unsaved work).</summary>
+    public void SetPageTitle(int page, string title) => _pageTabs.SetTabTitle(page, title);
+
     /// <summary>Shows the page of that number; the others stay as they are, hidden.</summary>
     public void ShowPage(int page)
     {

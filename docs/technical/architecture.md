@@ -256,7 +256,9 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   cannot see `MapDocument`. The editor uses `EditorMapGenerator.Generate`; `MapConverter.ToDocument` saves a map.
 - Templates: model `MapTemplate` (Core.Generation), file `*.ewtemplate.json` via `TemplateSerializer` /
   `BuiltInTemplates` (Core.Data), `TemplateValidator` (errors, fairness), `MapFairness`. `TemplateEditorSession`
-  edits a template without undo and publishes `TemplateChanged`.
+  edits a template, one undo step a change (an `UndoHistory` of whole templates, `IUndoSession` like the map's session), and publishes
+  `TemplateChanged`, `UndoHistoryChanged` and `UnsavedWorkChanged`. Its files are `TemplateFileService` (Godot.UI) over the app's
+  `ITemplateFiles`; both editors' autosaves are an `AutosaveFolder` (Core.Data).
 - Generation touches no shared state and must stay fast (target < 5 s for 256×256×2).
 
 ### Map editor

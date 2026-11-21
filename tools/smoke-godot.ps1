@@ -216,6 +216,15 @@ $scenarios = @(
     # right-drag it onto start-1 to connect, Generate (the map opens in the Map tab).
     @{ Name = 'editor-template-editor'; App = 'EternalWars.MapEditor'; Frames = 70
        Input = '3:click:@Template;10:click:710,405;18:click:@+ Treasure;24:drag:626,440,710,590;30:rdrag:710,590,570,405;44:click:@Generate' },
+    # Template undo (EDIT-2, ADR-250): on the Template tab add a treasure zone and a junction, open the template's History under the graph;
+    # Ctrl+Z twice undoes both (dim in the list), Ctrl+Y redoes the treasure zone; on the Map tab Undo is the map's (nothing to undo).
+    @{ Name = 'editor-template-undo'; App = 'EternalWars.MapEditor'; Frames = 44
+       Input = '3:click:@Template;8:click:@+ Treasure;12:click:@+ Junction;16:click:@History;20:key:Ctrl+Z;24:key:Ctrl+Z;28:key:Ctrl+Y;34:click:@Map;38:key:Ctrl+Z' },
+    # Template files (ADR-250): a treasure zone makes the template unsaved ("Template*"); Save asks where (no file yet) and Enter saves it to
+    # the scenario's templates folder; a junction, then a shipped template (Duel) asks over the unsaved work and "Don't save" opens it
+    # read-only; Ctrl+S on the Template tab asks where to save a copy, and Enter saves it.
+    @{ Name = 'editor-template-files'; App = 'EternalWars.MapEditor'; Frames = 60
+       Input = '3:click:@Template;8:click:@+ Treasure;12:click:@Save;18:key:Enter;24:click:@+ Junction;28:click:@Shipped…;31:choose:Duel;36:click:@Don''t save;42:key:Ctrl+S;48:key:Enter' },
     # The Events tab (EVT-6) on the quests map: open the tab, pick the first event (its tree), then its first action (the node text).
     @{ Name = 'editor-events'; App = 'EternalWars.MapEditor'; Frames = 30; Map = $questsMap
        Input = '3:click:@Events;8:click:1096,170;14:click:1145,436' },
@@ -442,7 +451,7 @@ $results = $selected | ForEach-Object -ThrottleLimit ([Math]::Max(1, $Jobs)) -Pa
     # The editor keeps its workspace layout beside the settings file: every scenario starts from the default layout.
     Remove-Item (Join-Path $dir 'editor-settings.cfg') -ErrorAction SilentlyContinue
     # ... and its maps folder and its autosaves with the session marker, which a run ended by --quit-after leaves behind.
-    Remove-Item (Join-Path $dir 'maps'), (Join-Path $dir 'autosave'), (Join-Path $dir 'stamps'), (Join-Path $dir 'cache') -Recurse -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $dir 'maps'), (Join-Path $dir 'autosave'), (Join-Path $dir 'stamps'), (Join-Path $dir 'cache'), (Join-Path $dir 'templates'), (Join-Path $dir 'template-autosave') -Recurse -ErrorAction SilentlyContinue
     # ... and the files it writes beside its map (exports), so no save dialog asks to overwrite them.
     foreach ($file in @($scenario.Clean)) { if ($file) { Remove-Item (Join-Path $using:Out $file) -ErrorAction SilentlyContinue } }
     if ($scenario.Recovery) {

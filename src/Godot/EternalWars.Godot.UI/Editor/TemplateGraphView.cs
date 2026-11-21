@@ -94,6 +94,21 @@ public partial class TemplateGraphView : Control
         return null;
     }
 
+    /// <summary>A drag ends when the graph is hidden (another tab shows) as well as on the release.</summary>
+    public override void _Notification(int what)
+    {
+        if (what == NotificationVisibilityChanged && !IsVisibleInTree())
+        {
+            EndDrag();
+        }
+    }
+
+    private void EndDrag()
+    {
+        _session.EndStep();
+        _dragging = null;
+    }
+
     public override void _GuiInput(InputEvent @event)
     {
         switch (@event)
@@ -102,7 +117,9 @@ public partial class TemplateGraphView : Control
                 GrabFocus();
                 if (ZoneAt(press.Position) is { } zone)
                 {
+                    _session.EndStep(); // a drag whose release never came ends here
                     _dragging = zone.Id;
+                    _session.BeginStep($"Move zone {zone.Id}"); // the whole drag is one undo step (ADR-268)
                     Select(new GraphSelection(zone.Id, null));
                 }
                 else if (ConnectionAt(press.Position) is { } connection)
@@ -117,6 +134,7 @@ public partial class TemplateGraphView : Control
 
                 break;
             case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: false }:
+                _session.EndStep();
                 _dragging = null;
                 _panning = false;
                 break;
@@ -124,6 +142,7 @@ public partial class TemplateGraphView : Control
                 _connectFrom = ZoneAt(press.Position)?.Id;
                 break;
             case InputEventMouseButton { ButtonIndex: MouseButton.Right, Pressed: false } release:
+                EndDrag(); // a connection is a step of its own, not part of a drag
                 if (_connectFrom is { } from && ZoneAt(release.Position) is { } to && to.Id != from && _session.Connect(from, to.Id))
                 {
                     Select(new GraphSelection(null, _session.Template.Connections.Count - 1));
@@ -159,6 +178,7 @@ public partial class TemplateGraphView : Control
 
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.Delete }:
+                EndDrag(); // a removal is a step of its own, not part of a drag
                 if (Selection.Zone is { } selected)
                 {
                     _session.RemoveZone(selected);

@@ -10,7 +10,7 @@ Core `MapGenerator` (`EternalWars.Core.Generation`, version 8). Shipped template
 ## Goals
 - **Game and editor both generate**: the new-game screen (template, size, players, seed, options; ADR-086) and the editor's
   [Generate](#editor) tab, into an **editable** map (ADR-087).
-- **Templates** (`*.ewtemplate.json`) come from the [template editor](#template-editor), saved to `user://templates`; the editor lists
+- **Templates** (`*.ewtemplate.json`) come from the [template editor](#template-editor), saved to `user://templates` by default; the editor lists
   shipped and valid user templates, the new-game screen only shipped ones so far.
 - **Deterministic** from (template, size, players, seed, generator version), so a seed shares a map; each stage has its own seed stream
   (`SeedStreams`). Output is a scenario `GameState` (ADR-064), saved as an ordinary map by `MapConverter.ToDocument`.
@@ -127,9 +127,16 @@ The rest is the game's scenario assembly, so the map is playable as generated; i
 generator version, and the generator's problems and validator issues are shown. A hero may stand in its own town's entrance.
 
 ## Template editor
-The map editor's **Template** tab (RMG-10, ADR-117, EDIT-3) is a HotA-like editor: a zone graph, a top row (New, Open, Save,
-add zones, size, seed, Generate) and an inspector for the template, a zone or a connection; terrains and neutral town types are edited in
-the file. Core `TemplateEditorSession`: every change publishes `TemplateChanged` with the validator's issues; **no undo**.
+The map editor's **Template** tab (RMG-10, ADR-117, EDIT-3) is a HotA-like editor: a zone graph, a top row (the template's name, New,
+Open, Shipped, Save, Save as, add zones, arrange, size, seed, Generate), an inspector for the template, a zone or a connection, and under
+the graph the validator's issues and the template's undo history; terrains and neutral town types are edited in the file. Core
+`TemplateEditorSession`: every change publishes `TemplateChanged` with the validator's issues and is one named undo step (EDIT-2,
+ADR-268); dragging a zone is one step. Ctrl+Z and Ctrl+Y undo and redo on the Template tab, and a click in the History list jumps.
+
+**Files** (ADR-269), as for maps: Open and Save as with the file dialog (the user's templates folder first), Save, recent templates
+(Templates menu), an asterisk over unsaved work ("Template*" on the tab), the question before unsaved work is left, an autosave every
+few minutes while there is unsaved work, and after a session that did not close the offer to restore it (at start, or when the
+Template tab first shows if the map asked something). A shipped template opens read-only and Save keeps a copy. On the Template tab, File > Open, Save and Save as act on the template.
 
 ## Scope
 - **In 1.0**: mirrored generation; saving generated maps as map files as well as reproducing them from the seed.

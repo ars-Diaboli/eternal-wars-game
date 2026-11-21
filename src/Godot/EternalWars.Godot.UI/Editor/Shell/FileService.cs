@@ -193,8 +193,8 @@ public partial class FileService : Node
         }
     });
 
-    /// <summary>Closes the editor, after the question over unsaved work.</summary>
-    public void Quit() => WhenSafe(() =>
+    /// <summary>Closes the editor, after the question over unsaved work; <paramref name="ending"/> runs just before it closes.</summary>
+    public void Quit(Action? ending = null) => WhenSafe(() =>
     {
         try
         {
@@ -205,6 +205,7 @@ public partial class FileService : Node
             GD.PushWarning($"Could not end the autosave session: {e.Message}");
         }
 
+        ending?.Invoke();
         GetTree().Quit();
     });
 
@@ -263,7 +264,7 @@ public partial class FileService : Node
     }
 
     /// <summary>The map's file's name without its extension, else a file name made from the map's name.</summary>
-    private string MapTitle => Path is null ? SafeName(_editor.Scenario.Map.Name) : FileTitle(Path);
+    private string MapTitle => Path is null ? EditorFileDialog.SafeName(_editor.Scenario.Map.Name) : FileTitle(Path);
 
     /// <summary>A file dialog in the map's folder (else the maps folder), one at a time; <paramref name="picked"/> gets the path chosen.</summary>
     private void ShowDialog(string title, bool save, string filter, string? file, Action<string> picked)
@@ -274,36 +275,7 @@ public partial class FileService : Node
         }
 
         var folder = Path is null ? _maps.Folder : System.IO.Path.GetDirectoryName(Path)!;
-        Directory.CreateDirectory(_maps.Folder);
-        var dialog = new FileDialog
-        {
-            Title = title,
-            FileMode = save ? FileDialog.FileModeEnum.SaveFile : FileDialog.FileModeEnum.OpenFile,
-            Access = FileDialog.AccessEnum.Filesystem,
-            UseNativeDialog = _systemDialogs,
-            Filters = [filter],
-            CurrentDir = Directory.Exists(folder) ? folder : _maps.Folder,
-        };
-        if (file is not null)
-        {
-            dialog.CurrentFile = file;
-        }
-
-        _dialog = dialog;
-        AddChild(dialog);
-        dialog.FileSelected += path =>
-        {
-            CloseDialog();
-            picked(path);
-        };
-        dialog.Canceled += CloseDialog;
-        dialog.PopupCentered(new Vector2I(900, 600));
-    }
-
-    private void CloseDialog()
-    {
-        _dialog?.QueueFree();
-        _dialog = null;
+        _dialog = EditorFileDialog.Open(this, title, save, filter, file, folder, _maps.Folder, _systemDialogs, picked, () => _dialog = null);
     }
 
     private void Load(string path)
@@ -484,12 +456,6 @@ public partial class FileService : Node
     {
         var name = System.IO.Path.GetFileName(path);
         return name.EndsWith(_maps.Extension, StringComparison.OrdinalIgnoreCase) ? name[..^_maps.Extension.Length] : name;
-    }
-
-    private static string SafeName(string name)
-    {
-        var safe = string.Concat(name.Select(c => System.IO.Path.GetInvalidFileNameChars().Contains(c) ? '_' : c)).Trim();
-        return safe.Length == 0 ? "untitled" : safe;
     }
 
     /// <summary>A map file's path: the map extension is added to a name typed without it (".json" alone is completed, not doubled).</summary>

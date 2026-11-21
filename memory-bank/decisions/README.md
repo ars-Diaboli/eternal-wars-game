@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-268.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-270.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -294,3 +294,5 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [265](random-maps-and-editor.md#adr-265-fix-its-for-the-maps-problems-adr-250-2026-11-21) | random-maps-and-editor | Fix-its for the map's problems (ADR-250, 2026-11-21) | implemented |
 | [266](random-maps-and-editor.md#adr-266-the-fairness-report-and-the-exports-adr-263-2026-11-21) | random-maps-and-editor | The fairness report and the exports (ADR-263, 2026-11-21) | implemented |
 | [267](random-maps-and-editor.md#adr-267-play-test-from-the-editor-adr-250-2026-11-21) | random-maps-and-editor | Play-test from the editor (ADR-250, 2026-11-21) | implemented |
+| [268](random-maps-and-editor.md#adr-268-template-undo-edit-2-adr-250-2026-11-21) | random-maps-and-editor | Template undo (EDIT-2, ADR-250, 2026-11-21) | implemented |
+| [269](random-maps-and-editor.md#adr-269-template-files-adr-250-2026-11-21) | random-maps-and-editor | Template files (ADR-250, 2026-11-21) | implemented |

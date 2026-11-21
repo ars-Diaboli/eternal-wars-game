@@ -6,39 +6,43 @@ using Godot;
 namespace EternalWars.Godot.UI.Editor;
 
 /// <summary>
-/// The undo history as a list (EDIT-1, ADR-250): the state the history starts from, then every step, oldest first. The row of the state the
-/// map is in is selected and the undone steps after it are dim; a click on a row jumps there (<see cref="MapEditorSession.UndoTo"/>).
+/// An undo history as a list (EDIT-1, EDIT-2, ADR-250): the state the history starts from, then every step, oldest first. The row of the
+/// state the map (or the template) is in is selected and the undone steps after it are dim; a click on a row jumps there
+/// (<see cref="IUndoSession.UndoTo"/>). The map's is a tab of the bottom region; the template editor shows the template's beside its issues.
 /// Only a click of the left button jumps: the list takes no keys (no focus, no search by typing), so a key meant for the map or a
 /// shortcut never moves the history.
 /// </summary>
 public partial class HistoryPanel : ItemList
 {
-    private MapEditorSession _editor = null!;
+    private IUndoSession _session = null!;
+    private string _thing = "map";
 
-    public void Bind(MapEditorSession editor)
+    /// <summary>The history of <paramref name="session"/>; <paramref name="thing"/> names what it edits ("map", "template") in the tooltips.</summary>
+    public void Bind(IUndoSession session, string thing = "map")
     {
-        _editor = editor;
+        _session = session;
+        _thing = thing;
         AllowSearch = false;
         FocusMode = FocusModeEnum.None;
         ItemClicked += (index, _, button) =>
         {
-            if (button == (long)MouseButton.Left && (int)index != _editor.History.Position)
+            if (button == (long)MouseButton.Left && (int)index != _session.History.Position)
             {
-                _editor.UndoTo((int)index);
+                _session.UndoTo((int)index);
             }
         };
         // At the end of the frame: a jump is made from this list's own signal, and the list is not rebuilt inside it.
-        new RefreshScheduler(this, Refresh).On<UndoHistoryChanged>(editor.Events);
+        new RefreshScheduler(this, Refresh).On<UndoHistoryChanged>(session.Events);
         Refresh();
     }
 
     private void Refresh()
     {
         Clear();
-        var history = _editor.History;
+        var history = _session.History;
         var steps = history.Steps;
         AddItem("Start");
-        SetItemTooltip(0, "The map before the first step the history keeps");
+        SetItemTooltip(0, $"The {_thing} before the first step the history keeps");
         for (var i = 0; i < steps.Count; i++)
         {
             var index = AddItem($"{i + 1}. {steps[i]}");

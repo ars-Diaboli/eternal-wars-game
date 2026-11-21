@@ -9,6 +9,17 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 5 task 2 (ADR-269): template files. `TemplateFileService` (Godot.UI, Editor/Shell) over the app's
+  `ITemplateFiles` (`TemplateFiles` in the editor): New, Open, Save, Save as, recent, shipped templates read-only (saved as a copy),
+  "Template*" over unsaved work, the question before leaving it (quitting asks for the template first), the autosave and its recovery
+  offered when the Template tab first shows. `AutosaveFolder` (Core.Data) is shared by `MapAutosaves` and `TemplateAutosaves`;
+  `EditorFileDialog` is both services' dialog. File > Open / Save / Save as follow the tab shown. Tests `TemplateAutosavesTests`; smoke
+  `editor-template-files`.
+- Editor overhaul, step 5 task 1 (ADR-268): template undo. `TemplateEditorSession` records every change as a named step of whole
+  templates (`UndoHistory`, `IUndoSession` shared with `MapEditorSession`), `BeginStep`/`EndStep` for a drag, `Load` starts the history
+  anew, `TemplateChanged.Replaced` after an undo; the template editor shows its History beside the Issues, and Undo / Redo follow the tab
+  shown. Tests in `TemplateEditorSessionTests`; smoke `editor-template-undo`. Next: step 5 task 3 (zones as cards), or step 3's
+  drop-downs.
 - Editor icons: 77 files cut from the owner's sheets of `editor-icon-prompts.md` (all but C4 and C7) into `textures/ui/icons/`;
   `UiIcon` has their values (the file name is the value in snake case), `IEditorTool.Icon` gives each tool its own, and the commands,
   panel tabs, problems, layers, favourites, brush and height options and the template editor's lists show them. The view and map
@@ -194,7 +205,7 @@ Detail: [roadmap.md](roadmap.md).
 2. The prologue map (CAMP-1), as the first map of a campaign; Border Watch's story is a placeholder.
 3. The remaining Phase 5 items in [roadmap.md](roadmap.md) ("Presentation and UI", "Town screen overhaul", "Editor overhaul",
    "Platform and art", "Roster"); the town screen overhaul starts with the owner's answers (TOWN-14 … TOWN-23), the editor
-   overhaul continues with step 2 task 7 (the step 0 greybox of the wizard is still open).
+   overhaul continues with step 5 task 3 (step 3's drop-downs and the step 0 greybox of the wizard are still open).
 4. The "Code health" list in [roadmap.md](roadmap.md): skills, heroes and town types as typed ids; `InfoSheets` as data once localisation
    is decided (ADR-239).
 

@@ -6,42 +6,48 @@ using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Generation;
 using EternalWars.Godot.Shared.Events;
+using EternalWars.Godot.UI.Editor.Shell;
 using EternalWars.Godot.UI.Hud;
 using Godot;
 
 namespace EternalWars.Godot.UI.Editor;
 
-/// <summary>A template the editor can open: its name and how to read it (a shipped one or a file in the user's templates folder).</summary>
-public sealed record TemplateSource(string Name, Func<MapTemplate> Open);
-
 /// <summary>
-/// What the app does for the template editor: the templates it can open, saving one (returns a message), and generating a map from one in the map
-/// editor (returns null when the map is open, else why not).
+/// What the app does for the template editor: the template's files (<see cref="TemplateFileService"/>), and generating a map from a template in
+/// the map editor (returns null when the map is open, else why not).
 /// </summary>
-public sealed record TemplateEditorHost(
-    Func<IReadOnlyList<TemplateSource>> Templates,
-    Func<MapTemplate, string> Save,
-    Func<MapTemplate, int, ulong, string?> Generate);
+public sealed record TemplateEditorHost(TemplateFileService Files, Func<MapTemplate, int, ulong, string?> Generate);
 
 /// <summary>
 /// The template editor (ADR-070 RMG-10, ADR-117), like HotA's: the zone graph on the left (<see cref="TemplateGraphView"/>), on the right the
-/// settings of the selected zone or connection, or of the template when nothing is selected, and under the graph the validator's issues, live.
-/// Every control applies at once through the <see cref="TemplateEditorSession"/> (no undo, the owner's answer). The top row: New, open a template,
-/// Save (the user's templates folder), add zones, arrange the graph, and Generate (size and seed), which opens the result in the map editor.
-/// The app places it (the editor's Template tab, EDIT-3, ADR-250) and shows the map once one was generated.
+/// settings of the selected zone or connection, or of the template when nothing is selected, and under the graph the validator's issues, live,
+/// and the template's undo history.
+/// Every control applies at once through the <see cref="TemplateEditorSession"/>, one undo step each (EDIT-2, ADR-268); an undo, a redo or
+/// another template shows every part again. The top row: the template's name (an asterisk over unsaved work), New, Open, a shipped template
+/// (read-only), Save and Save as (the <see cref="TemplateFileService"/>, ADR-269), add zones, arrange the graph, and Generate (size and seed), which
+/// opens the result in the map editor. The app places it (the editor's Template tab, EDIT-3, ADR-250) and shows the map once one was generated.
 /// </summary>
 public partial class TemplateEditorPanel : PanelContainer
 {
     private readonly TemplateGraphView _graph = new() { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
     private readonly VBoxContainer _inspector = new() { CustomMinimumSize = new Vector2(430, 0) };
-    private readonly ItemList _issues = new() { CustomMinimumSize = new Vector2(0, 130) };
-    private readonly OptionButton _open = new();
+    private readonly ItemList _issues = new()
+    {
+        Name = "Issues", TooltipText = "Errors make the template unusable; warnings point at what will likely play badly",
+    };
+
+    private readonly HistoryPanel _history = new() { Name = "History" };
+    private readonly Label _title = new() { CustomMinimumSize = new Vector2(180, 0), ClipText = true };
+    private readonly OptionButton _shipped = new() { TooltipText = "Open a shipped template, read-only: Save keeps a copy in your templates folder" };
     private readonly OptionButton _size = new();
     private readonly LineEdit _seed = new() { CustomMinimumSize = new Vector2(170, 0) };
     private readonly Label _message = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart };
     private TemplateEditorSession _session = null!;
     private TemplateEditorHost _host = null!;
-    private IReadOnlyList<TemplateSource> _sources = [];
+    private RefreshScheduler _replaced = null!;
+
+    /// <summary>The inspector is being rebuilt: a field that loses the focus as it goes does not apply its text.</summary>
+    private bool _rebuilding;
 
     public TemplateEditorSession Session => _session;
 
@@ -55,17 +61,26 @@ public partial class TemplateEditorPanel : PanelContainer
         AddChild(rows);
         var top = new HBoxContainer();
         rows.AddChild(top);
-        top.AddChild(new Label { Text = "Template editor" });
-        Button(top, "New", () => Load(TemplateEditorSession.Blank()), UiIcon.New);
-        _open.ItemSelected += index =>
+        top.AddChild(_title);
+        Button(top, "New", () => _host.Files.New(), UiIcon.New);
+        Button(top, "Open…", () => _host.Files.Open(), UiIcon.Load);
+        _shipped.AddItem("Shipped…");
+        foreach (var template in _host.Files.Shipped)
         {
-            if (index > 0 && index - 1 < _sources.Count)
+            _shipped.AddItem(template.Name);
+        }
+
+        _shipped.ItemSelected += index =>
+        {
+            _shipped.Select(0);
+            if (index > 0)
             {
-                Load(_sources[(int)index - 1].Open());
+                _host.Files.OpenShipped(_host.Files.Shipped[(int)index - 1]);
             }
         };
-        top.AddChild(_open);
-        Button(top, "Save", () => _message.Text = _host.Save(_session.Template));
+        top.AddChild(_shipped);
+        Button(top, "Save", () => _host.Files.Save());
+        Button(top, "Save as", () => _host.Files.SaveAs(), UiIcon.SaveAs);
         top.AddChild(new VSeparator());
         Button(top, "+ Start", () => Add(ZoneType.PlayerStart), ZoneIcon(ZoneType.PlayerStart));
         Button(top, "+ AI start", () => Add(ZoneType.AiStart), ZoneIcon(ZoneType.AiStart));
@@ -83,8 +98,14 @@ public partial class TemplateEditorPanel : PanelContainer
         var left = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         body.AddChild(left);
         left.AddChild(_graph);
-        left.AddChild(new Label { Text = "Issues (errors make the template unusable, warnings point at what will likely play badly):" });
-        left.AddChild(_issues);
+        // Under the graph: the live issues, and the template's undo history (EDIT-2: the bottom region's History is the map's).
+        var below = new TabContainer { CustomMinimumSize = new Vector2(0, 160) };
+        left.AddChild(below);
+        below.AddChild(_issues);
+        below.WithTabIcon(0, UiIcon.Error);
+        below.AddChild(_history);
+        below.WithTabIcon(1, UiIcon.History);
+        _history.Bind(session, "template");
         left.AddChild(_message);
         var scroll = new ScrollContainer { CustomMinimumSize = new Vector2(450, 0), HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
         body.AddChild(scroll);
@@ -92,28 +113,33 @@ public partial class TemplateEditorPanel : PanelContainer
 
         _graph.Bind(session);
         _graph.SelectionChanged += _ => ShowInspector();
+        // An undo, a redo or another template: the inspector and the sizes show it once, at the end of the frame (the history may be moving
+        // through several steps, and the change can come from a control of the inspector itself).
+        _replaced = new RefreshScheduler(this, () =>
+        {
+            ShowInspector();
+            ShowSizes();
+        });
         this.SubscribeWhileInTree<TemplateChanged>(session.Events, e =>
         {
             _graph.Refresh();
             ShowIssues(e.Issues);
+            if (e.Replaced)
+            {
+                _replaced.Request();
+            }
         });
+        // The service and this panel both live as long as the editor: plain events.
+        host.Files.Changed += () => _title.Text = host.Files.Title;
+        host.Files.Opened += Opened;
 
-        RefreshSources();
+        _title.Text = host.Files.Title;
         ShowSizes();
         ShowIssues(session.Issues);
         ShowInspector();
     }
 
-    /// <summary>The template list is read again each time the editor shows: a file may have been saved meanwhile.</summary>
-    public override void _Notification(int what)
-    {
-        if (what == NotificationVisibilityChanged && IsVisibleInTree() && _host is not null)
-        {
-            RefreshSources();
-        }
-    }
-
-    /// <summary>A button; <paramref name="icon"/> stands before its text.</summary>
+    /// <summary>A button; <paramref name="icon"/> stands before its text ("Save" shows only its icon).</summary>
     private static void Button(Container parent, string text, Action pressed, UiIcon? icon = null)
     {
         var button = new Button { Text = text };
@@ -171,32 +197,12 @@ public partial class TemplateEditorPanel : PanelContainer
         _ => null,
     };
 
-    private void RefreshSources()
+    /// <summary>Another template is in the editor: nothing selected, the graph centred.</summary>
+    private void Opened()
     {
-        _sources = _host.Templates();
-        _open.Clear();
-        _open.AddItem("Open…");
-        foreach (var source in _sources)
-        {
-            _open.AddItem(source.Name);
-        }
-
-        _open.Select(0);
-    }
-
-    private void Load(MapTemplate template)
-    {
-        _session.Load(template);
-        if (template.Zones.Any(z => z.GraphX is null || z.GraphY is null))
-        {
-            _session.ArrangeGraph();
-        }
-
         _graph.Select(GraphSelection.None);
         _graph.Refresh(centre: true);
-        ShowSizes();
-        _message.Text = $"Opened {template.Name}.";
-        _open.Select(0);
+        _message.Text = "";
     }
 
     private void Add(ZoneType type)
@@ -262,7 +268,15 @@ public partial class TemplateEditorPanel : PanelContainer
 
     private void ShowInspector()
     {
-        _inspector.ClearChildren(detach: true);
+        _rebuilding = true;
+        try
+        {
+            _inspector.ClearChildren(detach: true);
+        }
+        finally
+        {
+            _rebuilding = false;
+        }
 
         if (_graph.Selection.Zone is { } zone && _session.Template.Zone(zone) is not null)
         {
@@ -281,7 +295,13 @@ public partial class TemplateEditorPanel : PanelContainer
     private void Spin(string label, double value, double min, double max, Action<int> changed, double step = 1, string tooltip = "")
     {
         var spin = new SpinBox { MinValue = min, MaxValue = max, Step = step, Value = value, TooltipText = tooltip, CustomMinimumSize = new Vector2(110, 0) };
-        spin.ValueChanged += v => changed((int)v);
+        spin.ValueChanged += v =>
+        {
+            if (!_rebuilding) // a SpinBox applies its typed text when it loses the focus, as the inspector is rebuilt too
+            {
+                changed((int)v);
+            }
+        };
         _inspector.AddRow(label, labelWidth: 150).AddChild(spin);
     }
 
@@ -320,14 +340,26 @@ public partial class TemplateEditorPanel : PanelContainer
         if (multiline)
         {
             var edit = new TextEdit { Text = value, CustomMinimumSize = new Vector2(270, 70), WrapMode = TextEdit.LineWrappingMode.Boundary };
-            edit.FocusExited += () => submitted(edit.Text);
+            edit.FocusExited += () =>
+            {
+                if (!_rebuilding)
+                {
+                    submitted(edit.Text);
+                }
+            };
             _inspector.AddRow(label, labelWidth: 150).AddChild(edit);
             return;
         }
 
         var line = new LineEdit { Text = value, CustomMinimumSize = new Vector2(220, 0) };
         line.TextSubmitted += text => submitted(text);
-        line.FocusExited += () => submitted(line.Text);
+        line.FocusExited += () =>
+        {
+            if (!_rebuilding)
+            {
+                submitted(line.Text);
+            }
+        };
         _inspector.AddRow(label, labelWidth: 150).AddChild(line);
     }
 
@@ -444,12 +476,21 @@ public partial class TemplateEditorPanel : PanelContainer
             var low = new SpinBox { MinValue = 100, MaxValue = 50000, Step = 100, Value = current.MinValue };
             var high = new SpinBox { MinValue = 100, MaxValue = 50000, Step = 100, Value = current.MaxValue };
             var count = new SpinBox { MinValue = 0, MaxValue = 20, Value = at < z.Treasure.Count ? current.Count : 0 };
-            void Apply() => Zone(id, x =>
+            void Apply()
             {
-                var bands = Enumerable.Range(0, 3).Select(i => i < x.Treasure.Count ? x.Treasure[i] : null).ToList();
-                bands[at] = count.Value < 1 ? null : new TreasureBand((int)low.Value, (int)Math.Max(low.Value, high.Value), (int)count.Value);
-                return x with { Treasure = [.. bands.OfType<TreasureBand>()] };
-            });
+                if (_rebuilding)
+                {
+                    return;
+                }
+
+                Zone(id, x =>
+                {
+                    var bands = Enumerable.Range(0, 3).Select(i => i < x.Treasure.Count ? x.Treasure[i] : null).ToList();
+                    bands[at] = count.Value < 1 ? null : new TreasureBand((int)low.Value, (int)Math.Max(low.Value, high.Value), (int)count.Value);
+                    var treasure = bands.OfType<TreasureBand>().ToList();
+                    return treasure.SequenceEqual(x.Treasure) ? x : x with { Treasure = treasure }; // a band left at count 0 changes nothing
+                });
+            }
             low.ValueChanged += _ => Apply();
             high.ValueChanged += _ => Apply();
             count.ValueChanged += _ => Apply();
