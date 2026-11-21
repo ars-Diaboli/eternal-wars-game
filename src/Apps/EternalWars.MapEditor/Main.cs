@@ -407,6 +407,20 @@ public partial class Main : Node3D
         window.Bind(_editor, Say);
     }
 
+    /// <summary>The map settings window (ADR-256) at <paramref name="tab"/>, else at the tab shown last.</summary>
+    private void OpenSettings(MapSettingsTab? tab)
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        _workspace.ShowPage(EditorWorkspace.MapPage); // its Undo and Redo change the map, so the map shows
+        var window = new MapSettingsWindow { Name = "MapSettings" };
+        _overlays.AddChild(window);
+        window.Bind(_editor, tab);
+    }
+
     /// <summary>Crop to the selection: at once when nothing would be lost, else after the window's question.</summary>
     private void Crop()
     {
@@ -511,16 +525,7 @@ public partial class Main : Node3D
         left.AddChild(_browser);
         _workspace.AddTab(EditorRegion.Left, left);
 
-        // Right: the map's settings and the inspector.
-        var properties = new MapPropertiesPanel { Name = "Map" };
-        _workspace.AddTab(EditorRegion.Right, properties);
-        properties.Bind(_editor);
-        var players = new PlayersPanel { Name = "Players" };
-        _workspace.AddTab(EditorRegion.Right, players);
-        players.Bind(_editor);
-        var conditions = new ConditionsPanel { Name = "Conditions" };
-        _workspace.AddTab(EditorRegion.Right, conditions);
-        conditions.Bind(_editor);
+        // Right: the inspector, the events and "From template"; the map's settings are a window of their own (F7).
         _inspector = new InspectorPanel { Name = "Inspector" };
         _workspace.AddTab(EditorRegion.Right, _inspector);
         _inspector.Bind(_editor, _settings);
@@ -539,9 +544,6 @@ public partial class Main : Node3D
         _events = new EventsPanel { Name = "Events" };
         _workspace.AddTab(EditorRegion.Right, _events);
         _events.Bind(_editor, MapEventNodeJson.Instance);
-        var bans = new BansPanel { Name = "Bans" }; // the map's bans (ADR-126)
-        _workspace.AddTab(EditorRegion.Right, bans, UiIcon.Ban);
-        bans.Bind(_editor);
         _generate = new GeneratePanel { Name = "Generate" }; // "From template" opens it
         _workspace.AddTab(EditorRegion.Right, _generate);
         _generatorTemplates = [.. BuiltInTemplates.All, .. UserTemplates().Select(u => u.Template).Where(t => TemplateValidator.IsValid(t))];
@@ -585,11 +587,7 @@ public partial class Main : Node3D
         _workspace.PageChanged += _commands.NotifyStateChanged;
 
         // The panels and the tools exist: the commands that open them, then the menus and the toolbar built from the registry.
-        Command("map.properties", "Map properties", () => _workspace.ShowTab(properties));
-        Command("map.players", "Players", () => _workspace.ShowTab(players));
-        Command("map.conditions", "Victory and loss conditions", () => _workspace.ShowTab(conditions));
         Command("map.events", "Events", () => _workspace.ShowTab(_events));
-        Command("map.bans", "Bans", () => _workspace.ShowTab(bans), UiIcon.Ban);
         Command("view.problems", "Problems", () => _workspace.ShowTab(problems));
         Command("view.history", "History", () => _workspace.ShowTab(history));
         Command("view.output", "Output", () => _workspace.ShowTab(output));
@@ -613,7 +611,7 @@ public partial class Main : Node3D
             },
             new("Edit", ["edit.undo", "edit.redo", null, "edit.cut", "edit.copy", "edit.paste", "edit.duplicate", "edit.delete", "edit.save-stamp", null, "edit.rotate", "edit.mirror", null, "edit.select-all", "edit.deselect", null, "edit.preferences"]),
             new("View", ["view.palette", null, "view.map-tab", "templates.editor", null, "view.level", "view.grid", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.problems", "view.history", "view.output"]),
-            new("Map", ["map.properties", "map.players", "map.conditions", "map.events", "map.bans", null, "map.resize", "map.crop", null, "view.problems"]),
+            new("Map", ["map.settings", "map.general", "map.players", "map.conditions", "map.bans", "map.week-events", null, "map.events", null, "map.resize", "map.crop", null, "view.problems"]),
             new("Tools", [.. _tools.Tools.Select(ToolCommand)]),
             new("Templates", ["templates.editor", "file.generate"]),
             new("Test", ["test.play"]),
@@ -673,6 +671,12 @@ public partial class Main : Node3D
         Command("edit.save-stamp", "Save selection as stamp", SaveStamp, whyNot: NothingToCopy, onMap: true);
         Command("edit.rotate", "Rotate scenery", () => Turn(mirror: false), shortcut: new(Key.R, Ctrl: true), whyNot: NoScenery, onMap: true);
         Command("edit.mirror", "Mirror scenery", () => Turn(mirror: true), shortcut: new(Key.M, Ctrl: true), whyNot: NoScenery, onMap: true);
+        Command("map.settings", "Map settings", () => OpenSettings(null), UiIcon.Settings, new(Key.F7));
+        Command("map.general", "Name, difficulty and arena", () => OpenSettings(MapSettingsTab.General));
+        Command("map.players", "Players and teams", () => OpenSettings(MapSettingsTab.Players));
+        Command("map.conditions", "Victory and loss", () => OpenSettings(MapSettingsTab.VictoryAndLoss));
+        Command("map.bans", "Bans", () => OpenSettings(MapSettingsTab.Bans), UiIcon.Ban);
+        Command("map.week-events", "Week events", () => OpenSettings(MapSettingsTab.WeekEvents));
         Command("map.resize", "Resize map", OpenResize, onMap: true);
         Command("map.crop", "Crop to selection", Crop,
             whyNot: () => _editor.Selection.Tiles.Count > 0 ? null : "No tile is selected", onMap: true);

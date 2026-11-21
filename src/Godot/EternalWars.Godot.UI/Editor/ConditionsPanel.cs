@@ -5,7 +5,6 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
-using EternalWars.Core.Domain.Turns;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using Godot;
@@ -13,18 +12,13 @@ using Godot;
 namespace EternalWars.Godot.UI.Editor;
 
 /// <summary>
-/// How the scenario is won and lost (ADR-057): the default rules (the last team standing wins, no towns and no heroes
-/// means defeat) can be switched off, and special victory and defeat conditions added or removed. Every change goes
-/// through <see cref="MapEditorSession.SetScenarioRules"/>, so it is undoable. The hero limit per player (ADR-068) and the week and month events
-/// (on or off, weeks without events first, the factions whose creatures they pick; ADR-073, ADR-075) are rules too, and so is the map's
-/// difficulty: what a game with "Map default" complexity counts as in the ranking (ADR-101). The arena switch (ADR-097, ARN-2) turns the map into
-/// one battle; the conditions then stay stored but count for nothing, so their controls are off.
+/// The map settings window's Victory and loss tab (ADR-057): the default rules (the last team standing wins, no towns and no heroes means
+/// defeat) can be switched off, and special victory and defeat conditions added or removed. Every change goes through the session's rules
+/// edit, so it is undoable. On an arena map (ADR-097, the General tab's switch) the conditions stay stored but count for nothing, so their
+/// controls are off.
 /// </summary>
 public partial class ConditionsPanel : VBoxContainer
 {
-    /// <summary>The "not set" item's id: -1 would make Godot number the item itself, and the row would then show nothing selected.</summary>
-    private const int DifficultyNotSet = 1000;
-
     private static readonly (ConditionKind Kind, string Label)[] Kinds =
     [
         (ConditionKind.CaptureTown, "Victory: capture a town"),
@@ -40,24 +34,11 @@ public partial class ConditionsPanel : VBoxContainer
         (ConditionKind.TimeLimit, "Defeat: time limit"),
     ];
 
-    private readonly CheckBox _arena = new()
-    {
-        Text = "Arena: a day to prepare, then one battle decides the game",
-        TooltipText = "Day 1: unlimited movement and building. Day 2 starts with the battle of the two sides' strongest heroes at a combat place; "
-                      + "its winner wins the game. The map needs a combat place.",
-    };
-
-    private readonly Label _arenaNote = new() { Text = "The arena ignores the victory and defeat conditions below." };
+    private readonly Label _arenaNote = new() { Text = "This map is an arena (General tab): it ignores the victory and defeat conditions below." };
     private readonly Button _add = new() { Text = "Add condition" };
     private readonly CheckBox _standard = new() { Text = "Last team standing wins (defeat every enemy)" };
     private readonly CheckBox _elimination = new() { Text = "No towns and no heroes means defeat" };
     private readonly SpinBox _grace = new() { MinValue = 0, MaxValue = 99, Step = 1, Suffix = "days without a town (0 = no countdown)" };
-    private readonly SpinBox _maxHeroes = new() { MinValue = 1, MaxValue = ScenarioRules.HeroLimit, Step = 1, Prefix = "at most", Suffix = "heroes per player" };
-    private readonly OptionButton _difficulty = new() { TooltipText = "What a game with \"Map default\" complexity counts as in the ranking" };
-    private readonly CheckBox _weekEvents = new() { Text = "Week and month events" };
-    private readonly SpinBox _skipWeeks = new() { MinValue = 0, MaxValue = WeekEventSettings.MaxSkipWeeks, Step = 1, Suffix = "week(s) without events at the start" };
-    private readonly HFlowContainer _weeklyFactions = new();
-    private readonly HFlowContainer _monthlyFactions = new();
     private readonly VBoxContainer _list = new();
     private readonly OptionButton _kind = new();
     private readonly OptionButton _player = new();
@@ -79,9 +60,6 @@ public partial class ConditionsPanel : VBoxContainer
     public void Bind(MapEditorSession editor)
     {
         _editor = editor;
-        this.AddHeading("Victory and defeat");
-        _arena.Toggled += on => Change(r => r with { Arena = on });
-        AddChild(_arena);
         AddChild(_arenaNote);
         _standard.Toggled += on => Change(r => r with { StandardVictory = on });
         AddChild(_standard);
@@ -89,32 +67,6 @@ public partial class ConditionsPanel : VBoxContainer
         AddChild(_elimination);
         _grace.ValueChanged += v => Change(r => r with { GraceDays = (int)v });
         AddChild(_grace);
-        _maxHeroes.ValueChanged += v => Change(r => r with { MaxHeroes = (int)v });
-        AddChild(_maxHeroes);
-        _difficulty.AddItem("Difficulty: not set (Normal)", DifficultyNotSet);
-        foreach (var level in Enum.GetValues<Difficulty>())
-        {
-            _difficulty.AddItem($"Difficulty: {level}", (int)level);
-        }
-
-        _difficulty.ItemSelected += index => Change(r => r with
-        {
-            Difficulty = _difficulty.GetItemId((int)index) is var id and not DifficultyNotSet ? (Difficulty)id : null,
-        });
-        AddChild(_difficulty);
-        _weekEvents.Toggled += on => Change(r => r with { WeekEvents = r.WeekEvents with { Enabled = on } });
-        AddChild(_weekEvents);
-        _skipWeeks.ValueChanged += v => Change(r => r with { WeekEvents = r.WeekEvents with { SkipWeeks = (int)v } });
-        AddChild(_skipWeeks);
-        AddChild(new Label { Text = "Weekly events pick creatures of:" });
-        AddChild(_weeklyFactions);
-        AddChild(new Label { Text = "Monthly events pick creatures of:" });
-        AddChild(_monthlyFactions);
-        foreach (var faction in WeekEventSettings.Factions)
-        {
-            _weeklyFactions.AddChild(FactionBox(faction, monthly: false));
-            _monthlyFactions.AddChild(FactionBox(faction, monthly: true));
-        }
 
         AddChild(_list);
 
@@ -152,24 +104,6 @@ public partial class ConditionsPanel : VBoxContainer
         this.SubscribeWhileInTree<UndoHistoryChanged>(editor.Events, _ => Refresh());
     }
 
-    /// <summary>A faction's tick box; ticking or unticking stores the whole list, in the order of <see cref="WeekEventSettings.Factions"/>.</summary>
-    private CheckBox FactionBox(string faction, bool monthly)
-    {
-        var box = new CheckBox { Text = faction }.WithCrest(faction, UiIcons.ButtonSize);
-        box.SetMeta("faction", faction);
-        box.Toggled += on => Change(r =>
-        {
-            var current = monthly ? r.WeekEvents.Monthly : r.WeekEvents.Weekly;
-            IReadOnlyList<string>? next = WeekEventSettings.Factions.Where(f => f == faction ? on : current.Contains(f)).ToList();
-            if (next.Order(StringComparer.Ordinal).SequenceEqual(Core.Domain.Objects.BuiltInMapObjects.PlayableTowns.Order(StringComparer.Ordinal)))
-            {
-                next = null; // the default stays out of the map file
-            }
-            return r with { WeekEvents = monthly ? r.WeekEvents with { MonthlyFactions = next } : r.WeekEvents with { WeeklyFactions = next } };
-        });
-        return box;
-    }
-
     private ConditionKind SelectedKind => (ConditionKind)_kind.GetItemId(_kind.Selected);
 
     /// <summary>Shows only the fields the selected kind uses.</summary>
@@ -192,7 +126,6 @@ public partial class ConditionsPanel : VBoxContainer
     private void Refresh()
     {
         var rules = Scenario.Rules;
-        _arena.SetPressedNoSignal(rules.Arena);
         _arenaNote.Visible = rules.Arena;
         _standard.Disabled = rules.Arena;
         _elimination.Disabled = rules.Arena;
@@ -201,20 +134,6 @@ public partial class ConditionsPanel : VBoxContainer
         _elimination.SetPressedNoSignal(rules.Elimination);
         _grace.SetValueNoSignal(rules.GraceDays);
         _grace.Editable = rules.Elimination && !rules.Arena;
-        _maxHeroes.SetValueNoSignal(rules.MaxHeroes);
-        _difficulty.Selected = _difficulty.GetItemIndex(rules.Difficulty is { } difficulty ? (int)difficulty : DifficultyNotSet);
-        _weekEvents.SetPressedNoSignal(rules.WeekEvents.Enabled);
-        _skipWeeks.SetValueNoSignal(rules.WeekEvents.SkipWeeks);
-        _skipWeeks.Editable = rules.WeekEvents.Enabled;
-        foreach (var (box, chosen) in new[] { (_weeklyFactions, rules.WeekEvents.Weekly), (_monthlyFactions, rules.WeekEvents.Monthly) })
-        {
-            foreach (var check in box.GetChildren().OfType<CheckBox>())
-            {
-                check.SetPressedNoSignal(chosen.Contains((string)check.GetMeta("faction")));
-                check.Disabled = !rules.WeekEvents.Enabled;
-            }
-        }
-
         _list.ClearChildren();
 
         AddRows("Victory", rules.Victory, (r, c) => r with { Victory = r.Victory.Where(x => x != c).ToList() });
@@ -311,7 +230,7 @@ public partial class ConditionsPanel : VBoxContainer
     {
         if (_editor.Map.SetRules(change(Scenario.Rules)) is var result and not EditResult.Ok)
         {
-            _status.Text = result == EditResult.HeroLimit ? "A player already has more heroes than that." : result.ToString();
+            _status.Text = GeneralSettingsPanel.RulesRefusal(result);
             Refresh();
         }
     }

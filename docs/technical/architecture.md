@@ -306,6 +306,9 @@ list of objects as one undo step, all or none, and `ObjectsOfOneKind` gives the 
 inspector's sections take a list of objects (`IInspectorSection.Show`), and `InspectorForm` binds controls to properties with "—"
 for values that differ. `PicturePicker` (Godot.UI) is the searchable picture grid that replaces the drop-downs for creatures,
 heroes, artifacts, spells and skills; `PickerItems` builds its lists.
+Map settings (ADR-256): `MapSettingsWindow` (Godot.UI, Editor.Shell) is an overlay with one tab per settings panel
+(`GeneralSettingsPanel`, `PlayersPanel`, `ConditionsPanel`, `BansPanel`, `WeekEventsPanel`); each panel edits through the session, so
+the window adds no rule of its own.
 Single-value edits are `PropertyEdit<T>` commands; an edit to the value already there records no undo step and publishes
 nothing. The three tile layers paint through `PaintLayer<TValue, TEvent>`. `BeginStroke`/`EndStroke` merge a drag into
 one undo step. `MapValidator` reports what single edits cannot prevent. `MapConnectivity` tells where a hero can walk on a fresh

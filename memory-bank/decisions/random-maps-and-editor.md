@@ -22,6 +22,7 @@
 | [253](#adr-253-the-object-browser-lists-entries-built-in-the-core-the-object-tool-places-its-choice-edit-1-adr-166-adr-250-2026-11-21) | The object browser lists entries built in the core; the Object tool places its choice (EDIT-1, ADR-166, ADR-250, 2026-11-21) | implemented |
 | [254](#adr-254-thumbnails-are-renders-of-the-placeholder-model-cached-by-its-hash-the-inspector-has-six-parts-and-computed-jump-links-edit-1-adr-223-adr-245-adr-253-2026-11-21) | Thumbnails are renders of the placeholder model cached by its hash; the inspector has six parts and computed jump links (EDIT-1, ADR-223, ADR-245, ADR-253, 2026-11-21) | implemented |
 | [255](#adr-255-multi-edit-writes-one-object-property-to-several-objects-of-one-kind-as-one-all-or-nothing-step-pickers-are-searchable-picture-grids-edit-1-adr-223-adr-245-adr-254-2026-11-21) | Multi-edit writes one object property to several objects of one kind as one all-or-nothing step; pickers are searchable picture grids (EDIT-1, ADR-223, ADR-245, ADR-254, 2026-11-21) | implemented |
+| [256](#adr-256-the-map-settings-are-one-window-with-tabs-over-the-editor-each-tab-one-of-the-settings-panels-edit-1-adr-250-adr-255-2026-11-21) | The map settings are one window with tabs over the editor, each tab one of the settings panels (EDIT-1, ADR-250, ADR-255, 2026-11-21) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -534,3 +535,17 @@ ADR when it is built.
   moved into place.
 - **Jump links name only what a quest can mean**: a quest's monster or town link is offered only when the id is a monster or town on
   the map and not the quest object itself; a jump to an object or hero switches to the Select tool, so the next click selects.
+
+### ADR-256: The map settings are one window with tabs over the editor, each tab one of the settings panels (EDIT-1, ADR-250, ADR-255, 2026-11-21)
+**Status**: implemented (plan step 3, task 7).
+
+- **A window, not a region**: the map's settings are set once in a while, not beside the map, so they leave the right region (which
+  keeps the inspector, the events and "From template") for `MapSettingsWindow`, an overlay like Preferences, opened with Map → Map
+  settings or F7; the Map menu's other entries open it at a tab, and it opens again at the tab shown last.
+- **Tabs**: General (name, description, difficulty, hero limit, arena switch), Players (slots, teams locked, team counts), Victory and
+  loss, Bans, Week events. The arena switch is a general setting: it changes what the map is, and the Victory and loss tab only greys
+  its rows while it is on. Rumours and the texts list come with their own tasks (EDIT-11, EDIT-12).
+- **Changes apply at once**: each control is an undoable session edit, as the panels were; there is no OK or Cancel. The window has its
+  own Undo and Redo (and Ctrl+Z, Ctrl+Y outside a text field), since the editor takes no other input while it is open.
+- **The panels stay the units**: each tab is a panel bound to the session (`GeneralSettingsPanel`, `PlayersPanel`, `ConditionsPanel`,
+  `BansPanel`, `WeekEventsPanel`), so the window holds no rule and no state of the map.

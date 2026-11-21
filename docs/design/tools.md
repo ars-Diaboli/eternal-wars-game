@@ -4,7 +4,7 @@
 
 ## Map editor
 A **separate standalone app**, not an in-game mode (ADR-023). Core `MapEditorSession` (undo / redo) with Godot UI (tool palette, inspector,
-properties, players, validation and conditions panels):
+problems panel, map settings window):
 - terrain painting, roads and rivers with a [brush](#editor-brushes) (drag strokes, lines, flood fill); **start zones** (the Start zone tool: a player's zone or Erase, shown as
   tiles of the player's colour; MP-4, ADR-197), where a player's day stays its own in a simultaneous first week;
 - the ground's height (ADR-181, ADR-182), the "Height" tool: raise, lower, level (towards the height where the stroke started) and smooth
@@ -19,15 +19,14 @@ properties, players, validation and conditions panels):
 - objects: placement from the [object browser](#editor-browser) and removal ([erase by kind](#editor-brushes)), gate linking, mine owners and guards, map dwellings, artifact pickups, riddles, witch huts, shrines;
 - heroes (type, army, war machines, morale and luck, artifacts, spell book, placeholder), monsters (with guard mode, ADR-065; random by
   tier), towns (buildings, dwellings, garrison, guild spells, random faction);
-- player slots and teams, map name and description, victory and defeat conditions (ADR-057);
-- map events, the "Events" tab ([adventure-map.md](adventure-map.md#pandoras-box-and-map-events), ADR-129), and the map's bans, the "Bans"
-  tab ([adventure-map.md](adventure-map.md#map-bans-and-random-placeholders), ADR-133);
+- the map settings window: map name and description, player slots and teams, victory and defeat conditions (ADR-057), the map's bans
+  ([adventure-map.md](adventure-map.md#map-bans-and-random-placeholders), ADR-133) and the week events;
+- map events, the "Events" tab ([adventure-map.md](adventure-map.md#pandoras-box-and-map-events), ADR-129);
 - validation; [generate from a template and the template editor](random-maps.md#editor).
 
 **The window** (EDIT-1, ADR-250): a bar on top (the menus, the Map and Template tabs, the toolbar), three docked regions around the map
-view, each a tab box, and a status bar at the bottom. The tools and the options of the one in use are on the left, the map's settings
-and the inspector on the right (Map, Players, Conditions, Inspector, Events, Bans, Generate), Problems, History and Output at the
-bottom. A region is resized with its splitter and collapsed with its
+view, each a tab box, and a status bar at the bottom. The tools and the options of the one in use are on the left, the inspector
+on the right (Inspector, Events, Generate), Problems, History and Output at the bottom. A region is resized with its splitter and collapsed with its
 button on the toolbar or in the View menu; F11 hides them all and shows them again. A panel larger than its region scrolls. The
 splitter positions, the collapsed regions and each region's open tab are kept in `editor-settings.cfg` in the user data folder.
 
@@ -35,8 +34,23 @@ splitter positions, the collapsed regions and each region's open tab are kept in
 [template editor](random-maps.md#template-editor), which fills the room between the bars. Both stay as they were left while the other
 shows; the template editor also stays so when another map is opened. The File menu and its shortcuts always act on the map (the
 template has its own Save button). Generating a map in the Template tab opens it in the Map tab. While the Template tab shows, the commands that work on the map's
-view (undo and redo, the level, the grid, the regions, the tools) are greyed; a command that opens one of the map's panels shows the
-Map tab.
+view (undo and redo, the level, the grid, the regions, the tools) are greyed; a command that opens one of the map's panels or the map
+settings window shows the Map tab.
+
+**Map settings** (EDIT-1, ADR-256): one window over the editor, opened with Map → Map settings or F7 (the Map menu's other entries
+open it at a tab). Its tabs:
+- **General**: the map's name and description ("Apply name and description" sets both), its difficulty (ADR-101), the hero limit per
+  player (ADR-068) and the arena switch (ADR-161);
+- **Players**: the player slots (name, human or computer by default, team, own hero limit; add a slot, remove the last), whether the
+  setup screen may change teams, and the team counts it must keep to (ADR-117);
+- **Victory and loss** (ADR-057): the default rules and the special conditions; on an arena map they are kept but greyed out;
+- **Bans** (ADR-133);
+- **Week events** (ADR-084): on or off, the weeks without events at the start, the factions whose creatures the weekly and the monthly
+  events pick.
+
+Each change is an undo step at once, as in a panel. The window's Undo and Redo (also Ctrl+Z and Ctrl+Y outside a text field) take
+back any step while it is open; nothing else in the editor takes input then. Close, Escape or F7 closes it; it opens again at the tab
+shown last.
 
 **The look**: the game's theme (ADR-191) in a compact variant: the same colours, a 14 px font, tighter rows and gaps and lower buttons.
 Every tool and command has an icon in the menus, on the toolbar and in the palette; where the art does not exist yet it is a
@@ -60,8 +74,8 @@ placeholder, a coloured tile with the name's two letters.
 **Commands**: every action is a command with a name, an icon, an optional shortcut, and a check whether it can run now. The menus
 (File, Edit, View, Map, Tools, Templates, Test, Help) and the toolbar are built from the commands; an item that cannot run is greyed
 and says why in its tooltip. Shortcuts: the File menu's, Ctrl+Z undo, Ctrl+Y redo, Ctrl+X cut, Ctrl+C copy, Ctrl+V paste, Ctrl+D duplicate, Delete, Ctrl+A select all, Escape
-deselect, Ctrl+R rotate scenery, Ctrl+M mirror scenery, the tools' keys (T Terrain, O Object, E Erase, V Select, M Move), L the next level, F11 the panels, Ctrl+Shift+P the command palette, Ctrl+, Preferences. The Map menu opens the map's
-tabs, the Tools menu picks a tool. Test (F5) and Help (F1) are in their menus and greyed until they are built.
+deselect, Ctrl+R rotate scenery, Ctrl+M mirror scenery, the tools' keys (T Terrain, O Object, E Erase, V Select, M Move), L the next level, F11 the panels, F7 the map settings, Ctrl+Shift+P the command palette, Ctrl+, Preferences. The Map
+menu opens the map settings (at a tab) and the Events tab, the Tools menu picks a tool. Test (F5) and Help (F1) are in their menus and greyed until they are built.
 
 **Selection** (EDIT-1, ADR-250). The selection holds tiles, objects, heroes and map events. It is not an undo step, and a thing that
 leaves the map leaves the selection.

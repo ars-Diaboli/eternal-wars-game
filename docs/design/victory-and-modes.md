@@ -92,7 +92,7 @@ In priority order:
     other hero brings it its army and war machines.
   - **What day 1 shows** (ADR-161): on the preparation day a right click on a Pandora's Box shows its contents and guard (its "Open it?"
     prompt too), on a Shrine its spell, on a Witch Hut its skills, on a quest object its current stage (what it asks, wants, takes and gives).
-  - **In the editor** (ADR-161): the "Arena" switch heads the Conditions tab; while it is on, the victory and defeat rows are greyed out
+  - **In the editor** (ADR-161): the "Arena" switch is on the map settings window's General tab; while it is on, the Victory and loss tab's rows are greyed out
     (kept, not counted). Combat places are ordinary objects of the Object tool. The validator: an error without a combat place or with one
     whose attack cell is impassable; warnings when two enemies' heroes can reach the same ground on day 1 (from their heroes and town
     entrances, through gates; monsters, garrisons and barriers count as passable), for map events that do something only after day 1 (by
