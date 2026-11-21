@@ -12,8 +12,10 @@ namespace EternalWars.Godot.UI.Editor;
 /// The object browser (EDIT-1, ADR-253): everything that can be put on the map, by category, with a search, a terrain filter, the
 /// Favourites and the Recent list (kept in the editor's settings) and the saved stamps. A click makes an entry the Object tool's
 /// choice (<see cref="BrowserChoice"/>); a right click adds it to the favourites or takes it out. The card at the bottom shows the
-/// entry under the pointer, or the chosen one: its footprint, its size and a one-line rule. The pictures are placeholders until
-/// thumbnails exist.
+/// entry under the pointer, or the chosen one: its picture, its footprint, its size and a one-line rule. An entry's picture
+/// (ADR-254) is its icon where one exists (a town's crest, a resource, the hero), else its model rendered by
+/// <see cref="ThumbnailRenderer"/>; a monster and a named artifact, whose models are all alike and whose portraits do not exist yet,
+/// keep the lettered placeholder.
 /// </summary>
 public partial class ObjectBrowser : VBoxContainer
 {
@@ -24,13 +26,29 @@ public partial class ObjectBrowser : VBoxContainer
     private const string RecentHeader = "⟲ Recent";
     private const string StampsHeader = "Stamps";
 
+    /// <summary>A picture's side in the list, in pixels.</summary>
+    private const int ListPicture = 18;
+
+    /// <summary>The picture's side on the card.</summary>
+    private const int CardPicture = 56;
+
     /// <summary>How many found entries the list shows: more are found by typing more.</summary>
     private const int MaxFound = 60;
 
     private readonly LineEdit _search = new() { PlaceholderText = "Search objects…", ClearButtonEnabled = true, SizeFlagsHorizontal = SizeFlags.ExpandFill };
     private readonly OptionButton _terrain = new() { TooltipText = "Shows only the scenery made for a terrain", SizeFlagsHorizontal = SizeFlags.ExpandFill };
     private readonly VBoxContainer _list = new() { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+    private readonly ThumbnailRenderer _thumbnails = new() { Name = "Thumbnails" };
+    private readonly TextureRect _preview = new()
+    {
+        CustomMinimumSize = new Vector2(CardPicture, CardPicture), ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+        StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, SizeFlagsVertical = SizeFlags.ShrinkBegin,
+    };
+
     private readonly FootprintPicture _picture = new();
+
+    /// <summary>The entry the card shows, so a picture that arrives late goes to the card only while it still shows that entry.</summary>
+    private BrowserEntry? _shown;
     private readonly Label _name = new() { ClipText = true, SizeFlagsHorizontal = SizeFlags.ExpandFill };
     private readonly Label _detail = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, SizeFlagsHorizontal = SizeFlags.ExpandFill };
     private readonly Button _favourite = new() { Text = "★", ToggleMode = true, TooltipText = "Favourite: keeps the chosen entry under Favourites (also a right click on an entry)" };
@@ -54,11 +72,14 @@ public partial class ObjectBrowser : VBoxContainer
     /// <summary>
     /// Shows <paramref name="catalog"/>; a click chooses through <paramref name="choice"/>, the kept lists are read from and written to
     /// <paramref name="settings"/>; <paramref name="stampNames"/> lists the saved stamps and <paramref name="pasteStamp"/> puts one on
-    /// the pointer.
+    /// the pointer. The rendered pictures are kept in <paramref name="thumbnailFolder"/> (null: not kept).
     /// </summary>
     public void Bind(
-        BrowserCatalog catalog, BrowserChoice choice, EditorSettingsFile settings, Func<IReadOnlyList<string>> stampNames, Action<string> pasteStamp)
+        BrowserCatalog catalog, BrowserChoice choice, EditorSettingsFile settings, Func<IReadOnlyList<string>> stampNames, Action<string> pasteStamp,
+        string? thumbnailFolder = null)
     {
+        AddChild(_thumbnails);
+        _thumbnails.Bind(thumbnailFolder);
         (_catalog, _choice, _settings, _stampNames, _pasteStamp) = (catalog, choice, settings, stampNames, pasteStamp);
         _favourites = settings.Get(Section, FavouritesKey, System.Array.Empty<string>()).AsStringArray();
         _recent = settings.Get(Section, RecentKey, System.Array.Empty<string>()).AsStringArray();
@@ -84,11 +105,12 @@ public partial class ObjectBrowser : VBoxContainer
         card.AddThemeStyleboxOverride("panel", UiTheme.Box(UiTheme.ButtonFace, UiTheme.BorderDim, UiSpacing.Padding));
         var row = new HBoxContainer();
         card.AddChild(row);
-        row.AddChild(_picture);
+        row.AddChild(_preview);
         var text = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         row.AddChild(text);
         var title = new HBoxContainer();
         title.AddChild(_name);
+        title.AddChild(_picture);
         title.AddChild(_favourite);
         text.AddChild(title);
         _detail.AddThemeColorOverride("font_color", UiTheme.TextQuiet);
@@ -271,10 +293,23 @@ public partial class ObjectBrowser : VBoxContainer
     {
         var button = new Button
         {
-            Text = entry.Name, Icon = PlaceholderIcons.Of(entry.Name), Alignment = HorizontalAlignment.Left, ClipText = true,
+            Text = entry.Name, Alignment = HorizontalAlignment.Left, ClipText = true,
             ToggleMode = true, ButtonPressed = entry.Id == _choice.Entry?.Id, Flat = entry.Id != _choice.Entry?.Id, SizeFlagsHorizontal = SizeFlags.ExpandFill,
             TooltipText = withCategory ? $"{entry.Name} ({Where(entry)})" : entry.Name, // tells the monster Skeleton from the scenery of that name
         };
+        button.AddThemeConstantOverride("icon_max_width", ListPicture);
+        button.Icon = Picture(entry, ListPicture, texture =>
+        {
+            if (IsInstanceValid(button))
+            {
+                button.Icon = texture;
+            }
+
+            if (_shown == entry)
+            {
+                _preview.Texture = texture;
+            }
+        });
         _entryButtons.Add((entry, button));
         button.Pressed += () => _choice.Choose(entry);
         button.MouseEntered += () => ShowCard(entry);
@@ -289,17 +324,38 @@ public partial class ObjectBrowser : VBoxContainer
         return button;
     }
 
+    /// <summary>
+    /// The entry's picture: its icon, else its rendered model, else (and until the model is rendered, when <paramref name="whenRendered"/>
+    /// gets it) the lettered placeholder, drawn at <paramref name="placeholderSize"/> pixels.
+    /// </summary>
+    private Texture2D Picture(BrowserEntry entry, int placeholderSize, Action<Texture2D> whenRendered)
+    {
+        var icon = entry switch
+        {
+            { Placement: BrowserPlacement.Hero } => UiIcons.Get(UiIcon.Hero, CardPicture),
+            { Definition: { Kind: MapObjectKind.Town, Town: { } town } } => Heraldry.Crest(town, CardPicture),
+            { Definition: { Kind: MapObjectKind.ResourcePile, Resource: { } resource } } => ResourceIcons.Get(resource, CardPicture),
+            _ => null,
+        };
+        var portrayed = entry.Placement == BrowserPlacement.Monster || entry.Artifact is not null; // their models are all alike
+        return icon
+            ?? (entry.Definition is { } definition && !portrayed ? _thumbnails.Get(definition, whenRendered) : null)
+            ?? PlaceholderIcons.Of(entry.Name, placeholderSize);
+    }
+
     private Button StampButton(string name)
     {
         var button = new Button
         {
-            Text = name, Icon = PlaceholderIcons.Of(name), Alignment = HorizontalAlignment.Left, ClipText = true, Flat = true,
+            Text = name, Icon = PlaceholderIcons.Of(name, ListPicture), Alignment = HorizontalAlignment.Left, ClipText = true, Flat = true,
             SizeFlagsHorizontal = SizeFlags.ExpandFill, TooltipText = $"Stamp \"{name}\": click the map where it goes",
         };
+        button.AddThemeConstantOverride("icon_max_width", ListPicture);
         button.Pressed += () => _pasteStamp(name);
         button.MouseEntered += () =>
         {
             _picture.Show(null);
+            (_shown, _preview.Texture) = (null, PlaceholderIcons.Of(name, CardPicture));
             _name.Text = name;
             _detail.Text = "Stamp: a saved piece of the map. Click it, then click the map where it goes.";
             _favourite.Visible = false;
@@ -308,9 +364,17 @@ public partial class ObjectBrowser : VBoxContainer
         return button;
     }
 
-    /// <summary>The card shows <paramref name="entry"/>: its footprint, where it belongs, its size and its rule.</summary>
+    /// <summary>The card shows <paramref name="entry"/>: its picture, its footprint, where it belongs, its size and its rule.</summary>
     private void ShowCard(BrowserEntry? entry)
     {
+        _shown = entry;
+        _preview.Texture = entry is null ? null : Picture(entry, CardPicture, texture =>
+        {
+            if (_shown == entry)
+            {
+                _preview.Texture = texture;
+            }
+        });
         _picture.Show(entry?.Footprint);
         _favourite.Visible = entry is not null && entry == _choice.Entry;
         _favourite.SetPressedNoSignal(entry is not null && _favourites.Contains(entry.Id));
@@ -326,7 +390,7 @@ public partial class ObjectBrowser : VBoxContainer
         var size = $"{footprint.Width} × {footprint.Height}" + (footprint.HasVisit && footprint.OccupiedCells.Count > 1 ? ", entered at the light cell" : "");
         var terrains = entry.Terrains.Count > 0 ? $"\nFor {string.Join(", ", entry.Terrains.Select(t => Spaced(t.ToString()).ToLowerInvariant()))}." : "";
         _name.Text = entry.Name;
-        _detail.Text = $"{where}\n{size}\n{entry.Rule}{terrains}";
+        _detail.Text = $"{where} · {size}\n{entry.Rule}{terrains}";
     }
 
     /// <summary>An entry's category, and its group when it has one: "Monsters, Haven".</summary>
@@ -346,7 +410,7 @@ public partial class ObjectBrowser : VBoxContainer
     /// <summary>A footprint drawn as its cells: the blocked ones dark, the entrance light, the free ones of its box only outlined.</summary>
     private sealed partial class FootprintPicture : Control
     {
-        private const float Side = 56;
+        private const float Side = 28;
         private Footprint? _footprint;
 
         public FootprintPicture() => CustomMinimumSize = new Vector2(Side, Side);

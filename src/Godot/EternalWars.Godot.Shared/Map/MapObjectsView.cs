@@ -158,7 +158,6 @@ public partial class MapObjectsView : Node3D
     private void Add(KnownObject known)
     {
         var map = _context.State.Map;
-        var color = known.Definition.Colour is { } colour ? Palette.ForColour(colour) : Palette.ForObject(known.Definition.Kind);
         var cells = new List<(CellBatch Batch, int Slot)>();
         var tiles = new List<MapPosition>();
         void Cell(Vector3 size, Vector3 position, Color tint) => cells.Add(Batch(size).Add(position, tint));
@@ -167,15 +166,22 @@ public partial class MapObjectsView : Node3D
             var tile = known.Position.Offset(dx, dy);
             _objectAt[tile] = known.Id;
             tiles.Add(tile);
-            var at = MapSpace.ToGround(map, tile);
-            if (cell == FootprintCell.Blocked)
+        }
+
+        // The model (PlaceholderModel): a piece on a tile of the footprint stands on that tile's ground, as one of a batch; the rest
+        // are nodes over the ground of the top-left tile.
+        var root = new Node3D { Name = $"Object_{known.Id.Value}" };
+        var origin = MapSpace.ToGround(map, known.Position);
+        foreach (var part in PlaceholderModel.Of(known.Definition, known.Footprint))
+        {
+            if (part.Cell is var (dx, dy))
             {
-                Cell(new Vector3(0.9f, 0.5f, 0.9f), at + (Vector3.Up * 0.25f), color);
+                var offset = new Vector3(dx, 0, dy) * MapSpace.TileSize;
+                Cell(part.Size, MapSpace.ToGround(map, known.Position.Offset(dx, dy)) + (part.Position - offset), part.Color);
             }
-            else if (cell == FootprintCell.Visit)
+            else
             {
-                var height = known.Definition.Kind is MapObjectKind.Monster or MapObjectKind.ResourcePile or MapObjectKind.TreasureChest or MapObjectKind.Artifact or MapObjectKind.Loot ? 0.35f : 0.06f;
-                Cell(new Vector3(0.6f, height, 0.6f), at + (Vector3.Up * height / 2), color.Lightened(0.15f));
+                root.AddChild(Shape(part, origin));
             }
         }
 
@@ -187,8 +193,6 @@ public partial class MapObjectsView : Node3D
 
         _cells[known.Id] = cells;
         _tilesOf[known.Id] = tiles;
-        var root = new Node3D { Name = $"Object_{known.Id.Value}" };
-        AddShape(root, known, color, MapSpace.ToGround(map, known.Position));
         if (Caption(known) is { } caption)
         {
             var label = new Label3D
@@ -270,49 +274,18 @@ public partial class MapObjectsView : Node3D
     private string CreatureName(MonsterGuard monster) =>
         _context.State.Creatures.TryGet(monster.Creature, out var creature) ? creature.Name : monster.Creature.Value;
 
-    /// <summary>
-    /// Placeholder shapes that tell the quest objects apart (EVT-5) until there are models: a Seer's Hut gets a pointed roof over its building, a
-    /// Quest Guard a standing figure with a spear, a Quest Gate two posts and a lintel over its cell.
-    /// </summary>
-    private void AddShape(Node3D root, KnownObject known, Color color, Vector3 at)
+    /// <summary>A piece of the model that stands on no tile of its own, as a node; objects of one colour and size share mesh and material.</summary>
+    private MeshInstance3D Shape(ModelPart part, Vector3 at) => new()
     {
-        switch (known.Definition.Kind)
+        Mesh = part.Shape switch
         {
-            case MapObjectKind.SeerHut:
-                var blocked = known.Definition.Footprint.OccupiedCells.Where(c => c.Cell == FootprintCell.Blocked).ToList();
-                if (blocked.Count > 0)
-                {
-                    var middle = at + (new Vector3((float)blocked.Average(c => c.Dx), 0, (float)blocked.Average(c => c.Dy)) * MapSpace.TileSize);
-                    var width = blocked.Max(c => c.Dx) - blocked.Min(c => c.Dx) + 1;
-                    root.AddChild(Cone(0.4f * width, 0.7f, middle + (Vector3.Up * 0.85f), color.Darkened(0.3f)));
-                    root.AddChild(Sphere(0.12f, middle + (Vector3.Up * 1.3f), Colors.Gold)); // the seer's lamp
-                }
-
-                break;
-            case MapObjectKind.QuestGuard:
-                root.AddChild(Cylinder(0.18f, 0.6f, at + (Vector3.Up * 0.36f), color));
-                root.AddChild(Sphere(0.14f, at + (Vector3.Up * 0.8f), color.Lightened(0.3f)));
-                root.AddChild(Box(new Vector3(0.04f, 1.0f, 0.04f), at + new Vector3(0.26f, 0.55f, 0), Colors.Silver));
-                break;
-            case MapObjectKind.QuestGate:
-                root.AddChild(Box(new Vector3(0.14f, 0.9f, 0.14f), at + new Vector3(-0.38f, 0.45f, 0), color));
-                root.AddChild(Box(new Vector3(0.14f, 0.9f, 0.14f), at + new Vector3(0.38f, 0.45f, 0), color));
-                root.AddChild(Box(new Vector3(0.95f, 0.14f, 0.18f), at + (Vector3.Up * 0.95f), color.Darkened(0.2f)));
-                root.AddChild(Sphere(0.09f, at + (Vector3.Up * 1.1f), Colors.Gold)); // the seal: meet the quest to pass
-                break;
-        }
-    }
-
-    // Objects of one colour and size share their mesh and material (_meshes).
-    private MeshInstance3D Box(Vector3 size, Vector3 position, Color color) => new() { Mesh = _meshes.Box(size, color), Position = position };
-
-    private MeshInstance3D Cone(float radius, float height, Vector3 position, Color color) =>
-        new() { Mesh = _meshes.Cylinder(0, radius, height, color), Position = position };
-
-    private MeshInstance3D Cylinder(float radius, float height, Vector3 position, Color color) =>
-        new() { Mesh = _meshes.Cylinder(radius, radius, height, color), Position = position };
-
-    private MeshInstance3D Sphere(float radius, Vector3 position, Color color) => new() { Mesh = _meshes.Sphere(radius, color), Position = position };
+            ModelShape.Box => _meshes.Box(part.Size, part.Color),
+            ModelShape.Cone => _meshes.Cylinder(0, part.Size.X, part.Size.Y, part.Color),
+            ModelShape.Cylinder => _meshes.Cylinder(part.Size.X, part.Size.X, part.Size.Y, part.Color),
+            _ => _meshes.Sphere(part.Size.X, part.Color),
+        },
+        Position = at + part.Position,
+    };
 }
 
 /// <summary>

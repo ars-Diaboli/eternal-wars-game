@@ -14,7 +14,7 @@ internal sealed class SignPostInspector : InspectorSection<SignPost>
     protected override void Show(InspectorForm form, SignPost sign)
     {
         var row = new HBoxContainer();
-        form.Box.AddChild(row);
+        form.In(InspectorPart.Messages).AddChild(row);
         row.AddChild(new Label { Text = "Message" });
         var text = new LineEdit { Text = sign.Message, CustomMinimumSize = new Vector2(UiTheme.InspectorTextWidth, 0), PlaceholderText = "What the sign says" };
         text.TextSubmitted += value => form.Edit(() => form.Editor.Contents.SetSignMessage(sign.Id, value));
@@ -29,7 +29,7 @@ internal sealed class PrisonInspector : InspectorSection<Prison>
     protected override void Show(InspectorForm form, Prison prison)
     {
         var row = new HBoxContainer();
-        form.Box.AddChild(row);
+        form.In(InspectorPart.Contents).AddChild(row);
         var heroes = new[] { ("Random (drawn at start)", (string?)null) }
             .Concat(form.Scenario.HeroRoster.All.OrderBy(h => h.Town).ThenBy(h => h.Name).Select(h => ($"{h.Name} ({h.Town})", (string?)h.Id)));
         var who = row.AddChoice("Prisoner", heroes, prison.Hero);
@@ -46,7 +46,7 @@ internal sealed class ArtifactPickupInspector : InspectorSection<ArtifactPickup>
     protected override void Show(InspectorForm form, ArtifactPickup pickup)
     {
         var row = new HBoxContainer();
-        form.Box.AddChild(row);
+        form.In(InspectorPart.Contents).AddChild(row);
         var artifacts = new[] { ($"Random ({pickup.Definition.Name}, drawn at start)", (string?)null) }
             .Concat(form.Scenario.Artifacts.All.OrderBy(a => a.Tier).ThenBy(a => a.Name).Select(a => ($"{a.Name} ({a.Tier})", (string?)a.Id.Value)));
         var catalog = form.Scenario.Artifacts;
@@ -73,7 +73,7 @@ internal sealed class WitchHutInspector : InspectorSection<WitchHut>
     protected override void Show(InspectorForm form, WitchHut hut)
     {
         var row = new HBoxContainer();
-        form.Box.AddChild(row);
+        form.In(InspectorPart.Contents).AddChild(row);
         var skills = new[] { ("Rolled at start", "") }.Concat(BuiltInSkills.All.OrderBy(s => s.Group).ThenBy(s => s.Name).Select(s => ($"{s.Name} ({s.Group})", s.Id))).ToList();
         var first = row.AddChoice("Skills", skills, hut.Skills.ElementAtOrDefault(0) ?? "");
         var second = row.AddChoice("and", skills, hut.Skills.ElementAtOrDefault(1) ?? "");
@@ -98,7 +98,7 @@ internal sealed class ShrineInspector : InspectorSection<Shrine>
     protected override void Show(InspectorForm form, Shrine shrine)
     {
         var row = new HBoxContainer();
-        form.Box.AddChild(row);
+        form.In(InspectorPart.Contents).AddChild(row);
         var spells = new[] { ("Drawn at start", (string?)null) }
             .Concat(ShrineRules.Candidates(form.Scenario.Spells, shrine.SpellLevel).Select(s => ($"{s.Name} ({s.School})", (string?)s.Id.Value)));
         var spell = row.AddChoice("Spell", spells, shrine.Spell?.Value);
@@ -112,7 +112,7 @@ internal sealed class TreasureChestInspector : InspectorSection<TreasureChest>
     protected override void Show(InspectorForm form, TreasureChest chest)
     {
         var row = new HBoxContainer();
-        form.Box.AddChild(row);
+        form.In(InspectorPart.Contents).AddChild(row);
         var fixedValues = new CheckBox { Text = "Fixed values (else rolled)", ButtonPressed = chest.FixedValues is not null };
         row.AddChild(fixedValues);
         var gold = row.AddSpin("Gold", chest.FixedValues?.Gold ?? 1000, 0, 100000);
@@ -137,18 +137,18 @@ internal sealed class OneWayGateInspector : InspectorSection<OneWayGateEntrance>
     protected override void Show(InspectorForm form, OneWayGateEntrance gate) => GateLink.Show(form, gate);
 }
 
-/// <summary>Where a gate leads.</summary>
+/// <summary>How a gate's link is changed; the link itself is a jump link (<see cref="InspectorForm.Links"/>).</summary>
 internal static class GateLink
 {
     public static void Show(InspectorForm form, MapObject gate) =>
-        form.Box.AddChild(new Label { Text = gate.TeleportTarget is { } t ? $"Linked to #{t.Value} (use the LinkGates tool to change)" : "Not linked (use the LinkGates tool)" });
+        form.In(InspectorPart.Links).AddChild(new Label { Text = gate.TeleportTarget is null ? "Not linked (use the LinkGates tool)" : "The LinkGates tool changes the link." });
 }
 
 /// <summary>A resource pile's fixed amount, or that it is rolled.</summary>
 internal sealed class ResourcePileInspector : InspectorSection<ResourcePile>
 {
     protected override void Show(InspectorForm form, ResourcePile pile) =>
-        form.Box.AddChild(new Label { Text = pile.Amount is { } fixedAmount ? $"{fixedAmount} {pile.Resource}" : $"{pile.Resource}, amount rolled at game start" });
+        form.In(InspectorPart.Contents).AddChild(new Label { Text = pile.Amount is { } fixedAmount ? $"{fixedAmount} {pile.Resource}" : $"{pile.Resource}, amount rolled at game start" });
 }
 
 /// <summary>The arena place (ADR-097): what it means for the battle of day 2.</summary>

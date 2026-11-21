@@ -206,6 +206,10 @@ public partial class Main : Node3D
     private static string MapsFolder =>
         LaunchArguments.SettingsPath is null ? ProjectSettings.GlobalizePath(MapsDirectory) : Path.Combine(DataFolder, "maps");
 
+    /// <summary>Where the browser keeps the pictures it rendered (ADR-254); deleting the folder only costs rendering them again.</summary>
+    private static string ThumbnailsFolder =>
+        LaunchArguments.SettingsPath is null ? ProjectSettings.GlobalizePath("user://cache/thumbs") : Path.Combine(DataFolder, "cache", "thumbs");
+
     /// <summary>Where "Save selection as stamp" writes and the browser's stamp list reads (ADR-250).</summary>
     private static string StampsFolder =>
         LaunchArguments.SettingsPath is null ? ProjectSettings.GlobalizePath("user://stamps") : Path.Combine(DataFolder, "stamps");
@@ -519,7 +523,7 @@ public partial class Main : Node3D
         conditions.Bind(_editor);
         _inspector = new InspectorPanel { Name = "Inspector" };
         _workspace.AddTab(EditorRegion.Right, _inspector);
-        _inspector.Bind(_editor);
+        _inspector.Bind(_editor, _settings);
         _toolContext = new EditorToolContext(_editor, _inspector, Say) {
             Marks = _selectionView, VisibleArea = VisibleTiles, Clipboard = _clipboard, Choice = _choice,
         };
@@ -529,7 +533,7 @@ public partial class Main : Node3D
         // The browser's choice is the Object tool's: the entry of the same name in this map's catalog, the treasure chest at first.
         var catalog = new BrowserCatalog(_editor.Catalog, _editor.Scenario.Creatures, _editor.Scenario.Artifacts);
         _choice.Rebase(catalog.Find(_choice.Entry?.Id ?? BuiltInMapObjects.TreasureChest)); // no one is told: the last map's UI still listens until it is freed
-        _browser.Bind(catalog, _choice, _settings, () => StampFolder.Names(StampsFolder), PasteStamp);
+        _browser.Bind(catalog, _choice, _settings, () => StampFolder.Names(StampsFolder), PasteStamp, ThumbnailsFolder);
         _choice.Changed += UseChoice;
         _browser.TreeExiting += () => _choice.Changed -= UseChoice; // this UI goes when another map is opened; the choice stays
         _events = new EventsPanel { Name = "Events" };
@@ -567,6 +571,7 @@ public partial class Main : Node3D
         _events.SelectionChanged += name => _eventCells.Highlighted = name;
         _events.ShowRequested += ShowTile;
         _inspector.EventRequested += OpenEvent;
+        _inspector.LinkRequested += Jump;
 
         // The template editor (ADR-117) is the workspace's Template tab (EDIT-3, ADR-250), the same one from map to map.
         var templateEditor = _templateEditor;
@@ -779,6 +784,26 @@ public partial class Main : Node3D
     {
         _context.SetLevel(position.Level);
         _camera.FocusOn(MapSpace.ToWorld(position));
+    }
+
+    /// <summary>A jump link of the inspector (ADR-254): the view goes to the linked thing, which becomes the selection and the inspected one.</summary>
+    private void Jump(MapLink link)
+    {
+        ShowTile(link.Position);
+        if (link.Object is { } id && _editor.Scenario.FindObject(id) is { } mapObject)
+        {
+            _editor.Selecting.Set(new SelectionItems([], [id], [], []));
+            _toolContext.Inspect(mapObject);
+        }
+        else if (link.Hero is { } hero && _editor.Scenario.Heroes.Any(h => h.Id == hero))
+        {
+            _editor.Selecting.Set(new SelectionItems([], [], [hero], []));
+            _toolContext.Inspect(hero);
+        }
+        else
+        {
+            Say(link.Text);
+        }
     }
 
     /// <summary>An event link (inspector, validation): the "Events" tab with that event open.</summary>

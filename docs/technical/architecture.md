@@ -296,6 +296,10 @@ The object browser's data is `BrowserCatalog` (ADR-253; Core.Domain.Editing), bu
 terrains and a one-line rule; `Search` ranks them. `EntryEditor` (`session.Placing`) places an entry through the other editors and
 `Check` gives the cells for the ghost. The panel is `ObjectBrowser` (Godot.UI); it and the Object tool share a `BrowserChoice`, and
 `BrowserLists` holds the rules of the Favourites and Recent lists the editor's settings file keeps.
+An object's stand-in model is `PlaceholderModel` (Godot.Shared, ADR-254): a list of `ModelPart`s that `MapObjectsView` draws and
+`ThumbnailRenderer` (Godot.UI) renders for the browser in hidden `SubViewport`s, kept as PNG files under the parts' hash.
+The inspector's forms put their rows into `InspectorPart`s through `InspectorForm.In(part)` (ADR-254); its jump links are
+`MapLinks.Of(scenario, thing)` (Core.Domain.Editing), computed from the scenario each time and never stored.
 Single-value edits are `PropertyEdit<T>` commands; an edit to the value already there records no undo step and publishes
 nothing. The three tile layers paint through `PaintLayer<TValue, TEvent>`. `BeginStroke`/`EndStroke` merge a drag into
 one undo step. `MapValidator` reports what single edits cannot prevent. `MapConnectivity` tells where a hero can walk on a fresh

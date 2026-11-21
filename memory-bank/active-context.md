@@ -9,13 +9,18 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 3 tasks 3 and 4 (ADR-254). Thumbnails: `PlaceholderModel` (Godot.Shared: the parts of an object's
+  stand-in model, drawn by `MapObjectsView`), `ThumbnailRenderer` (hidden `SubViewport`s, PNG cache by the model's hash in
+  `user://cache/thumbs/`), used by `ObjectBrowser` after icons and before the lettered placeholder. Inspector: `InspectorPart`
+  (identity, contents, guard, messages, links, events) with `InspectorForm.In`, closed parts kept in the settings; jump links
+  from `MapLinks` (Core.Domain.Editing), `InspectorPanel.LinkRequested`. Tests `EditorLinksTests`; smoke
+  `editor-inspector-sections`. Next: step 3 task 5 (multi-edit).
 - Editor overhaul, step 3 tasks 1 and 2 (ADR-253). Core: `BrowserCatalog` / `BrowserEntry` / `BrowserCategory` (every map object
   kind has a category; monsters and dwellings per creature, pickups per artifact, the hero), `BrowserCatalog.Search`, `BrowserLists`
   (favourites, recent), `EntryEditor` (`session.Placing`: `Check` for the ghost, `Place` as one step), `HeroEditor.CanPlace`,
   `SceneryTable.KindOf`. UI: `ObjectBrowser` under the tool palette in the left region, `BrowserChoice` shared with `ObjectTool`
   (O; ghost through `SelectionView.ShowMove`); the Object tool's drop-down and stamp buttons are gone. `AutoInput` no longer aims at a
-  button a scroll box has scrolled out of view. Tests `EditorBrowserTests`; smoke `editor-browser-place`. Next: step 3 task 3
-  (thumbnails).
+  button a scroll box has scrolled out of view. Tests `EditorBrowserTests`; smoke `editor-browser-place`.
 - Editor overhaul, step 2 tasks 7 and 8 (ADR-252); step 2 is complete. Scenery orientation: `Orientation` (mirrored, then 0 to 3
   quarter turns clockwise) on `Scenery`; `MapObject.Footprint` / `KnownObject.Footprint` are the shape as it lies
   (`Footprint.Oriented`), read by the cell index, the fog's memory, the minimap and `MapObjectsView`; `ObjectEditor.Rotate` /

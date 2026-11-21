@@ -5,7 +5,10 @@ using Godot;
 
 namespace EternalWars.Godot.UI.Editor.Inspector;
 
-/// <summary>A monster: creature, count (0 = rolled), disposition, whether it never flees, its guard mode and a random tier (ADR-126).</summary>
+/// <summary>
+/// A monster. Identity: creature, count (0 = rolled) and a random tier (ADR-126). Guard: disposition, whether it never flees and its
+/// guard mode.
+/// </summary>
 internal sealed class MonsterInspector : InspectorSection<MonsterGuard>
 {
     protected override void Show(InspectorForm form, MonsterGuard monster)
@@ -15,7 +18,7 @@ internal sealed class MonsterInspector : InspectorSection<MonsterGuard>
         var creature = row.AddChoice("Creature", form.Creatures(), monster.Creature.Value);
         var count = row.AddSpin("Count (0 = rolled)", monster.Count ?? 0, 0, 999);
         var row2 = new HBoxContainer();
-        form.Box.AddChild(row2);
+        form.In(InspectorPart.Guard).AddChild(row2);
         var disposition = row2.AddChoice("Disposition", Enum.GetValues<GuardDisposition>().Select(d => (d.ToString(), d)), monster.Disposition);
         var neverFlees = new CheckBox { Text = "Never flees", ButtonPressed = monster.NeverFlees };
         row2.AddChild(neverFlees);
@@ -37,7 +40,7 @@ internal sealed class MonsterInspector : InspectorSection<MonsterGuard>
 
         // A random monster (ADR-126): the creature above only shows it; the game start draws one of the tier.
         var row4 = new HBoxContainer();
-        form.Box.AddChild(row4);
+        form.In(InspectorPart.Identity).AddChild(row4);
         var tiers = new[] { ("Fixed creature", (int?)null), ("Random, any tier", 0) }
             .Concat(Enumerable.Range(1, CreatureDefinition.MaxTier).Select(t => ($"Random tier {t}", (int?)t)));
         var randomTier = row4.AddChoice("Random", tiers, monster.RandomTier);

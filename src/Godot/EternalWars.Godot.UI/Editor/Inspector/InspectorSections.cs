@@ -2,7 +2,10 @@ using EternalWars.Core.Domain.Objects;
 
 namespace EternalWars.Godot.UI.Editor.Inspector;
 
-/// <summary>The inspector's fields for one map object type (ADR-223); the registry is <see cref="InspectorSections"/>.</summary>
+/// <summary>
+/// The inspector's fields for one map object type (ADR-223); the registry is <see cref="InspectorSections"/>. It puts its rows into
+/// the form's parts (<see cref="InspectorPart"/>, ADR-254): Identity unless it names another with <see cref="InspectorForm.In"/>.
+/// </summary>
 internal interface IInspectorSection
 {
     /// <summary>The object type whose fields this section shows.</summary>

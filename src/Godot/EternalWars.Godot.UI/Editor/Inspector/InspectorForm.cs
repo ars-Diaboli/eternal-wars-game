@@ -8,14 +8,127 @@ using Godot;
 
 namespace EternalWars.Godot.UI.Editor.Inspector;
 
-/// <summary>
-/// What the inspector's sections (ADR-223) fill and edit through: the panel's box, the editor, the edits (skipped while the form is being filled)
-/// and the rows several kinds share (a garrison's slots, a link to one of the map's events).
-/// </summary>
-internal sealed class InspectorForm(VBoxContainer box, MapEditorSession editor, Action<string> openEvent)
+/// <summary>The inspector's parts (EDIT-1, ADR-254), in the order they stand: each a heading that opens and closes, shown when it has rows.</summary>
+internal enum InspectorPart
 {
-    /// <summary>The panel the rows go into, top to bottom.</summary>
-    public VBoxContainer Box => box;
+    /// <summary>What the thing is: its name, kind, owner.</summary>
+    Identity,
+
+    /// <summary>What it holds or gives: an army, artifacts, resources, spells, buildings.</summary>
+    Contents,
+
+    /// <summary>Who must be fought for it.</summary>
+    Guard,
+
+    /// <summary>The texts it shows.</summary>
+    Messages,
+
+    /// <summary>The things on the map it is tied to, as jump links.</summary>
+    Links,
+
+    /// <summary>The map events it runs.</summary>
+    Events,
+}
+
+/// <summary>
+/// What the inspector's forms (ADR-223) fill and edit through: the parts of the panel (ADR-254), the editor, the edits (skipped while the
+/// form is being filled) and the rows several kinds share (a garrison's slots, a link to one of the map's events, jump links).
+/// </summary>
+internal sealed class InspectorForm(VBoxContainer panel, MapEditorSession editor, Action<string> openEvent, Action<MapLink> jump)
+{
+    private readonly Dictionary<InspectorPart, VBoxContainer> _parts = [];
+    private InspectorPart _part;
+
+    /// <summary>The parts that are closed; they stay so from one inspected thing to the next.</summary>
+    public HashSet<InspectorPart> Closed { get; } = [];
+
+    /// <summary>A part was opened or closed.</summary>
+    public event Action? ClosedChanged;
+
+    /// <summary>The part the rows go into now, top to bottom: the one <see cref="In"/> named last (Identity at first).</summary>
+    public VBoxContainer Box => In(_part);
+
+    /// <summary>The rows that follow go into <paramref name="part"/>; returns its box.</summary>
+    public VBoxContainer In(InspectorPart part)
+    {
+        _part = part;
+        if (!_parts.TryGetValue(part, out var body))
+        {
+            _parts[part] = body = new VBoxContainer { Name = part.ToString() };
+        }
+
+        return body;
+    }
+
+    /// <summary>A new thing is shown: the parts are empty again and the rows go into Identity.</summary>
+    public void Begin()
+    {
+        _parts.Clear();
+        _part = InspectorPart.Identity;
+    }
+
+    /// <summary>The form is filled: the parts that have rows go into the panel in their order, each under its heading.</summary>
+    public void End()
+    {
+        foreach (var part in Enum.GetValues<InspectorPart>())
+        {
+            if (!_parts.TryGetValue(part, out var body))
+            {
+                continue;
+            }
+
+            if (body.GetChildCount() == 0)
+            {
+                body.Free();
+                continue;
+            }
+
+            var header = new Button
+            {
+                Text = part.ToString(), Alignment = HorizontalAlignment.Left, ToggleMode = true, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+                TooltipText = $"{part}: click to open or close",
+            };
+            void Show()
+            {
+                var open = !Closed.Contains(part);
+                header.SetPressedNoSignal(open);
+                header.WithIcon(open ? UiIcon.ArrowDown : UiIcon.ArrowRight, UiIcons.ButtonSize, keepText: true);
+                body.Visible = open;
+            }
+
+            header.Pressed += () =>
+            {
+                _ = Closed.Remove(part) || Closed.Add(part);
+                Show();
+                ClosedChanged?.Invoke();
+            };
+            Show();
+            panel.AddChild(header);
+            var inset = new MarginContainer();
+            inset.AddThemeConstantOverride("margin_left", UiSpacing.Padding);
+            inset.AddChild(body);
+            panel.AddChild(inset);
+        }
+
+        _parts.Clear();
+    }
+
+    /// <summary>The jump links (ADR-254), in the Links part: a click selects the linked thing and shows it on the map.</summary>
+    public void Links(IReadOnlyList<MapLink> links)
+    {
+        var box = In(InspectorPart.Links);
+        foreach (var link in links)
+        {
+            var go = new Button
+            {
+                Text = link.Text, Alignment = HorizontalAlignment.Left, ClipText = true, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+                TooltipText = link.Object is null && link.Hero is null ? $"{link.Text}: shows the tile on the map" : $"{link.Text}: selects it and shows it on the map",
+            };
+            go.WithIcon(UiIcon.ArrowRight, UiIcons.ButtonSize, keepText: true);
+            go.Pressed += () => jump(link);
+            box.AddChild(go);
+        }
+    }
 
     public MapEditorSession Editor => editor;
 
@@ -53,7 +166,7 @@ internal sealed class InspectorForm(VBoxContainer box, MapEditorSession editor, 
         }
 
         var row = new HBoxContainer();
-        box.AddChild(row);
+        In(InspectorPart.Events).AddChild(row);
         var choice = row.AddChoice(label, new[] { ("— none —", "") }.Concat(names.Select(n => (n, n))), current ?? "");
         choice.Button.ItemSelected += _ => Edit(() => set(choice.Value().Length == 0 ? null : choice.Value()));
         var create = new Button { Text = "New" };
@@ -83,9 +196,10 @@ internal sealed class InspectorForm(VBoxContainer box, MapEditorSession editor, 
         }
     }
 
-    /// <summary>The seven garrison slots of a town or a map garrison (ADR-070).</summary>
+    /// <summary>The seven garrison slots of a town or a map garrison (ADR-070), in the Guard part.</summary>
     public void GarrisonRows(MapObjectId holder, Army troops)
     {
+        var box = In(InspectorPart.Guard);
         box.AddHeading("Garrison");
         var creatures = new[] { ("— empty —", "") }.Concat(Creatures()).ToList();
         for (var slot = 0; slot < Army.SlotCount; slot++)
