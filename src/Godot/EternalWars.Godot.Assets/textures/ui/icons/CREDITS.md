@@ -1,6 +1,6 @@
 # UI icons
 
-Button icons, 128 × 128 with transparency, generated for this project by the owner (2026-11-05, 2026-11-11, 2026-11-17; the action and battle icons of sets 15–18 replaced 2026-11-21), cut from the
+Button icons, 128 × 128 with transparency, generated for this project by the owner (2026-11-05, 2026-11-11, 2026-11-17; the action and battle icons of sets 15–18 and the buttons of sets 19–22 replaced 2026-11-21), cut from the
 sheets of [icon-prompts.md](../../../../../../docs/content/prompts/icon-prompts.md) (sets 15–22). Loaded through
 `EternalWars.Godot.UI.UiIcons`, which scales them to button size; a missing file leaves the button text-only.
 
@@ -15,7 +15,7 @@ sheets of [icon-prompts.md](../../../../../../docs/content/prompts/icon-prompts.
 | plus.png / minus.png | add player; remove player, remove a condition |
 | ban.png | the editor's Bans tab; Cancel in the map events form |
 | settings.png (cogwheel) | the game menu's Settings tab |
-| menu.png (stone gear, supplied by the project owner) | the game's Menu (F10) button |
+| menu.png (three stone bars) | the game's Menu (F10) button |
 | save.png (closed book) / load.png (open book) | Save and Load in the game menu and the map editor, the "Save and load" tab, the template editor's Save, "Save replay" |
 | undo.png / redo.png | the map editor's Undo and Redo |
 | zoom_in.png / zoom_out.png, lock.png / unlock.png | not used yet |

@@ -307,12 +307,16 @@ inspector's sections take a list of objects (`IInspectorSection.Show`), and `Ins
 for values that differ. `PicturePicker` (Godot.UI) is the searchable picture grid that replaces the drop-downs for creatures,
 heroes, artifacts, spells and skills; `PickerItems` builds its lists.
 Map settings (ADR-256): `MapSettingsWindow` (Godot.UI, Editor.Shell) is an overlay with one tab per settings panel
-(`GeneralSettingsPanel`, `PlayersPanel`, `ConditionsPanel`, `BansPanel`, `WeekEventsPanel`); each panel edits through the session, so
-the window adds no rule of its own.
+(`GeneralSettingsPanel`, `PlayersPanel`, `ConditionsPanel`, `BansPanel`, `WeekEventsPanel`, `RumoursPanel`, `TextsPanel`); each panel
+edits through the session, so the window adds no rule of its own.
 Map content (ADR-257): rumours are `ScenarioRules.Rumours` (`TavernRules.Rumour` picks the week's), a player's factions `Player.Factions`
 (`PlayerFactions`: what the new-game screen offers and what a random choice draws among), an object's name `MapObject.Name` (a town's is
 its own name; `ObjectNames` finds an object or a hero by id or name), a hero's `Biography` and `Portrait`. The map format reads an object's
 name through `MapObject.WithName`, since `Core.Data` sees only the domain's public members.
+Map texts (ADR-258): `MapTexts.List` lists every text of a map with an id; `MapTextEditor.Set` (the session's `Texts`) sets one by
+calling the editor that owns it, so the Texts tab adds no rule of its own. `MapTextsTests` checks every string the map file writes.
+New maps (ADR-259): the wizard (`NewMapWizard`, Godot.UI) collects a `NewMapSettings` (Core.Domain) for `BlankScenario.Create`, or presets
+the `GeneratePanel`; the app opens the result through `FileService.OpenNew`. `SampleMaps` lists the shipped maps the empty state offers.
 Single-value edits are `PropertyEdit<T>` commands; an edit to the value already there records no undo step and publishes
 nothing. The three tile layers paint through `PaintLayer<TValue, TEvent>`. `BeginStroke`/`EndStroke` merge a drag into
 one undo step. `MapValidator` reports what single edits cannot prevent. `MapConnectivity` tells where a hero can walk on a fresh

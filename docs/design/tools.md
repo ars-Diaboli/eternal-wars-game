@@ -48,7 +48,11 @@ open it at a tab). Its tabs:
 - **Bans** (ADR-133);
 - **Week events** (ADR-084): on or off, the weeks without events at the start, the factions whose creatures the weekly and the monthly
   events pick;
-- **Rumours** (ADR-257): one rumour a line; "Apply rumours" sets them. The game's taverns tell one a week, in this order.
+- **Rumours** (ADR-257): one rumour a line; "Apply rumours" sets them. The game's taverns tell one a week, in this order;
+- **Texts** (EDIT-11, ADR-258): every text of the map by group (the map, players, heroes, objects, rumours, events) with a search box,
+  each edited in place and applied on Enter or when the field is left, as the edit of its own panel (its rules hold; the list also keeps
+  the map's and players' names and an event's texts from being blank); a refused text stays in its field and the line above the list says
+  why. Event and variable names are not listed: things are found by them.
 
 Each change is an undo step at once, as in a panel. The window's Undo and Redo (also Ctrl+Z and Ctrl+Y outside a text field) take
 back any step while it is open; nothing else in the editor takes input then. Close, Escape or F7 closes it; it opens again at the tab
@@ -59,13 +63,22 @@ Every tool and command has an icon in the menus, on the toolbar and in the palet
 placeholder, a coloured tile with the name's two letters.
 
 **Files** (File menu):
+- **New map** (Ctrl+N, ADR-259) opens the new-map wizard, in three steps: the size (the presets 48 × 48 to 256 × 256, or any size
+  from 16 to 256 a side), the levels (the surface, or the surface and the underground) and the ground (a terrain a hero can walk on);
+  the players (1 to 8), each a person or the computer by default; a template, or none. Without a template it makes a blank map: the
+  ground, the underground below, the players named by colour, each with a hero. With one it ends in the Generate tab, set to the
+  template at its size nearest the chosen one and to the players (the template decides the ground and the levels); Generate makes
+  the map. Cancel or Escape closes the wizard.
+- **The empty state**: the editor starts on a blank map with a card over it that offers the wizard, Open and the sample maps (Ember
+  March, Two Towns and the arenas, each opened as a new, unsaved map). The map can be painted at once; the card goes at the first edit,
+  with its close button or when another map opens.
 - **Open** (Ctrl+O), **Save** (Ctrl+S) and **Save as** (Ctrl+Shift+S) use a file dialog, the system's own where there is one. It
   starts in the maps folder (`user://maps`), or in the folder of the map's file. Save writes to the map's file; a map without a file
   asks for one. The dialog asks before it overwrites a file.
 - **Open recent** lists the last ten files opened or saved, the newest first (kept in `editor-settings.cfg`).
 - The window's title is the file's name (the map's name for a map without a file), with an asterisk in front while the map has
   unsaved work.
-- **Unsaved work**: New (Ctrl+N), From template, Open, Quit (Ctrl+Q) and closing the window first ask "Save", "Don't save" or
+- **Unsaved work**: making a new map (the wizard's blank map, Generate, a sample map), Open, Quit (Ctrl+Q) and closing the window first ask "Save", "Don't save" or
   "Cancel". Escape is Cancel.
 - **Autosave**: every 2 minutes (a preference), a map with unsaved work that changed since the last autosave is copied to `user://maps/.autosave/`;
   the newest five stay. The map's own file is not touched.

@@ -9,13 +9,23 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 3 task 10 (ADR-259): the new-map wizard `NewMapWizard` (File → New map, Ctrl+N; replaces New, New (2 levels) and
+  From template): size, levels and ground, players and their kind, a template; it ends on a blank map (`NewMapSettings`,
+  `BlankScenario.Create(settings)`) or in the Generate tab (`GeneratePanel.Preset`, `MapSizes.Nearest`, `EditorMapGenerator`'s `humans`).
+  The empty state `EmptyStateCard` over the start-up map offers the wizard, Open and `SampleMaps`. Tests `NewMapTests`; smoke
+  `editor-new-map`. Next: step 3's done-when: replace the
+  remaining drop-downs (`ConditionsPanel`, `BansPanel`, `GeneralSettingsPanel` difficulty, `EventsPanel` quest kind, `GeneratePanel`,
+  `TemplateEditorPanel`, `ToolOptions`, `PreferencesWindow`, the `ObjectBrowser` and `ProblemsPanel` filters), then step 4.
+- Editor overhaul, step 3 task 9 (ADR-258, EDIT-11): the map's texts in one core list (`MapTexts.List`, `MapText` with an id, group and
+  place) set through `MapTextEditor.Set` (the session's `Texts`), which makes each text's own panel edit; the map settings window's Texts
+  tab (`TextsPanel`, Map → Texts) edits them in place with a search box. `MapTextsTests` fails when a string the map file writes is
+  neither a listed text nor named as not one. Smoke `editor-texts`.
 - Editor overhaul, step 3 task 8 (ADR-257, map format 44): rumours (`ScenarioRules.Rumours`, the Rumours tab `RumoursPanel`, the taverns
   show `TavernRules.Rumour`), a player's factions (`Player.Factions`, `PlayerFactions`, the Players tab's Factions menu, the new-game
   screen's `CrestPicker.Towns`, a random choice drawn among them), object names (`MapObject.Name`/`GivenName`/`Label`, a town's is its
   name; `ObjectEditor.SetName`, the inspector's Name field, `ObjectNames`, the quest form takes names, `NameCheck`), custom heroes
   (`Hero.Biography`, `Hero.Portrait`, `HeroEditor.SetName`/`SetBiography`/`SetPortrait`/`SetSkill`; the hero screen shows the
   biography). `FactionsCheck` warns of a fixed town outside a player's factions. Tests `MapContentTests`; smoke `editor-map-content`.
-  Next: step 3 task 9 (Texts, EDIT-11).
 - Editor overhaul, step 3 task 7 (ADR-256): the map settings window `MapSettingsWindow` (F7, Map menu) with the tabs General
   (`GeneralSettingsPanel`: name, description, difficulty, hero limit, arena), Players (`PlayersPanel`, now with teams locked and team
   counts), Victory and loss (`ConditionsPanel`), Bans (`BansPanel`) and Week events (`WeekEventsPanel`); the right region keeps

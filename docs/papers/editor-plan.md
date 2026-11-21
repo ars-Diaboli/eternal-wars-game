@@ -582,10 +582,10 @@ again offers the lost work.
    - **custom heroes**: a name, biography and starting skills in the hero inspector; the portrait from the roster. *Done.*
 9. **Texts** (EDIT-11): a core list of every text in a map (name, description, event texts, messages, signs, rumours, hero names and
    biographies) with a setter for each, and a Texts tab that edits them in place. A test fails when a text field is missing from
-   the list.
+   the list. *Done.*
 10. **New-map wizard**: size (the presets, or any size 16–256), levels, default terrain, the number of players and their kind, a
     template; it ends on a blank map or in Generate. It replaces New, New (2 levels) and From template. The empty state offers the
-    wizard and the sample maps. Smoke `editor-new-map`.
+    wizard and the sample maps. Smoke `editor-new-map`. *Done.*
 
 **Done when**: nothing is picked from a plain drop-down; a map can carry rumours, allowed factions, named objects and custom heroes,
 and the game uses them.

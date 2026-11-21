@@ -10,9 +10,11 @@ public sealed record GeneratorTemplate(string Name, string Description, IReadOnl
 
 /// <summary>
 /// What the designer asked for: the template (index into the panel's list), size, seed, the number of players (the first slots), a town per slot
-/// that has one picked (the others are drawn from the seed) and the hero limit (null = the template's).
+/// that has one picked (the others are drawn from the seed), the hero limit (null = the template's) and the players' kinds from the new-map wizard
+/// (<see cref="Humans"/>, by slot: false for a computer player; null = the template's, ADR-259).
 /// </summary>
-public sealed record GenerateRequest(int Template, int Size, ulong Seed, int Players, IReadOnlyDictionary<int, string> Towns, int? MaxHeroes);
+public sealed record GenerateRequest(
+    int Template, int Size, ulong Seed, int Players, IReadOnlyDictionary<int, string> Towns, int? MaxHeroes, IReadOnlyList<bool>? Humans = null);
 
 /// <summary>
 /// "Generate from template" (ADR-087, ADR-064): template, size, seed, players, a town per player and the hero limit. "Generate" hands the request to
@@ -35,6 +37,9 @@ public partial class GeneratePanel : VBoxContainer
     private IReadOnlyList<GeneratorTemplate> _templates = [];
     private Func<GenerateRequest, string?> _generate = _ => null;
 
+    /// <summary>The players' kinds the new-map wizard chose (ADR-259), kept for the next Generate; null = the template's.</summary>
+    private IReadOnlyList<bool>? _humans;
+
     /// <summary>
     /// Binds the templates and the generate callback (it returns null when a map was generated, else the reason). <paramref name="last"/> is the
     /// previous request, restored in the controls.
@@ -49,7 +54,11 @@ public partial class GeneratePanel : VBoxContainer
             _template.AddItem(template.Name);
         }
 
-        _template.ItemSelected += _ => ShowTemplate(null);
+        _template.ItemSelected += _ =>
+        {
+            _humans = null; // the wizard's kinds were for its template
+            ShowTemplate(null);
+        };
         Row("Template", _template);
         AddChild(_description);
         Row("Size", _size);
@@ -70,8 +79,27 @@ public partial class GeneratePanel : VBoxContainer
         if (templates.Count > 0)
         {
             _template.Select(last is { } request && request.Template < templates.Count ? request.Template : 0);
+            _humans = last?.Humans;
             ShowTemplate(last);
         }
+    }
+
+    /// <summary>
+    /// The new-map wizard's end (ADR-259): the template, its size and the players, with their kinds by slot; the seed stays. Generate is pressed by
+    /// the designer.
+    /// </summary>
+    public void Preset(int template, int size, int players, IReadOnlyList<bool> humans)
+    {
+        if (template < 0 || template >= _templates.Count)
+        {
+            return;
+        }
+
+        _template.Select(template);
+        _humans = humans;
+        var seed = ulong.TryParse(_seed.Text.Trim(), CultureInfo.InvariantCulture, out var kept) ? kept : 0;
+        ShowTemplate(new GenerateRequest(template, size, seed, players, new Dictionary<int, string>(), null, humans));
+        _message.Text = "Set by the new-map wizard: press Generate.";
     }
 
     /// <summary>Shows a message under the button (the app's report on the last generation).</summary>
@@ -129,7 +157,8 @@ public partial class GeneratePanel : VBoxContainer
         _townChoices.Clear();
         for (var slot = 0; slot < (int)_players.Value; slot++)
         {
-            _towns.AddChild(new Label { Text = template.SlotNames[slot], CustomMinimumSize = new Vector2(100, 0) });
+            var computer = _humans is { } humans && slot < humans.Count && !humans[slot];
+            _towns.AddChild(new Label { Text = template.SlotNames[slot] + (computer ? " (computer)" : ""), CustomMinimumSize = new Vector2(100, 0) });
             var town = new OptionButton();
             town.AddItem(Random);
             foreach (var type in BuiltInMapObjects.PlayableTowns)
@@ -161,6 +190,6 @@ public partial class GeneratePanel : VBoxContainer
             .Where(c => c.Selected > 0)
             .ToDictionary(c => c.slot, c => BuiltInMapObjects.PlayableTowns[c.Selected - 1]);
         var maxHeroes = (int)_maxHeroes.Value == template.MaxHeroes ? (int?)null : (int)_maxHeroes.Value;
-        _message.Text = _generate(new GenerateRequest(_template.Selected, _size.GetSelectedId(), seed, (int)_players.Value, towns, maxHeroes)) ?? "";
+        _message.Text = _generate(new GenerateRequest(_template.Selected, _size.GetSelectedId(), seed, (int)_players.Value, towns, maxHeroes, _humans)) ?? "";
     }
 }
