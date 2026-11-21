@@ -51,6 +51,8 @@ public partial class Main : Node3D
     private InspectorPanel _inspector = null!;
     private EventsPanel _events = null!;
     private LayersPanel _layers = null!;
+    private OverlaysPanel _overlayPanel = null!;
+    private OverlayView _overlayView = null!;
     private EventCellsView _eventCells = null!;
     private SelectionView _selectionView = null!;
     private FileService _files = null!;
@@ -372,6 +374,7 @@ public partial class Main : Node3D
         BuildWorld();
 
         BuildUi();
+        _overlayPanel.Attach(_context, _overlayView);
         // On the session's own UI, freed with it on the next Open; the root stays in the tree and would keep every old session alive.
         _ui!.SubscribeWhileInTree<UndoHistoryChanged>(_editor.Events, _ =>
         {
@@ -403,6 +406,8 @@ public partial class Main : Node3D
         var zones = new StartZonesView { Name = "StartZones" };
         world.AddChild(zones);
         zones.Bind(_context);
+        _overlayView = new OverlayView { Name = "Overlay" }; // the overlays panel binds it (ADR-264)
+        world.AddChild(_overlayView);
     }
 
     /// <summary>
@@ -424,6 +429,7 @@ public partial class Main : Node3D
         _context = new MapViewContext(_editor.Scenario, _editor.Events) { ShowGrid = _showGrid, Hidden = _editor.Layers.Hidden };
         _context.SetLevel(level);
         BuildWorld();
+        _overlayPanel.Attach(_context, _overlayView); // the overlay shown is drawn on the new views
         BuildMinimap(); // of the new size, on the new view context
         _eventCells.Highlighted = highlighted;
         _toolContext.Marks = _selectionView;
@@ -584,6 +590,9 @@ public partial class Main : Node3D
         _layers = new LayersPanel { Name = "Layers" };
         _workspace.AddTab(EditorRegion.Right, _layers);
         _layers.Bind(_editor, _showGrid, ShowGrid);
+        _overlayPanel = new OverlaysPanel { Name = "Overlays" };
+        _workspace.AddTab(EditorRegion.Right, _overlayPanel);
+        _overlayPanel.Bind(_editor, state => GeneratedZones.Read(state, _generatorTemplates, GameContent.All), _workspace.MapView);
         _events = new EventsPanel { Name = "Events" };
         _workspace.AddTab(EditorRegion.Right, _events);
         _events.Bind(_editor, MapEventNodeJson.Instance);
@@ -620,6 +629,7 @@ public partial class Main : Node3D
         problems.Bind(_editor, ValidationOfSnapshot);
         problems.IssueSelected += ShowTile;
         problems.EventSelected += OpenEvent;
+        problems.FixReported += Say;
         _statusBar.ProblemsRequested += () => _workspace.ShowTab(problems);
         var history = new HistoryPanel { Name = "History" };
         _workspace.AddTab(EditorRegion.Bottom, history, scroll: false);
@@ -650,6 +660,7 @@ public partial class Main : Node3D
         Command("view.output", "Output", () => _workspace.ShowTab(output));
         Command("view.inspector", "Inspector", () => _workspace.ShowTab(_inspector));
         Command("view.layers", "Layers", () => _workspace.ShowTab(_layers));
+        Command("view.overlays", "Overlays", () => _workspace.ShowTab(_overlayPanel));
         foreach (var tool in _tools.Tools)
         {
             _commands.Register(new EditorCommand(ToolCommand(tool), tool.Name, () => _tools.Use(tool))
@@ -669,12 +680,13 @@ public partial class Main : Node3D
             },
             new("Edit", ["edit.undo", "edit.redo", null, "edit.cut", "edit.copy", "edit.paste", "edit.duplicate", "edit.delete", "edit.save-stamp", null, "edit.rotate", "edit.mirror", null, "edit.select-all", "edit.deselect", null, "edit.preferences"]),
             new("View", ["view.palette", null, "view.map-tab", "templates.editor", null, "view.level", "view.grid", null, "view.top-down",
-                "view.focus", "view.whole-map", "view.go-to", ">Bookmarks", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.layers", "view.problems", "view.history", "view.output"])
+                "view.focus", "view.whole-map", "view.go-to", ">Bookmarks", null, ">Overlay", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.layers", "view.overlays", "view.problems", "view.history", "view.output"])
             {
                 Lists =
                 [
                     new("Bookmarks", () => [.. _bookmarks.Stored.Select(n => ($"Bookmark {n} (key {n})", (Action)(() => _commands.Run($"view.bookmark-{n}"))))],
                         "No view is stored yet: Ctrl+1 … 9 store one"),
+                    new("Overlay", () => [.. OverlaysPanel.Names.Select(o => (o.Text, (Action)(() => _overlayPanel.Choose(o.Kind))))], "No overlay"),
                 ],
             },
             new("Map", ["map.settings", "map.general", "map.players", "map.conditions", "map.bans", "map.week-events", "map.rumours", "map.texts", null, "map.events", null, "map.resize", "map.crop", null, "view.problems"]),

@@ -161,6 +161,24 @@ public sealed class MapEditorSession
     }
 
     /// <summary>
+    /// Runs a validator issue's fix (ADR-265) on the map as one undo step named after it. Refused (<see cref="EditResult.InvalidTarget"/>,
+    /// nothing changed) unless the live map, validated again, still has an issue with this very fix: the check that found it may have run
+    /// on a copy made before the latest edits. The editors' own refusals come back as they are.
+    /// </summary>
+    public EditResult Fix(MapFix fix)
+    {
+        ArgumentNullException.ThrowIfNull(fix);
+        if (!MapValidator.Validate(Scenario).Any(i => i.Fix == fix))
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        var result = EditResult.Ok;
+        _context.AsOneStep($"Fix: {fix.Text}", () => result = fix.Apply(this));
+        return result;
+    }
+
+    /// <summary>
     /// The objects with <paramref name="ids"/> when they are all on the map and of one kind (one object type: all monsters, all mines),
     /// in the order given; else null. These are what the inspector edits together.
     /// </summary>

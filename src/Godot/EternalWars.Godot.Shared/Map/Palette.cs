@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Analysis;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Map;
@@ -130,6 +131,28 @@ public static class Palette
         ObjectColour.Black => new Color(0.12f, 0.12f, 0.14f),
         _ => Colors.Magenta,
     };
+
+    /// <summary>
+    /// An overlay band's colour (ADR-264): passability in red, white and orange; players in their colours; heat and days from green over
+    /// yellow to red (a day past the overlay's last in dark red); zones in hues spread around the wheel; contours in white, at whole cells in gold.
+    /// </summary>
+    public static Color ForTint(OverlayTint tint) => tint.Kind switch
+    {
+        TintKind.Blocked => new Color(0.85f, 0.15f, 0.15f),
+        TintKind.Entrance => new Color(0.95f, 0.95f, 0.95f),
+        TintKind.Guarded => new Color(1.00f, 0.55f, 0.10f),
+        TintKind.Player => ForColour(tint.Value),
+        TintKind.Neutral => Neutral,
+        TintKind.Heat => Ramp(tint.Value / 100f),
+        TintKind.Day => tint.Value > MapOverlays.ReachDays ? new Color(0.45f, 0.08f, 0.08f) : Ramp((tint.Value - 1) / (float)Math.Max(1, MapOverlays.ReachDays - 1)),
+        TintKind.Zone => Color.FromHsv(tint.Value * 0.618034f % 1f, 0.65f, 0.95f), // golden-ratio hues: neighbours in the list differ
+        TintKind.Contour => tint.Value == 0 ? new Color(1, 1, 1, 0.6f) : new Color(1.00f, 0.85f, 0.35f, 0.95f),
+        _ => Colors.Magenta,
+    };
+
+    /// <summary>Green (0) over yellow to red (1).</summary>
+    private static Color Ramp(float t) =>
+        t < 0.5f ? new Color(0.25f, 0.85f, 0.30f).Lerp(new Color(0.95f, 0.85f, 0.20f), t * 2) : new Color(0.95f, 0.85f, 0.20f).Lerp(new Color(0.90f, 0.20f, 0.20f), (t - 0.5f) * 2);
 
     /// <summary>Path markers: today green, tomorrow yellow, the day after orange, later red (HoMM-style).</summary>
     public static Color ForPathDay(int day) => day switch

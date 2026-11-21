@@ -602,9 +602,9 @@ and the game uses them.
    strength within 3 and 7 days; the resources around the start town; a warning when a start is more than 20 % from the mean
    *(placeholder)*. `MapFairness` and `sim` use it where the numbers mean the same. Tests on `TestWorld` maps. *Done.*
 5. **Overlays**: `OverlayView` (one multimesh per overlay) with a legend, one at a time: passability, owners, guard strength, reach
-   from a chosen start, zones, height contours. Smoke `editor-overlays`.
+   from a chosen start, zones, height contours. Smoke `editor-overlays`. *Done.*
 6. **Fix-its**: `MapIssue` gets an optional fix, an edit the session runs as one step; fixes where the answer is clear (link an
-   unlinked gate, give a start town its owner). The Problems panel shows a Fix button. Tests per fix.
+   unlinked gate, give a start town its owner). The Problems panel shows a Fix button. Tests per fix. *Done.*
 7. **Fairness report and exports**: a Fairness panel from `MapAnalysis`; File → Export writes the report with the problems as
    Markdown, and the whole map top-down as a PNG.
 8. **Play-test** (EDIT-5): the game app reads new launch arguments (`--player=`, `--others=ai|off`, `--reveal`, `--start=x,y,level`,

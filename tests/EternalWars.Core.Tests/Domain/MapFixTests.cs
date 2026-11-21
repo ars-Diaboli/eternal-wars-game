@@ -3,6 +3,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Economy;
+using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
 
@@ -48,6 +49,62 @@ public class MapFixTests
         TestWorld.Add<TwoWayGate>(state, BuiltInMapObjects.TwoWayMonolith, 20, 2);
 
         Assert.Null(IssueAt(Session(state), a, "is not linked").Fix);
+    }
+
+    [Fact]
+    public void GatesOfAnotherKind_OrAGatePointedAtByTwo_GiveNoFix()
+    {
+        var state = TestWorld.Create(Rows);
+        var portal = TestWorld.Add<TwoWayGate>(state, BuiltInMapObjects.TwoWayMonolith, 2, 2);
+        TestWorld.Add<TwoWayGate>(state, BuiltInMapObjects.SubterraneanGate, 20, 2); // a lone gate of the other kind
+        Assert.Null(IssueAt(Session(state), portal, "is not linked").Fix);
+
+        var two = TestWorld.Create(Rows);
+        var c = TestWorld.Add<TwoWayGate>(two, BuiltInMapObjects.TwoWayMonolith, 15, 6);
+        var a = TestWorld.Add<TwoWayGate>(two, BuiltInMapObjects.TwoWayMonolith, 2, 2);
+        var b = TestWorld.Add<TwoWayGate>(two, BuiltInMapObjects.TwoWayMonolith, 20, 2);
+        a.LinkedGate = c.Id;
+        b.LinkedGate = c.Id;
+        var session = Session(two);
+        Assert.Null(IssueAt(session, a, "not mutual").Fix);
+        Assert.Null(IssueAt(session, b, "not mutual").Fix);
+        Assert.Null(IssueAt(session, c, "is not linked").Fix);
+    }
+
+    [Fact]
+    public void AStaleFix_IsRefused_WhenTheLiveMapNoLongerGivesIt()
+    {
+        // The start town: Red got a hero since the check.
+        var state = TestWorld.Create(Rows);
+        TestWorld.AddTown(state, TownIds.Haven, 0, 0, TestWorld.Blue);
+        var neutral = TestWorld.AddTown(state, TownIds.Haven, 20, 0);
+        state.Map.SetStartZone(neutral.VisitPosition, TestWorld.Red);
+        var session = Session(state);
+        var give = MapValidator.Validate(state).First(i => i.Fix is OwnerFix).Fix!;
+        Assert.Equal(EditResult.Ok, session.Heroes.Place(TestWorld.Red, new MapPosition(10, 9), "Rook", out _));
+        var steps = session.History.Count;
+        Assert.Equal(EditResult.InvalidTarget, session.Fix(give));
+        Assert.Null(neutral.Owner);
+        Assert.Equal(steps, session.History.Count);
+
+        // The one-way gates: a second free exit appeared.
+        var gates = TestWorld.Create(Rows);
+        TestWorld.Add<OneWayGateEntrance>(gates, BuiltInMapObjects.OneWayMonolithEntrance, 2, 2);
+        TestWorld.Add<OneWayGateExit>(gates, BuiltInMapObjects.OneWayMonolithExit, 20, 2);
+        var gateSession = Session(gates);
+        var exit = MapValidator.Validate(gates).First(i => i.Fix is GateExitFix).Fix!;
+        TestWorld.Add<OneWayGateExit>(gates, BuiltInMapObjects.OneWayMonolithExit, 10, 6);
+        Assert.Equal(EditResult.InvalidTarget, gateSession.Fix(exit));
+
+        // Already linked by hand: no empty step.
+        var linked = TestWorld.Create(Rows);
+        var a = TestWorld.Add<TwoWayGate>(linked, BuiltInMapObjects.TwoWayMonolith, 2, 2);
+        var b = TestWorld.Add<TwoWayGate>(linked, BuiltInMapObjects.TwoWayMonolith, 20, 2);
+        var linkedSession = Session(linked);
+        var link = MapValidator.Validate(linked).First(i => i.Fix is LinkGatesFix).Fix!;
+        Assert.Equal(EditResult.Ok, linkedSession.Objects.LinkGates(a.Id, b.Id));
+        Assert.Equal(EditResult.InvalidTarget, linkedSession.Fix(link));
+        Assert.Equal(1, linkedSession.History.Count);
     }
 
     [Fact]

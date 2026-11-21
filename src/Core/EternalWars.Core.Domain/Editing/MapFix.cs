@@ -7,7 +7,7 @@ namespace EternalWars.Core.Domain.Editing;
 /// <summary>
 /// A fix for a <see cref="MapIssue"/> (ADR-265): an edit whose answer is clear, named by <see cref="Text"/> (the Problems panel's Fix button).
 /// A fix is data (the ids of what it changes and what it found there), as the validator may run on a copy of the map: the session applies it
-/// to the live map (<see cref="MapEditorSession.Fix"/>) as one undo step, and refuses it when the map no longer is as the check saw it.
+/// to the live map (<see cref="MapEditorSession.Fix"/>) as one undo step, and refuses it unless the live map still gives the same fix.
 /// </summary>
 public abstract record MapFix(string Text)
 {
@@ -16,15 +16,21 @@ public abstract record MapFix(string Text)
 }
 
 /// <summary>
-/// Links two two-way gates to each other: each must still be unlinked or already linked to the other (the fix of an unlinked gate whose
-/// partner is the only other unlinked gate, or that another gate already points at).
+/// Links two two-way gates of one kind to each other (the fix of an unlinked gate whose partner is the only other unlinked gate of its kind,
+/// or the one gate that points at it): each must still be unlinked or linked to the other, and not both already.
 /// </summary>
 public sealed record LinkGatesFix(string Text, MapObjectId First, MapObjectId Second) : MapFix(Text)
 {
     internal override EditResult Apply(MapEditorSession session)
     {
-        bool Free(MapObjectId id, MapObjectId other) => session.Scenario.FindObject(id) is TwoWayGate { LinkedGate: var link } && (link is null || link == other);
-        return Free(First, Second) && Free(Second, First) ? session.Objects.LinkGates(First, Second) : EditResult.InvalidTarget;
+        if (session.Scenario.FindObject(First) is not TwoWayGate a || session.Scenario.FindObject(Second) is not TwoWayGate b
+            || a.Definition.Id != b.Definition.Id || (a.LinkedGate == b.Id && b.LinkedGate == a.Id))
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        var free = a.LinkedGate is null || a.LinkedGate == b.Id;
+        return free && (b.LinkedGate is null || b.LinkedGate == a.Id) ? session.Objects.LinkGates(First, Second) : EditResult.InvalidTarget;
     }
 }
 
@@ -39,8 +45,7 @@ public sealed record GateExitFix(string Text, MapObjectId Entrance, MapObjectId 
 }
 
 /// <summary>
-/// Gives an ownable thing (a town, mine, garrison, resource provider or dwelling) the owner <see cref="Owner"/> (null: neutral), when it still
-/// has the owner <see cref="Was"/> the check saw.
+/// Gives a town, mine or garrison the owner <see cref="Owner"/> (null: neutral), when it still has the owner <see cref="Was"/> the check saw.
 /// </summary>
 public sealed record OwnerFix(string Text, MapObjectId Object, PlayerId? Was, PlayerId? Owner) : MapFix(Text)
 {
@@ -50,8 +55,6 @@ public sealed record OwnerFix(string Text, MapObjectId Object, PlayerId? Was, Pl
         Town town => session.Towns.SetOwner(town.Id, Owner),
         Mine mine => session.Objects.SetMineOwner(mine.Id, Owner),
         MapGarrison garrison => session.Objects.SetGarrisonOwner(garrison.Id, Owner),
-        ResourceProvider provider => session.Objects.SetProviderOwner(provider.Id, Owner),
-        CreatureDwelling dwelling => session.Objects.SetDwelling(dwelling.Id, dwelling.Creature, Owner, dwelling.Available),
         _ => EditResult.InvalidTarget,
     };
 }

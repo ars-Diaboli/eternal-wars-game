@@ -36,11 +36,14 @@ public enum IssueKind
 
 /// <summary>
 /// A problem the validator found: how bad, what, where on the map and, for the map events, which event (the Events tab opens it).
-/// <see cref="Kind"/> is set by the validator from the check that found it.
+/// <see cref="Kind"/> is set by the validator from the check that found it. <see cref="Fix"/> is the edit that solves it, where the answer
+/// is clear (ADR-265); <see cref="MapEditorSession.Fix"/> runs it.
 /// </summary>
 public sealed record MapIssue(IssueSeverity Severity, string Message, MapPosition? Position = null, string? Event = null)
 {
     public IssueKind Kind { get; init; }
+
+    public MapFix? Fix { get; init; }
 }
 
 /// <summary>

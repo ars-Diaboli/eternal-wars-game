@@ -326,9 +326,13 @@ views leave out what `MapViewContext.Hidden` names, and `LayersPanel` (Godot.UI)
 The map analysis (ADR-263) is `MapAnalysis` (Core.Domain/Analysis): reach in days through `PathFinder.CostsFor` for a scout that is not
 on the map, guard strength, treasure value and the fairness numbers per start; the generator's `MapFairness` takes its guard power
 from it.
+The editor's overlays (ADR-264) are computed by `MapOverlays` (Core.Domain/Analysis) as tinted tiles or lines with a legend; a generated
+map's zones come from `GeneratedZones` (Core.Generation), which lays the zones out again from the map's description. `OverlayView`
+(Godot.Shared) draws one as a multimesh, and `OverlaysPanel` (Godot.UI) chooses it, computes it again after edits and shows the legend.
 Single-value edits are `PropertyEdit<T>` commands; an edit to the value already there records no undo step and publishes
 nothing. The three tile layers paint through `PaintLayer<TValue, TEvent>`. `BeginStroke`/`EndStroke` merge a drag into
-one undo step. `MapValidator` reports what single edits cannot prevent. `MapConnectivity` tells where a hero can walk on a fresh
+one undo step. `MapValidator` reports what single edits cannot prevent; an issue with a clear answer carries a `MapFix` (ADR-265), data
+naming the objects it changes, which `MapEditorSession.Fix` runs on the live map as one undo step. `MapConnectivity` tells where a hero can walk on a fresh
 map (through guards and pickups, via gates); the Sim's generated-map check reports the rival towns a player cannot reach.
 
 ### Content tables (ADR-071)

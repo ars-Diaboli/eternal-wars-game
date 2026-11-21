@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-264.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-266.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -290,3 +290,5 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [261](random-maps-and-editor.md#adr-261-the-editors-minimap-and-go-to-adr-260-2026-11-21) | random-maps-and-editor | The editor's minimap and Go to (ADR-260, 2026-11-21) | implemented |
 | [262](random-maps-and-editor.md#adr-262-the-editors-layers-adr-250-2026-11-21) | random-maps-and-editor | The editor's layers (ADR-250, 2026-11-21) | implemented |
 | [263](random-maps-and-editor.md#adr-263-the-map-analysis-in-the-core-adr-117-adr-250-2026-11-21) | random-maps-and-editor | The map analysis in the core (ADR-117, ADR-250, 2026-11-21) | implemented |
+| [264](random-maps-and-editor.md#adr-264-the-editors-overlays-adr-262-adr-263-2026-11-21) | random-maps-and-editor | The editor's overlays (ADR-262, ADR-263, 2026-11-21) | implemented |
+| [265](random-maps-and-editor.md#adr-265-fix-its-for-the-maps-problems-adr-250-2026-11-21) | random-maps-and-editor | Fix-its for the map's problems (ADR-250, 2026-11-21) | implemented |

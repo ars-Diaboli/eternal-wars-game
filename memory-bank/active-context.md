@@ -9,10 +9,20 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 4 task 6 (ADR-265): fix-its. `MapIssue.Fix` (`MapFix`: `LinkGatesFix`, `GateExitFix`, `OwnerFix`) where the
+  answer is clear (gates with one possible partner, a missing player's things made neutral, a player's only neutral start-zone town);
+  `MapEditorSession.Fix` runs one as an undo step and refuses it when the map changed since the check. The Problems panel's Fix button
+  runs the selected one. Tests `MapFixTests`. Next: step 4 task 7 (the fairness report and exports); step 3's done-when (the
+  drop-downs below) is still open.
+- Editor overhaul, step 4 task 5 (ADR-264): overlays. `MapOverlays` (Core.Domain/Analysis) computes passability, owners, guard strength,
+  reach from a `MapAnalysis.Starts` start or a cell, zones and height contours per level as tinted cells or lines with a legend;
+  `GeneratedZones` (Core.Generation) lays a generated map's zones out again from its description. `OverlayView` (Godot.Shared) draws
+  one multimesh per overlay; `OverlaysPanel` (Godot.UI, a right-region tab) chooses it and shows `OverlayLegend` over the map view.
+  Tests `MapOverlaysTests`; smoke `editor-overlays`.
 - Editor overhaul, step 4 task 4 (ADR-263): `MapAnalysis` (Core.Domain/Analysis) over any `GameState`: `Reach` in days by the game's
   step costs for a scout of the start's faction that walks past guards and pickups (`PathFinder.CostsFor`, `passThrough`), `GuardStrength` per cell, `GuardPower`, `TreasureValue`, and `Fairness` per start
   with warnings over 20 % from the mean. `MapFairness` and `TreasurePlacer` take guard power and gold values from it; `sim fairness
-  --verbose` prints it. Tests `MapAnalysisTests`. Next: step 4 task 5; step 3's done-when (the drop-downs below) is still open.
+  --verbose` prints it. Tests `MapAnalysisTests`.
 - Editor overhaul, step 4 task 3 (ADR-262): layers. `MapLayers` (`MapEditorSession.Layers`, Core.Domain) hides and locks per `MapLayer`;
   what is hidden or locked is not selected (`SelectionEditor`) or erased (`EraseEditor`), and leaves the selection when its layer
   changes (`MapLayersChanged`). `MapViewContext.Hidden` hides kinds in the shared map views; the Layers tab is `LayersPanel`. Tests
