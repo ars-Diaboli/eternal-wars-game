@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Game;
 
 namespace EternalWars.Core.Domain.Editing;
 
@@ -90,6 +91,19 @@ public sealed class MapSelection
     public bool Contains(HeroId hero) => _heroes.Contains(hero);
 
     public bool ContainsEvent(string name) => _events.Contains(name);
+
+    /// <summary>
+    /// The map cells the selection covers in <paramref name="state"/>, each once: its tiles, every cell of its objects, its heroes' tiles
+    /// and its events' cells. What the editor's camera frames for "focus the selection" (ADR-260).
+    /// </summary>
+    public IReadOnlyList<MapPosition> Cells(GameState state) =>
+    [
+        .. _tiles
+            .Concat(state.Objects.Where(o => _objects.Contains(o.Id)).SelectMany(o => o.OccupiedCells().Select(c => c.Position)))
+            .Concat(state.Heroes.Where(h => _heroes.Contains(h.Id)).Select(h => h.Position))
+            .Concat(state.MapEvents.Set.Cells.Where(c => _events.Contains(c.Event)).Select(c => c.Position))
+            .Distinct(),
+    ];
 
     /// <summary>Makes the selection exactly <paramref name="items"/>. Returns whether it changed.</summary>
     internal bool Set(SelectionItems items)

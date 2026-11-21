@@ -9,6 +9,15 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 4 task 2 (ADR-261): the minimap `MinimapPanel` under the right region's tabs (`EditorWorkspace.SetFooter`; the
+  HUD's `MinimapWidget` with `DragMoves`, `ViewFrame`, `GhostOtherLevel`, `Refresh`); Go to (Ctrl+G, `GoToBox` over `MapGoTo.Find`,
+  results are `MapLink`s run through the inspector's jump). `EditorCamera.Centre` puts a tile in the middle of the map view (Go to, the
+  Problems panel, the events, the minimap, switching level). Tests `MapGoToTests`; smoke `editor-minimap`. Next: step 4 task 3
+  (layers); step 3's done-when (the drop-downs below) is still open.
+- Editor overhaul, step 4 task 1 (ADR-260): the editor's own camera `EditorCamera` (Godot.Shared, beside `StrategyCamera`): tilted or top
+  down (View > Top-down view), middle-button drag, the wheel zooming by a share of the distance; F frames the selection
+  (`MapSelection.Cells`), Home the whole level, both into `EditorWorkspace.MapView`; Ctrl+1 … 9 / 1 … 9 bookmarks (`CameraBookmarks`).
+  AutoInput has `mdrag`. Smoke `editor-camera`.
 - Editor overhaul, step 3 task 10 (ADR-259): the new-map wizard `NewMapWizard` (File → New map, Ctrl+N; replaces New, New (2 levels) and
   From template): size, levels and ground, players and their kind, a template; it ends on a blank map (`NewMapSettings`,
   `BlankScenario.Create(settings)`) or in the Generate tab (`GeneratePanel.Preset`, `MapSizes.Nearest`, `EditorMapGenerator`'s `humans`).

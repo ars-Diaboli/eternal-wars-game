@@ -284,10 +284,28 @@ through the list, Enter or a click runs the command, Escape closes the palette.
 | Autosave interval | 1 to 30 minutes | 2 |
 | Camera move speed | 4 to 40 tiles a second (at 100 % zoom) | 12 |
 | Camera turn speed | 30 to 180 degrees a second | 90 |
-| Camera zoom speed | 1 to 5 (one notch of the wheel) | 3 |
+| Camera zoom speed | 1 to 5 (a notch of the wheel divides or multiplies the camera's distance by 1.05 to 1.25) | 3 |
 | New map's size | 16 to 256 tiles a side | 36 |
 
 "Defaults" puts the values of a new installation into the fields; "Cancel" or Escape changes nothing.
+
+**The camera** (ADR-260) looks at the map tilted, 15° to 30° from straight down (more tilted closer), or straight down (View >
+Top-down view); it goes out far enough to show a 256 × 256 map.
+- W, A, S, D move it, Q and E turn it up to 45° either way, the wheel zooms, and dragging with the middle button moves the map with
+  the pointer.
+- **F** (View > Focus the selection) frames the selection: its tiles and every cell of its objects, heroes and events, on the shown
+  level, else on the level it is on. **Home** (View > Whole map) frames the shown level. Both fit into the part of the window the map
+  shows in, between the panels.
+- **Bookmarks**: Ctrl+1 … 9 store the view and the level shown, 1 … 9 return to them (View > Bookmarks lists them). They belong to the
+  map open and are not saved.
+- **The minimap** (ADR-261), under the right region's tabs: the shown level in the terrain's colours, objects and heroes in their
+  owners' colours, and the view outlined in white. A click or a drag on it moves the view there. On a map of two levels, "Show the other
+  level faintly" mixes the other level's colours in.
+- **Go to** (Ctrl+G, View > Go to…): type a tile ("12, 7", or "12, 7, 1" for the level; the shown level otherwise) or a name: the
+  list follows as you type with the tile first, then the heroes, the named objects (every town) and the events with a cell whose names
+  fit, as the command palette ranks them. Up and Down choose, Enter or a click goes there (a hero or an object also becomes the
+  selection), Escape closes it.
+- Going to a tile from Go to, the minimap, the Problems panel or the events puts it in the middle of the map's part of the window.
 
 The camera keys do nothing while a text field is being typed into, while a question, a dialog, the palette or Preferences is open,
 while Ctrl is held, and on the Template tab. A shortcut pressed in the middle of a stroke on the map is ignored.

@@ -41,7 +41,10 @@ public partial class Main : Node3D
     private MapEditorSession _editor = null!;
     private MapViewContext _context = null!;
     private bool _showGrid = true; // the editor's own toggle, kept from map to map
-    private StrategyCamera _camera = null!;
+    private EditorCamera _camera = null!;
+
+    /// <summary>The camera's bookmarks (ADR-260): of the map open, cleared when another opens.</summary>
+    private readonly CameraBookmarks _bookmarks = new();
     private Node3D? _world;
     private CanvasLayer? _ui;
     private ToolPalette _tools = null!;
@@ -97,7 +100,7 @@ public partial class Main : Node3D
             AddChild(autoInput);
         }
 
-        _camera = new StrategyCamera { Name = "Camera" };
+        _camera = new EditorCamera { Name = "Camera" };
         AddChild(_camera);
         _camera.Zoomed += () => _statusBar.ShowZoom(_camera.ZoomPercent);
         AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-55, -35, 0) });
@@ -378,6 +381,7 @@ public partial class Main : Node3D
         _ui!.SubscribeWhileInTree<SelectionChanged>(_editor.Events, _ => _commands.NotifyStateChanged());
 
         _camera.FocusOn(MapSpace.ToWorld(new(state.Map.Width / 2, state.Map.Height / 2)));
+        _bookmarks.Clear();
         return _editor;
     }
 
@@ -418,12 +422,13 @@ public partial class Main : Node3D
         _context = new MapViewContext(_editor.Scenario, _editor.Events) { ShowGrid = _showGrid };
         _context.SetLevel(level);
         BuildWorld();
+        BuildMinimap(); // of the new size, on the new view context
         _eventCells.Highlighted = highlighted;
         _toolContext.Marks = _selectionView;
         _tools.Tool.Hover(null); // what the tool drew before a click was on the old views
         _tools.Tool.Refresh();
         var map = _editor.Scenario.Map;
-        _camera.FocusOn(MapSpace.ToWorld(new MapPosition(map.Width / 2, map.Height / 2, _context.Level)));
+        _camera.Centre(MapSpace.ToWorld(new MapPosition(map.Width / 2, map.Height / 2, _context.Level)), _workspace.MapView.GetGlobalRect());
         _commands.NotifyStateChanged();
     }
 
@@ -546,6 +551,7 @@ public partial class Main : Node3D
         _statusBar = new StatusBarView { Name = "Status" };
         _workspace.StatusBar.AddChild(_statusBar);
         _statusBar.ShowZoom(_camera.ZoomPercent);
+        BuildMinimap();
 
         // Left: the tools and the options of the one in use, which wrap to the region's width; the object browser takes the room under
         // them and scrolls its own list.
@@ -656,7 +662,15 @@ public partial class Main : Node3D
                 ],
             },
             new("Edit", ["edit.undo", "edit.redo", null, "edit.cut", "edit.copy", "edit.paste", "edit.duplicate", "edit.delete", "edit.save-stamp", null, "edit.rotate", "edit.mirror", null, "edit.select-all", "edit.deselect", null, "edit.preferences"]),
-            new("View", ["view.palette", null, "view.map-tab", "templates.editor", null, "view.level", "view.grid", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.problems", "view.history", "view.output"]),
+            new("View", ["view.palette", null, "view.map-tab", "templates.editor", null, "view.level", "view.grid", null, "view.top-down",
+                "view.focus", "view.whole-map", "view.go-to", ">Bookmarks", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.problems", "view.history", "view.output"])
+            {
+                Lists =
+                [
+                    new("Bookmarks", () => [.. _bookmarks.Stored.Select(n => ($"Bookmark {n} (key {n})", (Action)(() => _commands.Run($"view.bookmark-{n}"))))],
+                        "No view is stored yet: Ctrl+1 … 9 store one"),
+                ],
+            },
             new("Map", ["map.settings", "map.general", "map.players", "map.conditions", "map.bans", "map.week-events", "map.rumours", "map.texts", null, "map.events", null, "map.resize", "map.crop", null, "view.problems"]),
             new("Tools", [.. _tools.Tools.Select(ToolCommand)]),
             new("Templates", ["templates.editor"]),
@@ -735,6 +749,19 @@ public partial class Main : Node3D
         Command("view.level", "Switch level", SwitchLevel, UiIcon.SwitchLevel, new(Key.L),
             () => _editor.Scenario.Map.Levels > 1 ? null : "The map has one level", onMap: true);
         Command("view.grid", "Grid", () => _context.ShowGrid = _showGrid = !_showGrid, isOn: () => _showGrid, onMap: true);
+        Command("view.top-down", "Top-down view", () => _camera.TopDown = !_camera.TopDown, isOn: () => _camera.TopDown, onMap: true);
+        Command("view.focus", "Focus the selection", FocusSelection, shortcut: new(Key.F),
+            whyNot: () => _editor.Selection.Cells(_editor.Scenario).Count > 0 ? null : "Nothing is selected", onMap: true);
+        Command("view.whole-map", "Whole map", ShowWholeMap, shortcut: new(Key.Home), onMap: true);
+        Command("view.go-to", "Go to…", OpenGoTo, shortcut: new(Key.G, Ctrl: true), onMap: true);
+        for (var slot = CameraBookmarks.First; slot <= CameraBookmarks.Last; slot++)
+        {
+            var n = slot;
+            Command($"view.store-bookmark-{n}", $"Store bookmark {n}", () => StoreBookmark(n), shortcut: new(Key.Key0 + n, Ctrl: true), onMap: true);
+            Command($"view.bookmark-{n}", $"Go to bookmark {n}", () => GoToBookmark(n), shortcut: new(Key.Key0 + n),
+                whyNot: () => _bookmarks[n] is null ? $"Bookmark {n} is not stored: Ctrl+{n} stores the view" : null, onMap: true);
+        }
+
         Command("view.left", "Left panel", () => _workspace.SetOpen(EditorRegion.Left, !_workspace.IsShown(EditorRegion.Left)),
             isOn: () => _workspace.IsShown(EditorRegion.Left), onMap: true);
         Command("view.bottom", "Bottom panel", () => _workspace.SetOpen(EditorRegion.Bottom, !_workspace.IsShown(EditorRegion.Bottom)),
@@ -817,7 +844,7 @@ public partial class Main : Node3D
     {
         _context.SetLevel((_context.Level + 1) % _editor.Scenario.Map.Levels);
         _tools.Tool.Refresh();
-        _camera.FocusOn(MapSpace.ToWorld(new MapPosition(_editor.Scenario.Map.Width / 2, _editor.Scenario.Map.Height / 2, _context.Level)));
+        _camera.Centre(MapSpace.ToWorld(new MapPosition(_editor.Scenario.Map.Width / 2, _editor.Scenario.Map.Height / 2, _context.Level)), _workspace.MapView.GetGlobalRect());
     }
 
     /// <summary>
@@ -830,10 +857,95 @@ public partial class Main : Node3D
         return () => MapValidator.Validate(MapConverter.ToGameState(document, GameContent.All, checkEvents: false));
     }
 
+    /// <summary>The view shows <paramref name="position"/>'s level with the tile in the middle of the map view.</summary>
     private void ShowTile(MapPosition position)
     {
-        _context.SetLevel(position.Level);
-        _camera.FocusOn(MapSpace.ToWorld(position));
+        ShowLevel(position.Level);
+        _camera.Centre(MapSpace.ToGround(_editor.Scenario.Map, position), _workspace.MapView.GetGlobalRect());
+    }
+
+    /// <summary>The minimap (ADR-261) under the right region's tabs, for the map as it is now.</summary>
+    private void BuildMinimap()
+    {
+        var minimap = new MinimapPanel { Name = "MinimapPanel" };
+        _workspace.SetFooter(EditorRegion.Right, minimap);
+        minimap.Bind(_editor, _context, _camera, _workspace.MapView, ShowTile);
+    }
+
+    /// <summary>Go to (Ctrl+G, ADR-261): a tile or a named thing, which the view shows and, for a thing, selects (as a jump link does).</summary>
+    private void OpenGoTo()
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        var box = new GoToBox { Name = "GoTo" };
+        _overlays.AddChild(box);
+        box.Bind(_editor.Scenario, _context.Level, Jump);
+    }
+
+    /// <summary>The view shows <paramref name="level"/>: the tool in use follows when it changes.</summary>
+    private void ShowLevel(int level)
+    {
+        if (_context.Level != level)
+        {
+            _context.SetLevel(level);
+            _tools.Tool.Refresh();
+        }
+    }
+
+    /// <summary>F (ADR-260): the camera frames the selection, on the shown level if it has cells there, else on the level of its first.</summary>
+    private void FocusSelection()
+    {
+        var cells = _editor.Selection.Cells(_editor.Scenario);
+        if (cells.Count == 0)
+        {
+            return;
+        }
+
+        var level = cells.Any(c => c.Level == _context.Level) ? _context.Level : cells[0].Level;
+        var shown = cells.Where(c => c.Level == level).ToList();
+        ShowLevel(level);
+        var ground = shown.Average(c => MapSpace.ToGround(_editor.Scenario.Map, c).Y); // raised ground shows nearer: framed at its height
+        _camera.Frame(
+            MapSpace.ToWorld(new MapPosition(shown.Min(c => c.X), shown.Min(c => c.Y), level)) with { Y = ground },
+            MapSpace.ToWorld(new MapPosition(shown.Max(c => c.X), shown.Max(c => c.Y), level)) with { Y = ground }, _workspace.MapView.GetGlobalRect());
+    }
+
+    /// <summary>Home (ADR-260): the camera frames the whole shown level.</summary>
+    private void ShowWholeMap()
+    {
+        var map = _editor.Scenario.Map;
+        _camera.Frame(
+            MapSpace.ToWorld(new MapPosition(0, 0, _context.Level)), MapSpace.ToWorld(new MapPosition(map.Width - 1, map.Height - 1, _context.Level)),
+            _workspace.MapView.GetGlobalRect());
+    }
+
+    /// <summary>Ctrl+1 … 9 (ADR-260): the view and the shown level go into bookmark <paramref name="slot"/>.</summary>
+    private void StoreBookmark(int slot)
+    {
+        _bookmarks.Store(slot, new CameraBookmark(_camera.View, _context.Level));
+        _commands.NotifyStateChanged();
+        Say($"Stored the view as bookmark {slot}; {slot} returns to it");
+    }
+
+    /// <summary>1 … 9 (ADR-260): the view of bookmark <paramref name="slot"/> again, on its level.</summary>
+    private void GoToBookmark(int slot)
+    {
+        if (_bookmarks[slot] is not { } bookmark)
+        {
+            return;
+        }
+
+        if (bookmark.Level >= _editor.Scenario.Map.Levels)
+        {
+            Say($"Bookmark {slot} shows a level the map no longer has");
+            return;
+        }
+
+        ShowLevel(bookmark.Level);
+        _camera.Show(bookmark.View);
     }
 
     /// <summary>A jump link of the inspector (ADR-254): the view goes to the linked thing, which becomes the selection and the inspected one.</summary>

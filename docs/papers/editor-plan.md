@@ -593,9 +593,9 @@ and the game uses them.
 ### Step 4: Navigation, overlays, analysis and testing
 
 1. **Editor camera**: `EditorCamera` beside `StrategyCamera`: top-down or tilted, F to focus the selection, Home for the whole map,
-   the middle button pans, the wheel zooms; Ctrl+1 … 9 store bookmarks and 1 … 9 return to them.
+   the middle button pans, the wheel zooms; Ctrl+1 … 9 store bookmarks and 1 … 9 return to them. *Done.*
 2. **Minimap and Go to**: `MinimapWidget` reused in the right region (a click or drag moves the view, the view's frame drawn); Ctrl+G
-   goes to a tile or a named object, searching as you type; the other level can show ghosted.
+   goes to a tile or a named object, searching as you type; the other level can show ghosted. *Done.*
 3. **Layers**: show, hide and lock per kind; the core's selection and erase skip locked kinds. Tests.
 4. **Analysis in the core**: `MapAnalysis` over a `GameState`: reach in days from a tile with the game's pathfinding, guard strength
    per cell, and the fairness numbers per start (EDIT-9): days to the nearest town, mines and providers; treasure value and guard

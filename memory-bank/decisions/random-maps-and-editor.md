@@ -26,6 +26,8 @@
 | [257](#adr-257-the-map-content-rumours-a-players-factions-object-names-and-custom-heroes-in-one-format-bump-edit-12-adr-250-adr-256-2026-11-21) | The map content: rumours, a player's factions, object names and custom heroes, in one format bump (EDIT-12, ADR-250, ADR-256, 2026-11-21) | implemented |
 | [258](#adr-258-the-maps-texts-one-core-list-with-a-setter-each-and-the-texts-tab-edit-11-adr-256-adr-257-2026-11-21) | The map's texts: one core list with a setter each, and the Texts tab (EDIT-11, ADR-256, ADR-257, 2026-11-21) | implemented |
 | [259](#adr-259-the-new-map-wizard-and-the-empty-state-adr-250-adr-087-2026-11-21) | The new-map wizard and the empty state (ADR-250, ADR-087, 2026-11-21) | implemented |
+| [260](#adr-260-the-editors-camera-framing-and-bookmarks-adr-022-adr-250-2026-11-21) | The editor's camera: framing and bookmarks (ADR-022, ADR-250, 2026-11-21) | implemented |
+| [261](#adr-261-the-editors-minimap-and-go-to-adr-260-2026-11-21) | The editor's minimap and Go to (ADR-260, 2026-11-21) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -618,3 +620,39 @@ ADR when it is built.
   when another map opens, and does not come back until the next start.
 - **Sample maps** (`SampleMaps`): the shipped hand-made maps (Ember March, Two Towns, the three arenas), opened through the map format as a
   new, unsaved map. The Help menu's sample maps and their own files come with step 6.
+
+### ADR-260: The editor's camera: framing and bookmarks (ADR-022, ADR-250, 2026-11-21)
+**Status**: implemented (plan step 4, task 1).
+
+- **A camera of its own**: `EditorCamera` (Godot.Shared) beside the game's `StrategyCamera` (ADR-022), which stays as it is. It keeps the
+  game camera's tilt (15° to 30° from vertical, more tilted closer, up to 45° of turn) and adds a straight-down view; it goes out to
+  400 tiles' distance, so the largest map fits. The wheel zooms by a share of the distance (a factor of 1.15 a notch at the default preference), so a
+  notch feels the same close up and over a 256 × 256 map. W, A, S, D and Q, E stay the camera's keys.
+- **The middle button drags the map**: the ground point under the press stays under the pointer (on the plane of the camera's focus),
+  followed through the input before the panels see it, so the drag goes on over them.
+- **Framing** (`Frame`): an area fits into the part of the window the map shows in (`EditorWorkspace.MapView`, between the panels) with
+  two tiles of room, and its middle comes under that part's centre. Straight down the distance is worked out; tilted, the near edge
+  shows larger than the far one, so the nearest distance at which all four corners show is searched. Home frames the shown level;
+  F frames the selection
+  (`MapSelection.Cells`: its tiles and every cell of its objects, heroes and events), on the shown level if it has cells there, else on
+  the level of its first, at the ground's mean height there.
+- **Bookmarks** (`CameraBookmarks`, Godot.UI): Ctrl+1 … 9 store the view (focus, distance, turn, top-down) with the shown level, 1 … 9
+  return to it; View > Bookmarks lists them. They belong to the map open, go when another opens and are not saved: a view is a
+  designer's place in a session, not part of the map.
+
+### ADR-261: The editor's minimap and Go to (ADR-260, 2026-11-21)
+**Status**: implemented (plan step 4, task 2).
+
+- **The game's minimap, reused**: `MinimapPanel` (Godot.UI) holds the HUD's `MinimapWidget` under the right region's tabs (a footer of the
+  region, `EditorWorkspace.SetFooter`, so it shows whichever tab is open and moves nothing above it), fitted into a 200-pixel square. The
+  widget gains what the editor needs and the game does not use: a drag reports every tile it passes (`DragMoves`), the view's frame is
+  drawn from the ground under the map view's corners (`ViewFrame`, through `EditorCamera.GroundAt`), and it rebuilds after every edit
+  (`Refresh` on `UndoHistoryChanged`), since moves, owners and roads publish no event it listens to. A click or a drag moves the view so
+  the tile is in the middle of the map view (`EditorCamera.Centre`); the panel is made again for every map and every new size.
+- **The other level ghosted**: on a map of two levels, a box under the minimap mixes 35 % of the other level's colour into every cell
+  (`GhostOtherLevel`), so the underground can be laid out against the surface. Only the minimap shows it; the 3D view shows one level.
+- **Go to** (Ctrl+G, View > Go to…): `GoToBox` searches as you type through `MapGoTo.Find` (Core.Domain). Two numbers, with a third for
+  the level, are a tile (the shown level when none is typed), offered first; any text is also searched among the heroes, the named
+  objects (a town always has a name) and the events with a cell, ranked as the command palette ranks commands (`CommandSearch`); an
+  empty text lists them all, at most 50. A result is a `MapLink`, so going there is the inspector's jump: the view shows it and a hero or
+  an object becomes the selection.

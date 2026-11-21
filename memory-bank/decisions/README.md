@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-260.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-262.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -286,3 +286,5 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [257](random-maps-and-editor.md#adr-257-the-map-content-rumours-a-players-factions-object-names-and-custom-heroes-in-one-format-bump-edit-12-adr-250-adr-256-2026-11-21) | random-maps-and-editor | The map content: rumours, a player's factions, object names and custom heroes, in one format bump (EDIT-12, ADR-250, ADR-256, 2026-11-21) | implemented |
 | [258](random-maps-and-editor.md#adr-258-the-maps-texts-one-core-list-with-a-setter-each-and-the-texts-tab-edit-11-adr-256-adr-257-2026-11-21) | random-maps-and-editor | The map's texts: one core list with a setter each, and the Texts tab (EDIT-11, ADR-256, ADR-257, 2026-11-21) | implemented |
 | [259](random-maps-and-editor.md#adr-259-the-new-map-wizard-and-the-empty-state-adr-250-adr-087-2026-11-21) | random-maps-and-editor | The new-map wizard and the empty state (ADR-250, ADR-087, 2026-11-21) | implemented |
+| [260](random-maps-and-editor.md#adr-260-the-editors-camera-framing-and-bookmarks-adr-022-adr-250-2026-11-21) | random-maps-and-editor | The editor's camera: framing and bookmarks (ADR-022, ADR-250, 2026-11-21) | implemented |
+| [261](random-maps-and-editor.md#adr-261-the-editors-minimap-and-go-to-adr-260-2026-11-21) | random-maps-and-editor | The editor's minimap and Go to (ADR-260, 2026-11-21) | implemented |
