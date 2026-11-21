@@ -40,6 +40,7 @@
 | [271](#adr-271-the-template-graphs-selection-and-clipboard-adr-268-adr-270-2026-11-21) | The template graph's selection and clipboard (ADR-268, ADR-270, 2026-11-21) | implemented |
 | [272](#adr-272-template-mirror-tools-adr-117-adr-271-2026-11-21) | Template mirror tools (ADR-117, ADR-271, 2026-11-21) | implemented |
 | [273](#adr-273-the-template-inspectors-pickers-and-zone-presets-adr-117-adr-250-2026-11-21) | The template inspector's pickers and zone presets (ADR-117, ADR-250, 2026-11-21) | implemented |
+| [274](#adr-274-the-template-preview-and-generate-many-adr-087-adr-117-2026-11-21) | The template preview and Generate many (ADR-087, ADR-117, 2026-11-21) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -939,3 +940,27 @@ ADR when it is built.
   made empty (`ZonePresets.Settings`, which also copies the tables, so zones made from one preset share none), and Delete finds a preset
   whose file was renamed by hand. The lists are read each time a preset menu opens, so
   presets saved elsewhere show without a restart.
+
+### ADR-274: The template preview and Generate many (ADR-087, ADR-117, 2026-11-21)
+**Status**: implemented (plan step 5, tasks 7 and 8).
+
+- **The template editor generates in the core** (`TemplateBatch.Generate`, Core.Generation): every start slot a player, towns drawn from
+  the seed, as `EditorMapGenerator` makes it. The panel runs it off the main thread and shows the map in a **Preview** tab beside the
+  graph instead of opening it; the app only opens a map it is handed (`TemplateEditorHost.Open`, "Open in map editor"), and gives the
+  content tables (`TemplateEditorHost.Content`). A newer Generate drops the result of one still running. A handed-over map belongs to the
+  map editor, so opening again generates the seed afresh rather than sharing a `GameState` between two sessions.
+- **The picture is core data** (`ZonePicture`): each tile's minimap cell (`Minimap.Build`, omniscient) and its zone from the generation's
+  `ZoneLayout`, the borders between zones and a label tile per zone (its tile nearest the mean of its tiles, so a bent zone's label stays
+  on it). The view (`ZonePictureView`, Godot.UI) only colours it: at three or more pixels a tile a border is the tile's last pixel row or
+  column, below that the tile is darkened. Built off the main thread with the map.
+- **Generate many** (`TemplateBatch.RunAsync`): N seeds (default 20, at most 200) counting up from the top row's seed, at most
+  `DefaultParallel` (half the processors) at once through `Parallel.ForEachAsync`, cancellable, returned in seed order; a template with
+  errors, a size it lacks or a bad count is refused before any map. Each map (`BatchMap`, `Check`) has the `sim maps` checks without the
+  AI's play: the generator's problems, the same digest from a second generation, `MapConnectivity.UnreachableRivalTowns`, the map
+  validator's errors. Fairness is the generator's own `StartMeasure`s (already computed per map); per map each measure's **imbalance** is
+  (largest - smallest) / mean in percent, and the batch's `BatchSummary` gives how many passed and the smallest, mean and largest of the
+  attempts and of each imbalance. A batch's maps equal single runs of their seeds (tested).
+- **Workers never call Godot**: many workers deferring calls at once crashed the engine, so Generate's task and the batch's workers queue
+  their results (`ConcurrentQueue`) and the panel drains the queue in `_Process` while one runs, dropping a Generate older than the newest
+  and what belongs to an older batch. A batch runs on while the panel leaves the tree (it does at every map open) and stops only when
+  the panel is freed. Handed-over maps are remembered weakly, so the panel keeps no closed map alive.

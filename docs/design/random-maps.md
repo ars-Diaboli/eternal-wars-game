@@ -128,8 +128,9 @@ generator version, and the generator's problems and validator issues are shown. 
 
 ## Template editor
 The map editor's **Template** tab (RMG-10, ADR-117, EDIT-3) is a HotA-like editor: a zone graph, a top row (the template's name, New,
-Open, Shipped, Save, Save as, add zones, add a zone from a preset, size, seed, Generate), the graph's tools over it, an inspector for the
-template, a zone, several zones or a connection, and under the graph the validator's issues and the template's undo history. Core `TemplateEditorSession`: every change publishes `TemplateChanged` with the validator's issues and is one named
+Open, Shipped, Save, Save as, add zones, add a zone from a preset, size, seed, Generate), beside the graph (with its tools over it) the
+Preview and Seeds tabs, an inspector for the template, a zone, several zones or a connection, and under them the validator's issues and the
+template's undo history. Core `TemplateEditorSession`: every change publishes `TemplateChanged` with the validator's issues and is one named
 undo step (EDIT-2, ADR-268); dragging a zone (or a selection) is one step. Ctrl+Z and Ctrl+Y undo and redo on the Template tab, and a
 click in the History list jumps.
 
@@ -171,6 +172,21 @@ it is its own image). A dotted line joins a zone to its mirror. While zones form
 one (type, size, level, towns, mines, treasure, monsters, terrains, start buildings, …) changes on its images in the same step, while the
 player slot, team, mirror and graph place stay each zone's own; connecting two zones, changing a connection or removing it does the same to
 the connection's images. **Break mirror** unlinks a cycle, so its zones are edited apart.
+
+**Preview** (ADR-274): Generate makes the map off the main thread, every start slot a player and towns drawn from the seed
+(`TemplateBatch.Generate`), and shows it in the Preview tab from above: the tiles as the minimap colours them, the borders between the
+generator's zones dark and each zone's id over it (`ZonePicture`), a level picker for a template with underground. The template stays
+open and editable; a newer Generate replaces one still running, and the preview says when the template changed since. **Open in map
+editor** opens the map as a new map like the Generate tab's; opened again, the same seed is generated afresh.
+
+**Generate many** (ADR-274), in the Seeds tab: the template at the top row's size for N seeds (20 by default, at most 200) from the top
+row's seed up, off the main thread at most half the processors at once, cancellable (`TemplateBatch.RunAsync`). Each map is checked as
+`sim maps` checks one, without the AI's play: the generator's problems, the same map twice from the seed, every player able to reach every
+rival start town, the map validator's errors; and the fairness measures of its starts (mine distance, treasure, guard power), each as how
+far apart the starts are (the largest less the smallest, in percent of their mean). The gallery shows a thumbnail per seed, in seed
+order as they come in, with its verdict, attempt and the three imbalances (the failures in its tooltip); a click puts the map in the
+preview and its seed in the top row. Over the gallery: how many passed, and the smallest, mean and largest of the attempts and of each
+imbalance over the maps.
 
 **Files** (ADR-269), as for maps: Open and Save as with the file dialog (the user's templates folder first), Save, recent templates
 (Templates menu), an asterisk over unsaved work ("Template*" on the tab), the question before unsaved work is left, an autosave every

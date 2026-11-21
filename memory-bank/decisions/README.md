@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-274.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-275.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -300,3 +300,4 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [271](random-maps-and-editor.md#adr-271-the-template-graphs-selection-and-clipboard-adr-268-adr-270-2026-11-21) | random-maps-and-editor | The template graph's selection and clipboard (ADR-268, ADR-270, 2026-11-21) | implemented |
 | [272](random-maps-and-editor.md#adr-272-template-mirror-tools-adr-117-adr-271-2026-11-21) | random-maps-and-editor | Template mirror tools (ADR-117, ADR-271, 2026-11-21) | implemented |
 | [273](random-maps-and-editor.md#adr-273-the-template-inspectors-pickers-and-zone-presets-adr-117-adr-250-2026-11-21) | random-maps-and-editor | The template inspector's pickers and zone presets (ADR-117, ADR-250, 2026-11-21) | implemented |
+| [274](random-maps-and-editor.md#adr-274-the-template-preview-and-generate-many-adr-087-adr-117-2026-11-21) | random-maps-and-editor | The template preview and Generate many (ADR-087, ADR-117, 2026-11-21) | implemented |

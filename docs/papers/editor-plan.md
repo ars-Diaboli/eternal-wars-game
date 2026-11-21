@@ -630,10 +630,10 @@ and the game uses them.
 6. **Inspector and presets**: every field, including terrains and neutral town types, with pickers; zone presets (rich treasure, mine
    junction, guarded start) and user presets in `user://template-presets/`. Smoke `editor-template-presets`. *Done.*
 7. **Preview**: Generate runs in the background and shows the map in a preview panel (top-down, zones outlined) without leaving the
-   template; "Open in map editor" as now.
+   template; "Open in map editor" as now. Smoke `editor-template-preview`. *Done.*
 8. **Generate many**: `TemplateBatch` in the core runs N seeds (default 20) off the main thread, cancellable, with a cap on parallel
    work, and returns each map's checks (problems, determinism, starts reachable, as `sim maps`) and fairness. A gallery of
-   thumbnails shows the numbers per seed and their spread. Tests: a batch equals single runs. Smoke `editor-template-batch`.
+   thumbnails shows the numbers per seed and their spread. Tests: a batch equals single runs. Smoke `editor-template-batch`. *Done.*
 
 **Done when**: a template can be built, checked over 20 seeds and opened in the map workspace without touching its file.
 

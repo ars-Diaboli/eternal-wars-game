@@ -2,6 +2,7 @@ using EternalWars.Godot.Shared.Controls;
 using System.Globalization;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Editing;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
@@ -15,10 +16,12 @@ using Godot;
 namespace EternalWars.Godot.UI.Editor;
 
 /// <summary>
-/// What the app does for the template editor: the template's files (<see cref="TemplateFileService"/>), generating a map from a template in
-/// the map editor (returns null when the map is open, else why not), and the user's zone presets (ADR-273; none kept when left out).
+/// What the app does for the template editor: the template's files (<see cref="TemplateFileService"/>), the content tables maps are generated
+/// with, opening a generated map (template, size, seed, map) in the map editor as a new map, and the user's zone presets (ADR-273; none kept
+/// when left out).
 /// </summary>
-public sealed record TemplateEditorHost(TemplateFileService Files, Func<MapTemplate, int, ulong, string?> Generate, IZonePresetFiles? Presets = null);
+public sealed record TemplateEditorHost(
+    TemplateFileService Files, ContentCatalogs Content, Action<MapTemplate, int, ulong, EditorMap> Open, IZonePresetFiles? Presets = null);
 
 /// <summary>The user's zone presets (ADR-273), kept by the app (the editor's <c>user://template-presets/</c>).</summary>
 public interface IZonePresetFiles
@@ -42,8 +45,9 @@ public interface IZonePresetFiles
 /// and the template's undo history.
 /// Every control applies at once through the <see cref="TemplateEditorSession"/>, one undo step each (EDIT-2, ADR-268); an undo, a redo or
 /// another template shows every part again. The top row: the template's name (an asterisk over unsaved work), New, Open, a shipped template
-/// (read-only), Save and Save as (the <see cref="TemplateFileService"/>, ADR-269), add zones, arrange the graph, and Generate (size and seed), which
-/// opens the result in the map editor. The app places it (the editor's Template tab, EDIT-3, ADR-250) and shows the map once one was generated.
+/// (read-only), Save and Save as (the <see cref="TemplateFileService"/>, ADR-269), add zones, and Generate (size and seed, ADR-274), whose
+/// map shows in the Preview tab beside the graph; the Seeds tab generates many seeds at that size. The app places it (the editor's Template tab, EDIT-3, ADR-250)
+/// and shows a map once one is opened in the map editor.
 /// </summary>
 public partial class TemplateEditorPanel : PanelContainer
 {
@@ -125,9 +129,11 @@ public partial class TemplateEditorPanel : PanelContainer
         rows.AddChild(body);
         var left = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         body.AddChild(left);
-        // Over the graph: its tools (ADR-270), for the selected zones.
+        // The graph with its tools over it (ADR-270, for the selected zones), beside the preview and the batch's seeds (ADR-274).
+        var graph = new VBoxContainer();
+        left.AddChild(Views(graph));
         var tools = new HBoxContainer();
-        left.AddChild(tools);
+        graph.AddChild(tools);
         _snap.Toggled += on => _graph.SnapToGrid = on;
         tools.AddChild(_snap);
         tools.AddChild(new VSeparator());
@@ -143,7 +149,7 @@ public partial class TemplateEditorPanel : PanelContainer
             _graph.EndDrag();
             _session.ArrangeGraph(all: true);
         }, UiIcon.Arrange);
-        left.AddChild(_graph);
+        graph.AddChild(_graph);
         // Under the graph: the live issues, and the template's undo history (EDIT-2: the bottom region's History is the map's).
         var below = new TabContainer { CustomMinimumSize = new Vector2(0, 160) };
         left.AddChild(below);
@@ -175,6 +181,8 @@ public partial class TemplateEditorPanel : PanelContainer
             _graph.Refresh();
             ShowIssues(e.Issues);
             ShowTools(); // the symmetry or a mirror may have changed
+            ShowPreviewInfo(); // the preview and the batch say when the template changed since
+            ShowBatchInfo();
             if (e.Replaced)
             {
                 _replaced.Request();
@@ -529,26 +537,6 @@ public partial class TemplateEditorPanel : PanelContainer
         }
 
         _size.Select(_size.ItemCount / 2);
-    }
-
-    private void Generate()
-    {
-        if (!ulong.TryParse(_seed.Text.Trim(), CultureInfo.InvariantCulture, out var seed))
-        {
-            _message.Text = "Enter a numeric seed.";
-            return;
-        }
-
-        if (!TemplateValidator.IsValid(_session.Template))
-        {
-            _message.Text = "Fix the errors first.";
-            return;
-        }
-
-        if (_host.Generate(_session.Template, _size.GetSelectedId(), seed) is { } refused)
-        {
-            _message.Text = refused;
-        }
     }
 
     private void ShowIssues(IReadOnlyList<TemplateIssue> issues)

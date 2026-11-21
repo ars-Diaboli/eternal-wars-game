@@ -9,12 +9,18 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 5 tasks 7 and 8 (ADR-274): Generate in the template editor runs off the main thread and shows the map in the
+  Preview tab beside the graph (`ZonePicture` in the core, `ZonePictureView`; zones outlined and named; Open in map editor through
+  `TemplateEditorHost.Open`). The Seeds tab's Generate many runs `TemplateBatch.RunAsync` (N seeds, capped parallel, cancellable; each
+  map's `sim maps` checks and fairness imbalances) into a gallery of thumbnails with the spread over the batch. Tests
+  `TemplateBatchTests`; smoke `editor-template-preview`, `editor-template-batch`. Step 5 is done. Next: step 6 (polish), or step 3's
+  drop-downs.
 - Editor overhaul, step 5 task 6 (ADR-273): the template inspector edits every field: tick-box pickers for a zone's terrains and neutral
   town types, the week events' factions and the roads' mines; start buildings by level and start dwellings by tier; road type and gates,
   weeks before events. Zone presets: `ZonePresets` (Rich treasure, Mine junction, Guarded start), the session's `AddZone(preset)` and
   `ApplyPreset`, user presets as `*.ewzone.json` in `user://template-presets/` (`ZonePresetFolder` in Core.Data, the editor's
   `ZonePresetFiles` behind `IZonePresetFiles`); + Preset, Apply preset, Save as preset…, Delete preset. Tests `ZonePresetTests` and the
-  undo theory; smoke `editor-template-presets`. Next: step 5 task 7 (preview), or step 3's drop-downs.
+  undo theory; smoke `editor-template-presets`.
 - Editor overhaul, step 5 task 5 (ADR-272): mirror tools. `TemplateEditorSession.MakeMirror` adds the images of zones under the
   template's symmetry (new ids, free slots, a mirror cycle, mirrored graph places, the connections' images); while a cycle is closed an
   edit carries its changed fields to the images (`TemplateMirrors.Carry`) and Connect / a connection change / Disconnect apply to the
