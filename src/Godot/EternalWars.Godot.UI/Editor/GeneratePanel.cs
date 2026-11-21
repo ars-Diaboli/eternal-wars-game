@@ -63,7 +63,7 @@ public partial class GeneratePanel : VBoxContainer
         AddChild(_description);
         Row("Size", _size);
         _seed.Text = (last?.Seed ?? (ulong)System.Random.Shared.NextInt64()).ToString(CultureInfo.InvariantCulture);
-        var reroll = new Button { Text = "New seed" };
+        var reroll = new Button { Text = "New seed" }.WithIcon(UiIcon.NewSeed, keepText: true);
         reroll.Pressed += () => _seed.Text = ((ulong)System.Random.Shared.NextInt64()).ToString(CultureInfo.InvariantCulture);
         Row("Seed", _seed, reroll);
         _players.ValueChanged += _ => ShowTowns(null);
@@ -71,7 +71,7 @@ public partial class GeneratePanel : VBoxContainer
         Row("Hero limit", _maxHeroes);
         AddChild(new Label { Text = "Towns (a start zone is painted in its town's terrain):" });
         AddChild(_towns);
-        var button = new Button { Text = "Generate" };
+        var button = new Button { Text = "Generate" }.WithIcon(UiIcon.Generate, keepText: true);
         button.Pressed += Generate;
         AddChild(button);
         AddChild(_message);

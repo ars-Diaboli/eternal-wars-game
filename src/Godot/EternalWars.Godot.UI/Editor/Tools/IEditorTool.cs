@@ -12,6 +12,9 @@ public interface IEditorTool
     /// <summary>The tool's name on its button.</summary>
     string Name { get; }
 
+    /// <summary>The tool's icon on its button and in the Tools menu; null: a placeholder.</summary>
+    UiIcon? Icon { get; }
+
     /// <summary>The key that picks the tool; null: none.</summary>
     Key? Shortcut { get; }
 

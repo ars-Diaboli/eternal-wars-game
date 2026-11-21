@@ -363,12 +363,12 @@ internal sealed class InspectorForm(VBoxContainer panel, MapEditorSession editor
                 Edit(() => set(choice.Value().Length == 0 ? null : choice.Value()));
             }
         };
-        var create = new Button { Text = "New" };
+        var create = new Button { Text = "New" }.WithIcon(UiIcon.Link, keepText: true);
         create.Pressed += () => Edit(() => NewEvent(kind, set));
         row.AddChild(create);
         if (current is not null)
         {
-            var open = new Button { Text = "Edit" };
+            var open = new Button { Text = "Edit" }.WithIcon(UiIcon.Link, keepText: true);
             open.Pressed += () => OpenEvent(current);
             row.AddChild(open);
         }

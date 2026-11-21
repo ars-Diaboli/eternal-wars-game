@@ -26,14 +26,24 @@ public sealed class ToolOptions(Container row)
         SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
     });
 
-    /// <summary>A labelled list of <paramref name="items"/> showing <paramref name="selected"/>; <paramref name="chosen"/> gets the pick.</summary>
-    public void Choice<T>(string label, IEnumerable<(string Text, T Value)> items, T selected, Action<T> chosen)
+    /// <summary>
+    /// A labelled list of <paramref name="items"/> showing <paramref name="selected"/>; <paramref name="chosen"/> gets the pick. <paramref name="icon"/>
+    /// gives an item its icon (null: none).
+    /// </summary>
+    public void Choice<T>(string label, IEnumerable<(string Text, T Value)> items, T selected, Action<T> chosen, Func<T, UiIcon?>? icon = null)
     {
         var list = items.ToList();
         var option = new OptionButton();
-        foreach (var (text, _) in list)
+        foreach (var (text, value) in list)
         {
-            option.AddItem(text);
+            if (icon?.Invoke(value) is { } own && UiIcons.Get(own) is { } texture)
+            {
+                option.AddIconItem(texture, text);
+            }
+            else
+            {
+                option.AddItem(text);
+            }
         }
 
         option.Selected = Math.Max(0, list.FindIndex(i => EqualityComparer<T>.Default.Equals(i.Value, selected)));

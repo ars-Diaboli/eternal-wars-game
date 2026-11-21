@@ -61,6 +61,8 @@ public partial class ProblemsPanel : VBoxContainer
         _editor = editor;
         var filters = new HBoxContainer();
         AddChild(filters);
+        _errors.Icon = UiIcons.Get(UiIcon.Error);
+        _warnings.Icon = UiIcons.Get(UiIcon.Warning);
         filters.AddChild(_errors);
         filters.AddChild(_warnings);
         filters.AddChild(_kinds);
@@ -222,10 +224,14 @@ public partial class ProblemsPanel : VBoxContainer
         foreach (var issue in _shown)
         {
             var index = _list.AddItem($"{issue.Severity}: {issue.Message}{(issue.Position is { } p ? $" {p}" : "")}"
-                + $"{(issue.Event is not null ? " (double click: open the event)" : "")}{(issue.Fix is { } fix ? $" (Fix: {fix.Text})" : "")}");
+                + $"{(issue.Event is not null ? " (double click: open the event)" : "")}{(issue.Fix is { } fix ? $" (Fix: {fix.Text})" : "")}",
+                SeverityIcon(issue.Severity));
             _list.SetItemCustomFgColor(index, issue.Severity == IssueSeverity.Error ? UiTheme.IssueError : UiTheme.IssueWarning);
         }
     }
+
+    /// <summary>The icon before an issue of <paramref name="severity"/> in a list: the error's or the warning's.</summary>
+    public static Texture2D? SeverityIcon(IssueSeverity severity) => UiIcons.Get(severity == IssueSeverity.Error ? UiIcon.Error : UiIcon.Warning, 16);
 
     /// <summary>The issue selected in the list, if one is.</summary>
     private MapIssue? Selected => _list.GetSelectedItems() is [var index] && index < _shown.Count ? _shown[index] : null;

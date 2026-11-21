@@ -43,6 +43,85 @@ public enum UiIcon
     Lock,
     Unlock,
     Menu,
+
+    // The map and template editor's icons (editor-icon-prompts.md): the tools, then the template's parts, then the plain commands and options.
+    ToolTerrain,
+    ToolRoad,
+    ToolRiver,
+    ToolHeight,
+    ToolStartZone,
+    ToolScatter,
+    ToolObject,
+    ToolMonster,
+    ToolGrail,
+    ToolLinkGates,
+    ToolStamp,
+    ToolMeasure,
+    ToolSelect,
+    ToolMove,
+    ToolErase,
+    ToolFill,
+    ZoneStart,
+    ZoneAiStart,
+    ZoneTreasure,
+    ZoneJunction,
+    ConnectionNormal,
+    ConnectionWide,
+    ConnectionGate,
+    ConnectionPortal,
+    GuardGarrison,
+    GuardBorder,
+    GuardBorderGate,
+    Cut,
+    Copy,
+    Paste,
+    Duplicate,
+    Delete,
+    SelectAll,
+    Deselect,
+    Rotate,
+    Mirror,
+    Crop,
+    Resize,
+    Link,
+    New,
+    SaveAs,
+    Quit,
+    Play,
+    Help,
+    CommandPalette,
+    PanelLeft,
+    PanelBottom,
+    PanelRight,
+    PanelsHide,
+    Eye,
+    EyeOff,
+    Inspector,
+    Layers,
+    Events,
+    History,
+    Output,
+    Filter,
+    Error,
+    Warning,
+    Favourite,
+    FavouriteOff,
+    HeightRaise,
+    HeightLower,
+    HeightLevel,
+    HeightSmooth,
+    BrushRound,
+    BrushSquare,
+    Generate,
+    NewSeed,
+    Arrange,
+    MirrorVertical,
+    MirrorHorizontal,
+    MirrorDiagonal,
+    StrengthNone,
+    StrengthWeak,
+    StrengthAverage,
+    StrengthStrong,
 }
 
 /// <summary>
@@ -201,45 +280,21 @@ public static class UiIcons
         }
     }
 
-    private static string FileName(UiIcon icon) => icon switch
+    /// <summary>The icon's file name: its name in snake case (<see cref="UiIcon.SpellBook"/>: <c>spell_book</c>).</summary>
+    public static string FileName(UiIcon icon)
     {
-        UiIcon.Close => "close",
-        UiIcon.Confirm => "confirm",
-        UiIcon.ArrowLeft => "arrow_left",
-        UiIcon.ArrowRight => "arrow_right",
-        UiIcon.ArrowUp => "arrow_up",
-        UiIcon.ArrowDown => "arrow_down",
-        UiIcon.Plus => "plus",
-        UiIcon.Minus => "minus",
-        UiIcon.Ban => "ban",
-        UiIcon.Settings => "settings",
-        UiIcon.Hourglass => "hourglass",
-        UiIcon.SpellBook => "spell_book",
-        UiIcon.Spells => "spells",
-        UiIcon.Quests => "quests",
-        UiIcon.PuzzleMap => "puzzle_map",
-        UiIcon.Dig => "dig",
-        UiIcon.EndTurn => "end_turn",
-        UiIcon.SwitchLevel => "switch_level",
-        UiIcon.Kingdom => "kingdom",
-        UiIcon.Marketplace => "marketplace",
-        UiIcon.ThievesGuild => "thieves_guild",
-        UiIcon.Defend => "defend",
-        UiIcon.Warcry => "warcry",
-        UiIcon.Retreat => "retreat",
-        UiIcon.Surrender => "surrender",
-        UiIcon.QuickCombat => "quick_combat",
-        UiIcon.AutoCombat => "auto_combat",
-        UiIcon.Hero => "hero",
-        UiIcon.Undo => "undo",
-        UiIcon.Redo => "redo",
-        UiIcon.ZoomIn => "zoom_in",
-        UiIcon.ZoomOut => "zoom_out",
-        UiIcon.Save => "save",
-        UiIcon.Load => "load",
-        UiIcon.Lock => "lock",
-        UiIcon.Unlock => "unlock",
-        UiIcon.Menu => "menu",
-        _ => "",
-    };
+        var name = icon.ToString();
+        var file = new System.Text.StringBuilder(name.Length + 4);
+        for (var i = 0; i < name.Length; i++)
+        {
+            if (char.IsUpper(name[i]) && i > 0)
+            {
+                file.Append('_');
+            }
+
+            file.Append(char.ToLowerInvariant(name[i]));
+        }
+
+        return file.ToString();
+    }
 }

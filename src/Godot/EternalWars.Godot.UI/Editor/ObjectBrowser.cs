@@ -125,12 +125,15 @@ public partial class ObjectBrowser : VBoxContainer
         _detail.CustomMinimumSize = new Vector2(120, 0);
         text.AddChild(_detail);
         AddChild(card);
+        _favourite.WithIcon(UiIcons.Get(UiIcon.FavouriteOff, UiIcons.ButtonSize) ?? PlaceholderIcons.Of("Favourite"), UiIcons.ButtonSize);
         _favourite.Pressed += () =>
         {
             if (_choice.Entry is { } chosen)
             {
                 ToggleFavourite(chosen.Id);
             }
+
+            ShowFavouriteIcon();
         };
 
         _choice.Changed += OnChoice;
@@ -191,6 +194,15 @@ public partial class ObjectBrowser : VBoxContainer
         _recent = BrowserLists.WithRecent(_recent, entry.Id);
         _settings.Set(Section, RecentKey, _recent.ToArray());
         Rebuild();
+    }
+
+    /// <summary>The favourite button's star: solid while the chosen entry is a favourite, hollow when not.</summary>
+    private void ShowFavouriteIcon()
+    {
+        if (UiIcons.Get(_favourite.ButtonPressed ? UiIcon.Favourite : UiIcon.FavouriteOff) is { } star)
+        {
+            _favourite.Icon = star;
+        }
     }
 
     private void ToggleFavourite(string id)
@@ -386,6 +398,7 @@ public partial class ObjectBrowser : VBoxContainer
         _picture.Show(entry?.Footprint);
         _favourite.Visible = entry is not null && entry == _choice.Entry;
         _favourite.SetPressedNoSignal(entry is not null && _favourites.Contains(entry.Id));
+        ShowFavouriteIcon();
         if (entry is null)
         {
             _name.Text = "Nothing chosen";

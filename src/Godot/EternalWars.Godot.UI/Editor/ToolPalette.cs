@@ -6,7 +6,7 @@ using Godot;
 namespace EternalWars.Godot.UI.Editor;
 
 /// <summary>
-/// A button per tool (its placeholder icon and its name) plus the options of the one in use, both wrapping to the width the palette is given. The first tool is in use at the
+/// A button per tool (its icon and its name) plus the options of the one in use, both wrapping to the width the palette is given. The first tool is in use at the
 /// start; picking another cancels what the old one was in the middle of.
 /// </summary>
 public partial class ToolPalette : VBoxContainer
@@ -33,7 +33,7 @@ public partial class ToolPalette : VBoxContainer
         {
             var button = new Button
             {
-                Text = tool.Name, Icon = PlaceholderIcons.Of(tool.Name), ToggleMode = true, ButtonGroup = group, ButtonPressed = tool == tools[0],
+                Text = tool.Name, Icon = PlaceholderIcons.Of(tool.Icon, tool.Name), ToggleMode = true, ButtonGroup = group, ButtonPressed = tool == tools[0],
             };
             button.TooltipText = tool.Shortcut is { } key ? $"{tool.Name} ({key})" : tool.Name;
             button.Pressed += () => Use(tool);

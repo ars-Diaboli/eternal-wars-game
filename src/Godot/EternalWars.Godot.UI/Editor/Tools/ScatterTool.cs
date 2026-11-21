@@ -20,6 +20,8 @@ public sealed class ScatterTool(EditorToolContext context) : TileBrushTool(conte
 
     public override string Name => "Scatter";
 
+    public override UiIcon? Icon => UiIcon.ToolScatter;
+
     protected override string StrokeDescription => "Scatter scenery";
 
     private ScatterOptions Options => new(_density, _kinds, _keepPathsOpen);

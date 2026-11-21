@@ -15,7 +15,7 @@ public partial class StatusBarView : HBoxContainer
     private readonly Label _tile = new() { CustomMinimumSize = new Vector2(360, 0), TooltipText = "The tile under the pointer" };
     private readonly Label _message = new() { SizeFlagsHorizontal = SizeFlags.ExpandFill, ClipText = true };
     private readonly Label _work = new() { TooltipText = "Work running in the background" };
-    private readonly Button _problems = new() { Flat = true, TooltipText = "The map's problems: click to open Problems" };
+    private readonly Button _problems = new() { Flat = true, TooltipText = "The map's problems: click to open Problems", Icon = UiIcons.Get(UiIcon.Error, 16) };
     private readonly Label _save = new() { TooltipText = "Whether the map has changes that are not saved" };
     private readonly Label _zoom = new() { CustomMinimumSize = new Vector2(56, 0), HorizontalAlignment = HorizontalAlignment.Right, TooltipText = "Zoom" };
 

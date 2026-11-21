@@ -34,6 +34,8 @@ public class SelectTool(EditorToolContext context) : EditorTool(context)
 
     public override string Name => "Select";
 
+    public override UiIcon? Icon => UiIcon.ToolSelect;
+
     public override Key? Shortcut => Key.V;
 
     /// <summary>Whether a drag that starts on a thing that is not selected selects it and moves it (the Move tool), or draws a marquee.</summary>
@@ -183,6 +185,8 @@ public class SelectTool(EditorToolContext context) : EditorTool(context)
 public sealed class MoveTool(EditorToolContext context) : SelectTool(context)
 {
     public override string Name => "Move";
+
+    public override UiIcon? Icon => UiIcon.ToolMove;
 
     public override Key? Shortcut => Key.M;
 
