@@ -50,7 +50,7 @@ public static class SceneryPlacer
     }
 
     /// <summary>The kind of a scenery id (<c>scenery.tree.pair</c> → <c>tree</c>).</summary>
-    public static string KindOf(MapObjectDefinition definition) => definition.Id.Split('.') is { Length: > 1 } parts ? parts[1] : definition.Id;
+    public static string KindOf(MapObjectDefinition definition) => SceneryTable.KindOf(definition);
 
     /// <summary>
     /// How often a kind is drawn on a terrain (ADR-157): trees and rocks most, the terrain's own kind (trees in forests, rocks on broken

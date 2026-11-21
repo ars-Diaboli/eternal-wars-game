@@ -65,6 +65,10 @@ public partial class Main : Node3D
 
     /// <summary>What was copied or cut last: kept from map to map, so a piece of one map can be pasted into another (EDIT-4).</summary>
     private readonly EditorClipboard _clipboard = new();
+
+    /// <summary>What the object browser has chosen: kept from map to map.</summary>
+    private readonly BrowserChoice _choice = new();
+    private ObjectBrowser _browser = null!;
     private CommandRegistry _commands = null!;
 
     /// <summary>The left button is held since the tool in use got its press.</summary>
@@ -202,7 +206,7 @@ public partial class Main : Node3D
     private static string MapsFolder =>
         LaunchArguments.SettingsPath is null ? ProjectSettings.GlobalizePath(MapsDirectory) : Path.Combine(DataFolder, "maps");
 
-    /// <summary>Where "Save selection as stamp" writes and the Object tool's stamp list reads (ADR-250).</summary>
+    /// <summary>Where "Save selection as stamp" writes and the browser's stamp list reads (ADR-250).</summary>
     private static string StampsFolder =>
         LaunchArguments.SettingsPath is null ? ProjectSettings.GlobalizePath("user://stamps") : Path.Combine(DataFolder, "stamps");
 
@@ -291,6 +295,7 @@ public partial class Main : Node3D
         var tile = Pick(screen);
         _context.Point(tile);
         _statusBar.ShowTile(_editor.Scenario, tile);
+        _browser.PointAt(tile is { } at ? _editor.Scenario.Map.GetTerrain(at) : null); // for its filter "terrain under the pointer"
         return tile;
     }
 
@@ -425,8 +430,8 @@ public partial class Main : Node3D
             {
                 var replaced = File.Exists(StampFolder.PathOf(StampsFolder, name));
                 var path = StampFolder.Save(StampsFolder, name, fragment);
-                Say($"{(replaced ? "Replaced" : "Saved")} stamp {Path.GetFileName(path)}; the Object tool lists it");
-                _tools.RefreshOptions();
+                Say($"{(replaced ? "Replaced" : "Saved")} stamp {Path.GetFileName(path)}; the browser lists it under Stamps");
+                _browser.RefreshStamps();
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException)
             {
@@ -435,7 +440,7 @@ public partial class Main : Node3D
         });
     }
 
-    /// <summary>A stamp picked in the Object tool's list: the Paste tool takes it, and every click puts it on the map.</summary>
+    /// <summary>A stamp picked in the browser: the Paste tool takes it, and every click puts it on the map.</summary>
     private void PasteStamp(string name)
     {
         MapFragment fragment;
@@ -461,6 +466,20 @@ public partial class Main : Node3D
         Say($"Stamp {name}: click where it goes; Escape ends");
     }
 
+    /// <summary>Something was chosen in the browser: the Object tool comes in and shows it.</summary>
+    private void UseChoice()
+    {
+        var tool = _tools.Tools.OfType<ObjectTool>().First();
+        _tools.Use(tool);
+        _tools.RefreshOptions();
+        tool.Hover(_context.Pointed);
+        tool.Refresh();
+        if (_choice.Entry is { } entry)
+        {
+            Say($"{entry.Name}: click the map to place it");
+        }
+    }
+
     private void BuildUi()
     {
         _ui = new CanvasLayer { Name = "Ui" };
@@ -478,9 +497,15 @@ public partial class Main : Node3D
         _workspace.StatusBar.AddChild(_statusBar);
         _statusBar.ShowZoom(_camera.ZoomPercent);
 
-        // Left: the tools and the options of the one in use, which wrap to the region's width.
-        _tools = new ToolPalette { Name = "Tools" };
-        _workspace.AddTab(EditorRegion.Left, _tools);
+        // Left: the tools and the options of the one in use, which wrap to the region's width; the object browser takes the room under
+        // them and scrolls its own list.
+        _tools = new ToolPalette();
+        _browser = new ObjectBrowser { Name = "Browser", SizeFlagsVertical = Control.SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(0, 320) };
+        var left = new VBoxContainer { Name = "Tools" };
+        left.AddChild(_tools);
+        left.AddChild(new HSeparator());
+        left.AddChild(_browser);
+        _workspace.AddTab(EditorRegion.Left, left);
 
         // Right: the map's settings and the inspector.
         var properties = new MapPropertiesPanel { Name = "Map" };
@@ -496,11 +521,17 @@ public partial class Main : Node3D
         _workspace.AddTab(EditorRegion.Right, _inspector);
         _inspector.Bind(_editor);
         _toolContext = new EditorToolContext(_editor, _inspector, Say) {
-            Marks = _selectionView, VisibleArea = VisibleTiles, Clipboard = _clipboard,
-            StampNames = () => StampFolder.Names(StampsFolder), PasteStamp = PasteStamp,
+            Marks = _selectionView, VisibleArea = VisibleTiles, Clipboard = _clipboard, Choice = _choice,
         };
         _tools.Bind(EditorTools.All(_toolContext));
         _tools.ToolChanged += _commands.NotifyStateChanged;
+
+        // The browser's choice is the Object tool's: the entry of the same name in this map's catalog, the treasure chest at first.
+        var catalog = new BrowserCatalog(_editor.Catalog, _editor.Scenario.Creatures, _editor.Scenario.Artifacts);
+        _choice.Rebase(catalog.Find(_choice.Entry?.Id ?? BuiltInMapObjects.TreasureChest)); // no one is told: the last map's UI still listens until it is freed
+        _browser.Bind(catalog, _choice, _settings, () => StampFolder.Names(StampsFolder), PasteStamp);
+        _choice.Changed += UseChoice;
+        _browser.TreeExiting += () => _choice.Changed -= UseChoice; // this UI goes when another map is opened; the choice stays
         _events = new EventsPanel { Name = "Events" };
         _workspace.AddTab(EditorRegion.Right, _events);
         _events.Bind(_editor, MapEventNodeJson.Instance);

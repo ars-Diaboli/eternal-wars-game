@@ -291,6 +291,11 @@ definition's footprint; `ObjectEditor.Rotate` / `Mirror` (`SceneryTurner`) chang
 selected scenery. `ScatterEditor` (Core.Generation, beside `EditorMapGenerator`) scatters scenery over an area through the session,
 with `SceneryPlacer`'s choice of pieces; it draws from the scenario's random numbers inside
 `MapEditorSession.AsOneStep(description, random => …)`, whose undo also puts the generator back.
+The object browser's data is `BrowserCatalog` (ADR-253; Core.Domain.Editing), built from the object, creature and artifact catalogs:
+`BrowserEntry`s with a `BrowserCategory` (`CategoryOf(MapObjectKind)`, which a test holds against every kind), a group, search words,
+terrains and a one-line rule; `Search` ranks them. `EntryEditor` (`session.Placing`) places an entry through the other editors and
+`Check` gives the cells for the ghost. The panel is `ObjectBrowser` (Godot.UI); it and the Object tool share a `BrowserChoice`, and
+`BrowserLists` holds the rules of the Favourites and Recent lists the editor's settings file keeps.
 Single-value edits are `PropertyEdit<T>` commands; an edit to the value already there records no undo step and publishes
 nothing. The three tile layers paint through `PaintLayer<TValue, TEvent>`. `BeginStroke`/`EndStroke` merge a drag into
 one undo step. `MapValidator` reports what single edits cannot prevent. `MapConnectivity` tells where a hero can walk on a fresh

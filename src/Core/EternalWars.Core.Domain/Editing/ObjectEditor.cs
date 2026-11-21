@@ -48,6 +48,17 @@ public sealed class ObjectEditor
         return EditResult.Ok;
     }
 
+    /// <summary>Whether the map may hold one more object of <paramref name="definition"/>: the Eyes of a colour and the obelisks are counted.</summary>
+    public EditResult CheckLimit(MapObjectDefinition definition)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        return definition.Kind == MapObjectKind.MagiEye && Scenario.Objects.OfType<MagiEye>().Count(e => e.Colour == definition.Colour) >= MagiWindow.MaxEyes
+            ? EditResult.TooManyEyes
+            : definition.Kind == MapObjectKind.Obelisk && Scenario.ObjectsOf<Obelisk>().Count() >= GrailRules.MaxObelisks
+                ? EditResult.TooManyObelisks
+                : EditResult.Ok;
+    }
+
     /// <summary>Places an object; a multi-tile one with an entrance (a town, a mine…) gets its ground levelled in the same command (ADR-182 f).</summary>
     public EditResult Place(string definitionId, MapPosition topLeft, out MapObjectId id)
     {
@@ -63,14 +74,10 @@ public sealed class ObjectEditor
             return check;
         }
 
-        if (definition.Kind == MapObjectKind.MagiEye && Scenario.Objects.OfType<MagiEye>().Count(e => e.Colour == definition.Colour) >= MagiWindow.MaxEyes)
+        var limit = CheckLimit(definition);
+        if (limit != EditResult.Ok)
         {
-            return EditResult.TooManyEyes;
-        }
-
-        if (definition.Kind == MapObjectKind.Obelisk && Scenario.ObjectsOf<Obelisk>().Count() >= GrailRules.MaxObelisks)
-        {
-            return EditResult.TooManyObelisks;
+            return limit;
         }
 
         var mapObject = MapObject.Create(Scenario.NextObjectId(), definition, topLeft);

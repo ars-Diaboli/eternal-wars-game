@@ -9,6 +9,13 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 3 tasks 1 and 2 (ADR-253). Core: `BrowserCatalog` / `BrowserEntry` / `BrowserCategory` (every map object
+  kind has a category; monsters and dwellings per creature, pickups per artifact, the hero), `BrowserCatalog.Search`, `BrowserLists`
+  (favourites, recent), `EntryEditor` (`session.Placing`: `Check` for the ghost, `Place` as one step), `HeroEditor.CanPlace`,
+  `SceneryTable.KindOf`. UI: `ObjectBrowser` under the tool palette in the left region, `BrowserChoice` shared with `ObjectTool`
+  (O; ghost through `SelectionView.ShowMove`); the Object tool's drop-down and stamp buttons are gone. `AutoInput` no longer aims at a
+  button a scroll box has scrolled out of view. Tests `EditorBrowserTests`; smoke `editor-browser-place`. Next: step 3 task 3
+  (thumbnails).
 - Editor overhaul, step 2 tasks 7 and 8 (ADR-252); step 2 is complete. Scenery orientation: `Orientation` (mirrored, then 0 to 3
   quarter turns clockwise) on `Scenery`; `MapObject.Footprint` / `KnownObject.Footprint` are the shape as it lies
   (`Footprint.Oriented`), read by the cell index, the fog's memory, the minimap and `MapObjectsView`; `ObjectEditor.Rotate` /
@@ -18,7 +25,7 @@ Detail: [roadmap.md](roadmap.md).
   (`ScatterOptions`: density, kinds, keep paths open; `SceneryPlacer.Pick`), through `MapEditorSession.AsOneStep(description,
   random => …)`, whose undo restores the random state. UI: `ScatterTool` (no key: S pans the camera; scatters on release over the stroke's tiles), commands
   Rotate scenery (Ctrl+R) and Mirror scenery (Ctrl+M). Tests `SceneryOrientationTests`, `ScatterEditorTests`, cases in
-  `EditorUndoTests`; smoke `editor-scatter-rotate`. Next: step 3 of the plan.
+  `EditorUndoTests`; smoke `editor-scatter-rotate`.
 - Editor overhaul, step 2 tasks 9 and 10 (ADR-250, ADR-251). Core:
   `MapEditorSession.Resize(width, height, anchor)`, `Crop()`, `Shift(dx, dy)` and their `Check…` (a `ResizeCheck`: the new frame and
   what would leave the map), all through `MapResizer`: what is outside is removed by the other editors, then one command reframes
@@ -26,7 +33,7 @@ Detail: [roadmap.md](roadmap.md).
   cells and the places event actions name, moves or drops the Grail, and publishes `MapResized`. Sizes 16 to 256 a side
   (`MapSizes.MinDimension`), square or not. Data: stamps (`Core.Data/Stamps`: `StampDocument` v1, `StampSerializer`, `StampFolder`;
   pinned sample in `tests/.../Data/StampSamples`). UI: `ResizeWindow` (size, presets, anchor, shift, the list of what is removed),
-  `NameBox`, commands Resize map, Crop to selection, Save selection as stamp; the Object tool lists the stamps and hands one to the
+  `NameBox`, commands Resize map, Crop to selection, Save selection as stamp; the browser lists the stamps and hands one to the
   Paste tool; the app builds the world's views again on `MapResized` (a new `MapViewContext`). Tests `EditorResizeTests`,
   `StampFormatTests`, cases in `EditorUndoTests`; smokes `editor-resize`, `editor-select-move-paste`.
 - Editor overhaul, step 2 tasks 4 to 6 (ADR-250). Core: `MapFragment` and `FragmentEditor` (`session.Fragments`: `Copy`, `Cut`,

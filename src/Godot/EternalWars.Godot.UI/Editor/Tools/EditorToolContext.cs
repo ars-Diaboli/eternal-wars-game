@@ -11,6 +11,36 @@ public sealed class EditorClipboard
     public MapFragment? Fragment { get; set; }
 }
 
+/// <summary>
+/// What is chosen in the object browser (EDIT-1, ADR-253): the browser sets it, the Object tool places it and says so, which fills the
+/// browser's Recent list. The app keeps one, so the choice stays when another map is opened.
+/// </summary>
+public sealed class BrowserChoice
+{
+    /// <summary>The chosen entry; null: nothing yet.</summary>
+    public BrowserEntry? Entry { get; private set; }
+
+    /// <summary>Another entry was chosen.</summary>
+    public event Action? Changed;
+
+    /// <summary>The entry was put on the map.</summary>
+    public event Action<BrowserEntry>? Placed;
+
+    public void Choose(BrowserEntry? entry)
+    {
+        Entry = entry;
+        Changed?.Invoke();
+    }
+
+    /// <summary>
+    /// Another map was opened: the choice becomes <paramref name="entry"/>, the same thing in that map's catalog. Nobody is told, since
+    /// the user chose nothing; the new map's browser and tools read it when they are made.
+    /// </summary>
+    public void Rebase(BrowserEntry? entry) => Entry = entry;
+
+    public void NotePlaced(BrowserEntry entry) => Placed?.Invoke(entry);
+}
+
 /// <summary>How the button went down for the press a tool is told of: the app sets it from the pointer's event before every press.</summary>
 public readonly record struct PointerPress(bool Add = false, bool Remove = false, bool DoubleClick = false);
 
@@ -58,11 +88,8 @@ public sealed class EditorToolContext(MapEditorSession editor, InspectorPanel in
     /// <summary>What was copied or cut last; the app's, so it outlives the map (EDIT-4).</summary>
     public EditorClipboard Clipboard { get; init; } = new();
 
-    /// <summary>The names of the stamps the user saved (ADR-250), for the Object tool's list; the app reads its stamps folder.</summary>
-    public Func<IReadOnlyList<string>> StampNames { get; init; } = () => [];
-
-    /// <summary>Puts the stamp of that name on the pointer: the app loads it and hands it to the Paste tool.</summary>
-    public Action<string> PasteStamp { get; init; } = _ => { };
+    /// <summary>What the object browser has chosen for the Object tool; the app's, so it outlives the map.</summary>
+    public BrowserChoice Choice { get; init; } = new();
 
     /// <summary>Which layers a paste puts on the map.</summary>
     public FragmentLayers PasteLayers { get; set; } = FragmentLayers.All;

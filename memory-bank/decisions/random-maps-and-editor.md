@@ -19,6 +19,7 @@
 | [250](#adr-250-edit-1--edit-12-answered-the-editor-plans-proposals-adopted-template-undo-scenery-rotation-new-map-content-owner-adr-117-adr-247-2026-11-20) | EDIT-1 … EDIT-12 answered: the editor plan's proposals adopted; template undo; scenery rotation; new map content (owner, ADR-117, ADR-247, 2026-11-20) | accepted |
 | [251](#adr-251-map-resize-reframes-the-map-in-place-stamps-are-fragments-in-a-file-format-of-their-own-edit-8-adr-015-adr-250-2026-11-21) | Map resize reframes the map in place; stamps are fragments in a file format of their own (EDIT-8, ADR-015, ADR-250, 2026-11-21) | implemented |
 | [252](#adr-252-scenery-has-an-orientation-stored-in-map-format-43-scatter-is-the-generators-scenery-choice-run-through-the-editor-session-edit-6-adr-079-adr-157-adr-174-adr-250-2026-11-21) | Scenery has an orientation, stored in map format 43; scatter is the generator's scenery choice run through the editor session (EDIT-6, ADR-079, ADR-157, ADR-174, ADR-250, 2026-11-21) | implemented |
+| [253](#adr-253-the-object-browser-lists-entries-built-in-the-core-the-object-tool-places-its-choice-edit-1-adr-166-adr-250-2026-11-21) | The object browser lists entries built in the core; the Object tool places its choice (EDIT-1, ADR-166, ADR-250, 2026-11-21) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -448,3 +449,30 @@ ADR when it is built.
 - **No key for the tool**: the plan's S is the camera's pan key in the editor, so Scatter is picked from the palette or the menu.
 - **The tool scatters on release**, over all the tiles of the stroke: pieces of several tiles fit across the brush's dabs, and the
   result depends on the tiles alone, not on how the brush was dragged.
+
+### ADR-253: The object browser lists entries built in the core; the Object tool places its choice (EDIT-1, ADR-166, ADR-250, 2026-11-21)
+**Status**: implemented (plan step 3, tasks 1 and 2).
+
+- **Entries, not definitions**: the browser lists `BrowserEntry`s. Most are one map object definition. A kind whose instances differ
+  by one choice is listed once per choice, because that choice is what the user looks for: a monster and a dwelling per creature, an
+  artifact pickup per artifact beside the "random" pickup of each tier. The hero is an entry without a definition. New definitions
+  per creature or artifact were rejected: the map format and the catalog would grow for the browser's sake.
+- **The category is a function of the kind** (`BrowserCatalog.CategoryOf`), not a column of the catalog: a new `MapObjectKind` without
+  a category fails a test, as the other tables keyed by kind do (ADR-166). Groups, search words and the rule line are derived from
+  what the definition already says (resource, colour, town, a bank's rewards), so the content tables carry nothing new.
+- **Terrains** are the scenery table's; a thing made for no terrain suits every one. The terrain filter therefore narrows scenery only.
+- **Search** is by word starts in the name and the search words, and inside the name; not the command palette's letters-in-order
+  search, which over several hundred entries with search words would find nearly everything.
+- **Placement in the core**: `EntryEditor` (`session.Placing`) places an entry through the existing editors, a dwelling or a pickup
+  with its creature or artifact as one undo step, and `Check` gives the ghost's cells. The clicked tile is the top-left one, as
+  before. Monsters from the browser are aggressive with their number left open; the Monster and Hero tools stay for their options.
+- **One choice, shared**: `BrowserChoice` is the app's, so it outlives the map; the browser sets it, the Object tool places it and
+  reports it, which fills Recent. Favourites and Recent are lists of entry ids in the editor's settings file (`BrowserLists`); an id
+  the catalog no longer knows is kept and not shown.
+- **Layout**: the browser stands under the tool palette in the left region's one tab, as the plan draws it; the list scrolls by
+  itself, and when the tool's options are long the whole tab scrolls. Entries are buttons, so the smoke scripts press them by name.
+  Stamps stand above the categories, where they are in reach without scrolling.
+- **The hover preview is a card** at the bottom of the browser, not a tooltip: it also shows the chosen entry, and the footprint needs
+  a drawing. Pictures are the placeholder tiles until thumbnails exist (plan step 3, task 3).
+- **AutoInput**: a button whose centre a scroll box has scrolled out of view is no longer "visible" to an aimed click; the click
+  would land on whatever is drawn there, and the scenario would pass without doing what it says.
