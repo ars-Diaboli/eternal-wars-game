@@ -50,7 +50,7 @@ public partial class BansPanel : VBoxContainer
         var clear = new Button { Text = "Allow every one of this kind" };
         clear.Pressed += () => Change(bans => bans.Of(Kind).Aggregate(bans, (b, id) => b.With(Kind, id, banned: false)));
         AddChild(clear);
-        var scroll = new ScrollContainer { SizeFlagsVertical = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(0, 360) };
+        var scroll = new ScrollContainer { SizeFlagsVertical = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(0, 360) }.KeepBarRoom(horizontal: true);
         _list.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         scroll.AddChild(_list);
         AddChild(scroll);

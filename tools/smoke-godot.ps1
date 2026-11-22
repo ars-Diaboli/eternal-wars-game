@@ -356,9 +356,9 @@ $scenarios = @(
     # The side bars (ADR-282) on Ember March: Layers on the right bar shows the Layers panel, pressed again it collapses the right region;
     # History at the left bar's foot shows History in the bottom region, pressed again it collapses that; Tools collapses the left region
     # and brings it back; the right region opens on Fairness, and its header's Hide button collapses it; Ctrl+F opens Find on the map
-    # and "#" plus an id finds the object of that id.
+    # and a kind ("dwelling") lists the objects of that kind, named or not.
     @{ Name = 'editor-side-bars'; App = 'EternalWars.MapEditor'; Frames = 60; Map = $emberMap
-       Input = '4:click:@Layers;9:click:@Layers;14:click:@History;19:click:@History;24:click:@Tools;29:click:@Tools;34:click:@Fairness;40:click:@Hide#2;45:key:Ctrl+F;49:text:#3;56:key:Escape' },
+       Input = '4:click:@Layers;9:click:@Layers;14:click:@History;19:click:@History;24:click:@Tools;29:click:@Tools;34:click:@Fairness;40:click:@Hide#2;45:key:Ctrl+F;49:text:dwelling;56:key:Escape' },
     # The bottom panels and the status bar (EDIT-1, ADR-250) on a blank map: a road, a river and an object are three steps; History lists
     # them and a click on the first jumps back to it (the river and the object are undone and dim); Output keeps the messages (the gate link tool, clicked on empty ground, says what it needs); the status
     # bar's problem counts open Problems, where the warnings are hidden and shown again and the kind Heroes is picked.

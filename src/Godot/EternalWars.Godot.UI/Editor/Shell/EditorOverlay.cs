@@ -25,7 +25,7 @@ internal static class EditorOverlay
         var dim = new ColorRect { Color = new Color(0, 0, 0, 0.5f), MouseFilter = Control.MouseFilterEnum.Stop };
         host.AddChild(dim);
         dim.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        var room = new ScrollContainer { Name = "Room", MouseFilter = Control.MouseFilterEnum.Pass, FollowFocus = true };
+        var room = new ScrollContainer { Name = "Room", MouseFilter = Control.MouseFilterEnum.Pass, FollowFocus = true }.KeepBarRoom(horizontal: true);
         host.AddChild(room);
         room.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         room.OffsetTop = atTop ? TopOffset : Margin;

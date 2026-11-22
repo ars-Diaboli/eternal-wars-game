@@ -55,7 +55,7 @@ public partial class EventsPanel : ScrollContainer
     public void Bind(MapEditorSession editor, IMapEventNodeText nodeText)
     {
         (_editor, _nodeText) = (editor, nodeText);
-        HorizontalScrollMode = ScrollMode.Disabled;
+        this.KeepBarRoom();
         AddChild(_box);
         _refresh = new RefreshScheduler(this, Refresh).OnlyWhileShown().On<UndoHistoryChanged>(editor.Events);
         Refresh();

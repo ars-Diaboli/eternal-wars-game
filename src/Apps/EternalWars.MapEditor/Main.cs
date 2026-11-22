@@ -1078,8 +1078,8 @@ public partial class Main : Node3D
         Command("view.focus", "Focus the selection", FocusSelection, shortcut: new(Key.F),
             whyNot: () => _editor.Selection.Cells(_editor.Scenario).Count > 0 ? null : "Nothing is selected", onMap: true, icon: UiIcon.Focus);
         Command("view.whole-map", "Whole map", ShowWholeMap, shortcut: new(Key.Home), onMap: true, icon: UiIcon.WholeMap);
-        Command("view.go-to", "Go to…", OpenGoTo, shortcut: new(Key.G, Ctrl: true), onMap: true, icon: UiIcon.GoTo);
-        Command("edit.find", "Find on the map…", OpenGoTo, shortcut: new(Key.F, Ctrl: true), onMap: true, icon: UiIcon.Find); // Go to's box: names and ids (#12)
+        Command("view.go-to", "Go to…", () => OpenGoTo(find: false), shortcut: new(Key.G, Ctrl: true), onMap: true, icon: UiIcon.GoTo);
+        Command("edit.find", "Find on the map…", () => OpenGoTo(find: true), shortcut: new(Key.F, Ctrl: true), onMap: true, icon: UiIcon.Find); // Go to's box that also finds objects by kind (ADR-282)
         for (var slot = CameraBookmarks.First; slot <= CameraBookmarks.Last; slot++)
         {
             var n = slot;
@@ -1240,8 +1240,11 @@ public partial class Main : Node3D
         minimap.Bind(_editor, _context, _camera, _workspace.MapView, ShowTile);
     }
 
-    /// <summary>Go to (Ctrl+G, ADR-261): a tile or a named thing, which the view shows and, for a thing, selects (as a jump link does).</summary>
-    private void OpenGoTo()
+    /// <summary>
+    /// Go to (Ctrl+G, ADR-261): a tile or a named thing, which the view shows and, for a thing, selects (as a jump link does). With
+    /// <paramref name="find"/>, Find on the map (Ctrl+F, ADR-282): objects by their kind too.
+    /// </summary>
+    private void OpenGoTo(bool find)
     {
         if (IsBusy)
         {
@@ -1250,7 +1253,7 @@ public partial class Main : Node3D
 
         var box = new GoToBox { Name = "GoTo" };
         _overlays.AddChild(box);
-        box.Bind(_editor.Scenario, _context.Level, Jump);
+        box.Bind(_editor.Scenario, _context.Level, Jump, find);
     }
 
     /// <summary>The view shows <paramref name="level"/>: the tool in use follows when it changes.</summary>

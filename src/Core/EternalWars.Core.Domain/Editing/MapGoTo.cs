@@ -11,15 +11,19 @@ namespace EternalWars.Core.Domain.Editing;
 /// ("12, 7" or "12 7"), and a third for the level, are a tile of the map; the shown level when no third is typed. Any text is also searched
 /// among the names of the map's heroes, named objects (a town always has a name) and map events with a cell, ranked as the command palette
 /// ranks commands (<see cref="CommandSearch"/>); an empty text lists them all. "#12" is the object and the hero whose id is 12, named or
-/// not (the ids the inspector and the problems show). The tile or the id comes first.
+/// not (the ids the inspector and the problems show). The tile or the id comes first. Find on the map (Ctrl+F) also searches the kinds
+/// of the map's objects: "gold mine" lists every gold mine, named or not, after the names.
 /// </summary>
 public static partial class MapGoTo
 {
     /// <summary>The most it offers.</summary>
     public const int MaxResults = 50;
 
-    /// <summary>What fits <paramref name="query"/> in <paramref name="state"/>, the best first; <paramref name="level"/> is the shown level.</summary>
-    public static IReadOnlyList<MapLink> Find(GameState state, string query, int level)
+    /// <summary>
+    /// What fits <paramref name="query"/> in <paramref name="state"/>, the best first; <paramref name="level"/> is the shown level. With
+    /// <paramref name="kinds"/> (Find on the map) a typed text also finds the objects whose kind it names.
+    /// </summary>
+    public static IReadOnlyList<MapLink> Find(GameState state, string query, int level, bool kinds = false)
     {
         ArgumentNullException.ThrowIfNull(state);
         query ??= "";
@@ -33,7 +37,28 @@ public static partial class MapGoTo
 
         var named = Named(state);
         results.AddRange(CommandSearch.Find(query.Trim(), [.. named.Select(n => n.Name)]).Select(i => named[i].Link));
+        if (kinds && !string.IsNullOrWhiteSpace(query))
+        {
+            var listed = results.Select(r => r.Object).OfType<MapObjectId>().ToHashSet();
+            results.AddRange(OfKind(state, query.Trim()).Where(l => !listed.Contains(l.Object!.Value)));
+        }
+
         return [.. results.Take(MaxResults)];
+    }
+
+    /// <summary>The objects whose kind (their definition's name) fits <paramref name="query"/>: the best-fitting kind first, each in the map's order.</summary>
+    private static IEnumerable<MapLink> OfKind(GameState state, string query)
+    {
+        var map = state.Map;
+        var byKind = state.Objects.GroupBy(o => o.Definition.Name, StringComparer.Ordinal).ToList();
+        foreach (var index in CommandSearch.Find(query, [.. byKind.Select(g => g.Key)]))
+        {
+            foreach (var found in byKind[index].OrderBy(o => o.Id.Value))
+            {
+                var name = found.Name is { } own && own != found.Definition.Name ? $"{own} ({found.Definition.Name})" : found.Definition.Name;
+                yield return new MapLink($"{name} at {Where(map, found.VisitPosition)}", found.VisitPosition, found.Id);
+            }
+        }
     }
 
     /// <summary>

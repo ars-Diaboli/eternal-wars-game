@@ -172,13 +172,7 @@ public partial class EditorWorkspace : Control
         var tab = panel;
         if (scroll)
         {
-            // The scroll bar's room is kept even while it is not needed: a panel whose height depends on its width (wrapping text, a
-            // flow of buttons) would otherwise turn the bar on and off for ever at some widths, and the editor would hang.
-            tab = new ScrollContainer
-            {
-                Name = panel.Name,
-                VerticalScrollMode = ScrollContainer.ScrollMode.Reserve,
-            };
+            tab = UiScroll.Vertical(panel.Name, horizontal: true); // keeps the bar's room: a panel that wraps would hang the editor
             panel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
             panel.SizeFlagsVertical = SizeFlags.ExpandFill;
             tab.AddChild(panel);

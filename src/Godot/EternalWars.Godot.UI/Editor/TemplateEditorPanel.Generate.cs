@@ -100,7 +100,7 @@ public partial class TemplateEditorPanel
         _cancelBatch.Disabled = true;
         seeds.AddChild(_batchInfo);
         _batchInfo.Text = "Generate many checks the template for many seeds, as sim maps does: problems, the same map twice, starts reachable, and how fair the starts are.";
-        var scroll = new ScrollContainer { SizeFlagsVertical = SizeFlags.ExpandFill, HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
+        var scroll = new ScrollContainer { SizeFlagsVertical = SizeFlags.ExpandFill }.KeepBarRoom();
         seeds.AddChild(scroll);
         scroll.AddChild(_gallery);
 

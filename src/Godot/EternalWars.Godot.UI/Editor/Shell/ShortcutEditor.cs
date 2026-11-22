@@ -57,9 +57,9 @@ public partial class ShortcutEditor : VBoxContainer
         AddChild(_conflicts);
         var scroll = new ScrollContainer
         {
-            CustomMinimumSize = new Vector2(560, 300), SizeFlagsVertical = SizeFlags.ExpandFill, HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+            CustomMinimumSize = new Vector2(560, 300), SizeFlagsVertical = SizeFlags.ExpandFill,
         };
-        AddChild(scroll);
+        AddChild(scroll.KeepBarRoom());
         var grid = new GridContainer { Name = "Commands", Columns = 4, SizeFlagsHorizontal = SizeFlags.ExpandFill };
         grid.AddThemeConstantOverride("h_separation", UiSpacing.Row);
         grid.AddThemeConstantOverride("v_separation", UiSpacing.Row / 2);

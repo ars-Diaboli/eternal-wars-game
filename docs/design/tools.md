@@ -342,10 +342,11 @@ Top-down view, orthographic like a plan, every tile the same size); it goes out 
 - **The minimap** (ADR-261), under the right region's panel: the shown level in the terrain's colours, objects and heroes in their
   owners' colours, and the view outlined in white. A click or a drag on it moves the view there. On a map of two levels, "Show the other
   level faintly" mixes the other level's colours in.
-- **Go to** (Ctrl+G, View > Go to…; also **Find on the map**, Ctrl+F, Edit > Find on the map…): type a tile ("12, 7", or "12, 7, 1"
-  for the level; the shown level otherwise), an id ("#12": the object and the hero of that id, named or not) or a name: the list
-  follows as you type with the tile or the id first, then the heroes, the named objects (every town) and the events with a cell whose names
-  fit, as the command palette ranks them. Up and Down choose, Enter or a click goes there (a hero or an object also becomes the
+- **Go to** (Ctrl+G, View > Go to…): type a tile ("12, 7", or "12, 7, 1" for the level; the shown level otherwise), an id ("#12": the
+  object and the hero of that id, named or not) or a name: the list follows as you type with the tile or the id first, then the heroes,
+  the named objects (every town) and the events with a cell whose names fit, as the command palette ranks them. **Find on the map**
+  (Ctrl+F, Edit > Find on the map…) is the same box that also finds objects by their kind: "gold mine" lists every gold mine on the map,
+  named or not, after the names. Up and Down choose, Enter or a click goes there (a hero or an object also becomes the
   selection, unless its layer is hidden or locked), Escape closes it.
 - Going to a tile from Go to, the minimap, the Problems panel or the events puts it in the middle of the map's part of the window.
 

@@ -161,7 +161,7 @@ public partial class TemplateEditorPanel : PanelContainer
         below.WithTabIcon(1, UiIcon.History);
         _history.Bind(session, "template");
         under.AddChild(_message);
-        var scroll = new ScrollContainer { CustomMinimumSize = new Vector2(450, 0), HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
+        var scroll = new ScrollContainer { CustomMinimumSize = new Vector2(450, 0) }.KeepBarRoom();
         body.AddChild(scroll);
         scroll.AddChild(_inspector);
 

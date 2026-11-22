@@ -10,9 +10,9 @@ Detail: [roadmap.md](roadmap.md).
 
 ## Last work
 - Editor plan check and side bars (ADR-282): IDE-like side bars with a button per panel, one panel per region under a header, an
-  icon-only tool palette, the scroll bar's room kept (an editor hang at some widths), Find (Ctrl+F), Go to by id, an orthographic
-  top-down view, icon prompts C12 and C13. The gaps the check found are in the plan's "After the close" and the roadmap. Smoke
-  `editor-side-bars`.
+  icon-only tool palette, the scroll bar's room kept in every scrolled editor panel (`UiScroll`; an editor hang at some widths), Find
+  (Ctrl+F) by name, id or kind ("gold mine"), Go to by id, an orthographic top-down view, icon prompts C12 and C13. The gaps the check
+  found are in the plan's "After the close" and the roadmap. Smoke `editor-side-bars`.
 - Editor overhaul, step 3's done-when (ADR-281): content is picked from pictures everywhere (the Monster tool's creature through
   `ToolOptions.Picker`, the Victory and loss tab's hero and artifact, crests on Generate's towns; `PicturePicker.SetItems`); "Any
   player" in a condition no longer becomes the first player. Smoke `editor-content-pickers`.

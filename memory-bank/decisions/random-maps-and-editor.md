@@ -1121,10 +1121,14 @@ ADR when it is built.
   header is as tall as the tab bar was. EDIT-1 stands: fixed regions, no docking, no floating windows.
 - **A compact tool palette**: a tool's button is its icon alone, its name and key in the tooltip; the tools take two or three rows. The
   Object tool's options no longer repeat what the status bar's hint says, so the browser keeps the room.
-- **A panel taller than its region keeps the scroll bar's room** (`ScrollMode.Reserve`): with the bar shown only when needed, a panel
-  whose height depends on its width (the tools wrapping, the browser's card) turned the bar on and off without end at some widths, and
-  the editor hung (the left region at 268 px).
-- **From the check of the plan** (the plan's "After the close"): Find on the map (Ctrl+F) opens Go to's box; Go to finds an object or
-  a hero by id ("#12"); the top-down view is orthographic. The icons prompted but not drawn (sheets C4 and C7) and those with no
-  prompt yet (new sheets C12 and C13: the panels of the side bars, Find, sample maps, the exports, the Map and Template tabs) have
-  their `UiIcon` values, so a file shows once it exists; a lettered placeholder stands in until then.
+- **Every scrolled panel of the editor keeps the scroll bar's room** (`ScrollMode.Reserve`, made in one place: `UiScroll`): with the
+  bar shown only when needed, a panel whose height depends on its width (the tools wrapping, the browser's card) turned the bar on and
+  off without end at some widths, and the editor hung (the left region at 268 px). The regions' panels, the browser's list, the events,
+  the bans, the map settings' pages, the shortcut editor, the template editor's inspector and gallery, and the overlays' room all scroll
+  this way.
+- **From the check of the plan** (the plan's "After the close"): Find on the map (Ctrl+F) is Go to's box that also finds the map's
+  objects by their kind ("gold mine": every gold mine, named or not, after the names; `MapGoTo.Find(…, kinds: true)`), so an unnamed
+  object can be found without knowing its id; Go to finds an object or a hero by id ("#12"); the top-down view is orthographic. The
+  icons prompted but not drawn (sheets C4 and C7) and those with no prompt yet (new sheets C12 and C13: the panels of the side bars,
+  Find, sample maps, the exports, the Map and Template tabs) have their `UiIcon` values, so a file shows once it exists; a lettered
+  placeholder stands in until then.

@@ -6,8 +6,9 @@ namespace EternalWars.Godot.UI.Editor.Shell;
 
 /// <summary>
 /// Go to (Ctrl+G, ADR-261): a search field and what fits it as you type (<see cref="MapGoTo"/>): a tile by its numbers ("12, 7", a third
-/// for the level), the map's heroes, named objects and events by name. Up and Down move through the list, Enter or a click goes there,
-/// Escape closes it. It frees itself before the view moves.
+/// for the level), the map's heroes, named objects and events by name, an object or a hero by id ("#12"). As Find on the map (Ctrl+F) it
+/// also finds objects by their kind ("gold mine"). Up and Down move through the list, Enter or a click goes there, Escape closes it. It
+/// frees itself before the view moves.
 /// </summary>
 public partial class GoToBox : Control
 {
@@ -23,13 +24,22 @@ public partial class GoToBox : Control
     private int _level;
     private Action<MapLink> _go = _ => { };
     private int _selected;
+    private bool _kinds;
 
-    /// <summary>Searches <paramref name="scenario"/>; <paramref name="level"/> is the shown level, a tile's when none is typed.</summary>
-    public void Bind(GameState scenario, int level, Action<MapLink> go)
+    /// <summary>
+    /// Searches <paramref name="scenario"/>; <paramref name="level"/> is the shown level, a tile's when none is typed. With
+    /// <paramref name="find"/> it is Find on the map, which also finds objects by their kind.
+    /// </summary>
+    public void Bind(GameState scenario, int level, Action<MapLink> go, bool find = false)
     {
-        (_scenario, _level, _go) = (scenario, level, go);
+        (_scenario, _level, _go, _kinds) = (scenario, level, go, find);
         var rows = EditorOverlay.Build(this, atTop: true);
-        rows.AddChild(new Label { Text = "Go to" });
+        rows.AddChild(new Label { Text = find ? "Find on the map" : "Go to" });
+        if (find)
+        {
+            _search.PlaceholderText = "A kind (gold mine), a name, an id (#12) or a tile (12, 7)";
+        }
+
         rows.AddChild(_search);
         rows.AddChild(_list);
         rows.AddChild(_none);
@@ -80,7 +90,7 @@ public partial class GoToBox : Control
         _list.Clear();
         _shown.Clear();
         var root = _list.CreateItem();
-        foreach (var link in MapGoTo.Find(_scenario, _search.Text, _level))
+        foreach (var link in MapGoTo.Find(_scenario, _search.Text, _level, _kinds))
         {
             _list.CreateItem(root).SetText(0, link.Text);
             _shown.Add(link);

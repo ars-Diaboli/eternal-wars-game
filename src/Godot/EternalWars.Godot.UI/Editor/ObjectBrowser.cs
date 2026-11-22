@@ -105,7 +105,7 @@ public partial class ObjectBrowser : VBoxContainer
         _terrain.ItemSelected += _ => Rebuild();
         AddChild(_terrain);
 
-        var scroll = new ScrollContainer { SizeFlagsVertical = SizeFlags.ExpandFill, HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
+        var scroll = new ScrollContainer { SizeFlagsVertical = SizeFlags.ExpandFill }.KeepBarRoom();
         scroll.AddChild(_list);
         AddChild(scroll);
 

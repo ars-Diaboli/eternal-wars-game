@@ -82,7 +82,23 @@ public class MapGoToTests
         Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.TreasureChest, new MapPosition(6, 5), out var chest));
         var found = MapGoTo.Find(editor.Scenario, $"#{chest.Value}", level: 0);
         Assert.Contains(found, l => l.Object == chest && l.Position == editor.Scenario.GetObject(chest).VisitPosition);
-        Assert.Empty(MapGoTo.Find(editor.Scenario, "#99999", level: 0).Where(l => l.Object is not null));
+        Assert.DoesNotContain(MapGoTo.Find(editor.Scenario, "#99999", level: 0), l => l.Object is not null);
+    }
+
+    [Fact]
+    public void Find_ListsTheObjectsOfAKind_NamedOrNot_OnceEach_AndGoToDoesNot()
+    {
+        var editor = new MapEditorSession(BlankScenario.Create(40, 30));
+        Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.TreasureChest, new MapPosition(5, 5), out var named));
+        Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.TreasureChest, new MapPosition(8, 5), out var plain));
+        var kind = editor.Scenario.GetObject(plain).Definition.Name;
+        Assert.Equal(EditResult.Ok, editor.Objects.SetName(named, kind + " of the king")); // its name fits the kind too
+
+        var found = MapGoTo.Find(editor.Scenario, kind, level: 0, kinds: true);
+        Assert.Single(found, l => l.Object == plain);
+        Assert.Single(found, l => l.Object == named); // found by its name and its kind, listed once
+        Assert.DoesNotContain(MapGoTo.Find(editor.Scenario, kind, level: 0), l => l.Object == plain);
+        Assert.DoesNotContain(MapGoTo.Find(editor.Scenario, "", level: 0, kinds: true), l => l.Object == plain); // nothing typed: no kinds
     }
 
     [Theory]

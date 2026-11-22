@@ -682,8 +682,10 @@ for collapsible panels as in IDEs.
    panel under a header with Hide, in place of a tab bar. Smoke `editor-side-bars`.
 2. **A compact tool palette** (icons alone, the name and key in the tooltip) and an Object tool without the hint the status bar
    repeats, so the browser keeps the room in the narrower left region.
-3. **The scroll bar's room kept** in every scrolled panel: at some widths the bar turned on and off without end and the editor hung.
-4. **Find** (Ctrl+F, the table of shortcuts): Go to's box; **Go to by id** ("#12"); the **top-down view orthographic**.
+3. **The scroll bar's room kept** in every scrolled panel of the editor (one helper, `UiScroll`), so a panel that wraps never turns
+   the bar on and off without end. Smoke: the editor scenarios.
+4. **Find** (Ctrl+F, the table of shortcuts): Go to's box, which also finds the map's objects by their kind ("gold mine": every one,
+   named or not); **Go to by id** ("#12"); the **top-down view orthographic**. Tests in `MapGoToTests`; smoke `editor-side-bars`.
 5. **Icons**: `UiIcon` values for the prompted icons not drawn yet (sheets C4, C7) and new prompts for those that had none (sheets C12,
    C13 in [editor-icon-prompts.md](../content/prompts/editor-icon-prompts.md)).
 

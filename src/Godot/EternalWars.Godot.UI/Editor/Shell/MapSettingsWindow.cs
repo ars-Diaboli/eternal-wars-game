@@ -113,7 +113,7 @@ public partial class MapSettingsWindow : Control
     private T Page<T>(MapSettingsTab tab, T panel)
         where T : Control
     {
-        var page = new ScrollContainer { Name = Titles[(int)tab], HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
+        var page = UiScroll.Vertical(Titles[(int)tab]);
         _tabs.AddChild(page);
         panel.Name = tab.ToString();
         panel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
