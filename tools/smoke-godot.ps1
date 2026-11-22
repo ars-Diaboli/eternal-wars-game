@@ -155,6 +155,11 @@ $scenarios = @(
     # the map is back.
     @{ Name = 'game-town-scene'; App = 'EternalWars.Game'; Frames = 76; Map = $townsMap
        Input = '3:key:Enter;12:key:T;20:click:640,470;30:key:Escape;36:click:1140,250;46:key:Escape;52:rclick:470,525;62:key:Escape;66:key:Escape;70:key:Escape' },
+    # The town camera (TOWN-14, ADR-302): T opens Castlebridge at the hero shot; a click on the tavern opens its window at once while the camera
+    # eases toward it, Escape eases back; E held turns the view to its 25° stop, two wheel turns zoom in two steps; B opens the Hall and the
+    # camera eases to the keep from there, Escape back; Q held turns it the other way, the wheel and − zoom out; Escape leaves.
+    @{ Name = 'game-town-camera'; App = 'EternalWars.Game'; Frames = 110; Map = $townsMap
+       Input = '3:key:Enter;12:key:T;20:click:640,470;34:key:Escape;44:hold:E,24;56:wheel:up,2,800,300;70:key:B;82:key:Escape;88:hold:Q,14;96:wheel:down,1,800,300;98:key:Minus;106:key:Escape' },
     # The eight town layouts (ADR-300): Blue holds a town of each type with everything built; T opens the first, ] goes through the other seven
     # (each layout loaded, every plot shown; a layout without a plot for one of its town's buildings or lines reports an error); Escape leaves.
     @{ Name = 'game-town-layouts'; App = 'EternalWars.Game'; Frames = 104; Map = $townLayoutsMap

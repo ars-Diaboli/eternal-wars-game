@@ -49,6 +49,9 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
 {
     private const string PaintingFolder = "res://shared/textures/ui/backgrounds/towns/";
 
+    /// <summary>How fast Q and E turn the scene's view.</summary>
+    private const float TurnDegreesPerSecond = 60f;
+
     private readonly TownArmiesSection _armies;
     private readonly TextureRect _crest = new() { StretchMode = TextureRect.StretchModeEnum.KeepCentered, CustomMinimumSize = new Vector2(Heraldry.TitleSize, Heraldry.TitleSize) };
     private readonly Button _title = new() { ThemeTypeVariation = UiTheme.TitleLabel, Flat = true, TooltipText = "Rename the town" };
@@ -302,7 +305,16 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
         _windowHost.AddChild(_window);
         _dim.Visible = true;
         FillWindow(town);
+        if (_scene is { IsOpen: true } scene && PlotOf(window) is { } plot)
+        {
+            scene.FocusOn(plot.Id); // the window is open already; the camera eases toward its building behind it (TOWN-14)
+        }
     }
+
+    /// <summary>The scene's built plot whose window <paramref name="window"/> is (the dwelling's, for the dwelling window), if any.</summary>
+    private PlotInfo? PlotOf(TownWindow window) =>
+        _scene?.Plots.FirstOrDefault(p => p.State is PlotState.Built or PlotState.BuiltToday
+                                          && (p.Line is { } line ? window == TownWindow.Dwelling && line == _dwelling : WindowOf(p.Building) == window));
 
     /// <summary>Opens the dwelling window of <paramref name="line"/> (a dwelling of the building strip).</summary>
     public void ShowDwelling(CreatureId line)
@@ -314,6 +326,7 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
     public void CloseWindow()
     {
         OpenWindow = null;
+        _scene?.Unfocus(); // the camera eases back from the building
         if (_window is not null)
         {
             Release(_window.Content);
@@ -322,6 +335,22 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
 
         _window = null;
         _dim.Visible = false;
+    }
+
+    /// <summary>The camera's turn keys, held (TOWN-14): Q and E turn the scene's view while no window is open, as on the adventure map.</summary>
+    public override void _Process(double delta)
+    {
+        if (!Visible || _scene is not { IsOpen: true } scene || OpenWindow is not null || ConfirmDialog.AnyOpen || IsCovered?.Invoke() == true
+            || Current is null || Input.IsKeyPressed(Key.Ctrl) || GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit)
+        {
+            return;
+        }
+
+        var turn = (TownScreenKeys.Held(TownKey.TurnRight) ? 1f : 0f) - (TownScreenKeys.Held(TownKey.TurnLeft) ? 1f : 0f);
+        if (turn != 0f)
+        {
+            scene.Turn(turn * TurnDegreesPerSecond * (float)delta);
+        }
     }
 
     public override void _UnhandledKeyInput(InputEvent @event)
@@ -342,6 +371,14 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
                 Close();
             }
 
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (OpenWindow is null && _scene is { IsOpen: true } scene
+            && (TownScreenKeys.Pressed(@event, TownKey.ZoomIn) || TownScreenKeys.Pressed(@event, TownKey.ZoomOut)))
+        {
+            scene.Zoom(TownScreenKeys.Pressed(@event, TownKey.ZoomIn) ? 1 : -1);
             GetViewport().SetInputAsHandled();
             return;
         }
@@ -623,6 +660,10 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
                     _stage.AcceptEvent();
                 }
 
+                break;
+            case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.WheelUp or MouseButton.WheelDown } wheel:
+                scene.Zoom(wheel.ButtonIndex == MouseButton.WheelUp ? 1 : -1);
+                _stage.AcceptEvent();
                 break;
             case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right } info:
                 scene.Hover(info.GlobalPosition);

@@ -21,6 +21,10 @@ namespace EternalWars.Godot.Shared.Towns;
 /// layout with a sky, spread over the part of it the hero shot sees (<c>town_sky.gdshader</c>). Besides the plots the layout shows the town's
 /// <see cref="TownScenery"/> (<see cref="TownDressing"/>, ADR-301): streets and houses by the town hall's level, the walls as the siege has them,
 /// banners in the owner's colour and the garrison hero's banner on the keep; they follow the owner and the garrison hero too.
+/// The camera (TOWN-14, ADR-302) starts at the hero shot each time a town opens; the player turns it up to <see cref="MaxTurnDegrees"/> either way
+/// round the vertical through the plots' middle (<see cref="Turn"/>) and zooms in two steps by narrowing its lens, so it never runs into the
+/// scenery (<see cref="Zoom"/>); <see cref="FocusOn"/> eases it toward a building whose window has opened, and <see cref="Unfocus"/> back. Every move
+/// eases; at rest the camera is exactly the hero shot.
 /// </summary>
 public partial class TownScene3D : Node3D
 {
@@ -30,7 +34,19 @@ public partial class TownScene3D : Node3D
     /// <summary>Where the town types' sky paintings are (<c>bg_town_&lt;town&gt;.jpg</c>, ui-element-prompts.md).</summary>
     public const string SkyFolder = "res://shared/textures/ui/backgrounds/towns/";
 
+    /// <summary>How far the player may turn the hero shot either way (TOWN-14).</summary>
+    public const float MaxTurnDegrees = 25f;
+
     private const string SkyShader = "res://shared/shaders/town_sky.gdshader";
+
+    /// <summary>The camera's distance from a building it eases toward, as a share of the hero shot's.</summary>
+    private const float FocusScale = 0.42f;
+
+    /// <summary>How quickly the camera closes on where it is going: about 90 % of the way in 0.45 s.</summary>
+    private const float EaseRate = 5f;
+
+    /// <summary>The lens at each zoom step, as a share of the hero shot's field (the tangent of half its angle): the hero shot and two steps in.</summary>
+    private static readonly float[] ZoomLenses = [1f, 0.75f, 0.56f];
 
     private readonly Camera3D _camera = new() { Name = "TownCamera", Fov = 40, Far = 1500 };
     private readonly Dictionary<string, TownPlot> _plots = [];
@@ -40,6 +56,14 @@ public partial class TownScene3D : Node3D
     private string? _layoutType;
     private MapObjectId? _town;
     private TownPlot? _hovered;
+    private Transform3D _shot = Transform3D.Identity;
+    private Vector3 _pivot;
+    private float _turn;
+    private int _zoom;
+    private Vector3? _focus;
+    private float _shotFov = 40f;
+    private (Vector3 At, float Turn, float Scale, float Lens) _now;
+    private Vector2? _pointer;
 
     /// <summary>The scene was shown (the app hides the adventure world, its light and its camera).</summary>
     public event Action? Opened;
@@ -59,6 +83,18 @@ public partial class TownScene3D : Node3D
     public MapObjectId? Town => _town;
 
     public Camera3D Camera => _camera;
+
+    /// <summary>
+    /// How far the player has turned the hero shot, in degrees: + circles the camera to the right, as E turns the adventure map's; at most
+    /// <see cref="MaxTurnDegrees"/> either way.
+    /// </summary>
+    public float TurnDegrees => _turn;
+
+    /// <summary>The zoom step: 0 is the hero shot, 1 and 2 closer.</summary>
+    public int ZoomStep => _zoom;
+
+    /// <summary>The camera is easing toward, or resting at, a building (<see cref="FocusOn"/>).</summary>
+    public bool IsFocused => _focus is not null;
 
     /// <summary>The plot under the pointer, if any.</summary>
     public PlotInfo? Hovered => _hovered?.Info;
@@ -114,6 +150,7 @@ public partial class TownScene3D : Node3D
         if (_town != town)
         {
             SetHovered(null);
+            ResetCamera();
         }
 
         _town = town;
@@ -158,7 +195,85 @@ public partial class TownScene3D : Node3D
     }
 
     /// <summary>The pointer is at <paramref name="screenPoint"/> (viewport coordinates), or off the scene (null).</summary>
-    public void Hover(Vector2? screenPoint) => SetHovered(screenPoint is { } point && IsOpen ? PlotAt(point) : null);
+    public void Hover(Vector2? screenPoint)
+    {
+        _pointer = screenPoint;
+        SetHovered(screenPoint is { } point && IsOpen ? PlotAt(point) : null);
+    }
+
+    /// <summary>
+    /// Turns the view by <paramref name="degrees"/> (+ circles the camera to the right), within <see cref="MaxTurnDegrees"/> of the hero shot; not
+    /// while focused on a building.
+    /// </summary>
+    public void Turn(float degrees)
+    {
+        if (IsOpen && _focus is null)
+        {
+            _turn = Mathf.Clamp(_turn + degrees, -MaxTurnDegrees, MaxTurnDegrees);
+        }
+    }
+
+    /// <summary>
+    /// Zooms <paramref name="steps"/> steps in (+) or out (−), between the hero shot and two steps in; not while focused on a building.
+    /// </summary>
+    public void Zoom(int steps)
+    {
+        if (IsOpen && _focus is null)
+        {
+            _zoom = Math.Clamp(_zoom + steps, 0, ZoomLenses.Length - 1);
+        }
+    }
+
+    /// <summary>
+    /// Eases the camera toward the plot <paramref name="plotId"/> (its <c>Focus</c> marker), keeping the view's turn: the window over it has opened
+    /// already and does not wait. False, and nothing moves, for a plot the layout has not or that shows nothing.
+    /// </summary>
+    public bool FocusOn(string plotId)
+    {
+        if (!IsOpen || !_plots.TryGetValue(TownOverview.PlotNode(plotId), out var plot) || !plot.IsShown)
+        {
+            return false;
+        }
+
+        _focus = ToLocal(plot.Focus); // the camera stands in this node's space
+        return true;
+    }
+
+    /// <summary>Eases the camera back to the player's view (its turn and zoom) from a building.</summary>
+    public void Unfocus() => _focus = null;
+
+    public override void _Process(double delta)
+    {
+        if (!IsOpen)
+        {
+            return;
+        }
+
+        (Vector3 At, float Turn, float Scale, float Lens) goal =
+            _focus is { } focus ? (focus, _turn, FocusScale, 1f) : (_pivot, _turn, 1f, ZoomLenses[_zoom]);
+        if (_now == goal)
+        {
+            return;
+        }
+
+        if (_now.At.DistanceSquaredTo(goal.At) < 1e-4f && Mathf.Abs(_now.Turn - goal.Turn) < 0.01f && Mathf.Abs(_now.Scale - goal.Scale) < 1e-4f
+            && Mathf.Abs(_now.Lens - goal.Lens) < 1e-4f)
+        {
+            _now = goal; // close enough: settle exactly (at rest the hero shot is the hero shot)
+        }
+        else
+        {
+            var t = 1f - Mathf.Exp(-EaseRate * (float)delta);
+            _now = (_now.At.Lerp(goal.At, t), Mathf.Lerp(_now.Turn, goal.Turn, t), Mathf.Lerp(_now.Scale, goal.Scale, t),
+                Mathf.Lerp(_now.Lens, goal.Lens, t));
+        }
+
+        PlaceCamera();
+        if (_pointer is { } pointer && _focus is null)
+        {
+            SetHovered(PlotAt(pointer)); // the building under a still pointer changes as the view moves (not under an open window)
+        }
+    }
 
     /// <summary>A click at <paramref name="screenPoint"/>: raises <see cref="BuildingPicked"/> for the plot there. True when one was.</summary>
     public bool Pick(Vector2 screenPoint)
@@ -253,17 +368,22 @@ public partial class TownScene3D : Node3D
             _plots[marker.Name] = new TownPlot(marker);
         }
 
+        // The layout is not in the tree yet: its nodes' places in this node's space (the camera's) are their transforms up to the layout's.
+        Vector3? middle = _plots.Count == 0 ? null : _plots.Values.Aggregate(Vector3.Zero, (sum, p) => sum + InLayout(p.Marker).Origin) / _plots.Count;
         if (_layout.GetNodeOrNull<Camera3D>("Camera") is { } shot)
         {
-            (_camera.Transform, _camera.Fov, _camera.Near, _camera.Far) = (shot.Transform, shot.Fov, shot.Near, shot.Far);
+            (_shot, _shotFov, _camera.Near, _camera.Far) = (InLayout(shot), shot.Fov, shot.Near, shot.Far);
             _layout.RemoveChild(shot);
             shot.Free();
         }
         else
         {
-            var centre = _plots.Count == 0 ? Vector3.Zero : _plots.Values.Aggregate(Vector3.Zero, (sum, p) => sum + p.Marker.Position) / _plots.Count;
-            _camera.Transform = new Transform3D(Basis.Identity, centre + new Vector3(0, 22, 48)).LookingAt(centre, Vector3.Up);
+            var centre = middle ?? Vector3.Zero;
+            (_shot, _shotFov) = (new Transform3D(Basis.Identity, centre + new Vector3(0, 22, 48)).LookingAt(centre, Vector3.Up), 40f);
         }
+
+        _pivot = middle ?? PivotOf(_shot); // the camera turns round the plots' middle
+        ResetCamera();
 
         if (_layout.FindChildren("*", nameof(WorldEnvironment), recursive: false, owned: false).Count == 0)
         {
@@ -305,7 +425,7 @@ public partial class TownScene3D : Node3D
 
         var environment = (global::Godot.Environment)shared.Duplicate(); // the loaded scene's own environment stays as authored
         var above = (shared.Sky?.SkyMaterial as ProceduralSkyMaterial)?.SkyTopColor ?? new Color(0.3f, 0.45f, 0.7f);
-        var forward = -_camera.Transform.Basis.Z;
+        var forward = -_shot.Basis.Z;
         var material = new ShaderMaterial { Shader = GD.Load<Shader>(SkyShader) };
         material.SetShaderParameter("picture", GD.Load<Texture2D>(SkyPath(townType)));
         material.SetShaderParameter("azimuth", Mathf.Atan2(forward.X, -forward.Z));
@@ -314,6 +434,53 @@ public partial class TownScene3D : Node3D
         material.SetShaderParameter("above", above);
         environment.Sky = new Sky { SkyMaterial = material };
         world.Environment = environment;
+    }
+
+    /// <summary><paramref name="node"/>'s transform in this node's space, through its parents up to and with the layout's own (out of the tree or not).</summary>
+    private Transform3D InLayout(Node3D node)
+    {
+        var transform = node.Transform;
+        for (var parent = node.GetParent(); parent is not null && parent != this; parent = parent.GetParent())
+        {
+            if (parent is Node3D spatial)
+            {
+                transform = spatial.Transform * transform;
+            }
+
+            if (parent == _layout)
+            {
+                break;
+            }
+        }
+
+        return transform;
+    }
+
+    /// <summary>Back to the hero shot at once: no turn, no zoom, no building.</summary>
+    private void ResetCamera()
+    {
+        (_turn, _zoom, _focus) = (0, 0, null);
+        _now = (_pivot, 0, 1, 1);
+        PlaceCamera();
+    }
+
+    /// <summary>
+    /// The camera where it is now: the hero shot turned by <c>_now.Turn</c> round the vertical through the plots' middle (which stays where it is on
+    /// the screen), moved to <c>_now.At</c> from <c>_now.Scale</c> of its distance, its lens narrowed to <c>_now.Lens</c>. The hero shot's own
+    /// direction is kept, so at rest it is the hero shot exactly.
+    /// </summary>
+    private void PlaceCamera()
+    {
+        var turn = new Basis(Vector3.Up, Mathf.DegToRad(_now.Turn)); // + circles the camera to the right, as E turns the adventure map's camera
+        _camera.Transform = new Transform3D(turn * _shot.Basis, _now.At + (turn * (_shot.Origin - _pivot) * _now.Scale));
+        _camera.Fov = Mathf.RadToDeg(2 * Mathf.Atan(Mathf.Tan(Mathf.DegToRad(_shotFov) / 2) * _now.Lens));
+    }
+
+    /// <summary>Where the hero shot of a layout without plots looks: its ray's meeting with the ground, or 40 m ahead for a shot that does not look down.</summary>
+    private static Vector3 PivotOf(Transform3D shot)
+    {
+        var forward = -shot.Basis.Z;
+        return forward.Y < -0.05f ? shot.Origin + (forward * (-shot.Origin.Y / forward.Y)) : shot.Origin + (forward * 40f);
     }
 
     private static WorldEnvironment DefaultEnvironment() => new()

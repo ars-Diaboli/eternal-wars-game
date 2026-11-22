@@ -9,6 +9,8 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Academy heroes: four dwarves, five djinn (four renamed) and a golem (Talos); prompts rewritten; generator version 14,
+  maps re-pinned (ADR-303).
 - Hero portrait prompts: women's hair medium to long, and a pose of each kind on every sheet (towards the viewer, left, right,
   chin raised) instead of all facing right; Sylvan men beardless, no wide faces, some slightly East Asian; the twenty Haven
   portraits cut into `textures/ui/heroes/`, not yet shown in the game (ADR-299).
@@ -16,11 +18,13 @@ Detail: [roadmap.md](roadmap.md).
   Utopia) never drawn at random; 14 heroes renamed as men (about a third women); varied close-crop prompts. Generator version 13.
 - Stronghold's Wolf Rider line moved to tier 2 and the Centaur line to tier 3, numbers swapped with the tier; generator version 12,
   maps re-pinned (ADR-295).
-- The town screen plan's step 3, tasks 1–3 (ADR-297, ADR-300, ADR-301): `TownScene3D` behind the town screen's bars, plots read from
+- The town screen plan's step 3, tasks 1–4 (ADR-297, ADR-300, ADR-301, ADR-302): `TownScene3D` behind the town screen's bars, plots read from
   `plot_*` markers and shown as the town has them (model, the layout's greybox or a block; scaffolding the day it is built; citizens'
   homes on the closed lines under the Capitol), hover and pick opening the windows; greybox layouts for all eight playable towns,
   checked in the game (smoke `game-town-layouts`); walls as the siege has them, streets and houses by the town hall's level, banners in
-  the owner's colour and the garrison hero's banner on the keep (`TownScenery`, smoke `game-town-states`). Next is task 4 (the camera).
+  the owner's colour and the garrison hero's banner on the keep (`TownScenery`, smoke `game-town-states`); the camera turned ±25°
+  with Q and E, zoomed in two steps by the lens, easing toward a building behind its window and back (smoke `game-town-camera`).
+  Next is task 5 (hover and pick: the outline, the controller's ring of plots).
 - The town screen plan's step 2 (ADR-296): the game's only town screen is the new one, its windows over the key painting with a strip
   of the town's buildings (Hall with columns by kind and requirement links, Recruitment and the dwelling window, Mage guild, Tavern,
   Marketplace, Blacksmith, Fort, Caravan, governor list, Transformer), the bars with Split, Upgrade all, Swap and Dismiss, rename and

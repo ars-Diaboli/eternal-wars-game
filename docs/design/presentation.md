@@ -110,7 +110,7 @@ creatures and buildings, heraldic player colours, iconic map objects).
 
 <a id="town-screen"></a>
 ## Town screen
-ADR-246, ADR-294, ADR-296, ADR-297, ADR-300, ADR-301; the plan and its 3D scene: [town-screen-plan.md](../papers/town-screen-plan.md).
+ADR-246, ADR-294, ADR-296, ADR-297, ADR-300, ADR-301, ADR-302; the plan and its 3D scene: [town-screen-plan.md](../papers/town-screen-plan.md).
 - **Main screen**: the top bar has the town's crest and name (a click renames it), ◄ ► through the player's towns ([ and ] too), the faction,
   town hall and governor, the quick buttons of the windows and the close "×". The main area is the town's 3D scene where its town type
   has a layout (every playable town type has one), else the faction's key painting. In the scene each built building stands on its plot (a greybox block with
@@ -119,6 +119,8 @@ ADR-246, ADR-294, ADR-296, ADR-297, ADR-300, ADR-301; the plan and its 3D scene:
   hall's level (village, town, city); walls rise with the fort as the siege has them (the wall and gate, then the moat, then towers);
   banners fly in the owner's colour, and the garrison hero's banner on the keep. The pointer over a building shows the hand and its
   name on the status bar, a click opens its window (or its information, for one without a window) and a right click its information. The
+  scene opens at the town's hero shot: Q and E turn it up to 25° either way, the wheel or + and − zoom in two steps; a building's window
+  opens at once while the camera eases toward the building behind it, and back when the window closes. The
   adventure map and its side panels are put away while the scene shows. Along the main area's bottom runs a strip of the town's buildings
   (a click opens a building's window, or the information of one without a window), and a notices card stands in its corner (built today,
   caravans coming, the governor's discount). The bottom bar has the town's

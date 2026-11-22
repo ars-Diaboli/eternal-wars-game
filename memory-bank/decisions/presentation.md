@@ -44,6 +44,7 @@
 | [299](#adr-299-hero-portraits-womens-hair-medium-to-long-a-pose-of-each-kind-on-every-sheet-owner-adr-298-2026-11-22) | Hero portraits: women's hair medium to long, a pose of each kind on every sheet (owner, ADR-298, 2026-11-22) | accepted |
 | [300](#adr-300-town-screen-step-3-task-2-greybox-layouts-for-the-eight-towns-after-their-key-paintings-the-layout-check-in-the-game-the-towns-painting-as-the-sky-adr-246-adr-292-adr-297-2026-11-22) | Town screen step 3, task 2: greybox layouts for the eight towns after their key paintings, the layout check in the game, the town's painting as the sky (ADR-246, ADR-292, ADR-297, 2026-11-22) | implemented |
 | [301](#adr-301-town-screen-step-3-task-3-plot-states-walls-as-the-siege-has-them-streets-by-the-town-hall-banners-and-the-garrison-heros-banner-town-15-town-19-town-22-adr-291-2026-11-22) | Town screen step 3, task 3: plot states, walls as the siege has them, streets by the town hall, banners and the garrison hero's banner (TOWN-15, TOWN-19, TOWN-22, ADR-291, 2026-11-22) | implemented |
+| [302](#adr-302-town-screen-step-3-task-4-the-town-camera-turned-25-round-the-town-and-zoomed-in-two-steps-by-the-lens-easing-toward-a-building-behind-its-window-town-14-adr-292-2026-11-22) | Town screen step 3, task 4: the town camera, turned ±25° round the town and zoomed in two steps by the lens, easing toward a building behind its window (TOWN-14, ADR-292, 2026-11-22) | implemented |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -859,3 +860,23 @@ TOWN-15 is ADR-291. The plan's step-by-step implementation is in its [roadmap](.
   `game-town-states` opens a village, a town, a city and a Capitol; `game-town-build` shows the scaffolding, `game-town-armies` the hero's
   banner.
 - Not yet: a captured Capitol dropping to City Hall loses the homes (the plan keeps them; it needs the town to remember the Capitol).
+
+### ADR-302: Town screen step 3, task 4: the town camera, turned ±25° round the town and zoomed in two steps by the lens, easing toward a building behind its window (TOWN-14, ADR-292, 2026-11-22)
+**Status**: implemented. The [town screen plan](../../docs/papers/town-screen-plan.md#implementation-plan)'s step 3, task 4.
+
+- **At rest the camera is the layout's hero shot**, and every town opens there (a town switched to with [ or ] too). Its moves are three
+  numbers eased together (about 90 % of the way in 0.45 s, closing exponentially, so a new move mid-way just changes the goal): the turn,
+  where it looks and the lens.
+- **Turn**: Q and E held (60° a second; they turn it the way they turn the adventure map's camera) turn the hero shot up to 25° either way round the
+  vertical through the plots' middle, which stays where it is on the screen; the shot's own tilt is kept.
+- **Zoom**: the wheel over the scene, or + and − (the numpad's too), steps between the hero shot and two steps in by narrowing the lens (the tangent of half
+  the field at 1, 0.75 and 0.56), not by moving the camera, so a close view never runs into the keep's rise or a wall.
+- **A building's window**: the window opens at once; the camera eases toward the building's `Focus` marker behind it (to 0.42 of the hero
+  shot's distance, the lens back to the hero shot's, the turn kept), whether the window was opened by a click in the scene, the building
+  strip or a key. Closing the window, by Escape, ×, or a click beside it, eases it back to the turned and zoomed view. Turning and zooming
+  wait while a window is open; Recruitment and the governor's window have no building of their own: opened from the scene's view they leave
+  the camera where it is, opened over a building's window they close it and the camera eases back. The building under a still pointer
+  follows the moving view, but not under an open window.
+- The keys are input actions (`town_turn_left`, `town_turn_right`,
+  `town_zoom_in`, `town_zoom_out`) beside the screen's others (ADR-294). The smoke script's `wheel:` takes a screen point
+  (`wheel:up,2,640,360`; without one it turns at the screen's centre, as before); smoke `game-town-camera` clicks the tavern, turns, zooms, opens the Hall and comes back.

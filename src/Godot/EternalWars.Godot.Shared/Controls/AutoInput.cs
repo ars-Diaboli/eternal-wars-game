@@ -8,7 +8,7 @@ namespace EternalWars.Godot.Shared.Controls;
 /// <c>-- --autoinput=30:click:800,450;45:key:Enter;60:rclick:400,300</c>. Each entry is
 /// <c>frame:kind:argument</c>; kinds are <c>click</c>/<c>rclick</c> (screen x,y), <c>key</c> (a Godot
 /// <see cref="Key"/> name, with its modifiers before it: <c>key:Ctrl+Shift+P</c>), <c>text</c> (letters typed into the focused text field, one a frame), <c>touch</c> (<c>x,y,frames</c>: one finger down there, lifted that many frames later; a long press
-/// opens the information window through <see cref="TouchInput"/>), <c>hold</c> (<c>Key,frames</c>: held down that long), <c>wheel</c> (<c>up|down,count</c>) and
+/// opens the information window through <see cref="TouchInput"/>), <c>hold</c> (<c>Key,frames</c>: held down that long), <c>wheel</c> (<c>up|down,count</c> at the screen's centre, or <c>up|down,count,x,y</c> at that point) and
 /// <c>drag</c>/<c>rdrag</c>/<c>mdrag</c> (<c>x1,y1,x2,y2</c>: left, right or middle button pressed, moved, released over three frames), <c>press</c> (a visible,
 /// enabled button by its text or, without one, its tooltip; the topmost: exact, else the first that contains it, ignoring case; scrolled into view, then clicked at its centre the next
 /// frame; an error when there is none) and <c>dump</c> (prints the visible buttons' texts (a text-less button by its tooltip), centres and sizes, and the tabs, for writing scripts). A click,
@@ -101,14 +101,17 @@ public partial class AutoInput : Node
 
                     break;
                 case "wheel":
-                    // wheel:up|down,count at the screen centre (camera zoom).
+                    // wheel:up|down,count (camera zoom); wheel:up|down,count,x,y turns it with the pointer at that screen point (over a control).
                     var wheelParts = parts[2].Split(',');
                     var wheel = wheelParts[0].Equals("up", StringComparison.OrdinalIgnoreCase) ? MouseButton.WheelUp : MouseButton.WheelDown;
                     var turns = wheelParts.Length > 1 ? int.Parse(wheelParts[1], CultureInfo.InvariantCulture) : 1;
+                    var over = wheelParts.Length > 3
+                        ? new Vector2(float.Parse(wheelParts[2], CultureInfo.InvariantCulture), float.Parse(wheelParts[3], CultureInfo.InvariantCulture))
+                        : Vector2.Zero;
                     for (var i = 0; i < turns; i++)
                     {
-                        _script.Add((frame, new InputEventMouseButton { ButtonIndex = wheel, Pressed = true }));
-                        _script.Add((frame, new InputEventMouseButton { ButtonIndex = wheel, Pressed = false }));
+                        _script.Add((frame, new InputEventMouseButton { ButtonIndex = wheel, Pressed = true, Position = over, GlobalPosition = over }));
+                        _script.Add((frame, new InputEventMouseButton { ButtonIndex = wheel, Pressed = false, Position = over, GlobalPosition = over }));
                     }
 
                     break;
@@ -183,8 +186,9 @@ public partial class AutoInput : Node
 
         foreach (var (_, @event) in _script.Where(s => s.Frame == _frame))
         {
-            if (@event is InputEventMouseButton { ButtonIndex: MouseButton.WheelUp or MouseButton.WheelDown } turn)
+            if (@event is InputEventMouseButton { ButtonIndex: MouseButton.WheelUp or MouseButton.WheelDown } turn && turn.Position == Vector2.Zero)
             {
+                // no point given: the screen's centre
                 turn.Position = turn.GlobalPosition = GetViewport().GetVisibleRect().Size / 2;
             }
 

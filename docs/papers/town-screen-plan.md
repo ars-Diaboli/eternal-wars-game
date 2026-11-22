@@ -654,7 +654,9 @@ Core first (tasks 1–7), then the screen (8–16). Each TOWN-17 rule gets its o
    parts, the owner, the garrison hero); each layout's `Walls` line and `Streets` markers; scaffolding until the next day; homes as a few
    houses in the town's look; banners with the faction's charge. A captured Capitol dropping to City Hall still loses its homes.*
 4. **Camera** (TOWN-14): the hero shot, turned ±25° and zoomed in two steps; a click opens the window at once while the camera eases
-   toward the building, and eases back after Escape.
+   toward the building, and eases back after Escape. *Done (ADR-302): Q and E turn round the plots' middle, the wheel or + and − zoom by
+   the lens, so a close view never runs into the scenery; the camera eases toward the building of any window, opened by a click, the
+   strip or a key, and back when it closes.*
 5. **Hover and pick**: the bronze outline, name and state on the status line, the hand cursor, right click for the info window;
    picking by hover shape; the controller walks a ring of plots. "Show in town" from the Hall shows a ghost of the model on its plot.
 6. **Construction scene**: on `TownBuilt` / `DwellingBuilt`, 1.5 s at the plot (scaffold, dust, the model rising, a bell), cut short

@@ -19,10 +19,15 @@ public enum TownKey
     Hero,
     SwapHeroes,
     Back,
+    TurnLeft,
+    TurnRight,
+    ZoomIn,
+    ZoomOut,
 }
 
 /// <summary>
-/// The town screen's keys (ADR-294): B, R, G, V, M, S, F, C, U, [ and ], H, Space and Escape, as input actions the game app adds to its input
+/// The town screen's keys (ADR-294): B, R, G, V, M, S, F, C, U, [ and ], H, Space and Escape, and the camera's Q and E (held, turning it as on the
+/// adventure map) and + and − (zoom, as the wheel; ADR-302), as input actions the game app adds to its input
 /// map (<see cref="AddToInputMap"/>), so they can be rebound later. Each key's button shows its label with the key on the status bar
 /// (<see cref="Hint"/>, ADR-204). A screen in an app without the actions (the 2D harness) falls back to the default keys.
 /// </summary>
@@ -45,6 +50,10 @@ public static class TownScreenKeys
         [TownKey.Hero] = ("town_hero", Key.H, "Hero screen"),
         [TownKey.SwapHeroes] = ("town_swap_heroes", Key.Space, "Swap the heroes"),
         [TownKey.Back] = ("town_back", Key.Escape, "Back"),
+        [TownKey.TurnLeft] = ("town_turn_left", Key.Q, "Turn left"),
+        [TownKey.TurnRight] = ("town_turn_right", Key.E, "Turn right"),
+        [TownKey.ZoomIn] = ("town_zoom_in", Key.Equal, "Zoom in"),
+        [TownKey.ZoomOut] = ("town_zoom_out", Key.Minus, "Zoom out"),
     };
 
     /// <summary>Adds the actions with their default keys to the app's input map (the game app, at start); an action already there stays.</summary>
@@ -59,6 +68,10 @@ public static class TownScreenKeys
 
             InputMap.AddAction(action);
             InputMap.ActionAddEvent(action, new InputEventKey { Keycode = key });
+            foreach (var also in AlsoKeys(key))
+            {
+                InputMap.ActionAddEvent(action, new InputEventKey { Keycode = also });
+            }
         }
     }
 
@@ -71,14 +84,33 @@ public static class TownScreenKeys
         var (action, defaultKey, _) = All[key];
         if (InputMap.HasAction(action))
         {
-            return @event.IsActionPressed(action, exactMatch: true) && @event is not InputEventKey { Echo: true };
+            // A zoom key takes Shift too: + is Shift and = on many keyboards.
+            return @event.IsActionPressed(action, exactMatch: AlsoKeys(defaultKey).Length == 0) && @event is not InputEventKey { Echo: true };
         }
 
-        return @event is InputEventKey { Pressed: true, Echo: false, CtrlPressed: false, AltPressed: false, ShiftPressed: false } k && k.Keycode == defaultKey;
+        return @event is InputEventKey { Pressed: true, Echo: false, CtrlPressed: false, AltPressed: false } k
+               && (AlsoKeys(defaultKey).Length > 0 ? k.Keycode == defaultKey || AlsoKeys(defaultKey).Contains(k.Keycode) : k.Keycode == defaultKey && !k.ShiftPressed);
+    }
+
+    /// <summary>The other keys of a zoom key: the numpad's, and + itself (shifted on some keyboards, its own key on others).</summary>
+    private static Key[] AlsoKeys(Key key) => key switch
+    {
+        Key.Equal => [Key.Plus, Key.KpAdd],
+        Key.Minus => [Key.KpSubtract],
+        _ => [],
+    };
+
+    /// <summary>Whether <paramref name="key"/> is held down now (the camera's turn keys): its action, or its default key without the action.</summary>
+    public static bool Held(TownKey key)
+    {
+        var (action, defaultKey, _) = All[key];
+        return InputMap.HasAction(action) ? Input.IsActionPressed(action, exactMatch: true) : Input.IsKeyPressed(defaultKey);
     }
 
     private static string KeyName(Key key) => key switch
     {
+        Key.Equal => "+",
+        Key.Minus => "−",
         Key.Bracketleft => "[",
         Key.Bracketright => "]",
         _ => OS.GetKeycodeString(key),
