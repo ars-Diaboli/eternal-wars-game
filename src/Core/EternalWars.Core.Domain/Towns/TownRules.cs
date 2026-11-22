@@ -326,6 +326,25 @@ public static class TownRules
         return state.HeroLimitReached(hero.Owner) ? $"You already have {state.HeroLimit(hero.Owner)} heroes on the map." : null;
     }
 
+    /// <summary>
+    /// Why the garrison hero and the visiting hero cannot change places (ADR-294), or null: both must be there, and the garrison the garrison hero
+    /// would lead out must have troops. Each hero keeps its own troops, so nothing has to fit and the heroes on the map stay as many.
+    /// </summary>
+    public static string? CheckSwapHeroes(GameState state, Town town)
+    {
+        if (town.GarrisonHero is not { } inside)
+        {
+            return $"{town.Name} has no garrison hero.";
+        }
+
+        if (VisitingHero(state, town) is null)
+        {
+            return $"No own hero is visiting {town.Name}.";
+        }
+
+        return town.Garrison.IsEmpty ? $"{inside.Name} has no troops to lead out." : null;
+    }
+
     /// <summary>The garrison with <paramref name="army"/>'s stacks added, or null when they do not fit.</summary>
     internal static Armies.Army? Merged(Armies.Army garrison, Armies.Army army)
     {
@@ -352,6 +371,21 @@ public static class TownRules
     /// <summary>How many of something costing <paramref name="each"/> the resources pay for, at most <paramref name="limit"/>.</summary>
     public static int MaxAffordable(ResourceSet resources, ResourceSet each, int limit) =>
         Math.Max(0, Enum.GetValues<ResourceType>().Where(t => each[t] > 0).Select(t => resources[t] / each[t]).Append(limit).Min());
+
+    /// <summary>
+    /// Why the town cannot upgrade a stack of <paramref name="creature"/> (ADR-294: the army bar's upgrade badge), or null: the town has the line, the
+    /// line has an upgrade and its dwelling is upgraded. The price is <see cref="UpgradeCost"/>; whether the player can pay is the command's.
+    /// </summary>
+    public static string? CheckUpgradeLine(GameState state, Town town, Common.CreatureId creature, out CreatureDefinition? line)
+    {
+        line = Lines(state, town).FirstOrDefault(l => l.Id == creature && l.UpgradesTo is not null);
+        if (line is null)
+        {
+            return $"{town.Name} cannot upgrade {creature}.";
+        }
+
+        return town.DwellingLevel(line.Id) < 2 ? $"The {line.Name} dwelling is not upgraded." : null;
+    }
 
     /// <summary>The price difference for upgrading <paramref name="count"/> creatures of a line.</summary>
     public static ResourceSet UpgradeCost(GameState state, Town town, CreatureDefinition line, int count) =>

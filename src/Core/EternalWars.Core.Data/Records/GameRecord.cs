@@ -207,6 +207,7 @@ public static class GameRecordSerializer
         (typeof(BuySpellBookCommand), "buySpellBook"),
         (typeof(EnterGarrisonCommand), "enterGarrison"),
         (typeof(LeaveGarrisonCommand), "leaveGarrison"),
+        (typeof(SwapTownHeroesCommand), "swapTownHeroes"),
         (typeof(TradeResourceCommand), "tradeResource"),
         (typeof(HireHeroCommand), "hireHero"),
         (typeof(AppointGovernorCommand), "appointGovernor"),

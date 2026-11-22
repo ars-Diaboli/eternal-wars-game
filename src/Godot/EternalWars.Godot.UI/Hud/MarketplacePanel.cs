@@ -129,7 +129,7 @@ public partial class MarketplacePanel : PanelContainer
             name.AddChild(new Label { Text = resource.ToString() });
             _rows.AddChild(name);
             _rows.AddChild(ResourceIcons.AmountLabel(resource, player.Resources[resource]));
-            _rows.AddChild(new Label { Text = $"{rate.BuyPrice} gold" });
+            _rows.AddChild(new Widgets.CostLabel(ResourceSet.Of(ResourceType.Gold, rate.BuyPrice), player.Resources)); // red when the gold falls short
             _rows.AddChild(TradeButton("Buy", resource, TradeDirection.Buy).WithResourceIcon(resource));
             var sell = TradeButton($"Sell ({rate.SellPrice} gold)", resource, TradeDirection.Sell).WithResourceIcon(ResourceType.Gold);
             _rows.AddChild(sell);

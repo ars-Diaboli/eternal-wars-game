@@ -15,7 +15,7 @@ namespace EternalWars.Godot.UI.Hud.TownScreen;
 /// and cost; the tooltip lists the cost, each requirement (✓ met, ✗ missing), what the level pays or grows, and why it cannot be built.
 /// Built-out buildings are green, those waiting on others grey, the rest show whether they wait for tomorrow or for resources.
 /// </summary>
-internal sealed class BuildingTreeSection(TownPanel panel) : TownSection(panel)
+internal sealed class BuildingTreeSection(ITownSectionHost panel) : TownSection(panel)
 {
     public Label BuiltToday { get; } = new();
 
@@ -55,7 +55,7 @@ internal sealed class BuildingTreeSection(TownPanel panel) : TownSection(panel)
                 };
                 if (node.Next is not null)
                 {
-                    button.WithCost(node.Cost!.Value);
+                    button.WithCost(node.Cost!.Value, treasury: state.CurrentPlayer.Resources);
                 }
 
                 button.Pressed += () => Run(new BuildCommand(state.CurrentPlayer.Id, town.Id, building));

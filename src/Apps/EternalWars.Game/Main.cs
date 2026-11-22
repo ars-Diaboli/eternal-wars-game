@@ -17,6 +17,7 @@ using EternalWars.Godot.Shared.Map;
 using EternalWars.Godot.UI;
 using EternalWars.Godot.UI.Battle;
 using EternalWars.Godot.UI.Hud;
+using EternalWars.Godot.UI.Hud.TownScreen;
 using EternalWars.Godot.UI.Setup;
 using Godot;
 
@@ -88,7 +89,9 @@ public partial class Main : Node3D
 
     public override void _Ready()
     {
-        UiTheme.Apply(); // the shared margins and gaps (ADR-163) and the look (ADR-191)
+        UiFonts.Pairing = LaunchArguments.Fonts == "b" ? FontPairing.MarcellusFira : FontPairing.CinzelAlegreya; // the owner's pick (ADR-294)
+        UiTheme.Apply(); // the shared margins and gaps (ADR-163), the look (ADR-191) and the fonts (ADR-294)
+        TownScreenKeys.AddToInputMap(); // the town screen's keys (ADR-294)
         AddChild(new TouchInput()); // a touch screen as the mouse: a long press opens the information window (ADR-190)
         if (AutoInput.FromLaunchArguments() is { } autoInput)
         {
@@ -635,7 +638,7 @@ public partial class Main : Node3D
 
     private void BuildHud()
     {
-        _hud = new AdventureHud();
+        _hud = new AdventureHud { NewTownScreen = LaunchArguments.TownScreen == "new" }; // the town screen overhaul (ADR-294) until its step 2 ends
         _game!.AddChild(_hud);
         var playing = Playing; // the replay viewer only watches: nothing here issues a command (ADR-164)
         _hud.Bind(_session, _context, _world, _camera, playing, _layout, screens: _game);

@@ -75,11 +75,11 @@ public static class UiSpacing
         return box;
     }
 
-    /// <summary>A section's heading: <see cref="Section"/> of room above it, then the text (same font as the rest).</summary>
+    /// <summary>A section's heading: <see cref="Section"/> of room above it, then the text in the heading face (<see cref="UiTheme.HeadingLabel"/>).</summary>
     public static Label AddHeading(this BoxContainer box, string text)
     {
         box.AddChild(Space(Section - Row));
-        var label = new Label { Text = text };
+        var label = new Label { Text = text, ThemeTypeVariation = UiTheme.HeadingLabel };
         box.AddChild(label);
         return label;
     }

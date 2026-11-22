@@ -12,7 +12,7 @@ namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
 /// Hero screen for a hero of the player whose turn it is: stats (with what artifacts add), mana, experience, specialty,
-/// skills with their descriptions, the army (click a stack, then a slot to move it; "Split" moves half), the paper doll
+/// skills with their descriptions, the army (an <see cref="Widgets.ArmyBar"/>, ADR-294: drag, split, spread), the paper doll
 /// and the backpack (click a worn artifact to take it off, a carried one to put it on, or drag it there: ADR-162), and war machines. Every change is
 /// a command; refusals show below. A right click on a skill, a spell, a stack or an artifact opens its information window (ADR-154). Opened with <see cref="Open"/>; Previous / Next go through the player's heroes. With
 /// <see cref="FullScreen"/> it fills its parent and scrolls; Escape or "Close" shut it.
@@ -30,7 +30,6 @@ public partial class HeroPanel : PanelContainer
     private readonly AdventureSpellsSection _adventure;
     private readonly HeroArtifactsSection _artifacts;
     private readonly HeroSection[] _sections;
-    private readonly CheckBox _split = new() { Text = "Split (move half)" };
     private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(UiTheme.ScreenTextWidth, 0) };
     private GameSession _session = null!;
     private HeroId? _hero;
@@ -73,8 +72,6 @@ public partial class HeroPanel : PanelContainer
     /// <summary>The hero the sections show: the open hero while the screen is in sight and the hero is the current player's.</summary>
     internal Hero? Shown => Visible && _hero is { } id ? Of(id) : null;
 
-    /// <summary>The army slot picked to move.</summary>
-    internal int? PickedSlot { get; private set; }
 
     public void Bind(GameSession session)
     {
@@ -114,8 +111,7 @@ public partial class HeroPanel : PanelContainer
         box.AddHeading("Skills");
         box.AddChild(_skills.Rows);
         box.AddHeading("Army");
-        box.AddChild(_army.Slots);
-        box.AddChild(_split);
+        box.AddChild(_army.Bar);
         box.AddChild(_machines.Row);
         box.AddChild(_spells.Row);
         box.AddHeading("Adventure spells (mana and 500 movement points)");
@@ -142,7 +138,7 @@ public partial class HeroPanel : PanelContainer
     public void Open(HeroId hero)
     {
         _hero = hero;
-        PickedSlot = null;
+        _army.Bars.Picked = null;
         _status.Text = "";
         Refresh();
     }
@@ -177,36 +173,21 @@ public partial class HeroPanel : PanelContainer
 
     internal void ReopenEavesdrop(HeroId hero, MapObjectId town) => EavesdropReopened?.Invoke(hero, town);
 
-    /// <summary>An army slot clicked: picks its stack, or moves the picked stack there (half with "Split").</summary>
-    internal void ClickSlot(HeroId id, int slot)
+    internal void Run(GameCommand command) => RunAll([command]);
+
+    /// <summary>Runs the commands in order, stopping at the first refused one, whose reason the status line shows.</summary>
+    internal void RunAll(IReadOnlyList<GameCommand> commands)
     {
-        var hero = _session.State.GetHero(id);
-        if (PickedSlot is not { } from)
+        _status.Text = "";
+        foreach (var command in commands)
         {
-            if (hero.Army[slot] is not null)
+            var result = _session.Execute(command);
+            if (!result.IsAccepted)
             {
-                PickedSlot = slot;
+                _status.Text = $"Refused: {result.Error}";
+                return;
             }
-
-            _army.Refresh();
-            return;
         }
-
-        PickedSlot = null;
-        if (from != slot)
-        {
-            var stack = hero.Army[from]!;
-            int? count = _split.ButtonPressed && stack.Count > 1 ? stack.Count / 2 : null;
-            Run(new MoveStackCommand(_session.State.CurrentPlayer.Id, id, from, id, slot, count));
-        }
-
-        _army.Refresh();
-    }
-
-    internal void Run(GameCommand command)
-    {
-        var result = _session.Execute(command);
-        _status.Text = result.IsAccepted ? "" : $"Refused: {result.Error}";
     }
 
     private Hero? Of(HeroId id)

@@ -1218,6 +1218,7 @@ object GameCommand
   type=sendTroops -> SendTroopsCommand
   type=sphinx -> AnswerSphinxCommand
   type=step -> StepHeroCommand
+  type=swapTownHeroes -> SwapTownHeroesCommand
   type=takeRelicApart -> TakeRelicApartCommand
   type=townGate -> ChooseTownGateCommand
   type=tradeResource -> TradeResourceCommand
@@ -1846,6 +1847,9 @@ object StepHeroCommand
   hero: HeroId
   player: PlayerId
 object StopAction
+object SwapTownHeroesCommand
+  player: PlayerId
+  town: MapObjectId
 object TakeLessonCommand
   player: PlayerId
   school: MapObjectId

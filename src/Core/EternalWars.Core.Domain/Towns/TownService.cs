@@ -94,12 +94,8 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         var town = OwnTown(player, townId);
         var (army, hero) = ArmyOf(town, which, null);
         var stack = (Army.IsValidSlot(slot) ? army[slot] : null) ?? throw new CommandRefusedException("The slot is empty.");
-        var line = TownRules.Lines(state, town).FirstOrDefault(l => l.Id == stack.Creature && l.UpgradesTo is not null)
-                   ?? throw new CommandRefusedException($"{town.Name} cannot upgrade {stack.Creature}.");
-        if (town.DwellingLevel(line.Id) < 2)
-        {
-            throw new CommandRefusedException($"The {line.Name} dwelling is not upgraded.");
-        }
+        Refuse(TownRules.CheckUpgradeLine(state, town, stack.Creature, out var found));
+        var line = found!;
 
         Pay(player, TownRules.UpgradeCost(state, town, line, stack.Count));
         army.Set(slot, new CreatureStack(line.UpgradesTo!.Value, stack.Count));
@@ -224,6 +220,37 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         events.Publish(new HeroLeftGarrison(town.Id, hero.Id, hero.Position));
         events.Publish(new GarrisonChanged(town.Id, town.Garrison.Slots.ToList()));
         events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
+    }
+
+    /// <summary>
+    /// The garrison hero and the visiting hero change places (ADR-294): each keeps its own troops, so the garrison hero comes out leading the
+    /// garrison and the visiting hero's army becomes the garrison.
+    /// </summary>
+    internal void SwapHeroes(PlayerId player, MapObjectId townId)
+    {
+        var town = OwnTown(player, townId);
+        Refuse(TownRules.CheckSwapHeroes(state, town));
+
+        var entering = TownRules.VisitingHero(state, town)!;
+        var leaving = town.GarrisonHero!;
+        for (var slot = 0; slot < Army.SlotCount; slot++)
+        {
+            leaving.Army.Set(slot, town.Garrison[slot]);
+            town.Garrison.Set(slot, entering.Army[slot]);
+            entering.Army.Set(slot, null);
+        }
+
+        state.RemoveHero(entering);
+        town.GarrisonHero = entering;
+        leaving.Position = town.VisitPosition;
+        leaving.MaxMovementPoints = MovementAllowance.Daily(state, leaving);
+        leaving.MovementPoints = Math.Min(leaving.MovementPoints, leaving.MaxMovementPoints);
+        state.AddHero(leaving);
+        events.Publish(new HeroEnteredGarrison(town.Id, entering.Id));
+        events.Publish(new HeroLeftGarrison(town.Id, leaving.Id, leaving.Position));
+        events.Publish(new GarrisonChanged(town.Id, town.Garrison.Slots.ToList()));
+        events.Publish(new ArmyChanged(entering.Id, entering.Army.Slots.ToList()));
+        events.Publish(new ArmyChanged(leaving.Id, leaving.Army.Slots.ToList()));
     }
 
     /// <summary>The owner appoints one of its heroes governor of the town; the hero leaves any other town it governed.</summary>

@@ -6,20 +6,21 @@ using EternalWars.Core.Domain.Towns;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.UI.Hud.TownScreen;
+using EternalWars.Godot.UI.Widgets;
 using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
 /// Basic town screen (ADR-046) for the current player's town: build the next level of a building, build or upgrade
-/// dwellings, recruit, and manage the garrison and the visiting hero (click a stack, then a slot; "Upgrade" upgrades
-/// the picked stack"), turn stacks into undead at a Necropolis's Undead Transformer (ADR-137), and appoint or dismiss the governor (ADR-063). Every action is a town command; refusals show
+/// dwellings, recruit (a count in a <see cref="SliderDialog"/>), and manage the garrison and the visiting hero as two <see cref="ArmyBar"/>s
+/// (ADR-294: drag, split, spread, upgrade badges, the heroes swapped), turn stacks into undead at a Necropolis's Undead Transformer (ADR-137), and appoint or dismiss the governor (ADR-063). Every action is a town command; refusals show
 /// below. Opened with <see cref="Open"/>. With <see cref="FullScreen"/> (the game app) it fills its parent and scrolls;
 /// Escape or "Close" shut it. A right click on a building, a dwelling, a recruit button or a stack opens its information window (ADR-154).
 /// The screen is made of <see cref="TownSection"/>s (ADR-223), each rebuilt alone on its own events; the screen rebuilds them all when it opens
 /// and on the events that change what it shows at all or what every section reads (the owner, a decision, the turn, a building, the governor).
 /// </summary>
-public partial class TownPanel : PanelContainer
+public partial class TownPanel : PanelContainer, ITownScreen, ITownSectionHost
 {
     private readonly TownHeaderSection _header;
     private readonly BuildingTreeSection _buildings;
@@ -31,14 +32,13 @@ public partial class TownPanel : PanelContainer
     private readonly BlacksmithSection _blacksmith;
     private readonly TavernSection _tavern;
     private readonly TownSection[] _sections;
-    private readonly CheckBox _split = new() { Text = "Split (move half)" };
-    private readonly CheckBox _toHero = new() { Text = "Recruit to visiting hero" };
     private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(UiTheme.ScreenTextWidth, 0) };
     private GameSession _session = null!;
     private MapObjectId? _town;
 
     public TownPanel()
     {
+        Armies = TownArmiesSection.Group(this);
         _header = new TownHeaderSection(this);
         _buildings = new BuildingTreeSection(this);
         _dwellings = new DwellingsSection(this);
@@ -49,6 +49,7 @@ public partial class TownPanel : PanelContainer
         _blacksmith = new BlacksmithSection(this);
         _tavern = new TavernSection(this);
         _sections = [_header, _buildings, _dwellings, _governor, _armies, _caravan, _tavern, _blacksmith, _transformer];
+        Armies.PickChanged += _caravan.Refresh; // the caravan sends the picked stack
     }
 
     /// <summary>Fill the parent and scroll (the game app's town screen) instead of shrinking to the content. Set before <see cref="Bind"/>.</summary>
@@ -106,14 +107,6 @@ public partial class TownPanel : PanelContainer
         box.AddChild(_transformer.Row);
         box.AddChild(_blacksmith.Row);
         box.AddChild(_tavern.Row);
-
-        var options = new HBoxContainer();
-        box.AddChild(options);
-        options.AddChild(_split);
-        options.AddChild(_toHero);
-        var upgrade = new Button { Text = "Upgrade picked stack" };
-        upgrade.Pressed += UpgradePicked;
-        options.AddChild(upgrade);
         box.AddChild(_status);
         Visible = false;
 
@@ -136,7 +129,7 @@ public partial class TownPanel : PanelContainer
     public void Open(MapObjectId town)
     {
         _town = town;
-        Picked = null;
+        Armies.Picked = null;
         _transformer.Reset();
         _status.Text = "";
         Refresh();
@@ -156,24 +149,20 @@ public partial class TownPanel : PanelContainer
     /// <summary>The town the screen shows, if it is open.</summary>
     public MapObjectId? CurrentTown => Visible ? _town : null;
 
+    GameSession ITownSectionHost.Session => _session;
+
     internal GameSession Session => _session;
 
     /// <summary>The town the sections show: the open town while the screen is in sight.</summary>
-    internal Town? Shown => Visible && _session.State.PendingDecision is null ? Current : null;
+    public Town? Shown => Visible && _session.State.PendingDecision is null ? Current : null;
 
-    /// <summary>The stack picked to move (the army rows) or to send (the caravan).</summary>
-    internal (TownArmy Army, int Slot)? Picked { get; set; }
-
-    /// <summary>"Split (move half)" is ticked.</summary>
-    internal bool Split => _split.ButtonPressed;
-
-    /// <summary>"Recruit to visiting hero" is ticked.</summary>
-    internal bool RecruitToHero => _toHero.ButtonPressed;
+    /// <summary>The army bars' group (ADR-294): what their drags do, and the stack picked to move or to send (the caravan).</summary>
+    public ArmyBarGroup Armies { get; }
 
     /// <summary>Someone opens a tavern screen (<see cref="TavernRequested"/>).</summary>
-    internal bool HasTavernScreen => TavernRequested is not null;
+    public bool HasTavernScreen => TavernRequested is not null;
 
-    internal void OpenTavern(MapObjectId town) => TavernRequested?.Invoke(town);
+    public void OpenTavern(MapObjectId town) => TavernRequested?.Invoke(town);
 
     private Town? Current =>
         _town is { } id && _session.State.FindObject(id) is Town town && town.Owner == _session.State.CurrentPlayer.Id ? town : null;
@@ -193,51 +182,21 @@ public partial class TownPanel : PanelContainer
         }
     }
 
-    /// <summary>A stack's slot clicked: picks it, or moves the picked stack there (half with "Split").</summary>
-    internal void ClickSlot(Town town, (TownArmy Army, int Slot) target, bool occupied)
+    public void Run(GameCommand command) => RunAll([command]);
+
+    /// <summary>Runs the commands in order, stopping at the first refused one, whose reason the status line shows.</summary>
+    public void RunAll(IReadOnlyList<GameCommand> commands)
     {
-        if (Picked is not { } from)
+        _status.Text = "";
+        foreach (var command in commands)
         {
-            Picked = occupied ? target : null;
-            RefreshPicking();
-            return;
+            var result = _session.Execute(command);
+            if (!result.IsAccepted)
+            {
+                _status.Text = $"Refused: {result.Error}";
+                return;
+            }
         }
-
-        Picked = null;
-        if (from != target)
-        {
-            var source = from.Army == TownArmy.Garrison ? town.Garrison : TownRules.VisitingHero(_session.State, town)!.Army;
-            var stack = source[from.Slot]!;
-            int? count = _split.ButtonPressed && stack.Count > 1 ? stack.Count / 2 : null;
-            Run(new MoveTownStackCommand(_session.State.CurrentPlayer.Id, town.Id, from.Army, from.Slot, target.Army, target.Slot, count));
-        }
-
-        RefreshPicking();
-    }
-
-    /// <summary>The sections that show the picked stack.</summary>
-    private void RefreshPicking()
-    {
-        _armies.Refresh();
-        _caravan.Refresh();
-    }
-
-    private void UpgradePicked()
-    {
-        if (Current is not { } town || Picked is not { } picked)
-        {
-            _status.Text = "Pick a stack first.";
-            return;
-        }
-
-        Picked = null;
-        Run(new UpgradeStackCommand(_session.State.CurrentPlayer.Id, town.Id, picked.Army, picked.Slot));
-    }
-
-    internal void Run(GameCommand command)
-    {
-        var result = _session.Execute(command);
-        _status.Text = result.IsAccepted ? "" : $"Refused: {result.Error}";
     }
 
     public override void _UnhandledKeyInput(InputEvent @event)

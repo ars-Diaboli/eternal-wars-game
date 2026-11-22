@@ -13,7 +13,7 @@ namespace EternalWars.Godot.UI.Hud.TownScreen;
 /// The tavern's offers (ADR-060): who can be hired for gold at the entrance, by the tavern's level, and "Visit the tavern…" when the screen has
 /// a tavern screen to open (<see cref="TownPanel.TavernRequested"/>).
 /// </summary>
-internal sealed class TavernSection(TownPanel panel) : TownSection(panel)
+internal sealed class TavernSection(ITownSectionHost panel) : TownSection(panel)
 {
     public HBoxContainer Row { get; } = new();
 
@@ -49,7 +49,7 @@ internal sealed class TavernSection(TownPanel panel) : TownSection(panel)
                 Text = $"Hire {offer.Name}\n{details}",
                 Disabled = refusal is not null,
                 TooltipText = refusal ?? "",
-            }.WithCost(TavernRules.HeroCost);
+            }.WithCost(TavernRules.HeroCost, treasury: State.CurrentPlayer.Resources);
             var player = state.CurrentPlayer.Id;
             hire.WithInfo(detailed => InfoSheets.TavernHero(Session.State, player, town, offer, detailed));
             hire.Pressed += () => Run(new HireHeroCommand(state.CurrentPlayer.Id, town.Id, offer.Id));

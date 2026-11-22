@@ -154,7 +154,7 @@ public partial class TavernPanel : PanelContainer
 
         var refusal = TavernRules.CheckHire(state, town, offer.Id);
         var hire = new Button { Text = "Hire", Disabled = refusal is not null, TooltipText = refusal ?? $"{offer.Name} appears at the town's entrance." }
-            .WithCost(TavernRules.HeroCost)
+            .WithCost(TavernRules.HeroCost, treasury: state.CurrentPlayer.Resources)
             .WithInfo(detailed => InfoSheets.TavernHero(_session.State, player, town, offer, detailed));
         hire.Pressed += () =>
         {

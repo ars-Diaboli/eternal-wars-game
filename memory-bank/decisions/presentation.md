@@ -37,6 +37,7 @@
 | [285](#adr-285-creature-portraits-in-2--2-sheets-creature-and-puzzle-prompts-redone-to-the-key-paintings-rocky-ground-is-dark-granite-owner-adr-284-2026-11-22) | Creature portraits in 2 × 2 sheets; creature and puzzle prompts redone to the key paintings; rocky ground is dark granite (owner, ADR-284, 2026-11-22) | accepted |
 | [289](#adr-289-creature-portraits-in-high-contrast-with-plain-bases-and-clearly-upgraded-upgrades-academy-creatures-redone-owner-adr-285-2026-11-22) | Creature portraits in high contrast with plain bases and clearly upgraded upgrades; Academy creatures redone (owner, ADR-285, 2026-11-22) | accepted |
 | [292](#adr-292-town-screen-answers-the-proposals-no-creatures-or-hero-models-in-the-scene-art-after-the-key-paintings-town-14--town-23-owner-adr-246-2026-11-22) | Town screen answers: the proposals, no creatures or hero models in the scene, art after the key paintings (TOWN-14 … TOWN-23, owner, ADR-246, 2026-11-22) | accepted |
+| [294](#adr-294-town-screen-steps-0-and-1-the-shell-behind---town-screennew-havens-style-frame-two-font-pairings-nine-slice-frames-the-shared-widgets-the-heroes-swap-adr-246-adr-292-2026-11-22) | Town screen steps 0 and 1: the shell behind --town-screen=new, Haven's style frame, two font pairings, nine-slice frames, the shared widgets, the heroes' swap (ADR-246, ADR-292, 2026-11-22) | implemented |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -649,3 +650,45 @@ TOWN-15 is ADR-291. The plan's step-by-step implementation is in its [roadmap](.
 - **TOWN-21** (owner): the proposal (a kit per faction, image-to-3D with clean-up for landmarks, Haven and Inferno first,
   `town-scene-prompts.md`), following the latest art direction: the key paintings and faction-art.md (ADR-284) and realistic, not
   cartoon (ADR-248). The style frame of step 0 is Haven's greybox lit after `key_haven-1`.
+
+### ADR-294: Town screen steps 0 and 1: the shell behind --town-screen=new, Haven's style frame, two font pairings, nine-slice frames, the shared widgets, the heroes' swap (ADR-246, ADR-292, 2026-11-22)
+**Status**: implemented; the font pairing waits for the owner's pick, the budget numbers for the reference PC and the Deck. The
+[town screen plan](../../docs/papers/town-screen-plan.md#implementation-plan)'s steps 0 and 1.
+
+- **Shell** (step 0): `TownScreenPanel` (`Hud/TownScreen/`) opens instead of `TownPanel` with `--town-screen=new` until step 2 ends:
+  the top bar (crest, name, ◄ ►, faction, town hall, governor, quick buttons, ×), the faction's key painting as the main area
+  (`textures/ui/backgrounds/towns/`) with the notices card, the bottom bar (crest, the two army bars with Swap, income, date), and one
+  window at a time over the dimmed painting (Escape closes it, a second Escape leaves). The Hall shows building tiles, the
+  recruitment window creature cards with the recruit dialog; the other windows are titled and empty, the marketplace and tavern
+  windows open today's screens. Both screens are `ITownScreen`s for the adventure HUD; the town sections take an `ITownSectionHost`,
+  so both screens hold them.
+- **Style frame** (step 0): `scenes/towns/haven.tscn`, Haven blocked out in CSG after `key_haven-1` (lake left, castle on a rise right,
+  the mage guild's orb as the focal point, the tavern in the low foreground, snowy mountains far back). First renderer settings:
+  Forward+, no SDFGI or VoxelGI (sky ambient light, SSAO, glow), filmic tone mapping, depth fog with aerial perspective, one shadowed
+  sun. The frame budget is still to be measured on the reference PC and the Deck. Smoke `town-style-frame-haven` (a scenario may run a
+  scene: `Scene`).
+- **Fonts**: two OFL pairings in `fonts/` with their licences: Cinzel with Alegreya Sans (the default) and Marcellus SC with Fira Sans
+  (`--fonts=b`, smoke `game-fonts-b`), for the owner's pick. Body text 16 px, headings 22, titles 28 (`HeadingLabel`, `TitleLabel`);
+  the editor's compact variant keeps Godot's font and its look.
+- **Frames and theme**: `UiFrames` draws greybox textures in code (a window's nine-slice bevelled bronze frame with an inner accent line
+  per faction, slots, check and radio marks, the slider's grabber) until the UI art exists; `UiTheme` styles tabs, check boxes, fields,
+  scroll bars, sliders, lists, menus, tooltips, separators, progress bars and embedded windows. Every panel with an opaque background
+  takes the window frame. `WindowFrame` is a titled frame with a "×".
+- **Widgets**: `CostLabel` (the lack in red, the shortfall in the tooltip; `WithCost(…, treasury)` on today's building tree, dwellings,
+  tavern, blacksmith; the marketplace's buy price); `SliderDialog` (− / +, Max at what the treasury pays, cost of one, total, the
+  treasury after paying; recruiting and splitting use it); `ArmyBar` with `ArmyBarGroup` (drag moves, merges or swaps; Shift + drag
+  splits; Ctrl + drag moves one; Alt + click spreads; double or right click opens the information; a click picks and a click moves for
+  the keyboard and the controller; the upgrade badge; a hero's frame dragged to the other row) on the town, hero and exchange screens,
+  which lose their "Split" and "Recruit to visiting hero" check boxes (recruits go to the garrison, or to the visiting hero when the
+  garrison has no room; the caravan sends the whole picked stack); `CreatureCard`; `BuildingTile` with its state by frame and symbol;
+  `FocusOrder`.
+- **Rules**: `SwapTownHeroesCommand`: the garrison and visiting heroes change places, each with its own troops (the garrison hero leads
+  the garrison out, the visitor's army becomes the garrison); it needs both heroes and troops in the garrison, and the heroes on the map
+  stay as many. `StackSpread`: a stack shared evenly over its army's empty slots, the stack keeping what does not divide, run as the
+  existing stack commands. `TownRules.CheckUpgradeLine` for the badge and the command alike; `BuildingStatus.Closed` and
+  `BuildingTree.DwellingStatus` for a line the 7-of-9 rule closed for good. Tests: `TownScreenFoundationTests`; the record names
+  `swapTownHeroes` (re-pinned; older saves load unchanged).
+- **Keys**: `TownScreenKeys`, the plan's keys as input actions the game app adds to its input map (the harness falls back to the keys);
+  each quick button's label and key show on the status bar.
+- **Smokes**: `game-town-shell`, `game-town-armies`, `game-hero-armies`, `game-fonts-b`, `town-style-frame-haven`; `game-artifact-drag`'s
+  drop points follow the taller army rows.

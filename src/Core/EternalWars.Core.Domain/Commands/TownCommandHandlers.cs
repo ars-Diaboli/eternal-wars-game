@@ -21,6 +21,7 @@ internal static class TownCommandHandlers
         handlers.Add<BuySpellBookCommand>(c => towns.BuySpellBook(c.Player, c.Town));
         handlers.Add<EnterGarrisonCommand>(c => towns.EnterGarrison(c.Player, c.Town));
         handlers.Add<LeaveGarrisonCommand>(c => towns.LeaveGarrison(c.Player, c.Town));
+        handlers.Add<SwapTownHeroesCommand>(c => towns.SwapHeroes(c.Player, c.Town));
 
         handlers.Add<OrderCaravanCommand>(c => caravans.Order(c.Player, c.Town, c.Dwelling, c.Count));
         handlers.Add<FetchResourcesCommand>(c => caravans.Fetch(c.Player, c.Town, c.Provider));

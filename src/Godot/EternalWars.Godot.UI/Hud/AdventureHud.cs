@@ -57,7 +57,11 @@ public partial class AdventureHud : CanvasLayer
 
     public HeroListPanel HeroList { get; private set; } = null!;
 
-    public TownPanel TownScreen { get; private set; } = null!;
+    /// <summary>The town screen: today's <see cref="TownPanel"/>, or the new one with <see cref="NewTownScreen"/> (ADR-294).</summary>
+    public TownScreen.ITownScreen TownScreen { get; private set; } = null!;
+
+    /// <summary>Open the new town screen (<see cref="TownScreen.TownScreenPanel"/>) instead of today's: <c>--town-screen=new</c>. Set before <see cref="Bind"/>.</summary>
+    public bool NewTownScreen { get; set; }
 
     public HeroPanel HeroScreen { get; private set; } = null!;
 
@@ -376,8 +380,21 @@ public partial class AdventureHud : CanvasLayer
         // The town screen covers the map and the HUD (ADR-050); a hero stepping into an own town opens it.
         var townLayer = new CanvasLayer { Name = "TownScreen", Layer = 1 };
         screens.AddChild(townLayer);
-        TownScreen = new TownPanel { FullScreen = true };
-        townLayer.AddChild(TownScreen);
+        if (NewTownScreen)
+        {
+            var screen = new TownScreen.TownScreenPanel();
+            townLayer.AddChild(screen);
+            screen.HeroRequested += hero => HeroScreen.Open(hero);
+            screen.SwitchRequested += ShowTown;
+            TownScreen = screen;
+        }
+        else
+        {
+            var screen = new TownPanel { FullScreen = true };
+            townLayer.AddChild(screen);
+            TownScreen = screen;
+        }
+
         TownScreen.Bind(_session);
         HeroScreen = new HeroPanel { FullScreen = true };
         townLayer.AddChild(HeroScreen);
@@ -426,6 +443,11 @@ public partial class AdventureHud : CanvasLayer
         townLayer.AddChild(tavernScreen);
         tavernScreen.Bind(_session);
         TownScreen.TavernRequested += tavernScreen.Open;
+        if (TownScreen is TownScreen.TownScreenPanel panel)
+        {
+            panel.IsCovered = () => HeroScreen.Visible || _marketScreen.Visible || _guildScreen.Visible || tavernScreen.Visible;
+        }
+
         TownScreen.Closed += tavernScreen.Close;
         tavernScreen.ThievesGuildRequested += () => _guildScreen.Open(_session.State.CurrentPlayer.Id);
         townLayer.MoveChild(_guildScreen, -1); // the guild opens over the tavern

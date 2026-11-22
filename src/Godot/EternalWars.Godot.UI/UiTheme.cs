@@ -3,14 +3,15 @@ using Godot;
 namespace EternalWars.Godot.UI;
 
 /// <summary>
-/// The game's look (ADR-191): dark slate panels framed in bronze, in the HoMM manner, with Godot's default fonts. One set of colours that
+/// The game's look (ADR-191): dark slate panels framed in bronze, in the HoMM manner, with the game's fonts (<see cref="UiFonts"/>, ADR-294) and
+/// a style for every Godot control the game's screens use, so no default control shows (<see cref="AddControlStyles"/>). One set of colours that
 /// the theme, the screens, the status bar and the side panel share; <see cref="Apply"/> merges it with the spacing (<see cref="UiSpacing"/>)
 /// into Godot's default theme at start, so it holds on every canvas layer. The map editor uses the compact variant (EDIT-1, ADR-250): the
 /// same colours with a smaller font, tighter rows and gaps and lower buttons, so more fits into a tool's panels. The editor's high contrast
 /// (ADR-277, <see cref="HighContrast"/>): opaque near-black grounds, light frames, white text, and the quiet tints and disabled text
 /// lightened; the colours below follow it, and <see cref="Apply"/> again switches a running UI.
 /// </summary>
-public static class UiTheme
+public static partial class UiTheme
 {
     /// <summary>The editor's frame of a docked region: opaque, a panel's padding (a <see cref="Control.ThemeTypeVariation"/> of PanelContainer).</summary>
     public const string RegionPanel = "RegionPanel";
@@ -178,6 +179,10 @@ public static class UiTheme
 
         theme.SetTypeVariation(QuietLabel, "Label");
         theme.SetColor("font_color", QuietLabel, TextQuiet);
+        if (!compact)
+        {
+            AddControlStyles(theme); // the game's controls (ADR-294); the editor keeps its compact look (ADR-250, ADR-277)
+        }
         if (HighContrast)
         {
             foreach (var (name, type, colour) in HighContrastText())
@@ -234,6 +239,16 @@ public static class UiTheme
         if (compact)
         {
             theme.DefaultFontSize = CompactFontSize;
+        }
+        else
+        {
+            if (UiFonts.Body is { } body)
+            {
+                theme.DefaultFont = body;
+                ThemeDB.FallbackFont = body;
+            }
+
+            theme.DefaultFontSize = UiFonts.BodySize;
         }
     }
 

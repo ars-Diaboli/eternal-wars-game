@@ -6,6 +6,7 @@ using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
+using EternalWars.Godot.UI.Widgets;
 using Godot;
 
 namespace EternalWars.Godot.UI.Hud.TownScreen;
@@ -14,7 +15,7 @@ namespace EternalWars.Godot.UI.Hud.TownScreen;
 /// The dwellings (7 of 9, every tier): per line its state, waiting creatures and growth (a warning when building it closes others), the
 /// Build / Upgrade button, and recruit buttons for the base and the upgraded creature.
 /// </summary>
-internal sealed class DwellingsSection(TownPanel panel) : TownSection(panel)
+internal sealed class DwellingsSection(ITownSectionHost panel) : TownSection(panel)
 {
     public GridContainer Grid { get; } = new() { Columns = 4 };
 
@@ -50,7 +51,7 @@ internal sealed class DwellingsSection(TownPanel panel) : TownSection(panel)
             };
             if (next is not null)
             {
-                build.WithCost(TownRules.BuildCost(state, town, next));
+                build.WithCost(TownRules.BuildCost(state, town, next), treasury: resources);
             }
 
             build.Pressed += () => Run(new BuildDwellingCommand(state.CurrentPlayer.Id, town.Id, line.Id));
@@ -67,12 +68,13 @@ internal sealed class DwellingsSection(TownPanel panel) : TownSection(panel)
                 };
                 if (creature is not null)
                 {
-                    recruit.WithCost(TownRules.CreatureCost(state, town, creature), " each");
+                    recruit.WithCost(TownRules.CreatureCost(state, town, creature), " each", resources);
                 }
 
-                if (creature?.Id is { } id)
+                if (creature is not null)
                 {
-                    recruit.Pressed += () => Recruit(town, id, count);
+                    var id = creature.Id;
+                    recruit.Pressed += () => Recruit(town, creature, available);
                     recruit.WithInfo(detailed => InfoSheets.Creature(Session.State, id, detailed));
                 }
 
@@ -89,10 +91,21 @@ internal sealed class DwellingsSection(TownPanel panel) : TownSection(panel)
             .On<ResourcesChanged>(events)
             .On<DwellingOwnerChanged>(events);
 
-    private void Recruit(Town town, Core.Domain.Common.CreatureId creature, int count)
+    /// <summary>
+    /// Asks how many to recruit (<see cref="SliderDialog"/>, ADR-294: the cost of one, the total and the treasury after paying), then recruits them
+    /// into the garrison, or into the visiting hero when the garrison has no room for them.
+    /// </summary>
+    private void Recruit(Town town, Core.Domain.Creatures.CreatureDefinition creature, int available)
     {
-        var hero = Panel.RecruitToHero ? TownRules.VisitingHero(State, town)?.Id : null;
-        Run(new RecruitCommand(Player, town.Id, creature, count, hero));
+        var cost = TownRules.CreatureCost(State, town, creature);
+        var treasury = State.CurrentPlayer.Resources;
+        var request = new SliderRequest(
+            $"Recruit {creature.Name}", 1, available, TownRules.MaxAffordable(treasury, cost, available), "Recruit", cost, treasury, n => $"{n} of {available}");
+        SliderDialog.Open(Grid, request, count =>
+        {
+            var hero = town.Garrison.CanAccept(creature.Id) ? null : TownRules.VisitingHero(State, town)?.Id;
+            Run(new RecruitCommand(Player, town.Id, creature.Id, count, hero));
+        });
     }
 
     private static string Tooltip(GameState state, Town town, BuildingLevel? next, string? refusal, DwellingChoice? choice)

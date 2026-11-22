@@ -82,7 +82,23 @@ creatures and buildings, heraldic player colours, iconic map objects).
   change shows at once and is kept in `settings.json` with the speeds, not in saves. The minimap is nearest its corner; lists beside it follow
   it; the action buttons stand in their corner, after the minimap and lists if they share it; End turn stays at the top left, beside anything there. The bottom parts stand
   above the status bar.
-- **Theme** (ADR-191): dark slate panels and buttons framed in bronze, Godot's default fonts; the same in the map editor.
+- **Theme** (ADR-191, ADR-294): dark slate panels and buttons framed in bronze; screens and windows in a bevelled nine-slice frame whose
+  inner line takes the faction's accent on a town's windows (greybox frames until the art of
+  [ui-element-prompts.md](../content/prompts/ui-element-prompts.md)). Every control the screens use (tabs, check boxes, fields, scroll
+  bars, sliders, lists, menus, tooltips) has the look, so no default Godot control shows. Two faces: headings and titles in a carved
+  capital face, the rest in a humanist sans, body text at least 16 px at 1080p; two pairings are proposed for the owner's pick (Cinzel with
+  Alegreya Sans, the default, and Marcellus SC with Fira Sans), the licences beside them in `fonts/`. The map editor keeps the colours and
+  Godot's font in its compact variant.
+- **Army rows** (ADR-294): an army is a row of seven slots led by its hero's frame (empty without a hero), each stack shown by its
+  portrait and count. Drag a stack onto a slot to move it, merge it with the same creature or swap it with another; **Shift** + drag asks
+  how many to split off, **Ctrl** + drag moves one creature, **Alt** + click spreads the stack evenly over the empty slots (the stack keeps
+  what does not divide), a double or right click opens its information. A click picks a stack and a click on another slot moves it there
+  (Shift: split), for the keyboard and the controller. In a town, a stack the town can upgrade carries an arrow badge with the price in
+  its tooltip, and a hero's frame dragged onto the other row swaps the heroes, moves the visitor in or leads the garrison hero out. The
+  town, hero and exchange screens use the rows.
+- **Counts and costs** (ADR-294): a count is chosen in a dialog with a slider, − and +, Max (what the treasury pays for), the cost of
+  one, the total and the treasury after paying, short amounts in red (recruiting, splitting a stack). A cost shows what the player lacks
+  in red, and its tooltip names the shortfall.
 - **Spacing** (ADR-118, ADR-163): one set of margins and gaps for every panel:
   4 px between slots and the cells of a grid (army slots, paper doll, backpack), 6 between rows, 8 between controls side by side, 16
   above a section's heading (Army, Worn artifacts, Buildings, ...), 8 inside a panel, 16 inside a screen or window over the map, 8 from

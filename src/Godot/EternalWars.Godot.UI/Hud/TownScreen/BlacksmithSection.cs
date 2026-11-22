@@ -14,7 +14,7 @@ namespace EternalWars.Godot.UI.Hud.TownScreen;
 /// What the town sells the visiting hero: the blacksmith's war machines it lacks (ADR-056) and the mage guild's spell book (ADR-071, ADR-110);
 /// then what the guild teaches now.
 /// </summary>
-internal sealed class BlacksmithSection(TownPanel panel) : TownSection(panel)
+internal sealed class BlacksmithSection(ITownSectionHost panel) : TownSection(panel)
 {
     public HBoxContainer Row { get; } = new();
 
@@ -40,7 +40,7 @@ internal sealed class BlacksmithSection(TownPanel panel) : TownSection(panel)
                 }.WithMachineIcon(state, hero, slot);
                 if (!owned)
                 {
-                    buy.WithCost(WarMachines.Cost(slot));
+                    buy.WithCost(WarMachines.Cost(slot), treasury: State.CurrentPlayer.Resources);
                 }
 
                 buy.Pressed += () => Run(new BuyWarMachineCommand(state.CurrentPlayer.Id, town.Id, slot));
@@ -58,7 +58,7 @@ internal sealed class BlacksmithSection(TownPanel panel) : TownSection(panel)
                 };
                 if (!hero.HasSpellBook)
                 {
-                    book.WithCost(MagicRules.SpellBookCost);
+                    book.WithCost(MagicRules.SpellBookCost, treasury: State.CurrentPlayer.Resources);
                 }
                 else
                 {

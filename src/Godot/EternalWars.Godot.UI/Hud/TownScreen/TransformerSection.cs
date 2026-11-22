@@ -14,7 +14,7 @@ namespace EternalWars.Godot.UI.Hud.TownScreen;
 /// The Undead Transformer (ADR-137): a toggle per stack it can take (two, one per line, for a creature without a class), then "Transform" turns
 /// the chosen ones at once.
 /// </summary>
-internal sealed class TransformerSection(TownPanel panel) : TownSection(panel)
+internal sealed class TransformerSection(ITownSectionHost panel) : TownSection(panel)
 {
     private readonly Dictionary<(TownArmy Army, int Slot), CreatureCategory> _chosen = [];
 

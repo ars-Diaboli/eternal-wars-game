@@ -9,9 +9,9 @@ using EternalWars.Godot.Shared.Events;
 namespace EternalWars.Godot.UI.Hud.TownScreen;
 
 /// <summary>A part of the town screen (<see cref="TownPanel"/>, ADR-223): rebuilt alone on its own events, and with the whole screen.</summary>
-internal abstract class TownSection(TownPanel panel) : ScreenSection<Town>(() => panel.Shown)
+internal abstract class TownSection(ITownSectionHost panel) : ScreenSection<Town>(() => panel.Shown)
 {
-    protected TownPanel Panel => panel;
+    protected ITownSectionHost Panel => panel;
 
     protected GameSession Session => panel.Session;
 

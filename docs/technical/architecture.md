@@ -127,7 +127,10 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   events uses a `RefreshScheduler` (Godot.Shared/Events: `.On<T>(events)`), which refreshes once at the end of the frame however many
   asked; with `.OnlyWhileShown()` a hidden view (a tab not shown, the editor's events panel) waits and refreshes once when it shows. A large screen is made of sections (`ScreenSection<TSubject>`, ADR-223: the town screen's in `Hud/TownScreen`, the hero
   screen's in `Hud/HeroScreen`), each with its own scheduler and events, rebuilding only itself; the screen rebuilds them all when it
-  opens and on the few events that change what it shows at all. The editor's inspector has one `InspectorSection<T>` per map object
+  opens and on the few events that change what it shows at all; the town screen's sections take an `ITownSectionHost`, so today's
+  `TownPanel` and the new `TownScreenPanel` hold the same ones. Widgets shared by several screens are in `Widgets/` (ADR-294): the army
+  row (`ArmyBar`, its moves given by the screen through an `ArmyBarGroup`), `CostLabel`, `SliderDialog`, `CreatureCard`, `BuildingTile`,
+  `WindowFrame` and `FocusOrder`. The editor's inspector has one `InspectorSection<T>` per map object
   type in the `InspectorSections` registry (`Editor/Inspector`). The map editor's actions are commands in a `CommandRegistry` (`Editor/Shell`), from which its menus and toolbar are built and which
   runs the shortcuts. Its tools are classes (`IEditorTool`, `Editor/Tools`): the app routes
   the pointer to the one in use, and the tool edits through the session. The editor's

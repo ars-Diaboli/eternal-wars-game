@@ -88,7 +88,7 @@ $scenarios = @(
     # Iron Band from his backpack onto his doll, her axe onto empty ground of his backpack; on his hero screen the axe onto the doll, the band
     # into the backpack.
     @{ Name = 'game-artifact-drag'; App = 'EternalWars.Game'; Frames = 62; Map = $exchangeMap
-       Input = '3:key:Enter;10:key:Right;16:drag:@Weapon: Rusted Blade>@Head: —#2;24:drag:@Iron Band (Ring)>@Ring: —;30:drag:@Centaur''s Axe (Weapon)>420,536;36:click:@Close;40:key:H;46:drag:@Centaur''s Axe (Weapon)>@Shield: —;52:drag:@Ring: Iron Band>300,725' },
+       Input = '3:key:Enter;10:key:Right;16:drag:@Weapon: Rusted Blade>@Head: —#2;24:drag:@Iron Band (Ring)>@Ring: —;30:drag:@Centaur''s Axe (Weapon)>420,592;36:click:@Close;40:key:H;46:drag:@Centaur''s Axe (Weapon)>@Shield: —;52:drag:@Ring: Iron Band>300,779' },
     # Information windows (ADR-154): right-click Orrin on the map, a click closes it; on the hero screen right-click his footmen, then his blade
     # (the second right click opens the next window), Escape closes it, then the Iron Band in his backpack; Escape closes it and the screen.
     # Touch (ADR-190): a finger held still on the hero opens its information window, which stays open when lifted; a tap closes it.
@@ -131,6 +131,25 @@ $scenarios = @(
     # "Orrin into the garrison", "Lead Orrin out", close the town screen.
     @{ Name = 'game-town-screen'; App = 'EternalWars.Game'; Frames = 170; Map = $townsMap
        Input = '3:key:Enter;12:key:T;24:key:Escape;30:key:T;40:key:Escape;48:key:K;60:key:Escape;66:key:K;76:key:Escape;84:key:H;96:key:Escape;102:key:H;112:key:Escape;120:key:Up;130:press:Orrin into the garrison;145:press:Lead Orrin out;158:key:Escape' },
+    # The new town screen's shell (ADR-294, --town-screen=new): T opens Castlebridge over Haven's key painting; B opens the Hall (building tiles
+    # with their states), Escape closes it; R the recruitment window (creature cards), Recruit Footman opens the recruit dialog, Max, Recruit;
+    # G a window still empty, a click on the dimmed painting closes it; ] with one town does nothing; Escape leaves the town.
+    @{ Name = 'game-town-shell'; App = 'EternalWars.Game'; Frames = 90; Map = $townsMap; Args = @('--town-screen=new')
+       Input = '3:key:Enter;12:key:T;20:key:B;32:key:Escape;38:key:R;48:press:Recruit Footman;56:press:Max;60:press:Recruit;68:key:G;74:click:200,300;80:key:Escape' },
+    # The second font pairing (Marcellus SC and Fira Sans, ADR-294) on the same screens, for the owner's pick beside game-town-shell.
+    @{ Name = 'game-fonts-b'; App = 'EternalWars.Game'; Frames = 60; Map = $townsMap; Args = @('--town-screen=new', '--fonts=b')
+       Input = '3:key:Enter;12:key:T;20:key:B;32:key:Escape;38:key:R;48:key:Escape;52:key:Escape;54:key:H' },
+    # The army bars (ADR-294) on the new screen's bottom bar: Orrin walks into Castlebridge; his pikemen dragged into the garrison; Shift + drag
+    # of the archers asks how many (the split dialog), Split takes half; Alt + click spreads the pikemen over the empty garrison slots; Orrin's
+    # portrait dragged onto the garrison's empty frame moves him in; Swap is greyed with one hero; his frame dragged back leads him out.
+    @{ Name = 'game-town-armies'; App = 'EternalWars.Game'; Frames = 96; Map = $townsMap; Args = @('--town-screen=new')
+       Input = '3:key:Enter;12:key:Up;26:drag:@20 | Pikeman>@—#1;34:hold:Shift,8;35:drag:@10 | Archer>@—#2;46:press:Split;54:hold:Alt,4;55:click:@20 | Pikeman;66:drag:@Hero Orrin>@No hero;78:drag:@Hero Orrin>@No hero' },
+    # The hero screen's army bar (ADR-294): Tab selects Orrin, H opens his screen; the pikemen dragged to an empty slot; Ctrl + drag moves one
+    # archer; Alt + click spreads the archers; a right click on a stack opens its information.
+    @{ Name = 'game-hero-armies'; App = 'EternalWars.Game'; Frames = 70; Map = $townsMap
+       Input = '3:key:Enter;8:key:Tab;12:key:H;20:drag:@20 | Pikeman>@—#1;30:hold:Ctrl,6;31:drag:@10 | Archer>@—#1;42:hold:Alt,4;43:click:@9 | Archer;54:rclick:@20 | Pikeman;64:key:Escape' },
+    # Haven's style frame (ADR-294, step 0): the greybox scene after key_haven-1 with its light, fog and grading, rendered alone.
+    @{ Name = 'town-style-frame-haven'; App = 'EternalWars.Game'; Frames = 8; Scene = 'res://shared/scenes/towns/haven.tscn'; Input = '' },
     # Quests (ADR-127, ADR-128): the Seer's Hut, Quest Guard and Quest Gate shapes; the hero walks into the hut and completes its first stage, the next one shows; Q opens the
     # quest log, Q closes it.
     @{ Name = 'game-quests'; App = 'EternalWars.Game'; Frames = 64; Map = $questsMap
@@ -545,7 +564,7 @@ $results = $selected | ForEach-Object -ThrottleLimit ([Math]::Max(1, $Jobs)) -Pa
     if ($scenario.Replay) { $userArgs += "--replay=$($scenario.Replay)" }
     if ($scenario.Args) { $userArgs += $scenario.Args } # further launch arguments (a play-test's, ADR-267)
     # The game opens on the main menu; the scenarios start on the new-game screen unless they test the menu.
-    if ($scenario.App -eq 'EternalWars.Game' -and -not $scenario.MainMenu) { $userArgs += '--new-game' }
+    if ($scenario.App -eq 'EternalWars.Game' -and -not $scenario.MainMenu -and -not $scenario.Scene) { $userArgs += '--new-game' }
     $fps = if ($scenario.Fps) { $scenario.Fps } else { 10 }
 
     $movie = Join-Path $dir ($using:Png ? 'frame.png' : 'frame.avi')
@@ -554,8 +573,10 @@ $results = $selected | ForEach-Object -ThrottleLimit ([Math]::Max(1, $Jobs)) -Pa
     $tries = 0
     do {
         $tries++
+        # A scenario with a Scene runs that scene instead of the app's main one (a style frame, ADR-294).
+        $scene = if ($scenario.Scene) { @("--scene", $scenario.Scene) } else { @() }
         $log = & $using:Godot --path (Join-Path $using:root "src/Apps/$($scenario.App)") --write-movie $movie `
-            --fixed-fps $fps --quit-after $scenario.Frames -- @userArgs 2>&1 | Out-String
+            --fixed-fps $fps --quit-after $scenario.Frames @scene -- @userArgs 2>&1 | Out-String
         $exit = $LASTEXITCODE
     } while ($tries -lt 2 -and $exit -ne 0 -and -not $log.Trim())
     Set-Content (Join-Path $dir 'godot.log') $log

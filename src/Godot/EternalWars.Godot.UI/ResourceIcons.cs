@@ -173,9 +173,10 @@ public static class ResourceIcons
     /// <summary>
     /// Moves the button's text into lines above a <see cref="CostRow"/> of <paramref name="cost"/>, centred inside the button, which grows to
     /// fit them. Call after setting <see cref="BaseButton.Disabled"/>: a disabled button's content is dimmed. Scripted input still names the
-    /// button by its text with the cost in words on the last line (<see cref="AutoInput.LabelMeta"/>).
+    /// button by its text with the cost in words on the last line (<see cref="AutoInput.LabelMeta"/>). With <paramref name="treasury"/> the cost is
+    /// a <see cref="Widgets.CostLabel"/>: what the treasury lacks is marked, and the tooltip names it (ADR-294).
     /// </summary>
-    public static T WithCost<T>(this T button, ResourceSet cost, string suffix = "") where T : Button
+    public static T WithCost<T>(this T button, ResourceSet cost, string suffix = "", ResourceSet? treasury = null) where T : Button
     {
         button.SetMeta(AutoInput.LabelMeta, (button.Text.Length > 0 ? button.Text + "\n" : "") + Describe(cost) + suffix);
         var content = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
@@ -185,8 +186,13 @@ public static class ResourceIcons
             content.AddChild(new Label { Text = button.Text, HorizontalAlignment = HorizontalAlignment.Center, MouseFilter = Control.MouseFilterEnum.Ignore });
         }
 
-        var row = CostRow(cost, suffix);
+        var row = treasury is { } have ? new Widgets.CostLabel(cost, have, suffix) { MouseFilter = Control.MouseFilterEnum.Ignore } : CostRow(cost, suffix);
         row.Alignment = BoxContainer.AlignmentMode.Center;
+        if (row is Widgets.CostLabel { Lacking.IsEmpty: false } marked)
+        {
+            button.TooltipText = (button.TooltipText.Length > 0 ? button.TooltipText + "\n" : "") + marked.TooltipText;
+        }
+
         content.AddChild(row);
         if (button.Disabled)
         {

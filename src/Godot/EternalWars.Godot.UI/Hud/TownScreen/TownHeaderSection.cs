@@ -8,7 +8,7 @@ using Godot;
 namespace EternalWars.Godot.UI.Hud.TownScreen;
 
 /// <summary>The header: the town's crest, name and daily income, and the Marketplace and Thieves' Guild buttons while the town has them.</summary>
-internal sealed class TownHeaderSection(TownPanel panel) : TownSection(panel)
+internal sealed class TownHeaderSection(ITownSectionHost panel) : TownSection(panel)
 {
     public Label Title { get; } = new() { VerticalAlignment = VerticalAlignment.Center };
 

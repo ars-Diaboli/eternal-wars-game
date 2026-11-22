@@ -207,7 +207,8 @@ a second Escape leaves the town.
   - double click opens the creature's info.
   - A stack that can upgrade shows an arrow badge. Its tooltip gives the price difference, and a click upgrades it (the existing
     `UpgradeStackCommand`).
-  - Drag a hero's portrait to the other row to swap, which uses `EnterGarrisonCommand` and `LeaveGarrisonCommand`.
+  - Drag a hero's portrait to the other row to swap (`SwapTownHeroesCommand`, ADR-294), or, with one hero, to move it in or
+    out (`EnterGarrisonCommand`, `LeaveGarrisonCommand`).
 - **Notices**: one card in a corner of the scene says what was built today, or that nothing was. Caravans arriving and the governor's
   discount have small chips there as well.
 - **Built today**: when the day's building is done, the Hall's quick button has a lock badge, and the hall shows why.
@@ -543,35 +544,41 @@ The tasks of each step in build order. A task is one reviewable change that leav
 2. **Greybox shell**: `TownScreen` in `Hud/TownScreen/` with the top bar, the bottom bar, a window host (one window at a time; Escape
    closes the window, a second Escape leaves) and an empty, titled window per hotkey. The main area shows the faction's key painting
    (`docs/content/art/towns/`, copied to the assets) as a stand-in. Opened instead of `TownPanel` with a launch option
-   (`--town-screen=new`) until step 2 ends. It is not thrown away: steps 1 and 2 fill it. Smoke `game-town-shell`.
+   (`--town-screen=new`) until step 2 ends. It is not thrown away: steps 1 and 2 fill it. Smoke `game-town-shell`. *Done (ADR-294).*
 3. **Style frame and look-dev spike**: `scenes/towns/haven.tscn` blocked out after `key_haven-1` (lakeside, castle with conical-roofed
    towers, one focal point, low calm foreground), with its light, fog and grading (TOWN-18: the painting's light is the faction's
    lighting set). It settles the renderer settings (SDFGI, VoxelGI or none; fog; SSAO) and the first budget numbers on the reference PC
-   and the Deck. Screenshots beside the painting for the owner.
+   and the Deck. Screenshots beside the painting for the owner. *Done (ADR-294): smoke `town-style-frame-haven`; the budget numbers
+   wait for the reference PC and the Deck.*
 
 #### Step 1: UI foundation
 
 1. **Fonts**: a heading face and a body face, open licences, in `fonts/` with their credits; `UiTheme` uses them everywhere; text at
-   least 16 px at 1080p. *(proposal)* The agent proposes two pairs as screenshots of today's screens; the owner picks.
+   least 16 px at 1080p. *(proposal)* The agent proposes two pairs as screenshots of today's screens; the owner picks. *Done
+   (ADR-294): Cinzel with Alegreya Sans (`game-town-shell`) and Marcellus SC with Fira Sans (`game-fonts-b`); the owner's pick is open.*
 2. **Frames and theme**: `WindowFrame` (nine-slice, the faction's accent on the frame) and the button, slot and tab styles in
    `UiTheme`, from greybox textures until the UI art of [ui-element-prompts.md](../content/prompts/ui-element-prompts.md) exists.
-   Today's panels switch to them, so no default Godot control shows.
+   Today's panels switch to them, so no default Godot control shows. *Done (ADR-294).*
 3. **`CostLabel`**: a cost with what the player lacks marked. Used by today's building tree, tavern, blacksmith and marketplace.
-4. **`SliderDialog`**: a count with − / +, Max, the cost of one, the total and the treasury after paying (red where short).
+   *Done (ADR-294).*
+4. **`SliderDialog`**: a count with − / +, Max, the cost of one, the total and the treasury after paying (red where short). *Done
+   (ADR-294).*
 5. **Stack moves in core**: an engine-free helper for "spread a stack evenly over the empty slots" as a list of `MoveTownStackCommand`
    / `MoveStackCommand`s (both already take a count), and a `SwapTownHeroesCommand` that swaps the garrison and visiting heroes in one
-   step (today `EnterGarrisonCommand` and `LeaveGarrisonCommand` refuse when both are there). ADR, tests.
+   step (today `EnterGarrisonCommand` and `LeaveGarrisonCommand` refuse when both are there). ADR, tests. *Done (ADR-294).*
 6. **`ArmyBar`**: seven slots led by a hero portrait (an empty frame without one). Drag onto a slot moves, merges or swaps;
    Shift + drag opens the split dialog; Ctrl + drag moves one creature; Alt + click spreads; double click opens the creature's info;
    an arrow badge on a stack the town can upgrade, with the price in the tooltip (`UpgradeStackCommand`); dragging a hero portrait to
    the other row swaps the heroes. Used by the hero screen, the exchange screen and today's town armies section, which loses its
-   global "Split" and "Recruit to visiting hero" checkboxes. Smokes `game-town-armies`, `game-hero-armies`.
+   global "Split" and "Recruit to visiting hero" checkboxes. Smokes `game-town-armies`, `game-hero-armies`. *Done (ADR-294).*
 7. **`CreatureCard` and `BuildingTile`**: the card with portrait, base / upgraded toggle, stats and abilities as icons, waiting,
    growth and cost; the tile with picture, level n of m and the six states by frame **and** symbol (built out ✓, can build hammer,
    can't afford coin, needs buildings chain, built today hourglass, locked for ever ✗). Core: the tree's status gains "locked for
-   ever" for a closed dwelling line (`BuildingTree.DwellingChoices`). Greybox building pictures until step 4.
+   ever" for a closed dwelling line (`BuildingTree.DwellingChoices`). Greybox building pictures until step 4. *Done (ADR-294):
+   `BuildingStatus.Closed`, `BuildingTree.DwellingStatus`.*
 8. **Hotkeys and focus order**: the town screen's keys in the app's input map (B, R, G, V, M, S, F, C, U, [ ], H, Space, Escape), each
-   shown on the status bar with its button (ADR-204); every window gets a focus order for the keyboard and the controller.
+   shown on the status bar with its button (ADR-204); every window gets a focus order for the keyboard and the controller. *Done
+   (ADR-294): `TownScreenKeys`, `FocusOrder`.*
 
 #### Step 2: The windows over a 2D main screen
 

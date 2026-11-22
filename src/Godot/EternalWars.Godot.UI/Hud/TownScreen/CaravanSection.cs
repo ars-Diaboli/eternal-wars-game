@@ -15,7 +15,7 @@ namespace EternalWars.Godot.UI.Hud.TownScreen;
 /// The caravan (ADR-054): hire creatures from owned map dwellings within its reach (ADR-073), fetch what waits at own resource providers
 /// (ADR-079), send the picked garrison stack to another own town, the queue of caravans coming here and those sent from here.
 /// </summary>
-internal sealed class CaravanSection(TownPanel panel) : TownSection(panel)
+internal sealed class CaravanSection(ITownSectionHost panel) : TownSection(panel)
 {
     public VBoxContainer Rows { get; } = new();
 
@@ -84,9 +84,9 @@ internal sealed class CaravanSection(TownPanel panel) : TownSection(panel)
             Rows.AddChild(row);
         }
 
-        if (Panel.Picked is { Army: TownArmy.Garrison } picked && town.Garrison[picked.Slot] is { } stack)
+        if (Panel.Armies.Picked is { Army: TownArmy.Garrison } picked && town.Garrison[picked.Slot] is { } stack)
         {
-            int? count = Panel.Split && stack.Count > 1 ? stack.Count / 2 : null;
+            int? count = null;
             foreach (var other in state.ObjectsOf<Town>().Where(t => t.Owner == player && t != town).OrderBy(t => t.Id.Value))
             {
                 var refusal = CaravanRules.CheckSend(state, town, picked.Slot, other, count);
@@ -94,7 +94,7 @@ internal sealed class CaravanSection(TownPanel panel) : TownSection(panel)
                 var target = other.Id;
                 send.Pressed += () =>
                 {
-                    Panel.Picked = null;
+                    Panel.Armies.Picked = null;
                     Run(new SendTroopsCommand(player, town.Id, picked.Slot, target, count));
                 };
                 Rows.AddChild(send);

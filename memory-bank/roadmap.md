@@ -250,9 +250,10 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 
 ### Town screen overhaul (ADR-246; [plan](../docs/papers/town-screen-plan.md), questions TOWN-14 … TOWN-23 answered)
 - [x] Step 0a: answers to TOWN-14 … TOWN-23 (ADR-291, ADR-292)
-- [ ] Step 0: the greybox shell of the new screen; Haven's style frame and the look-dev spike
-- [ ] Step 1: UI foundation: fonts, nine-slice frames, `CostLabel`, `SliderDialog`, the swap and spread commands, `ArmyBar` (drag,
-      split, swap), `CreatureCard`, `BuildingTile`, hotkeys and focus order
+- [x] Step 0: the greybox shell of the new screen (`--town-screen=new`); Haven's style frame and the look-dev spike (ADR-294; the
+      budget numbers on the reference PC and the Deck still to measure)
+- [x] Step 1: UI foundation: fonts, nine-slice frames, `CostLabel`, `SliderDialog`, the swap and spread commands, `ArmyBar` (drag,
+      split, swap), `CreatureCard`, `BuildingTile`, hotkeys and focus order (ADR-294; the owner picks one of the two font pairings)
 - [ ] Step 2: core read models and the TOWN-17 rules (Recruit all, Upgrade all, dismiss, rename, rumours, any-pair trade, sending to
       teammates); the windows over a 2D main screen (Hall, Recruitment, Mage guild, Tavern, Marketplace, Blacksmith, Fort, Caravan,
       the rest); the bars; previous / next town; `TownPanel` to the harness only

@@ -211,6 +211,12 @@ public sealed record EnterGarrisonCommand(PlayerId Player, MapObjectId Town) : G
 /// </summary>
 public sealed record LeaveGarrisonCommand(PlayerId Player, MapObjectId Town) : GameCommand(Player);
 
+/// <summary>
+/// The town's garrison hero and its visiting hero change places in one step (ADR-294): the garrison hero comes out leading the garrison, the visiting
+/// hero goes in and its army becomes the garrison. Refused unless both are there and the garrison has troops to lead out.
+/// </summary>
+public sealed record SwapTownHeroesCommand(PlayerId Player, MapObjectId Town) : GameCommand(Player);
+
 // Artifacts (the owner's turn; no movement points; ADR-061) -------------------------------------------
 
 /// <summary>Puts an artifact from the hero's backpack on; one worn in that slot goes to the backpack when none is free.</summary>

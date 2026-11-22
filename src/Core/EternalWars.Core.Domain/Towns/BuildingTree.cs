@@ -24,6 +24,9 @@ public enum BuildingStatus
 
     /// <summary>Refused for another reason (a second Capitol, the Grail building).</summary>
     Refused,
+
+    /// <summary>A dwelling line the 7-of-9 rule has closed for good (ADR-030): building it would leave a tier without room.</summary>
+    Closed,
 }
 
 /// <summary>One requirement of a building's next level and whether the town has it.</summary>
@@ -105,6 +108,32 @@ public static class BuildingTree
         visiting.Remove(building);
         known[building] = depth;
         return depth;
+    }
+
+    /// <summary>
+    /// Where a dwelling line stands today (ADR-294), as <see cref="For"/> says for a building: <see cref="BuildingStatus.Closed"/> when the 7-of-9
+    /// rule shuts it for good, else built out, buildable, built today, waiting on a building or on resources.
+    /// </summary>
+    public static BuildingStatus DwellingStatus(GameState state, Town town, CreatureDefinition line)
+    {
+        if (TownRules.NextDwellingLevel(state, town, line) is not { } next)
+        {
+            return BuildingStatus.Complete;
+        }
+
+        if (TownRules.CheckDwelling(state, town, line.Id) is null)
+        {
+            return BuildingStatus.Available;
+        }
+
+        if (next.Level == 1 && TownRules.CheckDwellingChoice(state, town, line.Id, 1) is not null)
+        {
+            return BuildingStatus.Closed;
+        }
+
+        return next.Requires.Any(r => TownRules.Level(state, town, r.Building) < r.Level) ? BuildingStatus.NeedsBuildings
+            : TownRules.HasBuiltToday(state, town) ? BuildingStatus.BuiltToday
+            : BuildingStatus.CannotAfford;
     }
 
     /// <summary>

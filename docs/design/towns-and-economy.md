@@ -36,6 +36,9 @@ ADR-112, TOWN-8. The visiting hero may enter the garrison (its army joins it; re
 garrison. It is off the map and not counted towards the hero limit, but cannot leave while the player is at the limit. It earns, rests,
 levels and governs like the others; in a siege it leads the garrison with its skills, spells and war machines (so a town keeps machines
 through it) and cannot retreat or surrender.
+With a garrison hero and a visiting hero both there, the two **swap** places in one step (ADR-294). Each keeps its own troops: the
+garrison hero comes out leading the garrison, and the visitor's army becomes the garrison. The swap needs troops in the garrison; the
+heroes on the map stay as many, so the hero limit does not stop it.
 
 ## Creature tech tree
 ADR-030, ADR-050.

@@ -9,7 +9,7 @@ using Godot;
 namespace EternalWars.Godot.UI.Hud.TownScreen;
 
 /// <summary>The governor and what Stewardship does here (ADR-063); appoint the visiting hero, or dismiss the governor.</summary>
-internal sealed class GovernorSection(TownPanel panel) : TownSection(panel)
+internal sealed class GovernorSection(ITownSectionHost panel) : TownSection(panel)
 {
     public HBoxContainer Row { get; } = new();
 
