@@ -132,7 +132,9 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   runs the shortcuts. Its tools are classes (`IEditorTool`, `Editor/Tools`): the app routes
   the pointer to the one in use, and the tool edits through the session. The editor's
   Problems panel validates a copy of the map (the map document) on a task and takes the result back on the main thread; the validator
-  marks each `MapIssue` with the `IssueKind` of the check that found it. **Apps** hold composition and input mapping only.
+  marks each `MapIssue` with the `IssueKind` of the check that found it. The editor app's `Main` builds each map's views and panels and
+  maps the input; its commands, menus and windows are composers, one per area (`FileComposer`, `EditComposer`, `ViewComposer`, …),
+  sharing an `EditorParts` that holds the lasting parts and the open map's (ADR-288). **Apps** hold composition and input mapping only.
 - **The game app** (ADR-222, ADR-231): `Main` builds the views and maps input; the policy it runs lives elsewhere. `GameDirector` (Core.Domain/Game)
   runs a shown game once a frame: the colours played here (`PlaysHere`, `PlaysElsewhere`, `Viewer`), the turn timer's clock and when it
   may end a turn (`RunClock`), a person's turn that waits for the computer's moves to be shown (`TurnStarted`, `TakeTurnToShow`) and the

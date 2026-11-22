@@ -707,10 +707,12 @@ for collapsible panels as in IDEs.
 5. **The height brush's falloff** (ADR-287): the Height tool's Falloff, 0–6 tiles past the brush over which the strength fades (0 a
    hard edge, 1 unless changed), a parameter of `HeightEditor.Raise`, `Lower`, `Level` and `Smooth`; tests in `HeightEditorTests`.
 6. **The editor's icon art**: sheets C4, C7, C12 and C13 cut into the icons folder; no editor command keeps a lettered placeholder.
+7. **`Main.cs` as composition only** (ADR-288): `Main` makes the editor's lasting parts, builds the views and panels for each map and
+   maps the input (about 540 lines). The commands, the menus and the windows are one composer per area in the app (`FileComposer`,
+   `EditComposer`, `MapComposer`, `ViewComposer`, `TestComposer`, `WindowComposer`, `GenerateComposer`, `MenuComposer`,
+   `ContextMenuComposer`), sharing an `EditorParts`; the folders are `EditorFolders`. No change in behaviour.
 
-**Left open** (in [roadmap.md](../../memory-bank/roadmap.md)):
-1. **`Main.cs` as composition only**: it holds about 1400 lines (the plan expected it to shrink from 548). Its commands, menus and
-   file handling move to composers in the app, each one area, so the app stays composition and input mapping.
+Nothing is left open from the check.
 
 ## Decisions
 

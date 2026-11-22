@@ -52,6 +52,7 @@
 | [283](#adr-283-the-measure-tool-edit-1-2026-11-22) | The Measure tool (EDIT-1, 2026-11-22) | implemented |
 | [286](#adr-286-context-menus-the-object-tools-random-variant-and-road-snapping-edit-1-2026-11-22) | Context menus; the Object tool's random variant and road snapping (EDIT-1, 2026-11-22) | implemented |
 | [287](#adr-287-the-other-level-ghosted-in-the-map-view-the-height-brushs-falloff-edit-1-2026-11-22) | The other level ghosted in the map view; the height brush's falloff (EDIT-1, 2026-11-22) | implemented |
+| [288](#adr-288-the-editor-apps-composers-edit-1-2026-11-22) | The editor app's composers (EDIT-1, 2026-11-22) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -1183,3 +1184,21 @@ ADR when it is built.
   the brush's full circle over which the strength fades smoothly (`DefaultFalloff` 1, the brush as before); 0 is a hard edge, the
   circle's corners at full strength and none past it. The Height tool's Falloff box passes it; From terrain has none (it reshapes from
   the terrains, which blend by themselves).
+
+### ADR-288: The editor app's composers (EDIT-1, 2026-11-22)
+**Status**: implemented.
+
+- **`Main` is composition and input mapping only**: it makes the editor's lasting parts (the camera, the file services, the settings),
+  builds the views and the panels for each map opened (and again for a resized one), and routes the pointer to the tool in use and the
+  keys to the commands.
+- **One composer per area**, a plain class in the app, registering its commands into each map's registry and holding what its
+  commands do: `FileComposer` (new map, open, save, the exports, the template files, quit), `EditComposer` (undo, the selection, the
+  stamps, the browser's choice), `MapComposer` (the map settings window, resize, crop), `ViewComposer` (tabs, regions, levels, the
+  grid, the camera, Go to and Find, the panel commands, jumps), `TestComposer`, `WindowComposer` (palette, preferences, help, the
+  preferences applied), `GenerateComposer` (the templates offered, generating), `MenuComposer` (the menu bar, the toolbar, the tool
+  commands) and `ContextMenuComposer` (ADR-286). The order of registration stays the order the palette and the preferences list.
+- **`EditorParts`** is what they share: the parts kept from map to map, and the open map's (session, view context, workspace, the
+  panels the commands need, the registry), set again on each Open. A composer reads them when its command runs, so it always works on
+  the map open; `Say`, `IsBusy`, the tab checks and the command helper live there. The editor's folders are `EditorFolders`.
+- Nothing moved to the libraries or the core: the composers hold composition (which window opens, which panel shows, the messages
+  said), and the editing goes through `MapEditorSession` as before.

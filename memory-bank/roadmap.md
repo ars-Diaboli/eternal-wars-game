@@ -294,7 +294,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] The other level ghosted in the map view (View > Ghost the other level, with the minimap) and the height brush's falloff
       (ADR-287)
 - [x] The editor icons of sheets C4, C7, C12 and C13 drawn and cut
-- [ ] After the close ([plan](../docs/papers/editor-plan.md#after-the-close)): `Main.cs` split into composers
+- [x] The editor app's `Main` as composition and input mapping only: its commands, menus and windows in one composer per area
+      (ADR-288)
 
 ### Platform and art
 - [x] Built: speed settings (ADR-095, UI-1)

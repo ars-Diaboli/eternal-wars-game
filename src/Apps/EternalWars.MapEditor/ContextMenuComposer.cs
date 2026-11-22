@@ -1,6 +1,5 @@
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Editing;
-using EternalWars.Core.Domain.Objects;
 using EternalWars.Godot.UI;
 using EternalWars.Godot.UI.Editor.Shell;
 using EternalWars.Godot.UI.Editor.Tools;
@@ -9,24 +8,40 @@ using Godot;
 namespace EternalWars.MapEditor;
 
 /// <summary>
-/// The context menus (ADR-286): a right click on the map, a selection, a browser entry or a panel's header offers the commands that apply
-/// there, from the registry like the menu bar. Which commands each one lists is composed here.
+/// The context menus (ADR-286; ADR-288): a right click on the map, a selection, a browser entry or a panel's header offers the commands
+/// that apply there, from the registry like the menu bar. Which commands each one lists is composed here.
 /// </summary>
-public partial class Main
+internal sealed class ContextMenuComposer(EditorParts parts, EditComposer edit, ViewComposer view)
 {
     /// <summary>The command that shows each panel that has one, for the panels' context menus.</summary>
     private Dictionary<Control, string> _panelCommands = [];
 
     /// <summary>Registers the context menus' own commands and listens for the right clicks of the browser and the panels.</summary>
-    private void BindContextMenus(Dictionary<Control, string> panelCommands)
+    public void Bind(Dictionary<Control, string> panelCommands)
     {
         _panelCommands = panelCommands;
-        Command("browser.favourite", "Favourite", _browser.ToggleChosenFavourite, isOn: () => _browser.ChosenIsFavourite,
-            whyNot: () => _choice.Entry is null ? "Nothing is chosen in the browser" : null, icon: UiIcon.Favourite);
-        Command("browser.find", "Find on the map", () => OpenGoTo(find: true, FindText(_choice.Entry!)),
-            whyNot: () => _choice.Entry is null ? "Nothing is chosen in the browser" : null, onMap: true, icon: UiIcon.Find);
-        _browser.EntryMenuRequested += (_, at) => OpenContextMenu(["tool.object", null, "browser.favourite", "browser.find"], at);
-        _workspace.PanelMenuRequested += (region, panel, at) => OpenContextMenu(PanelMenu(region, panel), at);
+        var browser = parts.Browser;
+        var choice = parts.Choice;
+        parts.Command("browser.favourite", "Favourite", browser.ToggleChosenFavourite, isOn: () => browser.ChosenIsFavourite,
+            whyNot: () => choice.Entry is null ? "Nothing is chosen in the browser" : null, icon: UiIcon.Favourite);
+        parts.Command("browser.find", "Find on the map", () => view.OpenGoTo(find: true, FindText(choice.Entry!)),
+            whyNot: () => choice.Entry is null ? "Nothing is chosen in the browser" : null, onMap: true, icon: UiIcon.Find);
+        browser.EntryMenuRequested += (_, at) => Open(["tool.object", null, "browser.favourite", "browser.find"], at);
+        parts.Workspace.PanelMenuRequested += (region, panel, at) => Open(PanelMenu(region, panel), at);
+    }
+
+    /// <summary>
+    /// A right click on <paramref name="tile"/>: a hero or object there that is not selected becomes the selection (as a click of Select
+    /// would), then the menu for what is selected, or for the map when nothing is.
+    /// </summary>
+    public void OpenMapMenu(MapPosition tile, Vector2 at)
+    {
+        if (parts.Editor.Selecting.PickUnlessSelected(tile, parts.ToolContext.Filter))
+        {
+            parts.Say(EditorToolContext.Describe(parts.Editor.Selection));
+        }
+
+        Open(MapMenu(), at);
     }
 
     /// <summary>
@@ -35,30 +50,16 @@ public partial class Main
     /// </summary>
     private static string FindText(BrowserEntry entry) => entry.Definition?.Name ?? entry.Name;
 
-    /// <summary>
-    /// A right click on <paramref name="tile"/>: a hero or object there that is not selected becomes the selection (as a click of Select
-    /// would), then the menu for what is selected, or for the map when nothing is.
-    /// </summary>
-    private void OpenMapMenu(MapPosition tile, Vector2 at)
-    {
-        if (_editor.Selecting.PickUnlessSelected(tile, _toolContext.Filter))
-        {
-            Say(EditorToolContext.Describe(_editor.Selection));
-        }
-
-        OpenContextMenu(MapMenu(), at);
-    }
-
     /// <summary>The map's context menu: for the things selected, for the tiles selected, or for the map.</summary>
     private IReadOnlyList<string?> MapMenu()
     {
-        var selection = _editor.Selection;
+        var selection = parts.Editor.Selection;
         if (selection.HasThings)
         {
             return
             [
                 "view.inspector", null, "edit.cut", "edit.copy", "edit.paste", "edit.duplicate", "edit.delete", null,
-                .. NoScenery() is null ? new[] { "edit.rotate", "edit.mirror" } : [], "edit.save-stamp", null, "view.focus", "edit.deselect",
+                .. edit.NoScenery() is null ? new[] { "edit.rotate", "edit.mirror" } : [], "edit.save-stamp", null, "view.focus", "edit.deselect",
             ];
         }
 
@@ -89,7 +90,7 @@ public partial class Main
         };
         return
         [
-            .. _workspace.PanelsOf(region).Where(p => p != panel && _panelCommands.ContainsKey(p)).Select(p => _panelCommands[p]), null,
+            .. parts.Workspace.PanelsOf(region).Where(p => p != panel && _panelCommands.ContainsKey(p)).Select(p => _panelCommands[p]), null,
             .. own, null, toggle, "view.panels",
         ];
     }
@@ -98,11 +99,11 @@ public partial class Main
     /// Opens a context menu of <paramref name="items"/> at <paramref name="at"/> (the pointer, in the viewport); nothing while a file question,
     /// a window or a stroke is open.
     /// </summary>
-    private void OpenContextMenu(IReadOnlyList<string?> items, Vector2 at)
+    private void Open(IReadOnlyList<string?> items, Vector2 at)
     {
-        if (!IsBusy && !_pressed)
+        if (!parts.IsBusy && !parts.Pressed)
         {
-            CommandPopup.Open(this, _commands, items, at); // not an overlay: those make the editor busy
+            CommandPopup.Open(parts.Root, parts.Commands, items, at); // not an overlay: those make the editor busy
         }
     }
 }

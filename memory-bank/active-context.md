@@ -9,6 +9,10 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- The editor app split (ADR-288): `Main` (about 540 lines, from 1452) makes the lasting parts, builds each map's views and panels and
+  maps the input; the commands, menus and windows are composers by area (`FileComposer`, `EditComposer`, `MapComposer`,
+  `ViewComposer`, `TestComposer`, `WindowComposer`, `GenerateComposer`, `MenuComposer`, `ContextMenuComposer`) over a shared
+  `EditorParts`; folders in `EditorFolders`. No change in behaviour; every editor smoke scenario passes.
 - Editor icons C4, C7, C12 and C13: the owner's sheets cut into `textures/ui/icons/` (22 files); every editor command, panel and tab
   now has its drawn icon, none a lettered placeholder.
 - The other level ghosted and the height falloff (ADR-287): View > Ghost the other level (the minimap's box and the map's context menu
@@ -277,8 +281,8 @@ Detail: [roadmap.md](roadmap.md).
 2. The prologue map (CAMP-1), as the first map of a campaign; Border Watch's story is a placeholder.
 3. The remaining Phase 5 items in [roadmap.md](roadmap.md) ("Presentation and UI", "Town screen overhaul", "Editor overhaul",
    "Platform and art", "Roster"); the town screen overhaul starts with the owner's answers (TOWN-14 … TOWN-23); the editor
-   overhaul is closed, with the first-use test with a person, the owner's look at the workspace and the plan's "After the close"
-   list (`Main.cs` split; ADR-282) open.
+   overhaul is closed (the plan's "After the close" list done, ADR-288), with the first-use test with a person and the owner's look
+   at the workspace open.
 4. The "Code health" list in [roadmap.md](roadmap.md): skills, heroes and town types as typed ids; `InfoSheets` as data once localisation
    is decided (ADR-239).
 
