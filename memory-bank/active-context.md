@@ -9,6 +9,9 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- The town screen plan's questions answered (ADR-292: the proposals, no creatures or hero models in the scene, art after the key
+  paintings) and its roadmap broken into tasks per step ([implementation plan](../docs/papers/town-screen-plan.md#implementation-plan));
+  next is step 0's greybox shell and Haven's style frame.
 - The Capitol needs six dwellings of tiers 1–4 (ADR-291, owner's new rule with the TOWN-15 answer): in build, the town tree, the editor,
   the validator and the AI; the plan's plots show unused land when not built and citizens' homes on the two closed lines once the
   Capitol stands.

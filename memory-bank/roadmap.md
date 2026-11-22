@@ -248,17 +248,19 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       scenery and obstacles (ADR-245); then the views that use them
 - [x] Melee direction in battle: the side to strike from by the pointer's place in the cell (8 sides), the stand cells highlighted (ADR-204)
 
-### Town screen overhaul (ADR-246; [plan](../docs/papers/town-screen-plan.md), questions TOWN-14 … TOWN-23)
-- [ ] Step 0: answers to TOWN-14 … TOWN-23, clickable greybox wireframes of every window, one faction's style frame
-- [ ] Step 1: UI foundation: own fonts, nine-slice frames, the shared widgets (army bar with drag, split and swap; slider dialog; cost
-      label; creature card; building tile; window frame), hotkeys and focus order
-- [ ] Step 2: the windows over a 2D main screen: Hall (building tree), Recruitment and the recruit dialog, Mage guild, Tavern,
-      Marketplace, Blacksmith, Fort, Caravan; the bottom bar; previous / next town; core read models and Recruit all / Upgrade all
-- [ ] Step 3: the 3D town scene in greybox for the eight playable towns: plots, camera, hover and pick, construction scene, walls by
-      fort level, loading ahead
+### Town screen overhaul (ADR-246; [plan](../docs/papers/town-screen-plan.md), questions TOWN-14 … TOWN-23 answered)
+- [x] Step 0a: answers to TOWN-14 … TOWN-23 (ADR-291, ADR-292)
+- [ ] Step 0: the greybox shell of the new screen; Haven's style frame and the look-dev spike
+- [ ] Step 1: UI foundation: fonts, nine-slice frames, `CostLabel`, `SliderDialog`, the swap and spread commands, `ArmyBar` (drag,
+      split, swap), `CreatureCard`, `BuildingTile`, hotkeys and focus order
+- [ ] Step 2: core read models and the TOWN-17 rules (Recruit all, Upgrade all, dismiss, rename, rumours, any-pair trade, sending to
+      teammates); the windows over a 2D main screen (Hall, Recruitment, Mage guild, Tavern, Marketplace, Blacksmith, Fort, Caravan,
+      the rest); the bars; previous / next town; `TownPanel` to the harness only
+- [ ] Step 3: the 3D town scene in greybox for the eight playable towns: plots and their states, streets and walls, camera, hover and
+      pick, construction scene, arrival, loading ahead, budget
 - [ ] Step 4: Haven and Inferno in full art, light, life, sound and music; Hall pictures; the Deck preset
 - [ ] Step 5: Sylvan, Academy, Necropolis, Dungeon, Stronghold and Swamp Bestiary in full art
-- [ ] Step 6: controller pass, UI scale, the adopted TOWN-17 mechanics, idle creatures; the plan's target list ticked
+- [ ] Step 6: controller pass, UI scale, the goal building; the plan's target list ticked
 
 ### Editor overhaul (ADR-247, ADR-250; [plan](../docs/papers/editor-plan.md#implementation-plan), EDIT-1 … EDIT-12 answered)
 - [x] Step 0a: answers to EDIT-1 … EDIT-12 (ADR-250: the proposals)

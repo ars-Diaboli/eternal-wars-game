@@ -36,6 +36,7 @@
 | [284](#adr-284-faction-key-paintings-set-each-towns-look-owner-adr-008-adr-246-adr-248-2026-11-22) | Faction key paintings set each town's look (owner, ADR-008, ADR-246, ADR-248, 2026-11-22) | accepted |
 | [285](#adr-285-creature-portraits-in-2--2-sheets-creature-and-puzzle-prompts-redone-to-the-key-paintings-rocky-ground-is-dark-granite-owner-adr-284-2026-11-22) | Creature portraits in 2 × 2 sheets; creature and puzzle prompts redone to the key paintings; rocky ground is dark granite (owner, ADR-284, 2026-11-22) | accepted |
 | [289](#adr-289-creature-portraits-in-high-contrast-with-plain-bases-and-clearly-upgraded-upgrades-academy-creatures-redone-owner-adr-285-2026-11-22) | Creature portraits in high contrast with plain bases and clearly upgraded upgrades; Academy creatures redone (owner, ADR-285, 2026-11-22) | accepted |
+| [292](#adr-292-town-screen-answers-the-proposals-no-creatures-or-hero-models-in-the-scene-art-after-the-key-paintings-town-14--town-23-owner-adr-246-2026-11-22) | Town screen answers: the proposals, no creatures or hero models in the scene, art after the key paintings (TOWN-14 … TOWN-23, owner, ADR-246, 2026-11-22) | accepted |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -632,3 +633,19 @@ once step 3 of the plan lands. Plan, study and questions: [town-screen-plan.md](
   ash-grey demon, told apart from the imp), the breeders on a new sheet I6 (ember eggs, no green). One neutral sheet is left: the
   mammoths with the bandit over the troll.
 - **Regenerate**: every creature sheet.
+
+### ADR-292: Town screen answers: the proposals, no creatures or hero models in the scene, art after the key paintings (TOWN-14 … TOWN-23, owner, ADR-246, 2026-11-22)
+**Status**: accepted; nothing built. The owner's answers in the [town screen plan](../../docs/papers/town-screen-plan.md#questions);
+TOWN-15 is ADR-291. The plan's step-by-step implementation is in its [roadmap](../../docs/papers/town-screen-plan.md#implementation-plan).
+
+- **The proposals** (TOWN-14, TOWN-16, TOWN-17, TOWN-18, TOWN-19, TOWN-23): a fixed hero shot turned ±25° and zoomed in two steps, the
+  window opening at once; no 2D fallback, `TownPanel` kept in the harness; one lighting set per faction with a light week tint, no day
+  cycle; walls by fort level and street filler by town hall level in three steps; a 0.5 s fade into the town.
+- **TOWN-17 mechanics**: Recruit all, Upgrade all, tavern rumours, dismissing a stack and renaming a town now; any resource for any
+  other at A's sell price over B's buy price; resources sent only between teammates; a goal building later (UI only); no selling of
+  artifacts or creatures; spell research a candidate after step 6. Each is built as a core task of the plan's step 2 with its own ADR.
+- **TOWN-20** (owner): no creatures idle at the dwellings; the scene has no creatures.
+- **TOWN-22** (owner): no hero models in the scene; the garrison hero shows only as its banner on the keep.
+- **TOWN-21** (owner): the proposal (a kit per faction, image-to-3D with clean-up for landmarks, Haven and Inferno first,
+  `town-scene-prompts.md`), following the latest art direction: the key paintings and faction-art.md (ADR-284) and realistic, not
+  cartoon (ADR-248). The style frame of step 0 is Haven's greybox lit after `key_haven-1`.

@@ -7,8 +7,7 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-11-20**: TOWN-14 … TOWN-23 asked, for the town screen overhaul (ADR-246); EDIT-1 … EDIT-12 (the editor overhaul)
-answered in ADR-250.
+**Updated 2026-11-22**: TOWN-14 … TOWN-23 (the town screen overhaul) answered in ADR-291 and ADR-292.
 
 ## 🚧 Blocking now
 
@@ -26,56 +25,6 @@ Nothing blocking.
 faction-specific buildings does each town get (HoMM3 has 2–4 a town)?
 
 **Proposal**: open; the owner adds them here.
-
-<a id="town-14"></a>
-**TOWN-14 The town camera** (ADR-246): fixed hero shot, orbit or drift; does a click wait for the camera?
-
-**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-14).
-
-<a id="town-15"></a>
-**TOWN-15 What plots show** (ADR-246): a plot for both dwelling alternatives; the look before building and once a line is closed
-
-**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-15).
-
-<a id="town-16"></a>
-**TOWN-16 A 2D fallback** (ADR-246): keep a 2D main screen for weak hardware or as a setting?
-
-**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-16).
-
-<a id="town-17"></a>
-**TOWN-17 Town mechanics to add** (ADR-246): recruit all, upgrade all, any-pair trade, artifact and creature selling, resources to allies, spell research, rumours, dismissing a stack, renaming, a goal building
-
-**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-17).
-
-<a id="town-18"></a>
-**TOWN-18 Light and weather in the town** (ADR-246): one mood per faction or a time of day and weather?
-
-**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-18); each faction's key painting already shows a light to start from (ADR-284).
-
-<a id="town-19"></a>
-**TOWN-19 How much the town grows in the scene** (ADR-246): walls by fort level, streets by town hall level?
-
-**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-19).
-
-<a id="town-20"></a>
-**TOWN-20 Creatures in the scene** (ADR-246): an idle creature at each built dwelling?
-
-**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-20).
-
-<a id="town-21"></a>
-**TOWN-21 How the town art is made** (ADR-246): about 320 models: image-to-3D, kitbash, commissioned; which factions first?
-
-**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-21); the key paintings, the first step of that proposal, exist for every town (ADR-284).
-
-<a id="town-22"></a>
-**TOWN-22 Heroes in the scene** (ADR-246): the visiting and garrison heroes shown?
-
-**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-22).
-
-<a id="town-23"></a>
-**TOWN-23 Entering and leaving** (ADR-246): the transition from the map
-
-**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-23).
 
 ## Game flow and content
 
@@ -130,6 +79,7 @@ One line per question; the ADR holds the detail.
 - **Map events**: EVT-1 … EVT-6 (scope and plan, triggers, conditions, actions, quests, AI and editor: the proposals) ADR-115.
 - **Campaign**: CAMP-1 (the prologue) ADR-118.
 - **Editor overhaul**: EDIT-1 … EDIT-12 (the plan's proposals) ADR-250.
+- **Town screen overhaul**: TOWN-15 (plots, the Capitol's dwellings) ADR-291; TOWN-14, TOWN-16 … TOWN-23 ADR-292.
 - **Arena**: ARN-1 and ARN-2 (before 1.0, with LAN, three shipped maps) ADR-100.
 - **Assumptions** of ADR-070 … ADR-072: confirmed in ADR-073; of ADR-073: confirmed in ADR-075.
 ~~~~

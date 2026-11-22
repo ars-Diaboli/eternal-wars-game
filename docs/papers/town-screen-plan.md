@@ -6,8 +6,8 @@ current commercial strategy game. In function the screen should match HoMM3 with
 
 This file has five parts. The **study** looks at what we have and what the references do. The **target** sets the bar. **Screens**
 describes each screen. **Technical design** and **art and audio** cover how to build it. **Roadmap**, **questions** and **risks** close
-it. Nothing here is built yet. The questions (TOWN-14 … TOWN-23) are also in
-[open-questions.md](../../memory-bank/open-questions.md#towns); each one has a proposal that the plan follows until the owner answers.
+it. Nothing here is built yet. The questions (TOWN-14 … TOWN-23) are answered (ADR-292, with ADR-291 for the plots), and the plan
+follows the answers.
 When every step is built, this file stays in `papers/` as the report (ADR-280) and the rules move into [towns-and-economy.md](../design/towns-and-economy.md) and
 [presentation.md](../design/presentation.md).
 
@@ -234,6 +234,8 @@ a second Escape leaves the town.
 
   The Capitol needs six dwellings of tiers 1–4 (ADR-291), so a town with it has exactly two closed tier 1–4 lines. Building the Capitol
   fills those two plots with citizens' homes, as part of its construction scene; a captured Capitol that drops to City Hall keeps them.
+- **Streets follow the town hall** (TOWN-19): streets and houses fill the space between the buildings in three steps, village, town and
+  city, by the town hall's level; the Capitol adds the citizens' homes on the closed plots.
 - **Walls follow the fort**: no walls at level 0. A palisade or low wall with the Fort, towers with the Citadel, and the full wall and
   moat with the Castle. These are the same parts the siege uses ([combat.md](../design/combat.md#sieges)), so the town looks as it
   fights.
@@ -253,11 +255,11 @@ a second Escape leaves the town.
 - **Life**:
   - banners in the player's colour (ADR-211);
   - smoke from the blacksmith, the guild's glow, water, birds;
-  - the visiting hero's mount at the gate (TOWN-22);
-  - when creature models exist, one idle creature at each built dwelling (TOWN-20).
+  - the garrison hero's banner on the keep; no hero models in the scene (TOWN-22);
+  - no creatures in the scene (TOWN-20).
   - Ambient sound per building, louder near the camera's focus.
-- **Mood** (TOWN-18): one lighting set per faction (Haven a pale grey dawn, Inferno a red dusk, and so on), as the art direction asks
-  (low sun, fog, strong shadows). The week's event can tint the scene: banners of the week's creature, or a grey haze in a plague month.
+- **Mood** (TOWN-18): one lighting set per faction, taken from the faction's key painting (ADR-284), as the art direction asks
+  (low sun, fog, strong shadows). No day cycle. The week's event can tint the scene: banners of the week's creature, or a grey haze in a plague month.
 - **Arrival** (TOWN-23): from the adventure map, a 0.5 s fade through black into the hero shot. Skipped at instant speed.
 
 ### Hall: the building tree
@@ -490,7 +492,9 @@ The rules exist. The screen needs **read models** and a few **commands**:
   That is about **40 models a faction, about 320 for the eight**, the largest art task in the game. Hence the order: greybox, then two
   factions, then six.
 - **How it is made** (TOWN-21):
-  - concept art per faction first (a key painting, then a sheet of the main buildings);
+  - every model follows the faction's key paintings and [faction-art.md](../content/faction-art.md) (ADR-284), realistic, not cartoon
+    (ADR-248);
+  - concept art per faction first: the key paintings exist, then a sheet of the main buildings;
   - then models by an image-to-3D model with clean-up, or kitbashed from a shared kit per faction (roofs, walls, windows, props).
   - A new prompt file, `town-scene-prompts.md`, in the same layout as the others (ADR-245). It reuses each faction's look from
     [town-model-prompts.md](../content/prompts/town-model-prompts.md).
@@ -501,25 +505,183 @@ The rules exist. The screen needs **read models** and a few **commands**:
 
 ## Roadmap
 
-Six steps. Each ends in a working game with a green test suite, and steps 1 and 2 already help players. The roadmap's checkboxes are in
-[roadmap.md](../../memory-bank/roadmap.md) under "Town screen overhaul".
+Six steps after the decisions. Each ends in a working game with a green test suite, and steps 1 and 2 already help players. The
+roadmap's checkboxes are in [roadmap.md](../../memory-bank/roadmap.md) under "Town screen overhaul".
 
 | Step | What | Depends on | Done when |
 |---|---|---|---|
-| 0 | **Decide and sketch**: answers to TOWN-14 … TOWN-23; wireframes of every window as a clickable greybox in Godot; one faction's style frame (key art plus a lit greybox) | — | The owner signs off the wireframes and the style frame |
-| 1 | **UI foundation**: own fonts, nine-slice frames, buttons and slots from the UI prompts; the shared widgets (`ArmyBar`, `SliderDialog`, `CostLabel`, `CreatureCard`, `BuildingTile`, `WindowFrame`); hotkeys and focus order | 0; the UI art (ADR-245) or greybox frames | Hero, exchange and current town screens use the widgets; drag, split and swap work |
-| 2 | **The windows over a 2D main screen**: Hall, Recruitment and the recruit dialog, Mage guild, Tavern, Marketplace, Blacksmith, Fort, Caravan; core read models and the new commands; the bottom bar; ◄ ► between towns | 1 | Every action of today's screen is in a window; the long scrolling list is gone from the game app |
-| 3 | **The 3D scene in greybox**: `TownScene3D`, layouts with plots for all eight playable towns, camera, hover and pick, construction scene, walls by fort level, arrival, loading ahead | 2 | The game app's town screen is the 3D scene for every playable town, in greybox, at budget |
-| 4 | **Vertical slice art**: Haven and Inferno (ADR-034) fully modelled, lit, with life, sound and music; Hall pictures rendered; Deck preset | 3; the look-dev spike | Both towns meet every item of the [target](#target) |
-| 5 | **The other six factions**: Sylvan, Academy, Necropolis, Dungeon, Stronghold, Swamp Bestiary | 4 | All eight at the slice's quality |
-| 6 | **Polish and extras**: controller pass, UI scale, the TOWN-17 mechanics the owner adopts, idle creatures (once creature models exist), the final check against the [target](#target) | 5 | The target list is ticked |
+| 0 | **Decide and sketch**: the answers (ADR-292), a greybox shell of the new screen, Haven's style frame | — | The owner signs off the shell and the style frame |
+| 1 | **UI foundation**: fonts, frames, the shared widgets, hotkeys and focus order | 0 | Hero, exchange and today's town screens use the widgets; drag, split and swap work |
+| 2 | **The windows over a 2D main screen**, with the core read models and the adopted TOWN-17 rules | 1 | Every action of today's screen is in a window; the scrolling list is gone from the game app |
+| 3 | **The 3D scene in greybox** for the eight playable towns | 2 | The game app's town screen is the 3D scene for every playable town, at budget |
+| 4 | **Vertical slice art**: Haven and Inferno (ADR-034) | 3 | Both towns meet every item of the [target](#target) |
+| 5 | **The other six factions** | 4 | All eight at the slice's quality |
+| 6 | **Polish**: controller, UI scale, the goal building, the final check | 5 | The target list is ticked |
 
 Conflux and Dragon Utopia are not playable, so they get no town screen.
 
+### Implementation plan
+
+The tasks of each step in build order. A task is one reviewable change that leaves the game working.
+
+**Every task**:
+- Core first. A rule or a read model that can be engine-free goes into `src/Core/**` with tests in `tests/EternalWars.Core.Tests`
+  (`TestWorld` towns). A new action is a command (ADR-036) that publishes a past-tense event after the change; randomness only from
+  `GameState.Random`. A new rule gets its own ADR.
+- Then the Godot part: widgets and windows in `EternalWars.Godot.UI/Hud/TownScreen/` as `ScreenSection`-based parts rebuilt on their
+  own events (ADR-223); the 3D scene in `EternalWars.Godot.Shared/Town/`. Views subscribe with `SubscribeWhileInTree`; the game app
+  only composes and maps input.
+- A smoke scenario in `tools/smoke-godot.ps1` where the task changes what the player sees, saving screenshots; the existing ones keep
+  passing.
+- `dotnet build` and `dotnet test` green. A save format change bumps its version and keeps older saves loading.
+- At the end of a step: tick [roadmap.md](../../memory-bank/roadmap.md), refresh `active-context.md`, and move the rules that are now
+  built into [towns-and-economy.md](../design/towns-and-economy.md) and [presentation.md](../design/presentation.md).
+
+#### Step 0: Decide and sketch
+
+1. **Decisions**: TOWN-14 … TOWN-23 answered (ADR-292); the Capitol's dwellings and the plots' looks (ADR-291). *Done.*
+2. **Greybox shell**: `TownScreen` in `Hud/TownScreen/` with the top bar, the bottom bar, a window host (one window at a time; Escape
+   closes the window, a second Escape leaves) and an empty, titled window per hotkey. The main area shows the faction's key painting
+   (`docs/content/art/towns/`, copied to the assets) as a stand-in. Opened instead of `TownPanel` with a launch option
+   (`--town-screen=new`) until step 2 ends. It is not thrown away: steps 1 and 2 fill it. Smoke `game-town-shell`.
+3. **Style frame and look-dev spike**: `scenes/towns/haven.tscn` blocked out after `key_haven-1` (lakeside, castle with conical-roofed
+   towers, one focal point, low calm foreground), with its light, fog and grading (TOWN-18: the painting's light is the faction's
+   lighting set). It settles the renderer settings (SDFGI, VoxelGI or none; fog; SSAO) and the first budget numbers on the reference PC
+   and the Deck. Screenshots beside the painting for the owner.
+
+#### Step 1: UI foundation
+
+1. **Fonts**: a heading face and a body face, open licences, in `fonts/` with their credits; `UiTheme` uses them everywhere; text at
+   least 16 px at 1080p. *(proposal)* The agent proposes two pairs as screenshots of today's screens; the owner picks.
+2. **Frames and theme**: `WindowFrame` (nine-slice, the faction's accent on the frame) and the button, slot and tab styles in
+   `UiTheme`, from greybox textures until the UI art of [ui-element-prompts.md](../content/prompts/ui-element-prompts.md) exists.
+   Today's panels switch to them, so no default Godot control shows.
+3. **`CostLabel`**: a cost with what the player lacks marked. Used by today's building tree, tavern, blacksmith and marketplace.
+4. **`SliderDialog`**: a count with − / +, Max, the cost of one, the total and the treasury after paying (red where short).
+5. **Stack moves in core**: an engine-free helper for "spread a stack evenly over the empty slots" as a list of `MoveTownStackCommand`
+   / `MoveStackCommand`s (both already take a count), and a `SwapTownHeroesCommand` that swaps the garrison and visiting heroes in one
+   step (today `EnterGarrisonCommand` and `LeaveGarrisonCommand` refuse when both are there). ADR, tests.
+6. **`ArmyBar`**: seven slots led by a hero portrait (an empty frame without one). Drag onto a slot moves, merges or swaps;
+   Shift + drag opens the split dialog; Ctrl + drag moves one creature; Alt + click spreads; double click opens the creature's info;
+   an arrow badge on a stack the town can upgrade, with the price in the tooltip (`UpgradeStackCommand`); dragging a hero portrait to
+   the other row swaps the heroes. Used by the hero screen, the exchange screen and today's town armies section, which loses its
+   global "Split" and "Recruit to visiting hero" checkboxes. Smokes `game-town-armies`, `game-hero-armies`.
+7. **`CreatureCard` and `BuildingTile`**: the card with portrait, base / upgraded toggle, stats and abilities as icons, waiting,
+   growth and cost; the tile with picture, level n of m and the six states by frame **and** symbol (built out ✓, can build hammer,
+   can't afford coin, needs buildings chain, built today hourglass, locked for ever ✗). Core: the tree's status gains "locked for
+   ever" for a closed dwelling line (`BuildingTree.DwellingChoices`). Greybox building pictures until step 4.
+8. **Hotkeys and focus order**: the town screen's keys in the app's input map (B, R, G, V, M, S, F, C, U, [ ], H, Space, Escape), each
+   shown on the status bar with its button (ADR-204); every window gets a focus order for the keyboard and the controller.
+
+#### Step 2: The windows over a 2D main screen
+
+Core first (tasks 1–7), then the screen (8–16). Each TOWN-17 rule gets its own ADR with its numbers.
+
+1. **`TownOverview`**: income; each line's growth with its parts (base, fort, growth building, week event, artifacts, the Grail);
+   built today; the governor's discount; each plot's state (not built, built today, built at level n, closed, citizens' homes once the
+   Capitol stands, ADR-291). Tests.
+2. **Recruit all** (TOWN-17 a): `RecruitPlan` (the most of every line the treasury allows, top tier first, into the garrison, then
+   the visiting hero where it fits) and `RecruitManyCommand` (a list of orders, all or nothing, one event). Tests for the order, a
+   short treasury and full armies.
+3. **Upgrade all** (TOWN-17 b): `UpgradePlan` (every stack in both rows the town can upgrade and the player can pay, best first) and
+   `UpgradeAllCommand`. Tests.
+4. **Dismiss a stack** (TOWN-17 i): `DismissStackCommand` for a town or hero stack, never a hero's last one. Tests.
+5. **Rename a town** (TOWN-17 j): `RenameTownCommand` (own towns, trimmed, a length limit), kept in saves and replays. Tests.
+6. **Tavern rumours** (TOWN-17 h): a rumour table in `data/`, one line a week for each player drawn from `GameState.Random` on
+   Monday, some lines filled from the game (the strongest player, an unvisited treasure). Saved. Tests.
+7. **Trading** (TOWN-17 c, e): any resource for any other at the marketplace, at A's sell price divided by B's buy price, by the
+   marketplace count (ADR-067); sending resources to a teammate only (`SendResourcesCommand`). The AI may use both. Tests, and the
+   replay names.
+8. **The screen's frame**: the top bar (crest, name with rename, ◄ ► through the player's towns, faction, town hall, governor, quick
+   buttons, ×), the bottom bar (`ArmyBar` rows with Split, Upgrade all, Swap and Dismiss; the town's portrait with the governor;
+   income, growth with its breakdown on hover, the date) and the notices card (built today, caravans, the discount). The 2D main
+   screen is the key painting with a strip of building buttons, until step 3. Smokes `game-town-open`, `game-town-switch`.
+9. **Hall**: columns by kind (Core, Military, Magic, Dwellings, Unique; the kind is a column in `buildings.csv`), the requirement
+   links as lines, hovering lights a building's chain; the detail card (cost with what is lacking, ✓ / ✗ requirements that select,
+   what it gives, the refusal, Build); the 7-of-9 block with the closed lines crossed through in the preview. "Show in town" waits for
+   step 3. Smoke `game-town-build`.
+10. **Recruitment**: a card per line (unbuilt ones greyed, "build in the Hall"), the recruit dialog (`SliderDialog`, destination
+    Garrison or Visiting hero preselected to where it fits), Recruit all with its summary before paying; the dwelling window (the
+    large card, the dialog, Upgrade the dwelling). Smoke `game-town-recruit`.
+11. **Mage guild and war lodge**: shelves per built level with spell icons (the spell buildings' extras framed in their school's
+    colour), dark shelves saying what they need; the visiting hero's known, newly learned and too-hard spells; Buy a spell book moves
+    here from the blacksmith.
+12. **Tavern**: `TavernPanel` in the new frame, hero cards with portraits, the returning-hero badge, the week's rumour, the Thieves'
+    Guild; the next hire in the tavern's hover text.
+13. **Marketplace**: two columns of six resource tiles, the rate between them, slider, Max, Trade; the Silo's income; a "Send to
+    ally" tab where a teammate exists.
+14. **Blacksmith, Fort, Caravan**: three machine cards (greyed with the reason without a visiting hero); the defences window (walls,
+    towers, gate and moat at their level, the next level's gain, the unique building's siege bonus); the caravan window with cards of
+    the dwellings in reach and the queue.
+15. **The rest**: the governor list from the portrait slot (each hero's discount); the Transformer's stacks with previews; info
+    windows for the unique buildings, the Grail building and the Observatory from `InfoSheets`; a right click on everything opens its
+    information window (ADR-154). Smoke `game-town-windows`.
+16. **Switch over**: the game app opens the new screen only and drops the launch option; `TownPanel` stays in the 2D harness as a tool
+    (TOWN-16); `game-town-screen` moves to the new screen. Every action of the old screen is checked off in a window.
+
+#### Step 3: The 3D scene in greybox
+
+1. **`TownScene3D`**: a `Node3D` with its own camera, light and `WorldEnvironment`; the game app hides the adventure world while it is
+   open, as for a battle. It reads a layout (`scenes/towns/<town>.tscn`, `Marker3D` plots named `plot_<building>` and
+   `plot_dwelling-<line>`, each with a hover shape and a camera focus) and the town's `TownOverview`. A plot without a model gets a
+   procedural block sized by building kind, with a roof and a sign. Raises `BuildingHovered` and `BuildingPicked`.
+2. **Layouts for the eight towns**, each composed after its key painting ([faction-art.md](../content/faction-art.md)): the landmark
+   as the focal point, the setting around a fixed 60 × 40 m ground, the `bg_town_<town>` picture as the sky. A smoke check
+   `game-town-layouts` loads each one and fails on a building or line without a plot.
+3. **Plot states**: unused land (a piece of the diorama's scenery, no markers or rubble), the model for its level, scaffolding on the
+   day it is built, the citizens' homes on the two closed lines once the Capitol stands (ADR-291); walls by fort level (the siege's
+   parts); streets and houses as filler by town hall level in three steps, village, town and city (TOWN-19); banners in the player's
+   colour; the garrison hero's banner on the keep (TOWN-22).
+4. **Camera** (TOWN-14): the hero shot, turned ±25° and zoomed in two steps; a click opens the window at once while the camera eases
+   toward the building, and eases back after Escape.
+5. **Hover and pick**: the bronze outline, name and state on the status line, the hand cursor, right click for the info window;
+   picking by hover shape; the controller walks a ring of plots. "Show in town" from the Hall shows a ghost of the model on its plot.
+6. **Construction scene**: on `TownBuilt` / `DwellingBuilt`, 1.5 s at the plot (scaffold, dust, the model rising, a bell), cut short
+   or skipped by the speed settings (ADR-090); the Capitol's scene also raises the homes.
+7. **Arrival and loading** (TOWN-23): a 0.5 s fade through black into the hero shot, skipped at instant speed; the town type's scene
+   loaded in the background when an own hero's route ends at an own town or at the turn's start for the selected town; one cached
+   scene. Opens in under 1 s.
+8. **Budget**: an overlay with triangles, draw calls, video memory and frame time; a fully built greybox Haven and Inferno measured at
+   1440p and on the Deck; the numbers set in this plan. Smokes `game-town-open` and `game-town-build` now show the 3D scene.
+
+#### Step 4: Vertical slice art: Haven and Inferno
+
+1. **Prompts**: `town-scene-prompts.md` in the ADR-245 layout, paste-ready (ADR-249), realistic (ADR-248), following the key paintings
+   and [faction-art.md](../content/faction-art.md) (ADR-284): each faction's kit (walls, roofs, windows, props) and its landmark
+   buildings, one block a sheet. The owner generates the concept sheets.
+2. **Model pipeline**: the import convention (`models/towns/<town>/<building>_<level>.glb`), LODs, baked ambient occlusion, a check
+   that every model is within its share of the budget; image-to-3D for the landmarks, the kit for the rest (TOWN-21).
+3. **Haven**: every building, every level and the nine dwellings and their upgrades; the citizens' homes; the walls; the street
+   filler; the diorama around it.
+4. **Mood** (TOWN-18): the lighting set from `key_haven-1`; the week's tint (banners of the week's creature, a grey haze in a plague
+   month), with `key_haven-2`'s overcast light as the tint's reference. No day cycle.
+5. **Life**: banners, smoke from the blacksmith, the guild's glow, water, birds; ambient sound per building, louder near the camera's
+   focus. No creatures (TOWN-20) and no hero models (TOWN-22) in the scene.
+6. **Audio**: the game's first sound and music. Buses and volume settings, the Haven town theme, the diorama's ambient loop, and the
+   sounds for build, recruit, trade, hire, buy, the hero's arrival and windows opening and closing.
+7. **Hall pictures**: a tool scene that renders each building in a fixed studio light into the Hall's tiles.
+8. **Deck preset**: half-resolution fog, no SSAO, shadows at 2048; measured.
+9. **Inferno**: tasks 3–5 and its theme and ambience, to the same check.
+10. **The check**: both towns against every item of the [target](#target), with a frame-time capture; what fails is fixed before
+    step 5.
+
+#### Step 5: The other six factions
+
+One task per faction, each tasks 3–5 of step 4 plus its theme, ambience and Hall pictures, measured against the budget: Sylvan,
+Academy, Necropolis, Dungeon, Stronghold, Swamp Bestiary.
+
+#### Step 6: Polish
+
+1. **Controller pass**: every window and the scene with the Deck's controls; the shoulder buttons switch towns.
+2. **UI scale** (100–150 %) as a setting, and the accessibility check (no state by colour alone, text sizes, shortened animations).
+3. **Goal building** (TOWN-17 k): pin one building as the town's goal; the card shows the days of income needed, and the town list
+   marks the town once it can afford it. UI only.
+4. **Spell research** (TOWN-17 g): asked again as a candidate, not built unless the owner adopts it.
+5. **The final check** against the [target](#target); this file stays in `papers/` as the report (ADR-280).
+
 ## Questions
 
-Each question also has an entry in [open-questions.md](../../memory-bank/open-questions.md#towns). The plan follows the **proposal**
-until the owner answers.
+All answered by the owner on 2026-11-22 (ADR-292; TOWN-15 with ADR-291). The answers stay here as given.
 
 <a id="town-14"></a>
 **TOWN-14 The town camera.** (a) A fixed hero shot, free orbit, or HoMM5's slow drift? (b) Does a click wait for the camera to fly to
@@ -604,6 +766,6 @@ Answer : use proposals;
 | Performance on the Deck | Under 40 fps with fog and shadows | A budget per scene from step 3, a Deck preset, LOD, baked AO |
 | Loading time | A pause on entering a town | Load ahead when a route ends at a town; one cached scene |
 | A busy 3D scene hides information | Players miss states | The Hall and the bottom bar hold every number; the scene is never the only place a state shows |
-| Scope creep from TOWN-17 | Rules change late | Each adopted mechanic gets its own ADR and tests in step 6, outside the screen work |
+| Scope creep from TOWN-17 | Rules change late | Each adopted mechanic gets its own ADR and tests as a core task of step 2, before the window that uses it |
 | Godot's UI theme limits | Frames and fonts look default | Step 1 builds the theme and widgets once, used by every screen |
 | Network and replay | A UI action not repeatable | Every action stays a command (ADR-036); the scene and windows only read state |
