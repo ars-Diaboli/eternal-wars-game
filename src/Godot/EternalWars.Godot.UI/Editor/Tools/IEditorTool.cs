@@ -18,6 +18,9 @@ public interface IEditorTool
     /// <summary>The key that picks the tool; null: none.</summary>
     Key? Shortcut { get; }
 
+    /// <summary>What a click or a drag on the map does with the tool, as the status bar says it when the tool is picked.</summary>
+    string ClickHint { get; }
+
     /// <summary>The tool was picked.</summary>
     void Activate();
 

@@ -15,7 +15,7 @@
 | [157](#adr-157-more-scenery-on-random-maps-denser-by-terrain-adr-077-2026-11-09) | More scenery on random maps, denser by terrain (ADR-077, 2026-11-09) | implemented |
 | [181](#adr-181-adventure-map-relief-a-height-per-map-set-by-the-generator-and-the-editor-adr-011-adr-075-2026-11-12) | Adventure map relief: a height per map, set by the generator and the editor (ADR-011, ADR-075, 2026-11-12) | accepted |
 | [182](#adr-182-map-37-answered-how-the-relief-is-stored-generated-and-edited-adr-075-adr-174-adr-181-2026-11-13) | MAP-37 answered: how the relief is stored, generated and edited (ADR-075, ADR-174, ADR-181, 2026-11-13) | implemented |
-| [247](#adr-247-map-and-template-editor-overhaul-a-creator-app-workspace-planned-in-seven-steps-owner-adr-015-adr-023-adr-117-2026-11-20) | Map and template editor overhaul: a creator-app workspace, planned in seven steps (owner, ADR-015, ADR-023, ADR-117, 2026-11-20) | accepted |
+| [247](#adr-247-map-and-template-editor-overhaul-a-creator-app-workspace-planned-in-seven-steps-owner-adr-015-adr-023-adr-117-2026-11-20) | Map and template editor overhaul: a creator-app workspace, planned in seven steps (owner, ADR-015, ADR-023, ADR-117, 2026-11-20) | implemented |
 | [250](#adr-250-edit-1--edit-12-answered-the-editor-plans-proposals-adopted-template-undo-scenery-rotation-new-map-content-owner-adr-117-adr-247-2026-11-20) | EDIT-1 … EDIT-12 answered: the editor plan's proposals adopted; template undo; scenery rotation; new map content (owner, ADR-117, ADR-247, 2026-11-20) | accepted |
 | [251](#adr-251-map-resize-reframes-the-map-in-place-stamps-are-fragments-in-a-file-format-of-their-own-edit-8-adr-015-adr-250-2026-11-21) | Map resize reframes the map in place; stamps are fragments in a file format of their own (EDIT-8, ADR-015, ADR-250, 2026-11-21) | implemented |
 | [252](#adr-252-scenery-has-an-orientation-stored-in-map-format-43-scatter-is-the-generators-scenery-choice-run-through-the-editor-session-edit-6-adr-079-adr-157-adr-174-adr-250-2026-11-21) | Scenery has an orientation, stored in map format 43; scatter is the generator's scenery choice run through the editor session (EDIT-6, ADR-079, ADR-157, ADR-174, ADR-250, 2026-11-21) | implemented |
@@ -46,6 +46,8 @@
 | [277](#adr-277-the-editors-ui-scale-and-contrast-adr-250-2026-11-21) | The editor's UI scale and contrast (ADR-250, 2026-11-21) | implemented |
 | [278](#adr-278-the-editors-timing-on-a-large-map-adr-250-2026-11-21) | The editor's timing on a large map (ADR-250, 2026-11-21) | implemented |
 | [279](#adr-279-a-first-map-without-a-manual-adr-250-2026-11-21) | A first map without a manual (ADR-250, 2026-11-21) | implemented |
+| [280](#adr-280-the-editor-overhaul-closed-adr-247-2026-11-22) | The editor overhaul closed (ADR-247, 2026-11-22) | implemented |
+| [281](#adr-281-content-from-pictures-short-lists-from-drop-downs-adr-255-2026-11-22) | Content from pictures, short lists from drop-downs (ADR-255, 2026-11-22) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -383,8 +385,8 @@ tuned once the look-dev spike shows them.
 - **Plan**: [archive/relief-plan.md](../../docs/papers/relief-plan.md).
 
 ### ADR-247: Map and template editor overhaul: a creator-app workspace, planned in seven steps (owner, ADR-015, ADR-023, ADR-117, 2026-11-20)
-**Status**: accepted (the direction and the plan); nothing built. Plan, study and questions:
-[editor-plan.md](../../docs/papers/editor-plan.md). EDIT-1 … EDIT-12 answered in ADR-250.
+**Status**: implemented (closed in ADR-280; the first-use test with a person and the owner's look at the workspace left open). Plan, study and questions: [editor-plan.md](../../docs/papers/editor-plan.md). EDIT-1 … EDIT-12 answered in
+ADR-250.
 
 - **Owner**: the map editor and the template editor are to be overhauled to the quality, usability and style of a professional
   creator app, and in function on the level of the HoMM3 editor with HotA's additions and the HoMM5 editor.
@@ -1077,3 +1079,32 @@ ADR when it is built.
 - **A file name gets its extension once** (`RecentFiles.WithExtension`, for maps and templates): a name typed over the suggested one can
   keep its ".json" and the dialog add its own; "name.json.ewmap.json" is saved as "name.ewmap.json", unless that file exists (the
   dialog asked about the other name), then as picked (`RecentFiles.SavePath`).
+
+### ADR-280: The editor overhaul closed (ADR-247, 2026-11-22)
+**Status**: implemented (plan step 6, task 7).
+
+- **The target list is ticked item by item** in [editor-plan.md](../../docs/papers/editor-plan.md#target), each with what shows it.
+  Discoverable, Safe, Fast, Truthful and One look are met; Direct waits for the timed test with a person (ADR-279).
+- **What the check found is fixed**, for Discoverable:
+  - every tool has a key: R Road, I River, Z StartZone, G Height, C Scatter, N Monster, H Hero, K LinkGates, P Paste, B Grail, beside
+    T, O, E, V and M; none of the camera's W, A, S, D and Q (E, its other key, was Erase's already); each can be rebound (ADR-275);
+  - a tool the user picks (button, key, Tools menu; `ToolPalette.Pick`) says in the status bar what a click or a drag does with it
+    (`IEditorTool.ClickHint`); code that switches tools on its way to its own message (paste, stamps, the browser, links) does not;
+  - the bookmarks' Store is in the View menu (View > Store bookmark), not only on its key; both bookmark lists are empty off the Map tab.
+- **Left open, in the roadmap**: the first-use test with a person; the drop-downs step 3 left (since done, ADR-281); the owner's look
+  at the workspace, which replaces step 0's greybox sign-off now that the editor is built.
+- **A finished plan stays in `docs/papers/`** as the report of how the work was done (as the code review, relief and refactoring
+  plans do since the docs were restructured): no `archive/` folder.
+
+### ADR-281: Content from pictures, short lists from drop-downs (ADR-255, 2026-11-22)
+**Status**: implemented (step 3's done-when, left open by ADR-280).
+
+- **What step 3's "nothing from a plain drop-down" means**: the game's content (creatures, heroes, artifacts, spells, skills) is
+  picked from the searchable picture grids (ADR-255) everywhere in the editor, and a faction always shows its crest. A drop-down stays
+  where the list is short and fixed (a disposition, a road type, a symmetry, a difficulty, the UI scale), where it lists files
+  (templates), or this map's own towns, objects and prisons, which are found by name and place.
+- **Moved to pictures**: the Monster tool's creature (`ToolOptions.Picker`), the Victory and loss tab's hero and artifact; the crests
+  on Generate's town per player and the template editor's faction tick boxes. A picker's grid goes with it when its row is rebuilt (a tool's options), and a picker's list can
+  change under it (`PicturePicker.SetItems`, the map's heroes).
+- **"Any player" in a condition is any player**: its item had id -1, which a Godot drop-down takes as "number by index", so the
+  condition was made for the first player.

@@ -1,6 +1,7 @@
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Godot.UI.Editor.Inspector;
 using Godot;
 
 namespace EternalWars.Godot.UI.Editor.Tools;
@@ -19,6 +20,8 @@ public sealed class ObjectTool(EditorToolContext context) : EditorTool(context)
     private PlayerId? _thingOwner;
 
     public override string Name => "Object";
+
+    public override string ClickHint => Entry is { } entry ? $"Object: a click places {entry.Name}" : "Object: pick what to place in the browser";
 
     public override UiIcon? Icon => UiIcon.ToolObject;
 
@@ -114,13 +117,15 @@ public sealed class MonsterTool(EditorToolContext context) : EditorTool(context)
 
     public override string Name => "Monster";
 
+    public override Key? Shortcut => Key.N;
+
+    public override string ClickHint => "Monster: a click places the picked monster";
+
     public override UiIcon? Icon => UiIcon.ToolMonster;
 
     public override void BuildOptions(ToolOptions options)
     {
-        var creatures = Editor.Scenario.Creatures.All.OrderBy(c => c.Town ?? "~").ThenBy(c => c.Tier).ThenBy(c => c.Name, StringComparer.Ordinal)
-            .Select(c => ($"{c.Name} (T{c.Tier})", c.Id.Value));
-        options.Choice("Creature", creatures, _creature, c => _creature = c);
+        options.Picker("Creature", PickerItems.Creatures(Editor.Scenario), _creature, c => _creature = c);
         var count = new SpinBox { MinValue = 0, MaxValue = 999, Value = _count ?? 0, TooltipText = "0 = rolled from the tier at game start" };
         count.ValueChanged += v => _count = v > 0 ? (int)v : null;
         options.Labelled("Count", count);
@@ -137,6 +142,10 @@ public sealed class HeroTool(EditorToolContext context) : EditorTool(context)
     private PlayerId _owner = context.Editor.Scenario.Players[0].Id;
 
     public override string Name => "Hero";
+
+    public override Key? Shortcut => Key.H;
+
+    public override string ClickHint => "Hero: a click places a hero for the picked player";
 
     public override UiIcon? Icon => UiIcon.Hero;
 
@@ -158,6 +167,10 @@ public sealed class LinkGatesTool(EditorToolContext context) : EditorTool(contex
     private MapObjectId? _from;
 
     public override string Name => "LinkGates";
+
+    public override Key? Shortcut => Key.K;
+
+    public override string ClickHint => "LinkGates: click a gate, then its partner";
 
     public override UiIcon? Icon => UiIcon.ToolLinkGates;
 
@@ -195,6 +208,10 @@ public sealed class LinkGatesTool(EditorToolContext context) : EditorTool(contex
 public sealed class GrailTool(EditorToolContext context) : EditorTool(context)
 {
     public override string Name => "Grail";
+
+    public override Key? Shortcut => Key.B;
+
+    public override string ClickHint => "Grail: a click on open ground buries the Grail; a click on it takes it away";
 
     public override UiIcon? Icon => UiIcon.ToolGrail;
 

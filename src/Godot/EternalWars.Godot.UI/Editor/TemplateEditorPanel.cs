@@ -453,7 +453,7 @@ public partial class TemplateEditorPanel : PanelContainer
 
             if (shown.Count == 0)
             {
-                popup.AddItem("(no presets of yours yet: Save as preset in a zone's inspector)", -1);
+                popup.AddItem("(no presets of yours yet: Save as preset in a zone's inspector)", int.MaxValue); // not -1: Godot numbers that by index
                 popup.SetItemDisabled(0, true);
             }
         };
@@ -643,6 +643,11 @@ public partial class TemplateEditorPanel : PanelContainer
         foreach (var value in values)
         {
             var box = new CheckBox { Text = name?.Invoke(value) ?? value?.ToString() ?? "", ButtonPressed = on.Contains(value) };
+            if (value is string townType)
+            {
+                box.WithCrest(townType); // a faction with its crest (ADR-281); no crest for anything else
+            }
+
             box.Toggled += _ => changed([.. boxes.Where(b => b.Box.ButtonPressed).Select(b => b.Value)]);
             boxes.Add((value, box));
             grid.AddChild(box);

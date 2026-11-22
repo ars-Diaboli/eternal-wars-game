@@ -14,6 +14,8 @@ public sealed class TerrainTool(EditorToolContext context) : TileBrushTool(conte
 
     public override string Name => "Terrain";
 
+    public override string ClickHint => _fill ? $"Terrain: a click fills the joined area with {_terrain}" : $"Terrain: drag over the map to paint {_terrain}";
+
     public override UiIcon? Icon => UiIcon.ToolTerrain;
 
     public override Key? Shortcut => Key.T;
@@ -70,6 +72,10 @@ public sealed class RoadTool(EditorToolContext context) : TileBrushTool(context)
 
     public override string Name => "Road";
 
+    public override Key? Shortcut => Key.R;
+
+    public override string ClickHint => "Road: drag over the map to lay the picked road";
+
     public override UiIcon? Icon => UiIcon.ToolRoad;
 
     protected override string StrokeDescription => "Paint road";
@@ -89,6 +95,10 @@ public sealed class RiverTool(EditorToolContext context) : TileBrushTool(context
     private RiverType _river = RiverType.Clear;
 
     public override string Name => "River";
+
+    public override Key? Shortcut => Key.I;
+
+    public override string ClickHint => "River: drag over the map to lay the picked river";
 
     public override UiIcon? Icon => UiIcon.ToolRiver;
 
@@ -110,6 +120,12 @@ public sealed class StartZoneTool(EditorToolContext context) : TileBrushTool(con
     private PlayerId? _zone = context.Editor.Scenario.Players[0].Id;
 
     public override string Name => "StartZone";
+
+    public override Key? Shortcut => Key.Z;
+
+    public override string ClickHint => _zone is null
+        ? "StartZone: drag over the map to erase start zones"
+        : "StartZone: drag over the map to paint the picked player's start zone";
 
     public override UiIcon? Icon => UiIcon.ToolStartZone;
 
@@ -152,6 +168,12 @@ public sealed class HeightTool(EditorToolContext context) : BrushTool(context)
     private int _levelTo;
 
     public override string Name => "Height";
+
+    public override Key? Shortcut => Key.G;
+
+    public override string ClickHint => _action == HeightAction.FromTerrain
+        ? "Height: drag over the map to give the ground its terrain's heights"
+        : $"Height: drag over the map to {StrokeDescription.ToLowerInvariant()}";
 
     public override UiIcon? Icon => UiIcon.ToolHeight;
 

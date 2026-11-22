@@ -397,6 +397,10 @@ $scenarios = @(
     # Sample maps (ADR-259) from the Help menu: on the Template tab, Help > Sample maps > Two Towns opens it as a new map on the Map tab.
     @{ Name = 'editor-samples'; App = 'EternalWars.MapEditor'; Frames = 40
        Input = '3:click:@Template;8:click:345,22;12:choose:Sample maps;16:choose:Two Towns' },
+    # Content picked from pictures, not lists (ADR-281): the Monster tool's creature picker searched for Dwarf (Enter takes the first found) and
+    # a Dwarf placed; the Victory and loss tab's artifact picker searched for Iron Band and an Obtain artifact victory added.
+    @{ Name = 'editor-content-pickers'; App = 'EternalWars.MapEditor'; Frames = 100
+       Input = '4:click:@Monster;8:click:@Timber Wolf (T1);12:text:dwarf;22:key:Enter;26:click:900,450;32:key:F7;36:click:@Victory and loss;40:click:@Victory: capture a town;44:choose:Victory: obtain an artifact;48:click:@Badge of Courage;52:text:iron band;64:key:Enter;68:click:@Add condition;90:key:Escape' },
     # A first map (ADR-279), as a newcomer makes it: the empty state's New map…, the wizard's defaults (two players, blank); Academy from the
     # browser's Towns placed for Blue (the Object tool's Owner) and Dungeon for Red; the two heroes' army warnings fixed from the Problems
     # panel (no problem left); saved as first-map; Test (F5) shows its window and is cancelled.

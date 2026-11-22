@@ -7,8 +7,10 @@ keeping this game's own rules and file formats.
 The **study** looks at what we have and what the references do. The **target** sets the bar. **The workspace and its tools**
 describes every part of the new editor, and **technical design** how it is built. The **roadmap** gives the seven steps and the
 **implementation plan** breaks each one into tasks in build order. **Decisions** and **risks** close it. The owner adopted every
-proposal for the questions EDIT-1 … EDIT-12 (ADR-250). Nothing here is built yet. When every step is built, this file moves to
-`archive/` and the rules live in [tools.md](../design/tools.md) and [random-maps.md](../design/random-maps.md).
+proposal for the questions EDIT-1 … EDIT-12 (ADR-250). The overhaul is built and closed (ADR-280); this file stays here as the
+report of how it was planned and built, like the other finished papers. The rules live in [tools.md](../design/tools.md) and
+[random-maps.md](../design/random-maps.md). Two things are left open, in [roadmap.md](../../memory-bank/roadmap.md): the timed
+first-use test with a person, and the owner's look at the workspace (step 0's greybox, overtaken by the built editor).
 
 ## Study
 
@@ -128,21 +130,28 @@ The workspace conventions people bring from tile and level editors, game engines
 
 ## Target
 
-The bar the overhaul is measured against. Each item can be checked; step 6 of the [roadmap](#roadmap) closes on them.
+The bar the overhaul is measured against. Each item can be checked; step 6 of the [roadmap](#roadmap) closes on them. At the close
+(ADR-280) each is ticked with what shows it, or left open.
 
-- **Discoverable**: every action is in a menu with its shortcut, and in the command palette. Every tool has an icon, a tooltip with
-  its shortcut, and a status-bar hint saying what a click will do.
-- **Direct**: a new user can make a playable two-player map in **15 minutes** using the new-map wizard and the browser, without
-  reading a manual. This gets tested with one person.
-- **Safe**: every change to the map and the template can be undone. An autosave every 2 minutes, crash recovery on the next start, and
-  a question before closing or opening over unsaved work.
-- **Fast**:
+- [x] **Discoverable**: every action is in a menu with its shortcut, and in the command palette. Every tool has an icon, a tooltip with
+  its shortcut, and a status-bar hint saying what a click will do. *The menus and the palette are built from the command registry
+  (the bookmarks' Store in View > Store bookmark); every tool has an icon, a key and a hint the status bar shows when it is picked.*
+- [ ] **Direct**: a new user can make a playable two-player map in **15 minutes** using the new-map wizard and the browser, without
+  reading a manual. This gets tested with one person. *The scripted first use (smoke `editor-first-use`) makes one with no problem
+  left; the test with a person is open.*
+- [x] **Safe**: every change to the map and the template can be undone. An autosave every 2 minutes, crash recovery on the next start, and
+  a question before closing or opening over unsaved work. *Map and template undo; autosave every 2 minutes by default (1–30);
+  recovery; the questions before closing or opening over unsaved work.*
+- [x] **Fast**:
   - a 256 × 256 two-level map opens in under 3 s and keeps 60 fps while painting;
   - a brush stroke shows at once;
   - validation runs in the background and never stalls the editor.
-- **Truthful**: the editor shows a map as the game will play it (the same views, the same rules), and the play-test is one click away.
-- **One look**: the game's theme and fonts, compact for a tool. Dense but grouped, with consistent icons, spacing and a UI scale
-  setting (100–200 %).
+
+  *`tools/perf-editor.ps1` (ADR-278): opens in about 1.3 s, paints at about 110 fps, and validation copies the map on the main thread in about 25 ms, the check itself off it.*
+- [x] **Truthful**: the editor shows a map as the game will play it (the same views, the same rules), and the play-test is one click away.
+  *The game's map view and rules; Test (F5) starts the game on the map.*
+- [x] **One look**: the game's theme and fonts, compact for a tool. Dense but grouped, with consistent icons, spacing and a UI scale
+  setting (100–200 %). *The compact theme, UI scale 100–200 % and high contrast (smoke `editor-scale-*`, `editor-contrast`).*
 
 ## The workspace and its tools
 
@@ -455,7 +464,7 @@ Seven steps. Each ends in a working editor with a green test suite. The checkbox
 | 3 | **Browser, inspector and map content**: categories, thumbnails, search, favourites, recent; the inspector in sections with multi-edit and picture pickers; the map settings window with rumours and texts; object names and custom heroes; the new-map wizard | 1 | Nothing is picked from a plain drop-down any more |
 | 4 | **Navigation, overlays, analysis and testing**: the editor camera, minimap, go to, bookmarks; layers and the overlays; problems with fix-its; the fairness report; play-test | 2, 3 | A map can be checked for fairness and played from the editor |
 | 5 | **Template workspace**: undo, cards and snapping, multi-select and copy, presets, mirror tools, every field in the inspector, preview, Generate many with the gallery | 1 | A template can be built, checked over 20 seeds and opened in the map workspace without touching its file |
-| 6 | **Polish**: F1 help, sample maps, UI scale, shortcut editor, performance on the largest maps, a first-use test with one person, the [target](#target) list | 1–5 | The target list is ticked; this file moves to `archive/` |
+| 6 | **Polish**: F1 help, sample maps, UI scale, shortcut editor, performance on the largest maps, a first-use test with one person, the [target](#target) list | 1–5 | The target list is ticked |
 
 Steps 2, 3 and 5 can run in parallel once the shell exists. Step 4 needs selection (step 2) for Go to and fix-its, and named objects
 (step 3) for Go to by name.
@@ -588,7 +597,8 @@ again offers the lost work.
     wizard and the sample maps. Smoke `editor-new-map`. *Done.*
 
 **Done when**: nothing is picked from a plain drop-down; a map can carry rumours, allowed factions, named objects and custom heroes,
-and the game uses them.
+and the game uses them. *Done*: content is picked from pictures everywhere, drop-downs are left for short fixed lists, files and the
+map's own things (ADR-281; smoke `editor-content-pickers`).
 
 ### Step 4: Navigation, overlays, analysis and testing
 
@@ -652,7 +662,8 @@ and the game uses them.
    what they trip over gets fixed. A scripted first use stands in for now (smoke `editor-first-use`, ADR-279): a town is placed for its
    owner, the wizard's warnings have fixes, the blank map names the next steps. *The timed test with a person is still to do.*
 7. **Close**: the [target](#target) list ticked; [tools.md](../design/tools.md) and [random-maps.md](../design/random-maps.md) hold
-   the rules; ADR-247 marked implemented; this file moves to `archive/`.
+   the rules; ADR-247 marked implemented. The check found and fixed: ten tools without a key, no status-bar hint when a tool is
+   picked, and the bookmarks' Store in no menu (ADR-280). This file stays in `papers/` as the report. *Done.*
 
 **After step 6**: the node-graph view of the event tree (EDIT-7); per-player AI style with the AI's styles (EDIT-12); per-language
 map texts once localisation is decided (EDIT-11, ADR-239).

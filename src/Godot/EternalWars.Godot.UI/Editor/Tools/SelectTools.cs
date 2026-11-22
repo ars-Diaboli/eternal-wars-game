@@ -34,6 +34,8 @@ public class SelectTool(EditorToolContext context) : EditorTool(context)
 
     public override string Name => "Select";
 
+    public override string ClickHint => "Select: click a thing or drag a rectangle";
+
     public override UiIcon? Icon => UiIcon.ToolSelect;
 
     public override Key? Shortcut => Key.V;
@@ -185,6 +187,8 @@ public class SelectTool(EditorToolContext context) : EditorTool(context)
 public sealed class MoveTool(EditorToolContext context) : SelectTool(context)
 {
     public override string Name => "Move";
+
+    public override string ClickHint => "Move: drag an object or a hero to move it";
 
     public override UiIcon? Icon => UiIcon.ToolMove;
 

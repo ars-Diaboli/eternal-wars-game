@@ -20,6 +20,8 @@ public sealed class EraseTool(EditorToolContext context) : TileBrushTool(context
 
     public override string Name => "Erase";
 
+    public override string ClickHint => "Erase: drag over the map to erase the ticked kinds under the brush";
+
     public override UiIcon? Icon => UiIcon.ToolErase;
 
     public override Key? Shortcut => Key.E;
@@ -63,6 +65,12 @@ public sealed class PasteTool(EditorToolContext context) : EditorTool(context)
     private MapPosition? _hovered;
 
     public override string Name => "Paste";
+
+    public override Key? Shortcut => Key.P;
+
+    public override string ClickHint => Fragment is null
+        ? "Nothing was copied: select something and copy it (Ctrl+C) first."
+        : "Paste: a click puts the copied piece there";
 
     public override UiIcon? Icon => UiIcon.ToolStamp;
 
@@ -109,14 +117,6 @@ public sealed class PasteTool(EditorToolContext context) : EditorTool(context)
         }
 
         options.Hint("Click where the copied piece goes; every click pastes it again. Red cells show where an object does not fit. Escape ends.");
-    }
-
-    public override void Activate()
-    {
-        if (Fragment is null)
-        {
-            Context.Say("Nothing was copied: select something and copy it (Ctrl+C) first.");
-        }
     }
 
     public override void Hover(MapPosition? tile)

@@ -7,6 +7,7 @@ using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
+using EternalWars.Godot.UI.Editor.Inspector;
 using Godot;
 
 namespace EternalWars.Godot.UI.Editor;
@@ -34,6 +35,9 @@ public partial class ConditionsPanel : VBoxContainer
         (ConditionKind.TimeLimit, "Defeat: time limit"),
     ];
 
+    /// <summary>The "Any player" item's id: not -1, which <see cref="OptionButton.AddItem"/> takes as "number it by its index" (player 0's id).</summary>
+    private const int AnyPlayer = int.MaxValue;
+
     private readonly Label _arenaNote = new() { Text = "This map is an arena (General tab): it ignores the victory and defeat conditions below." };
     private readonly Button _add = new() { Text = "Add condition" };
     private readonly CheckBox _standard = new() { Text = "Last team standing wins (defeat every enemy)" };
@@ -43,16 +47,15 @@ public partial class ConditionsPanel : VBoxContainer
     private readonly OptionButton _kind = new();
     private readonly OptionButton _player = new();
     private readonly OptionButton _town = new();
-    private readonly OptionButton _hero = new();
     private readonly OptionButton _resource = new();
     private readonly SpinBox _amount = new() { MinValue = 1, MaxValue = 1_000_000, Step = 1, Value = 1000, Prefix = "x " };
     private readonly SpinBox _day = new() { MinValue = 1, MaxValue = 1000, Step = 1, Value = 30, Prefix = "day " };
     private readonly OptionButton _object = new();
     private readonly OptionButton _prison = new();
-    private readonly OptionButton _artifact = new();
     private readonly SpinBox _deadline = new() { MinValue = 0, MaxValue = 1000, Step = 1, Prefix = "by day", Suffix = "(0 = no deadline)" };
     private readonly Label _status = new();
-    private List<string> _artifactIds = [];
+    private PicturePicker _hero = null!;
+    private PicturePicker _artifact = null!;
     private MapEditorSession _editor = null!;
 
     private GameState Scenario => _editor.Scenario;
@@ -80,7 +83,7 @@ public partial class ConditionsPanel : VBoxContainer
         AddChild(_kind);
         this.AddRow("Player", _player, 70, fill: true);
         this.AddRow("Town", _town, 70, fill: true);
-        this.AddRow("Hero", _hero, 70, fill: true);
+        _hero = PicturePicker.Add(this.AddRow("Hero", labelWidth: 70), null, [], ""); // the map's heroes, filled by Refresh
         foreach (var resource in Enum.GetValues<ResourceType>())
         {
             _resource.AddItem(resource.ToString(), (int)resource);
@@ -89,7 +92,8 @@ public partial class ConditionsPanel : VBoxContainer
         this.AddRow("Resource", _resource, 70, fill: true);
         this.AddRow("Object", _object, 70, fill: true);
         this.AddRow("Prison", _prison, 70, fill: true);
-        this.AddRow("Artifact", _artifact, 70, fill: true);
+        var artifacts = PickerItems.Artifacts(Scenario);
+        _artifact = PicturePicker.Add(this.AddRow("Artifact", labelWidth: 70), null, artifacts, artifacts.FirstOrDefault()?.Key ?? "");
         AddChild(_amount);
         AddChild(_day);
         AddChild(_deadline);
@@ -143,16 +147,16 @@ public partial class ConditionsPanel : VBoxContainer
             _list.AddChild(new Label { Text = "Nobody can win this scenario." });
         }
 
-        Fill(_player, [(-1, "Any player"), .. Scenario.Players.Select(p => (p.Id.Value, p.Name))]);
+        Fill(_player, [(AnyPlayer, "Any player"), .. Scenario.Players.Select(p => (p.Id.Value, p.Name))]);
         Fill(_town, Scenario.ObjectsOf<Town>().Select(t => (t.Id.Value, t.Name)));
-        Fill(_hero, Scenario.Heroes.Select(h => (h.Id.Value, h.Name)));
+        _hero.SetItems([.. Scenario.Heroes.Select(h => PickerItem.Of(
+            h.Id.Value.ToString(System.Globalization.CultureInfo.InvariantCulture), h.Name,
+            Scenario.HasPlayer(h.Owner) ? Scenario.GetPlayer(h.Owner).Name : ""))], "No heroes on this map");
         // Towns have their own kind; the other objects with a flag: mines, dwellings, providers, garrisons (ADR-073).
         Fill(_object, Scenario.Objects.Where(o => o is IFlaggable and not Town)
             .Select(o => (o.Id.Value, $"{(o.Name is { } name ? $"{name}, " : "")}{o.Definition.Name} ({o.Position.X}, {o.Position.Y})")));
         Fill(_prison, Scenario.ObjectsOf<Prison>()
             .Select(p => (p.Id.Value, $"{(p.Hero is { } h && Scenario.HeroRoster.Contains(h) ? Scenario.HeroRoster.Get(h).Name : "Drawn prisoner")} ({p.Position.X}, {p.Position.Y})")));
-        _artifactIds = Scenario.Artifacts.All.OrderBy(a => a.Name, StringComparer.Ordinal).Select(a => a.Id.Value).ToList();
-        Fill(_artifact, _artifactIds.Select((id, i) => (i, Scenario.Artifacts.Get(id).Name)));
     }
 
     private void AddRows(string heading, IReadOnlyList<ScenarioCondition> conditions, Func<ScenarioRules, ScenarioCondition, ScenarioRules> remove)
@@ -187,13 +191,13 @@ public partial class ConditionsPanel : VBoxContainer
     private void Add()
     {
         var kind = SelectedKind;
-        PlayerId? player = _player.Selected >= 0 && _player.GetItemId(_player.Selected) >= 0 ? new PlayerId(_player.GetItemId(_player.Selected)) : null;
+        PlayerId? player = _player.Selected >= 0 && _player.GetItemId(_player.Selected) != AnyPlayer ? new PlayerId(_player.GetItemId(_player.Selected)) : null;
         MapObjectId? town = _town.Selected >= 0 ? new MapObjectId(_town.GetItemId(_town.Selected)) : null;
-        HeroId? hero = _hero.Selected >= 0 ? new HeroId(_hero.GetItemId(_hero.Selected)) : null;
+        HeroId? hero = int.TryParse(_hero.Value(), System.Globalization.CultureInfo.InvariantCulture, out var heroId) ? new HeroId(heroId) : null;
         var resource = (ResourceType)_resource.GetItemId(Math.Max(0, _resource.Selected));
         MapObjectId? target = _object.Selected >= 0 ? new MapObjectId(_object.GetItemId(_object.Selected)) : null;
         MapObjectId? prison = _prison.Selected >= 0 ? new MapObjectId(_prison.GetItemId(_prison.Selected)) : null;
-        var artifact = _artifact.Selected >= 0 ? _artifactIds[_artifact.GetItemId(_artifact.Selected)] : null;
+        var artifact = _artifact.Value() is { Length: > 0 } picked ? picked : null;
         PlayerId? carrier = artifact is null ? null : Scenario.Heroes.FirstOrDefault(h => h.Artifacts.Has(artifact))?.Owner;
 
         ScenarioCondition? condition = kind switch

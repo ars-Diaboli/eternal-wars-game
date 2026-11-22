@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-280.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-282.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -273,7 +273,7 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [244](presentation.md#adr-244-ground-textures-each-terrain-its-own-saturated-colour-and-structure-at-a-30-m-scale-the-mood-comes-from-light-and-grading-owner-adr-183-2026-11-20) | presentation | Ground textures: each terrain its own saturated colour and structure, at a 30 m scale; the mood comes from light and grading (owner, ADR-183, 2026-11-20) | accepted |
 | [245](presentation.md#adr-245-asset-prompts-for-spells-creatures-heroes-and-towns-ui-pieces-roads-and-rivers-the-puzzle-map-and-the-environment-cursors-in-grey-iron-one-layout-for-every-prompt-file-owner-adr-116-adr-204-adr-244-2026-11-20) | presentation | Asset prompts for spells, creatures, heroes and towns, UI pieces, roads and rivers, the puzzle map and the environment; cursors in grey iron; one layout for every prompt file (owner, ADR-116, ADR-204, ADR-244, 2026-11-20) | accepted |
 | [246](presentation.md#adr-246-town-screen-overhaul-a-3d-town-scene-with-full-town-windows-planned-in-six-steps-owner-adr-050-adr-114-adr-223-2026-11-20) | presentation | Town screen overhaul: a 3D town scene with full town windows, planned in six steps (owner, ADR-050, ADR-114, ADR-223, 2026-11-20) | accepted |
-| [247](random-maps-and-editor.md#adr-247-map-and-template-editor-overhaul-a-creator-app-workspace-planned-in-seven-steps-owner-adr-015-adr-023-adr-117-2026-11-20) | random-maps-and-editor | Map and template editor overhaul: a creator-app workspace, planned in seven steps (owner, ADR-015, ADR-023, ADR-117, 2026-11-20) | accepted |
+| [247](random-maps-and-editor.md#adr-247-map-and-template-editor-overhaul-a-creator-app-workspace-planned-in-seven-steps-owner-adr-015-adr-023-adr-117-2026-11-20) | random-maps-and-editor | Map and template editor overhaul: a creator-app workspace, planned in seven steps (owner, ADR-015, ADR-023, ADR-117, 2026-11-20) | implemented |
 | [248](presentation.md#adr-248-icons-and-portraits-painted-realistically-not-as-cartoons-new-style-blocks-and-an-anti-cartoon-negative-owner-adr-116-adr-245-2026-11-20) | presentation | Icons and portraits painted realistically, not as cartoons: new style blocks and an anti-cartoon negative (owner, ADR-116, ADR-245, 2026-11-20) | accepted |
 | [249](presentation.md#adr-249-prompts-ready-to-paste-one-block-a-sheet-at-most-a-lead-and-an-item-elsewhere-negatives-joined-in-advance-owner-adr-245-adr-248-2026-11-20) | presentation | Prompts ready to paste: one block a sheet, at most a lead and an item elsewhere, negatives joined in advance (owner, ADR-245, ADR-248, 2026-11-20) | accepted |
 | [250](random-maps-and-editor.md#adr-250-edit-1--edit-12-answered-the-editor-plans-proposals-adopted-template-undo-scenery-rotation-new-map-content-owner-adr-117-adr-247-2026-11-20) | random-maps-and-editor | EDIT-1 … EDIT-12 answered: the editor plan's proposals adopted; template undo; scenery rotation; new map content (owner, ADR-117, ADR-247, 2026-11-20) | accepted |
@@ -306,3 +306,5 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [277](random-maps-and-editor.md#adr-277-the-editors-ui-scale-and-contrast-adr-250-2026-11-21) | random-maps-and-editor | The editor's UI scale and contrast (ADR-250, 2026-11-21) | implemented |
 | [278](random-maps-and-editor.md#adr-278-the-editors-timing-on-a-large-map-adr-250-2026-11-21) | random-maps-and-editor | The editor's timing on a large map (ADR-250, 2026-11-21) | implemented |
 | [279](random-maps-and-editor.md#adr-279-a-first-map-without-a-manual-adr-250-2026-11-21) | random-maps-and-editor | A first map without a manual (ADR-250, 2026-11-21) | implemented |
+| [280](random-maps-and-editor.md#adr-280-the-editor-overhaul-closed-adr-247-2026-11-22) | random-maps-and-editor | The editor overhaul closed (ADR-247, 2026-11-22) | implemented |
+| [281](random-maps-and-editor.md#adr-281-content-from-pictures-short-lists-from-drop-downs-adr-255-2026-11-22) | random-maps-and-editor | Content from pictures, short lists from drop-downs (ADR-255, 2026-11-22) | implemented |

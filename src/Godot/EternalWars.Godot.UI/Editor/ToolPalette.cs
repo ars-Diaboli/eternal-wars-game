@@ -17,6 +17,9 @@ public partial class ToolPalette : VBoxContainer
     /// <summary>Another tool is in use.</summary>
     public event Action? ToolChanged;
 
+    /// <summary>The user picked a tool (its button or its command, <see cref="Pick"/>), not code that switches tools on its way to something else.</summary>
+    public event Action<IEditorTool>? ToolPicked;
+
     /// <summary>The tools, in the buttons' order.</summary>
     public IReadOnlyList<IEditorTool> Tools { get; private set; } = [];
 
@@ -36,7 +39,7 @@ public partial class ToolPalette : VBoxContainer
                 Text = tool.Name, Icon = PlaceholderIcons.Of(tool.Icon, tool.Name), ToggleMode = true, ButtonGroup = group, ButtonPressed = tool == tools[0],
             };
             button.TooltipText = tool.Shortcut is { } key ? $"{tool.Name} ({key})" : tool.Name;
-            button.Pressed += () => Use(tool);
+            button.Pressed += () => Pick(tool);
             buttons.AddChild(button);
             _buttons[tool] = button;
         }
@@ -54,6 +57,13 @@ public partial class ToolPalette : VBoxContainer
         {
             button.TooltipText = shortcutOf(tool) is { } key ? $"{tool.Name} ({key})" : tool.Name;
         }
+    }
+
+    /// <summary>The user picked <paramref name="tool"/>: it is put in use and <see cref="ToolPicked"/> is told.</summary>
+    public void Pick(IEditorTool tool)
+    {
+        Use(tool);
+        ToolPicked?.Invoke(tool);
     }
 
     /// <summary>Puts <paramref name="tool"/> (one of <see cref="Tools"/>) in use.</summary>

@@ -20,6 +20,10 @@ public sealed class ScatterTool(EditorToolContext context) : TileBrushTool(conte
 
     public override string Name => "Scatter";
 
+    public override Key? Shortcut => Key.C;
+
+    public override string ClickHint => "Scatter: drag over the map to scatter scenery that suits the terrain";
+
     public override UiIcon? Icon => UiIcon.ToolScatter;
 
     protected override string StrokeDescription => "Scatter scenery";

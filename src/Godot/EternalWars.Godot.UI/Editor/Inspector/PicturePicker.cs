@@ -79,6 +79,9 @@ internal sealed partial class PicturePicker : Button
 
     private IReadOnlyList<PickerItem> _items = [];
     private string? _value;
+
+    /// <summary>What the button says while there is nothing to pick (<see cref="SetItems"/> with none).</summary>
+    private string _empty = "";
     private VBoxContainer? _grid;
 
     /// <summary>An item was picked; its key.</summary>
@@ -113,15 +116,32 @@ internal sealed partial class PicturePicker : Button
         picker.AddThemeConstantOverride("icon_max_width", UiIcons.ButtonSize);
         picker.Show(selected);
         picker.Pressed += picker.Toggle;
+        picker.TreeExiting += picker.Close; // its grid stands beside its row, not in it: it goes with the picker (a tool's options rebuilt)
         row.AddChild(picker);
         return picker;
+    }
+
+    /// <summary>
+    /// Offers <paramref name="items"/> from now on (the things they name changed): the picked item stays when it is still offered, else
+    /// the first is picked, without <see cref="Picked"/>.
+    /// </summary>
+    public void SetItems(IReadOnlyList<PickerItem> items, string empty = "")
+    {
+        _empty = empty;
+        if (!items.Select(i => (i.Key, i.Text, i.Group)).SequenceEqual(_items.Select(i => (i.Key, i.Text, i.Group))))
+        {
+            Close(); // an open grid would offer what is gone; the same items keep it open
+            _items = items;
+        }
+
+        Show(_value is { } value && items.Any(i => i.Key == value) ? value : items.FirstOrDefault()?.Key ?? "");
     }
 
     private void Show(string? key)
     {
         _value = key;
         var item = key is null ? null : _items.FirstOrDefault(i => i.Key == key);
-        Text = key is null ? "—" : item?.Text ?? key; // a key the list lacks still shows, by its own text
+        Text = key is null ? "—" : _items.Count == 0 && key.Length == 0 ? _empty : item?.Text ?? key; // a key the list lacks still shows, by its own text
         Icon = item?.Picture;
         TooltipText = key is null ? "The selected objects differ: pick one to set it on all of them" : $"{Text}: click to choose another";
     }
@@ -251,7 +271,11 @@ internal sealed partial class PicturePicker : Button
 
     private void Close()
     {
-        _grid?.QueueFree();
+        if (_grid is not null && IsInstanceValid(_grid))
+        {
+            _grid.QueueFree();
+        }
+
         _grid = null;
         if (_opened == this)
         {

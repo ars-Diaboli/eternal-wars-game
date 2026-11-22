@@ -1,3 +1,4 @@
+using EternalWars.Godot.UI.Editor.Inspector;
 using Godot;
 
 namespace EternalWars.Godot.UI.Editor.Tools;
@@ -25,6 +26,18 @@ public sealed class ToolOptions(Container row)
         CustomMinimumSize = new Vector2(160, 0), // a wrapping label in a flow needs a width, or it wraps every letter
         SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
     });
+
+    /// <summary>
+    /// A labelled picker with pictures (ADR-255) of <paramref name="items"/> showing <paramref name="selected"/>; <paramref name="chosen"/>
+    /// gets the key picked. For the game's content (creatures and the like), where a list would be long and plain (ADR-281).
+    /// </summary>
+    internal void Picker(string label, IReadOnlyList<PickerItem> items, string selected, Action<string> chosen)
+    {
+        var pair = new HBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        pair.AddChild(new Label { Text = label });
+        row.AddChild(pair);
+        PicturePicker.Add(pair, null, items, selected).Picked += chosen;
+    }
 
     /// <summary>
     /// A labelled list of <paramref name="items"/> showing <paramref name="selected"/>; <paramref name="chosen"/> gets the pick. <paramref name="icon"/>

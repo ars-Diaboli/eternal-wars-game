@@ -28,7 +28,8 @@ problems panel, map settings window):
 
 **The window** (EDIT-1, ADR-250): a bar on top (the menus, the Map and Template tabs, the toolbar), three docked regions around the map
 view, each a tab box, and a status bar at the bottom. The tools and the options of the one in use are on the left, the inspector
-on the right (Inspector, Events, Generate), Problems, History and Output at the bottom. A region is resized with its splitter and collapsed with its
+on the right (Inspector, Events, Generate), Problems, History and Output at the bottom. A tool picked (its button, its key or the Tools
+menu) says in the status bar what a click or a drag on the map does with it. A region is resized with its splitter and collapsed with its
 button on the toolbar or in the View menu; F11 hides them all and shows them again. A panel larger than its region scrolls. The
 splitter positions, the collapsed regions and each region's open tab are kept in `editor-settings.cfg` in the user data folder.
 
@@ -48,7 +49,8 @@ open it at a tab). Its tabs:
 - **Players**: the player slots (name, human or computer by default, team, own hero limit, the factions it may take; add a slot,
   remove the last), whether the setup screen may change teams, and the team counts it must keep to (ADR-117). The factions are a menu of
   the playable towns to tick, or "Any faction"; the new-game screen offers only the ticked ones (ADR-257);
-- **Victory and loss** (ADR-057): the default rules and the special conditions; on an arena map they are kept but greyed out;
+- **Victory and loss** (ADR-057): the default rules and the special conditions, each for one player or any player; on an arena map
+  they are kept but greyed out;
 - **Bans** (ADR-133);
 - **Week events** (ADR-084): on or off, the weeks without events at the start, the factions whose creatures the weekly and the monthly
   events pick;
@@ -95,7 +97,8 @@ placeholder, a coloured tile with the name's two letters.
 **Commands**: every action is a command with a name, an icon, an optional shortcut, and a check whether it can run now. The menus
 (File, Edit, View, Map, Tools, Templates, Test, Help) and the toolbar are built from the commands; an item that cannot run is greyed
 and says why in its tooltip. Shortcuts (each can be rebound in Preferences): the File menu's, Ctrl+Z undo, Ctrl+Y redo, Ctrl+X cut, Ctrl+C copy, Ctrl+V paste, Ctrl+D duplicate, Delete, Ctrl+A select all, Escape
-deselect, Ctrl+R rotate scenery, Ctrl+M mirror scenery, the tools' keys (T Terrain, O Object, E Erase, V Select, M Move), L the next level, F11 the panels, F7 the map settings, Ctrl+Shift+P the command palette, Ctrl+, Preferences. The Map
+deselect, Ctrl+R rotate scenery, Ctrl+M mirror scenery, the tools' keys (T Terrain, R Road, I River, Z StartZone, G Height, O Object,
+C Scatter, N Monster, H Hero, E Erase, K LinkGates, V Select, M Move, P Paste, B Grail), L the next level, F11 the panels, F7 the map settings, Ctrl+Shift+P the command palette, Ctrl+, Preferences. The Map
 menu opens the map settings (at a tab) and the Events tab, the Tools menu picks a tool. F5 is Test (below), F1 [help](#editor-help).
 
 **Selection** (EDIT-1, ADR-250). The selection holds tiles, objects, heroes and map events. It is not an undo step, and a thing that
@@ -213,8 +216,10 @@ are given a spell one level at a time. Objects of different kinds are listed by 
 **Pickers** (ADR-255): creatures, heroes, artifacts, spells and skills are chosen with a button that shows the chosen one's picture
 and name. A click opens a grid under the row: a search field (Enter takes the first found), and the items by group (creatures by
 town, heroes by town and class, artifacts by tier or by slot, spells by level and school, skills by group), each with its picture.
-The pictures are the lettered tiles until portraits and icons exist (ADR-245). The inspector and the Events tab's event form use
-them.
+The pictures are the lettered tiles until portraits and icons exist (ADR-245). The inspector, the Events tab's event form, the
+Monster tool's creature and the Victory and loss tab's hero and artifact use them; a faction is shown with its crest, in the map's
+and the template's panels alike. Drop-downs are
+left for short fixed lists (a disposition, a road type, a difficulty), files, and this map's own towns and objects (ADR-281).
 
 **The Object tool** (O) places the browser's choice with its top-left tile where clicked; the treasure chest is chosen at the start.
 Before the click a ghost shows the tiles it would take, red where it does not fit; all of them are red when the map may hold no
@@ -326,7 +331,7 @@ Top-down view); it goes out far enough to show a 256 × 256 map.
 - **F** (View > Focus the selection) frames the selection: its tiles and every cell of its objects, heroes and events, on the shown
   level, else on the level it is on. **Home** (View > Whole map) frames the shown level. Both fit into the part of the window the map
   shows in, between the panels.
-- **Bookmarks**: Ctrl+1 … 9 store the view and the level shown, 1 … 9 return to them (View > Bookmarks lists them). They belong to the
+- **Bookmarks**: Ctrl+1 … 9 store the view and the level shown, 1 … 9 return to them (View > Bookmarks lists them, View > Store bookmark stores one). They belong to the
   map open and are not saved.
 - **The minimap** (ADR-261), under the right region's tabs: the shown level in the terrain's colours, objects and heroes in their
   owners' colours, and the view outlined in white. A click or a drag on it moves the view there. On a map of two levels, "Show the other
@@ -409,9 +414,6 @@ the page they name; Escape or Close closes it.
 last message; "Checking the map…" while the problems are being checked; the counts of errors and warnings (a click opens Problems);
 the save state ("Not saved" for a map without a file, "No changes" after a file is opened, "Saved" with the time, and "Unsaved changes" whenever the map
 differs from the saved one: undoing back to the saved step clears it); the zoom in percent.
-
-*Planned*: the rest of an overhaul of the map and template editors into one creator-app workspace (ADR-247,
-[plan](../papers/editor-plan.md)).
 
 ## 2D harness and simulator
 - **Viewer** (Godot 2D app): a top-down debug front-end over the same core, for rule development and visual debugging of AI.

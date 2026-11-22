@@ -1,6 +1,6 @@
 # Active context
 
-**As of 2026-11-21.** Refresh this file at the end of every piece of work: replace, do not append.
+**As of 2026-11-22.** Refresh this file at the end of every piece of work: replace, do not append.
 
 ## Where the project is
 Phases 0–4 are done and closed out (ADR-114, ADR-117). Phase 5 (content and polish) is in progress: magic, sieges, relics, map events,
@@ -9,11 +9,16 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor overhaul, step 3's done-when (ADR-281): content is picked from pictures everywhere (the Monster tool's creature through
+  `ToolOptions.Picker`, the Victory and loss tab's hero and artifact, crests on Generate's towns; `PicturePicker.SetItems`); "Any
+  player" in a condition no longer becomes the first player. Smoke `editor-content-pickers`.
+- Editor overhaul closed (step 6 task 7, ADR-280; ADR-247 implemented): the plan's target list ticked item by item; every tool has a
+  key and a status-bar hint when picked (`IEditorTool.ClickHint`); View > Store bookmark. The plan stays in `docs/papers/` as the
+  report. Left open in the roadmap: the first-use test with a person, the owner's look at the workspace.
 - Editor overhaul, step 6 task 6 (ADR-279): a scripted first use (smoke `editor-first-use`) and its fixes: the Object tool places a
   town, mine, provider, garrison or dwelling for an owner (`EntryEditor.HasOwner`); fixes for a player without a town (nearest neutral
   town) and a hero without an army (`HeroArmyFix`, the starter stack); the blank map's next steps in the status bar; one extension on a
-  saved name (`RecentFiles.WithExtension`). Tests `FirstMapTests`. The timed test with a person is still to do. Next: step 6 task 7
-  (close).
+  saved name (`RecentFiles.WithExtension`). Tests `FirstMapTests`.
 - Editor overhaul, step 6 task 5 (ADR-278): `tools/perf-editor.ps1` times the editor on a generated 256 × 256 two-level map
   (`--perf=`, `EditorPerfProbe`; `FrameStats` and `EditorTimings` with the budgets in the core, tests `EditorTimingsTests`). Hot spots
   fixed: `GroundEdit` compares whole corner arrays (`AdventureMap.Corners`), the minimap repaints only painted tiles, ground chunks are
@@ -248,8 +253,8 @@ Detail: [roadmap.md](roadmap.md).
 1. A person's full game on Ember March (the Phase 3 exit's last check).
 2. The prologue map (CAMP-1), as the first map of a campaign; Border Watch's story is a placeholder.
 3. The remaining Phase 5 items in [roadmap.md](roadmap.md) ("Presentation and UI", "Town screen overhaul", "Editor overhaul",
-   "Platform and art", "Roster"); the town screen overhaul starts with the owner's answers (TOWN-14 … TOWN-23), the editor
-   overhaul continues with step 5 task 3 (step 3's drop-downs and the step 0 greybox of the wizard are still open).
+   "Platform and art", "Roster"); the town screen overhaul starts with the owner's answers (TOWN-14 … TOWN-23); the editor
+   overhaul is closed, with the first-use test with a person and the owner's look at the workspace open.
 4. The "Code health" list in [roadmap.md](roadmap.md): skills, heroes and town types as typed ids; `InfoSheets` as data once localisation
    is decided (ADR-239).
 

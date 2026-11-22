@@ -8,7 +8,7 @@ This file has five parts. The **study** looks at what we have and what the refer
 describes each screen. **Technical design** and **art and audio** cover how to build it. **Roadmap**, **questions** and **risks** close
 it. Nothing here is built yet. The questions (TOWN-14 … TOWN-23) are also in
 [open-questions.md](../../memory-bank/open-questions.md#towns); each one has a proposal that the plan follows until the owner answers.
-When every step is built, this file moves to `archive/` and the rules move into [towns-and-economy.md](../design/towns-and-economy.md) and
+When every step is built, this file stays in `papers/` as the report (ADR-280) and the rules move into [towns-and-economy.md](../design/towns-and-economy.md) and
 [presentation.md](../design/presentation.md).
 
 ## Study
@@ -509,7 +509,7 @@ Six steps. Each ends in a working game with a green test suite, and steps 1 and 
 | 3 | **The 3D scene in greybox**: `TownScene3D`, layouts with plots for all eight playable towns, camera, hover and pick, construction scene, walls by fort level, arrival, loading ahead | 2 | The game app's town screen is the 3D scene for every playable town, in greybox, at budget |
 | 4 | **Vertical slice art**: Haven and Inferno (ADR-034) fully modelled, lit, with life, sound and music; Hall pictures rendered; Deck preset | 3; the look-dev spike | Both towns meet every item of the [target](#target) |
 | 5 | **The other six factions**: Sylvan, Academy, Necropolis, Dungeon, Stronghold, Swamp Bestiary | 4 | All eight at the slice's quality |
-| 6 | **Polish and extras**: controller pass, UI scale, the TOWN-17 mechanics the owner adopts, idle creatures (once creature models exist), the final check against the [target](#target) | 5 | The target list is ticked; this file moves to `archive/` |
+| 6 | **Polish and extras**: controller pass, UI scale, the TOWN-17 mechanics the owner adopts, idle creatures (once creature models exist), the final check against the [target](#target) | 5 | The target list is ticked |
 
 Conflux and Dragon Utopia are not playable, so they get no town screen.
 

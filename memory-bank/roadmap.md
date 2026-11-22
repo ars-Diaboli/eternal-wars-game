@@ -262,7 +262,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 
 ### Editor overhaul (ADR-247, ADR-250; [plan](../docs/papers/editor-plan.md#implementation-plan), EDIT-1 … EDIT-12 answered)
 - [x] Step 0a: answers to EDIT-1 … EDIT-12 (ADR-250: the proposals)
-- [ ] Step 0: a clickable greybox of the workspace and the new-map wizard
+- [ ] Step 0: the owner's look at the workspace (the greybox was overtaken by the built editor, ADR-280)
 - [x] Step 1: the shell: regions, tools as classes, the command registry with the menus and the toolbar (built: `EditorWorkspace`,
       `IEditorTool`, `CommandRegistry`, the history's steps and `UndoTo`, Problems / History / Output, the status bar, `IsDirty`, `FileService` with the file dialogs, recent files, the
       unsaved marker, autosave and crash recovery, `CommandPalette`, `PreferencesWindow`, the compact theme and placeholder icons,
@@ -270,21 +270,20 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Step 2: selection and editing (`MapSelection`, the Select tool with marquee, filter and multi-select, Delete, Move with its
       ghost, `MapFragment` with copy, cut, paste and duplicate, brushes with size, shape, line and fill, erase by kind, scatter,
       scenery rotation and mirroring (map format 43), resize / crop / shift, stamps; plan tasks 1 to 10; ADR-251, ADR-252)
-- [ ] Step 3 (built: the browser's data in the core and the `ObjectBrowser` panel with categories, search, terrain filter,
-      favourites, recent and stamps, placed by the Object tool with a ghost; thumbnails; the inspector in sections with jump links,
-      multi-edit and picture pickers, the map settings window, the map content: rumours, allowed factions, object names, custom heroes
-      (map format 44), the Texts tab, the new-map wizard and the empty state; plan tasks 1 to 10; ADR-253 to ADR-259; open for the
-      done-when: drop-downs remain in the conditions, bans, difficulty, quest kind, Generate, template editor, tool options,
-      preferences and the browser's and Problems' filters)
+- [x] Step 3: browser, inspector and map content (the browser with categories, search, favourites, recent, stamps and thumbnails;
+      the inspector in sections with jump links, multi-edit and picture pickers; the map settings window; rumours, allowed factions,
+      object names, custom heroes (map format 44); the Texts tab; the new-map wizard and the empty state; content picked from pictures
+      everywhere; plan tasks 1 to 10; ADR-253 to ADR-259, ADR-281)
 - [x] Step 4: minimap, go to, bookmarks, layers and overlays, fix-its, the fairness report, play-test from the editor (the editor's
       camera with framing and bookmarks, the minimap and Go to, layers, the map analysis in the core, the overlays, fix-its, the
       fairness report and the exports, play-test with cheats; plan tasks 1 to 8; ADR-260 to ADR-267)
 - [x] Step 5: the template workspace: undo, zone cards, multi-select and copy, presets, mirror tools, preview, Generate many
       (template undo, the template's files, the graph's cards, grid and align, multi-select and copy, mirror tools, the full inspector
       and zone presets, the preview and Generate many; plan tasks 1 to 8; ADR-268 to ADR-274)
-- [ ] Step 6: F1 help, sample maps, UI scale, shortcut editor, performance on 256 × 256, a first-use test; the plan's target list ticked
-      (built: the shortcut editor, F1 help, sample maps in the Help menu, UI scale and contrast, the timing on 256 × 256, the scripted
-      first use and its fixes; plan tasks 1 to 6 (the timed test with a person still to do); ADR-275 to ADR-279)
+- [x] Step 6: F1 help, sample maps, UI scale, shortcut editor, performance on 256 × 256, a scripted first use, the plan's target list
+      ticked (the shortcut editor, F1 help, sample maps, UI scale and contrast, the timing on 256 × 256, the scripted first use and its
+      fixes, the close with a key and a status-bar hint for every tool; plan tasks 1 to 7; ADR-275 to ADR-280)
+- [ ] The first-use test with a person: a playable two-player map in 15 minutes, without a manual (the target's "Direct", ADR-279)
 
 ### Platform and art
 - [x] Built: speed settings (ADR-095, UI-1)
@@ -336,7 +335,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Dialogue and campaign triggers (ADR-242): dialogues, ending the game from an event, captured and battle events (map format v42)
 - [ ] A campaign editor (campaign files are written by hand), cutscenes, per-map starting bonuses (ADR-241)
 
-## Code health (ADR-226; what the refactoring plan left, [archive](../docs/papers/refactoring-plan-2026-11.md))
+## Code health (ADR-226; what the refactoring plan left, [plan](../docs/papers/refactoring-plan-2026-11.md))
 - [x] LAN hardening (ADR-228): at most 8 joined players wait in a lobby without a colour; 5 chat lines in 10 seconds a link; sends
       queued and written in the background (closed after 30 seconds without progress or 128 MB waiting); the record interval per colour
 - [x] Schema hash (ADR-229): the field walk stops at the first base type outside Domain, named only; enums hash their names and numbers.

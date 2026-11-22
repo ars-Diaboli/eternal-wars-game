@@ -60,7 +60,7 @@ The game design document, split by mechanic. Start at the overview.
 | [code-review-2026-11.md](papers/code-review-2026-11.md) | The November 2026 code review and what became of each item (ADR-165 … ADR-175) |
 | [relief-plan.md](papers/relief-plan.md) | How the adventure map's relief was built in five steps (ADR-181, ADR-182) |
 | [town-screen-plan.md](papers/town-screen-plan.md) | The town screen overhaul: a study of today's screen, HoMM3 with HotA and HoMM5, the target, every screen, the technical and art plan, six steps and the open questions (ADR-246) |
-| [editor-plan.md](papers/editor-plan.md) | The map and template editor overhaul: a study of today's editor, the HoMM3 / HotA and HoMM5 editors and creator tools, the target, the workspace and every tool, the technical plan, seven steps and the open questions (ADR-247) |
+| [editor-plan.md](papers/editor-plan.md) | How the map and template editor overhaul was planned and built: the study of the old editor, the HoMM3 / HotA and HoMM5 editors and creator tools, the target and how it was checked, the workspace and every tool, the technical plan and its seven steps (ADR-247, ADR-280) |
 | [refactoring-plan-2026-11.md](papers/refactoring-plan-2026-11.md) | The November 2026 codebase review and refactoring plan, its baselines and how each item was checked (ADR-202 … ADR-226) |
 
 ## Project state (in `memory-bank/`)

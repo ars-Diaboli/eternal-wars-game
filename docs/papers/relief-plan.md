@@ -1,9 +1,9 @@
 # Relief: implementation plan
 
 The adventure map's height (ADR-181, ADR-182). Five steps, each one change with a green test suite; steps 1–3 are core only, step 4 is
-the 3D view, step 5 the editor. Once all are built this file moves to `archive/` and the rules live in the design docs.
+the 3D view, step 5 the editor. The rules live in the design docs; this file stays in `papers/` as the report (ADR-280).
 
-All five steps are built (2026-11-13); archived. The rules live in `presentation.md`, `random-maps.md`, `tools.md` and ADR-182.
+All five steps are built (2026-11-13). The rules live in `presentation.md`, `random-maps.md`, `tools.md` and ADR-182.
 
 ## Shared decisions
 - **Name**: `GroundHeights` (not `Height`, which is already the map's row count). Values are `sbyte` **eighths of a cell width**.

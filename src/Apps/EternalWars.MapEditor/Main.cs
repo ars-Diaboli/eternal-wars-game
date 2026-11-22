@@ -843,6 +843,7 @@ public partial class Main : Node3D
         };
         _tools.Bind(EditorTools.All(_toolContext));
         _tools.ToolChanged += _commands.NotifyStateChanged;
+        _tools.ToolPicked += tool => Say(tool.ClickHint); // what a click does now (ADR-280)
 
         // The browser's choice is the Object tool's: the entry of the same name in this map's catalog, the treasure chest at first.
         var catalog = new BrowserCatalog(_editor.Catalog, _editor.Scenario.Creatures, _editor.Scenario.Artifacts);
@@ -932,7 +933,7 @@ public partial class Main : Node3D
         Command("view.fairness", "Fairness", () => _workspace.ShowTab(_fairness));
         foreach (var tool in _tools.Tools)
         {
-            _commands.Register(new EditorCommand(ToolCommand(tool), tool.Name, () => _tools.Use(tool))
+            _commands.Register(new EditorCommand(ToolCommand(tool), tool.Name, () => _tools.Pick(tool))
             {
                 Icon = tool.Icon, Shortcut = tool.Shortcut is { } key ? new CommandShortcut(key) : null, WhyNot = OnMapTab, IsOn = () => _tools.Tool == tool, IsChoice = true,
             });
@@ -950,12 +951,15 @@ public partial class Main : Node3D
             },
             new("Edit", ["edit.undo", "edit.redo", null, "edit.cut", "edit.copy", "edit.paste", "edit.duplicate", "edit.delete", "edit.save-stamp", null, "edit.rotate", "edit.mirror", null, "edit.select-all", "edit.deselect", null, "edit.preferences"]),
             new("View", ["view.palette", null, "view.map-tab", "templates.editor", null, "view.level", "view.grid", null, "view.top-down",
-                "view.focus", "view.whole-map", "view.go-to", ">Bookmarks", null, ">Overlay", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.layers", "view.overlays", "view.fairness", "view.problems", "view.history", "view.output"])
+                "view.focus", "view.whole-map", "view.go-to", ">Bookmarks", ">Store bookmark", null, ">Overlay", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.layers", "view.overlays", "view.fairness", "view.problems", "view.history", "view.output"])
             {
                 Lists =
                 [
-                    new("Bookmarks", () => [.. _bookmarks.Stored.Select(n => (KeyHint($"Bookmark {n}", $"view.bookmark-{n}"), (Action)(() => _commands.Run($"view.bookmark-{n}"))))],
-                        "No view is stored yet: Store bookmark (View menu, or its key) stores one"),
+                    new("Bookmarks", () => OnMapTab() is not null ? [] : [.. _bookmarks.Stored.Select(n => (KeyHint($"Bookmark {n}", $"view.bookmark-{n}"), (Action)(() => _commands.Run($"view.bookmark-{n}"))))],
+                        "No view is stored yet, or not on the Map tab: Store bookmark (View menu, or its key) stores one"),
+                    new("Store bookmark", () => OnMapTab() is not null ? [] : [.. Enumerable.Range(CameraBookmarks.First, CameraBookmarks.Last - CameraBookmarks.First + 1)
+                        .Select(n => (KeyHint($"Bookmark {n}", $"view.store-bookmark-{n}"), (Action)(() => _commands.Run($"view.store-bookmark-{n}"))))],
+                        "Only on the Map tab"),
                     new("Overlay", () => [.. OverlaysPanel.Names.Select(o => (o.Text, (Action)(() => _overlayPanel.Choose(o.Kind))))], "No overlay"),
                 ],
             },

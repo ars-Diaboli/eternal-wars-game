@@ -13,6 +13,8 @@ public abstract class EditorTool(EditorToolContext context) : IEditorTool
 
     public virtual Key? Shortcut => null;
 
+    public abstract string ClickHint { get; }
+
     protected EditorToolContext Context { get; } = context;
 
     protected MapEditorSession Editor => Context.Editor;

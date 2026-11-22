@@ -163,7 +163,14 @@ public partial class GeneratePanel : VBoxContainer
             town.AddItem(Random);
             foreach (var type in BuiltInMapObjects.PlayableTowns)
             {
-                town.AddItem(type);
+                if (Heraldry.Crest(type, UiIcons.ButtonSize) is { } crest)
+                {
+                    town.AddIconItem(crest, type); // each faction with its crest, as the town inspector shows them (ADR-281)
+                }
+                else
+                {
+                    town.AddItem(type);
+                }
             }
 
             var picked = last?.Towns.GetValueOrDefault(slot) is { } lastTown ? BuiltInMapObjects.PlayableTowns.ToList().IndexOf(lastTown) + 1 : slot < kept.Count ? kept[slot] : 0;
