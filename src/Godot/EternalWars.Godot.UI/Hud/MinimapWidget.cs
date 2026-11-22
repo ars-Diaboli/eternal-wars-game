@@ -31,7 +31,7 @@ public partial class MinimapWidget : Control
     private MinimapCell[]? _ghostCells;
 
     /// <summary>How much of the other level's colour a cell shows with <see cref="GhostOtherLevel"/>.</summary>
-    private const float GhostShare = 0.35f;
+    private const float GhostShare = AdventureMapView.GhostShare;
 
     /// <summary>Size of one tile in pixels.</summary>
     public float CellPixels { get; set; } = 6f;

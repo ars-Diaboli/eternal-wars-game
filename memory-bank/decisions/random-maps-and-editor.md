@@ -51,6 +51,7 @@
 | [282](#adr-282-side-bars-one-panel-per-region-and-the-plans-check-edit-1-2026-11-22) | Side bars, one panel per region, and the plan's check (EDIT-1, 2026-11-22) | implemented |
 | [283](#adr-283-the-measure-tool-edit-1-2026-11-22) | The Measure tool (EDIT-1, 2026-11-22) | implemented |
 | [286](#adr-286-context-menus-the-object-tools-random-variant-and-road-snapping-edit-1-2026-11-22) | Context menus; the Object tool's random variant and road snapping (EDIT-1, 2026-11-22) | implemented |
+| [287](#adr-287-the-other-level-ghosted-in-the-map-view-the-height-brushs-falloff-edit-1-2026-11-22) | The other level ghosted in the map view; the height brush's falloff (EDIT-1, 2026-11-22) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -1168,3 +1169,17 @@ ADR when it is built.
   beside one (a tile round it not its own), the nearest fitting place first, then the entrance on the road, then top and left; none: it
   stays. `Preview`, for the ghost, is the first variant that fits where it goes: Ok exactly when the click places something; with
   Random variant on, the one drawn may be another of another shape and spot.
+
+### ADR-287: The other level ghosted in the map view; the height brush's falloff (EDIT-1, 2026-11-22)
+**Status**: implemented.
+
+- **Ghost the other level**: one switch of the view (`MapViewContext.GhostOtherLevel`; View > Ghost the other level, the minimap's box,
+  the map's context menu), kept from map to map, not saved with the map. On a map of two levels the shown level's ground mixes in the
+  other level's terrain colours at the minimap's share (35 %), tile by tile: the ground shader reads the other level's terrain map
+  (`ghost_map`, the texture that level's view already keeps up to date) and each terrain's flat palette colour. Only the terrain: the
+  other level's objects, roads and heights are not drawn, so nothing of it can be mistaken for the shown level's or picked. The minimap
+  ghosts with the same switch. The game never sets it.
+- **The height brush's falloff**: `HeightEditor.Raise`, `Lower`, `Level` and `Smooth` take a falloff, 0 to `MaxFalloff` (6) tiles past
+  the brush's full circle over which the strength fades smoothly (`DefaultFalloff` 1, the brush as before); 0 is a hard edge, the
+  circle's corners at full strength and none past it. The Height tool's Falloff box passes it; From terrain has none (it reshapes from
+  the terrains, which blend by themselves).

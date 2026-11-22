@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-287.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-288.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -313,3 +313,4 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [284](presentation.md#adr-284-faction-key-paintings-set-each-towns-look-owner-adr-008-adr-246-adr-248-2026-11-22) | presentation | Faction key paintings set each town's look (owner, ADR-008, ADR-246, ADR-248, 2026-11-22) | accepted |
 | [285](presentation.md#adr-285-creature-portraits-in-2--2-sheets-creature-and-puzzle-prompts-redone-to-the-key-paintings-rocky-ground-is-dark-granite-owner-adr-284-2026-11-22) | presentation | Creature portraits in 2 × 2 sheets; creature and puzzle prompts redone to the key paintings; rocky ground is dark granite (owner, ADR-284, 2026-11-22) | accepted |
 | [286](random-maps-and-editor.md#adr-286-context-menus-the-object-tools-random-variant-and-road-snapping-edit-1-2026-11-22) | random-maps-and-editor | Context menus; the Object tool's random variant and road snapping (EDIT-1, 2026-11-22) | implemented |
+| [287](random-maps-and-editor.md#adr-287-the-other-level-ghosted-in-the-map-view-the-height-brushs-falloff-edit-1-2026-11-22) | random-maps-and-editor | The other level ghosted in the map view; the height brush's falloff (EDIT-1, 2026-11-22) | implemented |

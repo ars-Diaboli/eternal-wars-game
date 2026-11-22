@@ -69,7 +69,7 @@ public partial class Main
 
         return
         [
-            "edit.paste", "edit.select-all", null, "view.go-to", "edit.find", "view.whole-map", "view.level", null, "view.grid", "view.top-down",
+            "edit.paste", "edit.select-all", null, "view.go-to", "edit.find", "view.whole-map", "view.level", "view.ghost-level", null, "view.grid", "view.top-down",
             null, "map.settings", "test.play",
         ];
     }

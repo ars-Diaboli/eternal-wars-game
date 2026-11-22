@@ -17,6 +17,8 @@
 // A terrain with detail maps (a layer of `detail_layers`: normal XY, roughness, ambient occlusion) bends the light by its normal map, read
 // from above only (the sides stay flat), and gives its roughness and occlusion; the others are flat, 0.95 rough and unoccluded.
 // The tile grid is an overlay drawn here: thin anti-aliased lines along the tile edges, on when `grid` is.
+// The other level can show faintly through this one (ADR-287): with `ghost` above 0 each tile mixes in that share of the flat colour of
+// the terrain `ghost_map` (the other level's terrain map) has there.
 shader_type spatial;
 
 const int MAX_TERRAINS = 32;
@@ -54,6 +56,11 @@ uniform float blend_depth : hint_range(0.01, 0.5) = 0.2;
 uniform float edge_noise : hint_range(0.0, 0.5) = 0.3;
 // The side of a cell showing one shift of a picture, in tiles.
 uniform float variation_cell : hint_range(2.0, 32.0) = 7.0;
+
+// The other level's terrain map (as `terrain_map`), how much of its colours shows, and each terrain's flat colour.
+uniform sampler2D ghost_map : filter_nearest, repeat_disable;
+uniform float ghost : hint_range(0.0, 1.0) = 0.0;
+uniform vec4 ghost_color_of[MAX_TERRAINS] : source_color;
 
 uniform float grid : hint_range(0.0, 1.0) = 0.0;
 uniform vec4 grid_color : source_color = vec4(0.0, 0.0, 0.0, 0.4);
@@ -247,10 +254,17 @@ void fragment() {
 	// Broad patches a little lighter and darker, so a wide plain of one texture does not read as a tiled picture.
 	color *= 0.86 + 0.28 * soft_noise(at * 0.13 + 5.0);
 
+	vec2 edge = at + 0.5; // tile edges lie on whole numbers
+	// Only on the map's own tiles, not on the ground that continues past its edge under the fog.
+	float on_map = step(0.0, min(min(edge.x, edge.y), min(map_size.x - edge.x, map_size.y - edge.y)));
+
+	if (ghost > 0.0) {
+		ivec2 tile = clamp(ivec2(floor(edge)), ivec2(0), ivec2(map_size) - 1);
+		int other = clamp(int(texelFetch(ghost_map, tile, 0).r * 255.0 + 0.5), 0, MAX_TERRAINS - 1);
+		color = mix(color, ghost_color_of[other].rgb, ghost * on_map);
+	}
+
 	if (grid > 0.0) {
-		vec2 edge = at + 0.5; // tile edges lie on whole numbers
-		// Only on the map's own tiles, not on the ground that continues past its edge under the fog.
-		float on_map = step(0.0, min(min(edge.x, edge.y), min(map_size.x - edge.x, map_size.y - edge.y)));
 		vec2 distance_to = abs(fract(edge + 0.5) - 0.5);
 		vec2 pixel = fwidth(edge);
 		vec2 lines = 1.0 - smoothstep(pixel * 0.5, pixel * 1.5, distance_to);

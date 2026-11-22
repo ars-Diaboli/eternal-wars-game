@@ -9,7 +9,8 @@ problems panel, map settings window):
 - **Start zones** (the Start zone tool; MP-4, ADR-197): a player's zone, or Erase, painted with the brush and shown as tiles of the
   player's colour, where a player's day stays its own in a simultaneous first week;
 - **Height** (the Height tool; ADR-181, ADR-182): the ground's height: raise, lower, level (towards the height where the stroke started) and smooth
-  with a round brush (the radius, and a strength of 1–8 eighths of a cell width a dab, fading over one tile at the edge); "From terrain"
+  with a round brush (the radius, a strength of 1–8 eighths of a cell width a dab, and a falloff of 0–6 tiles past the brush over which
+  the strength fades smoothly: 0 is a hard edge, one tile unless changed; ADR-287); "From terrain"
   under the brush and a "Heights from terrain" button for the whole map; an **"Auto height"** switch (on by default) that gives newly
   painted terrain its height there and about 3 tiles around. Placing an object of more than one tile levels the ground under it at its
   entrance's height, and painting near one levels it again. Each stroke or placement is one undo step. Heights are clamped to the
@@ -113,7 +114,7 @@ with the reason when they cannot run now; a group that does not apply is left ou
 - **On the map**: a hero or object under the pointer that is not selected becomes the selection, as a click of Select would. With things
   selected: Inspector, Cut, Copy, Paste, Duplicate, Delete, Rotate and Mirror (when scenery is selected), Save selection as stamp, Focus,
   Deselect. With only tiles selected: Cut, Copy, Paste, Crop to selection, Save selection as stamp, Focus, Deselect. With nothing:
-  Paste, Select all, Go to, Find on the map, Whole map, Switch level, Grid, Top-down view, Map settings, Test the map.
+  Paste, Select all, Go to, Find on the map, Whole map, Switch level, Ghost the other level, Grid, Top-down view, Map settings, Test the map.
 - **On a browser entry**: the entry is chosen, then Object (the tool), Favourite (ticked when it is one) and Find on the map (Find with the
   entry's kind typed: "Gold mine"; a monster, a dwelling or an artifact entry types the kind they share, so every monster, dwelling or
   artifact pickup is listed).
@@ -368,8 +369,10 @@ Top-down view, orthographic like a plan, every tile the same size); it goes out 
 - **Bookmarks**: Ctrl+1 … 9 store the view and the level shown, 1 … 9 return to them (View > Bookmarks lists them, View > Store bookmark stores one). They belong to the
   map open and are not saved.
 - **The minimap** (ADR-261), under the right region's panel: the shown level in the terrain's colours, objects and heroes in their
-  owners' colours, and the view outlined in white. A click or a drag on it moves the view there. On a map of two levels, "Show the other
-  level faintly" mixes the other level's colours in.
+  owners' colours, and the view outlined in white. A click or a drag on it moves the view there.
+- **Ghost the other level** (View > Ghost the other level, the minimap's box, the map's context menu; ADR-287): on a map of two levels the
+  other level's terrain colours show faintly through the shown one, in the map view and on the minimap, so the underground can be laid
+  out under the surface (and back). It follows painting on either level and stays on from map to map.
 - **Go to** (Ctrl+G, View > Go to…): type a tile ("12, 7", or "12, 7, 1" for the level; the shown level otherwise), an id ("#12": the
   object and the hero of that id, named or not) or a name: the list follows as you type with the tile or the id first, then the heroes,
   the named objects (every town) and the events with a cell whose names fit, as the command palette ranks them. **Find on the map**

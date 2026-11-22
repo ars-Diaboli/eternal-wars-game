@@ -12,7 +12,8 @@ namespace EternalWars.Godot.UI.Editor;
 /// <summary>
 /// The editor's minimap (ADR-261), under the right region's tabs: the game's <see cref="MinimapWidget"/> of the shown level, fitted into a
 /// square, with the camera's view outlined. A click or a drag on it moves the view there. On a map of two levels a box shows the other
-/// level faintly through the shown one. It is made again for every map and every new size of one.
+/// level faintly through the shown one, here and in the map view (the view context's <see cref="MapViewContext.GhostOtherLevel"/>, ADR-287).
+/// It is made again for every map and every new size of one.
 /// </summary>
 public partial class MinimapPanel : VBoxContainer
 {
@@ -34,11 +35,24 @@ public partial class MinimapPanel : VBoxContainer
         AddChild(_minimap);
         _minimap.Bind(context);
 
+        _minimap.GhostOtherLevel = context.GhostOtherLevel;
         if (map.Levels > 1)
         {
-            var ghost = new CheckBox { Text = "Show the other level faintly" };
-            ghost.Toggled += on => _minimap.GhostOtherLevel = on;
+            var ghost = new CheckBox
+            {
+                Text = "Ghost the other level", ButtonPressed = context.GhostOtherLevel,
+                TooltipText = "The other level's terrain shows faintly through the shown one, here and on the map",
+            };
+            ghost.Toggled += on => context.GhostOtherLevel = on;
             AddChild(ghost);
+            void Follow()
+            {
+                ghost.SetPressedNoSignal(context.GhostOtherLevel);
+                _minimap.GhostOtherLevel = context.GhostOtherLevel;
+            }
+
+            context.GhostOtherLevelChanged += Follow;
+            TreeExiting += () => context.GhostOtherLevelChanged -= Follow;
         }
 
         // Every edit: what the game's own events do not tell (a move, an owner, a road) shows too.

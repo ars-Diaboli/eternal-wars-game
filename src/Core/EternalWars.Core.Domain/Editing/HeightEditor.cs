@@ -12,12 +12,19 @@ namespace EternalWars.Core.Domain.Editing;
 /// </summary>
 /// <remarks>
 /// The brush is centred on a tile: with radius r the corners within r + ¾ tile of its centre take the full strength (radius 0 is the tile's
-/// four corners), and the strength fades to nothing over one more tile.
+/// four corners), and the strength fades to nothing over the falloff's tiles past that, smoothly (<see cref="DefaultFalloff"/> one; none
+/// is a hard edge, a step at the brush's rim).
 /// </remarks>
 public sealed class HeightEditor
 {
     /// <summary>The strongest brush: a whole cell width per dab.</summary>
     public const int MaxStrength = ReliefLimits.StepsPerCell;
+
+    /// <summary>The falloff a brush has unless told: its strength fades over one tile past its full circle.</summary>
+    public const int DefaultFalloff = 1;
+
+    /// <summary>The widest falloff, in tiles.</summary>
+    public const int MaxFalloff = 6;
 
     /// <summary>The strength at which <see cref="Smooth"/> takes a corner all the way to its neighbours' mean.</summary>
     private const double FullSmoothing = 4;
@@ -38,28 +45,31 @@ public sealed class HeightEditor
     public int HeightAt(MapPosition tile) =>
         (int)Math.Round(Map.GroundHeightAt(tile) * ReliefLimits.StepsPerCell, MidpointRounding.AwayFromZero);
 
-    /// <summary>Raises the ground under the brush by up to <paramref name="strength"/> eighths.</summary>
-    public int Raise(MapPosition center, int radius, int strength) =>
-        Brush("Raise ground", center, radius, strength, (height, step) => height + step);
+    /// <summary>
+    /// Raises the ground under the brush by up to <paramref name="strength"/> eighths, fading to nothing over <paramref name="falloff"/> tiles
+    /// past its full circle (0 … <see cref="MaxFalloff"/>).
+    /// </summary>
+    public int Raise(MapPosition center, int radius, int strength, int falloff = DefaultFalloff) =>
+        Brush("Raise ground", center, radius, strength, falloff, (height, step) => height + step);
 
-    /// <summary>Lowers the ground under the brush by up to <paramref name="strength"/> eighths.</summary>
-    public int Lower(MapPosition center, int radius, int strength) =>
-        Brush("Lower ground", center, radius, strength, (height, step) => height - step);
+    /// <summary>Lowers the ground under the brush by up to <paramref name="strength"/> eighths, with <paramref name="falloff"/> as <see cref="Raise"/>.</summary>
+    public int Lower(MapPosition center, int radius, int strength, int falloff = DefaultFalloff) =>
+        Brush("Lower ground", center, radius, strength, falloff, (height, step) => height - step);
 
     /// <summary>
     /// Moves the ground under the brush towards <paramref name="target"/> eighths, by up to <paramref name="strength"/> a corner (the app passes
-    /// <see cref="HeightAt"/> of the tile where a stroke started, so dragging spreads that height).
+    /// <see cref="HeightAt"/> of the tile where a stroke started, so dragging spreads that height); <paramref name="falloff"/> as <see cref="Raise"/>.
     /// </summary>
-    public int Level(MapPosition center, int radius, int strength, int target) =>
-        Brush("Level ground", center, radius, strength, (height, step) => height + Math.Clamp(target - height, -step, step));
+    public int Level(MapPosition center, int radius, int strength, int target, int falloff = DefaultFalloff) =>
+        Brush("Level ground", center, radius, strength, falloff, (height, step) => height + Math.Clamp(target - height, -step, step));
 
     /// <summary>
     /// Moves each corner under the brush towards the mean of its (up to eight) neighbours, as they were before this dab: all the way at
-    /// strength 4 or more, a quarter of the way per point below.
+    /// strength 4 or more, a quarter of the way per point below; <paramref name="falloff"/> as <see cref="Raise"/>.
     /// </summary>
-    public int Smooth(MapPosition center, int radius, int strength)
+    public int Smooth(MapPosition center, int radius, int strength, int falloff = DefaultFalloff)
     {
-        Check(radius, strength);
+        Check(radius, strength, falloff);
         if (!Map.Contains(center))
         {
             return 0;
@@ -68,7 +78,7 @@ public sealed class HeightEditor
         var level = center.Level;
         return Run("Smooth ground", () =>
         {
-            var targets = Footprint(center, radius)
+            var targets = Footprint(center, radius, falloff)
                 .Select(c => (c.X, c.Y, Height: (double)Map.GetCorner(level, c.X, c.Y) + ((Neighbours(level, c.X, c.Y) - Map.GetCorner(level, c.X, c.Y))
                     * Math.Min(1, c.Weight * strength / FullSmoothing))))
                 .ToList();
@@ -131,9 +141,9 @@ public sealed class HeightEditor
         }
     }
 
-    private int Brush(string description, MapPosition center, int radius, int strength, Func<int, int, int> next)
+    private int Brush(string description, MapPosition center, int radius, int strength, int falloff, Func<int, int, int> next)
     {
-        Check(radius, strength);
+        Check(radius, strength, falloff);
         if (!Map.Contains(center))
         {
             return 0;
@@ -141,7 +151,7 @@ public sealed class HeightEditor
 
         return Run(description, () =>
         {
-            foreach (var (x, y, weight) in Footprint(center, radius))
+            foreach (var (x, y, weight) in Footprint(center, radius, falloff))
             {
                 var step = (int)Math.Round(strength * weight, MidpointRounding.AwayFromZero);
                 if (step > 0)
@@ -167,23 +177,26 @@ public sealed class HeightEditor
 
     private void Set(int level, int x, int y, int eighths) => Map.SetCorner(level, x, y, ReliefLimits.Clamp(Map, level, x, y, eighths));
 
-    /// <summary>The brush's corners on the map and how strongly each is touched (0 … 1).</summary>
-    private IEnumerable<(int X, int Y, double Weight)> Footprint(MapPosition center, int radius)
+    /// <summary>
+    /// The brush's corners on the map and how strongly each is touched (0 … 1): fully within its circle, then fading smoothly to nothing over
+    /// <paramref name="falloff"/> tiles; with none, the circle's corners only, at full strength.
+    /// </summary>
+    private IEnumerable<(int X, int Y, double Weight)> Footprint(MapPosition center, int radius, int falloff)
     {
         var full = radius + 0.75;
-        var none = full + 1;
+        var none = full + falloff;
         var reach = (int)Math.Ceiling(none);
         for (var y = center.Y + 1 - reach; y <= center.Y + reach; y++)
         {
             for (var x = center.X + 1 - reach; x <= center.X + reach; x++)
             {
                 var distance = Math.Sqrt(Math.Pow(x - (center.X + 0.5), 2) + Math.Pow(y - (center.Y + 0.5), 2));
-                if (distance >= none || !Map.ContainsCorner(center.Level, x, y))
+                if ((distance > full && (falloff == 0 || distance >= none)) || !Map.ContainsCorner(center.Level, x, y))
                 {
                     continue;
                 }
 
-                var t = Math.Min(1, (none - distance) / (none - full));
+                var t = falloff == 0 ? 1 : Math.Min(1, (none - distance) / falloff);
                 yield return (x, y, t * t * (3 - (2 * t)));
             }
         }
@@ -209,9 +222,11 @@ public sealed class HeightEditor
         return sum / count;
     }
 
-    private static void Check(int radius, int strength)
+    private static void Check(int radius, int strength, int falloff)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(radius);
+        ArgumentOutOfRangeException.ThrowIfNegative(falloff);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(falloff, MaxFalloff);
         ArgumentOutOfRangeException.ThrowIfLessThan(strength, 1);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(strength, MaxStrength);
     }

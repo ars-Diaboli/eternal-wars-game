@@ -164,6 +164,9 @@ public sealed class HeightTool(EditorToolContext context) : BrushTool(context)
     /// <summary>Eighths of a cell width per dab, 1 … <see cref="HeightEditor.MaxStrength"/>.</summary>
     private int _strength = 2;
 
+    /// <summary>The tiles past the brush's full circle over which its strength fades, 0 … <see cref="HeightEditor.MaxFalloff"/>.</summary>
+    private int _falloff = HeightEditor.DefaultFalloff;
+
     /// <summary>Level's target: the ground's height (eighths) where the stroke started.</summary>
     private int _levelTo;
 
@@ -206,6 +209,13 @@ public sealed class HeightTool(EditorToolContext context) : BrushTool(context)
         };
         strength.ValueChanged += v => _strength = (int)v;
         options.Labelled("Strength", strength);
+        var falloff = new SpinBox
+        {
+            MinValue = 0, MaxValue = HeightEditor.MaxFalloff, Value = _falloff,
+            TooltipText = "Tiles past the brush over which its strength fades: 0 is a hard edge, more a softer slope (not for From terrain)",
+        };
+        falloff.ValueChanged += v => _falloff = (int)v;
+        options.Labelled("Falloff", falloff);
         var whole = new Button { Text = "Heights from terrain", TooltipText = "The whole map, every level, takes its terrains' heights (one undo step)" };
         whole.Pressed += () => Editor.Heights.FromTerrain();
         options.Add(whole);
@@ -223,10 +233,10 @@ public sealed class HeightTool(EditorToolContext context) : BrushTool(context)
         var radius = Context.Radius;
         _ = _action switch
         {
-            HeightAction.Raise => Editor.Heights.Raise(tile, radius, _strength),
-            HeightAction.Lower => Editor.Heights.Lower(tile, radius, _strength),
-            HeightAction.Level => Editor.Heights.Level(tile, radius, _strength, _levelTo),
-            HeightAction.Smooth => Editor.Heights.Smooth(tile, radius, _strength),
+            HeightAction.Raise => Editor.Heights.Raise(tile, radius, _strength, _falloff),
+            HeightAction.Lower => Editor.Heights.Lower(tile, radius, _strength, _falloff),
+            HeightAction.Level => Editor.Heights.Level(tile, radius, _strength, _levelTo, _falloff),
+            HeightAction.Smooth => Editor.Heights.Smooth(tile, radius, _strength, _falloff),
             _ => Editor.Heights.FromTerrain(tile, radius),
         };
     }

@@ -29,6 +29,10 @@ internal static class TerrainSplat
 
     private static Layers? _layers;
 
+    /// <summary>Each terrain's flat palette colour, which another level's ground mixes in where this level is ghosted through it (ADR-287).</summary>
+    private static readonly Color[] GhostColours = [.. Enumerable.Range(0, MaxTerrains)
+        .Select(i => Enum.IsDefined((TerrainType)i) ? Palette.ForTerrain((TerrainType)i) : Colors.Magenta)];
+
     /// <summary>The ground's material for one level: <paramref name="terrainMap"/> is <see cref="TerrainMap"/>'s texture.</summary>
     public static ShaderMaterial Material(Texture2D terrainMap, int width, int height, float worldUnitsPerRepeat)
     {
@@ -43,6 +47,7 @@ internal static class TerrainSplat
         material.SetShaderParameter("detail_layers", layers.Details);
         material.SetShaderParameter("detail_of", layers.DetailOf);
         material.SetShaderParameter("uv_scale", 1f / worldUnitsPerRepeat);
+        material.SetShaderParameter("ghost_color_of", GhostColours);
         return material;
     }
 

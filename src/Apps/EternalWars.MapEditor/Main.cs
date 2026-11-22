@@ -45,6 +45,7 @@ public partial class Main : Node3D
     private MapEditorSession _editor = null!;
     private MapViewContext _context = null!;
     private bool _showGrid = true; // the editor's own toggle, kept from map to map
+    private bool _ghostLevel; // the other level faintly through the shown one (ADR-287), kept from map to map
     private EditorCamera _camera = null!;
 
     /// <summary>The camera's bookmarks (ADR-260): of the map open, cleared when another opens.</summary>
@@ -538,7 +539,8 @@ public partial class Main : Node3D
         _pressed = false;
 
         _editor = new MapEditorSession(state, copier: MapObjectCopier.Instance);
-        _context = new MapViewContext(state, _editor.Events) { ShowGrid = _showGrid };
+        _context = new MapViewContext(state, _editor.Events) { ShowGrid = _showGrid, GhostOtherLevel = _ghostLevel };
+        _context.GhostOtherLevelChanged += GhostChanged;
         BuildWorld();
 
         BuildUi();
@@ -595,7 +597,8 @@ public partial class Main : Node3D
         // A view context of their own for the new views: the old ones' handlers stay behind with the old context.
         _pressed = false;
         var level = _context.Level;
-        _context = new MapViewContext(_editor.Scenario, _editor.Events) { ShowGrid = _showGrid, Hidden = _editor.Layers.Hidden };
+        _context = new MapViewContext(_editor.Scenario, _editor.Events) { ShowGrid = _showGrid, Hidden = _editor.Layers.Hidden, GhostOtherLevel = _ghostLevel };
+        _context.GhostOtherLevelChanged += GhostChanged;
         _context.SetLevel(level);
         BuildWorld();
         _overlayPanel.Attach(_context, _overlayView); // the overlay shown is drawn on the new views
@@ -966,7 +969,7 @@ public partial class Main : Node3D
                 ],
             },
             new("Edit", ["edit.undo", "edit.redo", null, "edit.cut", "edit.copy", "edit.paste", "edit.duplicate", "edit.delete", "edit.save-stamp", null, "edit.rotate", "edit.mirror", null, "edit.select-all", "edit.deselect", "edit.find", null, "edit.preferences"]),
-            new("View", ["view.palette", null, "view.map-tab", "templates.editor", null, "view.level", "view.grid", null, "view.top-down",
+            new("View", ["view.palette", null, "view.map-tab", "templates.editor", null, "view.level", "view.ghost-level", "view.grid", null, "view.top-down",
                 "view.focus", "view.whole-map", "view.go-to", ">Bookmarks", ">Store bookmark", null, ">Overlay", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.layers", "view.overlays", "view.fairness", "view.problems", "view.history", "view.output"])
             {
                 Lists =
@@ -1089,6 +1092,8 @@ public partial class Main : Node3D
             isOn: () => _workspace.Page == _templatePage, isChoice: true, icon: UiIcon.TemplateTab);
         Command("view.level", "Switch level", SwitchLevel, UiIcon.SwitchLevel, new(Key.L),
             () => _editor.Scenario.Map.Levels > 1 ? null : "The map has one level", onMap: true);
+        Command("view.ghost-level", "Ghost the other level", () => _context.GhostOtherLevel = !_context.GhostOtherLevel, isOn: () => _context.GhostLevel is not null,
+            whyNot: () => _editor.Scenario.Map.Levels > 1 ? null : "The map has one level", onMap: true, icon: UiIcon.SwitchLevel);
         Command("view.grid", "Grid", () => ShowGrid(!_showGrid), isOn: () => _showGrid, onMap: true, icon: UiIcon.Grid);
         Command("view.top-down", "Top-down view", () => _camera.TopDown = !_camera.TopDown, isOn: () => _camera.TopDown, onMap: true, icon: UiIcon.TopDown);
         Command("view.focus", "Focus the selection", FocusSelection, shortcut: new(Key.F),
@@ -1220,6 +1225,13 @@ public partial class Main : Node3D
     {
         _context.ShowGrid = _showGrid = on;
         _layers.ShowGrid(on);
+        _commands.NotifyStateChanged();
+    }
+
+    /// <summary>The other level was ghosted or no longer is (the command or the minimap's box): kept for the next map, the commands follow.</summary>
+    private void GhostChanged()
+    {
+        _ghostLevel = _context.GhostOtherLevel;
         _commands.NotifyStateChanged();
     }
 

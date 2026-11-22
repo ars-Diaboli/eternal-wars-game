@@ -51,6 +51,61 @@ public class HeightEditorTests
     }
 
     [Fact]
+    public void TheFalloff_IsHowFarTheStrengthFades_PastTheFullCircle()
+    {
+        var hard = Editor();
+        var soft = Editor();
+        var usual = Editor();
+        var plain = Editor();
+
+        // Radius 1: the full circle reaches 1.75 tiles from the tile's centre (10.5, 10.5).
+        Assert.True(hard.Heights.Raise(Middle, 1, 8, falloff: 0) > 0);
+        Assert.True(soft.Heights.Raise(Middle, 1, 8, falloff: 4) > 0);
+        Assert.True(usual.Heights.Raise(Middle, 1, 8, falloff: HeightEditor.DefaultFalloff) > 0);
+        Assert.True(plain.Heights.Raise(Middle, 1, 8) > 0);
+
+        Assert.Equal(Corners(usual), Corners(plain)); // one tile unless told
+        // No falloff: a step at the rim, every corner inside raised the whole strength, none outside.
+        Assert.Equal(Grass + 8, Corner(hard, 12, 11)); // 1.58 from the centre
+        Assert.Equal(Grass, Corner(hard, 13, 10)); // 2.55
+        Assert.All(Corners(hard), h => Assert.True(h is Grass or Grass + 8));
+
+        // A wide falloff reaches further and fades by smaller steps: corner by corner along a row, no step larger than half the strength.
+        Assert.True(Corner(soft, 14, 10) > Grass); // 3.54 from the centre: within 1.75 + 4
+        Assert.Equal(Grass, Corner(usual, 14, 10));
+        Assert.Equal(Grass, Corner(soft, 17, 10)); // 6.52: past it
+        var row = Enumerable.Range(10, 8).Select(x => Corner(soft, x, 10)).ToList();
+        Assert.All(row.Zip(row.Skip(1)), p => Assert.InRange(p.First - p.Second, 0, 4));
+        Assert.True(Corners(soft).Count(h => h != Grass) > Corners(usual).Count(h => h != Grass));
+    }
+
+    [Fact]
+    public void TheFalloff_ShapesEveryBrush_AndIsHeldToItsRange()
+    {
+        // Corner (9, 10) is 1.58 tiles from Middle's centre: past a radius-0 brush's full circle (0.75), within a falloff of 3.
+        foreach (var falloff in new[] { 0, 3 })
+        {
+            var lower = Editor();
+            lower.Heights.Lower(Middle, 0, 8, falloff);
+            var level = Editor();
+            level.Heights.Level(Middle, 0, 8, Grass + 8, falloff);
+            var smooth = Editor();
+            smooth.Heights.Raise(Middle, 0, 8, falloff: 0); // a spike on the tile's four corners
+            smooth.Heights.Smooth(new MapPosition(7, 10), 0, 4, falloff); // (9, 10) beside the spike, 1.58 from this tile's centre
+
+            var reached = falloff > 0;
+            Assert.Equal(reached, Corner(lower, 9, 10) < Grass);
+            Assert.Equal(reached, Corner(level, 9, 10) > Grass);
+            Assert.Equal(reached, Corner(smooth, 9, 10) > Grass);
+        }
+
+        var editor = Editor();
+        Assert.Throws<ArgumentOutOfRangeException>(() => editor.Heights.Raise(Middle, 0, 2, falloff: -1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => editor.Heights.Raise(Middle, 0, 2, falloff: HeightEditor.MaxFalloff + 1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => editor.Heights.Smooth(Middle, 0, 2, falloff: HeightEditor.MaxFalloff + 1));
+    }
+
+    [Fact]
     public void ALargerRadius_ReachesFurther()
     {
         var small = Editor();

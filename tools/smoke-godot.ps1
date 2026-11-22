@@ -468,9 +468,9 @@ $scenarios = @(
        Input = '3:rclick:540,545;8:choose:Select all;14:rclick:540,545;19:choose:Deselect;24:click:180,491;27:text:chest;36:rclick:@Treasure chest;41:choose:Favourite;46:rclick:@Treasure chest;51:choose:Object;56:rclick:@History;61:choose:Output;66:click:@Snap entrance to a road;72:click:540,545' },
     # The minimap and Go to (ADR-261) on Ember March: the minimap under the right region's tabs outlines the view; a click on it, then a drag
     # over it, move the view; Ctrl+G with "Castle" goes to the town and selects it; Ctrl+G with "20 10" goes to that tile. Then a new map of
-    # two levels: the underground with the surface shown faintly on the minimap.
+    # two levels: the underground with the surface ghosted on the minimap and in the map view (ADR-287).
     @{ Name = 'editor-minimap'; App = 'EternalWars.MapEditor'; Frames = 96; Map = $emberMap
-       Input = '3:key:Home;6:click:1260,720;12:drag:1250,800,1390,700;18:key:Ctrl+G;22:text:Castle;32:key:Enter;40:key:Ctrl+G;44:text:20 10;52:key:Enter;60:key:Ctrl+N;64:click:@The surface and the underground;67:click:@Create map;80:key:L;84:click:@Show the other level faintly' }
+       Input = '3:key:Home;6:click:1260,720;12:drag:1250,800,1390,700;18:key:Ctrl+G;22:text:Castle;32:key:Enter;40:key:Ctrl+G;44:text:20 10;52:key:Enter;60:key:Ctrl+N;64:click:@The surface and the underground;67:click:@Create map;80:key:L;84:click:@Ghost the other level' }
     # The layers (ADR-262) on Ember March: the Layers tab; monsters locked, then Select all takes every thing but them; scenery and the terrain
     # hidden; then all shown and unlocked, and Select all takes the monsters too.
     @{ Name = 'editor-layers'; App = 'EternalWars.MapEditor'; Frames = 60; Map = $emberMap

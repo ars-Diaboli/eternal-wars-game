@@ -7,13 +7,15 @@ namespace EternalWars.Godot.Shared.Map;
 
 /// <summary>
 /// The whole adventure map as seen through a <see cref="MapViewContext"/>: terrain + roads, objects and fog per
-/// level (only the context's level is shown), hero markers, and the path preview. Used by the game and the
+/// level (only the context's level is shown, with the other level's terrain faintly through its ground while the context ghosts it),
+/// hero markers, and the path preview. Used by the game and the
 /// editor; heroes appearing or leaving (editor placement, undo, defeat) get or lose their view automatically.
 /// </summary>
 public partial class AdventureWorldView : Node3D
 {
     private readonly Dictionary<HeroId, HeroView> _heroes = [];
     private readonly List<Node3D> _levels = [];
+    private readonly List<AdventureMapView> _grounds = [];
     private MapViewContext _context = null!;
 
     public PathPreview PathPreview { get; } = new() { Name = "Path" };
@@ -31,6 +33,7 @@ public partial class AdventureWorldView : Node3D
             var map = new AdventureMapView { Name = "Terrain" };
             root.AddChild(map);
             map.Bind(context, level);
+            _grounds.Add(map);
 
             var objects = new MapObjectsView { Name = "Objects" };
             root.AddChild(objects);
@@ -57,7 +60,12 @@ public partial class AdventureWorldView : Node3D
         this.SubscribeWhileInTree<HeroEnteredGarrison>(context.Events, e => RemoveHero(e.Hero));
         this.SubscribeWhileInTree<HeroLeftGarrison>(context.Events, e => AddHero(e.Hero));
         context.LevelChanged += ShowLevel;
-        TreeExiting += () => context.LevelChanged -= ShowLevel;
+        context.GhostOtherLevelChanged += ShowLevel;
+        TreeExiting += () =>
+        {
+            context.LevelChanged -= ShowLevel;
+            context.GhostOtherLevelChanged -= ShowLevel;
+        };
         ShowLevel();
     }
 
@@ -101,6 +109,7 @@ public partial class AdventureWorldView : Node3D
         for (var level = 0; level < _levels.Count; level++)
         {
             _levels[level].Visible = level == _context.Level;
+            _grounds[level].Ghost(level == _context.Level && _context.GhostLevel is { } ghost ? _grounds[ghost].TerrainTexture : null);
         }
     }
 }

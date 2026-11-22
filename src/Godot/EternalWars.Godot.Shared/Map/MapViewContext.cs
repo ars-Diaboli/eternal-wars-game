@@ -15,6 +15,7 @@ public sealed class MapViewContext(GameState state, IEventSubscriber events, Pla
 {
     private FogLook _fogLook = FogLook.Dark;
     private bool _showGrid;
+    private bool _ghostOtherLevel;
     private MapLayer _hidden;
 
     public GameState State { get; } = state;
@@ -82,6 +83,26 @@ public sealed class MapViewContext(GameState state, IEventSubscriber events, Pla
         }
     }
 
+    /// <summary>
+    /// Whether the ground of the shown level mixes in the other level's terrain colours faintly (the map editor's toggle, ADR-287); the
+    /// minimap of the editor does the same. Nothing on a map of one level.
+    /// </summary>
+    public bool GhostOtherLevel
+    {
+        get => _ghostOtherLevel;
+        set
+        {
+            if (value != _ghostOtherLevel)
+            {
+                _ghostOtherLevel = value;
+                GhostOtherLevelChanged?.Invoke();
+            }
+        }
+    }
+
+    /// <summary>The level whose terrain shows faintly through the shown one: the other of two while <see cref="GhostOtherLevel"/> is on, else null.</summary>
+    public int? GhostLevel => _ghostOtherLevel && State.Map.Levels > 1 ? (Level == 0 ? 1 : 0) : null;
+
     /// <summary>The kinds the views leave out: the map editor's hidden layers (ADR-262); the game hides none.</summary>
     public MapLayer Hidden
     {
@@ -110,6 +131,9 @@ public sealed class MapViewContext(GameState state, IEventSubscriber events, Pla
 
     /// <summary>The grid was switched on or off.</summary>
     public event Action? ShowGridChanged;
+
+    /// <summary><see cref="GhostOtherLevel"/> was switched on or off.</summary>
+    public event Action? GhostOtherLevelChanged;
 
     /// <summary>Other kinds are hidden (<see cref="Hidden"/>).</summary>
     public event Action? HiddenChanged;

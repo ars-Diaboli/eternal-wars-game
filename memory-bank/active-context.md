@@ -9,6 +9,10 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- The other level ghosted and the height falloff (ADR-287): View > Ghost the other level (the minimap's box and the map's context menu
+  too; `MapViewContext.GhostOtherLevel`) mixes the other level's terrain colours into the shown ground (`terrain_splat.gdshader`'s
+  `ghost_map`, `AdventureMapView.Ghost`) and the minimap; the Height tool's Falloff (0–6 tiles, `HeightEditor` brushes' `falloff`).
+  Tests in `HeightEditorTests`; smoke `editor-minimap`.
 - Editor context menus and Object tool options (ADR-286): a right click on the map (by what is selected; a thing under the pointer is
   selected first), a browser entry (Object, Favourite, Find on the map) or a panel's header or side bar button opens a menu of registry
   commands (`CommandPopup`, shared with the menu bar; `MenuItems.Tidy`); the Object tool's Random variant (`BrowserCatalog.VariantsOf`,
@@ -273,7 +277,7 @@ Detail: [roadmap.md](roadmap.md).
 3. The remaining Phase 5 items in [roadmap.md](roadmap.md) ("Presentation and UI", "Town screen overhaul", "Editor overhaul",
    "Platform and art", "Roster"); the town screen overhaul starts with the owner's answers (TOWN-14 … TOWN-23); the editor
    overhaul is closed, with the first-use test with a person, the owner's look at the workspace and the plan's "After the close"
-   list (the other level ghosted, the height falloff, `Main.cs` split, the icon art; ADR-282) open.
+   list (`Main.cs` split, the icon art; ADR-282) open.
 4. The "Code health" list in [roadmap.md](roadmap.md): skills, heroes and town types as typed ids; `InfoSheets` as data once localisation
    is decided (ADR-239).
 

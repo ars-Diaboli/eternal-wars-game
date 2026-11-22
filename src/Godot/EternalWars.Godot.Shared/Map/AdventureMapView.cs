@@ -139,6 +139,22 @@ public partial class AdventureMapView : Node3D
         this.SubscribeWhileInTree<RiversPainted>(events, e => RefreshRivers(e.Positions));
     }
 
+    /// <summary>The map-sized texture of this level's terrains (one texel a tile), kept up to date as tiles are painted.</summary>
+    public Texture2D TerrainTexture => _terrainTexture;
+
+    /// <summary>
+    /// Mixes another level's terrain colours faintly into this ground (ADR-287): <paramref name="other"/> is that level's
+    /// <see cref="TerrainTexture"/>; null mixes nothing.
+    /// </summary>
+    public void Ghost(Texture2D? other)
+    {
+        _material.SetShaderParameter("ghost_map", other is null ? default : Variant.From(other));
+        _material.SetShaderParameter("ghost", other is null ? 0f : GhostShare);
+    }
+
+    /// <summary>How much of the other level's colour a tile shows while ghosted, here and on the minimap.</summary>
+    public const float GhostShare = 0.35f;
+
     /// <summary>
     /// Textured when <c>textures/terrain/&lt;terrain&gt;.png</c> exists, else the flat palette colour. World-space
     /// triplanar UVs; one texture repeat covers <paramref name="worldUnitsPerRepeat"/>. One terrain alone: the battlefield's ground.

@@ -223,7 +223,7 @@ The bar the overhaul is measured against. Each item can be checked; step 6 of th
 | Select | V | Click, marquee (drag), Shift adds, Alt removes, double click selects all objects of that kind | Filter: objects, heroes, monsters, scenery, events |
 | Move | M (or drag a selection) | Moves the selection on the grid; refused where it does not fit, the cells shown in red | — |
 | Terrain | T | Paints a terrain; transitions as now (ADR-212) | Size 1–9, round or square, **fill** (flood fill a connected area of one terrain), **line** (Shift + click) |
-| Height | G (built; H was planned) | Raise, lower, level, smooth, from terrain (ADR-182) | Size, strength, falloff (falloff not built) |
+| Height | G (built; H was planned) | Raise, lower, level, smooth, from terrain (ADR-182) | Size, strength, falloff (ADR-287) |
 | Road / River | R / I | Paints roads and rivers | Kind, size (built as the other brushes: 1–9, round or square) |
 | Start zone | Z | Paints a player's start zone (ADR-197) | The player, Erase |
 | Object | O | Places the browser's selection; a ghost shows where it would go, red where it does not fit | Snap the entrance to a road, random variant (ADR-286) |
@@ -701,13 +701,16 @@ for collapsible panels as in IDEs.
    terrain, drawn from the map's random numbers; the entrance snapped onto or beside a road within 3 tiles. The core's
    `BrowserCatalog.VariantsOf` and `EntryEditor.Spot`, `Preview`, `PlaceAny`; tests in `ObjectToolOptionsTests`; smoke
    `editor-context-menus`.
+4. **The other level ghosted in the map view** (ADR-287): View > Ghost the other level (also the minimap's box and the map's context
+   menu) mixes the other level's terrain colours faintly into the shown ground, as the minimap does; the ground shader's `ghost_map`.
+   Smoke `editor-minimap`.
+5. **The height brush's falloff** (ADR-287): the Height tool's Falloff, 0–6 tiles past the brush over which the strength fades (0 a
+   hard edge, 1 unless changed), a parameter of `HeightEditor.Raise`, `Lower`, `Level` and `Smooth`; tests in `HeightEditorTests`.
 
 **Left open** (in [roadmap.md](../../memory-bank/roadmap.md)), the larger first:
-1. **The other level ghosted in the map view** (Map view and navigation): today only the minimap mixes it in.
-2. **The height brush's falloff** (Height's options): a soft edge, a parameter of the core's height edit.
-3. **`Main.cs` as composition only**: it holds about 1400 lines (the plan expected it to shrink from 548). Its commands, menus and
+1. **`Main.cs` as composition only**: it holds about 1400 lines (the plan expected it to shrink from 548). Its commands, menus and
    file handling move to composers in the app, each one area, so the app stays composition and input mapping.
-4. **The editor's icon art**: sheets C4, C7, C12 and C13 generated and cut into the icons folder.
+2. **The editor's icon art**: sheets C4, C7, C12 and C13 generated and cut into the icons folder.
 
 ## Decisions
 
