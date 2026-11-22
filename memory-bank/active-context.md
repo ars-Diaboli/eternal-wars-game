@@ -9,6 +9,8 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Creature and puzzle prompts redone to the key paintings, creature sheets 2 × 2 (five a town), rocky ground dark granite in the
+  prompts and as a placeholder tint (ADR-285).
 - Faction key paintings (ADR-284): the owner's town paintings (19, every town incl. Conflux and Dragon Utopia) in
   `docs/content/art/towns/` set each faction's look; [faction-art.md](../docs/content/faction-art.md) describes them and the recipe for
   more. Town-model, town-icon, town-screen background, puzzle and Necropolis backdrop prompts aligned; three existing pictures to

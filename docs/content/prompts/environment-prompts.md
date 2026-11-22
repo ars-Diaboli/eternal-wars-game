@@ -112,8 +112,8 @@ violet mineral veins, pale cave fungus.
 ```text
 Game-ready 3D model of a natural or ruined map feature for a turn-based strategy game, seen from above at a steep angle, grim dark
 fantasy, realistic PBR materials, weathered and worn, rich natural colour. Chunky readable shapes and a clear outline from above, flat
-bottom sitting on the ground, no ground plane, no base slab, no characters, no lights. Ancient plateau look: terracotta and salmon-pink
-sandstone worn by wind, old claw scratches.
+bottom sitting on the ground, no ground plane, no base slab, no characters, no lights. Ancient plateau look: dark blue-grey speckled
+granite worn by wind, rusty ochre stains, pale lichen, old claw scratches.
 ```
 
 **`ENV-NEG`** (negative prompt, every model):

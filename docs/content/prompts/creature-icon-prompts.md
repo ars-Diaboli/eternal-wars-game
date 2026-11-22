@@ -1,9 +1,10 @@
 # Creature icon prompts (for an image-generating model)
 
 Prompts for the **creature portraits**: the army slots of the hero, town and exchange screens, the tavern, the dwellings, the battle's
-initiative bar and the creature windows. One portrait for each creature in `creatures.csv`, generated as **sheets of 6 (2 × 3)** like the
-icons ([icon-prompts.md](icon-prompts.md)): a town sheet holds three creatures in its top row and **their upgrades directly below
-them**, so each pair comes out as the same creature. The designs are original: the prompts never imitate another game's creatures.
+initiative bar and the creature windows. One portrait for each creature in `creatures.csv`, generated as **sheets of 4 (2 × 2)**: a
+town sheet holds two creatures in its top row and **their upgrades directly below them**, so each pair comes out as the same creature;
+a town's ninth pair fills the left column of its last sheet, and the right column takes a second try at each. The designs are
+original: the prompts never imitate another game's creatures.
 
 ## Use a prompt
 
@@ -29,14 +30,14 @@ symbols, another game's creature design
 ## Shared wording
 
 Every creature prompt repeats three passages word for word, so that each prompt is ready to paste: the creature style ("Game
-creature portrait sheet in a realistic painterly…"), its faction's look ("Haven creatures: …" and so on) and the grid sentence ("6
-separate icons arranged in a grid…" or "4 separate icons…"). Every backdrop prompt starts with the same backdrop style ("Square painted
+creature portrait sheet in a realistic painterly…"), its faction's look ("Haven creatures: …" and so on) and the grid sentence ("4
+separate icons arranged in a grid…"). Every backdrop prompt starts with the same backdrop style ("Square painted
 background for a creature portrait…"). A change to one of them is made in every prompt that holds it: search the faction files for its
 first words.
 
 ## Output for every portrait
 
-- **Sheet**: 2 × 3 at 1536 × 1024 or 2 × 2 at 1024 × 1024, every cell 512 × 512, transparent background; cut as the icons.
+- **Sheet**: 2 × 2 at 1024 × 1024, every cell 512 × 512, transparent background; cut as the icons.
 - **File**: `icon_creature_<creature id>.png` with the id from `creatures.csv` (`icon_creature_haven.footman.png`), 32-bit RGBA, 512 × 512.
 - **Framing**: the army slots are wider than tall, so the game may show only the middle band of the cell: the **head (or face) and the
   weapon stay in the middle 60 % of the cell's height**.

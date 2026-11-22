@@ -59,28 +59,30 @@ inside, faint stains and creases, seen exactly from the front, mirror-symmetric,
 
 ## Haven (`puzzle_haven`)
 
-- **Centre**: the sun-brazier in its iron cage, burning.
-- **Avoid**: a bright golden paradise; a white fairy-tale castle.
+- **Centre**: a gold sun on a white war banner, held high.
+- **Avoid**: a golden paradise; a white fairy-tale castle; clean gold.
 
 **`PUZZLE-haven`** (subject):
 
 ```text
-Haven: a burning sun-brazier held in a great iron cage at the centre, around it a castle of grey stone on a rocky rise, round towers with
-dark conical slate roofs, a procession of hooded zealots with torches, griffins circling the towers, knights in soot-dark plate, a pyre smoking by a
-gate, war banners of off-white and faded gold, a dim pale sun low in a grey sky.
+Haven: a white war banner with a gold sun held high at the centre, around it a lakeside town below snowy mountains, a grey stone
+castle on a rocky rise with round towers and dark conical slate roofs, a stone church with a bell tower, a mage tower crowned by a
+blue orb in a ring, a thatched tavern and a smithy with a glowing forge, pikemen and crossbowmen drilling at an archery range, knights
+riding out of the gate, griffins circling the towers, a sailing boat at a jetty, pine forest and a pale blue sky with soft cloud.
 ```
 
 ## Sylvan (`puzzle_sylvan`)
 
 - **Centre**: the great half-bare elder tree.
-- **Avoid**: a lush healthy forest; candy colours.
+- **Avoid**: a lush healthy forest; candy colours; mushrooms.
 
 **`PUZZLE-sylvan`** (subject):
 
 ```text
-Sylvan: a vast ancient tree at the centre, its crown half green and half bare, around it a ring of colossal trees with elven halls in
-their branches, archers on galleries, a white unicorn in a moonlit glade, ribbons and carved tablets tied to the roots, grey rot creeping
-up the trunks, falling leaves of green and gold, pale green lanterns.
+Sylvan: a vast ancient tree at the centre, its crown half green and half bare and propped with timber braces, around it a misty forest
+gorge with waterfalls, colossal trees with elven halls and tall tree towers in their branches, rope and plank bridges across the
+chasm, archers on galleries, a white unicorn by a ring of carved standing stones, ribbons and carved tablets tied to the roots, grey
+rot creeping up the trunks, blue-teal mist, warm amber windows and pale green lanterns.
 ```
 
 ## Academy (`puzzle_academy`)
@@ -91,48 +93,53 @@ up the trunks, falling leaves of green and gold, pale green lanterns.
 **`PUZZLE-academy`** (subject):
 
 ```text
-Academy: a giant bronze orrery of nested rings at the centre under an observatory dome, around it a frozen mountain citadel of
-blue-grey granite and verdigris domes, mages in fur-collared robes reading star charts, stone golems at a gate, a half-built construct
-in a workshop, snow on every ledge, pale-blue rune light, cold stars above.
+Academy: a giant bronze orrery of nested rings at the centre on an observatory tower, around it a snowy mountain valley by a frozen
+lake, a castle of blue-grey granite with verdigris domes and blue banners with a gold star, a white columned temple on a peak above
+the clouds with a titan at its steps, a domed pavilion with a golden lamp and a genie rising from it in blue smoke, mages in
+fur-collared robes reading star charts, chained stone golems at a gate, a half-built golem under a crane, snow on every ledge,
+pale-blue rune light.
 ```
 
 ## Necropolis (`puzzle_necropolis`)
 
 - **Centre**: a skeletal hand gripping the rim of a great spoked wheel.
-- **Avoid**: cartoon skulls; Halloween colours.
+- **Avoid**: cartoon skulls; Halloween colours; green glow.
 
 **`PUZZLE-necropolis`** (subject):
 
 ```text
-Necropolis: a great skeletal hand gripping the rim of a spoked stone wheel at the centre, around it a city of stacked ruins from many
-ages, ossuary walls of skulls, a tall straight black obelisk spire with a cold cyan light, ranks of skeleton soldiers, a bone dragon coiled on a
-broken tower, liches in grey robes, ash drifting, a heavy dark grey sky.
+Necropolis: a great skeletal hand gripping the rim of a spoked stone wheel at the centre, around it a grey dead plain under heavy dark
+cloud, a dark castle keep with a skull over its gate, a tall straight black obelisk spire with a cold cyan light at its tip, gothic
+manors and a bell tower, a graveyard behind an iron fence, ranks of skeleton soldiers, a bone dragon lying across broken ruins, liches
+in grey robes, gaunt dead trees, cyan fire in braziers, everything in black and ash grey.
 ```
 
 ## Inferno (`puzzle_inferno`)
 
 - **Centre**: a harvest sickle whose blade is a flame.
-- **Avoid**: pitchforks; flames on every surface.
+- **Avoid**: pitchforks; flames on every surface; a uniformly red picture.
 
 **`PUZZLE-inferno`** (subject):
 
 ```text
-Inferno: a great harvest sickle with a blade of fire at the centre, around it a fortress of black slag and fused rubble of burned
-cities, sickle-shaped spires, rivers of glowing lava, horned demons and hell hounds marching, imps flying through smoke, cages hanging
-from chains, an altar-furnace venting black smoke, a red sky.
+Inferno: a great harvest sickle with a blade of orange fire at the centre, around it a field of black volcanic ash and obsidian, a
+citadel with curved sickle-shaped spires, a stepped altar-furnace belching flame and black smoke, a foundry with three chimneys,
+birthing pools of molten rock, thin rivers of lava glowing red, horned demons and hell hounds marching, imps flying through the smoke,
+cages hanging from chains, a smoke-black sky lit red from below.
 ```
 
 ## Dungeon (`puzzle_dungeon`)
 
 - **Centre**: a spider whose body is a cut violet gem.
-- **Avoid**: green goblin caves; red lava.
+- **Avoid**: sky; water; green goblin caves; red lava.
 
 **`PUZZLE-dungeon`** (subject):
 
 ```text
-Dungeon: a great black spider whose body is a cut violet gem at the centre, around it a cavern town of black and violet stepped
-pyramids, a labyrinth's walls, dark elves in silver-inlaid armour, a minotaur at a gate, glowing mushrooms and violet crystals, webs
-between stalactites, a dark pool reflecting violet light.
+Dungeon: a great black spider whose body is a cut violet gem at the centre, around it a vast enclosed cavern under hanging
+stalactites, a gothic black citadel of many spires with violet-lit windows, a tall spire of glowing violet crystal, a labyrinth's
+walls with a minotaur at its gate, a lair carved as a giant beast's maw, dark elves in silver-inlaid armour, clusters of glowing
+violet and cyan mushrooms, warm orange braziers, webs between the stalactites.
 ```
 
 ## Stronghold (`puzzle_stronghold`)
@@ -143,22 +150,24 @@ between stalactites, a dark pool reflecting violet light.
 **`PUZZLE-stronghold`** (subject):
 
 ```text
-Stronghold: a huge horned beast skull on a pole frame at the centre, around it an orc war camp of hide tents and yurts behind a log
-palisade, war drums on a platform, a dirt fighting ring, orcs and goblins on wolves, a cyclops carrying a boulder, a roc overhead, carts
-ready to move, red-ochre painted hides, dust and ochre badlands.
+Stronghold: a huge horned beast skull on a pole frame at the centre, around it ochre badlands of mesas and canyon walls with broken
+ancient arches, an orc war camp of hide tents and yurts behind a log palisade with watchtowers, great war drums on a platform under a
+red banner, a dirt fighting ring of stakes, a forge glowing in a cave, orcs and goblins on wolves, a cyclops carrying a boulder, a roc
+on a tall nest tower, carts ready to move, red-ochre painted hides, dust in the low warm sun.
 ```
 
 ## Swamp Bestiary (`puzzle_swamp-bestiary`)
 
 - **Centre**: a coiled serpent with three heads rising from the coil.
-- **Avoid**: a jungle temple of a real culture; tropical colours.
+- **Avoid**: a jungle temple of a real culture; tropical colours; a wide lake.
 
 **`PUZZLE-swamp-bestiary`** (subject):
 
 ```text
-Swamp Bestiary: a coiled three-headed serpent rising from black water at the centre, around it half-sunken ruins of an old stone city,
-stilt huts and boardwalks, a rampart of giant shells and bones, lizardfolk in reed boats, a basilisk on a mossy stone, wyverns over the
-mist, a toppled statue head sinking in the mud.
+Swamp Bestiary: a coiled three-headed serpent rising from black water at the centre, around it half-sunken ruins of an ancient stone
+city in a deep dark pine forest, a towering totem of coiled serpents and toad-like beasts, a rampart of giant spiral shells and tusks,
+reed-thatched stilt huts on mossy islands, spawning pools of eggs glowing cyan, lizardfolk with spears, a basilisk on a mossy stone, a
+wyvern on a broken tower's nest, a toppled statue head in the ferns, dark green shadow and warm gold light through the pines.
 ```
 
 ## After generating

@@ -176,11 +176,11 @@ public partial class AdventureMapView : Node3D
         _ => terrain,
     };
 
-    /// <summary>Colour multiplied into the texture: lava darker and redder, water blue, the rest untouched.</summary>
+    /// <summary>Colour multiplied into the texture: lava darker and redder, water blue, rocky ground dark blue-grey, the rest untouched.</summary>
     internal static Color Tint(TerrainType terrain) => terrain switch
     {
         TerrainType.ShallowWater => new Color(0.55f, 0.75f, 0.95f),
-        TerrainType.RockyGround => new Color(0.70f, 0.70f, 0.72f),
+        TerrainType.RockyGround => new Color(0.45f, 0.48f, 0.55f), // dark blue-grey granite (ADR-284)
         TerrainType.CursedLands => new Color(0.60f, 0.50f, 0.65f),
         TerrainType.Lava => new Color(0.75f, 0.35f, 0.25f),
         TerrainType.Water => new Color(0.35f, 0.55f, 0.95f),

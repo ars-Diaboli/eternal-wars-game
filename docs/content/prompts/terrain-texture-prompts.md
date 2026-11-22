@@ -83,7 +83,7 @@ made, side by side at thumbnail size (64 px): each must still be named correctly
 | lava | black crust, vivid orange-red seams | cracked plates with glowing cracks | dark, hot accents |
 | subterranean | blue-grey slate, violet minerals | smooth wet flowstone, mineral veins | dark |
 | rock | dark slate grey | fractured blocks and ledges | medium-dark |
-| rocky ground | terracotta and salmon-pink sandstone | wide smooth slabs with grit joints | medium-bright |
+| rocky ground | dark blue-grey speckled granite, rusty ochre stains | wide smooth slabs with grit joints | medium-dark |
 
 Stones belong to rough, rocky ground, rock, beach (shingle) and highlands (slabs) only; grass, forest floor, dirt, sand and swamp show
 none or almost none. Grey stones scattered on every ground are what made the first set look alike.
@@ -378,7 +378,7 @@ from the side.
 - **Signature**: dark slate-grey fractured blocks.
 - **Look**: dark slate-grey bedrock in fractured blocks and ledges, wavy strata, green moss and yellow-green lichen in the cracks,
   scree in the hollows. Must work from the side as well as from above (no top-down-only features such as puddles).
-- **Avoid**: warm sandstone (rocky ground's), a pebble field, round boulders, a man-made wall.
+- **Avoid**: smooth speckled granite slabs (rocky ground's), a pebble field, round boulders, a man-made wall.
 
 **`TERRAIN-rock`** (subject):
 
@@ -391,16 +391,18 @@ in the cracks, loose scree in the hollows, reads as a cliff face from any side, 
 
 Walkable bare rock; Dragon Utopia's ground.
 
-- **Signature**: terracotta and salmon-pink sandstone slabs.
-- **Look**: wide smooth slabs of terracotta, salmon-pink and warm cream sandstone, worn and pitted by wind, grit in the joints, sparse
-  hardy tufts; a few deep old claw scratches and a scorched patch.
-- **Avoid**: grey stone (rock's), broken stones (rough's), loose scree, a cliff.
+- **Signature**: dark speckled granite slabs with rusty stains (Dragon Utopia's crag, ADR-284).
+- **Look**: wide smooth slabs of dark charcoal and blue-grey coarse-grained granite, speckled with pale feldspar, rusty ochre mineral
+  stains and patches of pale lichen, worn and pitted by wind, grit in the joints, sparse dry tufts; a few deep old claw scratches and
+  a scorched patch.
+- **Avoid**: red or pink sandstone; fractured slate with strata and green moss (rock's), broken stones (rough's), loose scree, a cliff.
 
 **`TERRAIN-rocky_ground`** (subject):
 
 ```text
-Rocky ground: ancient bedrock plateau of wide smooth slabs of terracotta, salmon-pink and warm cream sandstone, worn and pitted by
-wind, fine grit in the joints, sparse hardy green tufts, a few deep old claw scratches across the stone, one small scorched patch.
+Rocky ground: ancient bedrock plateau of wide smooth slabs of dark charcoal and blue-grey coarse-grained granite speckled with pale
+feldspar, rusty ochre mineral stains and patches of pale lichen, worn and pitted by wind, fine grit in the joints, sparse dry tufts, a
+few deep old claw scratches across the stone, one small scorched patch.
 ```
 
 ## Battlefield variants

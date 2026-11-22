@@ -41,7 +41,7 @@ public static class Palette
         TerrainType.Ice => new Color(0.72f, 0.85f, 0.95f),
         TerrainType.ShallowWater => new Color(0.30f, 0.55f, 0.72f),
         TerrainType.CursedLands => new Color(0.30f, 0.26f, 0.32f),
-        TerrainType.RockyGround => new Color(0.45f, 0.43f, 0.42f),
+        TerrainType.RockyGround => new Color(0.33f, 0.35f, 0.40f),
         _ => Colors.Magenta,
     };
 

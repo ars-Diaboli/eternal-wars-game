@@ -34,6 +34,7 @@
 | [248](#adr-248-icons-and-portraits-painted-realistically-not-as-cartoons-new-style-blocks-and-an-anti-cartoon-negative-owner-adr-116-adr-245-2026-11-20) | Icons and portraits painted realistically, not as cartoons: new style blocks and an anti-cartoon negative (owner, ADR-116, ADR-245, 2026-11-20) | accepted |
 | [249](#adr-249-prompts-ready-to-paste-one-block-a-sheet-at-most-a-lead-and-an-item-elsewhere-negatives-joined-in-advance-owner-adr-245-adr-248-2026-11-20) | Prompts ready to paste: one block a sheet, at most a lead and an item elsewhere, negatives joined in advance (owner, ADR-245, ADR-248, 2026-11-20) | accepted |
 | [284](#adr-284-faction-key-paintings-set-each-towns-look-owner-adr-008-adr-246-adr-248-2026-11-22) | Faction key paintings set each town's look (owner, ADR-008, ADR-246, ADR-248, 2026-11-22) | accepted |
+| [285](#adr-285-creature-portraits-in-2--2-sheets-creature-and-puzzle-prompts-redone-to-the-key-paintings-rocky-ground-is-dark-granite-owner-adr-284-2026-11-22) | Creature portraits in 2 × 2 sheets; creature and puzzle prompts redone to the key paintings; rocky ground is dark granite (owner, ADR-284, 2026-11-22) | accepted |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -581,3 +582,23 @@ once step 3 of the plan lands. Plan, study and questions: [town-screen-plan.md](
   prompts (hill-town, crooked spire, green sky).
 - **Open**: TOWN-18 (one mood per faction) can take each painting's light as the faction's lighting set; the second takes' light
   (Haven overcast, Stronghold dusk) could serve for weather or a week's tint.
+
+### ADR-285: Creature portraits in 2 × 2 sheets; creature and puzzle prompts redone to the key paintings; rocky ground is dark granite (owner, ADR-284, 2026-11-22)
+**Status**: accepted. Asset prompts and two placeholder colours; no rule or format change.
+
+- **Owner**: regenerate the puzzle and creature icon prompts to the updated design; creature sheets 2 × 2 instead of 2 × 3; Dragon
+  Utopia's ground darker.
+- **Creature sheets**: every sheet is 2 × 2 at 1024 × 1024. A town sheet holds two creatures over their upgrades; a town's nine pairs
+  take five sheets, the last with its pair in the left column and a second try at each in the right (the better take is kept). Sheets
+  of single creatures (Conflux, Dragon Utopia, the last neutral sheet) hold four, spare cells taking a second try. Creature subjects are
+  unchanged except Necropolis' glow (green to cyan) and the dragonyte's scales (granite grey).
+- **Faction looks and backdrops** in every creature file follow [faction-art.md](../../docs/content/faction-art.md): Haven's grey steel,
+  gold sun and lake; Sylvan's misty gorge; Academy's gold star; Necropolis' cyan on grey; Inferno's orange fire and red lava on black
+  ash; Dungeon's enclosed cavern; Stronghold's low warm sun; Swamp Bestiary's dark pine green with cyan; Conflux's element crystals;
+  Dragon Utopia's granite.
+- **Puzzle pictures**: all eight subjects rewritten to the paintings' towns, centres kept except Haven's (a white banner with the gold
+  sun instead of the sun-cage brazier).
+- **Rocky ground**: dark blue-grey speckled granite with rusty ochre stains and pale lichen, medium-dark, in the terrain texture and
+  the plateau scenery prompts; told apart from rock by smooth wide slabs and speckle, not slate strata and moss. Until it has its own
+  texture, the borrowed rough texture is tinted dark blue-grey and the minimap colour darkened (`AdventureMapView.Tint`, `Palette`).
+- **Regenerate**: every creature portrait and backdrop, every puzzle picture, and the rocky-ground texture when it is made.

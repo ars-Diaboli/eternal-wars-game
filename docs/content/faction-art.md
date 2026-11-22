@@ -192,6 +192,7 @@ The [faction groups](../design/factions.md) keep the colours already given to th
   watchtower; a spring and pool in a sheltered hollow; a fallen dragon's spine in the foreground.
 - **Colours**: dark grey and blue-grey granite with rusty ochre stains and pale lichen, bleached bone, green-tarnished bronze, a little
   gold.
+- **Ground**: Dragon Utopia's native rocky ground is the same dark speckled granite ([terrain-texture-prompts.md](prompts/terrain-texture-prompts.md)).
 - **Avoid**: red sandstone, a sun emblem, dragons in the sky, temples of a real culture.
 
 ## Painting more
