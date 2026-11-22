@@ -40,7 +40,10 @@ public enum TownWindow
 /// The town screen (the town screen plan, ADR-246, ADR-294, ADR-296). The top bar: crest, name (a click renames the town), ◄ ► through the
 /// player's towns, the faction, town hall and governor, the quick buttons, ×. The main area: the town's 3D scene (<see cref="Scene"/>, ADR-297)
 /// where its town type has a layout, else the faction's key painting; a strip of the town's buildings and the notices card (built today,
-/// caravans, the discount). A click on a building of the scene opens its window, as its strip button does; a right click its information. The bottom bar: the town's crest
+/// caravans, the discount). A click on a building of the scene opens its window, as its strip button does; a right click its information; a click on
+/// land the town can still build on opens the Hall with that building selected (ADR-304), whose "Show in town" shows a ghost of it on its plot. The
+/// building under the pointer, or reached by ← and → (the controller's ring of plots), has its name and state on the status bar. A building put
+/// up here closes the window for its construction scene (none at instant speed). The bottom bar: the town's crest
 /// with its governor, the garrison and visiting hero as <see cref="ArmyBar"/>s, Split, Upgrade all, Swap and Dismiss, the income, the week's
 /// growth (its parts on hover) and the date. One window at a time over the dimmed main area (the windows are this class's other parts); Escape
 /// closes the window, a second Escape leaves. The keys are <see cref="TownScreenKeys"/>'.
@@ -132,6 +135,8 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
             {
                 value.BuildingHovered += ShowHovered;
                 value.BuildingPicked += OpenPlot;
+                value.HighlightColour = UiTheme.BorderBright;
+                value.ConstructionStarted += _ => CloseWindow(); // the new building rises in sight
             }
         }
     }
@@ -298,6 +303,7 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
         }
 
         OpenWindow = window;
+        _scene?.Hover(null); // the window covers the building that was under the pointer
         // As large as the main area allows, the painting showing around it.
         var room = _windowHost.Size - new Vector2(UiSpacing.ScreenEdge * 8, UiSpacing.ScreenEdge * 4);
         _window = new WindowFrame(Title(town, window), UiFrames.Accent(town.TownType)) { CustomMinimumSize = room.Max(new Vector2(1040, 560)) };
@@ -327,6 +333,10 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
     {
         OpenWindow = null;
         _scene?.Unfocus(); // the camera eases back from the building
+        if (_scene is { HasGhost: true } scene)
+        {
+            HideGhost(scene);
+        }
         if (_window is not null)
         {
             Release(_window.Content);
@@ -335,6 +345,16 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
 
         _window = null;
         _dim.Visible = false;
+    }
+
+    /// <summary>"Show in town"'s ghost goes, with its line under the bottom bar's date.</summary>
+    private void HideGhost(TownScene3D scene)
+    {
+        if (scene.HasGhost)
+        {
+            scene.HideGhost();
+            _status.Text = "";
+        }
     }
 
     /// <summary>The camera's turn keys, held (TOWN-14): Q and E turn the scene's view while no window is open, as on the adventure map.</summary>
@@ -353,6 +373,45 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
         }
     }
 
+    /// <summary>
+    /// The ring of plots (ADR-304): ← → (the d-pad) and Enter (A) while no window is open, ahead of the GUI, so a button focused by a click does
+    /// not take them; a key that finds nothing to walk or open goes on (Enter to the chat line, say).
+    /// </summary>
+    public override void _Input(InputEvent @event)
+    {
+        if (!Visible || Current is null || OpenWindow is not null || ConfirmDialog.AnyOpen || IsCovered?.Invoke() == true
+            || _scene is not { IsOpen: true } ring || GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit)
+        {
+            return;
+        }
+
+        var step = TownScreenKeys.Pressed(@event, TownKey.RingRight) ? 1 : TownScreenKeys.Pressed(@event, TownKey.RingLeft) ? -1 : 0;
+        bool done;
+        if (step != 0)
+        {
+            HideGhost(ring);
+            done = ring.Step(step);
+        }
+        else
+        {
+            done = TownScreenKeys.Pressed(@event, TownKey.RingOpen) && ring.PickHovered();
+        }
+
+        if (done)
+        {
+            GetViewport().SetInputAsHandled();
+        }
+    }
+
+    /// <summary>The controller's buttons (ADR-304) go where the keys go.</summary>
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        if (@event is InputEventJoypadButton)
+        {
+            _UnhandledKeyInput(@event);
+        }
+    }
+
     public override void _UnhandledKeyInput(InputEvent @event)
     {
         if (!Visible || Current is not { } town || ConfirmDialog.AnyOpen || IsCovered?.Invoke() == true)
@@ -365,6 +424,14 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
             if (OpenWindow is not null)
             {
                 CloseWindow();
+            }
+            else if (_scene is { IsConstructing: true } building)
+            {
+                building.FinishConstruction();
+            }
+            else if (_scene is { HasGhost: true } ghost)
+            {
+                HideGhost(ghost);
             }
             else
             {
@@ -654,6 +721,10 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
             case InputEventMouseMotion motion:
                 scene.Hover(motion.GlobalPosition);
                 break;
+            case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } when scene.HasGhost:
+                HideGhost(scene); // a click puts "Show in town" away
+                _stage.AcceptEvent();
+                break;
             case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } click:
                 if (scene.Pick(click.GlobalPosition))
                 {
@@ -685,8 +756,34 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
         Hovered?.Invoke(plot is null ? null : HoverText(plot));
     }
 
-    private static string HoverText(PlotInfo plot) =>
-        plot.Name + (plot.State == PlotState.BuiltToday ? " · built today" : "");
+    /// <summary>A building's name and state for the status bar: built (today), or not; then what its next level waits for (ADR-304).</summary>
+    private string HoverText(PlotInfo plot)
+    {
+        var built = plot.State switch
+        {
+            PlotState.BuiltToday => "built today",
+            PlotState.Built => "built",
+            _ => "not built",
+        };
+        if (Current is not { } town)
+        {
+            return $"{plot.Name} · {built}";
+        }
+
+        var status = plot.Line is { } line
+            ? BuildingTree.DwellingStatus(State, town, State.Creatures.Get(line))
+            : BuildingTree.For(State, town).FirstOrDefault(n => n.Building == plot.Building)?.Status ?? BuildingStatus.Complete;
+        var next = status switch
+        {
+            BuildingStatus.Available => plot.Level > 0 ? "can be upgraded" : "can be built",
+            BuildingStatus.CannotAfford => plot.Level > 0 ? "its upgrade costs more than you have" : "costs more than you have",
+            BuildingStatus.NeedsBuildings => plot.Level > 0 ? "its upgrade needs other buildings" : "needs other buildings",
+            BuildingStatus.BuiltToday when plot.State != PlotState.BuiltToday => "the town built today: tomorrow",
+            _ => null,
+        };
+        var click = plot.State == PlotState.NotBuilt ? " · click for the Hall" : "";
+        return $"{plot.Name} · {built}{(next is null ? "" : $" · {next}")}{click}";
+    }
 
     /// <summary>A building of the scene was clicked: its window, a dwelling's window, or its information, as its strip button does.</summary>
     private void OpenPlot(PlotInfo plot)
@@ -696,7 +793,12 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
             return;
         }
 
-        if (plot.Line is { } line)
+        if (plot.State == PlotState.NotBuilt)
+        {
+            _hallSelected = plot.Id; // the Hall's tile keys are the plot ids
+            ShowWindow(TownWindow.Hall);
+        }
+        else if (plot.Line is { } line)
         {
             ShowDwelling(line);
         }

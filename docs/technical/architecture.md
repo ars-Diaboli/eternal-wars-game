@@ -232,7 +232,11 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   built as the siege has it (`SiegeRules.Create`), the street groups by the town hall's level, banners in the owner's colour and
   the garrison hero's banner; `TownPlot` adds scaffolding the day a building goes up and the citizens' homes (`SceneryKit`). The camera
   (ADR-302) rests at the hero shot, turns and zooms (`Turn`, `Zoom`, by the town screen's keys and wheel) and eases toward a building
-  behind its window (`FocusOn`, `Unfocus`).
+  behind its window (`FocusOn`, `Unfocus`). Hover and pick (ADR-304): the hovered building's meshes get `town_outline.gdshader` as their
+  material overlay; plots the core marks `PlotInfo.Buildable` pick too and show a ghost (`TownPlot.ShowGhost`, also "Show in town",
+  `TownScene3D.ShowGhost`); `Step` and `PickHovered` are the ring of plots. The construction scene runs in the scene's own `_Process` on
+  `TownBuilt` / `DwellingBuilt` for the town shown (`TownPlot.BeginRise`, a `CpuParticles3D` of dust), timed by `Speed`, which the game
+  app sets to the own heroes' speed setting.
 
 ### Map objects
 - **Definition** (`MapObjectDefinition`, data: id, `Kind`, footprint, kind parameters) vs **instance** (`MapObject`

@@ -1,6 +1,6 @@
 # Active context
 
-**As of 2026-11-22.** Refresh this file at the end of every piece of work: replace, do not append.
+**As of 2026-11-23.** Refresh this file at the end of every piece of work: replace, do not append.
 
 ## Where the project is
 Phases 0–4 are done and closed out (ADR-114, ADR-117). Phase 5 (content and polish) is in progress: magic, sieges, relics, map events,
@@ -16,13 +16,16 @@ Detail: [roadmap.md](roadmap.md).
   Utopia) never drawn at random; 14 heroes renamed as men (about a third women); varied close-crop prompts. Generator version 13.
 - Stronghold's Wolf Rider line moved to tier 2 and the Centaur line to tier 3, numbers swapped with the tier; generator version 12,
   maps re-pinned (ADR-295).
-- The town screen plan's step 3, tasks 1–4 (ADR-297, ADR-300, ADR-301, ADR-302): `TownScene3D` behind the town screen's bars, plots read from
+- The town screen plan's step 3, tasks 1–6 (ADR-297, ADR-300, ADR-301, ADR-302, ADR-304): `TownScene3D` behind the town screen's bars, plots read from
   `plot_*` markers and shown as the town has them (model, the layout's greybox or a block; scaffolding the day it is built; citizens'
   homes on the closed lines under the Capitol), hover and pick opening the windows; greybox layouts for all eight playable towns,
   checked in the game (smoke `game-town-layouts`); walls as the siege has them, streets and houses by the town hall's level, banners in
   the owner's colour and the garrison hero's banner on the keep (`TownScenery`, smoke `game-town-states`); the camera turned ±25°
-  with Q and E, zoomed in two steps by the lens, easing toward a building behind its window and back (smoke `game-town-camera`).
-  Next is task 5 (hover and pick: the outline, the controller's ring of plots).
+  with Q and E, zoomed in two steps by the lens, easing toward a building behind its window and back (smoke `game-town-camera`); the
+  bronze outline, name and state on the status bar, unused land that can be built on picked too (a ghost of it, a click for the Hall),
+  ← → and the d-pad walking a ring of plots, "Show in town" from the Hall, and the construction scene (the building rising through its
+  scaffolding in dust, the Capitol's homes with it, by the speed setting; smoke `game-town-pick`, `game-town-build`). The bell waits for
+  step 4's sounds. Next is task 7 (arrival and loading ahead).
 - The town screen plan's step 2 (ADR-296): the game's only town screen is the new one, its windows over the key painting with a strip
   of the town's buildings (Hall with columns by kind and requirement links, Recruitment and the dwelling window, Mage guild, Tavern,
   Marketplace, Blacksmith, Fort, Caravan, governor list, Transformer), the bars with Split, Upgrade all, Swap and Dismiss, rename and

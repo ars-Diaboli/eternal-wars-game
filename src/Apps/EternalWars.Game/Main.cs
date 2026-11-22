@@ -645,6 +645,7 @@ public partial class Main : Node3D
         var town = new TownScene3D { Name = "TownScene" };
         _game!.AddChild(town);
         town.Bind(_session);
+        town.Speed = () => _context?.Speeds.OwnHeroes ?? AnimationSpeed.Normal; // the construction scene's speed (ADR-090, ADR-304)
         _hud.TownScreen.Scene = town;
         _hud.TownScreen.Hovered += _hud.ShowHover;
         _screens.ShowTown(town, _world, _camera, sun);

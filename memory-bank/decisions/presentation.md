@@ -45,6 +45,7 @@
 | [300](#adr-300-town-screen-step-3-task-2-greybox-layouts-for-the-eight-towns-after-their-key-paintings-the-layout-check-in-the-game-the-towns-painting-as-the-sky-adr-246-adr-292-adr-297-2026-11-22) | Town screen step 3, task 2: greybox layouts for the eight towns after their key paintings, the layout check in the game, the town's painting as the sky (ADR-246, ADR-292, ADR-297, 2026-11-22) | implemented |
 | [301](#adr-301-town-screen-step-3-task-3-plot-states-walls-as-the-siege-has-them-streets-by-the-town-hall-banners-and-the-garrison-heros-banner-town-15-town-19-town-22-adr-291-2026-11-22) | Town screen step 3, task 3: plot states, walls as the siege has them, streets by the town hall, banners and the garrison hero's banner (TOWN-15, TOWN-19, TOWN-22, ADR-291, 2026-11-22) | implemented |
 | [302](#adr-302-town-screen-step-3-task-4-the-town-camera-turned-25-round-the-town-and-zoomed-in-two-steps-by-the-lens-easing-toward-a-building-behind-its-window-town-14-adr-292-2026-11-22) | Town screen step 3, task 4: the town camera, turned ±25° round the town and zoomed in two steps by the lens, easing toward a building behind its window (TOWN-14, ADR-292, 2026-11-22) | implemented |
+| [304](#adr-304-town-screen-step-3-tasks-5-and-6-the-bronze-outline-picking-unused-land-the-ring-of-plots-show-in-town-and-the-construction-scene-town-14-town-15-adr-090-adr-292-2026-11-23) | Town screen step 3, tasks 5 and 6: the bronze outline, picking unused land, the ring of plots, "Show in town" and the construction scene (TOWN-14, TOWN-15, ADR-090, ADR-292, 2026-11-23) | implemented |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -880,3 +881,33 @@ TOWN-15 is ADR-291. The plan's step-by-step implementation is in its [roadmap](.
 - The keys are input actions (`town_turn_left`, `town_turn_right`,
   `town_zoom_in`, `town_zoom_out`) beside the screen's others (ADR-294). The smoke script's `wheel:` takes a screen point
   (`wheel:up,2,640,360`; without one it turns at the screen's centre, as before); smoke `game-town-camera` clicks the tavern, turns, zooms, opens the Hall and comes back.
+
+### ADR-304: Town screen step 3, tasks 5 and 6: the bronze outline, picking unused land, the ring of plots, "Show in town" and the construction scene (TOWN-14, TOWN-15, ADR-090, ADR-292, 2026-11-23)
+**Status**: implemented. The [town screen plan](../../docs/papers/town-screen-plan.md#implementation-plan)'s step 3, tasks 5 and 6.
+
+- **Outline**: the building under the pointer gets an outline in the UI's bright bronze, an inverted hull a few pixels wide at any distance
+  (`town_outline.gdshader`, the meshes' material overlay), so it reads on any model without a second render pass. Its name and state are on the
+  status bar: built, built today or not built, then what its next level waits for (can be built or upgraded, costs more than the player has,
+  needs other buildings, or tomorrow when the town built today), in words, never by colour alone. The hand cursor and the right click for the
+  information window stay as ADR-297 made them.
+- **Unused land picks too**: a plot is picked by its hover shape when a building stands on it, or when the town can still build there
+  (`PlotInfo.Buildable`: not a closed line, not the Grail building; lacking resources or buildings still counts). Its
+  hover shape is the layout's `Hover`, or a box the size of its greybox block. Hovered, it shows a translucent bronze ghost of its first level;
+  a click opens the Hall with that building selected (the Hall's tile keys are the plot ids). Closed lines, the Grail's plot and the
+  citizens' homes pick nothing.
+- **The ring of plots**: ← and → (the d-pad) walk the pickable plots ordered round the plots' middle as the screen shows them, so → goes right
+  along the front and left along the back; the walk goes on from the plot under the pointer, or starts at the front's middle. The plot
+  reached is hovered as the pointer would hover it; Enter (A) opens it. The ring takes its keys ahead of a focused button while no window
+  is open; a key with nothing to walk or open goes on (Enter to the chat line). The controller's B is Escape and its shoulder buttons are [ and ]. They are input actions (`town_ring_left`,
+  `town_ring_right`, `town_ring_open`) with joypad events beside the keys; the screen takes joypad buttons in `_UnhandledInput`.
+- **"Show in town"** on the Hall's card closes the Hall and keeps a ghost of the selected level on its plot, the camera eased toward it as
+  for a window; its line stands under the bottom bar's date. It is offered only for a plot that stands built or can still be built. Escape, a click in the scene, a step of the ring or any window puts it away and
+  the camera eases back. The ghost is the model for that level, the layout's `Model`, or the greybox block, as the built plot would show.
+- **The construction scene**: on `TownBuilt` or `DwellingBuilt` for the town shown, once the plots show it and unless the speed is instant,
+  the window closes (one building a day: the Hall has nothing left to build), the camera eases to the plot and the building rises out of the ground through its scaffolding in a
+  cloud of dust, then the camera eases back. With the Capitol, the citizens' homes on the closed lines rise with it. 1.5 s at normal speed,
+  scaled by the own heroes' speed setting (ADR-090: slow 3 s, fast 0.75 s, none at instant), the setting for what the player does; a
+  click, Enter or Escape ends it at once. The bell waits for the game's first sounds (step 4, task 6), which list the build sound.
+- The smoke script's `move:x,y` moves the pointer without a button (hover). Smoke `game-town-pick` hovers the tavern and the caravan's land,
+  walks the ring, opens the Stables' land, shows it in town and clicks the caravan's land; `game-town-build` now plays the construction scene
+  before reopening the Hall.

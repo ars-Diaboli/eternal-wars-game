@@ -110,17 +110,22 @@ creatures and buildings, heraldic player colours, iconic map objects).
 
 <a id="town-screen"></a>
 ## Town screen
-ADR-246, ADR-294, ADR-296, ADR-297, ADR-300, ADR-301, ADR-302; the plan and its 3D scene: [town-screen-plan.md](../papers/town-screen-plan.md).
+ADR-246, ADR-294, ADR-296, ADR-297, ADR-300, ADR-301, ADR-302, ADR-304; the plan and its 3D scene: [town-screen-plan.md](../papers/town-screen-plan.md).
 - **Main screen**: the top bar has the town's crest and name (a click renames it), ◄ ► through the player's towns ([ and ] too), the faction,
   town hall and governor, the quick buttons of the windows and the close "×". The main area is the town's 3D scene where its town type
   has a layout (every playable town type has one), else the faction's key painting. In the scene each built building stands on its plot (a greybox block with
   a roof and its name on a sign until it has a model), in scaffolding on the day it goes up, and unbuilt plots are bare land; once the
   town has the Capitol its two closed dwelling plots hold citizens' homes. Streets and houses fill the town in three steps by the town
   hall's level (village, town, city); walls rise with the fort as the siege has them (the wall and gate, then the moat, then towers);
-  banners fly in the owner's colour, and the garrison hero's banner on the keep. The pointer over a building shows the hand and its
-  name on the status bar, a click opens its window (or its information, for one without a window) and a right click its information. The
-  scene opens at the town's hero shot: Q and E turn it up to 25° either way, the wheel or + and − zoom in two steps; a building's window
-  opens at once while the camera eases toward the building behind it, and back when the window closes. The
+  banners fly in the owner's colour, and the garrison hero's banner on the keep. The pointer over a building outlines it in bronze and
+  shows the hand, its name and state on the status bar (built or not, and what its next level waits for); a click opens its window (or
+  its information, for one without a window) and a right click its information. Bare land the town can still build on picks too: it shows
+  a ghost of its building, and a click opens the Hall with that building selected. ← and → (the controller's d-pad) walk the plots as a
+  ring round the town, Enter (A) opens the one reached. The scene opens at the town's hero shot: Q and E turn it up to 25° either way,
+  the wheel or + and − zoom in two steps; a building's window opens at once while the camera eases toward the building behind it, and
+  back when the window closes. A new building closes the window and plays its construction scene (at instant speed neither): the camera eases to it and it rises
+  through its scaffolding in dust (with the Capitol, the citizens' homes too), 1.5 s at normal speed, by the speed setting for the
+  player's own heroes (none at instant); a click ends it. The
   adventure map and its side panels are put away while the scene shows. Along the main area's bottom runs a strip of the town's buildings
   (a click opens a building's window, or the information of one without a window), and a notices card stands in its corner (built today,
   caravans coming, the governor's discount). The bottom bar has the town's
@@ -134,8 +139,9 @@ ADR-246, ADR-294, ADR-296, ADR-297, ADR-300, ADR-301, ADR-302; the plan and its 
   - **Hall**: the buildings in columns by kind (Core, Military, Magic, Dwellings, Unique; the `kind` column of `buildings.csv`) as tiles
     with their state by frame and symbol, the requirements drawn as lines between them; hovering a tile lights its chain of requirements
     and dims the rest. The dwellings stand as the 7-of-9 block, a column per tier. A click selects a tile for the card below: the next
-    level, its cost with what is lacking, the requirements as ✓ / ✗ buttons that select them, what it gives, the refusal and Build; a
-    dwelling that would close others draws them crossed through, with the warning on the card.
+    level, its cost with what is lacking, the requirements as ✓ / ✗ buttons that select them, what it gives, the refusal, Build and
+    **Show in town** (the Hall closes and a ghost of that level stands on its plot until Escape or a click); a dwelling that would close
+    others draws them crossed through, with the warning on the card.
   - **Recruitment**: a creature card per line (unbuilt lines greyed), Recruit opening the count dialog with **Garrison** or the visiting
     hero (preselected to where the creature fits), and Recruit all with its summary. A dwelling of the strip opens its own window: the
     card, its building, recruiting base or upgraded, and building or upgrading the dwelling.

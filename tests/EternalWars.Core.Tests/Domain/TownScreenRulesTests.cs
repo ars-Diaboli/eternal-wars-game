@@ -116,6 +116,26 @@ public class TownScreenRulesTests
     }
 
     [Fact]
+    public void Plots_AreBuildable_WhenUnusedLandCanStillTakeTheirBuilding_NotClosedLinesTheGrailOrWhatStands()
+    {
+        var (state, town) = Haven(ResourceSet.Empty);
+        foreach (var id in new[] { "haven.footman", "haven.pikeman", "haven.zealot", "haven.archer", "haven.monk" })
+        {
+            town.SetDwelling(id, 1);
+        }
+
+        PlotInfo Plot(string id) => TownOverview.PlotsOf(state, town).Single(p => p.Id == id);
+
+        // Poor and without the buildings it needs, a building is still one the town can build later; a dwelling line too, unless closed.
+        Assert.True(Plot(BuiltInBuildings.MageGuild).Buildable);
+        Assert.True(Plot(TownOverview.DwellingPlot("haven.lancer")).Buildable);
+        Assert.False(Plot(TownOverview.DwellingPlot("haven.griffin")).Buildable); // closed by the 7-of-9 rule
+        Assert.False(Plot(BuiltInBuildings.Grail).Buildable); // only with the Grail
+        Assert.False(Plot(BuiltInBuildings.TownHall).Buildable); // it stands
+        Assert.False(Plot(TownOverview.DwellingPlot("haven.monk")).Buildable);
+    }
+
+    [Fact]
     public void BuildingKinds_PutEachBuildingInAHallColumn_FromTheTable()
     {
         var (state, town) = Haven();

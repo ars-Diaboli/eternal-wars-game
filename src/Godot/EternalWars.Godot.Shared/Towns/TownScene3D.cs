@@ -1,6 +1,7 @@
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Settings;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.Shared.Map;
@@ -25,6 +26,13 @@ namespace EternalWars.Godot.Shared.Towns;
 /// round the vertical through the plots' middle (<see cref="Turn"/>) and zooms in two steps by narrowing its lens, so it never runs into the
 /// scenery (<see cref="Zoom"/>); <see cref="FocusOn"/> eases it toward a building whose window has opened, and <see cref="Unfocus"/> back. Every move
 /// eases; at rest the camera is exactly the hero shot.
+/// Hover and pick (ADR-304): the building under the pointer gets an outline in <see cref="HighlightColour"/>; unused land the town can still build
+/// on picks too and shows a translucent ghost of its building while hovered. <see cref="Step"/> walks the pickable plots as a ring round the plots'
+/// middle (the controller's way in) and <see cref="PickHovered"/> picks the one reached; <see cref="ShowGhost"/> ("Show in town" in the Hall) keeps
+/// a ghost of a level not built yet on its plot, the camera eased toward it, until <see cref="HideGhost"/>. The construction scene (ADR-304): on
+/// <see cref="TownBuilt"/> or <see cref="DwellingBuilt"/> for the town shown, the camera eases to the plot while the new building rises out of the
+/// ground through its scaffolding in a cloud of dust (with the Capitol, the citizens' homes rise too), then eases back: 1.5 s at normal speed,
+/// shorter or longer by <see cref="Speed"/> (ADR-090), none at instant speed; a click cuts it short (<see cref="FinishConstruction"/>).
 /// </summary>
 public partial class TownScene3D : Node3D
 {
@@ -37,7 +45,12 @@ public partial class TownScene3D : Node3D
     /// <summary>How far the player may turn the hero shot either way (TOWN-14).</summary>
     public const float MaxTurnDegrees = 25f;
 
+    /// <summary>How long the construction scene plays at normal speed (TOWN-14).</summary>
+    public const double ConstructionSeconds = 1.5;
+
     private const string SkyShader = "res://shared/shaders/town_sky.gdshader";
+
+    private const string OutlineShader = "res://shared/shaders/town_outline.gdshader";
 
     /// <summary>The camera's distance from a building it eases toward, as a share of the hero shot's.</summary>
     private const float FocusScale = 0.42f;
@@ -64,6 +77,26 @@ public partial class TownScene3D : Node3D
     private float _shotFov = 40f;
     private (Vector3 At, float Turn, float Scale, float Lens) _now;
     private Vector2? _pointer;
+    private ShaderMaterial? _outline;
+    private StandardMaterial3D? _ghostMaterial;
+    private TownPlot? _pinned;
+    private int _pinnedLevel;
+    private readonly List<string> _builds = [];
+    private Construction? _construction;
+
+    /// <summary>The construction scene playing: the plot built, what rises (it and, with the Capitol, the homes), the dust, the time.</summary>
+    private sealed class Construction(TownPlot plot, IReadOnlyList<TownPlot> rising, CpuParticles3D dust, double seconds)
+    {
+        public TownPlot Plot { get; } = plot;
+
+        public IReadOnlyList<TownPlot> Rising { get; } = rising;
+
+        public CpuParticles3D Dust { get; } = dust;
+
+        public double Seconds { get; } = seconds;
+
+        public double Elapsed { get; set; }
+    }
 
     /// <summary>The scene was shown (the app hides the adventure world, its light and its camera).</summary>
     public event Action? Opened;
@@ -74,8 +107,23 @@ public partial class TownScene3D : Node3D
     /// <summary>The pointer came to a shown plot, or left every plot (null).</summary>
     public event Action<PlotInfo?>? BuildingHovered;
 
-    /// <summary>A shown plot was clicked.</summary>
+    /// <summary>A shown plot, or land the town can still build on, was clicked (or reached by <see cref="Step"/> and picked).</summary>
     public event Action<PlotInfo>? BuildingPicked;
+
+    /// <summary>The construction scene of a new building began (the screen closes the window over it).</summary>
+    public event Action<PlotInfo>? ConstructionStarted;
+
+    /// <summary>The colour of the outline round the building under the pointer: the UI's bronze, set by the screen.</summary>
+    public Color HighlightColour { get; set; } = new(0.85f, 0.68f, 0.36f);
+
+    /// <summary>How fast the construction scene plays (ADR-090): the own heroes' speed, set by the app.</summary>
+    public Func<AnimationSpeed> Speed { get; set; } = () => AnimationSpeed.Normal;
+
+    /// <summary>A construction scene is playing.</summary>
+    public bool IsConstructing => _construction is not null;
+
+    /// <summary>A ghost of a building shows on its plot ("Show in town", <see cref="ShowGhost"/>).</summary>
+    public bool HasGhost => _pinned is not null;
 
     public bool IsOpen => _town is not null;
 
@@ -122,6 +170,18 @@ public partial class TownScene3D : Node3D
             .On<HeroEnteredGarrison>(session.Events)
             .On<HeroLeftGarrison>(session.Events)
             .On<TurnStarted>(session.Events);
+
+        // A building put up in the town shown plays its construction scene once the plots show it (ShowPlots, at the end of the frame).
+        this.SubscribeWhileInTree<TownBuilt>(session.Events, e => Built(e.Town, e.Building.Value));
+        this.SubscribeWhileInTree<DwellingBuilt>(session.Events, e => Built(e.Town, TownOverview.DwellingPlot(e.Line)));
+    }
+
+    private void Built(MapObjectId town, string plotId)
+    {
+        if (town == _town)
+        {
+            _builds.Add(plotId);
+        }
     }
 
     /// <summary>
@@ -149,6 +209,9 @@ public partial class TownScene3D : Node3D
 
         if (_town != town)
         {
+            FinishConstruction();
+            HideGhost();
+            _builds.Clear();
             SetHovered(null);
             ResetCamera();
         }
@@ -172,6 +235,9 @@ public partial class TownScene3D : Node3D
             return;
         }
 
+        FinishConstruction();
+        HideGhost();
+        _builds.Clear();
         _town = null;
         SetHovered(null);
         Visible = false;
@@ -198,7 +264,7 @@ public partial class TownScene3D : Node3D
     public void Hover(Vector2? screenPoint)
     {
         _pointer = screenPoint;
-        SetHovered(screenPoint is { } point && IsOpen ? PlotAt(point) : null);
+        SetHovered(screenPoint is { } point && IsOpen && _construction is null ? PlotAt(point) : null);
     }
 
     /// <summary>
@@ -242,6 +308,124 @@ public partial class TownScene3D : Node3D
     /// <summary>Eases the camera back to the player's view (its turn and zoom) from a building.</summary>
     public void Unfocus() => _focus = null;
 
+    /// <summary>
+    /// "Show in town" (ADR-304): a translucent ghost of the plot <paramref name="plotId"/>'s building at <paramref name="level"/> stands on its plot,
+    /// and the camera eases toward it, until <see cref="HideGhost"/>. False, and nothing shows, for a plot the layout has not.
+    /// </summary>
+    public bool ShowGhost(string plotId, int level)
+    {
+        if (!IsOpen || !_plots.TryGetValue(TownOverview.PlotNode(plotId), out var plot) || plot.Info is null)
+        {
+            return false;
+        }
+
+        FinishConstruction();
+        var old = _pinned;
+        (_pinned, _pinnedLevel) = (plot, level);
+        Highlight(old);
+        Highlight(plot);
+        _focus = ToLocal(plot.Focus);
+        return true;
+    }
+
+    /// <summary>The ghost of <see cref="ShowGhost"/> goes, and the camera eases back.</summary>
+    public void HideGhost()
+    {
+        if (_pinned is not { } old)
+        {
+            return;
+        }
+
+        _pinned = null;
+        _focus = null;
+        Highlight(old);
+    }
+
+    /// <summary>
+    /// The controller's ring of plots (ADR-304): the next pickable plot round the plots' middle as the screen shows them, to the right along the
+    /// front (+1) or to the left (−1); it becomes the plot under the pointer, outlined, with its name on the status line. False when none can be.
+    /// </summary>
+    public bool Step(int direction)
+    {
+        if (!IsOpen || _construction is not null)
+        {
+            return false;
+        }
+
+        var centre = _camera.UnprojectPosition(ToGlobal(_pivot));
+        var ring = _plots.Values
+            .Where(p => p.IsPickable && !_camera.IsPositionBehind(p.Marker.GlobalPosition))
+            .Select(p => (Plot: p, Angle: ScreenAngle(_camera.UnprojectPosition(p.Marker.GlobalPosition) - centre)))
+            .OrderBy(p => p.Angle)
+            .ToList();
+        if (ring.Count == 0)
+        {
+            return false;
+        }
+
+        var index = _hovered is null ? -1 : ring.FindIndex(p => p.Plot == _hovered);
+        var next = index >= 0
+            ? (index + Math.Sign(direction) + ring.Count) % ring.Count
+            : ring.Select((p, i) => (Distance: Mathf.Abs(Mathf.AngleDifference(p.Angle, -Mathf.Pi / 2)), Index: i)).Min().Index; // the front's middle first
+        _pointer = null; // the ring, not the pointer, says what is hovered until the pointer moves
+        SetHovered(ring[next].Plot);
+        return true;
+    }
+
+    /// <summary>The angle of a point round the screen's centre as a map draws it: 0 to the right, −90° below (the screen's y runs down).</summary>
+    private static float ScreenAngle(Vector2 offset) => Mathf.Atan2(-offset.Y, offset.X);
+
+    /// <summary>Picks the plot under the pointer or reached by <see cref="Step"/> (the controller's A). True when there was one.</summary>
+    public bool PickHovered()
+    {
+        if (_construction is not null)
+        {
+            FinishConstruction();
+            return true;
+        }
+
+        if (!IsOpen || _hovered is not { Info: { } info })
+        {
+            return false;
+        }
+
+        BuildingPicked?.Invoke(info);
+        return true;
+    }
+
+    /// <summary>Cuts the construction scene short: the building stands, the dust goes, the camera eases back.</summary>
+    public void FinishConstruction()
+    {
+        if (_construction is not { } scene)
+        {
+            return;
+        }
+
+        _construction = null;
+        foreach (var plot in scene.Rising)
+        {
+            plot.EndRise();
+        }
+
+        if (GodotObject.IsInstanceValid(scene.Dust))
+        {
+            scene.Dust.Emitting = false;
+            var dust = scene.Dust;
+            GetTree().CreateTimer(dust.Lifetime).Timeout += () =>
+            {
+                if (GodotObject.IsInstanceValid(dust))
+                {
+                    dust.QueueFree(); // the last of the dust settles first
+                }
+            };
+        }
+
+        if (_pointer is { } pointer && IsOpen && _focus is null)
+        {
+            SetHovered(PlotAt(pointer));
+        }
+    }
+
     public override void _Process(double delta)
     {
         if (!IsOpen)
@@ -249,8 +433,26 @@ public partial class TownScene3D : Node3D
             return;
         }
 
+        if (_construction is { } scene)
+        {
+            scene.Elapsed += delta;
+            var progress = scene.Elapsed / scene.Seconds;
+            var rise = Mathf.SmoothStep(0.2f, 0.9f, (float)progress); // the camera arrives first, then the building comes up
+            foreach (var plot in scene.Rising)
+            {
+                plot.Rise(rise);
+            }
+
+            if (progress >= 1)
+            {
+                FinishConstruction();
+            }
+        }
+
         (Vector3 At, float Turn, float Scale, float Lens) goal =
-            _focus is { } focus ? (focus, _turn, FocusScale, 1f) : (_pivot, _turn, 1f, ZoomLenses[_zoom]);
+            _construction is { } building ? (ToLocal(building.Plot.Focus), _turn, FocusScale, 1f)
+            : _focus is { } focus ? (focus, _turn, FocusScale, 1f)
+            : (_pivot, _turn, 1f, ZoomLenses[_zoom]);
         if (_now == goal)
         {
             return;
@@ -269,7 +471,7 @@ public partial class TownScene3D : Node3D
         }
 
         PlaceCamera();
-        if (_pointer is { } pointer && _focus is null)
+        if (_pointer is { } pointer && _focus is null && _construction is null)
         {
             SetHovered(PlotAt(pointer)); // the building under a still pointer changes as the view moves (not under an open window)
         }
@@ -278,6 +480,12 @@ public partial class TownScene3D : Node3D
     /// <summary>A click at <paramref name="screenPoint"/>: raises <see cref="BuildingPicked"/> for the plot there. True when one was.</summary>
     public bool Pick(Vector2 screenPoint)
     {
+        if (_construction is not null)
+        {
+            FinishConstruction(); // a click cuts the construction scene short
+            return true;
+        }
+
         if (!IsOpen || PlotAt(screenPoint) is not { Info: { } info })
         {
             return false;
@@ -316,8 +524,135 @@ public partial class TownScene3D : Node3D
             return;
         }
 
+        var old = _hovered;
         _hovered = plot;
+        Highlight(old);
+        Highlight(plot);
         BuildingHovered?.Invoke(plot?.Info);
+    }
+
+    /// <summary>
+    /// The plot's outline and ghost as they should be: the building under the pointer outlined; the land under it, if the town can build there, with
+    /// a ghost of its first level; the ghost of <see cref="ShowGhost"/> on its plot.
+    /// </summary>
+    private void Highlight(TownPlot? plot)
+    {
+        if (plot is null)
+        {
+            return;
+        }
+
+        var hovered = plot == _hovered;
+        plot.Outline(hovered && plot.IsShown ? OutlineMaterial() : null);
+        if (plot == _pinned)
+        {
+            plot.ShowGhost(_pinnedLevel, GhostMaterial());
+        }
+        else if (hovered && !plot.IsShown && plot.Info is { Buildable: true })
+        {
+            plot.ShowGhost(1, GhostMaterial());
+        }
+        else
+        {
+            plot.HideGhost();
+        }
+    }
+
+    private ShaderMaterial OutlineMaterial()
+    {
+        _outline ??= new ShaderMaterial { Shader = GD.Load<Shader>(OutlineShader) };
+        _outline.SetShaderParameter("colour", HighlightColour);
+        return _outline;
+    }
+
+    private StandardMaterial3D GhostMaterial() => _ghostMaterial ??= new StandardMaterial3D
+    {
+        AlbedoColor = new Color(HighlightColour, 0.35f),
+        Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+        ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+        EmissionEnabled = false,
+    };
+
+    /// <summary>
+    /// The construction scene of the plot <paramref name="plotId"/> (ADR-304), when the speed setting plays one: the building sinks into the ground and
+    /// rises through its scaffolding in dust while the camera eases to it; with the Capitol, the citizens' homes rise as well.
+    /// </summary>
+    private void StartConstruction(string plotId)
+    {
+        var seconds = SpeedSettings.Seconds(Speed(), ConstructionSeconds);
+        if (seconds <= 0 || !_plots.TryGetValue(TownOverview.PlotNode(plotId), out var plot) || plot is not { IsShown: true, Info: { } info })
+        {
+            return;
+        }
+
+        FinishConstruction();
+        HideGhost();
+        SetHovered(null);
+        var rising = new List<TownPlot>();
+        if (plot.BeginRise())
+        {
+            rising.Add(plot);
+        }
+
+        if (info.Building.Value == BuiltInBuildings.TownHall && info.Level >= BuiltInBuildings.CapitolLevel)
+        {
+            rising.AddRange(_plots.Values.Where(p => p.Info?.State == PlotState.CitizensHomes && p.BeginRise()));
+        }
+
+        _construction = new Construction(plot, rising, Dust(plot, seconds), seconds);
+        ConstructionStarted?.Invoke(info);
+    }
+
+    private static Texture2D? _puff;
+
+    /// <summary>The construction scene's dust: soft puffs rising round the plot's foot while the building comes up.</summary>
+    private static CpuParticles3D Dust(TownPlot plot, double seconds)
+    {
+        _puff ??= new GradientTexture2D
+        {
+            Width = 64,
+            Height = 64,
+            Fill = GradientTexture2D.FillEnum.Radial,
+            FillFrom = new Vector2(0.5f, 0.5f),
+            FillTo = new Vector2(0.5f, 0f),
+            Gradient = new Gradient { Colors = [Colors.White, new Color(1, 1, 1, 0)], Offsets = [0f, 1f] },
+        };
+        var bounds = plot.ShownBounds;
+        var dust = new CpuParticles3D
+        {
+            Name = "Dust",
+            Amount = 96,
+            Lifetime = Math.Clamp(seconds * 0.8, 0.5, 1.6),
+            Explosiveness = 0.15f,
+            EmissionShape = CpuParticles3D.EmissionShapeEnum.Box,
+            EmissionBoxExtents = new Vector3((bounds.Size.X / 2) + 0.6f, 0.2f, (bounds.Size.Z / 2) + 0.6f),
+            Direction = Vector3.Up,
+            Spread = 75,
+            InitialVelocityMin = 1.5f,
+            InitialVelocityMax = 4f,
+            Gravity = new Vector3(0, -0.6f, 0),
+            ScaleAmountMin = 2f,
+            ScaleAmountMax = 4f,
+            Color = new Color(0.78f, 0.71f, 0.6f, 0.85f),
+            ColorRamp = new Gradient { Colors = [Colors.White, new Color(1, 1, 1, 0)], Offsets = [0.35f, 1f] },
+            Position = new Vector3(bounds.GetCenter().X, 0.3f, bounds.GetCenter().Z),
+            Mesh = new QuadMesh
+            {
+                Size = new Vector2(1.2f, 1.2f),
+                Material = new StandardMaterial3D
+                {
+                    AlbedoTexture = _puff,
+                    Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+                    ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+                    BillboardMode = BaseMaterial3D.BillboardModeEnum.Particles,
+                    BillboardKeepScale = true,
+                    VertexColorUseAsAlbedo = true,
+                },
+            },
+            Emitting = true,
+        };
+        plot.Marker.AddChild(dust);
+        return dust;
     }
 
     /// <summary>Each plot as the town has it now.</summary>
@@ -340,9 +675,26 @@ public partial class TownScene3D : Node3D
 
         var colour = town.Owner is { } owner ? Palette.ForPlayer(_session.State, owner) : Palette.Neutral;
         _dressing?.Show(TownScenery.Of(_session.State, town), colour, _plots.GetValueOrDefault(TownOverview.PlotNode(BuiltInBuildings.TownHall)));
-        if (_hovered is { IsShown: false })
+        if (_pinned?.Info is { } pinned && pinned.Level >= _pinnedLevel)
+        {
+            HideGhost(); // what the ghost showed stands now
+        }
+
+        if (_hovered is { IsPickable: false })
         {
             SetHovered(null);
+        }
+
+        foreach (var plot in _plots.Values)
+        {
+            Highlight(plot); // a plot shown anew lost its outline and ghost
+        }
+
+        if (_builds.Count > 0)
+        {
+            var built = _builds[^1]; // one building a day
+            _builds.Clear();
+            StartConstruction(built);
         }
     }
 

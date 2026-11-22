@@ -263,6 +263,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       - [x] Task 2: greybox layouts for the eight towns after their key paintings, the layout check in the game (`game-town-layouts`), the painting as the sky (ADR-300)
       - [x] Task 3: plot states (scaffolding, citizens' homes), walls as the siege has them, streets by the town hall, banners and the garrison hero's banner (ADR-301)
       - [x] Task 4: the camera: turned ±25°, zoomed in two steps, easing toward a building behind its window (ADR-302)
+      - [x] Task 5: hover and pick: the bronze outline, name and state, unused land picked, the ring of plots, "Show in town" (ADR-304)
+      - [x] Task 6: the construction scene: the building rising through its scaffolding in dust, by the speed setting (ADR-304)
 - [ ] Step 4: Haven and Inferno in full art, light, life, sound and music; Hall pictures; the Deck preset
 - [ ] Step 5: Sylvan, Academy, Necropolis, Dungeon, Stronghold and Swamp Bestiary in full art
 - [ ] Step 6: controller pass, UI scale, the goal building; the plan's target list ticked

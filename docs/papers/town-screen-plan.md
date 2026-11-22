@@ -659,8 +659,11 @@ Core first (tasks 1–7), then the screen (8–16). Each TOWN-17 rule gets its o
    strip or a key, and back when it closes.*
 5. **Hover and pick**: the bronze outline, name and state on the status line, the hand cursor, right click for the info window;
    picking by hover shape; the controller walks a ring of plots. "Show in town" from the Hall shows a ghost of the model on its plot.
+   *Done (ADR-304): unused land the town can still build on picks too, with a ghost of its building and a click for the Hall; ← and → walk
+   the ring as the d-pad does, Enter or A opens.*
 6. **Construction scene**: on `TownBuilt` / `DwellingBuilt`, 1.5 s at the plot (scaffold, dust, the model rising, a bell), cut short
-   or skipped by the speed settings (ADR-090); the Capitol's scene also raises the homes.
+   or skipped by the speed settings (ADR-090); the Capitol's scene also raises the homes. *Done (ADR-304): by the own heroes' speed
+   setting, a click ends it; the window closes for it; the bell waits for step 4's sounds.*
 7. **Arrival and loading** (TOWN-23): a 0.5 s fade through black into the hero shot, skipped at instant speed; the town type's scene
    loaded in the background when an own hero's route ends at an own town or at the turn's start for the selected town; one cached
    scene. Opens in under 1 s.

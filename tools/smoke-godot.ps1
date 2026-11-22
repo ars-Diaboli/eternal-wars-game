@@ -160,6 +160,12 @@ $scenarios = @(
     # camera eases to the keep from there, Escape back; Q held turns it the other way, the wheel and − zoom out; Escape leaves.
     @{ Name = 'game-town-camera'; App = 'EternalWars.Game'; Frames = 110; Map = $townsMap
        Input = '3:key:Enter;12:key:T;20:click:640,470;34:key:Escape;44:hold:E,24;56:wheel:up,2,800,300;70:key:B;82:key:Escape;88:hold:Q,14;96:wheel:down,1,800,300;98:key:Minus;106:key:Escape' },
+    # Hover and pick (ADR-304): T opens Castlebridge; the pointer over the tavern outlines it in bronze (its name and state on the status bar),
+    # over the caravan's empty plot a ghost of it shows; → walks the ring of plots and ← back, Enter opens the one reached (the Stables' land: the
+    # Hall with the Stables selected); "Show in town" closes the Hall and shows the Stables' ghost, the camera eased toward it; Escape puts it away;
+    # a click on the caravan's land opens the Hall with the Caravan selected; Escape twice leaves.
+    @{ Name = 'game-town-pick'; App = 'EternalWars.Game'; Frames = 124; Map = $townsMap
+       Input = '3:key:Enter;12:key:T;20:move:640,470;28:move:900,600;34:key:Right;40:key:Right;46:key:Right;52:key:Right;58:key:Right;64:key:Right;70:key:Left;76:key:Enter;84:press:Show in town;98:key:Escape;106:click:900,600;114:key:Escape;118:key:Escape' },
     # The eight town layouts (ADR-300): Blue holds a town of each type with everything built; T opens the first, ] goes through the other seven
     # (each layout loaded, every plot shown; a layout without a plot for one of its town's buildings or lines reports an error); Escape leaves.
     @{ Name = 'game-town-layouts'; App = 'EternalWars.Game'; Frames = 104; Map = $townLayoutsMap
@@ -172,10 +178,11 @@ $scenarios = @(
     # Switching towns (ADR-296): T opens Castlebridge, ] opens Dawnford, [ comes back, the Next town button goes on; Escape leaves.
     @{ Name = 'game-town-switch'; App = 'EternalWars.Game'; Frames = 64; Map = $magicMap
        Input = '3:key:Enter;12:key:T;22:key:Bracketright;34:key:Bracketleft;46:press:Next town;58:key:Escape' },
-    # The Hall (ADR-296): B opens it; the Brotherhood tile (the tavern's second level) selected shows its card, Build builds it; the Archer's
+    # The Hall (ADR-296): B opens it; the Brotherhood tile (the tavern's second level) selected shows its card, Build builds it: the Hall
+    # closes and the construction scene plays (ADR-304: the tavern rising through its scaffolding); B opens the Hall again, the Archer's
     # dwelling selected shows what it needs; Escape twice leaves.
-    @{ Name = 'game-town-build'; App = 'EternalWars.Game'; Frames = 76; Map = $townsMap
-       Input = '3:key:Enter;12:key:T;20:key:B;30:click:@Brotherhood;40:press:Build;52:click:@Archer;64:key:Escape;70:key:Escape' },
+    @{ Name = 'game-town-build'; App = 'EternalWars.Game'; Frames = 90; Map = $townsMap
+       Input = '3:key:Enter;12:key:T;20:key:B;30:click:@Brotherhood;40:press:Build;60:key:B;68:click:@Archer;80:key:Escape;84:key:Escape' },
     # Recruiting (ADR-296): R, Recruit Footman with its destination, Max, Recruit; Recruit all shows its summary, Recruit; then the Pikeman's
     # dwelling window from the building strip; Escape twice leaves.
     @{ Name = 'game-town-recruit'; App = 'EternalWars.Game'; Frames = 92; Map = $townsMap

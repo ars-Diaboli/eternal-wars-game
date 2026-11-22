@@ -13,7 +13,8 @@ namespace EternalWars.Godot.UI.Hud.TownScreen;
 /// <c>buildings.csv</c>) with their requirement links drawn between the tiles; hovering a tile lights its chain of requirements and dims the
 /// rest. The dwellings stand as the 7-of-9 block, a row per tier. A click selects a tile for the detail card: the cost with what is lacking,
 /// the requirements as ✓ / ✗ buttons that select them, what the level gives, the refusal, and Build; a dwelling that would close others
-/// draws them crossed through, with the warning on the card.
+/// draws them crossed through, with the warning on the card. "Show in town" closes the Hall and shows a ghost of the selected level on its plot of the
+/// 3D scene (ADR-304).
 /// </summary>
 public partial class TownScreenPanel
 {
@@ -285,6 +286,24 @@ public partial class TownScreenPanel
         }
 
         card.AddChild(text);
+        var plot = line is null ? node!.Building.Value : TownOverview.DwellingPlot(line.Id);
+        if (next is not null && _scene is { IsOpen: true } scene
+            && scene.Plots.FirstOrDefault(p => p.Id == plot) is { } shown && (shown.Buildable || shown.State is PlotState.Built or PlotState.BuiltToday))
+        {
+            // "Show in town" (ADR-304): the Hall closes and a ghost of the next level stands on its plot (not on land that can never take it).
+            var level = next.Level;
+            var show = new Button { Text = "Show in town", TooltipText = "Close the Hall and see where it would stand; Escape or a click puts it away" };
+            show.Pressed += () =>
+            {
+                CloseWindow();
+                if (scene.ShowGhost(plot, level))
+                {
+                    _status.Text = $"{title}: where it would stand. Escape or a click puts it away.";
+                }
+            };
+            card.AddChild(show);
+        }
+
         if (next is not null)
         {
             var build = new Button { Text = next.Level > 1 && line is not null ? "Upgrade" : "Build", Disabled = refusal is not null, TooltipText = refusal ?? "" };

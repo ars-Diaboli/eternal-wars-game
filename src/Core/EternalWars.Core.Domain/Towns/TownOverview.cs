@@ -54,9 +54,11 @@ public enum PlotState
 
 /// <summary>
 /// One plot of the town: a building (<see cref="Line"/> null; <see cref="Id"/> is the building's id) or a dwelling line (<see cref="Id"/> is
-/// <c>dwelling-&lt;line&gt;</c>), its level and its state.
+/// <c>dwelling-&lt;line&gt;</c>), its level and its state. <see cref="Buildable"/>: unused land the town can still build on, now or once it has
+/// the buildings and the resources (not a closed line, not the Grail building without the Grail); the 3D scene lets the pointer pick such a
+/// plot as it does a building (ADR-304).
 /// </summary>
-public sealed record PlotInfo(string Id, Common.BuildingId Building, Common.CreatureId? Line, string Name, int Level, PlotState State);
+public sealed record PlotInfo(string Id, Common.BuildingId Building, Common.CreatureId? Line, string Name, int Level, PlotState State, bool Buildable = false);
 
 /// <summary>
 /// The town screen's read model (ADR-296): the daily income, each line's growth with its parts, what was built today, the governor and its
@@ -133,11 +135,13 @@ public sealed record TownOverview(
         var today = town.LastBuilt == state.Date ? town.LastBuiltPlot : null;
         var capitol = town.Level(BuiltInBuildings.TownHall) >= BuiltInBuildings.CapitolLevel;
         var plots = new List<PlotInfo>();
+        var refused = BuildingTree.For(state, town).Where(n => n.Status == BuildingStatus.Refused).Select(n => n.Building).ToHashSet();
         foreach (var building in catalog.TownBuildings)
         {
             var level = Math.Min(town.Level(building), catalog.MaxLevel(building));
             var look = level == 0 ? PlotState.NotBuilt : today == building.Value ? PlotState.BuiltToday : PlotState.Built;
-            plots.Add(new PlotInfo(building.Value, building, null, catalog.Get(building, Math.Max(level, 1)).Name, level, look));
+            plots.Add(new PlotInfo(
+                building.Value, building, null, catalog.Get(building, Math.Max(level, 1)).Name, level, look, look == PlotState.NotBuilt && !refused.Contains(building)));
         }
 
         foreach (var line in TownRules.Lines(state, town))
@@ -148,7 +152,7 @@ public sealed record TownOverview(
             var plot = level > 0 ? today == id ? PlotState.BuiltToday : PlotState.Built
                 : closed ? capitol ? PlotState.CitizensHomes : PlotState.Closed
                 : PlotState.NotBuilt;
-            plots.Add(new PlotInfo(id, BuiltInBuildings.Dwelling(line.Tier), line.Id, $"{line.Name} dwelling", level, plot));
+            plots.Add(new PlotInfo(id, BuiltInBuildings.Dwelling(line.Tier), line.Id, $"{line.Name} dwelling", level, plot, plot == PlotState.NotBuilt));
         }
 
         return plots;
