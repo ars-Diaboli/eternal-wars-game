@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-308.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-309.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -20,7 +20,7 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [game-modes.md](game-modes.md) | Victory and defeat, saves, the turn timer, score, ranking and difficulty, replays and the viewer, the main menu and new-game screen, the arena. | 23 |
 | [random-maps-and-editor.md](random-maps-and-editor.md) | Templates and the generator, scenery density, relief, the standalone editor and the template editor. | 48 |
 | [multiplayer.md](multiplayer.md) | The host and clients, each client's view, the lobby, live battles, LAN saves, start zones and the simultaneous first week. | 16 |
-| [presentation.md](presentation.md) | Art direction, the camera, terrain and fog drawing, the HUD, layout and theme, information windows, icons, cursors and heraldry. | 40 |
+| [presentation.md](presentation.md) | Art direction, the camera, terrain and fog drawing, the HUD, layout and theme, information windows, icons, cursors and heraldry. | 42 |
 | [project-and-scope.md](project-and-scope.md) | Scope and phases, the owner's batches of answers that touch several areas, phase close-outs and the Godot checks, closing reviews. | 21 |
 
 ## All decisions
@@ -332,4 +332,6 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [303](heroes.md#adr-303-academy-heroes-three-dwarves-five-djinn-a-naga-and-a-golem-owner-adr-298-2026-11-22) | heroes | Academy heroes: three dwarves, five djinn, a naga and a golem (owner, ADR-298, 2026-11-22) | implemented |
 | [304](presentation.md#adr-304-town-screen-step-3-tasks-5-and-6-the-bronze-outline-picking-unused-land-the-ring-of-plots-show-in-town-and-the-construction-scene-town-14-town-15-adr-090-adr-292-2026-11-23) | presentation | Town screen step 3, tasks 5 and 6: the bronze outline, picking unused land, the ring of plots, "Show in town" and the construction scene (TOWN-14, TOWN-15, ADR-090, ADR-292, 2026-11-23) | implemented |
 | [305](heroes.md#adr-305-dungeon-heroes-four-minotaurs-three-troglodytes-a-medusa-and-two-humans-owner-adr-298-adr-303-2026-11-23) | heroes | Dungeon heroes: four minotaurs, three troglodytes, a medusa and two humans (owner, ADR-298, ADR-303, 2026-11-23) | implemented |
+| [306](presentation.md#adr-306-town-screen-step-3-task-7-the-fade-through-black-into-the-hero-shot-and-the-layout-loaded-ahead-town-23-adr-090-adr-292-2026-11-23) | presentation | Town screen step 3, task 7: the fade through black into the hero shot and the layout loaded ahead (TOWN-23, ADR-090, ADR-292, 2026-11-23) | implemented |
 | [307](heroes.md#adr-307-necropolis-heroes-three-humans-four-liches-six-vampires-a-ghost-a-wraith-and-five-other-dead-owner-adr-298-adr-303-2026-11-23) | heroes | Necropolis heroes: three humans, four liches, six vampires, a ghost, a wraith and five other dead (owner, ADR-298, ADR-303, 2026-11-23) | implemented |
+| [308](presentation.md#adr-308-town-screen-step-3-task-8-the-budget-overlay-the-town-scenes-budget-set-and-a-layouts-resources-let-go-town-23-adr-294-adr-306-2026-11-23) | presentation | Town screen step 3, task 8: the budget overlay, the town scene's budget set and a layout's resources let go (TOWN-23, ADR-294, ADR-306, 2026-11-23) | implemented |

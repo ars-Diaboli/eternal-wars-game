@@ -13,6 +13,9 @@ public partial class PathPreview : Node3D
 
     public HeroPath? Path { get; private set; }
 
+    /// <summary>A route was shown (the town scene starts loading the town it ends at, ADR-306).</summary>
+    public event Action<HeroPath>? Shown;
+
     /// <summary>The map whose ground the markers sit on.</summary>
     public void Bind(AdventureMap map) => _map = map;
 
@@ -32,6 +35,8 @@ public partial class PathPreview : Node3D
                     : new Transform3D(MapSpace.OnSlope(_map, step.Position), MapSpace.ToGround(_map, step.Position) + (MapSpace.GroundNormal(_map, step.Position) * 0.05f)),
             });
         }
+
+        Shown?.Invoke(path);
     }
 
     public void Clear()

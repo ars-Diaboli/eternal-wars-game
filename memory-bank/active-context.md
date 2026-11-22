@@ -22,7 +22,7 @@ Detail: [roadmap.md](roadmap.md).
   Utopia) never drawn at random; 14 heroes renamed as men (about a third women); varied close-crop prompts. Generator version 13.
 - Stronghold's Wolf Rider line moved to tier 2 and the Centaur line to tier 3, numbers swapped with the tier; generator version 12,
   maps re-pinned (ADR-295).
-- The town screen plan's step 3, tasks 1–6 (ADR-297, ADR-300, ADR-301, ADR-302, ADR-304): `TownScene3D` behind the town screen's bars, plots read from
+- The town screen plan's step 3, done (ADR-297, ADR-300, ADR-301, ADR-302, ADR-304, ADR-306, ADR-308): `TownScene3D` behind the town screen's bars, plots read from
   `plot_*` markers and shown as the town has them (model, the layout's greybox or a block; scaffolding the day it is built; citizens'
   homes on the closed lines under the Capitol), hover and pick opening the windows; greybox layouts for all eight playable towns,
   checked in the game (smoke `game-town-layouts`); walls as the siege has them, streets and houses by the town hall's level, banners in
@@ -30,8 +30,12 @@ Detail: [roadmap.md](roadmap.md).
   with Q and E, zoomed in two steps by the lens, easing toward a building behind its window and back (smoke `game-town-camera`); the
   bronze outline, name and state on the status bar, unused land that can be built on picked too (a ghost of it, a click for the Hall),
   ← → and the d-pad walking a ring of plots, "Show in town" from the Hall, and the construction scene (the building rising through its
-  scaffolding in dust, the Capitol's homes with it, by the speed setting; smoke `game-town-pick`, `game-town-build`). The bell waits for
-  step 4's sounds. Next is task 7 (arrival and loading ahead).
+  scaffolding in dust, the Capitol's homes with it, by the speed setting; smoke `game-town-pick`, `game-town-build`); the fade through
+  black from the map into the hero shot and the layout loaded ahead on a route to an own town or at the turn's start, about 15 ms to
+  open (ADR-306, smoke `game-town-arrival`, `game-town-route`); the budget overlay on F3 (triangles, draw calls, video memory, frame
+  time, opening time; `--budget=2560x1440`, smoke `game-town-budget`), the budget set at 2,000 draw calls with the shadow cascades
+  counted, and each layout's resources let go when another replaces it (ADR-308). Open: the bell (step 4's sounds), the budget measured
+  on the reference PC and the Deck. Next is step 4 (Haven and Inferno in full art).
 - The town screen plan's step 2 (ADR-296): the game's only town screen is the new one, its windows over the key painting with a strip
   of the town's buildings (Hall with columns by kind and requirement links, Recruitment and the dwelling window, Mage guild, Tavern,
   Marketplace, Blacksmith, Fort, Caravan, governor list, Transformer), the bars with Split, Upgrade all, Swap and Dismiss, rename and

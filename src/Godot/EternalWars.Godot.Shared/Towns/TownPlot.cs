@@ -369,17 +369,20 @@ internal sealed class TownPlot
             var path = $"{ModelFolder}{townType}/{info.Id}_{level}.glb";
             if (ResourceLoader.Exists(path))
             {
-                return GD.Load<PackedScene>(path).Instantiate<Node3D>();
+                using var scene = GD.Load<PackedScene>(path); // disposed now, not by the garbage collector: it keeps the model's meshes (ADR-308)
+                return scene.Instantiate<Node3D>();
             }
         }
 
         return null;
     }
 
-    /// <summary>The box around what <paramref name="look"/> shows, in the marker's space.</summary>
+    /// <summary>
+    /// The box around what <paramref name="look"/> shows, in the marker's space; from the transforms between them, so it holds out of the tree too
+    /// (a layout loaded ahead, ADR-306).
+    /// </summary>
     private Aabb BoundsOf(Node3D look)
     {
-        var toMarker = Marker.GlobalTransform.AffineInverse();
         Aabb? bounds = null;
         foreach (var visual in look.FindChildren("*", nameof(VisualInstance3D), recursive: true, owned: false).OfType<VisualInstance3D>().Prepend(look as VisualInstance3D).OfType<VisualInstance3D>())
         {
@@ -388,10 +391,25 @@ internal sealed class TownPlot
                 continue;
             }
 
-            var box = (toMarker * visual.GlobalTransform) * visual.GetAabb();
+            var box = InMarker(visual) * visual.GetAabb();
             bounds = bounds is { } sum ? sum.Merge(box) : box;
         }
 
         return bounds ?? new Aabb(new Vector3(-2, 0, -2), new Vector3(4, 4, 4));
+    }
+
+    /// <summary><paramref name="node"/>'s transform in the marker's space, through its parents up to the marker.</summary>
+    private Transform3D InMarker(Node3D node)
+    {
+        var transform = node.Transform;
+        for (var parent = node.GetParent(); parent is not null && parent != Marker; parent = parent.GetParent())
+        {
+            if (parent is Node3D spatial)
+            {
+                transform = spatial.Transform * transform;
+            }
+        }
+
+        return transform;
     }
 }

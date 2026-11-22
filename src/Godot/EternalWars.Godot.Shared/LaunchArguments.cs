@@ -73,6 +73,18 @@ public static class LaunchArguments
     /// <summary><c>--fonts=b</c>: the UI in the second font pairing the plan proposes (ADR-294), for the owner's choice; the first otherwise.</summary>
     public static string? Fonts => Value("--fonts=");
 
+    /// <summary>
+    /// <c>--budget</c> or <c>--budget=&lt;width&gt;x&lt;height&gt;</c>: the game starts with the rendering budget overlay shown and writes its numbers
+    /// to the log (ADR-308); with a size, the 3D scenes are rendered at that size whatever the window's (<see cref="BudgetSize"/>).
+    /// </summary>
+    public static bool Budget => OS.GetCmdlineUserArgs().Any(a => a == "--budget" || a.StartsWith("--budget=", StringComparison.Ordinal));
+
+    /// <summary>The width and height of <c>--budget=2560x1440</c>; null without one or when it cannot be read.</summary>
+    public static (int Width, int Height)? BudgetSize =>
+        Value("--budget=")?.Split('x') is [var w, var h] && int.TryParse(w, out var width) && int.TryParse(h, out var height) && width > 0 && height > 0
+            ? (width, height)
+            : null;
+
     /// <summary>Scripted input for smoke tests (<see cref="Controls.AutoInput"/>).</summary>
     public static string? AutoInput => Value("--autoinput=");
 

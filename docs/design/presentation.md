@@ -125,7 +125,8 @@ ADR-246, ADR-294, ADR-296, ADR-297, ADR-300, ADR-301, ADR-302, ADR-304; the plan
   the wheel or + and − zoom in two steps; a building's window opens at once while the camera eases toward the building behind it, and
   back when the window closes. A new building closes the window and plays its construction scene (at instant speed neither): the camera eases to it and it rises
   through its scaffolding in dust (with the Capitol, the citizens' homes too), 1.5 s at normal speed, by the speed setting for the
-  player's own heroes (none at instant); a click ends it. The
+  player's own heroes (none at instant); a click ends it. From the map the screen fades through black into the hero shot (0.5 s, by the
+  same setting, none at instant), and the town's scene is loaded ahead, so it opens at once. The
   adventure map and its side panels are put away while the scene shows. Along the main area's bottom runs a strip of the town's buildings
   (a click opens a building's window, or the information of one without a window), and a notices card stands in its corner (built today,
   caravans coming, the governor's discount). The bottom bar has the town's

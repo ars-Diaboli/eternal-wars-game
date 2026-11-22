@@ -236,7 +236,11 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   material overlay; plots the core marks `PlotInfo.Buildable` pick too and show a ghost (`TownPlot.ShowGhost`, also "Show in town",
   `TownScene3D.ShowGhost`); `Step` and `PickHovered` are the ring of plots. The construction scene runs in the scene's own `_Process` on
   `TownBuilt` / `DwellingBuilt` for the town shown (`TownPlot.BeginRise`, a `CpuParticles3D` of dust), timed by `Speed`, which the game
-  app sets to the own heroes' speed setting.
+  app sets to the own heroes' speed setting. `Prepare` (ADR-306) loads a town's layout on the resource loader's threads and builds it out
+  of the tree while the scene is closed (one layout kept); the UI's `TownArrival` calls it for a route shown ending at an own town and at
+  the turn's start, and fades through black when the scene opens. What the scene loads or makes in C# (the layout's packed scene, the
+  sky's painting and material) is disposed once the scene holds it, so a replaced layout's resources go at once rather than at a garbage
+  collection (ADR-308). The game app's `BudgetOverlay` (F3) reads the renderer's counts against `TownSceneBudget`.
 
 ### Map objects
 - **Definition** (`MapObjectDefinition`, data: id, `Kind`, footprint, kind parameters) vs **instance** (`MapObject`

@@ -448,8 +448,9 @@ The rules exist. The screen needs **read models** and a few **commands**:
 - **Rendering**:
   - Forward+, one directional light with shadows, a reflection probe per scene, SSAO, volumetric fog, and bloom on magic only;
   - baked ambient occlusion in each model's texture (the buildings change, so a baked lightmap of the whole scene does not fit);
-  - a budget per scene: **≤ 1.5 M triangles, ≤ 400 draw calls, ≤ 1 GB of video memory** at full build (placeholders, to be set by
-    the look-dev spike);
+  - a budget per scene at full build, the whole frame counted: **≤ 1.5 M triangles, ≤ 2,000 draw calls** (the depth pass and the
+    shadow cascades included), **≤ 1 GB of video memory** for the game, 60 fps at 1440p on the reference PC and 40 on the Deck, opening
+    within a second; the overlay on F3 shows each against its limit (ADR-308);
   - LOD on everything;
   - a Deck preset: half-resolution fog, no SSAO, shadows at 2048.
 
@@ -466,8 +467,8 @@ The rules exist. The screen needs **read models** and a few **commands**:
   - `game-town-armies` (drag, split, swap);
   - `game-town-windows` (guild, tavern, market, smith);
   - `game-town-switch` (◄ ►).
-- **Performance**: a fully built Haven and Inferno measured at 1440p and on the Deck; a frame-time capture in the roadmap's check
-  list.
+- **Performance**: a fully built Haven and Inferno measured at 1440p and on the Deck (`game-town-budget`, or F3 in the game); a
+  frame-time capture in the roadmap's check list.
 
 ## Art and audio
 
@@ -666,9 +667,13 @@ Core first (tasks 1–7), then the screen (8–16). Each TOWN-17 rule gets its o
    setting, a click ends it; the window closes for it; the bell waits for step 4's sounds.*
 7. **Arrival and loading** (TOWN-23): a 0.5 s fade through black into the hero shot, skipped at instant speed; the town type's scene
    loaded in the background when an own hero's route ends at an own town or at the turn's start for the selected town; one cached
-   scene. Opens in under 1 s.
+   scene. Opens in under 1 s. *Done (ADR-306): the map's last frame darkens to black and the town comes up, by the own heroes' speed
+   setting; "the selected town" is the one T opens, the first in the list; the plots are built ahead too; about 15 ms to open in greybox.*
 8. **Budget**: an overlay with triangles, draw calls, video memory and frame time; a fully built greybox Haven and Inferno measured at
-   1440p and on the Deck; the numbers set in this plan. Smokes `game-town-open` and `game-town-build` now show the 3D scene.
+   1440p and on the Deck; the numbers set in this plan. Smokes `game-town-open` and `game-town-build` now show the 3D scene. *Done
+   (ADR-308): `BudgetOverlay` on F3 with the opening time, `--budget=2560x1440` and smoke `game-town-budget`; the draw calls' limit is
+   2,000 with the depth pass and the shadow cascades counted (the greybox towns draw 850 to 1,450); measured on the development laptop,
+   where the reference PC's and the Deck's numbers wait for those machines; each layout's resources now go when another replaces it.*
 
 #### Step 4: Vertical slice art: Haven and Inferno
 

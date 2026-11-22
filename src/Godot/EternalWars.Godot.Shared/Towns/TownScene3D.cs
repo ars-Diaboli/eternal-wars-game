@@ -33,6 +33,7 @@ namespace EternalWars.Godot.Shared.Towns;
 /// <see cref="TownBuilt"/> or <see cref="DwellingBuilt"/> for the town shown, the camera eases to the plot while the new building rises out of the
 /// ground through its scaffolding in a cloud of dust (with the Capitol, the citizens' homes rise too), then eases back: 1.5 s at normal speed,
 /// shorter or longer by <see cref="Speed"/> (ADR-090), none at instant speed; a click cuts it short (<see cref="FinishConstruction"/>).
+/// Loading (TOWN-23, ADR-306): <see cref="Prepare"/> loads a town's layout in the background while the scene is closed, so it opens at once.
 /// </summary>
 public partial class TownScene3D : Node3D
 {
@@ -83,6 +84,9 @@ public partial class TownScene3D : Node3D
     private int _pinnedLevel;
     private readonly List<string> _builds = [];
     private Construction? _construction;
+    private (string Type, MapObjectId Town)? _preparing;
+    private readonly HashSet<string> _abandoned = [];
+    private bool _plotsChecked;
 
     /// <summary>The construction scene playing: the plot built, what rises (it and, with the Capitol, the homes), the dust, the time.</summary>
     private sealed class Construction(TownPlot plot, IReadOnlyList<TownPlot> rising, CpuParticles3D dust, double seconds)
@@ -129,6 +133,18 @@ public partial class TownScene3D : Node3D
 
     /// <summary>The town shown, while open.</summary>
     public MapObjectId? Town => _town;
+
+    /// <summary>The town type whose layout is loaded (shown, or kept out of the tree while closed), if any.</summary>
+    public string? LoadedType => _layoutType;
+
+    /// <summary>The town type whose layout is loading in the background (<see cref="Prepare"/>), if any.</summary>
+    public string? PreparingType => _preparing?.Type;
+
+    /// <summary>
+    /// How long the last <see cref="Open"/> of a town took, from the map or switched to, in milliseconds (TOWN-23: under a second; the budget
+    /// overlay shows it, ADR-308).
+    /// </summary>
+    public double LastOpenMilliseconds { get; private set; }
 
     public Camera3D Camera => _camera;
 
@@ -196,18 +212,25 @@ public partial class TownScene3D : Node3D
             return false;
         }
 
+        var clock = System.Diagnostics.Stopwatch.StartNew();
         var wasOpen = IsOpen;
+        var another = _town != town; // opened from the map, or switched to with [ or ] (another type's layout loads then)
         if (_layoutType != shown.TownType)
         {
             Load(shown.TownType);
+        }
+
+        if (!_plotsChecked)
+        {
             CheckPlots(shown);
         }
-        else if (_layout!.GetParent() is null)
+
+        if (_layout!.GetParent() is null)
         {
             AddChild(_layout);
         }
 
-        if (_town != town)
+        if (another)
         {
             FinishConstruction();
             HideGhost();
@@ -220,12 +243,135 @@ public partial class TownScene3D : Node3D
         Visible = true;
         ShowPlots();
         _camera.MakeCurrent();
+        if (another)
+        {
+            LastOpenMilliseconds = clock.Elapsed.TotalMilliseconds; // shown on the budget overlay (ADR-308)
+            if (LastOpenMilliseconds > 1000)
+            {
+                GD.PushWarning($"Town scene: {shown.TownType} took {LastOpenMilliseconds:0} ms to open (TOWN-23 allows a second)");
+            }
+        }
+
         if (!wasOpen)
         {
             Opened?.Invoke();
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Loads the layout of <paramref name="town"/>'s type in the background (TOWN-23, ADR-306) so that its town screen opens at once: the scene and
+    /// its sky painting on loader threads, then, once they are in and the scene is still closed, the layout built out of the tree in place of the
+    /// one kept (one layout is kept), its plots showing the town as it is. Nothing happens while the scene is open, for a town whose type is loaded
+    /// already, or for a type without a layout.
+    /// </summary>
+    public void Prepare(MapObjectId town)
+    {
+        if (IsOpen || _session.State.FindObject(town) is not Town prepared)
+        {
+            return;
+        }
+
+        var townType = prepared.TownType;
+        if (_preparing?.Type == townType || !HasLayout(townType))
+        {
+            return;
+        }
+
+        AbandonPreparing(); // the latest town wins: one layout is kept
+        if (townType == _layoutType)
+        {
+            return;
+        }
+
+        _preparing = (townType, town);
+        _abandoned.ExceptWith([LayoutPath(townType), SkyPath(townType)]);
+        Request(LayoutPath(townType));
+        if (ResourceLoader.Exists(SkyPath(townType)))
+        {
+            Request(SkyPath(townType));
+        }
+    }
+
+    /// <summary>A background load no longer wanted is let go once it is in (<see cref="PollPreparing"/>).</summary>
+    private void AbandonPreparing()
+    {
+        if (_preparing is var (other, _))
+        {
+            _abandoned.UnionWith([LayoutPath(other), SkyPath(other)]);
+            _preparing = null;
+        }
+    }
+
+    /// <summary>
+    /// Takes a finished background load from the loader and drops it, so the loader keeps nothing for it; true. Its C# wrapper is disposed at once:
+    /// left to the garbage collector, it would keep the resource (a painting, a layout's meshes) in video memory until a collection (ADR-308).
+    /// </summary>
+    private static bool Collect(string path)
+    {
+        ResourceLoader.LoadThreadedGet(path)?.Dispose();
+        return true;
+    }
+
+    private static void Request(string path)
+    {
+        if (ResourceLoader.LoadThreadedGetStatus(path) == ResourceLoader.ThreadLoadStatus.InvalidResource)
+        {
+            ResourceLoader.LoadThreadedRequest(path, useSubThreads: true);
+        }
+    }
+
+    /// <summary>
+    /// The resource at <paramref name="path"/>: taken from the background load when one was asked for (waiting for it if it is still loading), else
+    /// loaded now.
+    /// </summary>
+    private static T Fetch<T>(string path)
+        where T : Resource =>
+        ResourceLoader.LoadThreadedGetStatus(path) is ResourceLoader.ThreadLoadStatus.InProgress or ResourceLoader.ThreadLoadStatus.Loaded
+            ? (T)ResourceLoader.LoadThreadedGet(path)
+            : GD.Load<T>(path);
+
+    /// <summary>A layout loading in the background: once its files are in, it is built while the scene is still closed.</summary>
+    private void PollPreparing()
+    {
+        if (_abandoned.Count > 0)
+        {
+            _abandoned.RemoveWhere(path => ResourceLoader.LoadThreadedGetStatus(path) switch
+            {
+                ResourceLoader.ThreadLoadStatus.InProgress => false,
+                ResourceLoader.ThreadLoadStatus.Loaded or ResourceLoader.ThreadLoadStatus.Failed => Collect(path),
+                _ => true,
+            });
+        }
+
+        if (_preparing is not var (type, town))
+        {
+            return;
+        }
+
+        var status = ResourceLoader.LoadThreadedGetStatus(LayoutPath(type));
+        var sky = ResourceLoader.Exists(SkyPath(type)) ? ResourceLoader.LoadThreadedGetStatus(SkyPath(type)) : ResourceLoader.ThreadLoadStatus.Loaded;
+        if (status == ResourceLoader.ThreadLoadStatus.InProgress || sky == ResourceLoader.ThreadLoadStatus.InProgress)
+        {
+            return;
+        }
+
+        _preparing = null;
+        if (status != ResourceLoader.ThreadLoadStatus.Loaded)
+        {
+            _abandoned.UnionWith([LayoutPath(type), SkyPath(type)]); // failed: let go (an Open loads it then, and reports why)
+            return;
+        }
+
+        if (type != _layoutType)
+        {
+            Load(type); // built out of the tree; Open adds it
+            if (_session.State.FindObject(town) is Town prepared && prepared.TownType == type)
+            {
+                Dress(prepared); // the plots' models made now, not when the town opens
+            }
+        }
     }
 
     public void Close()
@@ -251,6 +397,16 @@ public partial class TownScene3D : Node3D
 
     public override void _ExitTree()
     {
+        AbandonPreparing();
+        foreach (var path in _abandoned)
+        {
+            if (ResourceLoader.LoadThreadedGetStatus(path) is ResourceLoader.ThreadLoadStatus.InProgress or ResourceLoader.ThreadLoadStatus.Loaded)
+            {
+                Collect(path); // the game is leaving: nothing stays with the loader
+            }
+        }
+
+        _abandoned.Clear();
         if (_layout is not null && _layout.GetParent() is null)
         {
             _layout.Free(); // the kept layout is out of the tree while closed: it goes with the scene (nothing is freed in a queue at exit)
@@ -430,6 +586,7 @@ public partial class TownScene3D : Node3D
     {
         if (!IsOpen)
         {
+            PollPreparing();
             return;
         }
 
@@ -663,18 +820,7 @@ public partial class TownScene3D : Node3D
             return;
         }
 
-        var catalog = TownRules.Buildings(_session.State, town);
-        foreach (var info in TownOverview.PlotsOf(_session.State, town))
-        {
-            if (_plots.TryGetValue(TownOverview.PlotNode(info.Id), out var plot))
-            {
-                var tier = info.Line is { } line ? _session.State.Creatures.Get(line).Tier : (int?)null;
-                plot.Show(info, catalog.KindOf(info.Building), tier, town.TownType);
-            }
-        }
-
-        var colour = town.Owner is { } owner ? Palette.ForPlayer(_session.State, owner) : Palette.Neutral;
-        _dressing?.Show(TownScenery.Of(_session.State, town), colour, _plots.GetValueOrDefault(TownOverview.PlotNode(BuiltInBuildings.TownHall)));
+        Dress(town);
         if (_pinned?.Info is { } pinned && pinned.Level >= _pinnedLevel)
         {
             HideGhost(); // what the ghost showed stands now
@@ -698,9 +844,38 @@ public partial class TownScene3D : Node3D
         }
     }
 
-    /// <summary>Loads the layout of <paramref name="townType"/> in place of the one loaded; its camera becomes the hero shot.</summary>
+    /// <summary>The plots and the scenery of the layout loaded as <paramref name="town"/> has them (in the tree or not).</summary>
+    private void Dress(Town town)
+    {
+        var catalog = TownRules.Buildings(_session.State, town);
+        foreach (var info in TownOverview.PlotsOf(_session.State, town))
+        {
+            if (_plots.TryGetValue(TownOverview.PlotNode(info.Id), out var plot))
+            {
+                var tier = info.Line is { } line ? _session.State.Creatures.Get(line).Tier : (int?)null;
+                plot.Show(info, catalog.KindOf(info.Building), tier, town.TownType);
+            }
+        }
+
+        var colour = town.Owner is { } owner ? Palette.ForPlayer(_session.State, owner) : Palette.Neutral;
+        _dressing?.Show(TownScenery.Of(_session.State, town), colour, _plots.GetValueOrDefault(TownOverview.PlotNode(BuiltInBuildings.TownHall)));
+    }
+
+    /// <summary>
+    /// Loads the layout of <paramref name="townType"/> in place of the one loaded, out of the tree (<see cref="Open"/> adds it); its camera becomes
+    /// the hero shot.
+    /// </summary>
     private void Load(string townType)
     {
+        if (_preparing?.Type == townType)
+        {
+            _preparing = null; // taken now (Fetch waits for what is still loading)
+        }
+        else
+        {
+            AbandonPreparing(); // a town of another type opened: it is the layout kept
+        }
+
         if (_layout is not null)
         {
             if (_layout.GetParent() == this)
@@ -713,8 +888,12 @@ public partial class TownScene3D : Node3D
 
         SetHovered(null); // the old layout's building leaves the status bar and the cursor
         _plots.Clear();
-        _layout = GD.Load<PackedScene>(LayoutPath(townType)).Instantiate<Node3D>();
-        _layoutType = townType;
+        using (var packed = Fetch<PackedScene>(LayoutPath(townType)))
+        {
+            _layout = packed.Instantiate<Node3D>(); // the packed scene's wrapper goes now: the next type's layout replaces this one's resources (ADR-308)
+        }
+
+        (_layoutType, _plotsChecked) = (townType, false);
         foreach (var marker in _layout.FindChildren(TownOverview.PlotNodePrefix + "*", nameof(Marker3D), recursive: true, owned: false).OfType<Marker3D>())
         {
             _plots[marker.Name] = new TownPlot(marker);
@@ -749,12 +928,16 @@ public partial class TownScene3D : Node3D
 
         _dressing = new TownDressing(_layout, townType);
         PaintSky(townType);
-        AddChild(_layout);
+        if (ResourceLoader.LoadThreadedGetStatus(SkyPath(townType)) is ResourceLoader.ThreadLoadStatus.InProgress or ResourceLoader.ThreadLoadStatus.Loaded)
+        {
+            Collect(SkyPath(townType)); // a painting loaded for a layout without a sky: the loader lets it go
+        }
     }
 
     /// <summary>Reports the town type's buildings and lines the layout has no plot for (the core test checks the layouts against a default town).</summary>
     private void CheckPlots(Town town)
     {
+        _plotsChecked = true;
         var missing = TownOverview.PlotsOf(_session.State, town).Select(p => TownOverview.PlotNode(p.Id)).Where(n => !_plots.ContainsKey(n)).ToList();
         if (missing.Count > 0)
         {
@@ -775,17 +958,27 @@ public partial class TownScene3D : Node3D
             return;
         }
 
-        var environment = (global::Godot.Environment)shared.Duplicate(); // the loaded scene's own environment stays as authored
-        var above = (shared.Sky?.SkyMaterial as ProceduralSkyMaterial)?.SkyTopColor ?? new Color(0.3f, 0.45f, 0.7f);
+        // Every wrapper made or fetched here is disposed once the scene holds what it wraps: a wrapper left to the garbage collector keeps its
+        // resource alive after the layout is gone, the painting in video memory with it (ADR-308).
+        using var environment = (global::Godot.Environment)shared.Duplicate(); // the loaded scene's own environment stays as authored
+        using var authoredSky = shared.Sky;
+        using var authoredMaterial = authoredSky?.SkyMaterial;
+        var above = (authoredMaterial as ProceduralSkyMaterial)?.SkyTopColor ?? new Color(0.3f, 0.45f, 0.7f);
         var forward = -_shot.Basis.Z;
-        var material = new ShaderMaterial { Shader = GD.Load<Shader>(SkyShader) };
-        material.SetShaderParameter("picture", GD.Load<Texture2D>(SkyPath(townType)));
+        using var material = new ShaderMaterial { Shader = GD.Load<Shader>(SkyShader) };
+        using (var picture = Fetch<Texture2D>(SkyPath(townType)))
+        {
+            material.SetShaderParameter("picture", picture);
+        }
+
         material.SetShaderParameter("azimuth", Mathf.Atan2(forward.X, -forward.Z));
         material.SetShaderParameter("span", (float)_layout.GetMeta("sky_span", 2.1f));
         material.SetShaderParameter("horizon", (float)_layout.GetMeta("sky_horizon", 0.35f));
         material.SetShaderParameter("above", above);
-        environment.Sky = new Sky { SkyMaterial = material };
+        using var sky = new Sky { SkyMaterial = material };
+        environment.Sky = sky;
         world.Environment = environment;
+        shared.Dispose();
     }
 
     /// <summary><paramref name="node"/>'s transform in this node's space, through its parents up to and with the layout's own (out of the tree or not).</summary>

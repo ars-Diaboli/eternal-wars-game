@@ -98,6 +98,14 @@ stroke of real mouse events that crosses new ground every frame, waits for the P
 in the log fails the script, as does a map that did not open or a run past the timeout (300 s). The numbers are this computer's: compare
 runs on one machine.
 
+## Town scene budget
+F3 in the game shows the rendering budget overlay (ADR-308) on every screen: the frame's triangles, draw calls (the shadow passes'
+share beside them), the game's video memory and the frame time (CPU and GPU), each against the town scene's budget (`TownSceneBudget`:
+1.5 M triangles, 2,000 draw calls with the depth pass and the shadow cascades counted, 1 GB, 60 fps, or 40 on a Steam Deck), and the town
+scene's opening time (a second). `--budget` starts with it shown and logs a `Budget [<town type>]: …` line every ten frames;
+`--budget=2560x1440` also renders the 3D that wide whatever the window. `./tools/smoke-godot.ps1 -Only game-town-budget` goes round the
+eight fully built greybox towns twice that way: read the numbers in its `godot.log`. The times are the machine's own.
+
 CI (`.github/workflows/ci.yml`) runs build + test + `sim selftest`, and a parallel `generated-maps` job; no Godot.
 
 ## Conventions

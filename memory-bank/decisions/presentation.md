@@ -46,6 +46,8 @@
 | [301](#adr-301-town-screen-step-3-task-3-plot-states-walls-as-the-siege-has-them-streets-by-the-town-hall-banners-and-the-garrison-heros-banner-town-15-town-19-town-22-adr-291-2026-11-22) | Town screen step 3, task 3: plot states, walls as the siege has them, streets by the town hall, banners and the garrison hero's banner (TOWN-15, TOWN-19, TOWN-22, ADR-291, 2026-11-22) | implemented |
 | [302](#adr-302-town-screen-step-3-task-4-the-town-camera-turned-25-round-the-town-and-zoomed-in-two-steps-by-the-lens-easing-toward-a-building-behind-its-window-town-14-adr-292-2026-11-22) | Town screen step 3, task 4: the town camera, turned ±25° round the town and zoomed in two steps by the lens, easing toward a building behind its window (TOWN-14, ADR-292, 2026-11-22) | implemented |
 | [304](#adr-304-town-screen-step-3-tasks-5-and-6-the-bronze-outline-picking-unused-land-the-ring-of-plots-show-in-town-and-the-construction-scene-town-14-town-15-adr-090-adr-292-2026-11-23) | Town screen step 3, tasks 5 and 6: the bronze outline, picking unused land, the ring of plots, "Show in town" and the construction scene (TOWN-14, TOWN-15, ADR-090, ADR-292, 2026-11-23) | implemented |
+| [306](#adr-306-town-screen-step-3-task-7-the-fade-through-black-into-the-hero-shot-and-the-layout-loaded-ahead-town-23-adr-090-adr-292-2026-11-23) | Town screen step 3, task 7: the fade through black into the hero shot and the layout loaded ahead (TOWN-23, ADR-090, ADR-292, 2026-11-23) | implemented |
+| [308](#adr-308-town-screen-step-3-task-8-the-budget-overlay-the-town-scenes-budget-set-and-a-layouts-resources-let-go-town-23-adr-294-adr-306-2026-11-23) | Town screen step 3, task 8: the budget overlay, the town scene's budget set and a layout's resources let go (TOWN-23, ADR-294, ADR-306, 2026-11-23) | implemented |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -911,3 +913,61 @@ TOWN-15 is ADR-291. The plan's step-by-step implementation is in its [roadmap](.
 - The smoke script's `move:x,y` moves the pointer without a button (hover). Smoke `game-town-pick` hovers the tavern and the caravan's land,
   walks the ring, opens the Stables' land, shows it in town and clicks the caravan's land; `game-town-build` now plays the construction scene
   before reopening the Hall.
+
+### ADR-306: Town screen step 3, task 7: the fade through black into the hero shot and the layout loaded ahead (TOWN-23, ADR-090, ADR-292, 2026-11-23)
+**Status**: implemented. The [town screen plan](../../docs/papers/town-screen-plan.md#implementation-plan)'s step 3, task 7.
+
+- **The fade**: when the 3D scene opens from the map, the map's last frame darkens to black and the town's hero shot comes up out of it,
+  0.5 s in all at normal speed, scaled by the own heroes' speed setting as the construction scene is (ADR-090: slow 1 s, fast 0.25 s, none
+  at instant). It is only a picture over the screen (`TownArrival`, a canvas layer over the town screen and the status bar, under the
+  dialogs): the town screen takes the pointer and the keys from its first frame. The map's frame is copied from the viewport once, as the
+  scene opens. A town switched to with [ or ] does not fade (the scene stays open), nor does a town type without a layout (its painting).
+- **Loaded ahead**: `TownScene3D.Prepare(town)` loads the town type's layout scene and its sky painting on the resource loader's threads
+  while the scene is closed; once they are in, the layout is instantiated out of the tree and its plots dressed as that town has them, in
+  one frame on the main thread (with the plots' own models, loaded there too: cheap in greybox, a candidate for the loader's threads when
+  step 4's models come), so opening only adds it to the tree. One layout is kept, and the latest wish wins: a `Prepare` for another town, or
+  the opening of a town of another type, lets a pending load go (collected once it finishes, or when the game leaves). Opening a town whose
+  layout is still loading waits for that load rather than starting another. `TownPlot` measures
+  its models through the transforms up to its marker, so the plots can be built out of the tree.
+- **When**: a route shown on the map (`PathPreview.Shown`) that ends at the gate of a town of the player at this screen, which comes a
+  click before the move; and at the start of that player's turn (and the game's) for the town T opens, the first in the town list, since the
+  map has no selected town.
+- **Under a second**: measured in the smokes at 1600 × 900, the first open took about 90 ms with the greybox layout loaded on the spot, 10–20
+  ms loaded ahead, about 3 ms after that (the fade's copy of the map's frame comes after, in `Opened`). `Open` warns when it takes over a second; `LastOpenMilliseconds` keeps the time for the budget
+  overlay (task 8).
+- Smokes `game-town-arrival` (Orrin walks into Castlebridge, loaded at the turn's start: the fade; T: the fade again) and `game-town-route`
+  (a route to Mosswatch loads Sylvan's layout in place of Haven's; the walk in opens it loaded).
+
+### ADR-308: Town screen step 3, task 8: the budget overlay, the town scene's budget set and a layout's resources let go (TOWN-23, ADR-294, ADR-306, 2026-11-23)
+**Status**: implemented; the measurement on the reference PC and on the Deck waits for those machines. The [town screen plan](../../docs/papers/town-screen-plan.md#implementation-plan)'s step 3, task 8.
+
+- **The overlay**: `BudgetOverlay`, a canvas layer over every screen in the game app, shows the frame's triangles, draw calls (with the shadow
+  passes' share), the game's video memory and the frame time (the slower of the processor's and the graphics card's, each shown) against
+  the budget, a number over its limit in red, and the town scene's opening time while one shows. F3 shows and hides it. The counts are the
+  last frame's, the times the mean of half a second; the viewport's render times are measured only while it shows. The budget and the lines
+  are engine-free (`TownSceneBudget`, `FrameSample` in Core.Domain/Towns, tests `TownSceneBudgetTests`). The frame time's limit is the
+  Deck's when the game runs on one (Steam sets `SteamDeck=1`).
+- **Measuring**: `--budget` starts the game with the overlay shown and writes its numbers to the log every ten frames, each line naming the
+  town type shown (ten frames are a second of a smoke's movie; in a real window they are a sixth of one at 60 fps); `--budget=2560x1440`
+  also renders the 3D that wide through the viewport's 3D scale (kept on a resize, the map's and the battle's 3D too), since a smoke's movie is the
+  project's 1600 × 900 window whatever `--resolution` says (the bars are drawn at 1600 × 900, so the 3D costs what 1440p does and the 2D
+  less). Smoke `game-town-budget` goes round the layouts map's eight fully built towns twice at 1440p. `TownScene3D.LastOpenMilliseconds`
+  now times a town switched to with [ or ] as well as one opened from the map, since a switch to another type loads its layout.
+- **The budget at full build**, the whole frame counted as Godot counts it: **≤ 1.5 M triangles; ≤ 2,000 draw calls**, the depth pass and
+  the four shadow cascades included; **≤ 1 GB of video memory** for the game while the town shows; **60 fps** (16.7 ms) on the reference
+  PC at 1440p and **40 fps** (25 ms) on the Deck; **opening within a second** (TOWN-23). The plan's placeholder of 400 draw calls is
+  raised: the fully built greybox towns already draw 850 to 1,450, about half of them for the shadow cascades, and Godot draws each
+  surface once for depth and once for colour. The art of step 4 keeps a building to a few surfaces; the Deck preset (step 4, task 8) is the
+  place for fewer cascades.
+- **Measured** on the development laptop (an RTX 500 Ada laptop GPU, not the reference PC; a debug build under Movie Maker, the 3D at
+  2560 × 1440): Haven 33 k triangles, 853 draw calls (449 for shadows), 4–8 ms on the GPU, 8–11 ms on the CPU, opened in 10 ms
+  loaded ahead and 22 ms on a switch; Inferno 39 k triangles, 942 draw calls (524), 5–12 ms on the GPU, 9–13 ms on the CPU, 25–85 ms
+  to open on a switch. Over all eight: 33 k (Haven) to 385 k (Academy) triangles, 853 to 1,437 (Stronghold) draw calls, 464–511 MB of video
+  memory for the whole game (the map alone about 370 MB), never more than 90 ms to open. The laptop's times wander by a factor of two
+  between runs; the numbers that hold the line are the reference PC's and the Deck's, measured with the same smoke and F3.
+- **A layout's resources let go**: the overlay showed video memory rising by the sky painting (about 37 MB) with each town type opened and
+  never coming back, to 736 MB after the eight. The C# wrappers of what `TownScene3D` loaded or made (the layout's packed scene, the sky's
+  painting, material, sky and environment, the loader's abandoned results, a plot's model scene) kept their resources alive until a garbage
+  collection, which video memory does not prompt. They are disposed as soon as the scene holds what they wrap, so one layout's resources
+  stay, as TOWN-23 wants: the second round of the eight stays at about 510 MB.
+- Smokes `game-town-open` and `game-town-build` show the 3D scene (Haven's, since ADR-297); their descriptions say so.

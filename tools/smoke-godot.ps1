@@ -146,10 +146,24 @@ $scenarios = @(
     # portrait dragged onto the garrison's empty frame moves him in; Swap is greyed with one hero; his frame dragged back leads him out.
     @{ Name = 'game-town-armies'; App = 'EternalWars.Game'; Frames = 96; Map = $townsMap
        Input = '3:key:Enter;12:key:Up;26:drag:@20 | Pikeman>@—#1;34:hold:Shift,8;35:drag:@10 | Archer>@—#2;46:press:Split;54:hold:Alt,4;55:click:@20 | Pikeman;66:drag:@Hero Orrin>@No hero;78:drag:@Hero Orrin>@No hero' },
-    # The town screen opened (ADR-296): T opens Castlebridge (the bars, the building strip, the notices); a click on its name renames it
+    # Arrival (TOWN-23, ADR-306): Haven's layout loads in the background at the turn's start (Castlebridge is the town T opens); Orrin walks
+    # into Castlebridge and the map's last frame fades through black into the hero shot; Escape leaves; T opens it again, faded the same way.
+    @{ Name = 'game-town-arrival'; App = 'EternalWars.Game'; Frames = 64; Map = $townsMap
+       Input = '3:key:Enter;12:key:Up;34:key:Escape;44:key:T;58:key:Escape' },
+    # A route to a town loads its layout ahead (ADR-306): on the layouts map a click on Mosswatch's gate shows Orrin's route there (Sylvan's layout
+    # loads in place of Haven's, loaded at the turn's start); a second click walks him in (the Elder Grove's experience: OK, a skill for the
+    # level) and the screen fades into Mosswatch's scene, opened at once; Escape leaves.
+    @{ Name = 'game-town-route'; App = 'EternalWars.Game'; Frames = 52; Map = $townLayoutsMap
+       Input = '3:key:Enter;12:click:1103,398;20:click:1103,398;28:press:OK;32:click:822,462;46:key:Escape' },
+    # The town screen opened (ADR-296): T opens Castlebridge (Haven's 3D scene behind the bars, the building strip, the notices, ADR-308); a click on its name renames it
     # Brightwatch; the governor list from the portrait; Escape twice leaves.
     @{ Name = 'game-town-open'; App = 'EternalWars.Game'; Frames = 70; Map = $townsMap
        Input = '3:key:Enter;12:key:T;22:click:@Castlebridge;28:text:Brightwatch;42:key:Enter;48:press:No governor;58:key:Escape;62:key:Escape' },
+    # The town scene's budget (ADR-308): the overlay shown from the start and the 3D rendered 2560 wide, as at 1440p (--budget=2560x1440: its
+    # numbers in the log every ten frames, each line naming the town type); T opens the first of the layouts map's towns, all fully built, ]
+    # goes through the other seven, a while at each, then round them all again (the video memory stays level: one layout kept); Escape leaves.
+    @{ Name = 'game-town-budget'; App = 'EternalWars.Game'; Frames = 300; Map = $townLayoutsMap; Args = @('--budget=2560x1440')
+       Input = '3:key:Enter;12:key:T;34:key:Bracketright;56:key:Bracketright;78:key:Bracketright;100:key:Bracketright;122:key:Bracketright;144:key:Bracketright;166:key:Bracketright;188:key:Bracketright;200:key:Bracketright;212:key:Bracketright;224:key:Bracketright;236:key:Bracketright;248:key:Bracketright;260:key:Bracketright;272:key:Bracketright;290:key:Escape' },
     # The town's 3D scene (ADR-297): T opens Castlebridge (Haven's layout behind the bars, the map put away); a click on the tavern opens the
     # Tavern window, one on the keep the Hall; a right click on the Footman's dwelling (a greybox block) its information; Escape leaves, and
     # the map is back.
@@ -178,7 +192,7 @@ $scenarios = @(
     # Switching towns (ADR-296): T opens Castlebridge, ] opens Dawnford, [ comes back, the Next town button goes on; Escape leaves.
     @{ Name = 'game-town-switch'; App = 'EternalWars.Game'; Frames = 64; Map = $magicMap
        Input = '3:key:Enter;12:key:T;22:key:Bracketright;34:key:Bracketleft;46:press:Next town;58:key:Escape' },
-    # The Hall (ADR-296): B opens it; the Brotherhood tile (the tavern's second level) selected shows its card, Build builds it: the Hall
+    # The Hall (ADR-296) over Haven's 3D scene (ADR-308): B opens it; the Brotherhood tile (the tavern's second level) selected shows its card, Build builds it: the Hall
     # closes and the construction scene plays (ADR-304: the tavern rising through its scaffolding); B opens the Hall again, the Archer's
     # dwelling selected shows what it needs; Escape twice leaves.
     @{ Name = 'game-town-build'; App = 'EternalWars.Game'; Frames = 90; Map = $townsMap

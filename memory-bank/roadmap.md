@@ -257,14 +257,17 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Step 2: core read models and the TOWN-17 rules (Recruit all, Upgrade all, dismiss, rename, rumours, any-pair trade, sending to
       teammates); the windows over a 2D main screen (Hall, Recruitment, Mage guild, Tavern, Marketplace, Blacksmith, Fort, Caravan,
       the rest); the bars; previous / next town; `TownPanel` to the harness only (ADR-296)
-- [ ] Step 3: the 3D town scene in greybox for the eight playable towns: plots and their states, streets and walls, camera, hover and
-      pick, construction scene, arrival, loading ahead, budget
+- [x] Step 3: the 3D town scene in greybox for the eight playable towns: plots and their states, streets and walls, camera, hover and
+      pick, construction scene, arrival, loading ahead, budget (the budget's measurement on the reference PC and the Deck still to do)
       - [x] Task 1: `TownScene3D` behind the bars, plots from the layout scenes, greybox blocks, hover and pick; Haven's layout (ADR-297)
       - [x] Task 2: greybox layouts for the eight towns after their key paintings, the layout check in the game (`game-town-layouts`), the painting as the sky (ADR-300)
       - [x] Task 3: plot states (scaffolding, citizens' homes), walls as the siege has them, streets by the town hall, banners and the garrison hero's banner (ADR-301)
       - [x] Task 4: the camera: turned ±25°, zoomed in two steps, easing toward a building behind its window (ADR-302)
       - [x] Task 5: hover and pick: the bronze outline, name and state, unused land picked, the ring of plots, "Show in town" (ADR-304)
       - [x] Task 6: the construction scene: the building rising through its scaffolding in dust, by the speed setting (ADR-304)
+      - [x] Task 7: arrival and loading: the fade through black into the hero shot, the layout loaded ahead on a route or at the turn's start (ADR-306)
+      - [x] Task 8: the budget overlay (F3, `--budget`), the budget set from the greybox towns at 1440p, a layout's resources let go (ADR-308)
+      - [ ] The budget measured with `game-town-budget` or F3 on the reference PC at 1440p and on the Deck (ADR-308)
 - [ ] Step 4: Haven and Inferno in full art, light, life, sound and music; Hall pictures; the Deck preset
 - [ ] Step 5: Sylvan, Academy, Necropolis, Dungeon, Stronghold and Swamp Bestiary in full art
 - [ ] Step 6: controller pass, UI scale, the goal building; the plan's target list ticked

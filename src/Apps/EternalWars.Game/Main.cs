@@ -86,6 +86,9 @@ public partial class Main : Node3D
     /// <summary>The right-click information window (ADR-154), above every screen, for the whole run.</summary>
     private readonly InfoWindow _info = new();
 
+    /// <summary>The rendering budget overlay (ADR-308), F3, for the whole run.</summary>
+    private readonly BudgetOverlay _budget = new();
+
     public override void _ExitTree() => GameCursors.Release();
 
     public override void _Ready()
@@ -94,6 +97,12 @@ public partial class Main : Node3D
         UiTheme.Apply(); // the shared margins and gaps (ADR-163), the look (ADR-191) and the fonts (ADR-294)
         TownScreenKeys.AddToInputMap(); // the town screen's keys (ADR-294)
         AddChild(new TouchInput()); // a touch screen as the mouse: a long press opens the information window (ADR-190)
+        _budget.Visible = _budget.LogNumbers = LaunchArguments.Budget; // the rendering budget, F3 (ADR-308)
+        AddChild(_budget);
+        if (LaunchArguments.BudgetSize is var (width, _))
+        {
+            _budget.RenderAt(width); // the 3D at the budget's 1440p in a smoke's 1600 × 900 window
+        }
         if (AutoInput.FromLaunchArguments() is { } autoInput)
         {
             AddChild(autoInput);
@@ -294,7 +303,7 @@ public partial class Main : Node3D
     }
 
     /// <summary>
-    /// Alt+Enter switches the window mode. A deployment drag ends where the button is let go, even over the HUD (which would otherwise take the
+    /// Alt+Enter switches the window mode; F3 shows the rendering budget overlay (ADR-308). A deployment drag ends where the button is let go, even over the HUD (which would otherwise take the
     /// release).
     /// </summary>
     public override void _Input(InputEvent @event)
@@ -304,6 +313,14 @@ public partial class Main : Node3D
         {
             GetViewport().SetInputAsHandled();
             ToggleWindowMode();
+            return;
+        }
+
+        // F3 shows the rendering budget overlay (ADR-308) on every screen.
+        if (@event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.F3 })
+        {
+            GetViewport().SetInputAsHandled();
+            _budget.Toggle();
             return;
         }
 
@@ -649,6 +666,11 @@ public partial class Main : Node3D
         _hud.TownScreen.Scene = town;
         _hud.TownScreen.Hovered += _hud.ShowHover;
         _screens.ShowTown(town, _world, _camera, sun);
+        var arrival = new TownArrival(); // the fade into the hero shot, the layout loaded ahead (TOWN-23, ADR-306)
+        _game.AddChild(arrival);
+        arrival.Bind(_session, _context, town, _world.PathPreview);
+        _budget.Showing = () => IsInstanceValid(town) && town.IsOpen ? town.LoadedType : null; // the budget log names the town scene (ADR-308)
+        _budget.OpenTime = () => IsInstanceValid(town) && town.IsOpen ? town.LastOpenMilliseconds : null; // and its opening time (ADR-306)
     }
 
     private void BuildHud()
