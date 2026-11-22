@@ -65,8 +65,8 @@ inside, faint stains and creases, seen exactly from the front, mirror-symmetric,
 **`PUZZLE-haven`** (subject):
 
 ```text
-Haven: a burning sun-brazier held in a great iron cage at the centre, around it a tiered hill-city of soot-stained limestone and
-slate roofs, a procession of hooded zealots with torches, griffins circling the towers, knights in soot-dark plate, a pyre smoking by a
+Haven: a burning sun-brazier held in a great iron cage at the centre, around it a castle of grey stone on a rocky rise, round towers with
+dark conical slate roofs, a procession of hooded zealots with torches, griffins circling the towers, knights in soot-dark plate, a pyre smoking by a
 gate, war banners of off-white and faded gold, a dim pale sun low in a grey sky.
 ```
 
@@ -105,8 +105,8 @@ in a workshop, snow on every ledge, pale-blue rune light, cold stars above.
 
 ```text
 Necropolis: a great skeletal hand gripping the rim of a spoked stone wheel at the centre, around it a city of stacked ruins from many
-ages, ossuary walls of skulls, a crooked black spire with a cold green light, ranks of skeleton soldiers, a bone dragon coiled on a
-broken tower, liches in grey robes, ash drifting, a sickly green sky.
+ages, ossuary walls of skulls, a tall straight black obelisk spire with a cold cyan light, ranks of skeleton soldiers, a bone dragon coiled on a
+broken tower, liches in grey robes, ash drifting, a heavy dark grey sky.
 ```
 
 ## Inferno (`puzzle_inferno`)

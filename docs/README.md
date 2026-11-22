@@ -32,6 +32,7 @@ The game design document, split by mechanic. Start at the overview.
 | [town-buildings.md](content/town-buildings.md) | Town buildings, the tech tree and every town's dwellings |
 | [spells.md](content/spells.md) | Spell catalog: six schools, four levels, three ranks |
 | [artifacts.md](content/artifacts.md) | Artifact catalog: slots, tiers, sets and lore |
+| [faction-art.md](content/faction-art.md) | The owner's key paintings of every town and the look they set per faction: setting, light, landmark, buildings, colours, what to avoid |
 | [icon-prompts.md](content/prompts/icon-prompts.md) | Image-model prompts for the UI icons and the faction heraldry, as 2×2 and 2×3 sheets with shared style blocks and the shared anti-cartoon negative |
 | [cursor-prompts.md](content/prompts/cursor-prompts.md) | Image-model prompts for the mouse cursors (menus, adventure map, battle) in grey iron, and their hotspots |
 | [spell-icon-prompts.md](content/prompts/spell-icon-prompts.md) | Image-model prompts for the icons of the 36 most common spells, one sheet a school |

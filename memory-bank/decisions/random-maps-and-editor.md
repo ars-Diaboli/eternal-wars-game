@@ -49,6 +49,7 @@
 | [280](#adr-280-the-editor-overhaul-closed-adr-247-2026-11-22) | The editor overhaul closed (ADR-247, 2026-11-22) | implemented |
 | [281](#adr-281-content-from-pictures-short-lists-from-drop-downs-adr-255-2026-11-22) | Content from pictures, short lists from drop-downs (ADR-255, 2026-11-22) | implemented |
 | [282](#adr-282-side-bars-one-panel-per-region-and-the-plans-check-edit-1-2026-11-22) | Side bars, one panel per region, and the plan's check (EDIT-1, 2026-11-22) | implemented |
+| [283](#adr-283-the-measure-tool-edit-1-2026-11-22) | The Measure tool (EDIT-1, 2026-11-22) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -1132,3 +1133,18 @@ ADR when it is built.
   icons prompted but not drawn (sheets C4 and C7) and those with no prompt yet (new sheets C12 and C13: the panels of the side bars,
   Find, sample maps, the exports, the Map and Template tabs) have their `UiIcon` values, so a file shows once it exists; a lettered
   placeholder stands in until then.
+
+### ADR-283: The Measure tool (EDIT-1, 2026-11-22)
+**Status**: implemented.
+
+- **What it measures**: the route the game's pathfinding takes between two tiles, for a hero with the movement points a day the user
+  picks (100 to 5000; 1500, a hero with no army, at first) and of the player picked. Two clicks pick the tiles; between them the route
+  follows the pointer; a third click starts again. Nothing is edited, so nothing goes through `MapEditorSession`.
+- **The game's route, not the analysis's reach**: unlike the fairness analysis's scout (ADR-263), which walks on past guards and visits,
+  the measured hero walks as one in the game does: round guarded tiles and visits, onto a monster, a hero (not an allied one) or a
+  barring quest object as the route's end, through gates; the fog is ignored. `PathFinder.FindPathFor` is `FindPath` for a hero not
+  on the map; `MapMeasure` gives a stand-in of the player (no army, skill or artifact: at home on no terrain, the costs of the scout
+  with no town) and counts the days again
+  with the points picked, by the game's rule (a day ends when a step leaves no point).
+- **Shown as the game shows a route**: the world view's `PathPreview` draws it by day; the status bar gives the steps (a gate's jump is
+  none), the movement points and the days. No route, a start no hero can stand on, or one tile: the status bar says there is no route.

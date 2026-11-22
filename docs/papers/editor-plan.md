@@ -233,7 +233,7 @@ The bar the overhaul is measured against. Each item can be checked; step 6 of th
 | Link | K | Links gates, portals and one-way exits, drawn as arrows | — |
 | Paste | P (built) | Places the clipboard's piece where clicked | The layers to paste |
 | Grail | B (built; G is Height's) | Buries the Grail | — |
-| Measure | U | The steps and days a hero would take between two tiles, along the route the game would take | The hero's movement points (not built: [after the close](#after-the-close)) |
+| Measure | U | The steps and days a hero would take between two tiles, along the route the game would take | The hero's movement points a day, the player (ADR-283) |
 
 - **Every brush tool** shows its outline on the ground before the click. Every stroke is one undo step (as now).
 - **The clipboard**: Ctrl+C, X and V, and Ctrl+D to duplicate. The copied area keeps its terrain, height, roads, rivers, objects,
@@ -689,18 +689,20 @@ for collapsible panels as in IDEs.
 5. **Icons**: `UiIcon` values for the prompted icons not drawn yet (sheets C4, C7) and new prompts for those that had none (sheets C12,
    C13 in [editor-icon-prompts.md](../content/prompts/editor-icon-prompts.md)).
 
+**Built after the check**:
+1. **Measure tool** (U, the tools table, ADR-283): two clicks pick the tiles, the options the hero's movement points a day and its
+   player; the route the game's pathfinding takes is drawn on the map by day, its steps, points and days in the status bar. The core's
+   `MapMeasure`, tests in `MapMeasureTests`; smoke `editor-measure`.
+
 **Left open** (in [roadmap.md](../../memory-bank/roadmap.md)), the larger first:
-1. **Measure tool** (U, the tools table): pick two tiles and a hero's movement points; the route the game's pathfinding takes drawn on
-   the map, its steps and days in the status bar. The core's reach (`MapAnalysis`) is the start. A tool, a view and tests: never
-   scheduled in the tasks above.
-2. **Context menus** (the commands' "right click"): a right click on the map, a selection, a browser entry or a panel offers the
+1. **Context menus** (the commands' "right click"): a right click on the map, a selection, a browser entry or a panel offers the
    commands that apply there, built from the registry like the menus.
-3. **Object tool options**: a random variant of the picked kind, and snapping the entrance to a road; rules in the core with tests.
-4. **The other level ghosted in the map view** (Map view and navigation): today only the minimap mixes it in.
-5. **The height brush's falloff** (Height's options): a soft edge, a parameter of the core's height edit.
-6. **`Main.cs` as composition only**: it holds about 1400 lines (the plan expected it to shrink from 548). Its commands, menus and
+2. **Object tool options**: a random variant of the picked kind, and snapping the entrance to a road; rules in the core with tests.
+3. **The other level ghosted in the map view** (Map view and navigation): today only the minimap mixes it in.
+4. **The height brush's falloff** (Height's options): a soft edge, a parameter of the core's height edit.
+5. **`Main.cs` as composition only**: it holds about 1400 lines (the plan expected it to shrink from 548). Its commands, menus and
    file handling move to composers in the app, each one area, so the app stays composition and input mapping.
-7. **The editor's icon art**: sheets C4, C7, C12 and C13 generated and cut into the icons folder.
+6. **The editor's icon art**: sheets C4, C7, C12 and C13 generated and cut into the icons folder.
 
 ## Decisions
 

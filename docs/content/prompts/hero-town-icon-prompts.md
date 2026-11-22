@@ -940,9 +940,9 @@ materials with grime and moss, naturalistic light from the top left with soft sh
 without drawn outlines. Not a photograph, not a plastic CGI render, no pixel art. 4 separate icons arranged in a grid of 2 columns and
 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
 nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
-with alpha. The icons, top row left to right, then bottom row: 1 a walled hill-town of soot-grey limestone and dark slate roofs, a
-cathedral keep crowned by an iron cage holding a burning sun-brazier; 2 a ring of colossal living trees forming the walls, halls in
-their crowns, one vast half-bare ancient tree at the back; 3 the same town as the one above it, as a small village: a few houses around
+with alpha. The icons, top row left to right, then bottom row: 1 a grey stone castle on a rocky rise, round towers with dark conical
+slate roofs, a white banner with a gold sun on the keep; 2 a ring of colossal living trees forming the walls, halls in
+their crowns, one vast half-bare ancient tree at the back, faint blue-teal mist; 3 the same town as the one above it, as a small village: a few houses around
 the bare foundation of its landmark, no walls; 4 the same town as the one above it, as a small village: a few houses around the bare
 foundation of its landmark, no walls
 ```
@@ -967,8 +967,8 @@ without drawn outlines. Not a photograph, not a plastic CGI render, no pixel art
 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
 nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
 with alpha. The icons, top row left to right, then bottom row: 1 a frozen citadel of blue-grey granite with verdigris domes, a domed
-observatory holding a bronze orrery of rings; 2 stacked black ruins of many ages, ossuary walls of skulls, a crooked black spire with a
-cold green light; 3 the same town as the one above it, as a small village: a few houses around the bare foundation of its landmark, no
+observatory holding a bronze orrery of rings; 2 a dark keep among black ruins on a grey plain, a tall straight black obelisk spire with
+a cold cyan light at its tip; 3 the same town as the one above it, as a small village: a few houses around the bare foundation of its landmark, no
 walls; 4 the same town as the one above it, as a small village: a few houses around the bare foundation of its landmark, no walls
 ```
 
@@ -992,8 +992,8 @@ without drawn outlines. Not a photograph, not a plastic CGI render, no pixel art
 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
 nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
 with alpha. The icons, top row left to right, then bottom row: 1 a jagged fortress of black slag with glowing lava cracks,
-sickle-shaped spires, an altar-furnace venting smoke; 2 a town sunk into a cavern sinkhole, black and violet stepped pyramids, a spire
-topped by a glowing violet crystal; 3 the same town as the one above it, as a small village: a few houses around the bare foundation of
+sickle-shaped spires, an altar-furnace venting smoke; 2 a gothic black citadel of many spires on a cavern ledge under hanging stalactites, a
+tall spire of glowing violet crystal; 3 the same town as the one above it, as a small village: a few houses around the bare foundation of
 its landmark, no walls; 4 the same town as the one above it, as a small village: a few houses around the bare foundation of its
 landmark, no walls
 ```
@@ -1042,9 +1042,9 @@ materials with grime and moss, naturalistic light from the top left with soft sh
 without drawn outlines. Not a photograph, not a plastic CGI render, no pixel art. 4 separate icons arranged in a grid of 2 columns and
 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
 nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
-with alpha. The icons, top row left to right, then bottom row: 1 a ring-shaped sanctuary around a colossal half-buried gear of stone
-and green bronze, four small elemental shrines; 2 a stepped pyramid eyrie carved into a sandstone crag, huge perches, a broken colossal
-dragon statue; 3 the same town as the one above it, as a small village: a few houses around the bare foundation of its landmark, no
+with alpha. The icons, top row left to right, then bottom row: 1 a stepped round altar of weathered stone ringed by pillars, a
+glowing violet orb with floating stones above it, four small domed elemental shrines; 2 a terraced eyrie cut into a dark granite crag,
+huge cave mouths, an outcrop at its top shaped like a dragon's head; 3 the same town as the one above it, as a small village: a few houses around the bare foundation of its landmark, no
 walls; 4 the same town as the one above it, as a small village: a few houses around the bare foundation of its landmark, no walls
 ```
 

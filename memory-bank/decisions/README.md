@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-283.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-285.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -20,7 +20,7 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [game-modes.md](game-modes.md) | Victory and defeat, saves, the turn timer, score, ranking and difficulty, replays and the viewer, the main menu and new-game screen, the arena. | 20 |
 | [random-maps-and-editor.md](random-maps-and-editor.md) | Templates and the generator, scenery density, relief, the standalone editor and the template editor. | 11 |
 | [multiplayer.md](multiplayer.md) | The host and clients, each client's view, the lobby, live battles, LAN saves, start zones and the simultaneous first week. | 13 |
-| [presentation.md](presentation.md) | Art direction, the camera, terrain and fog drawing, the HUD, layout and theme, information windows, icons, cursors and heraldry. | 25 |
+| [presentation.md](presentation.md) | Art direction, the camera, terrain and fog drawing, the HUD, layout and theme, information windows, icons, cursors and heraldry. | 26 |
 | [project-and-scope.md](project-and-scope.md) | Scope and phases, the owner's batches of answers that touch several areas, phase close-outs and the Godot checks, closing reviews. | 20 |
 
 ## All decisions
@@ -309,3 +309,5 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [280](random-maps-and-editor.md#adr-280-the-editor-overhaul-closed-adr-247-2026-11-22) | random-maps-and-editor | The editor overhaul closed (ADR-247, 2026-11-22) | implemented |
 | [281](random-maps-and-editor.md#adr-281-content-from-pictures-short-lists-from-drop-downs-adr-255-2026-11-22) | random-maps-and-editor | Content from pictures, short lists from drop-downs (ADR-255, 2026-11-22) | implemented |
 | [282](random-maps-and-editor.md#adr-282-side-bars-one-panel-per-region-and-the-plans-check-edit-1-2026-11-22) | random-maps-and-editor | Side bars, one panel per region, and the plan's check (EDIT-1, 2026-11-22) | implemented |
+| [283](random-maps-and-editor.md#adr-283-the-measure-tool-edit-1-2026-11-22) | random-maps-and-editor | The Measure tool (EDIT-1, 2026-11-22) | implemented |
+| [284](presentation.md#adr-284-faction-key-paintings-set-each-towns-look-owner-adr-008-adr-246-adr-248-2026-11-22) | presentation | Faction key paintings set each town's look (owner, ADR-008, ADR-246, ADR-248, 2026-11-22) | accepted |

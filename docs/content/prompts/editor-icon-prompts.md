@@ -103,7 +103,7 @@ standing open in an upside-down V, two sharp steel points at the bottom, a round
 | 3 | `tool_grail` | Grail |
 | 4 | `tool_link_gates` | Link gates |
 | 5 | `tool_stamp` | Paste, stamps |
-| 6 | `tool_measure` | Measure (U, planned) |
+| 6 | `tool_measure` | Measure (U) |
 
 ### E3 · Selecting tools (2 × 2): the tool palette, the Tools menu, the terrain brush's Fill option
 

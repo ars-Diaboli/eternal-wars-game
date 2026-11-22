@@ -49,7 +49,7 @@ E6 spare unused). Sheets C4 (view) and C7 (map settings) are not drawn yet: thos
 |---|---|
 | tool_terrain, tool_road, tool_river, tool_height, tool_start_zone, tool_scatter | the brush tools (palette, Tools menu) |
 | tool_object, tool_monster, tool_grail, tool_link_gates, tool_stamp | Object, Monster (also the template's Monsters guard), Grail, Link gates, Paste and Save selection as stamp |
-| tool_measure | not used yet (the planned Measure tool) |
+| tool_measure | the Measure tool |
 | tool_select, tool_move, tool_erase | Select, Move, Erase |
 | tool_fill | the Terrain tool's Fill option |
 | zone_start, zone_ai_start, zone_treasure, zone_junction | the template editor's Add buttons and zone Type list |

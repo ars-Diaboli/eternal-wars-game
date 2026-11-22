@@ -20,5 +20,6 @@ public static class EditorTools
         new MoveTool(context),
         new PasteTool(context),
         new GrailTool(context),
+        new MeasureTool(context),
     ];
 }

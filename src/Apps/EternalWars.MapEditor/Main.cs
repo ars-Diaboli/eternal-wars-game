@@ -49,7 +49,7 @@ public partial class Main : Node3D
 
     /// <summary>The camera's bookmarks (ADR-260): of the map open, cleared when another opens.</summary>
     private readonly CameraBookmarks _bookmarks = new();
-    private Node3D? _world;
+    private AdventureWorldView? _world;
     private CanvasLayer? _ui;
     private ToolPalette _tools = null!;
     private InspectorPanel _inspector = null!;
@@ -593,6 +593,7 @@ public partial class Main : Node3D
         BuildMinimap(); // of the new size, on the new view context
         _eventCells.Highlighted = highlighted;
         _toolContext.Marks = _selectionView;
+        _toolContext.Route = _world!.PathPreview;
         _tools.Tool.Hover(null); // what the tool drew before a click was on the old views
         _tools.Tool.Refresh();
         var map = _editor.Scenario.Map;
@@ -839,7 +840,7 @@ public partial class Main : Node3D
         _workspace.AddTab(EditorRegion.Right, _inspector, UiIcon.Inspector);
         _inspector.Bind(_editor, _settings);
         _toolContext = new EditorToolContext(_editor, _inspector, Say) {
-            Marks = _selectionView, VisibleArea = VisibleTiles, Clipboard = _clipboard, Choice = _choice,
+            Marks = _selectionView, Route = _world!.PathPreview, VisibleArea = VisibleTiles, Clipboard = _clipboard, Choice = _choice,
         };
         _tools.Bind(EditorTools.All(_toolContext));
         _tools.ToolChanged += _commands.NotifyStateChanged;

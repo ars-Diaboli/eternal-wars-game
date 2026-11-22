@@ -10,6 +10,9 @@ creatures and buildings, heraldic player colours, iconic map objects).
 - **Palette**: desaturated earth tones on screen; player colours and interactive objects stay saturated so the map reads in a dark
   scene. The ground textures themselves are saturated, each terrain with its own colour and structure, and the light, fog and grading
   make the mood (ADR-244).
+- **Faction looks** (ADR-284): the owner's key paintings, one or more a town, set each faction's setting, light, landmark, buildings and
+  colours; every faction asset follows them ([faction-art.md](../content/faction-art.md)). Shared: painterly realism from one camera,
+  a low calm foreground, readable separate buildings, one focal point, warm light against cool shadow, magic glow only in small accents.
 - **Materials**: PBR (albedo / normal / roughness), weathered and worn. **Post**: subtle grading, bloom on magic only, vignette.
 - **Terrain** (ADR-011, ADR-183) *(placeholder textures, objects and units)*: a smooth heightmapped landscape; the terrains' textures
   run into each other where biomes meet, over about two thirds of a tile (ADR-212), along wandering lines that do not follow the tile

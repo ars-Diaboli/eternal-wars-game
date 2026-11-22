@@ -104,7 +104,7 @@ placeholder, a coloured tile with the name's two letters.
 (File, Edit, View, Map, Tools, Templates, Test, Help) and the toolbar are built from the commands; an item that cannot run is greyed
 and says why in its tooltip. Shortcuts (each can be rebound in Preferences): the File menu's, Ctrl+Z undo, Ctrl+Y redo, Ctrl+X cut, Ctrl+C copy, Ctrl+V paste, Ctrl+D duplicate, Delete, Ctrl+A select all, Escape
 deselect, Ctrl+F find on the map, Ctrl+G go to, Ctrl+R rotate scenery, Ctrl+M mirror scenery, the tools' keys (T Terrain, R Road, I River, Z StartZone, G Height, O Object,
-C Scatter, N Monster, H Hero, E Erase, K LinkGates, V Select, M Move, P Paste, B Grail), L the next level, F11 the panels, F7 the map settings, Ctrl+Shift+P the command palette, Ctrl+, Preferences. The Map
+C Scatter, N Monster, H Hero, E Erase, K LinkGates, V Select, M Move, P Paste, B Grail, U Measure), L the next level, F11 the panels, F7 the map settings, Ctrl+Shift+P the command palette, Ctrl+, Preferences. The Map
 menu opens the map settings (at a tab) and the Events panel, the Tools menu picks a tool. F5 is Test (below), F1 [help](#editor-help).
 
 **Selection** (EDIT-1, ADR-250). The selection holds tiles, objects, heroes and map events. It is not an undo step, and a thing that
@@ -241,6 +241,14 @@ two as one undo step; a first click on anything else says what to click.
 
 **The Grail** (the Grail tool, ADR-140): a click on open ground at least 10 cells from the edges buries the Grail there, and a click
 on it again takes it away. Left unset, it is drawn at the game's start on maps with obelisks.
+
+**Measure** (the Measure tool, U, ADR-283): a click picks where a hero starts, and the route the game's pathfinding takes follows the
+pointer from there, drawn on the map by day as the game draws a hero's; a second click keeps it, a third starts again. The status bar
+gives its steps, its movement points and its days. The options are the hero's movement points a day (1500 with no army, 100 to 5000)
+and the player whose hero walks (its keys, garrisons and allies count). The hero has no army, skill or artifact, so it is at home on no
+terrain; it goes round guarded tiles and visits as a hero in the game does, ends on a monster or a hero (not an allied one), takes
+gates, and ignores the fog. A day
+ends when a step leaves no movement point. Nothing is edited.
 
 <a id="editor-scatter"></a>
 **Scatter** (EDIT-6, ADR-252). The Scatter tool puts scenery on the tiles its brush is dragged over, when the button comes up;

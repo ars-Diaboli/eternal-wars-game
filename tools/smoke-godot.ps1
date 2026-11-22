@@ -457,6 +457,10 @@ $scenarios = @(
     # looks straight down; Home again.
     @{ Name = 'editor-camera'; App = 'EternalWars.MapEditor'; Frames = 70; Map = $emberMap
        Input = '3:key:Home;8:key:Ctrl+Key1;11:wheel:up,6;15:mdrag:640,400,840,500;20:key:V;23:drag:700,240,950,350;28:key:F;34:key:Key1;40:key:Ctrl+Shift+P;44:text:Top-down;54:key:Enter;62:key:Home' },
+    # The Measure tool (U, ADR-283) on Ember March: a click where a hero starts, a click where it goes: the route drawn by day, its steps
+    # and days in the status bar.
+    @{ Name = 'editor-measure'; App = 'EternalWars.MapEditor'; Frames = 30; Map = $emberMap
+       Input = '3:key:U;6:click:540,545;12:click:420,270' },
     # The minimap and Go to (ADR-261) on Ember March: the minimap under the right region's tabs outlines the view; a click on it, then a drag
     # over it, move the view; Ctrl+G with "Castle" goes to the town and selects it; Ctrl+G with "20 10" goes to that tile. Then a new map of
     # two levels: the underground with the surface shown faintly on the minimap.

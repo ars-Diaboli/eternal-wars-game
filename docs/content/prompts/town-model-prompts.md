@@ -2,6 +2,8 @@
 
 Prompts for the **adventure-map town models** of all ten town types, for a text-to-3D or image-to-3D model (or a concept-art pass
 first, then image-to-3D). The designs are original: the prompts never name or imitate another game's towns.
+Each town's look follows its key paintings in [faction-art.md](../faction-art.md) (ADR-284); the best start for image-to-3D is
+the landmark cut out of that painting.
 
 ## Use a prompt
 
@@ -80,20 +82,21 @@ another game's design.
 The last lit cities of a crumbling human theocracy. Iron discipline, flagellant zeal, war machines; they burn heretics to "feed the
 light". Native ground: highlands and grass.
 
-- **Silhouette**: a walled hill-town in tiers, a tall cathedral-keep at the back crowned by an iron **sun-cage brazier** (the landmark),
-  steep slate roofs, square towers with ballista platforms.
-- **Materials**: pale limestone gone grey with soot, black iron, dark slate, gilded trim worn to brass; whitewash peeling.
-- **Telling details**: braziers burning on every tower (emissive, warm), scorch marks under them, a pyre-stake platform by the gate,
-  scaffolding and fresh stone patching an old breach, a stable yard (the Stables), a drill yard with wooden dummies.
+- **Silhouette**: a castle on a rocky rise (the landmark): grey curtain walls, round towers with dark **conical slate roofs**, a tall
+  keep with pennants and a white banner with the **gold sun**; below it a stone church with a bell tower and a mage tower crowned by a
+  blue orb in a ring.
+- **Materials**: grey stone, dark slate, terracotta tiles on the lesser towers, half-timbering and thatch, worn brass trim.
+- **Telling details**: the gold sun over the church door and on the banners, a smithy's glowing forge and tall chimney, a stable yard
+  with a paddock, an archery range with targets, a jetty with a crane (the shipyard).
 - **Avoid**: a fairy-tale white castle; clean gold; blue-and-white heraldry of a real order.
 
 **`TOWN-haven`** (subject):
 
 ```text
-Haven: a grim human theocracy's hill-town in tiers, pale limestone stained with soot, steep dark slate roofs, black iron and worn
-brass trim, square towers with ballista platforms, a tall cathedral keep at the back crowned by a great iron cage holding a burning
-sun-brazier, braziers on every tower casting warm light, a pyre platform beside the gate, scaffolding over a patched breach in the
-wall, a stable yard and a drill yard inside. Zealous, desperate, last light in a dying world.
+Haven: a human castle town on a rocky rise, grey stone curtain walls and round towers with dark conical slate roofs, a tall keep
+flying pennants and a white banner with a gold sun, a stone church with a bell tower and a gold sun over its door, a slender mage
+tower crowned by a blue orb inside a bronze ring, a thatched half-timbered tavern, a smithy with a glowing forge and a tall chimney, a
+stable yard with a paddock, an archery range with targets. Grey stone, slate and timber; disciplined, devout, the last lit cities.
 ```
 
 ## Sylvan (`town_sylvan`)
@@ -105,8 +108,9 @@ Native ground: forest floor and grass.
   vast ancient tree at the back (the Elder Grove, the landmark) whose crown is half bare.
 - **Materials**: grey-brown bark, pale carved wood, moss, woven living branches, green-gold leaves; a creeping **grey rot** climbing
   from the roots.
-- **Telling details**: lanterns of pale green light, archery galleries between trunks, a moonlit glade with standing stones, memory
-  offerings (ribbons, carved tablets) tied to the roots, dead branches propped and braced.
+- **Telling details**: lanterns of pale green light and warm amber windows, archery galleries between trunks, a ring of carved
+  standing stones, rope and plank bridges, a gate grown from arching roots, memory offerings (ribbons, carved tablets) tied to the
+  roots, dead branches propped and braced with timber; blue-teal mist around it all.
 - **Avoid**: candy-coloured fairy forest; mushrooms everywhere (those are Dungeon's); a lush healthy look.
 
 **`TOWN-sylvan`** (subject):
@@ -127,7 +131,8 @@ turning. Native ground: snow and ice.
   great bronze **orrery of nested rings** (a model of the Wheel; the landmark).
 - **Materials**: blue-grey granite, frost and snow on every ledge, verdigris bronze, dark glass, pale sky-blue rune light (emissive).
 - **Telling details**: chained stone golems standing as gate guards, a workshop annex with cranes and a half-built construct, an ice
-  crust on the walls, steam vents, a hall of records with tall narrow windows.
+  crust on the walls, steam vents, a hall of records with tall narrow windows, a white columned cloud temple (the Titans) and a domed
+  altar of wishes holding a golden lamp (the Genies).
 - **Avoid**: a desert or Arabian palace; bright sapphire everywhere; floating islands.
 
 **`TOWN-academy`** (subject):
@@ -143,20 +148,22 @@ construct, steam rising from vents. Cold, scholarly, ambitious.
 
 The dead who remember every earlier age and know the Wheel cannot be stopped, only ruled. Native ground: cursed lands.
 
-- **Silhouette**: a city of **stacked ruins from many ages**, each layer in a different style, ending in a crooked black **spire**
-  (the Necromancy Amplifier, the landmark) with a cold green light at its tip.
+- **Silhouette**: a dark keep and gothic manors among **ruins of many ages**, with a tall straight black **obelisk spire** (the
+  Necromancy Amplifier, the landmark) with a cold **cyan** light at its tip.
 - **Materials**: grey-black basalt, bleached bone set into walls, rusted iron, crumbling older stone below newer; ash on everything.
-- **Telling details**: ossuary walls of skulls in neat rows, open graves and a charnel pit inside, a vaulted transformer building with
-  a stone vat, tattered banners, gaunt dead trees, spikes, a faint cold-green glow (emissive) in windows only.
-- **Avoid**: cartoon skulls; purple-and-green Halloween colours; slime.
+- **Telling details**: a graveyard behind an iron fence with an open grave, a mausoleum and a crypt mound, a vaulted transformer
+  building with a stone vat, grey tattered banners, the bones of a great dragon, gaunt dead trees, cyan fire in braziers on
+  skull-carved gate posts, a faint cyan glow (emissive) in a few windows; everything near black to ash grey.
+- **Avoid**: cartoon skulls, skulls on every surface; purple-and-green Halloween colours; green glow; slime.
 
 **`TOWN-necropolis`** (subject):
 
 ```text
-Necropolis: an undead city built from the stacked ruins of many fallen ages, each layer a different older architecture, grey-black
-basalt and bleached bone set into the walls, ossuary walls of neatly stacked skulls, rusted iron spikes, a crooked black spire at the
-back with a cold green light at its tip, open graves and a charnel pit inside the walls, a vaulted crypt with a great stone vat, dead
-trees, ash covering everything, faint cold-green light only in windows. Ancient, patient, inevitable.
+Necropolis: an undead town among the ruins of many fallen ages, a dark castle keep of grey-black basalt with a skull over its gate,
+a tall straight black obelisk spire with a cold cyan light at its tip, gothic manors and a bell tower, a graveyard behind a rusted
+iron fence with an open grave, a mausoleum and a vaulted crypt with a great stone vat, the bones of a great dragon, dead trees, ash
+covering everything, cyan fire in braziers at the gate and faint cyan light in a few windows. Near black to ash grey. Ancient,
+patient, inevitable.
 ```
 
 ## Inferno (`town_inferno`)
@@ -167,9 +174,10 @@ Demons of the ash beneath the world, born from each burned age; they see every w
   (harvest), one great altar-furnace at the back (the Altar of Brimstone, the landmark) venting smoke.
 - **Materials**: black obsidian and slag, glowing **lava cracks** and channels (emissive, ember red), blackened bronze, charred
   timber and half-melted human masonry caught in the walls.
-- **Telling details**: birthing pools of molten rock, cages hanging from chains, a moat of lava at the gate, brimstone-yellow crust
-  around vents, chimneys.
-- **Avoid**: a cartoon hell with pitchforks and flames on every surface; bright orange everywhere (keep the glow to cracks and pools).
+- **Telling details**: birthing pools of molten rock, a chained pit glowing from below, a foundry with chimneys and an ore cart, a moat
+  of lava at the gate, brimstone-yellow crust around vents. Fire is natural orange; lava glows red to infrared.
+- **Avoid**: a cartoon hell with pitchforks and flames on every surface; bright orange or red everywhere (keep the glow to the altar,
+  forges, cracks and pools).
 
 **`TOWN-inferno`** (subject):
 
@@ -184,21 +192,21 @@ back venting black smoke, yellow brimstone crust around the vents. A place that 
 
 Dark elves and the lightless things they serve, untouched by the dying sun and ready to inherit. Native ground: subterranean.
 
-- **Silhouette**: a sunken town in a **cavern sinkhole**: walls of stalagmites, terraced **stepped pyramids** and angular towers, a
-  tall stalactite-like spire at the back with a violet crystal (the Mana Spring, the landmark).
+- **Silhouette**: a town in an **enclosed cavern** (no sky, stalactites overhead): a gothic black citadel of many spires, slender
+  towers, a columned temple, and a tall spire of **violet crystal** (the Mana Spring, the landmark).
 - **Materials**: black and dark-violet stone, polished and angular, slick wet rock, pale fungus, **violet bioluminescence** (emissive),
   silver inlay.
-- **Telling details**: rings of giant glowing mushrooms, the walls of a labyrinth in the open, a pool with violet light, webs between
-  spires, spiked bridges.
-- **Avoid**: green goblin caves; red lava (that is Inferno); a bright purple glow over everything.
+- **Telling details**: clusters of glowing mushrooms in violet and cyan, the walls of a labyrinth in the open with horned skulls over
+  its gate, a lair carved as a huge beast's maw, cave dwellings lit from within, warm orange braziers, spiked gothic gates.
+- **Avoid**: sky; water; green goblin caves; red lava (that is Inferno); a bright purple glow over everything.
 
 **`TOWN-dungeon`** (subject):
 
 ```text
-Dungeon: a dark-elf town sunk into a cavern sinkhole, angular black and dark-violet stone, terraced stepped pyramids and sharp
-towers, a tall stalactite-shaped spire at the back topped by a glowing violet crystal over a luminous pool, rings of giant pale
-mushrooms with faint violet glow, open labyrinth walls inside, spiked bridges and webs between spires, polished stone with thin
-silver inlay, slick wet rock. Cold, elegant, patient, lightless.
+Dungeon: a dark-elf town in an enclosed cavern under hanging stalactites, a gothic citadel of black and dark-violet stone with many
+sharp spires and violet-lit windows, a tall spire of glowing violet crystal, a columned temple with a carved serpent on its roof, open
+labyrinth walls with horned skulls over the gate, a lair carved as a giant beast's maw, clusters of glowing violet and cyan mushrooms,
+warm orange braziers, polished stone with thin silver inlay, slick wet rock. Cold, elegant, patient, lightless.
 ```
 
 ## Stronghold (`town_stronghold`)
@@ -230,9 +238,10 @@ Beast-cults of the drowned lowlands, where ruins of an old age sink into the mir
   them, a tall carved **totem of coiled beasts** at the back (Elder Totem, the landmark).
 - **Materials**: algae-green stone, black water (a few shallow pools inside the footprint), reeds, rope, giant shells and scales,
   driftwood, bone; moss green and muddy brown.
-- **Telling details**: the Shell Wall (a rampart of giant shells and bones), spawning pools with eggs, an overgrown thicket, boardwalks
-  over water, a toppled statue's head sinking in the mud.
-- **Avoid**: jungle temple of a real culture; bright tropical colours.
+- **Telling details**: the Shell Wall (a rampart of giant spiral shells, tusks and bones), spawning pools with eggs glowing cyan, a
+  sunken dome glowing cyan inside (the hydra lair), a broken tower crowned by a great nest, short plank walks over channels, a toppled
+  statue's head sinking in the moss, dark pines around it.
+- **Avoid**: jungle temple of a real culture; bright tropical colours; toxic green glow.
 
 **`TOWN-swamp-bestiary`** (subject):
 
@@ -247,36 +256,43 @@ sinking in the mud, driftwood, rope, moss and mist-grey reeds.
 
 Elemental wardens of the Wheel's mechanism; neutral guardians. Campaign and neutral only.
 
-- **Silhouette**: a ring-shaped sanctuary around a **giant half-buried stone and bronze gear** (a tooth of the Wheel; the landmark),
-  four shrines at its rim, each touched by one element; domes as on its siege field (ADR-144).
+- **Silhouette**: a sanctuary around the **Altar of Thought** (the landmark): a stepped round platform ringed by pillars, a glowing
+  violet orb above it with stones floating around it; a weathered castle with green domes, a tall tiered mage tower, four domed
+  shrines, each touched by one element; domes as on its siege field (ADR-144).
 - **Materials**: ancient weathered stone, old green bronze, floating crystal shards close to the stone (not far off), a soft shimmer
   (emissive) in the crystals only.
-- **Telling details**: one shrine iced, one scorched, one wind-carved, one overgrown; rune channels converging on the gear.
+- **Telling details**: one shrine iced with a blue crystal, one scorched with an orange crystal, one wind-swept with a yellow crystal,
+  one overgrown with a green crystal; violet crystals on the castle's towers.
+- **Avoid**: a gear or cog.
 
 **`TOWN-conflux`** (subject):
 
 ```text
-Conflux: an ancient elemental sanctuary built in a ring around a colossal half-buried gear of stone and old green bronze, four small
-domed shrines on its rim, one frosted, one scorched black, one wind-carved, one overgrown with roots, glowing rune channels running
-to the gear, a few crystal shards hovering just above the stones with a soft shimmer. Older than any kingdom, silent, watchful.
+Conflux: an ancient elemental sanctuary of weathered stone and old green bronze around a stepped round altar ringed by pillars, a
+glowing violet orb hovering above it with stones floating around it, a weathered castle with green domes and violet crystals on its
+towers, a tall tiered mage tower, four small domed shrines, one frosted with a blue crystal, one scorched black with an orange
+crystal, one wind-swept with a yellow crystal, one overgrown with roots and a green crystal. Older than any kingdom, silent,
+watchful.
 ```
 
 ## Dragon Utopia (`town_dragon-utopia`, not playable)
 
 The last dragons, who remember the world *before* the Wheel. Campaign and neutral only.
 
-- **Silhouette**: a **stepped pyramid eyrie** (as on its siege field, ADR-144) carved from a crag, huge open perches, one broken
-  colossal dragon statue at the back (the landmark).
-- **Materials**: weathered sandstone and granite, old bronze, gold hoard glints in the openings, giant claw marks in the rock.
-- **Telling details**: carvings of a bright, young sun (the world before the Wheel), scorched ledges, enormous bones of fallen dragons
-  used as arches.
+- **Silhouette**: a **terraced eyrie** (as on its siege field, ADR-144) cut into a dark granite crag, huge cave mouths and perches,
+  crowned by a natural outcrop shaped like a dragon's head (the landmark); a broken colossal dragon statue on a far pinnacle.
+- **Materials**: dark grey and blue-grey granite with rusty ochre stains and pale lichen, old green-tarnished bronze, gold hoard
+  glints behind half-open vault doors, giant claw marks in the rock.
+- **Telling details**: scorched ledges, enormous dragon ribs used as a gate arch, the keepers' small stone village; no fires.
+- **Avoid**: red sandstone, a sun emblem, temples of a real culture.
 
 **`TOWN-dragon-utopia`** (subject):
 
 ```text
-Dragon Utopia: an ancient dragon eyrie carved into a rocky crag as a stepped pyramid, huge open perches and ledges scorched black,
-weathered sandstone and old bronze, deep claw marks in the rock, arches made from enormous dragon bones, glints of a gold hoard in
-dark openings, worn reliefs of a bright young sun from before the world began to die, a broken colossal dragon statue at the back.
+Dragon Utopia: an ancient dragon eyrie cut into a dark granite crag in broad terraces, huge cave mouths and ledges scorched black,
+a natural rock outcrop at the top shaped like a dragon's head, dark grey granite with rusty ochre stains and old green bronze, deep
+claw marks in the rock, a gate arch of two enormous dragon ribs, glints of a gold hoard behind half-open bronze vault doors, a broken
+colossal dragon statue on a pinnacle at the back.
 ```
 
 ## Optional: stages by fort level
@@ -361,7 +377,7 @@ prompt is the piece's block and the town's material line (each piece on its own,
 | Stronghold | `SIEGE-stronghold` | `Raw split logs, rope, hide and leather, bone, rusted scrap iron, dust; red-ochre paint on hides.` |
 | Swamp Bestiary | `SIEGE-swamp-bestiary` | `Algae-green stone, black water (a few shallow pools inside the footprint), reeds, rope, giant shells and scales, driftwood, bone; moss green and muddy brown.` |
 | Conflux | `SIEGE-conflux` | `Ancient weathered stone, old green bronze, floating crystal shards close to the stone (not far off), a soft shimmer (emissive) in the crystals only.` |
-| Dragon Utopia | `SIEGE-dragon-utopia` | `Weathered sandstone and granite, old bronze, gold hoard glints in the openings, giant claw marks in the rock.` |
+| Dragon Utopia | `SIEGE-dragon-utopia` | `Dark weathered granite, old bronze, gold hoard glints in the openings, giant claw marks in the rock.` |
 
 ## After generating
 

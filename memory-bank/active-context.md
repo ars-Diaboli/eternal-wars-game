@@ -9,6 +9,13 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Faction key paintings (ADR-284): the owner's town paintings (19, every town incl. Conflux and Dragon Utopia) in
+  `docs/content/art/towns/` set each faction's look; [faction-art.md](../docs/content/faction-art.md) describes them and the recipe for
+  more. Town-model, town-icon, town-screen background, puzzle and Necropolis backdrop prompts aligned; three existing pictures to
+  regenerate.
+- The editor's Measure tool (U, ADR-283): two clicks, the route the game's pathfinding takes drawn by day (the world view's
+  `PathPreview`), its steps, points and days in the status bar; options: movement points a day and the player. Core `MapMeasure` over
+  `PathFinder.FindPathFor` (a hero not on the map). Smoke `editor-measure`.
 - Editor plan check and side bars (ADR-282): IDE-like side bars with a button per panel, one panel per region under a header, an
   icon-only tool palette, the scroll bar's room kept in every scrolled editor panel (`UiScroll`; an editor hang at some widths), Find
   (Ctrl+F) by name, id or kind ("gold mine"), Go to by id, an orthographic top-down view, icon prompts C12 and C13. The gaps the check
@@ -259,7 +266,7 @@ Detail: [roadmap.md](roadmap.md).
 3. The remaining Phase 5 items in [roadmap.md](roadmap.md) ("Presentation and UI", "Town screen overhaul", "Editor overhaul",
    "Platform and art", "Roster"); the town screen overhaul starts with the owner's answers (TOWN-14 … TOWN-23); the editor
    overhaul is closed, with the first-use test with a person, the owner's look at the workspace and the plan's "After the close"
-   list (the Measure tool, context menus, the icon art and more, ADR-282) open.
+   list (context menus, the icon art and more, ADR-282) open.
 4. The "Code health" list in [roadmap.md](roadmap.md): skills, heroes and town types as typed ids; `InfoSheets` as data once localisation
    is decided (ADR-239).
 

@@ -287,8 +287,9 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] The plan's check (ADR-282): side bars with a button per panel, one panel per region under a header, the compact tool palette,
       the scroll bar's room kept (a hang at some widths), Find (Ctrl+F), Go to by id, the orthographic top-down view, the icon prompts
       for what had none
-- [ ] After the close ([plan](../docs/papers/editor-plan.md#after-the-close)): the Measure tool; context menus from the command
-      registry; the Object tool's random variant and road snapping; the other level ghosted in the map view; the height brush's
+- [x] The Measure tool (U, ADR-283): the game's route between two clicked tiles drawn by day, its steps, points and days for the
+      movement points picked
+- [ ] After the close ([plan](../docs/papers/editor-plan.md#after-the-close)): context menus from the command registry; the Object tool's random variant and road snapping; the other level ghosted in the map view; the height brush's
       falloff; `Main.cs` split into composers; the editor icons of sheets C4, C7, C12 and C13 drawn
 
 ### Platform and art

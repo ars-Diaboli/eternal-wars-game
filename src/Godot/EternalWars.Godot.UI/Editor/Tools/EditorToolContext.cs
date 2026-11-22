@@ -56,6 +56,9 @@ public sealed class EditorToolContext(MapEditorSession editor, InspectorPanel in
     /// <summary>The view that shows the selection, for the marquee and the ghost of a move; null: nothing shows them.</summary>
     public SelectionView? Marks { get; set; }
 
+    /// <summary>The view that draws a route by day, for the Measure tool; null: nothing draws it.</summary>
+    public PathPreview? Route { get; set; }
+
     /// <summary>The tiles of the shown level that are in view now; the whole level when the app does not say.</summary>
     public Func<TileArea> VisibleArea { get; init; } =
         () => new TileArea(0, 0, editor.Scenario.Map.Width - 1, editor.Scenario.Map.Height - 1, 0);

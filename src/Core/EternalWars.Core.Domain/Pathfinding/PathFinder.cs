@@ -56,11 +56,18 @@ public sealed partial class PathFinder(GameState state)
     /// The cheapest route for the hero to <paramref name="target"/>, or null. <paramref name="from"/>: plan as if the hero stood there instead (the
     /// AI weighing a Dimension Door landing); the costs are still the hero's.
     /// </summary>
-    public HeroPath? FindPath(HeroId heroId, MapPosition target, bool respectFog = true, MapPosition? from = null)
+    public HeroPath? FindPath(HeroId heroId, MapPosition target, bool respectFog = true, MapPosition? from = null) =>
+        FindPathFor(state.GetHero(heroId), target, respectFog, from);
+
+    /// <summary>
+    /// <see cref="FindPath"/> for a hero that need not be on the map: the editor's Measure tool
+    /// (<see cref="Analysis.MapMeasure"/>). The days of the steps count from the hero's movement points as they are.
+    /// </summary>
+    public HeroPath? FindPathFor(Hero hero, MapPosition target, bool respectFog, MapPosition? from = null)
     {
+        ArgumentNullException.ThrowIfNull(hero);
         var started = System.Diagnostics.Stopwatch.GetTimestamp();
         _counters = _counters with { Searches = _counters.Searches + 1 };
-        var hero = state.GetHero(heroId);
         var map = state.Map;
         var origin = from ?? hero.Position;
         if (target == origin || TargetKindOf(hero, target, respectFog) is not { } kind)

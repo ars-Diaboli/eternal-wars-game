@@ -33,6 +33,7 @@
 | [246](#adr-246-town-screen-overhaul-a-3d-town-scene-with-full-town-windows-planned-in-six-steps-owner-adr-050-adr-114-adr-223-2026-11-20) | Town screen overhaul: a 3D town scene with full town windows, planned in six steps (owner, ADR-050, ADR-114, ADR-223, 2026-11-20) | accepted |
 | [248](#adr-248-icons-and-portraits-painted-realistically-not-as-cartoons-new-style-blocks-and-an-anti-cartoon-negative-owner-adr-116-adr-245-2026-11-20) | Icons and portraits painted realistically, not as cartoons: new style blocks and an anti-cartoon negative (owner, ADR-116, ADR-245, 2026-11-20) | accepted |
 | [249](#adr-249-prompts-ready-to-paste-one-block-a-sheet-at-most-a-lead-and-an-item-elsewhere-negatives-joined-in-advance-owner-adr-245-adr-248-2026-11-20) | Prompts ready to paste: one block a sheet, at most a lead and an item elsewhere, negatives joined in advance (owner, ADR-245, ADR-248, 2026-11-20) | accepted |
+| [284](#adr-284-faction-key-paintings-set-each-towns-look-owner-adr-008-adr-246-adr-248-2026-11-22) | Faction key paintings set each town's look (owner, ADR-008, ADR-246, ADR-248, 2026-11-22) | accepted |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -558,3 +559,25 @@ once step 3 of the plan lands. Plan, study and questions: [town-screen-plan.md](
   another file), except the faction creature files, which link to one negative in the creature file.
 - **Cost**: the shared style wording is repeated in each prompt of a file; a change to it is made in every copy (each file's "Shared
   wording" note says which words to search for).
+
+### ADR-284: Faction key paintings set each town's look (owner, ADR-008, ADR-246, ADR-248, 2026-11-22)
+**Status**: accepted. Art direction only; no code, rule or format change.
+
+- **Owner**: the generated town paintings (one to three a town, Conflux and Dragon Utopia included) set the factions' and the game's
+  design direction.
+- **Where**: the paintings are in `docs/content/art/towns/`; [faction-art.md](../../docs/content/faction-art.md) states what they
+  share and each town's setting, light, landmark, buildings, colours and what to avoid. Where a town has more than one painting, the
+  first is the reference and the others are variations.
+- **Precedence**: every faction asset follows them (the town scene and its models, the adventure-map town models, the town-screen
+  backgrounds, backdrops, puzzle pictures). A prompt or model that disagrees is fixed, not the painting.
+- **Changes in the prompt files** (town models, town icons, town-screen backgrounds, the Haven and Necropolis puzzle pictures, the
+  Necropolis backdrop): Haven is a lakeside town under a castle with round, conical-roofed towers and the gold sun on its
+  banners (no sun-cage brazier); Necropolis' light is cyan on a grey plain and its spire a straight obelisk; Dungeon is an enclosed
+  cavern with a gothic citadel (no sinkhole, no pool); Conflux has the Altar of Thought, a castle and a mage guild instead of the gear;
+  Dragon Utopia is dark granite with a dragon-head crag (no sun relief); Swamp Bestiary stands in a dark pine forest with cyan accents.
+- **Shared look** (ADR-008, ADR-248): painterly realism from one camera, a low calm foreground, seven to nine readable buildings, one
+  focal point, warm light against cool shadow, magic glow only in small accents.
+- **Regenerate**: the existing `puzzle_haven`, `puzzle_necropolis` and `creature_backdrop_necropolis` pictures, made from the old
+  prompts (hill-town, crooked spire, green sky).
+- **Open**: TOWN-18 (one mood per faction) can take each painting's light as the faction's lighting set; the second takes' light
+  (Haven overcast, Stronghold dusk) could serve for weather or a week's tint.

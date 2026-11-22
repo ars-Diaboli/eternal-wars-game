@@ -50,7 +50,7 @@ faction-specific buildings does each town get (HoMM3 has 2–4 a town)?
 <a id="town-18"></a>
 **TOWN-18 Light and weather in the town** (ADR-246): one mood per faction or a time of day and weather?
 
-**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-18).
+**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-18); each faction's key painting already shows a light to start from (ADR-284).
 
 <a id="town-19"></a>
 **TOWN-19 How much the town grows in the scene** (ADR-246): walls by fort level, streets by town hall level?
@@ -65,7 +65,7 @@ faction-specific buildings does each town get (HoMM3 has 2–4 a town)?
 <a id="town-21"></a>
 **TOWN-21 How the town art is made** (ADR-246): about 320 models: image-to-3D, kitbash, commissioned; which factions first?
 
-**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-21).
+**Proposal**: [town-screen-plan.md](../docs/papers/town-screen-plan.md#town-21); the key paintings, the first step of that proposal, exist for every town (ADR-284).
 
 <a id="town-22"></a>
 **TOWN-22 Heroes in the scene** (ADR-246): the visiting and garrison heroes shown?

@@ -225,14 +225,14 @@ the game stretches the fill inside the frame.
 | `bg_victory` | the victory screen | a battlefield at dawn, a lone banner standing on a hill, the sun breaking through clouds |
 | `bg_defeat` | the defeat screen | a battlefield at dusk, a broken banner in the mud, smoke drifting, ravens in the sky |
 | `bg_battle-result` | a battle's result window | a quiet field after a battle, scattered shields and spears, low mist |
-| `bg_town_haven` | Haven's town screen | a soot-stained limestone hill-town in tiers under a pale sky, a cathedral keep with a burning sun-brazier |
-| `bg_town_sylvan` | Sylvan's town screen | a forest town built among colossal living trees, a vast half-bare ancient tree, pale green lanterns |
+| `bg_town_haven` | Haven's town screen | a lakeside town under snowy mountains, a grey castle with conical slate roofs on a rocky rise, a church with a gold sun |
+| `bg_town_sylvan` | Sylvan's town screen | a forest town in a misty gorge among colossal living trees, a vast half-bare ancient tree, blue-teal haze, amber windows |
 | `bg_town_academy` | Academy's town screen | a mage citadel on a frozen peak, verdigris domes, a great observatory with bronze rings |
-| `bg_town_necropolis` | Necropolis' town screen | a city of stacked black ruins of many ages under a sickly green sky, a crooked spire |
+| `bg_town_necropolis` | Necropolis' town screen | a dark keep and gothic manors on a grey dead plain under heavy cloud, a straight black obelisk spire with a cyan light |
 | `bg_town_inferno` | Inferno's town screen | a fortress of black slag and fused rubble over rivers of lava, sickle-shaped spires, red smoke |
-| `bg_town_dungeon` | Dungeon's town screen | a town in a vast cavern, black and violet stepped pyramids, glowing crystals and pale mushrooms |
+| `bg_town_dungeon` | Dungeon's town screen | a town in a vast enclosed cavern under stalactites, a gothic black citadel, a violet crystal spire, glowing mushrooms |
 | `bg_town_stronghold` | Stronghold's town screen | an orc war camp on ochre badlands, log palisade, hide tents, a great beast skull over a lodge |
-| `bg_town_swamp-bestiary` | Swamp Bestiary's town screen | half-sunken ruins in a misty marsh, stilt huts, a carved totem of coiled beasts |
+| `bg_town_swamp-bestiary` | Swamp Bestiary's town screen | half-sunken ruins in a dark pine forest, stilt huts, a carved totem of coiled beasts, cyan-glowing eggs |
 
 Each town screen's background leaves the **lower two thirds calm**: the game places the buildings, the garrison and the panels over it.
 

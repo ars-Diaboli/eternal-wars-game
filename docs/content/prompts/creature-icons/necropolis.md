@@ -106,5 +106,5 @@ bigger and more dangerous: a translucent grey-green ghostly body around the bone
 ```text
 Square painted background for a creature portrait, in a realistic painterly dark-fantasy style like an atmospheric matte painting, soft
 and out of focus like a distant landscape seen through haze, no creature, no figures, no text, darker toward the edges, the middle
-third calm and even so a portrait reads on it. Grey ash plain under a sickly green sky, dead trees and leaning tombstones
+third calm and even so a portrait reads on it. Grey ash plain under a heavy dark grey sky, dead trees and leaning tombstones
 ```
