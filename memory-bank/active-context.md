@@ -9,8 +9,6 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
-- Academy heroes: four dwarves, five djinn (four renamed) and a golem (Talos); prompts rewritten; generator version 14,
-  maps re-pinned (ADR-303).
 - Hero portrait prompts: women's hair medium to long, and a pose of each kind on every sheet (towards the viewer, left, right,
   chin raised) instead of all facing right; Sylvan men beardless, no wide faces, some slightly East Asian; the twenty Haven
   portraits cut into `textures/ui/heroes/`, not yet shown in the game (ADR-299).

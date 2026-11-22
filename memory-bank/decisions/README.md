@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-304.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-303.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -12,7 +12,7 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [adventure-map.md](adventure-map.md) | The grid, terrain classes and movement, roads, map objects and catalogues, neutral guards, fog-of-war rules, scouting, week events, the Grail. | 30 |
 | [map-events.md](map-events.md) | Pandora's Box, the event tree (triggers, conditions, actions), quests and quest objects, loops, campaign variables. | 10 |
 | [towns-and-economy.md](towns-and-economy.md) | Resources and income, town groups and rosters, creatures, buildings and the tech tree, dwellings and caravans, unique buildings. | 25 |
-| [heroes.md](heroes.md) | Primary stats, skills and levels, specialties, Necromancy, governors, the tavern. | 11 |
+| [heroes.md](heroes.md) | Primary stats, skills and levels, specialties, Necromancy, governors, the tavern. | 10 |
 | [artifacts.md](artifacts.md) | Artifact slots, tiers and effects, assembled relics, the exchange screen. | 7 |
 | [magic.md](magic.md) | Schools, spell levels and ranks, guilds and spell books, scrolls, every battle and adventure spell. | 12 |
 | [combat.md](combat.md) | The battlefield, turn order, damage and cover, morale and luck, capabilities, war machines, deployment, sieges, the 3D battle scene. | 17 |
@@ -329,4 +329,3 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [300](presentation.md#adr-300-town-screen-step-3-task-2-greybox-layouts-for-the-eight-towns-after-their-key-paintings-the-layout-check-in-the-game-the-towns-painting-as-the-sky-adr-246-adr-292-adr-297-2026-11-22) | presentation | Town screen step 3, task 2: greybox layouts for the eight towns after their key paintings, the layout check in the game, the town's painting as the sky (ADR-246, ADR-292, ADR-297, 2026-11-22) | implemented |
 | [301](presentation.md#adr-301-town-screen-step-3-task-3-plot-states-walls-as-the-siege-has-them-streets-by-the-town-hall-banners-and-the-garrison-heros-banner-town-15-town-19-town-22-adr-291-2026-11-22) | presentation | Town screen step 3, task 3: plot states, walls as the siege has them, streets by the town hall, banners and the garrison hero's banner (TOWN-15, TOWN-19, TOWN-22, ADR-291, 2026-11-22) | implemented |
 | [302](presentation.md#adr-302-town-screen-step-3-task-4-the-town-camera-turned-25-round-the-town-and-zoomed-in-two-steps-by-the-lens-easing-toward-a-building-behind-its-window-town-14-adr-292-2026-11-22) | presentation | Town screen step 3, task 4: the town camera, turned ±25° round the town and zoomed in two steps by the lens, easing toward a building behind its window (TOWN-14, ADR-292, 2026-11-22) | implemented |
-| [303](heroes.md#adr-303-academy-heroes-four-dwarves-five-djinn-and-a-golem-owner-adr-298-2026-11-22) | heroes | Academy heroes: four dwarves, five djinn and a golem (owner, ADR-298, 2026-11-22) | implemented |
