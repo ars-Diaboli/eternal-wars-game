@@ -35,6 +35,7 @@
 | [249](#adr-249-prompts-ready-to-paste-one-block-a-sheet-at-most-a-lead-and-an-item-elsewhere-negatives-joined-in-advance-owner-adr-245-adr-248-2026-11-20) | Prompts ready to paste: one block a sheet, at most a lead and an item elsewhere, negatives joined in advance (owner, ADR-245, ADR-248, 2026-11-20) | accepted |
 | [284](#adr-284-faction-key-paintings-set-each-towns-look-owner-adr-008-adr-246-adr-248-2026-11-22) | Faction key paintings set each town's look (owner, ADR-008, ADR-246, ADR-248, 2026-11-22) | accepted |
 | [285](#adr-285-creature-portraits-in-2--2-sheets-creature-and-puzzle-prompts-redone-to-the-key-paintings-rocky-ground-is-dark-granite-owner-adr-284-2026-11-22) | Creature portraits in 2 × 2 sheets; creature and puzzle prompts redone to the key paintings; rocky ground is dark granite (owner, ADR-284, 2026-11-22) | accepted |
+| [289](#adr-289-creature-portraits-in-high-contrast-with-plain-bases-and-clearly-upgraded-upgrades-academy-creatures-redone-owner-adr-285-2026-11-22) | Creature portraits in high contrast with plain bases and clearly upgraded upgrades; Academy creatures redone (owner, ADR-285, 2026-11-22) | accepted |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -602,3 +603,32 @@ once step 3 of the plan lands. Plan, study and questions: [town-screen-plan.md](
   the plateau scenery prompts; told apart from rock by smooth wide slabs and speckle, not slate strata and moss. Until it has its own
   texture, the borrowed rough texture is tinted dark blue-grey and the minimap colour darkened (`AdventureMapView.Tint`, `Palette`).
 - **Regenerate**: every creature portrait and backdrop, every puzzle picture, and the rocky-ground texture when it is made.
+
+### ADR-289: Creature portraits in high contrast with plain bases and clearly upgraded upgrades; Academy creatures redone (owner, ADR-285, 2026-11-22)
+**Status**: accepted. Asset prompts only; no rule or format change.
+
+- **Owner**, on the first Academy sheets: a base and its upgrade differ too little; the colours look faded; both apply to every
+  faction. Academy: no green or teal; the master gremlin not sci-fi, a musket instead of a hand gun; the djinn sultan a woman in
+  saturated blue; no cloth on the gargoyle; three creatures looked like golems; both snow maidens looked like the djinn; the golems
+  not robots, only the upgrade with a gladius and in real steel; only the titan of steel, the colossus with no weapon.
+- **Every creature sheet**: the light passage asks for strong directional light, high contrast and rich deep colours (was soft
+  light and muted colours); the upgrade cell asks for the same face and build, larger, heavier armed, more ornate and richer in
+  colour, told apart at a glance. `NEG-CREATURE` adds faded, washed out, low contrast, desaturated, grey cast, sci-fi, robot, mecha and
+  an upgrade identical to its base. The output rules say a base stays plain and its upgrade gains a feature that shows at 48 px.
+- **Academy**: creatures in royal blue, bright steel, gold and ice-blue light, no verdigris (the buildings keep it); stone, iron and
+  spirit creatures wear no cloth. The master gremlin carries a flintlock musket and powder horn; the iron golem is a crude forged iron
+  statue with bare fists; the obsidian gargoyle keeps spread wings and horns; the animated armour is polished steel plate with a
+  gladius; the snow maiden and enchantress are solid women in white fur and royal blue, not mist; the djinn sultan is a woman with
+  sapphire-blue skin; the colossus is a living frost-grey giant with no weapon, the titan the same giant in polished steel with a
+  lightning spear.
+- **Academy by lore**: the thane and thunder thane, the efreet and the golden golem stay neutral in the game (not hired in the
+  town, ids unchanged) but are Academy creatures by lore: drawn in its style on its backdrop, on Academy sheet A6. The thane is a
+  pale-blue rune-tattooed half-giant with an axe (told apart from the colossus); the efreet a fire spirit in the djinn's gold
+  shackles; the golden golem a slender gold statue. Likewise the specter and the banshee are Necropolis creatures by lore, in the
+  spare right column of Necropolis sheet N5: a veiled ghost woman fading into mist (told apart from the wight and the wraith), the
+  banshee her wailing upgrade with streaming white hair, cyan only. The timber and dire wolves are Sylvan by lore, in the spare
+  right column of Sylvan sheet S5 (moss in the fur, pale-green eyes; the dire wolf with an elven collar of carved wood and antler).
+  The gogs and the breeders are Inferno by lore: the gog and magog in the spare right column of Inferno sheet I5 (a squat wingless
+  ash-grey demon, told apart from the imp), the breeders on a new sheet I6 (ember eggs, no green). One neutral sheet is left: the
+  mammoths with the bandit over the troll.
+- **Regenerate**: every creature sheet.

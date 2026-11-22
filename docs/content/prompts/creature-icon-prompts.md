@@ -24,7 +24,8 @@ chibi, cute, toy-like, childish, cel shading, flat colours, flat shading, vector
 casual game art, thick black outlines, ink line art, exaggerated proportions, oversized head, big eyes, rounded bubbly shapes, glossy
 plastic, smooth airbrushed gradients, oversaturated colours, candy colours, background scenery, ground, frame, card border, full-body
 figure for a large creature, cropped head, two creatures in one cell, monster-toy look, friendly expression, modern clothes, real-world
-symbols, another game's creature design
+symbols, another game's creature design, faded colours, washed out, low contrast, desaturated, hazy, grey cast, muddy colours, sci-fi,
+robot, mecha, upgrade identical to its base
 ```
 
 ## Shared wording
@@ -42,8 +43,10 @@ first words.
 - **Framing**: the army slots are wider than tall, so the game may show only the middle band of the cell: the **head (or face) and the
   weapon stay in the middle 60 % of the cell's height**.
 - **Facing**: always to the right, the attacker's side; the game mirrors a portrait where it needs the other way.
-- **Telling apart**: a base creature and its upgrade share the silhouette; the upgrade is bigger, better armed and more ornate. Two
-  creatures of one town never share a silhouette.
+- **Telling apart**: a base creature and its upgrade share the face and build; the upgrade is larger, heavier armed, more ornate and
+  richer in colour, with at least one new feature that shows at 48 px (a weapon, a crown, a material, a colour). The base stays plain.
+  Two creatures of one town never share a silhouette or a material.
+- **Colour**: high contrast and rich, deep colours, never faded or washed out.
 - **Backdrop**: the portrait itself is transparent; the game puts the town's backdrop behind it *(proposal)*.
 
 ## Factions
@@ -68,7 +71,9 @@ One file a faction: its sheets' prompts, which cell is which file, and its backd
 
 One painted backdrop a faction, generated alone from the ready prompt under **Backdrop** in its faction's file, 1024 × 1024, saved
 as `creature_backdrop_<town>.png` (opaque, the game scales it). A creature keeps its own faction's backdrop wherever it is hired; neutral
-creatures use `neutral`. Hero portraits use the same backdrops ([hero-town-icon-prompts.md](hero-town-icon-prompts.md)).
+creatures use `neutral`, except those that belong to a town by lore, which are drawn in its style and use its backdrop: the
+Academy's thane, thunder thane, efreet and golden golem, the Necropolis' specter and banshee, the Sylvan timber and dire
+wolves, and the Inferno gogs and breeders. Hero portraits use the same backdrops ([hero-town-icon-prompts.md](hero-town-icon-prompts.md)).
 
 ## After generating
 

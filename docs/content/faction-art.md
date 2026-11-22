@@ -69,6 +69,8 @@ The [faction groups](../design/factions.md) keep the colours already given to th
   living trees at the back right; a gallery hall on a cliff ledge; a white gazebo in a hedged garden; a ring of carved standing stones;
   rope and plank suspension bridges; a gate grown from arching roots.
 - **Colours**: dark moss green, grey-brown bark, blue-teal mist, pale carved wood, amber light, pale green lanterns.
+- **Creatures**: the timber wolf and the dire wolf are Sylvan creatures by lore, drawn in its style, though not hired in the
+  town (neutral in the game).
 - **Avoid**: candy fairy forest, mushrooms (Dungeon's), a lush healthy look.
 
 ### Academy
@@ -84,6 +86,9 @@ The [faction groups](../design/factions.md) keep the colours already given to th
   with a blue wisp rising from it, the **altar of wishes** (the Genies); a tall tower with blue-lit windows (the mage guild); a library
   with tall windows; a golem workshop with a crane, scaffold and a half-built golem; a forge; a gate guarded by two chained stone golems.
 - **Colours**: snow white, blue-grey stone, verdigris green-blue domes, bronze and gold, blue rune light.
+- **Creatures**: royal blue, bright steel, gold and ice-blue light; no verdigris, green or teal (that stays on the buildings).
+  The thanes, the efreet and the golden golem are Academy creatures by lore, drawn in its style, though not hired in the town
+  (neutral in the game).
 - **Avoid**: a desert or Arabian palace, floating islands.
 
 ### Necropolis
@@ -100,6 +105,8 @@ The [faction groups](../design/factions.md) keep the colours already given to th
   fence with an open grave; the bones of a great dragon lying on the plain (the bone dragons); a wall and an iron gate in front with
   cyan braziers on skull-carved posts.
 - **Colours**: black, charcoal, ash grey, bone, rusted iron; cyan accents only.
+- **Creatures**: the specter and the banshee are Necropolis creatures by lore, drawn in its style, though not hired in the town
+  (neutral in the game).
 - **Avoid**: cartoon skulls, green-and-purple Halloween colours, slime, skulls on every surface.
 
 ### Inferno
@@ -116,6 +123,8 @@ The [faction groups](../design/factions.md) keep the colours already given to th
   chimneys, an open forge door and an ore cart; birthing pools of molten rock in carved basins; a chained pit glowing from below; a
   kennel yard with an iron fence; a gate with bronze doors in a wall of black stone.
 - **Colours**: ash black, obsidian, charcoal, blackened bronze, dark red banners; orange fire and red lava as the accents.
+- **Creatures**: the gog, magog, breeder and fel breeder are Inferno creatures by lore, drawn in its style, though not hired
+  in the town (neutral in the game).
 - **Avoid**: cartoon hell, flames on every surface, a pink or uniformly red scene.
 
 ### Dungeon

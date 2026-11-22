@@ -4,6 +4,9 @@ The Inferno portraits, each sheet's prompt ready to copy whole. Each sheet holds
 directly below them. The output rules and the checks are in [creature-icon-prompts.md](../creature-icon-prompts.md); the negative
 prompt is [`NEG-CREATURE`](../creature-icon-prompts.md#negative-prompt) there.
 
+The right column of sheet I5 holds the gog and the magog, and sheet I6 the breeder and the fel breeder: Inferno creatures by
+lore, not hired in the town (neutral in the game), drawn in its style and on its backdrop; their files keep their neutral ids.
+
 ## Portraits
 
 **Sheet I1** · 1024 × 1024 · negative [`NEG-CREATURE`](../creature-icon-prompts.md#negative-prompt)
@@ -140,17 +143,47 @@ and ash-grey skin cracked with seams glowing red like lava, natural orange fire,
 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty
 margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no
 text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a tall gaunt
-devil with ash-grey skin, long curved horns, tattered black leather wings, a cruel smile, a black sickle; 2 a second take of the
-creature to its left; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build
+devil with ash-grey skin, long curved horns, tattered black leather wings, a cruel smile, a black sickle; 2 a squat hunched demon with
+ash-grey skin cracked with glowing red seams, crude stubby horns, no wings and no tail, a ball of orange fire held up ready to throw,
+the whole body shown; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build
 but larger, heavier armed, more ornate and richer in colour: a crown of black iron, wings edged in ember red, the sickle's blade made
-of flame; 4 a second take of the creature to its left
+of flame; 4 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but larger,
+heavier armed, more ornate and richer in colour: long black horns, a blackened bronze collar, a fireball blazing in both hands
 ```
 
 | # | File |
 |---|---|
 | 1 | `icon_creature_inferno.devil` |
-| 2 | — (spare: keep the better take of 1) |
+| 2 | `icon_creature_neutral.gog` |
 | 3 | `icon_creature_inferno.arch-devil` |
+| 4 | `icon_creature_neutral.magog` |
+
+**Sheet I6** · 1024 × 1024 · negative [`NEG-CREATURE`](../creature-icon-prompts.md#negative-prompt)
+
+```text
+Game creature portrait sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a dark-fantasy book
+illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
+scarred skin, matted fur, cracked scales, wet hide). Strong directional light from the top left with crisp highlights and a faint cool
+rim light, deep rich shadows and high contrast, a full range of values from near-black to bright highlights, rich deep natural
+colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
+facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
+dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
+Not a photograph, not a plastic CGI render, no pixel art. Inferno creatures: demons born from the ash of burned cities, obsidian-black
+and ash-grey skin cracked with seams glowing red like lava, natural orange fire, blackened bronze, horns and smoke; hungry and cruel.
+4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty
+margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no
+text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a bloated
+demonic brood-mother with leathery obsidian-black and ash-grey skin cracked with glowing red seams, small imps clinging to its back; 2
+a second take of the creature to its left; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the
+same face and build but larger, heavier armed, more ornate and richer in colour: a sac of glowing ember eggs on its belly, veins of
+fire across the hide, blackened bronze rings pierced through the skin; 4 a second take of the creature to its left
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_creature_neutral.breeder` |
+| 2 | — (spare: keep the better take of 1) |
+| 3 | `icon_creature_neutral.fel-breeder` |
 | 4 | — (spare: keep the better take of 3) |
 
 ## Backdrop

@@ -9,6 +9,10 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Creature portraits in high contrast, plain bases and clearly upgraded upgrades on every sheet; Academy creatures redone to the
+  owner's review (no teal, musket gremlin, female djinn sultan, living colossus and steel titan); the thanes, efreet and golden golem
+  drawn as Academy by lore (A6), the specter and banshee as Necropolis (N5), the wolves as Sylvan (S5) and the gogs and breeders as
+  Inferno (I5, I6), all still neutral in the game; one neutral sheet left (ADR-289).
 - The editor app split (ADR-288): `Main` (about 540 lines, from 1452) makes the lasting parts, builds each map's views and panels and
   maps the input; the commands, menus and windows are composers by area (`FileComposer`, `EditComposer`, `MapComposer`,
   `ViewComposer`, `TestComposer`, `WindowComposer`, `GenerateComposer`, `MenuComposer`, `ContextMenuComposer`) over a shared

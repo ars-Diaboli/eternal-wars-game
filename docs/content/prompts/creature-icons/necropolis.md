@@ -4,6 +4,9 @@ The Necropolis portraits, each sheet's prompt ready to copy whole. Each sheet ho
 directly below them. The output rules and the checks are in [creature-icon-prompts.md](../creature-icon-prompts.md); the negative
 prompt is [`NEG-CREATURE`](../creature-icon-prompts.md#negative-prompt) there.
 
+The right column of sheet N5 holds the specter and the banshee: Necropolis creatures by lore, not hired in the town (neutral
+in the game), drawn in its style and on its backdrop; their files keep their neutral ids.
+
 ## Portraits
 
 **Sheet N1** · 1024 × 1024 · negative [`NEG-CREATURE`](../creature-icon-prompts.md#negative-prompt)
@@ -140,18 +143,21 @@ grey cloth, ash, near black to ash grey, a cold cyan glow in eyes and wounds onl
 grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and
 with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers.
 Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 the skull and neck of a dragon built of
-bleached bones, cold cyan fire in the eye sockets, broken wing bones behind; 2 a second take of the creature to its left; 3 the same
-creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more
-ornate and richer in colour: a translucent grey-cyan ghostly body around the bones, trailing smoke; 4 a second take of the creature to
-its left
+bleached bones, cold cyan fire in the eye sockets, broken wing bones behind; 2 the ghost of a woman in a long tattered grey burial
+veil and gown, no legs, her lower body fading into grey mist, a face of grey bone half seen under the veil, cold cyan eyes, hands
+folded; not the hooded or reaching figures; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the
+same face and build but larger, heavier armed, more ornate and richer in colour: a translucent grey-cyan ghostly body around the
+bones, trailing smoke; 4 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build
+but larger, heavier armed, more ornate and richer in colour: the veil torn back, long white hair streaming upward, the mouth wide open
+in a wail, a faint ring of cyan sound around her head, a rusted iron circlet
 ```
 
 | # | File |
 |---|---|
 | 1 | `icon_creature_necropolis.bone-dragon` |
-| 2 | — (spare: keep the better take of 1) |
+| 2 | `icon_creature_neutral.specter` |
 | 3 | `icon_creature_necropolis.ghost-dragon` |
-| 4 | — (spare: keep the better take of 3) |
+| 4 | `icon_creature_neutral.banshee` |
 
 ## Backdrop
 

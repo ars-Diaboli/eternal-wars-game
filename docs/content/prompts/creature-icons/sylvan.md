@@ -4,6 +4,9 @@ The Sylvan portraits, each sheet's prompt ready to copy whole. Each sheet holds 
 directly below them. The output rules and the checks are in [creature-icon-prompts.md](../creature-icon-prompts.md); the negative
 prompt is [`NEG-CREATURE`](../creature-icon-prompts.md#negative-prompt) there.
 
+The right column of sheet S5 holds the timber wolf and the dire wolf: Sylvan creatures by lore, not hired in the town (neutral
+in the game), drawn in its style and on its backdrop; their files keep their neutral ids.
+
 ## Portraits
 
 **Sheet S1** · 1024 × 1024 · negative [`NEG-CREATURE`](../creature-icon-prompts.md#negative-prompt)
@@ -141,18 +144,21 @@ pale carved wood, dark moss green and green-gold leaves, a faint pale-green glow
 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty
 margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no
 text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a
-long-tailed bird of flame, red and orange feathers burning at the tips, the whole body shown; 2 a second take of the creature to its
-left; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but larger,
-heavier armed, more ornate and richer in colour: wings of white-gold fire spread wide, a crest of flame, embers falling from it; 4 a
-second take of the creature to its left
+long-tailed bird of flame, red and orange feathers burning at the tips, the whole body shown; 2 a grey timber wolf of the misty forest
+with raised hackles, snarling, moss and dry leaves caught in its grey-brown fur, pale-green eyes, the whole body shown; 3 the same
+creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more
+ornate and richer in colour: wings of white-gold fire spread wide, a crest of flame, embers falling from it; 4 the same creature as
+the one above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and
+richer in colour: huge and scarred, a ridge of bristling black fur, an elven collar of carved pale wood and antler bone, faint
+pale-green rune marks on its shoulder
 ```
 
 | # | File |
 |---|---|
 | 1 | `icon_creature_sylvan.fire-bird` |
-| 2 | — (spare: keep the better take of 1) |
+| 2 | `icon_creature_neutral.wolf` |
 | 3 | `icon_creature_sylvan.phoenix` |
-| 4 | — (spare: keep the better take of 3) |
+| 4 | `icon_creature_neutral.dire-wolf` |
 
 ## Backdrop
 
