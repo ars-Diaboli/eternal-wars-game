@@ -62,7 +62,7 @@ public sealed class ObjectTool(EditorToolContext context) : EditorTool(context)
                 OwnerOf(entry), p => _thingOwner = p);
         }
 
-        options.Hint($"Places {entry.Name} where clicked: the ghost shows its tiles, red where it does not fit.");
+        // What a click does is the status bar's (ClickHint) and the ghost's to say: the browser below keeps the room.
     }
 
     public override void Hover(MapPosition? tile)

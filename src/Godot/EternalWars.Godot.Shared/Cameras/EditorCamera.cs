@@ -7,7 +7,7 @@ public sealed record EditorCameraView(Vector3 Focus, float Distance, float YawDe
 
 /// <summary>
 /// The map editor's camera (ADR-260), beside the game's <see cref="StrategyCamera"/>: tilted like it (15–30° from vertical, more tilted
-/// closer) or straight down (<see cref="TopDown"/>), and it goes far enough out to show the largest map. WASD pans relative to the
+/// closer) or straight down and orthographic (<see cref="TopDown"/>), and it goes far enough out to show the largest map. WASD pans relative to the
 /// rotation, Q/E rotate, the wheel zooms by a share of the distance, and dragging with the middle button moves the map with the pointer.
 /// <see cref="Frame"/> fits an area of the map into the view: the whole map (Home) or the selection (F).
 /// </summary>
@@ -323,9 +323,22 @@ public partial class EditorCamera : Camera3D
         var yaw = Mathf.DegToRad(_yawDegrees);
         if (_topDown)
         {
-            // Straight down, with the map's far side (north, -Z) at the top of the screen as in the tilted view.
+            // Straight down and orthographic, like a plan: every tile the same size, a wall hides nothing behind it. The view's height
+            // is what the perspective camera showed at the focus, so zoom, Home and the bookmarks frame the same ground. The far side
+            // (north, -Z) at the top of the screen as in the tilted view.
+            var size = 2f * _distance * Mathf.Tan(Mathf.DegToRad(Fov) / 2f);
+            if (Projection != ProjectionType.Orthogonal || !Mathf.IsEqualApprox(Size, size))
+            {
+                SetOrthogonal(size, Near, Far);
+            }
+
             LookAtFromPosition(_focus + (Vector3.Up * _distance), _focus, Vector3.Forward.Rotated(Vector3.Up, yaw));
             return;
+        }
+
+        if (Projection != ProjectionType.Perspective)
+        {
+            SetPerspective(Fov, Near, Far);
         }
 
         // Close = more tilted (MaxTilt), far = more top-down (MinTilt).

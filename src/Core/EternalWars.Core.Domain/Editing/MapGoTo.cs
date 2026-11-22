@@ -10,7 +10,8 @@ namespace EternalWars.Core.Domain.Editing;
 /// The editor's Go to (Ctrl+G, ADR-261): what fits a typed text, as links the editor shows and selects (<see cref="MapLink"/>). Two numbers
 /// ("12, 7" or "12 7"), and a third for the level, are a tile of the map; the shown level when no third is typed. Any text is also searched
 /// among the names of the map's heroes, named objects (a town always has a name) and map events with a cell, ranked as the command palette
-/// ranks commands (<see cref="CommandSearch"/>); an empty text lists them all. The tile comes first.
+/// ranks commands (<see cref="CommandSearch"/>); an empty text lists them all. "#12" is the object and the hero whose id is 12, named or
+/// not (the ids the inspector and the problems show). The tile or the id comes first.
 /// </summary>
 public static partial class MapGoTo
 {
@@ -27,6 +28,8 @@ public static partial class MapGoTo
         {
             results.Add(new MapLink($"Tile {Where(state.Map, tile)}", tile));
         }
+
+        results.AddRange(ById(state, query));
 
         var named = Named(state);
         results.AddRange(CommandSearch.Find(query.Trim(), [.. named.Select(n => n.Name)]).Select(i => named[i].Link));
@@ -49,6 +52,27 @@ public static partial class MapGoTo
         int Number(int group) => int.Parse(match.Groups[group].Value, CultureInfo.InvariantCulture);
         var tile = new MapPosition(Number(1), Number(2), match.Groups[3].Success ? Number(3) : level);
         return map.Contains(tile) ? tile : null;
+    }
+
+    /// <summary>The object and the hero whose id "#n" names; none for any other text.</summary>
+    private static IEnumerable<MapLink> ById(GameState state, string query)
+    {
+        var text = query.Trim();
+        if (text.Length < 2 || text[0] != '#' || !int.TryParse(text[1..], NumberStyles.None, CultureInfo.InvariantCulture, out var id))
+        {
+            yield break;
+        }
+
+        var map = state.Map;
+        if (state.Objects.FirstOrDefault(o => o.Id.Value == id) is { } found)
+        {
+            yield return new MapLink($"#{id}: {found.Name ?? found.Definition.Name} at {Where(map, found.VisitPosition)}", found.VisitPosition, found.Id);
+        }
+
+        if (state.Heroes.FirstOrDefault(h => h.Id.Value == id) is { } hero)
+        {
+            yield return new MapLink($"#{id}: {hero.Name}, hero at {Where(map, hero.Position)}", hero.Position, Hero: hero.Id);
+        }
     }
 
     /// <summary>The heroes, the named objects and the events with a cell, with their links, in the map's order.</summary>

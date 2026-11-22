@@ -36,6 +36,11 @@ These editor actions use icons that exist, and get no new art: Open (`load`), Sa
 (`plus`, `minus`), Close and OK (`close`, `confirm`), Zoom (`zoom_in`, `zoom_out`), a layer locked or unlocked (`lock`, `unlock`), Move
 up and down (`arrow_up`, `arrow_down`), the template's Monsters guard (`tool_monster`, below).
 
+## Still to draw
+
+The editor already asks for these files and shows a lettered placeholder until each exists: sheets **C4** (view), **C7** (map
+settings), **C12** (panels of the side bars) and **C13** (export and workspaces).
+
 ## Tier B · Emblems: tools and template parts
 
 Painted emblems like the adventure map's action icons (sheets 15–18 of [icon-prompts.md](icon-prompts.md)): every tool and template
@@ -467,6 +472,53 @@ slashes from the upper right to the lower left
 | 2 | `strength_weak` | Weak |
 | 3 | `strength_average` | Average |
 | 4 | `strength_strong` | Strong |
+
+### C12 · Panels of the side bars (2 × 3): the side bars, the View and Edit menus
+
+**Prompt** · 1536 × 1024 · negative `NEG-PLAIN`
+
+```text
+Game UI button symbol sheet, flat front view, each symbol a single light-grey shape with a subtle bevel and a thick dark outline, no
+other colour, no glow, bold and simple, equal stroke weight on every symbol. 6 separate icons arranged in a grid of 3 columns and 2
+rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
+nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
+with alpha. The icons, top row left to right, then bottom row: 1 a hammer and a small paintbrush crossed in an X; 2 a flat
+square seen from above with a second square laid over half of it at an angle, its edge drawn as a dashed line; 3 a balance scale: a
+short upright post with a level beam on top and a shallow pan hanging from each end; 4 a small square map with a smaller hollow rectangle
+inside its upper left part; 5 a magnifying glass: a thick ring with a short straight handle to the lower right; 6 three thin books
+standing upright side by side, the right one leaning on the others
+```
+
+| # | File | Used for |
+|---|---|---|
+| 1 | `tool_panel` | the Tools panel (the tools, their options and the object browser) |
+| 2 | `overlays` | Overlays |
+| 3 | `fairness` | Fairness |
+| 4 | `minimap` | the minimap's heading |
+| 5 | `find` | Find on the map (Ctrl+F) |
+| 6 | `sample_maps` | the sample maps on the empty map's card |
+
+### C13 · Export and workspaces (2 × 2): the File and View menus, the toolbar
+
+**Prompt** · 1024 × 1024 · negative `NEG-PLAIN`
+
+```text
+Game UI button symbol sheet, flat front view, each symbol a single light-grey shape with a subtle bevel and a thick dark outline, no
+other colour, no glow, bold and simple, equal stroke weight on every symbol. 4 separate icons arranged in a grid of 2 columns and 2
+rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
+nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
+with alpha. The icons, top row left to right, then bottom row: 1 a sheet of paper with its top right corner folded, three
+short horizontal lines on it and a thick arrow pointing out of its right side; 2 a framed landscape picture, two mountain peaks and a
+round sun, a thick arrow pointing out of its right side; 3 a square grid of four by four small squares seen from straight above; 4
+three circles joined by two straight lines into a V, like a small graph of nodes
+```
+
+| # | File | Used for |
+|---|---|---|
+| 1 | `export_report` | Export report (Markdown) |
+| 2 | `export_picture` | Export map picture (PNG) |
+| 3 | `map_tab` | the Map tab |
+| 4 | `template_tab` | the Template tab |
 
 ## After generating
 

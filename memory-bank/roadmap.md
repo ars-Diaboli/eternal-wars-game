@@ -284,6 +284,12 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       ticked (the shortcut editor, F1 help, sample maps, UI scale and contrast, the timing on 256 × 256, the scripted first use and its
       fixes, the close with a key and a status-bar hint for every tool; plan tasks 1 to 7; ADR-275 to ADR-280)
 - [ ] The first-use test with a person: a playable two-player map in 15 minutes, without a manual (the target's "Direct", ADR-279)
+- [x] The plan's check (ADR-282): side bars with a button per panel, one panel per region under a header, the compact tool palette,
+      the scroll bar's room kept (a hang at some widths), Find (Ctrl+F), Go to by id, the orthographic top-down view, the icon prompts
+      for what had none
+- [ ] After the close ([plan](../docs/papers/editor-plan.md#after-the-close)): the Measure tool; context menus from the command
+      registry; the Object tool's random variant and road snapping; the other level ghosted in the map view; the height brush's
+      falloff; `Main.cs` split into composers; the editor icons of sheets C4, C7, C12 and C13 drawn
 
 ### Platform and art
 - [x] Built: speed settings (ADR-095, UI-1)

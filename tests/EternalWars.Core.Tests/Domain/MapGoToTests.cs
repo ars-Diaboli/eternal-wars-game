@@ -74,4 +74,33 @@ public class MapGoToTests
         Assert.Null(tileFirst[0].Object);
         Assert.Empty(MapGoTo.Find(scenario, "nothing like it", level: 0));
     }
+
+    [Fact]
+    public void AnId_FindsItsObject_NamedOrNot()
+    {
+        var editor = new MapEditorSession(BlankScenario.Create(40, 30));
+        Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.TreasureChest, new MapPosition(6, 5), out var chest));
+        var found = MapGoTo.Find(editor.Scenario, $"#{chest.Value}", level: 0);
+        Assert.Contains(found, l => l.Object == chest && l.Position == editor.Scenario.GetObject(chest).VisitPosition);
+        Assert.Empty(MapGoTo.Find(editor.Scenario, "#99999", level: 0).Where(l => l.Object is not null));
+    }
+
+    [Theory]
+    [InlineData("#")]
+    [InlineData("#x")]
+    [InlineData("# 3")]
+    public void AnythingButHashAndDigits_IsNoId(string query)
+    {
+        var scenario = new MapEditorSession(BlankScenario.Create(40, 30)).Scenario;
+        Assert.DoesNotContain(MapGoTo.Find(scenario, query, level: 0), l => l.Text.StartsWith('#'));
+    }
+
+    [Fact]
+    public void AnId_FindsItsHero()
+    {
+        var scenario = new MapEditorSession(BlankScenario.Create(40, 30)).Scenario;
+        var hero = scenario.Heroes[0];
+        var found = MapGoTo.Find(scenario, $"#{hero.Id.Value}", level: 0);
+        Assert.Contains(found, l => l.Hero == hero.Id && l.Position == hero.Position);
+    }
 }

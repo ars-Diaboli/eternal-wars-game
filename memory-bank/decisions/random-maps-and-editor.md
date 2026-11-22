@@ -48,6 +48,7 @@
 | [279](#adr-279-a-first-map-without-a-manual-adr-250-2026-11-21) | A first map without a manual (ADR-250, 2026-11-21) | implemented |
 | [280](#adr-280-the-editor-overhaul-closed-adr-247-2026-11-22) | The editor overhaul closed (ADR-247, 2026-11-22) | implemented |
 | [281](#adr-281-content-from-pictures-short-lists-from-drop-downs-adr-255-2026-11-22) | Content from pictures, short lists from drop-downs (ADR-255, 2026-11-22) | implemented |
+| [282](#adr-282-side-bars-one-panel-per-region-and-the-plans-check-edit-1-2026-11-22) | Side bars, one panel per region, and the plan's check (EDIT-1, 2026-11-22) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -1108,3 +1109,22 @@ ADR when it is built.
   change under it (`PicturePicker.SetItems`, the map's heroes).
 - **"Any player" in a condition is any player**: its item had id -1, which a Godot drop-down takes as "number by index", so the
   condition was made for the first player.
+
+### ADR-282: Side bars, one panel per region, and the plan's check (EDIT-1, 2026-11-22)
+**Status**: implemented (the follow-ups the check found are open in the plan and the roadmap).
+
+- **Side bars, as in IDEs**: a thin bar on each edge of the window with a button per panel, its icon over its name. The left bar
+  holds the left region's panels at its top and the bottom region's at its foot; the right bar the right region's. A button shows its
+  panel and opens its region, or collapses the region when its panel is the one showing; the buttons of the panels in sight are lit.
+  F11 hides the regions and keeps the bars. The bars take their width from the regions' default sizes, so the map keeps its room.
+- **One panel per region**: a region shows its panel under a header (its icon, its name, a Hide button) instead of a tab bar. The
+  header is as tall as the tab bar was. EDIT-1 stands: fixed regions, no docking, no floating windows.
+- **A compact tool palette**: a tool's button is its icon alone, its name and key in the tooltip; the tools take two or three rows. The
+  Object tool's options no longer repeat what the status bar's hint says, so the browser keeps the room.
+- **A panel taller than its region keeps the scroll bar's room** (`ScrollMode.Reserve`): with the bar shown only when needed, a panel
+  whose height depends on its width (the tools wrapping, the browser's card) turned the bar on and off without end at some widths, and
+  the editor hung (the left region at 268 px).
+- **From the check of the plan** (the plan's "After the close"): Find on the map (Ctrl+F) opens Go to's box; Go to finds an object or
+  a hero by id ("#12"); the top-down view is orthographic. The icons prompted but not drawn (sheets C4 and C7) and those with no
+  prompt yet (new sheets C12 and C13: the panels of the side bars, Find, sample maps, the exports, the Map and Template tabs) have
+  their `UiIcon` values, so a file shows once it exists; a lettered placeholder stands in until then.

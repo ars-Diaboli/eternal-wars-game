@@ -22,16 +22,22 @@ problems panel, map settings window):
   tier), towns (buildings, dwellings, garrison, guild spells, random faction);
 - the map settings window: map name and description, player slots and teams, victory and defeat conditions (ADR-057), the map's bans
   ([adventure-map.md](adventure-map.md#map-bans-and-random-placeholders), ADR-133) and the week events;
-- **Map events** (the Events tab, ADR-129): the map's events in the order they run, each with its trigger, cells and actions, made
+- **Map events** (the Events panel, ADR-129): the map's events in the order they run, each with its trigger, cells and actions, made
   and edited there; what they can do is in [adventure-map.md](adventure-map.md#pandoras-box-and-map-events);
 - validation; [generate from a template and the template editor](random-maps.md#editor).
 
 **The window** (EDIT-1, ADR-250): a bar on top (the menus, the Map and Template tabs, the toolbar), three docked regions around the map
-view, each a tab box, and a status bar at the bottom. The tools and the options of the one in use are on the left, the inspector
-on the right (Inspector, Events, Generate), Problems, History and Output at the bottom. A tool picked (its button, its key or the Tools
-menu) says in the status bar what a click or a drag on the map does with it. A region is resized with its splitter and collapsed with its
-button on the toolbar or in the View menu; F11 hides them all and shows them again. A panel larger than its region scrolls. The
-splitter positions, the collapsed regions and each region's open tab are kept in `editor-settings.cfg` in the user data folder.
+view, and a status bar at the bottom. The tools and the options of the one in use are on the left, the inspector on the right
+(Inspector, Layers, Overlays, Fairness, Events, Generate), Problems, History and Output at the bottom. A tool picked (its button, its key
+or the Tools menu) says in the status bar what a click or a drag on the map does with it.
+- **Side bars** (ADR-282): a thin bar on each edge of the window holds a button per panel, its icon over its name. The left bar has the
+  left region's panels at its top and the bottom region's at its foot, the right bar the right region's. A button shows its panel (opening
+  its region), or collapses the region when its panel is the one showing; the buttons of the panels in sight are lit.
+- **A region** shows one panel at a time under a header with the panel's name and a Hide button. It is resized with its splitter and
+  collapsed with Hide, its side-bar button, its button on the toolbar or the View menu; F11 hides them all and shows them again (the side
+  bars stay). A panel taller than its region scrolls, and the scroll bar's room is kept while it is not needed.
+- The splitter positions, the collapsed regions and each region's open panel are kept in `editor-settings.cfg` in the user data
+  folder.
 
 **Map and Template tabs** (EDIT-3), after the menus: the Map tab is the map with its regions; the Template tab is the
 [template editor](random-maps.md#template-editor), which fills the room between the bars. Both stay as they were left while the other
@@ -72,7 +78,7 @@ placeholder, a coloured tile with the name's two letters.
 - **New map** (Ctrl+N, ADR-259) opens the new-map wizard, in three steps: the size (the presets 48 × 48 to 256 × 256, or any size
   from 16 to 256 a side), the levels (the surface, or the surface and the underground) and the ground (a terrain a hero can walk on);
   the players (1 to 8), each a person or the computer by default; a template, or none. Without a template it makes a blank map: the
-  ground, the underground below, the players named by colour, each with a hero. With one it ends in the Generate tab, set to the
+  ground, the underground below, the players named by colour, each with a hero. With one it ends in the Generate panel, set to the
   template at its size nearest the chosen one and to the players (the template decides the ground and the levels); Generate makes
   the map. Cancel or Escape closes the wizard. After a blank map the status bar names the next steps: a town for each player, then
   Problems and Test.
@@ -97,9 +103,9 @@ placeholder, a coloured tile with the name's two letters.
 **Commands**: every action is a command with a name, an icon, an optional shortcut, and a check whether it can run now. The menus
 (File, Edit, View, Map, Tools, Templates, Test, Help) and the toolbar are built from the commands; an item that cannot run is greyed
 and says why in its tooltip. Shortcuts (each can be rebound in Preferences): the File menu's, Ctrl+Z undo, Ctrl+Y redo, Ctrl+X cut, Ctrl+C copy, Ctrl+V paste, Ctrl+D duplicate, Delete, Ctrl+A select all, Escape
-deselect, Ctrl+R rotate scenery, Ctrl+M mirror scenery, the tools' keys (T Terrain, R Road, I River, Z StartZone, G Height, O Object,
+deselect, Ctrl+F find on the map, Ctrl+G go to, Ctrl+R rotate scenery, Ctrl+M mirror scenery, the tools' keys (T Terrain, R Road, I River, Z StartZone, G Height, O Object,
 C Scatter, N Monster, H Hero, E Erase, K LinkGates, V Select, M Move, P Paste, B Grail), L the next level, F11 the panels, F7 the map settings, Ctrl+Shift+P the command palette, Ctrl+, Preferences. The Map
-menu opens the map settings (at a tab) and the Events tab, the Tools menu picks a tool. F5 is Test (below), F1 [help](#editor-help).
+menu opens the map settings (at a tab) and the Events panel, the Tools menu picks a tool. F5 is Test (below), F1 [help](#editor-help).
 
 **Selection** (EDIT-1, ADR-250). The selection holds tiles, objects, heroes and map events. It is not an undo step, and a thing that
 leaves the map leaves the selection.
@@ -216,7 +222,7 @@ are given a spell one level at a time. Objects of different kinds are listed by 
 **Pickers** (ADR-255): creatures, heroes, artifacts, spells and skills are chosen with a button that shows the chosen one's picture
 and name. A click opens a grid under the row: a search field (Enter takes the first found), and the items by group (creatures by
 town, heroes by town and class, artifacts by tier or by slot, spells by level and school, skills by group), each with its picture.
-The pictures are the lettered tiles until portraits and icons exist (ADR-245). The inspector, the Events tab's event form, the
+The pictures are the lettered tiles until portraits and icons exist (ADR-245). The inspector, the Events panel's event form, the
 Monster tool's creature and the Victory and loss tab's hero and artifact use them; a faction is shown with its crest, in the map's
 and the template's panels alike. Drop-downs are
 left for short fixed lists (a disposition, a road type, a difficulty), files, and this map's own towns and objects (ADR-281).
@@ -325,7 +331,7 @@ until then); the boxes over the editor (the map settings, Preferences, the wizar
 not fit show arrows; the rows of buttons on the Template tab and over the Problems list wrap.
 
 **The camera** (ADR-260) looks at the map tilted, 15° to 30° from straight down (more tilted closer), or straight down (View >
-Top-down view); it goes out far enough to show a 256 × 256 map.
+Top-down view, orthographic like a plan, every tile the same size); it goes out far enough to show a 256 × 256 map.
 - W, A, S, D move it, Q and E turn it up to 45° either way, the wheel zooms, and dragging with the middle button moves the map with
   the pointer.
 - **F** (View > Focus the selection) frames the selection: its tiles and every cell of its objects, heroes and events, on the shown
@@ -333,23 +339,24 @@ Top-down view); it goes out far enough to show a 256 × 256 map.
   shows in, between the panels.
 - **Bookmarks**: Ctrl+1 … 9 store the view and the level shown, 1 … 9 return to them (View > Bookmarks lists them, View > Store bookmark stores one). They belong to the
   map open and are not saved.
-- **The minimap** (ADR-261), under the right region's tabs: the shown level in the terrain's colours, objects and heroes in their
+- **The minimap** (ADR-261), under the right region's panel: the shown level in the terrain's colours, objects and heroes in their
   owners' colours, and the view outlined in white. A click or a drag on it moves the view there. On a map of two levels, "Show the other
   level faintly" mixes the other level's colours in.
-- **Go to** (Ctrl+G, View > Go to…): type a tile ("12, 7", or "12, 7, 1" for the level; the shown level otherwise) or a name: the
-  list follows as you type with the tile first, then the heroes, the named objects (every town) and the events with a cell whose names
+- **Go to** (Ctrl+G, View > Go to…; also **Find on the map**, Ctrl+F, Edit > Find on the map…): type a tile ("12, 7", or "12, 7, 1"
+  for the level; the shown level otherwise), an id ("#12": the object and the hero of that id, named or not) or a name: the list
+  follows as you type with the tile or the id first, then the heroes, the named objects (every town) and the events with a cell whose names
   fit, as the command palette ranks them. Up and Down choose, Enter or a click goes there (a hero or an object also becomes the
   selection, unless its layer is hidden or locked), Escape closes it.
 - Going to a tile from Go to, the minimap, the Problems panel or the events puts it in the middle of the map's part of the window.
 
-**Views and checks of the map**, in the right region's tabs, and the map's test and exports:
-- **Layers** (ADR-262, the Layers tab of the right region, View > Layers): a Show box for the terrain, roads, rivers, objects, scenery,
+**Views and checks of the map**, panels of the right region, and the map's test and exports:
+- **Layers** (ADR-262, the Layers panel of the right region, View > Layers): a Show box for the terrain, roads, rivers, objects, scenery,
   monsters, heroes, events, start zones and the grid, and a Locked box for the roads, rivers, objects, scenery, monsters, heroes and
   events. A hidden or locked kind is not selected (a click, a box, Select all, a jump or Go to) and not erased; locking or hiding it lets
   go of what was selected of it. A copy leaves out hidden or locked roads and rivers, and a paste does not paint over them. The brushes
   still paint terrain, roads, rivers and start zones. The grid hides with the terrain. "Show and unlock all" undoes it all; every map
   opened starts with everything shown and unlocked.
-- **Overlays** (ADR-264, the Overlays tab of the right region, View > Overlays, or View > Overlay): one at a time over the shown level,
+- **Overlays** (ADR-264, the Overlays panel of the right region, View > Overlays, or View > Overlay): one at a time over the shown level,
   with a legend in the map view's lower left corner. Passability tints entrances, blocked cells and the cells a monster guards;
   Owners tints everything that can have an owner, and every hero, in its owner's colour (unowned: grey); Guard strength is a heat map
   of the army power guarding each cell in five bands from the level's weakest to its strongest guard; Reach tints every tile by the
@@ -357,7 +364,7 @@ Top-down view); it goes out far enough to show a 256 × 256 map.
   "more"; Zones shows a generated map's zones, laid out again from what its description records, and otherwise the start zones;
   Height contours draws a line every half cell of height, thicker at each whole cell. An overlay follows every edit and the level
   shown, and changes nothing on the map.
-- **Fairness** (ADR-266, the Fairness tab of the right region, View > Fairness or Map > Fairness): a row per start (a player's first
+- **Fairness** (ADR-266, the Fairness panel of the right region, View > Fairness or Map > Fairness): a row per start (a player's first
   town, else its first hero) with the days to the nearest town, mine of each resource and resource provider ("—": none reached), the
   treasure in gold and the guards' army power within 3 and 7 days, and the mines within 3 days; under it the warnings, where a start is
   more than 20 % from the starts' mean or reaches nothing another start reaches. A click on a row shows the start. The numbers follow

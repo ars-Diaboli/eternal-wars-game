@@ -38,6 +38,9 @@ public static class UiTheme
     /// <summary>An opaque screen's and the status bar's ground.</summary>
     public static Color Background => HighContrast ? new(0.04f, 0.04f, 0.05f) : new(0.11f, 0.12f, 0.15f);
 
+    /// <summary>The editor's side bars (ADR-282): a shade darker than the regions beside them.</summary>
+    public static Color SideBarBackground => HighContrast ? new(0f, 0f, 0f, 1f) : new(0.08f, 0.085f, 0.105f, 1f);
+
     /// <summary>A panel over the map: the same ground, a little of the map showing through.</summary>
     public static Color PanelBackground => HighContrast ? new(0.04f, 0.04f, 0.05f, 1f) : new(0.11f, 0.12f, 0.15f, 0.88f);
 

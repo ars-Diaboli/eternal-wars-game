@@ -6,8 +6,9 @@ using Godot;
 namespace EternalWars.Godot.UI.Editor;
 
 /// <summary>
-/// A button per tool (its icon and its name) plus the options of the one in use, both wrapping to the width the palette is given. The first tool is in use at the
-/// start; picking another cancels what the old one was in the middle of.
+/// A button per tool plus the options of the one in use, both wrapping to the width the palette is given. A tool's button is its icon
+/// alone, square, its name and key in the tooltip (ADR-282), so the tools take two or three rows and leave the room to the options and
+/// the browser. The first tool is in use at the start; picking another cancels what the old one was in the middle of.
 /// </summary>
 public partial class ToolPalette : VBoxContainer
 {
@@ -19,6 +20,9 @@ public partial class ToolPalette : VBoxContainer
 
     /// <summary>The user picked a tool (its button or its command, <see cref="Pick"/>), not code that switches tools on its way to something else.</summary>
     public event Action<IEditorTool>? ToolPicked;
+
+    /// <summary>A tool button's icon size.</summary>
+    private const int IconSize = 22;
 
     /// <summary>The tools, in the buttons' order.</summary>
     public IReadOnlyList<IEditorTool> Tools { get; private set; } = [];
@@ -36,8 +40,8 @@ public partial class ToolPalette : VBoxContainer
         {
             var button = new Button
             {
-                Text = tool.Name, Icon = PlaceholderIcons.Of(tool.Icon, tool.Name), ToggleMode = true, ButtonGroup = group, ButtonPressed = tool == tools[0],
-            };
+                Text = tool.Name, ToggleMode = true, ButtonGroup = group, ButtonPressed = tool == tools[0], FocusMode = Control.FocusModeEnum.None,
+            }.WithIcon(PlaceholderIcons.Of(tool.Icon, tool.Name, IconSize), IconSize); // the name stays the button's label for scripts (AutoInput)
             button.TooltipText = tool.Shortcut is { } key ? $"{tool.Name} ({key})" : tool.Name;
             button.Pressed += () => Pick(tool);
             buttons.AddChild(button);

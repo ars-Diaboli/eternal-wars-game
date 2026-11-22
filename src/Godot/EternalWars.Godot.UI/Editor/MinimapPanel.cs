@@ -30,7 +30,7 @@ public partial class MinimapPanel : VBoxContainer
         _minimap.SizeFlagsHorizontal = SizeFlags.ShrinkCenter;
         _minimap.TileClicked += moveTo;
         _minimap.ViewFrame = () => Frame(camera, mapView);
-        AddChild(new Label { Text = "Minimap" });
+        AddChild(UiIcons.IconLabel(UiIcon.Minimap, "Minimap"));
         AddChild(_minimap);
         _minimap.Bind(context);
 

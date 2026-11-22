@@ -36,7 +36,7 @@ public partial class EmptyStateCard : PanelContainer
         opening.Pressed += open;
         buttons.AddChild(opening);
 
-        rows.AddChild(new Label { Text = "Sample maps:" });
+        rows.AddChild(UiIcons.IconLabel(UiIcon.SampleMaps, "Sample maps:"));
         var list = new HFlowContainer();
         rows.AddChild(list);
         foreach (var sample in samples)

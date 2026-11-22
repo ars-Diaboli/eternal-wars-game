@@ -199,9 +199,9 @@ $scenarios = @(
     # Ember March (ADR-114): start, end the turn (the computer plays Red), open the town screen with its building tree, close it.
     @{ Name = 'game-ember-march'; App = 'EternalWars.Game'; Frames = 60; Map = $emberMap
        Input = '3:key:Enter;12:click:@End turn;40:key:T;52:key:Escape' },
-    # Inspector rows (ADR-114) on Ember March: Select, the Inspector tab, a Minor artifact pickup, the witch hut, the sphinx, the hero (artifacts).
+    # Inspector rows (ADR-114) on Ember March: Select, then in the Inspector (showing from the start) a Minor artifact pickup, the witch hut, the sphinx, the hero (artifacts).
     @{ Name = 'editor-inspector-objects'; App = 'EternalWars.MapEditor'; Frames = 38; Map = $emberMap
-       Input = '3:click:@Select;6:click:@Inspector;9:click:616,230;16:click:645,382;23:click:965,552;30:click:352,244' },
+       Input = '3:click:@Select;9:click:616,230;16:click:645,382;23:click:965,552;30:click:352,244' },
     # The tools on a blank map: roads, a river, an object, the gate link tool. Then the map settings window's Week events tab (F7, ADR-084,
     # ADR-256): tick Conflux for the weekly events, switch the events off, undo both with the window's Undo, Escape closes it.
     @{ Name = 'editor-tools'; App = 'EternalWars.MapEditor'; Frames = 80
@@ -211,7 +211,7 @@ $scenarios = @(
     # Then generate from a template (ADR-087): the Generate tab, Sylvan for Blue, Generate (Two against two at 128), then the Inspector and the
     # Generate tab again: the settings stay.
     @{ Name = 'editor-heights'; App = 'EternalWars.MapEditor'; Frames = 110
-       Input = '3:click:@Height;5:click:304,243;7:click:304,243;9:click:144,274;10:click:144,274;11:click:144,274;12:click:144,274;13:click:144,274;14:click:144,274;17:drag:460,600,900,600;21:drag:460,620,900,620;26:click:@Raise;29:choose:Lower;33:drag:460,560,900,560;38:click:@Undo;42:click:@Terrain;45:click:@Highlands;48:click:400,400;59:click:@Generate;64:click:@Random;68:choose:sylvan;72:click:@Generate;86:click:@Inspector;90:click:@Generate' },
+       Input = '3:click:@Height;5:click:183,271;7:click:183,271;9:click:196,304;10:click:196,304;11:click:196,304;12:click:196,304;13:click:196,304;14:click:196,304;17:drag:460,600,900,600;21:drag:460,620,900,620;26:click:@Raise;29:choose:Lower;33:drag:460,560,900,560;38:click:@Undo;42:click:@Terrain;45:click:@Highlands;48:click:400,400;59:click:@Generate;64:click:@Random;68:choose:sylvan;72:click:@Generate;86:click:@Inspector;90:click:@Generate' },
     # The template editor (ADR-117) in the workspace's Template tab (EDIT-3): the tab, select the middle zone's card (its obelisk count, ADR-140),
     # add a treasure zone, drag it (on the grid, ADR-270), right-drag it onto start-1 to connect, Generate (off the main thread, ADR-274: the
     # graph stays usable while it runs).
@@ -251,9 +251,9 @@ $scenarios = @(
     @{ Name = 'editor-events'; App = 'EternalWars.MapEditor'; Frames = 30; Map = $questsMap
        Input = '3:click:@Events;8:click:1096,170;14:click:1145,436' },
     # Bans and placeholders (ADR-126) on the placeholders map: the map settings window's Bans tab, ban the first hero, undo it, close; Select,
-    # the Inspector tab, the random town.
+    # the Inspector, the random town.
     @{ Name = 'editor-bans'; App = 'EternalWars.MapEditor'; Frames = 36; Map = $placeholdersMap
-       Input = '3:key:F7;6:click:@Bans;10:click:@Agathe Sorrel (haven, Mage);14:click:@Undo;17:key:Escape;21:click:@Select;24:click:@Inspector;27:click:420,300' },
+       Input = '3:key:F7;6:click:@Bans;10:click:@Agathe Sorrel (haven, Mage);14:click:@Undo;17:key:Escape;21:click:@Select;27:click:420,300' },
     # The arena switch (ARN-2) on the arena map: the map settings window's Victory and loss tab (the arena note, the victory rows off), the
     # General tab, untick the switch, close: Problems, in the bottom region, says the combat place now does nothing.
     @{ Name = 'editor-arena'; App = 'EternalWars.MapEditor'; Frames = 26; Map = $arenaMap
@@ -320,7 +320,7 @@ $scenarios = @(
     # A guild spell set by hand in the editor: select Emberkeep, open the inspector, open a guild slot's picker (the press scrolls the slots into
     # view), then the first level-1 slot's, which closes the other, and pick Brand from its grid (ADR-255).
     @{ Name = 'editor-guild-spell'; App = 'EternalWars.MapEditor'; Frames = 40; Map = $spellsMap
-       Input = '5:press:Select;10:click:400,300;16:click:@Inspector;20:press:— drawn —;26:click:@— drawn —#1;34:press:Brand' },
+       Input = '5:press:Select;10:click:400,300;20:press:— drawn —;26:click:@— drawn —#1;34:press:Brand' },
     # The siege's gate, keep and towers and Earthquake (ADR-120): the ballista breaks the gate; a second run casts Earthquake.
     @{ Name = 'game-siege-gate'; App = 'EternalWars.Game'; Frames = 104; Map = $siegeMagicMap
        Input = '3:key:Enter;10:key:Up;62:key:D;72:click:958,432' },
@@ -329,7 +329,7 @@ $scenarios = @(
     # The editor's Grail tool, the map settings window's difficulty and hero limit rows (ADR-083, ADR-103) and the town inspector's faction
     # and guild spells (ADR-083, ADR-123).
     @{ Name = 'editor-grail-and-town'; App = 'EternalWars.MapEditor'; Frames = 42; Map = $grailMap
-       Input = '3:key:F7;6:click:@General;9:key:Escape;12:press:Grail;16:click:400,450;22:press:Select;26:click:720,560;30:click:@Inspector' },
+       Input = '3:key:F7;6:click:@General;9:key:Escape;12:press:Grail;16:click:400,450;22:press:Select;26:click:720,560' },
     # The map settings window (F7, ADR-256) on a blank map: every tab; a player added on the Players tab, the arena switch on the General
     # tab, both undone with the window's Undo; F7 closes it on the Bans tab and opens it again there.
     @{ Name = 'editor-map-settings'; App = 'EternalWars.MapEditor'; Frames = 60
@@ -353,6 +353,12 @@ $scenarios = @(
     # nothing to undo), and Tools, where Hero is picked (the palette follows).
     @{ Name = 'editor-shell'; App = 'EternalWars.MapEditor'; Frames = 54; Map = $emberMap
        Input = '4:click:@Monster;8:drag:1036,400,936,400;14:click:@Left panel;19:key:F11;24:key:F11;29:click:@Left panel;33:click:@Generate;37:click:60,22;42:key:Escape;45:click:190,22;48:choose:Hero' },
+    # The side bars (ADR-282) on Ember March: Layers on the right bar shows the Layers panel, pressed again it collapses the right region;
+    # History at the left bar's foot shows History in the bottom region, pressed again it collapses that; Tools collapses the left region
+    # and brings it back; the right region opens on Fairness, and its header's Hide button collapses it; Ctrl+F opens Find on the map
+    # and "#" plus an id finds the object of that id.
+    @{ Name = 'editor-side-bars'; App = 'EternalWars.MapEditor'; Frames = 60; Map = $emberMap
+       Input = '4:click:@Layers;9:click:@Layers;14:click:@History;19:click:@History;24:click:@Tools;29:click:@Tools;34:click:@Fairness;40:click:@Hide#2;45:key:Ctrl+F;49:text:#3;56:key:Escape' },
     # The bottom panels and the status bar (EDIT-1, ADR-250) on a blank map: a road, a river and an object are three steps; History lists
     # them and a click on the first jumps back to it (the river and the object are undone and dim); Output keeps the messages (the gate link tool, clicked on empty ground, says what it needs); the status
     # bar's problem counts open Problems, where the warnings are hidden and shown again and the kind Heroes is picked.
@@ -431,21 +437,21 @@ $scenarios = @(
     @{ Name = 'editor-browser-place'; App = 'EternalWars.MapEditor'; Frames = 70
        Input = '3:click:@Object;7:click:@Mines and providers;12:click:@Gold mine;18:click:700,500;24:rclick:@Gold mine;30:click:@Mines and providers;34:click:@Monsters;40:click:@Dwarf;46:click:900,500;54:click:@Undo;62:click:@Redo' },
     # The inspector's sections and jump links (EDIT-1, ADR-254) on a blank map: "portal" is typed into the browser's search, two
-    # Portals are placed and linked with the LinkGates tool; the Select tool takes the first and the Inspector tab shows it with its
+    # Portals are placed and linked with the LinkGates tool; the Select tool takes the first and the Inspector shows it with its
     # Identity and Links sections; the jump link selects the partner and shows it; the Links section is closed.
     @{ Name = 'editor-inspector-sections'; App = 'EternalWars.MapEditor'; Frames = 84
-       Input = '3:click:@Object;6:click:160,354;8:text:portal;18:click:@Portal;22:click:600,400;26:click:900,520;30:click:@LinkGates;33:click:600,400;36:click:900,520;40:click:@Select;43:click:600,400;47:click:@Inspector;56:click:@Leads to Portal #2 at (20,21,L0);66:click:@Links' },
+       Input = '3:click:@Object;6:click:160,264;8:text:portal;18:click:@Portal;22:click:600,400;26:click:900,520;30:click:@LinkGates;33:click:600,400;36:click:900,520;40:click:@Select;43:click:600,400;56:click:@Leads to Portal #2 at (20,21,L0);66:click:@Links' },
     # Multi-edit and the picture pickers (EDIT-1, ADR-255) on a blank map: two Dwarves are placed from the browser; the Select tool
     # takes the first and the inspector makes it Friendly; a rectangle takes both, the inspector shows "2 × Monster" with "—" for the
     # differing disposition, and Hostile is set on both; the creature picker opens its grid, "timber" narrows it and the Timber Wolf is picked
     # for both; Undo takes the wolves back.
     @{ Name = 'editor-multi-edit'; App = 'EternalWars.MapEditor'; Frames = 110
-       Input = '3:click:@Object;6:click:160,354;8:text:dwarf;18:click:@Dwarf;22:click:600,400;26:click:800,400;30:click:@Select;33:click:600,400;36:click:@Inspector;42:click:@Aggressive;46:choose:Friendly;52:drag:540,340,880,470;58:click:@—;62:choose:Hostile;70:click:@Dwarf (T1);76:text:timber;84:click:@Timber Wolf (T1);94:click:@Undo' },
+       Input = '3:click:@Object;6:click:160,264;8:text:dwarf;18:click:@Dwarf;22:click:600,400;26:click:800,400;30:click:@Select;33:click:600,400;42:click:@Aggressive;46:choose:Friendly;52:drag:540,340,880,470;58:click:@—;62:choose:Hostile;70:click:@Dwarf (T1);76:text:timber;84:click:@Timber Wolf (T1);94:click:@Undo' },
     # Scatter and scenery rotation (EDIT-6, ADR-252) on a blank map: the Scatter tool with only walls ticked and a brush of 5 tiles is
     # dragged over the grass (pieces of wall, ways kept open); the Select tool's rectangle takes them; Ctrl+R turns them a quarter
     # turn, Ctrl+M mirrors them; Undo takes the mirroring back.
     @{ Name = 'editor-scatter-rotate'; App = 'EternalWars.MapEditor'; Frames = 70
-       Input = '3:click:@Scatter;7:click:@None;11:click:@Wall;14:click:112,302;17:click:112,302;20:click:112,302;23:click:112,302;27:drag:620,470,900,470;36:key:V;40:drag:560,360,960,620;48:key:Ctrl+R;56:key:Ctrl+M;64:click:@Undo' },
+       Input = '3:click:@Scatter;7:click:@None;11:click:@Wall;14:click:164,308;17:click:164,308;20:click:164,308;23:click:164,308;27:drag:620,470,900,470;36:key:V;40:drag:560,360,960,620;48:key:Ctrl+R;56:key:Ctrl+M;64:click:@Undo' },
     # The editor's camera (ADR-260) on Ember March: Home frames the whole map; Ctrl+1 stores the view; the wheel zooms in and the middle
     # button drags the map; the Select tool's rectangle and F frame the selection; 1 returns to the stored view; the palette's Top-down view
     # looks straight down; Home again.

@@ -9,6 +9,10 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor plan check and side bars (ADR-282): IDE-like side bars with a button per panel, one panel per region under a header, an
+  icon-only tool palette, the scroll bar's room kept (an editor hang at some widths), Find (Ctrl+F), Go to by id, an orthographic
+  top-down view, icon prompts C12 and C13. The gaps the check found are in the plan's "After the close" and the roadmap. Smoke
+  `editor-side-bars`.
 - Editor overhaul, step 3's done-when (ADR-281): content is picked from pictures everywhere (the Monster tool's creature through
   `ToolOptions.Picker`, the Victory and loss tab's hero and artifact, crests on Generate's towns; `PicturePicker.SetItems`); "Any
   player" in a condition no longer becomes the first player. Smoke `editor-content-pickers`.
@@ -254,7 +258,8 @@ Detail: [roadmap.md](roadmap.md).
 2. The prologue map (CAMP-1), as the first map of a campaign; Border Watch's story is a placeholder.
 3. The remaining Phase 5 items in [roadmap.md](roadmap.md) ("Presentation and UI", "Town screen overhaul", "Editor overhaul",
    "Platform and art", "Roster"); the town screen overhaul starts with the owner's answers (TOWN-14 … TOWN-23); the editor
-   overhaul is closed, with the first-use test with a person and the owner's look at the workspace open.
+   overhaul is closed, with the first-use test with a person, the owner's look at the workspace and the plan's "After the close"
+   list (the Measure tool, context menus, the icon art and more, ADR-282) open.
 4. The "Code health" list in [roadmap.md](roadmap.md): skills, heroes and town types as typed ids; `InfoSheets` as data once localisation
    is decided (ADR-239).
 

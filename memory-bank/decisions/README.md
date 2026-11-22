@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-282.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-283.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -308,3 +308,4 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [279](random-maps-and-editor.md#adr-279-a-first-map-without-a-manual-adr-250-2026-11-21) | random-maps-and-editor | A first map without a manual (ADR-250, 2026-11-21) | implemented |
 | [280](random-maps-and-editor.md#adr-280-the-editor-overhaul-closed-adr-247-2026-11-22) | random-maps-and-editor | The editor overhaul closed (ADR-247, 2026-11-22) | implemented |
 | [281](random-maps-and-editor.md#adr-281-content-from-pictures-short-lists-from-drop-downs-adr-255-2026-11-22) | random-maps-and-editor | Content from pictures, short lists from drop-downs (ADR-255, 2026-11-22) | implemented |
+| [282](random-maps-and-editor.md#adr-282-side-bars-one-panel-per-region-and-the-plans-check-edit-1-2026-11-22) | random-maps-and-editor | Side bars, one panel per region, and the plan's check (EDIT-1, 2026-11-22) | implemented |

@@ -122,6 +122,30 @@ public enum UiIcon
     StrengthWeak,
     StrengthAverage,
     StrengthStrong,
+
+    // Prompted in editor-icon-prompts.md (C4, C7, C12) and not drawn yet: a placeholder stands in until the file exists.
+    Grid,
+    TopDown,
+    Focus,
+    WholeMap,
+    GoTo,
+    Bookmark,
+    Map,
+    Players,
+    Conditions,
+    WeekEvents,
+    Rumours,
+    Texts,
+    ToolPanel,
+    Overlays,
+    Fairness,
+    Minimap,
+    ExportReport,
+    ExportPicture,
+    MapTab,
+    TemplateTab,
+    SampleMaps,
+    Find,
 }
 
 /// <summary>

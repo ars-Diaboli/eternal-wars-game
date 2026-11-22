@@ -11,7 +11,7 @@ namespace EternalWars.Godot.UI.Editor.Shell;
 /// </summary>
 public partial class GoToBox : Control
 {
-    private readonly LineEdit _search = new() { PlaceholderText = "A tile (12, 7) or a name", CustomMinimumSize = new Vector2(520, 0) };
+    private readonly LineEdit _search = new() { PlaceholderText = "A tile (12, 7), a name or an id (#12)", CustomMinimumSize = new Vector2(520, 0) };
     private readonly Tree _list = new()
     {
         HideRoot = true, SelectMode = Tree.SelectModeEnum.Row, FocusMode = FocusModeEnum.None, CustomMinimumSize = new Vector2(520, 340),

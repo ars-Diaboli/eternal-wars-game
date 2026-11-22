@@ -10,7 +10,8 @@ describes every part of the new editor, and **technical design** how it is built
 proposal for the questions EDIT-1 … EDIT-12 (ADR-250). The overhaul is built and closed (ADR-280); this file stays here as the
 report of how it was planned and built, like the other finished papers. The rules live in [tools.md](../design/tools.md) and
 [random-maps.md](../design/random-maps.md). Two things are left open, in [roadmap.md](../../memory-bank/roadmap.md): the timed
-first-use test with a person, and the owner's look at the workspace (step 0's greybox, overtaken by the built editor).
+first-use test with a person, and the owner's look at the workspace (step 0's greybox, overtaken by the built editor). A check of this
+plan against the code after the close found what [after the close](#after-the-close) lists.
 
 ## Study
 
@@ -222,15 +223,17 @@ The bar the overhaul is measured against. Each item can be checked; step 6 of th
 | Select | V | Click, marquee (drag), Shift adds, Alt removes, double click selects all objects of that kind | Filter: objects, heroes, monsters, scenery, events |
 | Move | M (or drag a selection) | Moves the selection on the grid; refused where it does not fit, the cells shown in red | — |
 | Terrain | T | Paints a terrain; transitions as now (ADR-212) | Size 1–9, round or square, **fill** (flood fill a connected area of one terrain), **line** (Shift + click) |
-| Height | H | Raise, lower, level, smooth, from terrain (ADR-182) | Size, strength, falloff |
-| Road / River | R / I | Paints roads and rivers | Kind, size 1–3 |
+| Height | G (built; H was planned) | Raise, lower, level, smooth, from terrain (ADR-182) | Size, strength, falloff (falloff not built) |
+| Road / River | R / I | Paints roads and rivers | Kind, size (built as the other brushes: 1–9, round or square) |
 | Start zone | Z | Paints a player's start zone (ADR-197) | The player, Erase |
-| Object | O | Places the browser's selection; a ghost shows where it would go, red where it does not fit | Snap the entrance to a road, random variant |
-| Scatter | S | Fills a brush area or the selection with scenery fitting the terrain, as the generator does (ADR-157) | Density, scenery kinds, keep paths open |
+| Object | O | Places the browser's selection; a ghost shows where it would go, red where it does not fit | Snap the entrance to a road, random variant (neither built) |
+| Monster, Hero | N, H (built) | Place a monster or a hero, as the Object tool does for them | The creature, the count, the disposition; the owner |
+| Scatter | C (built; S is the camera's) | Fills a brush area or the selection with scenery fitting the terrain, as the generator does (ADR-157) | Density, scenery kinds, keep paths open |
 | Erase | E | Removes what is under the brush, by kind | Kinds: objects, scenery, monsters, roads, rivers, events |
 | Link | K | Links gates, portals and one-way exits, drawn as arrows | — |
-| Grail | G | Buries the Grail | — |
-| Measure | U | The steps and days a hero would take between two tiles, along the route the game would take | The hero's movement points |
+| Paste | P (built) | Places the clipboard's piece where clicked | The layers to paste |
+| Grail | B (built; G is Height's) | Buries the Grail | — |
+| Measure | U | The steps and days a hero would take between two tiles, along the route the game would take | The hero's movement points (not built: [after the close](#after-the-close)) |
 
 - **Every brush tool** shows its outline on the ground before the click. Every stroke is one undo step (as now).
 - **The clipboard**: Ctrl+C, X and V, and Ctrl+D to duplicate. The copied area keeps its terrain, height, roads, rivers, objects,
@@ -667,6 +670,35 @@ map's own things (ADR-281; smoke `editor-content-pickers`).
 
 **After step 6**: the node-graph view of the event tree (EDIT-7); per-player AI style with the AI's styles (EDIT-12); per-language
 map texts once localisation is decided (EDIT-11, ADR-239).
+
+### After the close
+
+A check of this plan against the code (2026-11-22, ADR-282) found what the tasks above marked done but left out, and the owner asked
+for collapsible panels as in IDEs.
+
+**Built with the check**:
+1. **Side bars**: a button per panel on a thin bar at each edge (the left bar: the left region's panels at the top, the bottom
+   region's at the foot; the right bar: the right region's); a button shows its panel or collapses its region. Each region shows one
+   panel under a header with Hide, in place of a tab bar. Smoke `editor-side-bars`.
+2. **A compact tool palette** (icons alone, the name and key in the tooltip) and an Object tool without the hint the status bar
+   repeats, so the browser keeps the room in the narrower left region.
+3. **The scroll bar's room kept** in every scrolled panel: at some widths the bar turned on and off without end and the editor hung.
+4. **Find** (Ctrl+F, the table of shortcuts): Go to's box; **Go to by id** ("#12"); the **top-down view orthographic**.
+5. **Icons**: `UiIcon` values for the prompted icons not drawn yet (sheets C4, C7) and new prompts for those that had none (sheets C12,
+   C13 in [editor-icon-prompts.md](../content/prompts/editor-icon-prompts.md)).
+
+**Left open** (in [roadmap.md](../../memory-bank/roadmap.md)), the larger first:
+1. **Measure tool** (U, the tools table): pick two tiles and a hero's movement points; the route the game's pathfinding takes drawn on
+   the map, its steps and days in the status bar. The core's reach (`MapAnalysis`) is the start. A tool, a view and tests: never
+   scheduled in the tasks above.
+2. **Context menus** (the commands' "right click"): a right click on the map, a selection, a browser entry or a panel offers the
+   commands that apply there, built from the registry like the menus.
+3. **Object tool options**: a random variant of the picked kind, and snapping the entrance to a road; rules in the core with tests.
+4. **The other level ghosted in the map view** (Map view and navigation): today only the minimap mixes it in.
+5. **The height brush's falloff** (Height's options): a soft edge, a parameter of the core's height edit.
+6. **`Main.cs` as composition only**: it holds about 1400 lines (the plan expected it to shrink from 548). Its commands, menus and
+   file handling move to composers in the app, each one area, so the app stays composition and input mapping.
+7. **The editor's icon art**: sheets C4, C7, C12 and C13 generated and cut into the icons folder.
 
 ## Decisions
 

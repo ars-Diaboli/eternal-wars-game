@@ -832,7 +832,7 @@ public partial class Main : Node3D
         left.AddChild(_tools);
         left.AddChild(new HSeparator());
         left.AddChild(_browser);
-        _workspace.AddTab(EditorRegion.Left, left);
+        _workspace.AddTab(EditorRegion.Left, left, UiIcon.ToolPanel);
 
         // Right: the inspector, the events and Generate; the map's settings are a window of their own (F7).
         _inspector = new InspectorPanel { Name = "Inspector" };
@@ -855,10 +855,10 @@ public partial class Main : Node3D
         _workspace.AddTab(EditorRegion.Right, _layers, UiIcon.Layers);
         _layers.Bind(_editor, _showGrid, ShowGrid);
         _overlayPanel = new OverlaysPanel { Name = "Overlays" };
-        _workspace.AddTab(EditorRegion.Right, _overlayPanel);
+        _workspace.AddTab(EditorRegion.Right, _overlayPanel, UiIcon.Overlays);
         _overlayPanel.Bind(_editor, state => GeneratedZones.Read(state, _generatorTemplates, GameContent.All), _workspace.MapView);
         _fairness = new FairnessPanel { Name = "Fairness" };
-        _workspace.AddTab(EditorRegion.Right, _fairness);
+        _workspace.AddTab(EditorRegion.Right, _fairness, UiIcon.Fairness);
         _fairness.Bind(_editor);
         _fairness.StartSelected += ShowTile;
         _events = new EventsPanel { Name = "Events" }.Tag("Map events"); // F1 (ADR-276): not the inspector's Events section
@@ -929,8 +929,8 @@ public partial class Main : Node3D
         Command("view.output", "Output", () => _workspace.ShowTab(output), icon: UiIcon.Output);
         Command("view.inspector", "Inspector", () => _workspace.ShowTab(_inspector), icon: UiIcon.Inspector);
         Command("view.layers", "Layers", () => _workspace.ShowTab(_layers), icon: UiIcon.Layers);
-        Command("view.overlays", "Overlays", () => _workspace.ShowTab(_overlayPanel));
-        Command("view.fairness", "Fairness", () => _workspace.ShowTab(_fairness));
+        Command("view.overlays", "Overlays", () => _workspace.ShowTab(_overlayPanel), icon: UiIcon.Overlays);
+        Command("view.fairness", "Fairness", () => _workspace.ShowTab(_fairness), icon: UiIcon.Fairness);
         foreach (var tool in _tools.Tools)
         {
             _commands.Register(new EditorCommand(ToolCommand(tool), tool.Name, () => _tools.Pick(tool))
@@ -949,7 +949,7 @@ public partial class Main : Node3D
                     new("Open recent", () => [.. _files.Recent.Select(path => (path, (Action)(() => _files.Open(path))))], "No file was opened or saved yet"),
                 ],
             },
-            new("Edit", ["edit.undo", "edit.redo", null, "edit.cut", "edit.copy", "edit.paste", "edit.duplicate", "edit.delete", "edit.save-stamp", null, "edit.rotate", "edit.mirror", null, "edit.select-all", "edit.deselect", null, "edit.preferences"]),
+            new("Edit", ["edit.undo", "edit.redo", null, "edit.cut", "edit.copy", "edit.paste", "edit.duplicate", "edit.delete", "edit.save-stamp", null, "edit.rotate", "edit.mirror", null, "edit.select-all", "edit.deselect", "edit.find", null, "edit.preferences"]),
             new("View", ["view.palette", null, "view.map-tab", "templates.editor", null, "view.level", "view.grid", null, "view.top-down",
                 "view.focus", "view.whole-map", "view.go-to", ">Bookmarks", ">Store bookmark", null, ">Overlay", null, "view.left", "view.bottom", "view.right", "view.panels", null, "view.inspector", "view.layers", "view.overlays", "view.fairness", "view.problems", "view.history", "view.output"])
             {
@@ -1018,8 +1018,8 @@ public partial class Main : Node3D
         Command("file.open", "Open", () => OnTab(_templateFiles.Open, () => _files.Open()), UiIcon.Load, new(Key.O, Ctrl: true));
         Command("file.save", "Save", () => OnTab(() => _templateFiles.Save(), () => _files.Save()), UiIcon.Save, new(Key.S, Ctrl: true));
         Command("file.save-as", "Save as", () => OnTab(() => _templateFiles.SaveAs(), () => _files.SaveAs()), shortcut: new(Key.S, Ctrl: true, Shift: true), icon: UiIcon.SaveAs);
-        Command("file.export-report", "Export report (Markdown)…", ExportReport);
-        Command("file.export-picture", "Export map picture (PNG)…", ExportPicture, onMap: true);
+        Command("file.export-report", "Export report (Markdown)…", ExportReport, UiIcon.ExportReport);
+        Command("file.export-picture", "Export map picture (PNG)…", ExportPicture, onMap: true, icon: UiIcon.ExportPicture);
         Command("file.quit", "Quit", Quit, shortcut: new(Key.Q, Ctrl: true), icon: UiIcon.Quit);
         Command("template.new", "New template", () => OpenTemplate(_templateFiles.New), UiIcon.New);
         Command("template.open", "Open template…", () => OpenTemplate(_templateFiles.Open), UiIcon.Load);
@@ -1055,38 +1055,39 @@ public partial class Main : Node3D
         Command("edit.rotate", "Rotate scenery", () => Turn(mirror: false), shortcut: new(Key.R, Ctrl: true), whyNot: NoScenery, onMap: true, icon: UiIcon.Rotate);
         Command("edit.mirror", "Mirror scenery", () => Turn(mirror: true), shortcut: new(Key.M, Ctrl: true), whyNot: NoScenery, onMap: true, icon: UiIcon.Mirror);
         Command("map.settings", "Map settings", () => OpenSettings(null), UiIcon.Settings, new(Key.F7));
-        Command("map.general", "Name, difficulty and arena", () => OpenSettings(MapSettingsTab.General));
-        Command("map.players", "Players and teams", () => OpenSettings(MapSettingsTab.Players));
-        Command("map.conditions", "Victory and loss", () => OpenSettings(MapSettingsTab.VictoryAndLoss));
+        Command("map.general", "Name, difficulty and arena", () => OpenSettings(MapSettingsTab.General), UiIcon.Map);
+        Command("map.players", "Players and teams", () => OpenSettings(MapSettingsTab.Players), UiIcon.Players);
+        Command("map.conditions", "Victory and loss", () => OpenSettings(MapSettingsTab.VictoryAndLoss), UiIcon.Conditions);
         Command("map.bans", "Bans", () => OpenSettings(MapSettingsTab.Bans), UiIcon.Ban);
-        Command("map.week-events", "Week events", () => OpenSettings(MapSettingsTab.WeekEvents));
-        Command("map.rumours", "Rumours", () => OpenSettings(MapSettingsTab.Rumours));
-        Command("map.texts", "Texts", () => OpenSettings(MapSettingsTab.Texts));
+        Command("map.week-events", "Week events", () => OpenSettings(MapSettingsTab.WeekEvents), UiIcon.WeekEvents);
+        Command("map.rumours", "Rumours", () => OpenSettings(MapSettingsTab.Rumours), UiIcon.Rumours);
+        Command("map.texts", "Texts", () => OpenSettings(MapSettingsTab.Texts), UiIcon.Texts);
         Command("map.resize", "Resize map", OpenResize, onMap: true, icon: UiIcon.Resize);
         Command("map.crop", "Crop to selection", Crop,
             whyNot: () => _editor.Selection.Tiles.Count > 0 ? null : "No tile is selected", onMap: true, icon: UiIcon.Crop);
         Command("edit.preferences", "Preferences", OpenPreferences, UiIcon.Settings, new(Key.Comma, Ctrl: true));
         Command("view.palette", "Command palette", OpenPalette, shortcut: new(Key.P, Ctrl: true, Shift: true), icon: UiIcon.CommandPalette);
         Command("view.map-tab", "Map tab", () => _workspace.ShowPage(EditorWorkspace.MapPage),
-            isOn: () => _workspace.Page == EditorWorkspace.MapPage, isChoice: true);
+            isOn: () => _workspace.Page == EditorWorkspace.MapPage, isChoice: true, icon: UiIcon.MapTab);
         Command("templates.editor", "Template tab", () => _workspace.ShowPage(_templatePage),
-            isOn: () => _workspace.Page == _templatePage, isChoice: true);
+            isOn: () => _workspace.Page == _templatePage, isChoice: true, icon: UiIcon.TemplateTab);
         Command("view.level", "Switch level", SwitchLevel, UiIcon.SwitchLevel, new(Key.L),
             () => _editor.Scenario.Map.Levels > 1 ? null : "The map has one level", onMap: true);
-        Command("view.grid", "Grid", () => ShowGrid(!_showGrid), isOn: () => _showGrid, onMap: true);
-        Command("view.top-down", "Top-down view", () => _camera.TopDown = !_camera.TopDown, isOn: () => _camera.TopDown, onMap: true);
+        Command("view.grid", "Grid", () => ShowGrid(!_showGrid), isOn: () => _showGrid, onMap: true, icon: UiIcon.Grid);
+        Command("view.top-down", "Top-down view", () => _camera.TopDown = !_camera.TopDown, isOn: () => _camera.TopDown, onMap: true, icon: UiIcon.TopDown);
         Command("view.focus", "Focus the selection", FocusSelection, shortcut: new(Key.F),
-            whyNot: () => _editor.Selection.Cells(_editor.Scenario).Count > 0 ? null : "Nothing is selected", onMap: true);
-        Command("view.whole-map", "Whole map", ShowWholeMap, shortcut: new(Key.Home), onMap: true);
-        Command("view.go-to", "Go to…", OpenGoTo, shortcut: new(Key.G, Ctrl: true), onMap: true);
+            whyNot: () => _editor.Selection.Cells(_editor.Scenario).Count > 0 ? null : "Nothing is selected", onMap: true, icon: UiIcon.Focus);
+        Command("view.whole-map", "Whole map", ShowWholeMap, shortcut: new(Key.Home), onMap: true, icon: UiIcon.WholeMap);
+        Command("view.go-to", "Go to…", OpenGoTo, shortcut: new(Key.G, Ctrl: true), onMap: true, icon: UiIcon.GoTo);
+        Command("edit.find", "Find on the map…", OpenGoTo, shortcut: new(Key.F, Ctrl: true), onMap: true, icon: UiIcon.Find); // Go to's box: names and ids (#12)
         for (var slot = CameraBookmarks.First; slot <= CameraBookmarks.Last; slot++)
         {
             var n = slot;
-            Command($"view.store-bookmark-{n}", $"Store bookmark {n}", () => StoreBookmark(n), shortcut: new(Key.Key0 + n, Ctrl: true), onMap: true);
+            Command($"view.store-bookmark-{n}", $"Store bookmark {n}", () => StoreBookmark(n), shortcut: new(Key.Key0 + n, Ctrl: true), onMap: true, icon: UiIcon.Bookmark);
             Command($"view.bookmark-{n}", $"Go to bookmark {n}", () => GoToBookmark(n), shortcut: new(Key.Key0 + n),
                 whyNot: () => _bookmarks[n] is null
                     ? $"Bookmark {n} is not stored: {StoreBookmarkKey(n)} the view"
-                    : null, onMap: true);
+                    : null, onMap: true, icon: UiIcon.Bookmark);
         }
 
         Command("view.left", "Left panel", () => _workspace.SetOpen(EditorRegion.Left, !_workspace.IsShown(EditorRegion.Left)),

@@ -17,7 +17,7 @@ Core `MapGenerator` (`EternalWars.Core.Generation`, version 8). Shipped template
 
 ## The template (`MapTemplate`, format v8)
 - Name, description, supported sizes, player range, max humans, underground or not, **heroes per player 1–8** (default 8; written into the
-  scenario's rules; `MapGenerator.Build` / `EditorMapGenerator.Generate`, the editor's Generate tab and the new-game screen may override it;
+  scenario's rules; `MapGenerator.Build` / `EditorMapGenerator.Generate`, the editor's Generate panel and the new-game screen may override it;
   one limit for every player).
 - **Week and month events** (ADR-084): `weekEvents` with `enabled`, `skipWeeks` (0–8), `weeklyFactions` / `monthlyFactions` (town ids or
   `neutral`; omitted = playable towns); [rules](towns-and-economy.md#week-and-month-events).
@@ -119,7 +119,7 @@ draws their direction). It draws only from its own streams (`heights` per level,
 it. The ground under each multi-tile object's footprint is then levelled to its entrance's height; roads and rivers follow the ground.
 
 ## Editor
-**Generate** (the Generate tab, `EditorMapGenerator.Generate`, ADR-087) opens a new map (and undo history) like "New": a template (refused with errors), a size,
+**Generate** (the Generate panel, `EditorMapGenerator.Generate`, ADR-087) opens a new map (and undo history) like "New": a template (refused with errors), a size,
 a seed, how many start slots get a player (default all; the rest neutral) and optionally a town per slot (else drawn; start zones are
 painted native to it and keep that terrain if the town is changed later, RMG-7). Players are named by colour (Blue, Red, Yellow, Green,
 Orange, Purple, Teal, Pink); start slots are human up to max humans, AI-only slots computer; template teams may be overridden (ADR-070).
@@ -177,7 +177,7 @@ the connection's images. **Break mirror** unlinks a cycle, so its zones are edit
 (`TemplateBatch.Generate`), and shows it in the Preview tab from above: the tiles as the minimap colours them, the borders between the
 generator's zones dark and each zone's id over it (`ZonePicture`), a level picker for a template with underground. The template stays
 open and editable; a newer Generate replaces one still running, and the preview says when the template changed since. **Open in map
-editor** opens the map as a new map like the Generate tab's; opened again, the same seed is generated afresh.
+editor** opens the map as a new map like the Generate panel's; opened again, the same seed is generated afresh.
 
 **Generate many** (ADR-274), in the Seeds tab: the template at the top row's size for N seeds (20 by default, at most 200) from the top
 row's seed up, off the main thread at most half the processors at once, cancellable (`TemplateBatch.RunAsync`). Each map is checked as
