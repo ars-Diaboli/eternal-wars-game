@@ -50,6 +50,7 @@
 | [281](#adr-281-content-from-pictures-short-lists-from-drop-downs-adr-255-2026-11-22) | Content from pictures, short lists from drop-downs (ADR-255, 2026-11-22) | implemented |
 | [282](#adr-282-side-bars-one-panel-per-region-and-the-plans-check-edit-1-2026-11-22) | Side bars, one panel per region, and the plan's check (EDIT-1, 2026-11-22) | implemented |
 | [283](#adr-283-the-measure-tool-edit-1-2026-11-22) | The Measure tool (EDIT-1, 2026-11-22) | implemented |
+| [286](#adr-286-context-menus-the-object-tools-random-variant-and-road-snapping-edit-1-2026-11-22) | Context menus; the Object tool's random variant and road snapping (EDIT-1, 2026-11-22) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -1148,3 +1149,22 @@ ADR when it is built.
   with the points picked, by the game's rule (a day ends when a step leaves no point).
 - **Shown as the game shows a route**: the world view's `PathPreview` draws it by day; the status bar gives the steps (a gate's jump is
   none), the movement points and the days. No route, a start no hero can stand on, or one tile: the status bar says there is no route.
+
+### ADR-286: Context menus; the Object tool's random variant and road snapping (EDIT-1, 2026-11-22)
+**Status**: implemented.
+
+- **Context menus from the registry**: a right click on the map, a browser entry, a region's header or a panel's side bar button opens
+  a menu of command ids, shown as the menu bar shows them (`CommandPopup`, shared with `MenuBarView`: greyed with the reason, the
+  shortcut, the tick). Which commands each menu lists is the app's composition; a group that does not apply is left out and the stray
+  separators with it (`MenuItems.Tidy`). The map's menu follows the selection (things, tiles only, nothing); a right click on a hero or
+  object not selected selects it first, as Select's click would (`SelectionEditor.PickUnlessSelected`). A browser entry's menu chooses the entry and offers the Object tool,
+  Favourite and Find on the map (new commands `browser.favourite` and `browser.find`); the right click no longer toggles the favourite by
+  itself. A panel's menu lists its region's other panels, what the panel works with (History: Undo, Redo), the region and Hide all.
+- **Random variant**: `BrowserCatalog.VariantsOf` is the entries of the chosen one's category and group, placed alike and of the same
+  order (tier), the chosen first; an entry with no group has none but itself. `EntryEditor.PlaceAny` draws among those that fit from
+  the scenario's random numbers as one undo step (undo puts the draw back; no draw when one or none fits); a variant other than the
+  chosen one counts only where it suits the terrain.
+- **Road snapping**: `EntryEditor.Spot` moves a thing with an entrance up to 3 tiles (`SnapReach`) so its entrance is on a road or
+  beside one (a tile round it not its own), the nearest fitting place first, then the entrance on the road, then top and left; none: it
+  stays. `Preview`, for the ghost, is the first variant that fits where it goes: Ok exactly when the click places something; with
+  Random variant on, the one drawn may be another of another shape and spot.

@@ -9,6 +9,11 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor context menus and Object tool options (ADR-286): a right click on the map (by what is selected; a thing under the pointer is
+  selected first), a browser entry (Object, Favourite, Find on the map) or a panel's header or side bar button opens a menu of registry
+  commands (`CommandPopup`, shared with the menu bar; `MenuItems.Tidy`); the Object tool's Random variant (`BrowserCatalog.VariantsOf`,
+  `EntryEditor.PlaceAny`, drawn from the scenario's random numbers, suiting the terrain) and Snap entrance to a road
+  (`EntryEditor.Spot`, `Preview`). Tests `ObjectToolOptionsTests`, `MenuItemsTests`; smoke `editor-context-menus`.
 - Creature and puzzle prompts redone to the key paintings, creature sheets 2 × 2 (five a town), rocky ground dark granite in the
   prompts and as a placeholder tint (ADR-285).
 - Faction key paintings (ADR-284): the owner's town paintings (19, every town incl. Conflux and Dragon Utopia) in
@@ -268,7 +273,7 @@ Detail: [roadmap.md](roadmap.md).
 3. The remaining Phase 5 items in [roadmap.md](roadmap.md) ("Presentation and UI", "Town screen overhaul", "Editor overhaul",
    "Platform and art", "Roster"); the town screen overhaul starts with the owner's answers (TOWN-14 … TOWN-23); the editor
    overhaul is closed, with the first-use test with a person, the owner's look at the workspace and the plan's "After the close"
-   list (context menus, the icon art and more, ADR-282) open.
+   list (the other level ghosted, the height falloff, `Main.cs` split, the icon art; ADR-282) open.
 4. The "Code health" list in [roadmap.md](roadmap.md): skills, heroes and town types as typed ids; `InfoSheets` as data once localisation
    is decided (ADR-239).
 

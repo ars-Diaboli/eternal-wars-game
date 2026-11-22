@@ -86,6 +86,19 @@ public sealed class BrowserCatalog
     /// <summary>The entry of that id; null when the browser has none (a favourite of content that is gone).</summary>
     public BrowserEntry? Find(string id) => _byId.GetValueOrDefault(id);
 
+    /// <summary>
+    /// What the Object tool's random variant picks among for <paramref name="entry"/> (ADR-286): the entries of its category and group
+    /// placed the same way and of the same order (a creature's or an artifact's tier), <paramref name="entry"/> first and the others in the
+    /// catalog's order. An entry with no group (a town, the hero, most utilities) has no variant but itself.
+    /// </summary>
+    public IReadOnlyList<BrowserEntry> VariantsOf(BrowserEntry entry)
+    {
+        ArgumentNullException.ThrowIfNull(entry);
+        return entry.Group.Length == 0
+            ? [entry]
+            : [entry, .. Entries.Where(e => e != entry && e.Category == entry.Category && e.Group == entry.Group && e.Placement == entry.Placement && e.Order == entry.Order)];
+    }
+
     /// <summary>The entries of <paramref name="category"/>, in the catalog's order.</summary>
     public IEnumerable<BrowserEntry> Of(BrowserCategory category) => Entries.Where(e => e.Category == category);
 

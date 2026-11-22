@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
 
@@ -6,6 +7,9 @@ namespace EternalWars.Core.Domain.Editing;
 
 /// <summary>What <see cref="EntryEditor.Place"/> put on the map: an object, or a hero.</summary>
 public readonly record struct PlacedEntry(MapObjectId? Object, HeroId? Hero);
+
+/// <summary>What a click of the Object tool would place (ADR-286): the entry, its top-left tile and the check of its cells there.</summary>
+public readonly record struct PlacementPreview(BrowserEntry Entry, MapPosition At, MoveCheck Check);
 
 /// <summary>
 /// Places what the object browser offers (EDIT-1, ADR-253), with the clicked tile as the top-left one of its footprint: an object as it
@@ -130,6 +134,141 @@ public sealed class EntryEditor
         placed = result == EditResult.Ok ? new PlacedEntry(id, null) : default;
         return result;
     }
+
+    /// <summary>How far from the pointed tile, in tiles each way, <see cref="Spot"/> looks for a road.</summary>
+    public const int SnapReach = 3;
+
+    /// <summary>
+    /// Where <paramref name="entry"/> goes when the pointer is on <paramref name="tile"/> (ADR-286). Without <paramref name="snapToRoad"/>,
+    /// or for an entry with no entrance (scenery, the hero), on <paramref name="tile"/>. With it, the top-left tile within
+    /// <see cref="SnapReach"/> of <paramref name="tile"/> where the entry fits and its entrance (the visit cell) is on a road or beside one
+    /// (a tile round it that is not the object's own): the nearest, then one whose entrance is on the road, then the top row first and the
+    /// left first. <paramref name="tile"/> when there is none.
+    /// </summary>
+    public MapPosition Spot(BrowserEntry entry, MapPosition tile, bool snapToRoad, PlayerId? owner = null)
+    {
+        ArgumentNullException.ThrowIfNull(entry);
+        if (!snapToRoad || entry.Definition is not { Footprint.HasVisit: true } definition)
+        {
+            return tile;
+        }
+
+        var map = Scenario.Map;
+        MapPosition? best = null;
+        (int Far, int Steps, int OffRoad, int Dy, int Dx) bestScore = default;
+        for (var dy = -SnapReach; dy <= SnapReach; dy++)
+        {
+            for (var dx = -SnapReach; dx <= SnapReach; dx++)
+            {
+                var at = tile.Offset(dx, dy);
+                var probe = MapObject.Create(default, definition, at);
+                var visit = probe.VisitPosition;
+                if (!map.Contains(visit))
+                {
+                    continue;
+                }
+
+                var onRoad = map.GetRoad(visit) != RoadType.None;
+                if (!onRoad)
+                {
+                    var own = probe.OccupiedCells().Select(c => c.Position).ToHashSet();
+                    if (!DirectionExtensions.All.Select(visit.Step).Any(p => map.Contains(p) && !own.Contains(p) && map.GetRoad(p) != RoadType.None))
+                    {
+                        continue;
+                    }
+                }
+
+                var score = (Math.Max(Math.Abs(dx), Math.Abs(dy)), Math.Abs(dx) + Math.Abs(dy), onRoad ? 0 : 1, dy, dx);
+                if ((best is null || score.CompareTo(bestScore) < 0) && Check(entry, at, owner).Result == EditResult.Ok)
+                {
+                    (best, bestScore) = (at, score);
+                }
+            }
+        }
+
+        return best ?? tile;
+    }
+
+    /// <summary>
+    /// What a click with the pointer on <paramref name="tile"/> would place of <paramref name="variants"/> (the picked entry first, as
+    /// <see cref="BrowserCatalog.VariantsOf"/> gives them; one entry when the variant is not random), each where <see cref="Spot"/> puts
+    /// it: the first that fits, or the first entry's refusal. A variant other than the first counts only where it suits the terrain
+    /// (<see cref="BrowserEntry.Suits"/>) of its top-left tile: no random tree on lava. The result is Ok exactly when
+    /// <see cref="PlaceAny"/> places something; with several variants the one drawn may be another, of another footprint and spot, so the
+    /// ghost shows the first that fits.
+    /// </summary>
+    public PlacementPreview Preview(IReadOnlyList<BrowserEntry> variants, MapPosition tile, bool snapToRoad, PlayerId? owner = null)
+    {
+        ArgumentNullException.ThrowIfNull(variants);
+        ArgumentOutOfRangeException.ThrowIfZero(variants.Count);
+        PlacementPreview? first = null;
+        for (var i = 0; i < variants.Count; i++)
+        {
+            var entry = variants[i];
+            var at = Spot(entry, tile, snapToRoad, owner);
+            if (i > 0 && !SuitsAt(entry, at))
+            {
+                continue;
+            }
+
+            var preview = new PlacementPreview(entry, at, Check(entry, at, owner));
+            if (preview.Check.Result == EditResult.Ok)
+            {
+                return preview;
+            }
+
+            first ??= preview;
+        }
+
+        return first!.Value;
+    }
+
+    /// <summary>
+    /// Places one of <paramref name="variants"/> (ADR-286), each where <see cref="Spot"/> puts it, as one undo step: when several fit, one
+    /// drawn from the scenario's random numbers (undo puts them back, so the same click gives the same thing again); when one fits, that
+    /// one; when none does, the first entry's refusal. A variant other than the first counts only where it suits the terrain, as in
+    /// <see cref="Preview"/>. <paramref name="chosen"/> is the entry placed, null when nothing was.
+    /// </summary>
+    public EditResult PlaceAny(IReadOnlyList<BrowserEntry> variants, MapPosition tile, bool snapToRoad, out PlacedEntry placed, out BrowserEntry? chosen, PlayerId? owner = null)
+    {
+        ArgumentNullException.ThrowIfNull(variants);
+        ArgumentOutOfRangeException.ThrowIfZero(variants.Count);
+        var fitting = new List<(BrowserEntry Entry, MapPosition At)>();
+        for (var i = 0; i < variants.Count; i++)
+        {
+            var entry = variants[i];
+            var at = Spot(entry, tile, snapToRoad, owner);
+            if ((i == 0 || SuitsAt(entry, at)) && Check(entry, at, owner).Result == EditResult.Ok)
+            {
+                fitting.Add((entry, at));
+            }
+        }
+
+        if (fitting.Count <= 1)
+        {
+            var (entry, at) = fitting.Count == 1 ? fitting[0] : (variants[0], Spot(variants[0], tile, snapToRoad, owner));
+            var single = Place(entry, at, out placed, owner);
+            chosen = single == EditResult.Ok ? entry : null;
+            return single;
+        }
+
+        var (result, made, pick) = (EditResult.Ok, default(PlacedEntry), fitting[0]);
+        _context.AsOneStep($"Place a random variant of {variants[0].Name}", random =>
+        {
+            var before = random.State;
+            pick = fitting[random.Next(fitting.Count)];
+            result = Place(pick.Entry, pick.At, out made, owner);
+            if (result != EditResult.Ok)
+            {
+                random.Restore(before); // nothing was placed: the draw is taken back
+            }
+        });
+        (placed, chosen) = (made, result == EditResult.Ok ? pick.Entry : null);
+        return result;
+    }
+
+    /// <summary>Whether <paramref name="entry"/> suits the terrain of <paramref name="at"/>; off the map it does not.</summary>
+    private bool SuitsAt(BrowserEntry entry, MapPosition at) => Scenario.Map.Contains(at) && entry.Suits(Scenario.Map.GetTerrain(at));
 
     /// <summary>Gives a placed thing with an owner to <paramref name="owner"/>.</summary>
     private EditResult SetOwner(MapObjectId id, PlayerId owner) => Scenario.FindObject(id) switch

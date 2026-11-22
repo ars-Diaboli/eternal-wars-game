@@ -270,6 +270,8 @@ public class EditorUndoTests
         ["EntryEditor.Place (dwelling)"] = f => Ok(f.Editor.Placing.Place(Entry($"{BuiltInMapObjects.Dwelling}/{BuiltInCreatures.Pikeman}"), new MapPosition(4, 22), out _)),
         ["EntryEditor.Place (artifact)"] = f => Ok(f.Editor.Placing.Place(AnArtifact(), new MapPosition(15, 25), out _)),
         ["EntryEditor.Place (hero)"] = f => Ok(f.Editor.Placing.Place(Entry(BrowserEntry.HeroId), new MapPosition(10, 25), out _, Red)),
+        ["EntryEditor.PlaceAny"] = f => Ok(f.Editor.Placing.PlaceAny( // a random mine: the draw is undone with the step
+            [Entry(BuiltInMapObjects.MineId(ResourceType.Ore)), Entry(BuiltInMapObjects.MineId(ResourceType.Gold))], new MapPosition(4, 22), snapToRoad: false, out _, out _)),
         ["HeroEditor.Move"] = f => Ok(f.Editor.Heroes.Move(f.Hero, new MapPosition(10, 25))),
         ["HeroEditor.Remove"] = f => Ok(f.Editor.Heroes.Remove(f.Hero)),
         ["SelectionEditor.Move"] = f => f.Editor.Selecting.Set(new SelectionItems([], [f.Chest, f.Town, f.GateA], [f.Hero], []))
@@ -366,6 +368,7 @@ public class EditorUndoTests
         ["SelectionEditor.Add"] = "the selection is no undo step",
         ["SelectionEditor.Remove"] = "the selection is no undo step",
         ["SelectionEditor.Clear"] = "the selection is no undo step",
+        ["SelectionEditor.PickUnlessSelected"] = "the selection is no undo step",
     };
 
     private static readonly Type[] AreaEditors =

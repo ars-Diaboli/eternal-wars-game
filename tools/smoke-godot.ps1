@@ -440,13 +440,13 @@ $scenarios = @(
     # Portals are placed and linked with the LinkGates tool; the Select tool takes the first and the Inspector shows it with its
     # Identity and Links sections; the jump link selects the partner and shows it; the Links section is closed.
     @{ Name = 'editor-inspector-sections'; App = 'EternalWars.MapEditor'; Frames = 84
-       Input = '3:click:@Object;6:click:160,264;8:text:portal;18:click:@Portal;22:click:600,400;26:click:900,520;30:click:@LinkGates;33:click:600,400;36:click:900,520;40:click:@Select;43:click:600,400;56:click:@Leads to Portal #2 at (20,21,L0);66:click:@Links' },
+       Input = '3:click:@Object;6:click:160,292;8:text:portal;18:click:@Portal;22:click:600,400;26:click:900,520;30:click:@LinkGates;33:click:600,400;36:click:900,520;40:click:@Select;43:click:600,400;56:click:@Leads to Portal #2 at (20,21,L0);66:click:@Links' },
     # Multi-edit and the picture pickers (EDIT-1, ADR-255) on a blank map: two Dwarves are placed from the browser; the Select tool
     # takes the first and the inspector makes it Friendly; a rectangle takes both, the inspector shows "2 × Monster" with "—" for the
     # differing disposition, and Hostile is set on both; the creature picker opens its grid, "timber" narrows it and the Timber Wolf is picked
     # for both; Undo takes the wolves back.
     @{ Name = 'editor-multi-edit'; App = 'EternalWars.MapEditor'; Frames = 110
-       Input = '3:click:@Object;6:click:160,264;8:text:dwarf;18:click:@Dwarf;22:click:600,400;26:click:800,400;30:click:@Select;33:click:600,400;42:click:@Aggressive;46:choose:Friendly;52:drag:540,340,880,470;58:click:@—;62:choose:Hostile;70:click:@Dwarf (T1);76:text:timber;84:click:@Timber Wolf (T1);94:click:@Undo' },
+       Input = '3:click:@Object;6:click:160,292;8:text:dwarf;18:click:@Dwarf;22:click:600,400;26:click:800,400;30:click:@Select;33:click:600,400;42:click:@Aggressive;46:choose:Friendly;52:drag:540,340,880,470;58:click:@—;62:choose:Hostile;70:click:@Dwarf (T1);76:text:timber;84:click:@Timber Wolf (T1);94:click:@Undo' },
     # Scatter and scenery rotation (EDIT-6, ADR-252) on a blank map: the Scatter tool with only walls ticked and a brush of 5 tiles is
     # dragged over the grass (pieces of wall, ways kept open); the Select tool's rectangle takes them; Ctrl+R turns them a quarter
     # turn, Ctrl+M mirrors them; Undo takes the mirroring back.
@@ -461,6 +461,11 @@ $scenarios = @(
     # and days in the status bar.
     @{ Name = 'editor-measure'; App = 'EternalWars.MapEditor'; Frames = 30; Map = $emberMap
        Input = '3:key:U;6:click:540,545;12:click:420,270' },
+    # The context menus and the Object tool's options (ADR-286) on Ember March: a right click on the map offers Select all, then (things
+    # selected) Deselect; one on a browser entry (found by the search) offers Favourite, then the Object tool; one on a side bar button offers
+    # the region's other panels. Then the Object tool's "Snap entrance to a road" and a click that places the chest by the nearest road.
+    @{ Name = 'editor-context-menus'; App = 'EternalWars.MapEditor'; Frames = 84; Map = $emberMap
+       Input = '3:rclick:540,545;8:choose:Select all;14:rclick:540,545;19:choose:Deselect;24:click:180,491;27:text:chest;36:rclick:@Treasure chest;41:choose:Favourite;46:rclick:@Treasure chest;51:choose:Object;56:rclick:@History;61:choose:Output;66:click:@Snap entrance to a road;72:click:540,545' },
     # The minimap and Go to (ADR-261) on Ember March: the minimap under the right region's tabs outlines the view; a click on it, then a drag
     # over it, move the view; Ctrl+G with "Castle" goes to the town and selects it; Ctrl+G with "20 10" goes to that tile. Then a new map of
     # two levels: the underground with the surface shown faintly on the minimap.

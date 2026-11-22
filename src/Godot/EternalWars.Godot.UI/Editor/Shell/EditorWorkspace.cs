@@ -73,6 +73,12 @@ public partial class EditorWorkspace : Control
     private bool _allHidden;
     private bool _addingTab;
 
+    /// <summary>
+    /// A right click on a region's header or on a panel's side bar button (ADR-286): the region and the panel it names (the one the header
+    /// shows), and where the pointer is in the viewport, for a context menu of the commands that apply there.
+    /// </summary>
+    public event Action<EditorRegion, Control, Vector2>? PanelMenuRequested;
+
     /// <summary>A region was collapsed, opened, hidden or shown.</summary>
     public event Action? RegionsChanged;
 
@@ -194,6 +200,7 @@ public partial class EditorWorkspace : Control
         var picture = (icon is { } own ? UiIcons.Get(own, SideIconSize) : null) ?? PlaceholderIcons.Of(panel.Name.ToString(), SideIconSize);
         var button = SideButton(panel.Name.ToString(), picture);
         button.Pressed += () => Toggle(region, tab);
+        button.GuiInput += input => AskMenu(input, region, panel);
         _sideGroups[region].AddChild(button);
         _sideButtons[tab] = (region, button, picture);
 
@@ -372,6 +379,23 @@ public partial class EditorWorkspace : Control
         }
     }
 
+    /// <summary>The panels of <paramref name="region"/> in the order they were added.</summary>
+    public IReadOnlyList<Control> PanelsOf(EditorRegion region) =>
+        [.. _regions[region].GetChildren().OfType<Control>().Select(tab => _tabOf.FirstOrDefault(t => t.Value == tab).Key).OfType<Control>()];
+
+    /// <summary>The panel <paramref name="region"/>'s header names: its front tab's; null when it has none.</summary>
+    public Control? ShownPanel(EditorRegion region) =>
+        _regions[region].GetCurrentTabControl() is { } tab ? _tabOf.FirstOrDefault(t => t.Value == tab).Key : null;
+
+    private void AskMenu(InputEvent input, EditorRegion region, Control panel)
+    {
+        if (input is InputEventMouseButton { ButtonIndex: MouseButton.Right, Pressed: true } press)
+        {
+            AcceptEvent();
+            PanelMenuRequested?.Invoke(region, panel, press.GlobalPosition);
+        }
+    }
+
     /// <summary>Whether <paramref name="region"/> shows (not collapsed and not hidden with the others).</summary>
     public bool IsShown(EditorRegion region) => _panels[region].Visible;
 
@@ -419,6 +443,14 @@ public partial class EditorWorkspace : Control
             TooltipText = "Hide this region; its panels' buttons on the side bar show it again",
         }.WithIcon(UiIcon.Minus, UiIcons.ButtonSize);
         hide.Pressed += () => SetOpen(region, false);
+        header.MouseFilter = MouseFilterEnum.Stop;
+        header.GuiInput += input =>
+        {
+            if (ShownPanel(region) is { } shown)
+            {
+                AskMenu(input, region, shown);
+            }
+        };
         header.AddChild(icon);
         header.AddChild(title);
         header.AddChild(hide);

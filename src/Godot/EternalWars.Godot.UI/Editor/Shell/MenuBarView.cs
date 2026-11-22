@@ -59,24 +59,7 @@ public partial class MenuBarView : MenuBar
                     continue;
                 }
 
-                var command = commands[id];
-                var index = popup.ItemCount;
-                if (command.IsOn is null)
-                {
-                    popup.AddItem(command.Name, ids.Count);
-                }
-                else if (command.IsChoice)
-                {
-                    popup.AddRadioCheckItem(command.Name, ids.Count);
-                }
-                else
-                {
-                    popup.AddCheckItem(command.Name, ids.Count);
-                }
-
-                popup.SetItemIcon(index, PlaceholderIcons.Of(command));
-                popup.SetItemShortcutDisabled(index, true); // shown, not handled: the registry runs the shortcuts
-
+                CommandPopup.Add(popup, commands[id], ids.Count);
                 ids.Add(id);
             }
 
@@ -116,22 +99,7 @@ public partial class MenuBarView : MenuBar
     {
         for (var i = 0; i < ids.Count; i++)
         {
-            var command = _commands[ids[i]];
-            var index = popup.GetItemIndex(i);
-            var whyNot = command.WhyNot?.Invoke();
-            popup.SetItemDisabled(index, whyNot is not null);
-            popup.SetItemTooltip(index, whyNot ?? "");
-            popup.SetItemAccelerator(index, command.Shortcut is { } shortcut ? Accelerator(shortcut) : Key.None); // the user may rebind it (ADR-275)
-            if (command.IsOn is { } isOn)
-            {
-                popup.SetItemChecked(index, isOn());
-            }
+            CommandPopup.Show(popup, _commands[ids[i]], i);
         }
     }
-
-    private static Key Accelerator(CommandShortcut shortcut) =>
-        shortcut.Key
-        | (shortcut.Ctrl ? (Key)KeyModifierMask.MaskCtrl : 0)
-        | (shortcut.Shift ? (Key)KeyModifierMask.MaskShift : 0)
-        | (shortcut.Alt ? (Key)KeyModifierMask.MaskAlt : 0);
 }

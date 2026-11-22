@@ -410,6 +410,15 @@ public partial class Main : Node3D
                 }
 
                 break;
+            case InputEventMouseButton { ButtonIndex: MouseButton.Right, Pressed: true } menu when !_pressed && _events.PlacingCells is null:
+                GetViewport().GuiReleaseFocus();
+                if (Point(menu.Position) is not { } pointed)
+                {
+                    return;
+                }
+
+                OpenMapMenu(pointed, menu.Position); // the context menu (ADR-286)
+                break;
             case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: false } when _pressed:
                 _pressed = false;
                 _tools.Tool.Release();
@@ -848,6 +857,7 @@ public partial class Main : Node3D
 
         // The browser's choice is the Object tool's: the entry of the same name in this map's catalog, the treasure chest at first.
         var catalog = new BrowserCatalog(_editor.Catalog, _editor.Scenario.Creatures, _editor.Scenario.Artifacts);
+        _toolContext.Browser = catalog;
         _choice.Rebase(catalog.Find(_choice.Entry?.Id ?? BuiltInMapObjects.TreasureChest)); // no one is told: the last map's UI still listens until it is freed
         _browser.Bind(catalog, _choice, _settings, () => StampFolder.Names(StampsFolder), PasteStamp, ThumbnailsFolder);
         _choice.Changed += UseChoice;
@@ -940,6 +950,11 @@ public partial class Main : Node3D
             });
         }
 
+        BindContextMenus(new Dictionary<Control, string>
+        {
+            [_events] = "map.events", [problems] = "view.problems", [history] = "view.history", [output] = "view.output", [_inspector] = "view.inspector",
+            [_layers] = "view.layers", [_overlayPanel] = "view.overlays", [_fairness] = "view.fairness",
+        });
         UseShortcuts();
         menuBar.Bind(_commands,
         [
@@ -1245,7 +1260,7 @@ public partial class Main : Node3D
     /// Go to (Ctrl+G, ADR-261): a tile or a named thing, which the view shows and, for a thing, selects (as a jump link does). With
     /// <paramref name="find"/>, Find on the map (Ctrl+F, ADR-282): objects by their kind too.
     /// </summary>
-    private void OpenGoTo(bool find)
+    private void OpenGoTo(bool find, string query = "")
     {
         if (IsBusy)
         {
@@ -1254,7 +1269,7 @@ public partial class Main : Node3D
 
         var box = new GoToBox { Name = "GoTo" };
         _overlays.AddChild(box);
-        box.Bind(_editor.Scenario, _context.Level, Jump, find);
+        box.Bind(_editor.Scenario, _context.Level, Jump, find, query);
     }
 
     /// <summary>The view shows <paramref name="level"/>: the tool in use follows when it changes.</summary>

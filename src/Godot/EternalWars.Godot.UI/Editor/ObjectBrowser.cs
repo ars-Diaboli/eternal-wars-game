@@ -51,7 +51,7 @@ public partial class ObjectBrowser : VBoxContainer
     private BrowserEntry? _shown;
     private readonly Label _name = new() { ClipText = true, SizeFlagsHorizontal = SizeFlags.ExpandFill };
     private readonly Label _detail = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, SizeFlagsHorizontal = SizeFlags.ExpandFill };
-    private readonly Button _favourite = new() { Text = "★", ToggleMode = true, TooltipText = "Favourite: keeps the chosen entry under Favourites (also a right click on an entry)" };
+    private readonly Button _favourite = new() { Text = "★", ToggleMode = true, TooltipText = "Favourite: keeps the chosen entry under Favourites (also in an entry's right-click menu)" };
 
     /// <summary>The headings that are open; the kept lists and the stamps are at the start.</summary>
     private readonly HashSet<string> _open = [FavouritesHeader, RecentHeader, StampsHeader];
@@ -204,6 +204,23 @@ public partial class ObjectBrowser : VBoxContainer
         }
     }
 
+    /// <summary>A right click on an entry (ADR-286): the entry is chosen, then this asks for its context menu where the pointer is in the viewport.</summary>
+    public event Action<BrowserEntry, Vector2>? EntryMenuRequested;
+
+    /// <summary>Whether the chosen entry is one of the favourites.</summary>
+    public bool ChosenIsFavourite => _choice.Entry is { } entry && _favourites.Contains(entry.Id);
+
+    /// <summary>Adds the chosen entry to the favourites, or takes it out (the card's ★ does the same).</summary>
+    public void ToggleChosenFavourite()
+    {
+        if (_choice.Entry is { } entry)
+        {
+            ToggleFavourite(entry.Id);
+            _favourite.SetPressedNoSignal(_favourites.Contains(entry.Id));
+            ShowFavouriteIcon();
+        }
+    }
+
     private void ToggleFavourite(string id)
     {
         _favourites = BrowserLists.Toggled(_favourites, id);
@@ -335,9 +352,15 @@ public partial class ObjectBrowser : VBoxContainer
         button.MouseExited += () => ShowCard(_choice.Entry);
         button.GuiInput += input =>
         {
-            if (input is InputEventMouseButton { ButtonIndex: MouseButton.Right, Pressed: true })
+            if (input is InputEventMouseButton { ButtonIndex: MouseButton.Right, Pressed: true } press)
             {
-                ToggleFavourite(entry.Id);
+                button.AcceptEvent();
+                if (_choice.Entry != entry)
+                {
+                    _choice.Choose(entry);
+                }
+
+                EntryMenuRequested?.Invoke(entry, press.GlobalPosition);
             }
         };
         return button;

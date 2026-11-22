@@ -226,7 +226,7 @@ The bar the overhaul is measured against. Each item can be checked; step 6 of th
 | Height | G (built; H was planned) | Raise, lower, level, smooth, from terrain (ADR-182) | Size, strength, falloff (falloff not built) |
 | Road / River | R / I | Paints roads and rivers | Kind, size (built as the other brushes: 1–9, round or square) |
 | Start zone | Z | Paints a player's start zone (ADR-197) | The player, Erase |
-| Object | O | Places the browser's selection; a ghost shows where it would go, red where it does not fit | Snap the entrance to a road, random variant (neither built) |
+| Object | O | Places the browser's selection; a ghost shows where it would go, red where it does not fit | Snap the entrance to a road, random variant (ADR-286) |
 | Monster, Hero | N, H (built) | Place a monster or a hero, as the Object tool does for them | The creature, the count, the disposition; the owner |
 | Scatter | C (built; S is the camera's) | Fills a brush area or the selection with scenery fitting the terrain, as the generator does (ADR-157) | Density, scenery kinds, keep paths open |
 | Erase | E | Removes what is under the brush, by kind | Kinds: objects, scenery, monsters, roads, rivers, events |
@@ -693,16 +693,21 @@ for collapsible panels as in IDEs.
 1. **Measure tool** (U, the tools table, ADR-283): two clicks pick the tiles, the options the hero's movement points a day and its
    player; the route the game's pathfinding takes is drawn on the map by day, its steps, points and days in the status bar. The core's
    `MapMeasure`, tests in `MapMeasureTests`; smoke `editor-measure`.
+2. **Context menus** (ADR-286): a right click on the map (for the things selected, the tiles selected or the map; a hero or object
+   under the pointer is selected first), a browser entry (Object, Favourite, Find on the map) or a region's header or side bar button
+   (the region's other panels, Undo and Redo on History, the region, Hide all), built from the registry like the menus
+   (`CommandPopup`). Tests in `MenuItemsTests`; smoke `editor-context-menus`.
+3. **Object tool options** (ADR-286): a random variant among the entries of the chosen one's group and tier that fit and suit the
+   terrain, drawn from the map's random numbers; the entrance snapped onto or beside a road within 3 tiles. The core's
+   `BrowserCatalog.VariantsOf` and `EntryEditor.Spot`, `Preview`, `PlaceAny`; tests in `ObjectToolOptionsTests`; smoke
+   `editor-context-menus`.
 
 **Left open** (in [roadmap.md](../../memory-bank/roadmap.md)), the larger first:
-1. **Context menus** (the commands' "right click"): a right click on the map, a selection, a browser entry or a panel offers the
-   commands that apply there, built from the registry like the menus.
-2. **Object tool options**: a random variant of the picked kind, and snapping the entrance to a road; rules in the core with tests.
-3. **The other level ghosted in the map view** (Map view and navigation): today only the minimap mixes it in.
-4. **The height brush's falloff** (Height's options): a soft edge, a parameter of the core's height edit.
-5. **`Main.cs` as composition only**: it holds about 1400 lines (the plan expected it to shrink from 548). Its commands, menus and
+1. **The other level ghosted in the map view** (Map view and navigation): today only the minimap mixes it in.
+2. **The height brush's falloff** (Height's options): a soft edge, a parameter of the core's height edit.
+3. **`Main.cs` as composition only**: it holds about 1400 lines (the plan expected it to shrink from 548). Its commands, menus and
    file handling move to composers in the app, each one area, so the app stays composition and input mapping.
-6. **The editor's icon art**: sheets C4, C7, C12 and C13 generated and cut into the icons folder.
+4. **The editor's icon art**: sheets C4, C7, C12 and C13 generated and cut into the icons folder.
 
 ## Decisions
 

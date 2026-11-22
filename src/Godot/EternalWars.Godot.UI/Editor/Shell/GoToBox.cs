@@ -28,9 +28,10 @@ public partial class GoToBox : Control
 
     /// <summary>
     /// Searches <paramref name="scenario"/>; <paramref name="level"/> is the shown level, a tile's when none is typed. With
-    /// <paramref name="find"/> it is Find on the map, which also finds objects by their kind.
+    /// <paramref name="find"/> it is Find on the map, which also finds objects by their kind; <paramref name="query"/> is typed already (a
+    /// browser entry's "Find on the map", ADR-286).
     /// </summary>
-    public void Bind(GameState scenario, int level, Action<MapLink> go, bool find = false)
+    public void Bind(GameState scenario, int level, Action<MapLink> go, bool find = false, string query = "")
     {
         (_scenario, _level, _go, _kinds) = (scenario, level, go, find);
         var rows = EditorOverlay.Build(this, atTop: true);
@@ -40,6 +41,8 @@ public partial class GoToBox : Control
             _search.PlaceholderText = "A kind (gold mine), a name, an id (#12) or a tile (12, 7)";
         }
 
+        _search.Text = query;
+        _search.CaretColumn = query.Length;
         rows.AddChild(_search);
         rows.AddChild(_list);
         rows.AddChild(_none);

@@ -107,6 +107,19 @@ deselect, Ctrl+F find on the map, Ctrl+G go to, Ctrl+R rotate scenery, Ctrl+M mi
 C Scatter, N Monster, H Hero, E Erase, K LinkGates, V Select, M Move, P Paste, B Grail, U Measure), L the next level, F11 the panels, F7 the map settings, Ctrl+Shift+P the command palette, Ctrl+, Preferences. The Map
 menu opens the map settings (at a tab) and the Events panel, the Tools menu picks a tool. F5 is Test (below), F1 [help](#editor-help).
 
+<a id="editor-context-menus"></a>
+**Context menus** (ADR-286): a right click offers the commands that apply where it is, built from the commands as the menus are (greyed
+with the reason when they cannot run now; a group that does not apply is left out):
+- **On the map**: a hero or object under the pointer that is not selected becomes the selection, as a click of Select would. With things
+  selected: Inspector, Cut, Copy, Paste, Duplicate, Delete, Rotate and Mirror (when scenery is selected), Save selection as stamp, Focus,
+  Deselect. With only tiles selected: Cut, Copy, Paste, Crop to selection, Save selection as stamp, Focus, Deselect. With nothing:
+  Paste, Select all, Go to, Find on the map, Whole map, Switch level, Grid, Top-down view, Map settings, Test the map.
+- **On a browser entry**: the entry is chosen, then Object (the tool), Favourite (ticked when it is one) and Find on the map (Find with the
+  entry's kind typed: "Gold mine"; a monster, a dwelling or an artifact entry types the kind they share, so every monster, dwelling or
+  artifact pickup is listed).
+- **On a region's header or a panel's side bar button**: the region's other panels, what the panel works with (the History panel: Undo
+  and Redo), the region shown or hidden, and Hide all panels.
+
 **Selection** (EDIT-1, ADR-250). The selection holds tiles, objects, heroes and map events. It is not an undo step, and a thing that
 leaves the map leaves the selection.
 - The **Select** tool (V): a click selects the hero, the object or the events of the cell under the pointer; a click on open ground
@@ -176,7 +189,7 @@ everything that can be put on the map. A click on an entry makes it the Object t
   mine, the gold pile and the dwarven treasury. At most 60 entries show; typing more narrows the list.
 - **Terrain filter**: any terrain, the terrain under the pointer on the map, or a chosen one. It hides the scenery that is not made
   for the terrain; everything else suits every terrain.
-- **★ Favourites and ⟲ Recent** stand first. A right click on an entry, or the ★ on the card, adds the entry to the
+- **★ Favourites and ⟲ Recent** stand first. Favourite in an entry's [right-click menu](#editor-context-menus), or the ★ on the card, adds the entry to the
   favourites or takes it out. Recent holds the last 12 entries that were placed, the newest first. Both are kept in the editor's
   settings, so they are the same in every map.
 - **Stamps**: the saved [stamps](#editor-stamps), under their own heading above the categories; the search lists, after the
@@ -233,8 +246,15 @@ more of the thing (a player's heroes, the obelisks, the Eyes of one colour). A m
 left to the game's start, a dwelling and an artifact pickup already hold their creature or artifact (one undo step), and a hero is
 placed for the player picked in the tool's options and opens in the inspector. A thing with an owner (a town, a mine, a resource
 provider, a garrison, a dwelling) is placed for the owner the tool's options name, Neutral at the start, in the same undo step: a
-player's town is where that player starts. The **Monster** and **Hero** tools place the same things with
-their own options.
+player's town is where that player starts. The **Monster** and **Hero** tools place the same things with their own options. The
+Object tool has two more (ADR-286):
+- **Random variant** (for an entry with others like it): each click places one of the entries of its group placed alike and of its tier
+  (any working mine, a tree of any shape, a monster of the same faction and tier), drawn among those that fit; one other than the chosen
+  entry counts only where it suits the terrain. The draw comes from the map's random numbers, so undo puts it back.
+- **Snap entrance to a road** (for a thing with an entrance): the thing moves up to 3 tiles from the pointer so that its entrance is on a
+  road or beside one, the nearest place where it fits; with no road near it stays where pointed.
+- **The ghost** shows where the chosen entry goes; with Random variant on it shows the first variant that fits, and the one drawn may
+  have another shape and, snapped, another place (the ghost is red only when none fits).
 
 **Link gates** (the LinkGates tool): a click on a two-way gate or a one-way entrance, then one on its partner or its exit, links the
 two as one undo step; a first click on anything else says what to click.

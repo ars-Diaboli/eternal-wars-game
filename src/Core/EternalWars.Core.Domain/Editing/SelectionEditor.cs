@@ -107,6 +107,17 @@ public sealed class SelectionEditor
     /// <summary>Takes <paramref name="items"/> out of the selection.</summary>
     public bool Remove(SelectionItems items) => Changed(Selection.Remove(items));
 
+    /// <summary>
+    /// A right click on <paramref name="tile"/> (ADR-286): the hero or object there that <paramref name="filter"/> lets through becomes the
+    /// selection, as a click of Select would pick it, unless it is selected already (the menu is then for the whole selection). Events and
+    /// tiles are not picked this way. Returns whether the selection changed.
+    /// </summary>
+    public bool PickUnlessSelected(MapPosition tile, SelectionFilter filter = SelectionFilter.All)
+    {
+        var under = At(tile, filter) with { Events = [] };
+        return !under.IsEmpty && !under.Objects.Any(Selection.Contains) && !under.Heroes.Any(Selection.Contains) && Set(under);
+    }
+
     /// <summary>Selects nothing.</summary>
     public bool Clear() => Set(SelectionItems.Empty);
 

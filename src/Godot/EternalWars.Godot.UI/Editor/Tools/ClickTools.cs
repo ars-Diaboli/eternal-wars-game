@@ -19,15 +19,30 @@ public sealed class ObjectTool(EditorToolContext context) : EditorTool(context)
     /// <summary>Who a thing with an owner is placed for; null: neutral.</summary>
     private PlayerId? _thingOwner;
 
+    /// <summary>Whether a click places a random variant of the chosen entry (ADR-286).</summary>
+    private bool _randomVariant;
+
+    /// <summary>Whether the entrance is moved onto or beside a road near the pointer (ADR-286).</summary>
+    private bool _snapToRoad;
+
     public override string Name => "Object";
 
-    public override string ClickHint => Entry is { } entry ? $"Object: a click places {entry.Name}" : "Object: pick what to place in the browser";
+    public override string ClickHint => Entry is { } entry
+        ? $"Object: a click places {(RandomVariant ? $"a random variant of {entry.Name}" : entry.Name)}{(_snapToRoad ? ", its entrance by a road" : "")}"
+        : "Object: pick what to place in the browser";
 
     public override UiIcon? Icon => UiIcon.ToolObject;
 
     public override Key? Shortcut => Key.O;
 
     private BrowserEntry? Entry => Context.Choice.Entry;
+
+    /// <summary>What a click picks among: the chosen entry's variants with the random variant on, else the entry alone.</summary>
+    private IReadOnlyList<BrowserEntry> Variants(BrowserEntry entry) =>
+        _randomVariant && Context.Browser is { } browser ? browser.VariantsOf(entry) : [entry];
+
+    /// <summary>Whether a click picks among several entries.</summary>
+    private bool RandomVariant => Entry is { } entry && Variants(entry).Count > 1;
 
     /// <summary>The player a hero is placed for: the picked one, or the first when that player has left the map.</summary>
     private PlayerId Owner => Editor.Scenario.HasPlayer(_owner) ? _owner : Editor.Scenario.Players[0].Id;
@@ -62,6 +77,38 @@ public sealed class ObjectTool(EditorToolContext context) : EditorTool(context)
                 OwnerOf(entry), p => _thingOwner = p);
         }
 
+        if (Context.Browser is { } browser && browser.VariantsOf(entry).Count is > 1 and var count)
+        {
+            var random = new CheckBox
+            {
+                Text = "Random variant", ButtonPressed = _randomVariant,
+                TooltipText = $"Each click places one of the {count} of {entry.Group} like it, drawn at random among those that fit",
+            };
+            random.Toggled += on =>
+            {
+                _randomVariant = on;
+                ShowGhost(_hovered);
+                Context.Say(ClickHint);
+            };
+            options.Add(random);
+        }
+
+        if (entry.Footprint.HasVisit && entry.Placement != BrowserPlacement.Hero)
+        {
+            var snap = new CheckBox
+            {
+                Text = "Snap entrance to a road", ButtonPressed = _snapToRoad,
+                TooltipText = $"Moves the object up to {EntryEditor.SnapReach} tiles so its entrance is on a road or beside one; where no road is near, it stays",
+            };
+            snap.Toggled += on =>
+            {
+                _snapToRoad = on;
+                ShowGhost(_hovered);
+                Context.Say(ClickHint);
+            };
+            options.Add(snap);
+        }
+
         // What a click does is the status bar's (ClickHint) and the ghost's to say: the browser below keeps the room.
     }
 
@@ -81,9 +128,14 @@ public sealed class ObjectTool(EditorToolContext context) : EditorTool(context)
             return;
         }
 
-        if (Context.Report(Editor.Placing.Place(entry, tile, out var placed, OwnerOf(entry))))
+        if (Context.Report(Editor.Placing.PlaceAny(Variants(entry), tile, _snapToRoad, out var placed, out var chosen, OwnerOf(entry))))
         {
-            Context.Choice.NotePlaced(entry);
+            Context.Choice.NotePlaced(entry); // the chosen entry goes to Recent, not the variant drawn
+            if (chosen != entry)
+            {
+                Context.Say($"Placed {chosen!.Name}");
+            }
+
             if (placed.Hero is { } hero)
             {
                 Context.Inspect(hero);
@@ -102,7 +154,7 @@ public sealed class ObjectTool(EditorToolContext context) : EditorTool(context)
     private void ShowGhost(MapPosition? tile)
     {
         _hovered = tile;
-        Context.Marks?.ShowMove(tile is { } at && Entry is { } entry ? Editor.Placing.Check(entry, at, OwnerOf(entry)) : null);
+        Context.Marks?.ShowMove(tile is { } at && Entry is { } entry ? Editor.Placing.Preview(Variants(entry), at, _snapToRoad, OwnerOf(entry)).Check : null);
     }
 }
 

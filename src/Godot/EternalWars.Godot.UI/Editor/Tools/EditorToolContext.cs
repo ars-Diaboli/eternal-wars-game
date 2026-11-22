@@ -91,6 +91,9 @@ public sealed class EditorToolContext(MapEditorSession editor, InspectorPanel in
     /// <summary>What was copied or cut last; the app's, so it outlives the map (EDIT-4).</summary>
     public EditorClipboard Clipboard { get; init; } = new();
 
+    /// <summary>What the object browser lists for this map: the Object tool's random variants come from it (ADR-286). Null: none.</summary>
+    public BrowserCatalog? Browser { get; set; }
+
     /// <summary>What the object browser has chosen for the Object tool; the app's, so it outlives the map.</summary>
     public BrowserChoice Choice { get; init; } = new();
 
