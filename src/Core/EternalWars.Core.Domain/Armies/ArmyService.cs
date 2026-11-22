@@ -81,6 +81,41 @@ public sealed class ArmyService(GameState state, IEventPublisher events)
         events.Publish(new WarMachineGiven(from.Id, to.Id, slot));
     }
 
+    /// <summary>Dismisses a stack of an own hero or an own town's garrison for good (ADR-296, <see cref="StackDismissal"/>).</summary>
+    internal void Dismiss(PlayerId player, int slot, HeroId? heroId, MapObjectId? townId)
+    {
+        if ((heroId is null) == (townId is null))
+        {
+            throw new CommandRefusedException("Name either a hero or a town.");
+        }
+
+        if (heroId is { } id)
+        {
+            var hero = state.Heroes.FirstOrDefault(h => h.Id == id) ?? throw new CommandRefusedException($"{id} is not a hero on the map.");
+            Refuse(StackDismissal.Check(state, player, hero, slot));
+            var stack = hero.Army[slot]!;
+            hero.Army.Set(slot, null);
+            events.Publish(new StackDismissed(hero.Id, null, slot, stack));
+            Publish(hero);
+            return;
+        }
+
+        var town = state.FindObject(townId!.Value) as Towns.Town ?? throw new CommandRefusedException($"{townId} is not a town.");
+        Refuse(StackDismissal.Check(state, player, town, slot));
+        var dismissed = town.Garrison[slot]!;
+        town.Garrison.Set(slot, null);
+        events.Publish(new StackDismissed(null, town.Id, slot, dismissed));
+        events.Publish(new GarrisonChanged(town.Id, town.Garrison.Slots.ToList()));
+    }
+
+    private static void Refuse(string? refusal)
+    {
+        if (refusal is not null)
+        {
+            throw new CommandRefusedException(refusal);
+        }
+    }
+
     private static bool IsBetween(HeroExchangeDecision decision, HeroId a, HeroId b) =>
         (decision.Hero == a && decision.Other == b) || (decision.Hero == b && decision.Other == a);
 

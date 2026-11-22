@@ -217,6 +217,31 @@ public sealed record LeaveGarrisonCommand(PlayerId Player, MapObjectId Town) : G
 /// </summary>
 public sealed record SwapTownHeroesCommand(PlayerId Player, MapObjectId Town) : GameCommand(Player);
 
+/// <summary>
+/// Recruits several lines at once (Recruit all, ADR-296): every order as <see cref="RecruitCommand"/> would, all or nothing, paid in one sum. The
+/// screen sends <c>Towns.TownPlans.Recruit</c>'s orders.
+/// </summary>
+public sealed record RecruitManyCommand(PlayerId Player, MapObjectId Town, IReadOnlyList<Towns.RecruitOrder> Orders) : GameCommand(Player)
+{
+    public bool Equals(RecruitManyCommand? other) => other is not null && Player == other.Player && Town == other.Town && Orders.SequenceEqual(other.Orders);
+
+    public override int GetHashCode() => HashCode.Combine(Player, Town, Orders.Count);
+
+    public override string ToString() => $"RecruitManyCommand {{ Player = {Player}, Town = {Town}, Orders = {string.Join(", ", Orders)} }}";
+}
+
+/// <summary>Upgrades every stack of the garrison and the visiting hero that <c>Towns.TownPlans.Upgrade</c> lists (Upgrade all, ADR-296).</summary>
+public sealed record UpgradeAllCommand(PlayerId Player, MapObjectId Town) : GameCommand(Player);
+
+/// <summary>
+/// Dismisses a stack for good (ADR-296): of an own hero on the map (<paramref name="Hero"/>), never its last one, or of an own town's garrison
+/// (<paramref name="Town"/>). Exactly one of the two is given.
+/// </summary>
+public sealed record DismissStackCommand(PlayerId Player, int Slot, HeroId? Hero = null, MapObjectId? Town = null) : GameCommand(Player);
+
+/// <summary>Renames an own town (ADR-296): the name is trimmed, one line of 1 to <c>Towns.TownRules.MaxNameLength</c> characters.</summary>
+public sealed record RenameTownCommand(PlayerId Player, MapObjectId Town, string Name) : GameCommand(Player);
+
 // Artifacts (the owner's turn; no movement points; ADR-061) -------------------------------------------
 
 /// <summary>Puts an artifact from the hero's backpack on; one worn in that slot goes to the backpack when none is free.</summary>
@@ -257,6 +282,18 @@ public sealed record DismissGovernorCommand(PlayerId Player, MapObjectId Town) :
 public sealed record TradeResourceCommand(
     PlayerId Player, Economy.ResourceType Resource, Economy.TradeDirection Direction, int Amount, MapObjectId? MapMarketplace = null)
     : GameCommand(Player);
+
+/// <summary>
+/// Trades one resource for another, gold on neither side (ADR-296): <paramref name="Amount"/> units of <paramref name="Get"/> for what they cost in
+/// <paramref name="Give"/> at <c>Economy.MarketplaceRules.ExchangeCost</c>, the rate of the player's marketplace towns or of the map marketplace
+/// one of its heroes stands on.
+/// </summary>
+public sealed record ExchangeResourcesCommand(
+    PlayerId Player, Economy.ResourceType Give, Economy.ResourceType Get, int Amount, MapObjectId? MapMarketplace = null)
+    : GameCommand(Player);
+
+/// <summary>Sends resources to a teammate (ADR-296): the sender needs a town with a marketplace; enemies and itself are refused.</summary>
+public sealed record SendResourcesCommand(PlayerId Player, PlayerId To, Economy.ResourceSet Amount) : GameCommand(Player);
 
 public sealed record ChooseBattleWidthCommand(PlayerId Player, int Width) : GameCommand(Player), IBattleCommand;
 

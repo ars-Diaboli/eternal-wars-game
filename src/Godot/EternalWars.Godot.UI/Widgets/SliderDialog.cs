@@ -9,13 +9,26 @@ namespace EternalWars.Godot.UI.Widgets;
 /// What a <see cref="SliderDialog"/> asks: a count from <see cref="Min"/> to <see cref="Max"/> starting at <see cref="Value"/>, confirmed with
 /// the <see cref="Confirm"/> button. With <see cref="CostOfOne"/> and <see cref="Treasury"/> it shows the cost of one, the total and the
 /// treasury after paying (red where short), and Max stops at what the treasury pays for. <see cref="Describe"/> words the count ("12 of 30").
+/// With <see cref="Choices"/> it also asks one of them (the recruit dialog's Garrison or Visiting hero, ADR-296), starting at <see cref="Choice"/>.
 /// </summary>
 public sealed record SliderRequest(
     string Title, int Min, int Max, int Value, string Confirm, ResourceSet? CostOfOne = null, ResourceSet? Treasury = null, Func<int, string>? Describe = null)
 {
+    /// <summary>A choice beside the count (label, whether it may be picked, its tooltip), or null for none.</summary>
+    public IReadOnlyList<SliderChoice>? Choices { get; init; }
+
+    /// <summary>The choice picked when the dialog opens.</summary>
+    public int Choice { get; init; }
+
+    /// <summary>What the choice row is called ("Into").</summary>
+    public string ChoiceCaption { get; init; } = "";
+
     /// <summary>The most the treasury pays for, within <see cref="Max"/>.</summary>
     public int Affordable => CostOfOne is { } one && Treasury is { } have ? Math.Clamp(EternalWars.Core.Domain.Towns.TownRules.MaxAffordable(have, one, Max), Min, Max) : Max;
 }
+
+/// <summary>One option of a <see cref="SliderRequest"/>'s choice.</summary>
+public sealed record SliderChoice(string Label, bool Enabled = true, string Tooltip = "");
 
 /// <summary>
 /// A count chosen with a slider (ADR-294): − / + by one, Max, the slider itself, and the cost lines when the count has a price; Enter or the
@@ -25,7 +38,8 @@ public sealed record SliderRequest(
 public partial class SliderDialog : CanvasLayer
 {
     private readonly SliderRequest _request;
-    private readonly Action<int> _confirmed;
+    private readonly Action<int, int> _confirmed;
+    private int _choice;
     private readonly HSlider _slider = new() { CustomMinimumSize = new Vector2(320, 0), SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, Step = 1 };
     private readonly Label _count = new() { CustomMinimumSize = new Vector2(120, 0), HorizontalAlignment = HorizontalAlignment.Center };
     private readonly CostLabel _total = new();
@@ -33,11 +47,12 @@ public partial class SliderDialog : CanvasLayer
     private Button? _confirm;
     private bool _done;
 
-    private SliderDialog(SliderRequest request, Action<int> confirmed)
+    private SliderDialog(SliderRequest request, Action<int, int> confirmed)
     {
         Layer = 40;
         _request = request;
         _confirmed = confirmed;
+        _choice = request.Choice;
     }
 
     /// <summary>The dialog in the tree, if one is open.</summary>
@@ -47,7 +62,10 @@ public partial class SliderDialog : CanvasLayer
     public int Value => (int)_slider.Value;
 
     /// <summary>Opens a dialog for <paramref name="request"/> over <paramref name="anchor"/>'s screen; <paramref name="confirmed"/> gets the count.</summary>
-    public static SliderDialog Open(Node anchor, SliderRequest request, Action<int> confirmed)
+    public static SliderDialog Open(Node anchor, SliderRequest request, Action<int> confirmed) => Open(anchor, request, (count, _) => confirmed(count));
+
+    /// <summary>Opens a dialog with <see cref="SliderRequest.Choices"/>; <paramref name="confirmed"/> gets the count and the choice's index.</summary>
+    public static SliderDialog Open(Node anchor, SliderRequest request, Action<int, int> confirmed)
     {
         Current?.Cancel();
         var dialog = new SliderDialog(request, confirmed);
@@ -83,6 +101,27 @@ public partial class SliderDialog : CanvasLayer
         row.AddChild(max);
         row.AddChild(_count);
         frame.Content.AddChild(row);
+        var focus = new List<Control?> { minus, _slider, plus, max };
+        if (_request.Choices is { Count: > 0 } choices)
+        {
+            var group = new ButtonGroup();
+            var options = new HBoxContainer();
+            options.AddChild(new Label { Text = _request.ChoiceCaption, ThemeTypeVariation = UiTheme.QuietLabel, CustomMinimumSize = new Vector2(130, 0) });
+            for (var i = 0; i < choices.Count; i++)
+            {
+                var index = i;
+                var option = new Button
+                {
+                    Text = choices[i].Label, ToggleMode = true, ButtonGroup = group, ButtonPressed = i == _choice, Disabled = !choices[i].Enabled,
+                    TooltipText = choices[i].Tooltip,
+                };
+                option.Pressed += () => _choice = index;
+                options.AddChild(option);
+                focus.Add(option);
+            }
+
+            frame.Content.AddChild(options);
+        }
 
         if (_request.CostOfOne is { } one)
         {
@@ -99,7 +138,9 @@ public partial class SliderDialog : CanvasLayer
         frame.Content.AddChild(Screens.ButtonRow(cancel, confirm));
         _slider.ValueChanged += _ => ShowCount(confirm);
         ShowCount(confirm);
-        FocusOrder.Chain(minus, _slider, plus, max, cancel, confirm);
+        focus.Add(cancel);
+        focus.Add(confirm);
+        FocusOrder.Chain(focus);
         _slider.CallDeferred(Control.MethodName.GrabFocus);
     }
 
@@ -138,7 +179,7 @@ public partial class SliderDialog : CanvasLayer
         var value = Value;
         QueueFree();
         Current = null;
-        _confirmed(value);
+        _confirmed(value, _choice);
     }
 
     /// <summary>Closes without a count.</summary>

@@ -14,3 +14,14 @@ public sealed record ResourcesChanged(PlayerId Player, ResourceSet Previous, Res
 [SeenBy(Audience.Owner)]
 public sealed record ResourcesTraded(
     PlayerId Player, ResourceType Resource, TradeDirection Direction, int Amount, int Gold, MapObjectId? Marketplace) : IEvent;
+
+/// <summary>
+/// A player traded one resource for another at a marketplace (ADR-296): <paramref name="Gave"/> of <paramref name="Give"/> for <paramref name="Got"/> of
+/// <paramref name="Get"/>. <paramref name="Marketplace"/> is the map marketplace used, null for the player's towns.
+/// </summary>
+[SeenBy(Audience.Owner)]
+public sealed record ResourcesExchanged(PlayerId Player, ResourceType Give, int Gave, ResourceType Get, int Got, MapObjectId? Marketplace) : IEvent;
+
+/// <summary>A player sent resources to a teammate (ADR-296); both see their own <see cref="ResourcesChanged"/>.</summary>
+[SeenBy(Audience.Owner)]
+public sealed record ResourcesSent(PlayerId Player, PlayerId To, ResourceSet Amount) : IEvent;

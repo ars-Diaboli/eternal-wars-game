@@ -1,5 +1,7 @@
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Creatures;
+using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Info;
@@ -11,7 +13,7 @@ using Godot;
 
 namespace EternalWars.Godot.UI.Hud.TownScreen;
 
-/// <summary>The town screen's windows, one per hotkey (ADR-294).</summary>
+/// <summary>The town screen's windows (ADR-294, ADR-296): one per hotkey, then those opened from a building or the bottom bar.</summary>
 public enum TownWindow
 {
     Hall,
@@ -22,16 +24,24 @@ public enum TownWindow
     Blacksmith,
     Fort,
     Caravan,
+
+    /// <summary>One dwelling: its large card and recruit dialog, and the upgrade (a dwelling of the building strip).</summary>
+    Dwelling,
+
+    /// <summary>The governor list (the town's portrait).</summary>
+    Governor,
+
+    /// <summary>The Undead Transformer.</summary>
+    Transformer,
 }
 
 /// <summary>
-/// The new town screen (the town screen plan, ADR-246, ADR-294), opened instead of <see cref="TownPanel"/> with <c>--town-screen=new</c> until
-/// the plan's step 2 ends. Built in steps: this is step 0's shell with step 1's widgets in it. The top bar (crest, name, ◄ ►, the facts, the
-/// quick buttons, ×), the main area (the faction's key painting as a stand-in for the 3D scene, with the notices card), the bottom bar (the
-/// town's crest, the garrison and visiting hero as <see cref="ArmyBar"/>s with Swap, the income and the date) and a window host: one window
-/// at a time over the dimmed main area; Escape closes the window, a second Escape leaves. The Hall shows <see cref="BuildingTile"/>s, the
-/// recruitment window <see cref="CreatureCard"/>s with the recruit dialog; the other windows are titled and empty until step 2. The keys are
-/// <see cref="TownScreenKeys"/>'.
+/// The town screen (the town screen plan, ADR-246, ADR-294, ADR-296). The top bar: crest, name (a click renames the town), ◄ ► through the
+/// player's towns, the faction, town hall and governor, the quick buttons, ×. The main area: the faction's key painting with a strip of the
+/// town's buildings until the 3D scene (step 3) and the notices card (built today, caravans, the discount). The bottom bar: the town's crest
+/// with its governor, the garrison and visiting hero as <see cref="ArmyBar"/>s, Split, Upgrade all, Swap and Dismiss, the income, the week's
+/// growth (its parts on hover) and the date. One window at a time over the dimmed main area (the windows are this class's other parts); Escape
+/// closes the window, a second Escape leaves. The keys are <see cref="TownScreenKeys"/>'.
 /// </summary>
 public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
 {
@@ -39,7 +49,7 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
 
     private readonly TownArmiesSection _armies;
     private readonly TextureRect _crest = new() { StretchMode = TextureRect.StretchModeEnum.KeepCentered, CustomMinimumSize = new Vector2(Heraldry.TitleSize, Heraldry.TitleSize) };
-    private readonly Label _title = new() { ThemeTypeVariation = UiTheme.TitleLabel, VerticalAlignment = VerticalAlignment.Center };
+    private readonly Button _title = new() { ThemeTypeVariation = UiTheme.TitleLabel, Flat = true, TooltipText = "Rename the town" };
     private readonly Label _facts = new() { ThemeTypeVariation = UiTheme.QuietLabel, VerticalAlignment = VerticalAlignment.Center };
     private readonly TextureRect _painting = new()
     {
@@ -48,31 +58,46 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
         MouseFilter = MouseFilterEnum.Ignore,
     };
     private readonly TextureRect _portrait = new() { StretchMode = TextureRect.StretchModeEnum.KeepCentered, CustomMinimumSize = new Vector2(96, 96) };
-    private readonly Label _notice = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(260, 0) };
+    private readonly Button _governor = new() { TooltipText = "The governor: a hero with Stewardship makes building and recruiting cheaper here" };
+    private readonly VBoxContainer _notices = new() { CustomMinimumSize = new Vector2(280, 0) };
+    private readonly HFlowContainer _strip = new() { Alignment = FlowContainer.AlignmentMode.Center };
     private readonly HBoxContainer _income = new();
+    private readonly Label _growth = new() { MouseFilter = MouseFilterEnum.Pass };
     private readonly Label _date = new() { ThemeTypeVariation = UiTheme.QuietLabel };
     private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(300, 0) };
+    private readonly Button _split = new() { Text = "Split" };
+    private readonly Button _upgradeAll = new() { Text = "Upgrade all" };
     private readonly Button _swap = new() { Text = "Swap" };
+    private readonly Button _dismiss = new() { Text = "Dismiss" };
     private readonly ColorRect _dim = new() { Color = new Color(0, 0, 0, 0.5f), MouseFilter = MouseFilterEnum.Stop, Visible = false };
     private readonly CenterContainer _windowHost = new() { MouseFilter = MouseFilterEnum.Ignore };
     private readonly Dictionary<TownWindow, Button> _quick = [];
+    private readonly Control _parked = new() { Visible = false, MouseFilter = MouseFilterEnum.Ignore };
+    private readonly CaravanSection _caravan;
+    private readonly TransformerSection _transformer;
     private GameSession _session = null!;
     private MapObjectId? _town;
     private WindowFrame? _window;
+    private CreatureId? _dwelling;
 
     public TownScreenPanel()
     {
         Armies = TownArmiesSection.Group(this);
         _armies = new TownArmiesSection(this);
+        _caravan = new CaravanSection(this);
+        _transformer = new TransformerSection(this);
+        Armies.PickChanged += ShowArmyButtons;
     }
 
     public event Action? Closed;
 
-    public event Action? TradeRequested;
+    /// <summary>The marketplace is a window of this screen: it never asks for another.</summary>
+    event Action? ITownScreen.TradeRequested { add { } remove { } }
 
     public event Action? ThievesGuildRequested;
 
-    public event Action<MapObjectId>? TavernRequested;
+    /// <summary>The tavern is a window of this screen: it never asks for another.</summary>
+    event Action<MapObjectId>? ITownScreen.TavernRequested { add { } remove { } }
 
     /// <summary>H: the visiting hero's screen.</summary>
     public event Action<HeroId>? HeroRequested;
@@ -80,7 +105,7 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
     /// <summary>◄ ► or [ ]: another own town; the adventure HUD centres the map on it and opens it. Without a listener the screen opens it itself.</summary>
     public event Action<MapObjectId>? SwitchRequested;
 
-    /// <summary>Whether another screen covers this one (the hero screen, today's marketplace or tavern): its keys then stay off.</summary>
+    /// <summary>Whether another screen covers this one (the hero screen, the Thieves' Guild): its keys then stay off.</summary>
     public Func<bool>? IsCovered { get; set; }
 
     /// <summary>The window open over the main area, if any.</summary>
@@ -94,10 +119,16 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
 
     public ArmyBarGroup Armies { get; }
 
-    public bool HasTavernScreen => TavernRequested is not null;
+    public bool HasTavernScreen => false; // the tavern is a window of this screen
 
     private Town? Current =>
         _town is { } id && _session.State.FindObject(id) is Town town && town.Owner == _session.State.CurrentPlayer.Id ? town : null;
+
+    private GameState State => _session.State;
+
+    private PlayerId Player => _session.State.CurrentPlayer.Id;
+
+    private ResourceSet Treasury => _session.State.CurrentPlayer.Resources;
 
     public void Bind(GameSession session)
     {
@@ -111,6 +142,9 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
         page.AddChild(TopBar());
         page.AddChild(MainArea());
         page.AddChild(BottomBar());
+        AddChild(_parked);
+        _parked.AddChild(_caravan.Rows);
+        _parked.AddChild(_transformer.Row);
         Visible = false;
 
         new RefreshScheduler(this, Refresh)
@@ -121,21 +155,50 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
             .On<TownBuilt>(session.Events)
             .On<DwellingBuilt>(session.Events)
             .On<TownBuildingDowngraded>(session.Events)
+            .On<TownRenamed>(session.Events)
             .On<GovernorChanged>(session.Events)
             .On<ResourcesChanged>(session.Events)
             .On<CreaturesRecruited>(session.Events)
+            .On<CreaturesRecruitedMany>(session.Events)
+            .On<StackUpgraded>(session.Events)
+            .On<StackDismissed>(session.Events)
+            .On<CreaturesTransformed>(session.Events)
             .On<TownCreaturesGrew>(session.Events)
             .On<HeroMoved>(session.Events)
             .On<HeroEnteredGarrison>(session.Events)
             .On<HeroLeftGarrison>(session.Events)
             .On<HeroHired>(session.Events)
-            .On<GarrisonChanged>(session.Events) // the Swap button's state
+            .On<WarMachineBought>(session.Events)
+            .On<SpellBookBought>(session.Events)
+            .On<CaravanDispatched>(session.Events)
+            .On<CaravanArrived>(session.Events)
+            .On<CaravanReturned>(session.Events)
+            .On<CaravanLost>(session.Events)
+            .On<ProviderStockChanged>(session.Events)
+            .On<DwellingCreaturesGrew>(session.Events)
+            .On<SpellsLearned>(session.Events)
+            .On<WarcriesLearned>(session.Events)
+            .On<GarrisonChanged>(session.Events)
             .On<ArmyChanged>(session.Events);
         _armies.Watch(session.Events);
+        this.SubscribeWhileInTree<SpellsLearned>(session.Events, e =>
+        {
+            if (e.Town == _town)
+            {
+                _learnedHere.UnionWith(e.Spells); // the guild's "learned now" marks
+            }
+        });
     }
 
     public void Open(MapObjectId town)
     {
+        if (_town != town)
+        {
+            _transformer.Reset();
+            _learnedHere.Clear();
+            _hallSelected = null;
+        }
+
         _town = town;
         Armies.Picked = null;
         _status.Text = "";
@@ -155,7 +218,15 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
         }
     }
 
-    public void OpenTavern(MapObjectId town) => TavernRequested?.Invoke(town);
+    public void OpenTavern(MapObjectId town)
+    {
+        if (_town != town)
+        {
+            Open(town);
+        }
+
+        ShowWindow(TownWindow.Tavern);
+    }
 
     public void Run(GameCommand command) => RunAll([command]);
 
@@ -176,7 +247,7 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
     /// <summary>Opens <paramref name="window"/> over the main area, closing the one open; the same window again closes it.</summary>
     public void ShowWindow(TownWindow window)
     {
-        if (OpenWindow == window)
+        if (OpenWindow == window && window != TownWindow.Dwelling)
         {
             CloseWindow();
             return;
@@ -189,24 +260,38 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
         }
 
         OpenWindow = window;
-        _window = new WindowFrame(Title(window), UiFrames.Accent(town.TownType)) { CustomMinimumSize = new Vector2(980, 560) };
+        // As large as the main area allows, the painting showing around it.
+        var room = _windowHost.Size - new Vector2(UiSpacing.ScreenEdge * 8, UiSpacing.ScreenEdge * 4);
+        _window = new WindowFrame(Title(town, window), UiFrames.Accent(town.TownType)) { CustomMinimumSize = room.Max(new Vector2(1040, 560)) };
         _window.CloseRequested += CloseWindow;
         _windowHost.AddChild(_window);
         _dim.Visible = true;
         FillWindow(town);
     }
 
+    /// <summary>Opens the dwelling window of <paramref name="line"/> (a dwelling of the building strip).</summary>
+    public void ShowDwelling(CreatureId line)
+    {
+        _dwelling = line;
+        ShowWindow(TownWindow.Dwelling);
+    }
+
     public void CloseWindow()
     {
         OpenWindow = null;
-        _window?.QueueFree();
+        if (_window is not null)
+        {
+            Release(_window.Content);
+            _window.QueueFree();
+        }
+
         _window = null;
         _dim.Visible = false;
     }
 
     public override void _UnhandledKeyInput(InputEvent @event)
     {
-        if (!Visible || Current is not { } town || SliderDialog.Current is not null || IsCovered?.Invoke() == true)
+        if (!Visible || Current is not { } town || ConfirmDialog.AnyOpen || IsCovered?.Invoke() == true)
         {
             return;
         }
@@ -226,7 +311,7 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
             return;
         }
 
-        foreach (var window in Enum.GetValues<TownWindow>())
+        foreach (var window in QuickWindows)
         {
             if (TownScreenKeys.Pressed(@event, KeyOf(window)))
             {
@@ -247,18 +332,18 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
         }
         else if (TownScreenKeys.Pressed(@event, TownKey.SwapHeroes))
         {
-            Run(new SwapTownHeroesCommand(_session.State.CurrentPlayer.Id, town.Id));
+            Run(new SwapTownHeroesCommand(Player, town.Id));
         }
         else if (TownScreenKeys.Pressed(@event, TownKey.Hero))
         {
-            if (TownRules.VisitingHero(_session.State, town) is { } hero)
+            if (TownRules.VisitingHero(State, town) is { } hero)
             {
                 HeroRequested?.Invoke(hero.Id);
             }
         }
         else if (TownScreenKeys.Pressed(@event, TownKey.UpgradeAll))
         {
-            _status.Text = "Upgrade all comes with the plan's step 2: upgrade a stack with its arrow badge.";
+            UpgradeAll(town);
         }
         else
         {
@@ -270,6 +355,10 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
             GetViewport().SetInputAsHandled();
         }
     }
+
+    /// <summary>The windows with a quick button and a hotkey.</summary>
+    private static readonly TownWindow[] QuickWindows =
+        [TownWindow.Hall, TownWindow.Recruitment, TownWindow.Guild, TownWindow.Tavern, TownWindow.Marketplace, TownWindow.Blacksmith, TownWindow.Fort, TownWindow.Caravan];
 
     private static TownKey KeyOf(TownWindow window) => window switch
     {
@@ -283,7 +372,19 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
         _ => TownKey.Caravan,
     };
 
-    private static string Title(TownWindow window) => TownScreenKeys.All[KeyOf(window)].Label;
+    private string Title(Town town, TownWindow window) => window switch
+    {
+        TownWindow.Dwelling when _dwelling is { } line && State.Creatures.TryGet(line, out var creature) => $"{creature.Name} dwelling",
+        TownWindow.Guild when town.Level(BuiltInBuildings.WarLodge) > 0 => BuildingName(town, BuiltInBuildings.WarLodge),
+        TownWindow.Governor => "Governor",
+        TownWindow.Transformer => BuildingName(town, UndeadTransformer.Building),
+        _ => TownScreenKeys.All[KeyOf(window)].Label,
+    };
+
+    private string BuildingName(Town town, BuildingId building) =>
+        TownRules.Buildings(State, town).Contains(building)
+            ? TownRules.Buildings(State, town).Get(building, Math.Clamp(town.Level(building), 1, TownRules.Buildings(State, town).MaxLevel(building))).Name
+            : building.Value;
 
     private Control TopBar()
     {
@@ -291,6 +392,7 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
         var row = new HBoxContainer();
         bar.AddChild(row);
         row.AddChild(_crest);
+        _title.Pressed += Rename;
         row.AddChild(_title);
         var previous = new Button { Text = "Previous town" }.WithIcon(UiIcon.ArrowLeft);
         previous.SetMeta(UiIcons.StatusLabelMeta, TownScreenKeys.Hint(TownKey.PreviousTown));
@@ -302,7 +404,7 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
         row.AddChild(next);
         row.AddChild(_facts);
         row.AddChild(new Control { SizeFlagsHorizontal = SizeFlags.ExpandFill, MouseFilter = MouseFilterEnum.Ignore });
-        foreach (var window in Enum.GetValues<TownWindow>())
+        foreach (var window in QuickWindows)
         {
             var key = KeyOf(window);
             var button = new Button { Text = $"{TownScreenKeys.All[key].Label}" };
@@ -325,14 +427,24 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
         area.AddChild(_painting);
         _painting.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
 
-        // The notices card in the top-right corner (built today).
+        // The notices card in the top-right corner: built today, caravans, the governor's discount.
         var card = new PanelContainer { ThemeTypeVariation = UiTheme.CardPanel };
-        card.AddChild(_notice);
+        card.AddChild(_notices);
         area.AddChild(card);
         card.SetAnchorsAndOffsetsPreset(LayoutPreset.TopRight);
         card.GrowHorizontal = GrowDirection.Begin;
         card.OffsetRight = -UiSpacing.ScreenEdge * 2;
         card.OffsetTop = UiSpacing.ScreenEdge * 2;
+
+        // The town's buildings as a strip along the bottom of the painting, until the 3D scene (step 3).
+        var strip = new PanelContainer { ThemeTypeVariation = UiTheme.CardPanel };
+        strip.AddChild(_strip);
+        area.AddChild(strip);
+        strip.SetAnchorsAndOffsetsPreset(LayoutPreset.BottomWide);
+        strip.GrowVertical = GrowDirection.Begin;
+        strip.OffsetLeft = UiSpacing.ScreenEdge * 2;
+        strip.OffsetRight = -UiSpacing.ScreenEdge * 2;
+        strip.OffsetBottom = -UiSpacing.ScreenEdge;
 
         area.AddChild(_dim);
         _dim.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
@@ -353,23 +465,43 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
         var bar = new PanelContainer { ThemeTypeVariation = UiTheme.BarPanel };
         var row = new HBoxContainer();
         bar.AddChild(row);
-        row.AddChild(_portrait);
+        var portrait = new VBoxContainer();
+        portrait.AddChild(_portrait);
+        _governor.Pressed += () => ShowWindow(TownWindow.Governor);
+        portrait.AddChild(_governor);
+        row.AddChild(portrait);
         row.AddChild(new VSeparator());
         row.AddChild(_armies.Rows);
-        var buttons = new VBoxContainer();
+        var buttons = new GridContainer { Columns = 2 };
+        _split.TooltipText = "Pick a stack, then split it into an empty slot of its row";
+        _split.Pressed += Split;
+        _upgradeAll.SetMeta(UiIcons.StatusLabelMeta, TownScreenKeys.Hint(TownKey.UpgradeAll));
+        _upgradeAll.Pressed += () =>
+        {
+            if (Current is { } town)
+            {
+                UpgradeAll(town);
+            }
+        };
         _swap.SetMeta(UiIcons.StatusLabelMeta, TownScreenKeys.Hint(TownKey.SwapHeroes));
         _swap.Pressed += () =>
         {
             if (Current is { } town)
             {
-                Run(new SwapTownHeroesCommand(_session.State.CurrentPlayer.Id, town.Id));
+                Run(new SwapTownHeroesCommand(Player, town.Id));
             }
         };
+        _dismiss.TooltipText = "Pick a stack, then dismiss it for good";
+        _dismiss.Pressed += Dismiss;
+        buttons.AddChild(_split);
+        buttons.AddChild(_upgradeAll);
         buttons.AddChild(_swap);
+        buttons.AddChild(_dismiss);
         row.AddChild(buttons);
         row.AddChild(new Control { SizeFlagsHorizontal = SizeFlags.ExpandFill, MouseFilter = MouseFilterEnum.Ignore });
         var info = new VBoxContainer();
         info.AddChild(_income);
+        info.AddChild(_growth);
         info.AddChild(_date);
         info.AddChild(_status);
         row.AddChild(info);
@@ -378,38 +510,250 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
 
     private void Refresh()
     {
-        if (Current is not { } town || _session.State.PendingDecision is not null)
+        if (Current is not { } town || State.PendingDecision is not null)
         {
             Visible = false;
             CloseWindow();
             return;
         }
 
-        var state = _session.State;
+        var state = State;
         Visible = true;
+        var overview = TownOverview.Of(state, town);
         _crest.Texture = Heraldry.Crest(town.TownType, Heraldry.TitleSize);
         _portrait.Texture = Heraldry.Crest(town.TownType, 96);
         _title.Text = town.Name;
-        var hall = BuildingTree.For(state, town).FirstOrDefault(n => n.Building == BuiltInBuildings.TownHall);
-        var governor = StewardshipRules.GovernorOf(state, town);
-        _facts.Text = $"{Faction(town.TownType)} · {(hall is null ? "" : TownRules.Buildings(state, town).Get(BuiltInBuildings.TownHall, Math.Max(1, hall.Level)).Name)}"
-                      + (governor is null ? "" : $" · governed by {governor.Name}");
+        _facts.Text = $"{Faction(town.TownType)} · {BuildingName(town, BuiltInBuildings.TownHall)}"
+                      + (overview.Governor is { } governor ? $" · governed by {governor.Name}" : "");
+        _governor.Text = overview.Governor is { } who ? $"Governor: {who.Name}" : "No governor";
         _painting.Texture = Painting(town.TownType);
-        _notice.Text = TownRules.HasBuiltToday(state, town)
-            ? $"Built today: {town.LastBuiltName ?? "a building"}. The next building goes up tomorrow."
-            : "Nothing built today yet.";
+        ShowNotices(town, overview);
+        ShowStrip(town);
         _income.ClearChildren();
         _income.AddChild(new Label { Text = "Income", ThemeTypeVariation = UiTheme.QuietLabel });
-        _income.AddChild(ResourceIcons.CostRow(TownRules.DailyIncome(state, town), " a day"));
+        _income.AddChild(ResourceIcons.CostRow(overview.Income, " a day"));
+        ShowGrowth(overview);
         _date.Text = CalendarLabel.Describe(state);
         var swap = TownRules.CheckSwapHeroes(state, town);
         _swap.Disabled = swap is not null;
         _swap.TooltipText = swap ?? "The garrison hero and the visiting hero change places, each with its own troops.";
+        var upgrades = TownPlans.Upgrade(state, town);
+        _upgradeAll.Disabled = upgrades.IsEmpty;
+        _upgradeAll.TooltipText = upgrades.IsEmpty
+            ? "Nothing here can be upgraded that you can pay for."
+            : $"Upgrade {upgrades.Orders.Count} stack(s) for {ResourceIcons.Describe(upgrades.Cost)}";
+        ShowArmyButtons();
         _armies.Show(town);
         if (_window is not null)
         {
             FillWindow(town);
         }
+    }
+
+    private void ShowNotices(Town town, TownOverview overview)
+    {
+        _notices.ClearChildren();
+        _notices.AddChild(new Label
+        {
+            Text = overview.BuiltToday is { } built ? $"Built today: {built}. The next building goes up tomorrow." : "Nothing built today yet.",
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+        });
+        var coming = CaravanRules.Queue(State, town);
+        if (coming.Count > 0)
+        {
+            _notices.AddChild(new Label { Text = $"Caravans coming: {coming.Count}", ThemeTypeVariation = UiTheme.QuietLabel });
+        }
+
+        if (overview.Governor is { } governor)
+        {
+            _notices.AddChild(new Label
+            {
+                Text = $"{governor.Name}: buildings −{overview.BuildingDiscountPercent} %, creatures −{overview.CreatureDiscountPercent} %",
+                ThemeTypeVariation = UiTheme.QuietLabel,
+            });
+        }
+    }
+
+    /// <summary>Next Monday's growth with each line's parts in the tooltip (base, fort, artifacts, growth building, Grail; next week's event is not known yet).</summary>
+    private void ShowGrowth(TownOverview overview)
+    {
+        var built = overview.Lines.Where(l => l.DwellingLevel > 0).ToList();
+        _growth.Text = $"Growth: +{built.Sum(l => l.Week)} a week ▸";
+        _growth.TooltipText = built.Count == 0
+            ? "No dwelling built yet."
+            : string.Join('\n', built.Select(l => $"{l.Line.Name}: +{l.Week} ({string.Join(", ", l.Parts.Select(p => $"{GrowthName(p.Source)} {p.Amount:+0;−0;0}"))})"))
+              + "\nBefore next week's event, drawn on Monday.";
+    }
+
+    private static string GrowthName(GrowthSource source) => source switch
+    {
+        GrowthSource.Base => "base",
+        GrowthSource.Fort => "fort",
+        GrowthSource.Artifacts => "artifacts",
+        GrowthSource.GrowthBuilding => "growth building",
+        _ => "Grail",
+    };
+
+    /// <summary>The building strip: each built building that opens a window, each built dwelling, and the buildings that show their information.</summary>
+    private void ShowStrip(Town town)
+    {
+        var state = State;
+        _strip.ClearChildren();
+        var catalog = TownRules.Buildings(state, town);
+        foreach (var building in catalog.TownBuildings.Where(b => town.Level(b) > 0))
+        {
+            var window = WindowOf(building);
+            var button = new Button { Text = BuildingName(town, building) };
+            var id = building;
+            if (building.Value == BuiltInBuildings.Tavern && TavernRules.Offers(state, Player, town).FirstOrDefault() is { } nextHire)
+            {
+                button.TooltipText = $"Next hire: {nextHire.Name}";
+            }
+
+            button.WithInfo(detailed => InfoSheets.Building(_session.State, town, id, detailed));
+            if (window is { } opens)
+            {
+                button.Pressed += () => ShowWindow(opens);
+            }
+            else
+            {
+                button.Pressed += () => InfoWindow.Current?.Open(InfoSheets.Building(_session.State, town, id, InfoWindow.Current.Detailed), button.GlobalPosition + new Vector2(0, -8));
+            }
+
+            _strip.AddChild(button);
+        }
+
+        foreach (var line in TownRules.Lines(state, town).Where(l => town.DwellingLevel(l.Id) > 0))
+        {
+            var dwelling = line;
+            var button = new Button { Text = $"{line.Name} dwelling" };
+            button.WithInfo(detailed => InfoSheets.Dwelling(_session.State, town, dwelling, detailed));
+            button.Pressed += () => ShowDwelling(dwelling.Id);
+            _strip.AddChild(button);
+        }
+    }
+
+    /// <summary>The window a built building opens from the strip, or null for one that shows its information.</summary>
+    private static TownWindow? WindowOf(BuildingId building) => building.Value switch
+    {
+        BuiltInBuildings.TownHall => TownWindow.Hall,
+        BuiltInBuildings.Fort => TownWindow.Fort,
+        BuiltInBuildings.Tavern => TownWindow.Tavern,
+        BuiltInBuildings.Marketplace => TownWindow.Marketplace,
+        BuiltInBuildings.Blacksmith => TownWindow.Blacksmith,
+        BuiltInBuildings.MageGuild or BuiltInBuildings.WarLodge => TownWindow.Guild,
+        BuiltInBuildings.Caravan => TownWindow.Caravan,
+        UndeadTransformer.Building => TownWindow.Transformer,
+        _ => null,
+    };
+
+    /// <summary>The picked stack's Split and Dismiss.</summary>
+    private void ShowArmyButtons()
+    {
+        var picked = PickedStack();
+        _split.Disabled = picked is not { Count: > 1 };
+        _dismiss.Disabled = picked is null;
+    }
+
+    /// <summary>The picked stack of the garrison or the visiting hero, with where it is.</summary>
+    private (TownArmy Army, int Slot, Core.Domain.Armies.CreatureStack Stack, int Count)? PickedStack()
+    {
+        if (Current is not { } town || Armies.Picked is not { Army: TownArmy army, Slot: var slot })
+        {
+            return null;
+        }
+
+        var troops = army == TownArmy.Garrison ? town.Garrison : TownRules.VisitingHero(State, town)?.Army;
+        return troops?[slot] is { } stack ? (army, slot, stack, stack.Count) : null;
+    }
+
+    /// <summary>Split: how many of the picked stack go to the first empty slot of its row.</summary>
+    private void Split()
+    {
+        if (Current is not { } town || PickedStack() is not { } picked)
+        {
+            _status.Text = "Pick a stack to split first.";
+            return;
+        }
+
+        var troops = picked.Army == TownArmy.Garrison ? town.Garrison : TownRules.VisitingHero(State, town)!.Army;
+        var empty = Enumerable.Range(0, Core.Domain.Armies.Army.SlotCount).FirstOrDefault(s => troops[s] is null, -1);
+        if (empty < 0)
+        {
+            _status.Text = "The row has no empty slot to split into.";
+            return;
+        }
+
+        var name = State.Creatures.Get(picked.Stack.Creature).Name;
+        SliderDialog.Open(this, new SliderRequest($"Split {name}", 1, picked.Count - 1, picked.Count / 2, "Split", Describe: n => $"{n} of {picked.Count}"), count =>
+        {
+            Armies.Picked = null;
+            Run(new MoveTownStackCommand(Player, town.Id, picked.Army, picked.Slot, picked.Army, empty, count));
+        });
+    }
+
+    /// <summary>Dismiss: the picked stack leaves for good, after a question (ADR-296).</summary>
+    private void Dismiss()
+    {
+        if (Current is not { } town || PickedStack() is not { } picked)
+        {
+            _status.Text = "Pick a stack to dismiss first.";
+            return;
+        }
+
+        var name = State.Creatures.Get(picked.Stack.Creature).Name;
+        var hero = picked.Army == TownArmy.VisitingHero ? TownRules.VisitingHero(State, town) : null;
+        var refusal = hero is null
+            ? Core.Domain.Armies.StackDismissal.Check(State, Player, town, picked.Slot)
+            : Core.Domain.Armies.StackDismissal.Check(State, Player, hero, picked.Slot);
+        if (refusal is not null)
+        {
+            _status.Text = $"Refused: {refusal}";
+            return;
+        }
+
+        ConfirmDialog.Open(this, "Dismiss", ConfirmDialog.Lines($"Dismiss {picked.Count} {name} for good? Nothing is paid back."), "Dismiss", () =>
+        {
+            Armies.Picked = null;
+            Run(hero is null ? new DismissStackCommand(Player, picked.Slot, Town: town.Id) : new DismissStackCommand(Player, picked.Slot, Hero: hero.Id));
+        });
+    }
+
+    /// <summary>Upgrade all (U): what it upgrades and the total, then <see cref="UpgradeAllCommand"/> (ADR-296).</summary>
+    private void UpgradeAll(Town town)
+    {
+        var plan = TownPlans.Upgrade(State, town);
+        if (plan.IsEmpty)
+        {
+            _status.Text = "Nothing here can be upgraded that you can pay for.";
+            return;
+        }
+
+        var body = new VBoxContainer();
+        foreach (var order in plan.Orders)
+        {
+            body.AddChild(new Label { Text = $"{order.Count} {State.Creatures.Get(order.From).Name} → {State.Creatures.Get(order.To).Name}" });
+        }
+
+        var total = new HBoxContainer();
+        total.AddChild(new Label { Text = "Total", ThemeTypeVariation = UiTheme.QuietLabel });
+        total.AddChild(new CostLabel(plan.Cost, Treasury));
+        body.AddChild(total);
+        ConfirmDialog.Open(this, "Upgrade all", body, "Upgrade", () => Run(new UpgradeAllCommand(Player, town.Id)));
+    }
+
+    /// <summary>The name in the top bar renames the town (ADR-296).</summary>
+    private void Rename()
+    {
+        if (Current is not { } town)
+        {
+            return;
+        }
+
+        var name = new LineEdit { Text = town.Name, MaxLength = TownRules.MaxNameLength, CustomMinimumSize = new Vector2(360, 0), SelectAllOnFocus = true };
+        name.TextSubmitted += _ => ConfirmDialog.Current?.Confirm();
+        ConfirmDialog.Open(this, $"Rename {town.Name}", name, "Rename", () => Run(new RenameTownCommand(Player, town.Id, name.Text)));
+        name.CallDeferred(Control.MethodName.GrabFocus); // after the dialog's own, so typing goes into the field
     }
 
     private void Switch(Town? from, int step)
@@ -419,7 +763,7 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
             return;
         }
 
-        var towns = TownListPanel.TownsOf(_session.State, _session.State.CurrentPlayer.Id);
+        var towns = TownListPanel.TownsOf(State, Player);
         var index = towns.ToList().FindIndex(t => t.Id == from.Id);
         if (towns.Count < 2 || index < 0)
         {
@@ -445,7 +789,9 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
             return;
         }
 
+        Release(_window.Content);
         _window.Content.ClearChildren();
+        _window.Title = Title(town, window);
         var scroll = new ScrollContainer { SizeFlagsVertical = SizeFlags.ExpandFill, HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
         _window.Content.AddChild(scroll);
         var body = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
@@ -453,151 +799,85 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
         switch (window)
         {
             case TownWindow.Hall:
-                FillHall(town, body);
+                FillHall(town, body, _window.Content);
                 break;
             case TownWindow.Recruitment:
                 FillRecruitment(town, body);
                 break;
-            case TownWindow.Marketplace when town.Level(BuiltInBuildings.Marketplace) > 0:
-                Placeholder(body, window);
-                body.AddChild(Action("Trade at today's marketplace", () => TradeRequested?.Invoke()));
+            case TownWindow.Dwelling:
+                FillDwelling(town, body);
                 break;
-            case TownWindow.Tavern when town.Level(BuiltInBuildings.Tavern) > 0:
-                Placeholder(body, window);
-                if (HasTavernScreen)
-                {
-                    body.AddChild(Action("Open today's tavern", () => OpenTavern(town.Id)));
-                }
-
-                body.AddChild(Action("Thieves' guild", () => ThievesGuildRequested?.Invoke()));
+            case TownWindow.Guild:
+                FillGuild(town, body);
                 break;
-            default:
-                Placeholder(body, window);
+            case TownWindow.Tavern:
+                FillTavern(town, body);
+                break;
+            case TownWindow.Marketplace:
+                FillMarketplace(town, body);
+                break;
+            case TownWindow.Blacksmith:
+                FillBlacksmith(town, body);
+                break;
+            case TownWindow.Fort:
+                FillFort(town, body);
+                break;
+            case TownWindow.Caravan:
+                FillCaravan(town, body);
+                break;
+            case TownWindow.Governor:
+                FillGovernor(town, body);
+                break;
+            case TownWindow.Transformer:
+                FillTransformer(town, body);
                 break;
         }
 
         FocusOrder.Chain(FocusOrder.Focusable(_window));
     }
 
-    private static void Placeholder(VBoxContainer body, TownWindow window) =>
-        body.AddChild(new Label
-        {
-            Text = $"The {Title(window).ToLowerInvariant()} window comes with the town screen plan's step 2. Until then, today's town screen does it.",
-            AutowrapMode = TextServer.AutowrapMode.WordSmart,
-            ThemeTypeVariation = UiTheme.QuietLabel,
-        });
-
-    private Button Action(string text, Action pressed)
+    /// <summary>Parks the kept sections' nodes out of a window's content before it is freed, so they live on for the next window.</summary>
+    private void Release(Node content)
     {
-        var button = new Button { Text = text, SizeFlagsHorizontal = SizeFlags.ShrinkBegin };
-        button.Pressed += () =>
+        foreach (var kept in new Control[] { _caravan.Rows, _transformer.Row })
         {
-            CloseWindow();
-            pressed();
+            if (kept.GetParent() is { } parent && (parent == content || content.IsAncestorOf(kept)))
+            {
+                kept.Reparent(_parked, keepGlobalTransform: false);
+            }
+        }
+    }
+
+    /// <summary>Moves a kept section's node from where it is parked into a window.</summary>
+    private static void Adopt(Control kept, Container into)
+    {
+        if (kept.GetParent() is { } parent)
+        {
+            parent.RemoveChild(kept);
+        }
+
+        into.AddChild(kept);
+    }
+
+    /// <summary>A line of quiet text, wrapped.</summary>
+    private static Label Note(string text, Color? colour = null)
+    {
+        var label = new Label
+        {
+            Text = text, AutowrapMode = TextServer.AutowrapMode.WordSmart, ThemeTypeVariation = UiTheme.QuietLabel, SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            CustomMinimumSize = new Vector2(200, 0),
         };
-        return button;
-    }
-
-    /// <summary>The Hall: every building and dwelling as a <see cref="BuildingTile"/>; a tile that can be built builds on a click.</summary>
-    private void FillHall(Town town, VBoxContainer body)
-    {
-        var state = _session.State;
-        var player = state.CurrentPlayer.Id;
-        var treasury = state.CurrentPlayer.Resources;
-        body.AddHeading("Buildings");
-        var buildings = new HFlowContainer();
-        body.AddChild(buildings);
-        foreach (var node in BuildingTree.For(state, town))
+        if (colour is { } c)
         {
-            var tooltip = node.Status switch
-            {
-                BuildingStatus.Available => "Click to build.",
-                BuildingStatus.Complete => "Fully built.",
-                BuildingStatus.BuiltToday => "Built something today: tomorrow.",
-                _ => node.Refusal ?? "",
-            };
-            var tile = new BuildingTile(node.Name, node.Next is null ? node.Level : node.Level + 1, node.MaxLevel, node.Status, node.Cost, treasury, tooltip);
-            var building = node.Building;
-            tile.Pressed += () => Run(new BuildCommand(player, town.Id, building));
-            tile.WithInfo(detailed => InfoSheets.Building(_session.State, town, building, detailed));
-            buildings.AddChild(tile);
+            label.AddThemeColorOverride("font_color", c);
         }
 
-        body.AddHeading("Dwellings (7 of 9, every tier)");
-        var dwellings = new HFlowContainer();
-        body.AddChild(dwellings);
-        foreach (var line in TownRules.Lines(state, town))
-        {
-            var status = BuildingTree.DwellingStatus(state, town, line);
-            var next = TownRules.NextDwellingLevel(state, town, line);
-            var refusal = TownRules.CheckDwelling(state, town, line.Id);
-            var tooltip = status switch
-            {
-                BuildingStatus.Available => "Click to build.",
-                BuildingStatus.Complete => "Fully built.",
-                BuildingStatus.Closed => $"Closed for good: {refusal}",
-                _ => refusal ?? "",
-            };
-            var level = town.DwellingLevel(line.Id);
-            var tile = new BuildingTile(
-                $"T{line.Tier} {line.Name}", next is null ? level : level + 1, 2, status, next is null ? null : TownRules.BuildCost(state, town, next), treasury, tooltip);
-            var id = line.Id;
-            var dwellingLine = line;
-            tile.Pressed += () => Run(new BuildDwellingCommand(player, town.Id, id));
-            tile.WithInfo(detailed => InfoSheets.Dwelling(_session.State, town, dwellingLine, detailed));
-            dwellings.AddChild(tile);
-        }
+        return label;
     }
 
-    /// <summary>Recruitment: a <see cref="CreatureCard"/> per line; a built line's Recruit opens the recruit dialog.</summary>
-    private void FillRecruitment(Town town, VBoxContainer body)
-    {
-        var state = _session.State;
-        var flow = new HFlowContainer();
-        body.AddChild(flow);
-        foreach (var line in TownRules.Lines(state, town))
-        {
-            var column = new VBoxContainer();
-            var card = new CreatureCard(state, line, town, state.CurrentPlayer.Resources);
-            var level = town.DwellingLevel(line.Id);
-            column.AddChild(card);
-            if (level == 0)
-            {
-                card.Modulate = new Color(1, 1, 1, 0.55f);
-                column.AddChild(new Label { Text = "Not built: build it in the Hall.", ThemeTypeVariation = UiTheme.QuietLabel });
-            }
-            else
-            {
-                var recruit = new Button { Text = $"Recruit {line.Name}" };
-                recruit.Pressed += () => Recruit(town, line, card.Upgraded && level >= 2 ? card.Shown : line);
-                recruit.Disabled = town.AvailableOf(line.Id) == 0;
-                column.AddChild(recruit);
-            }
-
-            flow.AddChild(column);
-        }
-    }
-
-    /// <summary>The recruit dialog (<see cref="SliderDialog"/>): into the garrison, or the visiting hero when the garrison has no room.</summary>
-    private void Recruit(Town town, Core.Domain.Creatures.CreatureDefinition line, Core.Domain.Creatures.CreatureDefinition creature)
-    {
-        var state = _session.State;
-        var available = town.AvailableOf(line.Id);
-        if (available == 0)
-        {
-            return;
-        }
-
-        var cost = TownRules.CreatureCost(state, town, creature);
-        var treasury = state.CurrentPlayer.Resources;
-        var request = new SliderRequest(
-            $"Recruit {creature.Name}", 1, available, Math.Max(1, TownRules.MaxAffordable(treasury, cost, available)), "Recruit", cost, treasury, n => $"{n} of {available}");
-        SliderDialog.Open(this, request, count =>
-        {
-            var hero = town.Garrison.CanAccept(creature.Id) ? null : TownRules.VisitingHero(state, town)?.Id;
-            Run(new RecruitCommand(state.CurrentPlayer.Id, town.Id, creature.Id, count, hero));
-        });
-    }
+    /// <summary>A window's text for a building the town has not built yet.</summary>
+    private Label NotBuilt(Town town, BuildingId building) =>
+        Note($"{town.Name} has no {TownRules.Buildings(State, town).Get(building, 1).Name.ToLowerInvariant()} yet: build it in the Hall.");
 
     private static Texture2D? Painting(string townType)
     {

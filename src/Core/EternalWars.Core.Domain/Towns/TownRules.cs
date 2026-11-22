@@ -59,7 +59,10 @@ public static class TownRules
     /// Extra weekly growth of a town's dwellings from its fort (ADR-066, HoMM3): +50 % with the Citadel (fort 2), +100 %
     /// with the Castle (fort 3), none below. Map dwellings (<see cref="Objects.CreatureDwelling"/>) never get it.
     /// </summary>
-    public static int GrowthBonusPercent(Town town) => town.Level(BuiltInBuildings.Fort) switch
+    public static int GrowthBonusPercent(Town town) => GrowthBonusPercent(town.Level(BuiltInBuildings.Fort));
+
+    /// <summary>The fort's growth percent at <paramref name="fortLevel"/> (<see cref="GrowthBonusPercent(Town)"/>).</summary>
+    public static int GrowthBonusPercent(int fortLevel) => fortLevel switch
     {
         >= 3 => 100,
         2 => 50,
@@ -68,7 +71,7 @@ public static class TownRules
 
     /// <summary>
     /// How many creatures of <paramref name="line"/> the town's dwelling adds every Monday and opens with: the creature's
-    /// weekly growth plus the fort bonus (<see cref="GrowthBonusPercent"/>) and <paramref name="extraPercent"/>, the bonus rounded down
+    /// weekly growth plus the fort bonus (<see cref="GrowthBonusPercent(Town)"/>) and <paramref name="extraPercent"/>, the bonus rounded down
     /// (growth 1 stays 1 with a Citadel), then the flat bonus of the tier's growth building (<see cref="GrowthBuildingBonus"/>, not raised by
     /// the fort), and last the Grail building's <see cref="GrailGrowthPercent"/> on all of it (ADR-130). Whether the dwelling is built is not checked.
     /// </summary>
@@ -343,6 +346,26 @@ public static class TownRules
         }
 
         return town.Garrison.IsEmpty ? $"{inside.Name} has no troops to lead out." : null;
+    }
+
+    /// <summary>The longest name a player may give its town (ADR-296).</summary>
+    public const int MaxNameLength = 32;
+
+    /// <summary>Why <paramref name="name"/> cannot be a town's name (ADR-296), or null: one line of 1 to <see cref="MaxNameLength"/> characters once trimmed.</summary>
+    public static string? CheckName(string? name)
+    {
+        var trimmed = name?.Trim() ?? "";
+        if (trimmed.Length == 0)
+        {
+            return "A town needs a name.";
+        }
+
+        if (trimmed.Any(c => char.IsControl(c) || c is '\u2028' or '\u2029'))
+        {
+            return "A town's name is one line.";
+        }
+
+        return trimmed.Length > MaxNameLength ? $"A town's name has at most {MaxNameLength} characters." : null;
     }
 
     /// <summary>The garrison with <paramref name="army"/>'s stacks added, or null when they do not fit.</summary>

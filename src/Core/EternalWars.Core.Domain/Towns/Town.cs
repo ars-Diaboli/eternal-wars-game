@@ -128,6 +128,12 @@ public sealed class Town : MapObject, IFlaggable, Battles.IBattleGuard
     public string? LastBuiltName { get; internal set; }
 
     /// <summary>
+    /// The plot built on <see cref="LastBuilt"/>: the building's id, or <c>dwelling-&lt;line&gt;</c> for a dwelling (<see cref="TownOverview.PlotsOf"/>,
+    /// ADR-296); null when not known.
+    /// </summary>
+    public string? LastBuiltPlot { get; internal set; }
+
+    /// <summary>
     /// The spells its mage guild teaches, per spell level (ADR-110): drawn once at game start from the town's school, whether the guild is built
     /// or not; a guild of level L teaches levels 1 to L.
     /// </summary>

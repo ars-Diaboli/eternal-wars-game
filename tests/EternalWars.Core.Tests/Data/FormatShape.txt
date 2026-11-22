@@ -1057,6 +1057,11 @@ enum Direction: North, NorthEast, East, SouthEast, South, SouthWest, West, North
 object DismissGovernorCommand
   player: PlayerId
   town: MapObjectId
+object DismissStackCommand
+  hero: HeroId?
+  player: PlayerId
+  slot: Int32
+  town: MapObjectId?
 object DwellingDocument
   available: Int32?
   creature: String (required)
@@ -1142,6 +1147,12 @@ object EventExpr
   type=quantity -> QuantityExpr
   type=random -> RandomExpr
   type=variable -> VariableExpr
+object ExchangeResourcesCommand
+  amount: Int32
+  get: ResourceType
+  give: ResourceType
+  mapMarketplace: MapObjectId?
+  player: PlayerId
 object ExperienceAction
   amount: EventExpr
 object FactionCondition
@@ -1187,10 +1198,12 @@ object GameCommand
   type=deposit -> AnswerDepositCommand
   type=dig -> DigCommand
   type=dismissGovernor -> DismissGovernorCommand
+  type=dismissStack -> DismissStackCommand
   type=endTurn -> EndTurnCommand
   type=enterGarrison -> EnterGarrisonCommand
   type=equipArtifact -> EquipArtifactCommand
   type=eventArmy -> ChooseEventArmyCommand
+  type=exchangeResources -> ExchangeResourcesCommand
   type=factory -> BuyWarMachineAtFactoryCommand
   type=fetchResources -> FetchResourcesCommand
   type=garrisonStack -> MoveGarrisonStackCommand
@@ -1212,9 +1225,12 @@ object GameCommand
   type=pandorasBox -> AnswerPandorasBoxCommand
   type=recruit -> RecruitCommand
   type=recruitAtDwelling -> RecruitAtDwellingCommand
+  type=recruitMany -> RecruitManyCommand
   type=recruitRefugees -> RecruitAtRefugeeCampCommand
+  type=renameTown -> RenameTownCommand
   type=sacrificeArtifact -> SacrificeArtifactCommand
   type=sacrificeCreatures -> SacrificeCreaturesCommand
+  type=sendResources -> SendResourcesCommand
   type=sendTroops -> SendTroopsCommand
   type=sphinx -> AnswerSphinxCommand
   type=step -> StepHeroCommand
@@ -1226,6 +1242,7 @@ object GameCommand
   type=transformCreatures -> TransformCreaturesCommand
   type=turnByTurn -> PlayTurnByTurnCommand
   type=unequipArtifact -> UnequipArtifactCommand
+  type=upgradeAll -> UpgradeAllCommand
   type=upgradeStack -> UpgradeStackCommand
   type=witchHut -> ChooseWitchHutSkillCommand
   player: PlayerId
@@ -1682,6 +1699,14 @@ object RecruitCommand
   hero: HeroId?
   player: PlayerId
   town: MapObjectId
+object RecruitManyCommand
+  orders: IReadOnlyList<RecruitOrder>
+  player: PlayerId
+  town: MapObjectId
+object RecruitOrder
+  count: Int32
+  creature: String
+  hero: HeroId?
 object RefugeeCampDocument
   definition: String (required)
   id: Int32 (required)
@@ -1690,6 +1715,10 @@ object RefugeeCampDocument
   x: Int32 (required)
   y: Int32 (required)
 object RemoveCellAction
+object RenameTownCommand
+  name: String
+  player: PlayerId
+  town: MapObjectId
 object RepeatAction
   actions: IReadOnlyList<EventAction>
   times: EventExpr
@@ -1785,6 +1814,10 @@ object SceneryDocument
   turns: Int32?
   x: Int32 (required)
   y: Int32 (required)
+object SendResourcesCommand
+  amount: ResourceSet
+  player: PlayerId
+  to: PlayerId
 object SendTroopsCommand
   count: Int32?
   fromTown: MapObjectId
@@ -1923,6 +1956,9 @@ object UnequipArtifactCommand
   artifact: String
   hero: HeroId
   player: PlayerId
+object UpgradeAllCommand
+  player: PlayerId
+  town: MapObjectId
 object UpgradeAtHillFortCommand
   fort: MapObjectId
   player: PlayerId

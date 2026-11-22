@@ -70,12 +70,6 @@ public static class LaunchArguments
     /// </summary>
     public static string? PerfReport => Value("--perf=");
 
-    /// <summary>
-    /// <c>--town-screen=new</c>: the game opens the new town screen (the town screen plan, ADR-294) instead of today's, until the plan's step 2
-    /// ends.
-    /// </summary>
-    public static string? TownScreen => Value("--town-screen=");
-
     /// <summary><c>--fonts=b</c>: the UI in the second font pairing the plan proposes (ADR-294), for the owner's choice; the first otherwise.</summary>
     public static string? Fonts => Value("--fonts=");
 

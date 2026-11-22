@@ -87,6 +87,7 @@ internal sealed class DwellingsSection(ITownSectionHost panel) : TownSection(pan
     protected override void Subscribe(RefreshScheduler refresh, IEventSubscriber events) =>
         refresh.On<DwellingBuilt>(events)
             .On<CreaturesRecruited>(events)
+            .On<CreaturesRecruitedMany>(events)
             .On<TownCreaturesGrew>(events)
             .On<ResourcesChanged>(events)
             .On<DwellingOwnerChanged>(events);

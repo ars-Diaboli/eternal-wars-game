@@ -22,11 +22,16 @@ internal static class TownCommandHandlers
         handlers.Add<EnterGarrisonCommand>(c => towns.EnterGarrison(c.Player, c.Town));
         handlers.Add<LeaveGarrisonCommand>(c => towns.LeaveGarrison(c.Player, c.Town));
         handlers.Add<SwapTownHeroesCommand>(c => towns.SwapHeroes(c.Player, c.Town));
+        handlers.Add<RecruitManyCommand>(c => towns.RecruitMany(c.Player, c.Town, c.Orders));
+        handlers.Add<UpgradeAllCommand>(c => towns.UpgradeAll(c.Player, c.Town));
+        handlers.Add<RenameTownCommand>(c => towns.Rename(c.Player, c.Town, c.Name));
 
         handlers.Add<OrderCaravanCommand>(c => caravans.Order(c.Player, c.Town, c.Dwelling, c.Count));
         handlers.Add<FetchResourcesCommand>(c => caravans.Fetch(c.Player, c.Town, c.Provider));
         handlers.Add<SendTroopsCommand>(c => caravans.Send(c.Player, c.FromTown, c.Slot, c.ToTown, c.Count));
 
         handlers.Add<TradeResourceCommand>(c => economy.Trade(c.Player, c.Resource, c.Direction, c.Amount, c.MapMarketplace));
+        handlers.Add<ExchangeResourcesCommand>(c => economy.Exchange(c.Player, c.Give, c.Get, c.Amount, c.MapMarketplace));
+        handlers.Add<SendResourcesCommand>(c => economy.Send(c.Player, c.To, c.Amount));
     }
 }

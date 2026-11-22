@@ -638,7 +638,7 @@ public partial class Main : Node3D
 
     private void BuildHud()
     {
-        _hud = new AdventureHud { NewTownScreen = LaunchArguments.TownScreen == "new" }; // the town screen overhaul (ADR-294) until its step 2 ends
+        _hud = new AdventureHud();
         _game!.AddChild(_hud);
         var playing = Playing; // the replay viewer only watches: nothing here issues a command (ADR-164)
         _hud.Bind(_session, _context, _world, _camera, playing, _layout, screens: _game);

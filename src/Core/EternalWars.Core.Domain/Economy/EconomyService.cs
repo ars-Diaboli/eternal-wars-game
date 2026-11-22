@@ -132,6 +132,91 @@ public sealed class EconomyService(GameState state, IEventPublisher events, IRea
         events.Publish(new ResourcesTraded(playerId, resource, direction, amount, (int)gold, mapMarketplace));
     }
 
+    /// <summary>
+    /// One resource for another (ADR-296): <paramref name="amount"/> units of <paramref name="get"/> for <see cref="MarketplaceRules.ExchangeCost"/>
+    /// units of <paramref name="give"/>, at the rate of the player's marketplace towns or of the map marketplace one of its heroes stands on.
+    /// </summary>
+    internal void Exchange(PlayerId playerId, ResourceType give, ResourceType get, int amount, MapObjectId? mapMarketplace)
+    {
+        if (!MarketplaceRules.IsTradable(give) || !MarketplaceRules.IsTradable(get))
+        {
+            throw new CommandRefusedException("Trade gold with the buy and sell trades.");
+        }
+
+        if (give == get)
+        {
+            throw new CommandRefusedException("Pick two different resources.");
+        }
+
+        if (amount <= 0)
+        {
+            throw new CommandRefusedException("Trade a positive amount.");
+        }
+
+        var (giveRate, getRate) = mapMarketplace is { } id ? (MapRateFor(playerId, id, give), MarketplaceRules.MapRate(get)) : (TownRateFor(playerId, give), TownRateFor(playerId, get));
+        var cost = MarketplaceRules.ExchangeCost(giveRate, getRate, amount);
+        var player = state.GetPlayer(playerId);
+        if (cost > player.Resources[give])
+        {
+            throw new CommandRefusedException($"Not enough {give}.");
+        }
+
+        var previous = player.Resources;
+        player.Resources = previous - ResourceSet.Of(give, (int)cost) + ResourceSet.Of(get, amount);
+        events.Publish(new ResourcesChanged(playerId, previous, player.Resources));
+        events.Publish(new ResourcesExchanged(playerId, give, (int)cost, get, amount, mapMarketplace));
+    }
+
+    /// <summary>Sends resources to a teammate (ADR-296): the sender needs a town with a marketplace and the resources; enemies and itself are refused.</summary>
+    internal void Send(PlayerId from, PlayerId to, ResourceSet amount)
+    {
+        if (!state.Players.Any(p => p.Id == to) || !state.AreAllies(from, to))
+        {
+            throw new CommandRefusedException("Resources go only to a teammate.");
+        }
+
+        if (state.GetPlayer(to).IsDefeated)
+        {
+            throw new CommandRefusedException($"{state.GetPlayer(to).Name} is out of the game.");
+        }
+
+        if (Enum.GetValues<ResourceType>().Any(t => amount[t] < 0) || amount == ResourceSet.Empty)
+        {
+            throw new CommandRefusedException("Send a positive amount.");
+        }
+
+        if (!MarketplaceRules.CanTrade(state, from))
+        {
+            throw new CommandRefusedException("Sending resources needs a town with a marketplace.");
+        }
+
+        if (!state.GetPlayer(from).Resources.CanAfford(amount))
+        {
+            throw new CommandRefusedException("Not enough resources.");
+        }
+
+        var sender = state.GetPlayer(from);
+        var before = sender.Resources;
+        sender.Resources = before - amount;
+        events.Publish(new ResourcesChanged(from, before, sender.Resources));
+        Grant(to, amount);
+        events.Publish(new ResourcesSent(from, to, amount));
+    }
+
+    private MarketRate TownRateFor(PlayerId playerId, ResourceType resource) =>
+        MarketplaceRules.TownRate(state, playerId, resource) ?? throw new CommandRefusedException("Trading needs a town with a marketplace.");
+
+    private MarketRate MapRateFor(PlayerId playerId, MapObjectId id, ResourceType resource)
+    {
+        var marketplace = state.FindObject(id) as Marketplace ?? throw new CommandRefusedException($"{id} is not a marketplace.");
+        if (state.HeroAt(marketplace.VisitPosition) is not { } hero || hero.Owner != playerId)
+        {
+            throw new CommandRefusedException("Trading at a map marketplace needs one of your heroes on its entrance.");
+        }
+
+        return MarketplaceRules.MapRate(resource);
+    }
+
     internal void CollectDailyIncome(PlayerId playerId)
     {
         var income = DailyIncome(playerId);

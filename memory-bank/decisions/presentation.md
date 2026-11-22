@@ -39,6 +39,7 @@
 | [292](#adr-292-town-screen-answers-the-proposals-no-creatures-or-hero-models-in-the-scene-art-after-the-key-paintings-town-14--town-23-owner-adr-246-2026-11-22) | Town screen answers: the proposals, no creatures or hero models in the scene, art after the key paintings (TOWN-14 … TOWN-23, owner, ADR-246, 2026-11-22) | accepted |
 | [293](#adr-293-sylvan-creatures-redone-to-the-owners-review-owner-adr-289-2026-11-22) | Sylvan creatures redone to the owner's review (owner, ADR-289, 2026-11-22) | accepted |
 | [294](#adr-294-town-screen-steps-0-and-1-the-shell-behind---town-screennew-havens-style-frame-two-font-pairings-nine-slice-frames-the-shared-widgets-the-heroes-swap-adr-246-adr-292-2026-11-22) | Town screen steps 0 and 1: the shell behind --town-screen=new, Haven's style frame, two font pairings, nine-slice frames, the shared widgets, the heroes' swap (ADR-246, ADR-292, 2026-11-22) | implemented |
+| [296](#adr-296-town-screen-step-2-the-windows-over-the-key-painting-the-overview-and-plans-in-core-recruit-all-upgrade-all-dismissing-renaming-the-rumour-table-resource-for-resource-sending-to-an-ally-town-17-adr-246-adr-292-2026-11-22) | Town screen step 2: the windows over the key painting, the overview and plans in core, Recruit all, Upgrade all, dismissing, renaming, the rumour table, resource for resource, sending to an ally (TOWN-17, ADR-246, ADR-292, 2026-11-22) | implemented |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -712,3 +713,44 @@ TOWN-15 is ADR-291. The plan's step-by-step implementation is in its [roadmap](.
   each quick button's label and key show on the status bar.
 - **Smokes**: `game-town-shell`, `game-town-armies`, `game-hero-armies`, `game-fonts-b`, `town-style-frame-haven`; `game-artifact-drag`'s
   drop points follow the taller army rows.
+
+### ADR-296: Town screen step 2: the windows over the key painting, the overview and plans in core, Recruit all, Upgrade all, dismissing, renaming, the rumour table, resource for resource, sending to an ally (TOWN-17, ADR-246, ADR-292, 2026-11-22)
+**Status**: implemented. The [town screen plan](../../docs/papers/town-screen-plan.md#implementation-plan)'s step 2; the TOWN-17 answers
+(ADR-292: a, b, c, e, h, i, j now) as rules.
+
+- **Read models** (core, tested): `TownOverview` (the daily income; each line's growth next Monday by part, base, fort, artifacts, growth
+  building and Grail, adding up to what the dwelling gets before next week's event, which is drawn on Monday; built today; the governor and its discounts; each plot's
+  state: not built, built today, built, closed, citizens' homes while the Capitol stands) and `TownPlans` (Recruit all's and Upgrade
+  all's orders and totals), so the screen, the AI and the commands agree. `Town.LastBuiltPlot` names the plot built today.
+- **Recruit all** (TOWN-17 a): line by line, top tier first, the most the treasury still pays of the best creature each dwelling sells
+  (the upgraded one in an upgraded dwelling), into the garrison while it has room for it, else the visiting hero; a line without room or
+  money is skipped. `RecruitManyCommand` carries the orders: each checked as `RecruitCommand` would on copies, all or nothing, paid in
+  one sum, one `CreaturesRecruitedMany` event.
+- **Upgrade all** (TOWN-17 b): every stack of both rows the town can upgrade, best first (tier, then the larger stack, the garrison
+  before the hero), each while the treasury pays the whole stack; skipped stacks leave room for cheaper ones. `UpgradeAllCommand` runs the
+  plan it computes itself; refused when the plan is empty.
+- **Dismissing** (TOWN-17 i): `DismissStackCommand` for a stack of an own hero on the map (never its last) or an own garrison (may be
+  emptied); nothing paid back; `StackDismissed`. **Renaming** (TOWN-17 j): `RenameTownCommand`, one line of 1 to 32 characters once
+  trimmed; `TownRenamed`. Both live in saves and replays as commands.
+- **Rumours** (TOWN-17 h): the table `src/Core/data/rumours.csv` for maps without their own (a map's rumours, ADR-257, still come first).
+  A player's taverns tell one line a week, drawn from a source seeded by the game's seed, the player and the week, as the tavern's offers
+  are (ADR-070), not from `GameState.Random` on Monday as the plan said: the same all week while what it names stays, given back by replays
+  and saves without being stored, and older records' random draws unchanged. Lines may name the strongest, richest or most-towned player and an artifact lying on
+  the map with its third of the land (or the depths); a line naming what the game has not got is not told.
+- **Trading** (TOWN-17 c, e): `ExchangeResourcesCommand` gives B units for `ceil(B × buy(B) / sell(A))` units of A at the player's
+  marketplace rate (or a map marketplace's), gold on neither side; `SendResourcesCommand` sends any resources to a teammate still in the
+  game, from a player with a marketplace town. The AI does not use them yet.
+- **Hall columns**: a `kind` column in `buildings.csv` (`core`, `military`, `magic`, `dwelling`, `unique`; `BuildingCatalog.KindOf`).
+- **The screen**: `TownScreenPanel` is the game's only town screen and the launch option is gone; `TownPanel` stays in the 2D harness
+  (TOWN-16). The top bar renames the town and switches towns; the main area is the key painting with a strip of the town's buildings and
+  the notices card; the bottom bar has the governor, the army rows, Split, Upgrade all, Swap, Dismiss, the income, the growth with its
+  parts and the date. Windows (one partial-class file per group): the Hall (columns by kind, requirement links, hover chains, the 7-of-9
+  block as a column per tier, the detail card with crossed-through previews), Recruitment and the dwelling window (the count dialog with
+  its destination, Recruit all's summary), the Mage guild's shelves and the war lodge, the Tavern's hero cards (`TavernCard`, which
+  replaces the old tavern screen; the crest until portraits), rumour and Thieves' Guild, the Marketplace (two columns, rate, slider, Trade, the Silo, sending to an ally), the Blacksmith's machine
+  cards, the Fort's defences in words, the Caravan, the governor list, the Transformer. `SliderDialog` may ask a choice beside the count;
+  `ConfirmDialog` asks before Recruit all, Upgrade all and a dismissal.
+- **Tests and smokes**: `TownScreenRulesTests`; the record names `recruitMany`, `upgradeAll`, `dismissStack`, `renameTown`,
+  `exchangeResources`, `sendResources` (re-pinned; older saves load unchanged). Smokes `game-town-open`, `game-town-switch`,
+  `game-town-build`, `game-town-recruit`, `game-town-windows`; the town smokes run without the option, and `game-dwelling-caravan`,
+  `game-info-screens`, `game-unique-buildings` and `game-magic` open the windows they need.

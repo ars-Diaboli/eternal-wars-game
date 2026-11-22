@@ -254,9 +254,9 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       budget numbers on the reference PC and the Deck still to measure)
 - [x] Step 1: UI foundation: fonts, nine-slice frames, `CostLabel`, `SliderDialog`, the swap and spread commands, `ArmyBar` (drag,
       split, swap), `CreatureCard`, `BuildingTile`, hotkeys and focus order (ADR-294; the owner picks one of the two font pairings)
-- [ ] Step 2: core read models and the TOWN-17 rules (Recruit all, Upgrade all, dismiss, rename, rumours, any-pair trade, sending to
+- [x] Step 2: core read models and the TOWN-17 rules (Recruit all, Upgrade all, dismiss, rename, rumours, any-pair trade, sending to
       teammates); the windows over a 2D main screen (Hall, Recruitment, Mage guild, Tavern, Marketplace, Blacksmith, Fort, Caravan,
-      the rest); the bars; previous / next town; `TownPanel` to the harness only
+      the rest); the bars; previous / next town; `TownPanel` to the harness only (ADR-296)
 - [ ] Step 3: the 3D town scene in greybox for the eight playable towns: plots and their states, streets and walls, camera, hover and
       pick, construction scene, arrival, loading ahead, budget
 - [ ] Step 4: Haven and Inferno in full art, light, life, sound and music; Hall pictures; the Deck preset

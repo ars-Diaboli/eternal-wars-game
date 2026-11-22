@@ -544,7 +544,8 @@ The tasks of each step in build order. A task is one reviewable change that leav
 2. **Greybox shell**: `TownScreen` in `Hud/TownScreen/` with the top bar, the bottom bar, a window host (one window at a time; Escape
    closes the window, a second Escape leaves) and an empty, titled window per hotkey. The main area shows the faction's key painting
    (`docs/content/art/towns/`, copied to the assets) as a stand-in. Opened instead of `TownPanel` with a launch option
-   (`--town-screen=new`) until step 2 ends. It is not thrown away: steps 1 and 2 fill it. Smoke `game-town-shell`. *Done (ADR-294).*
+   (`--town-screen=new`) until step 2 ends. It is not thrown away: steps 1 and 2 fill it. Smoke `game-town-shell`. *Done (ADR-294); the
+   launch option went with step 2 (ADR-296).*
 3. **Style frame and look-dev spike**: `scenes/towns/haven.tscn` blocked out after `key_haven-1` (lakeside, castle with conical-roofed
    towers, one focal point, low calm foreground), with its light, fog and grading (TOWN-18: the painting's light is the faction's
    lighting set). It settles the renderer settings (SDFGI, VoxelGI or none; fog; SSAO) and the first budget numbers on the reference PC
@@ -586,45 +587,52 @@ Core first (tasks 1–7), then the screen (8–16). Each TOWN-17 rule gets its o
 
 1. **`TownOverview`**: income; each line's growth with its parts (base, fort, growth building, week event, artifacts, the Grail);
    built today; the governor's discount; each plot's state (not built, built today, built at level n, closed, citizens' homes once the
-   Capitol stands, ADR-291). Tests.
+   Capitol stands, ADR-291). Tests. *Done (ADR-296): next week's event is left out of the growth (it is drawn on Monday); the homes show while the Capitol stands; a captured Capitol that dropped keeping
+   them waits for step 3.*
 2. **Recruit all** (TOWN-17 a): `RecruitPlan` (the most of every line the treasury allows, top tier first, into the garrison, then
    the visiting hero where it fits) and `RecruitManyCommand` (a list of orders, all or nothing, one event). Tests for the order, a
-   short treasury and full armies.
+   short treasury and full armies. *Done (ADR-296): `TownPlans.Recruit`.*
 3. **Upgrade all** (TOWN-17 b): `UpgradePlan` (every stack in both rows the town can upgrade and the player can pay, best first) and
-   `UpgradeAllCommand`. Tests.
-4. **Dismiss a stack** (TOWN-17 i): `DismissStackCommand` for a town or hero stack, never a hero's last one. Tests.
-5. **Rename a town** (TOWN-17 j): `RenameTownCommand` (own towns, trimmed, a length limit), kept in saves and replays. Tests.
+   `UpgradeAllCommand`. Tests. *Done (ADR-296): `TownPlans.Upgrade`.*
+4. **Dismiss a stack** (TOWN-17 i): `DismissStackCommand` for a town or hero stack, never a hero's last one. Tests. *Done (ADR-296).*
+5. **Rename a town** (TOWN-17 j): `RenameTownCommand` (own towns, trimmed, a length limit), kept in saves and replays. Tests. *Done (ADR-296).*
 6. **Tavern rumours** (TOWN-17 h): a rumour table in `data/`, one line a week for each player drawn from `GameState.Random` on
-   Monday, some lines filled from the game (the strongest player, an unvisited treasure). Saved. Tests.
+   Monday, some lines filled from the game (the strongest player, an unvisited treasure). Saved. Tests. *Done (ADR-296), drawn instead
+   from a source seeded by the game's seed, the player and the week, as the tavern's offers are: the same all week, given back by replays
+   and saves without storing it, and the game's random source untouched; a map's own rumours still come first.*
 7. **Trading** (TOWN-17 c, e): any resource for any other at the marketplace, at A's sell price divided by B's buy price, by the
    marketplace count (ADR-067); sending resources to a teammate only (`SendResourcesCommand`). The AI may use both. Tests, and the
-   replay names.
+   replay names. *Done (ADR-296): `ExchangeResourcesCommand`, `SendResourcesCommand` (from a player with a marketplace town); the AI
+   does not use them yet.*
 8. **The screen's frame**: the top bar (crest, name with rename, ◄ ► through the player's towns, faction, town hall, governor, quick
    buttons, ×), the bottom bar (`ArmyBar` rows with Split, Upgrade all, Swap and Dismiss; the town's portrait with the governor;
    income, growth with its breakdown on hover, the date) and the notices card (built today, caravans, the discount). The 2D main
-   screen is the key painting with a strip of building buttons, until step 3. Smokes `game-town-open`, `game-town-switch`.
+   screen is the key painting with a strip of building buttons, until step 3. Smokes `game-town-open`, `game-town-switch`. *Done
+   (ADR-296).*
 9. **Hall**: columns by kind (Core, Military, Magic, Dwellings, Unique; the kind is a column in `buildings.csv`), the requirement
    links as lines, hovering lights a building's chain; the detail card (cost with what is lacking, ✓ / ✗ requirements that select,
    what it gives, the refusal, Build); the 7-of-9 block with the closed lines crossed through in the preview. "Show in town" waits for
-   step 3. Smoke `game-town-build`.
+   step 3. Smoke `game-town-build`. *Done (ADR-296): the dwellings' block is a column per tier, so it is two tiles high.*
 10. **Recruitment**: a card per line (unbuilt ones greyed, "build in the Hall"), the recruit dialog (`SliderDialog`, destination
     Garrison or Visiting hero preselected to where it fits), Recruit all with its summary before paying; the dwelling window (the
-    large card, the dialog, Upgrade the dwelling). Smoke `game-town-recruit`.
+    large card, the dialog, Upgrade the dwelling). Smoke `game-town-recruit`. *Done (ADR-296).*
 11. **Mage guild and war lodge**: shelves per built level with spell icons (the spell buildings' extras framed in their school's
     colour), dark shelves saying what they need; the visiting hero's known, newly learned and too-hard spells; Buy a spell book moves
-    here from the blacksmith.
+    here from the blacksmith. *Done (ADR-296).*
 12. **Tavern**: `TavernPanel` in the new frame, hero cards with portraits, the returning-hero badge, the week's rumour, the Thieves'
-    Guild; the next hire in the tavern's hover text.
+    Guild; the next hire in the tavern's hover text. *Done (ADR-296): its cards are `TavernCard`s in the tavern window,
+    which replaces `TavernPanel`; the crest stands in for the portraits, which need art.*
 13. **Marketplace**: two columns of six resource tiles, the rate between them, slider, Max, Trade; the Silo's income; a "Send to
-    ally" tab where a teammate exists.
+    ally" tab where a teammate exists. *Done (ADR-296): the resources as toggle buttons; sending below the trade.*
 14. **Blacksmith, Fort, Caravan**: three machine cards (greyed with the reason without a visiting hero); the defences window (walls,
     towers, gate and moat at their level, the next level's gain, the unique building's siege bonus); the caravan window with cards of
-    the dwellings in reach and the queue.
+    the dwellings in reach and the queue. *Done (ADR-296): the defences in words until their picture; the caravan's rows as today's.*
 15. **The rest**: the governor list from the portrait slot (each hero's discount); the Transformer's stacks with previews; info
     windows for the unique buildings, the Grail building and the Observatory from `InfoSheets`; a right click on everything opens its
-    information window (ADR-154). Smoke `game-town-windows`.
+    information window (ADR-154). Smoke `game-town-windows`. *Done (ADR-296): a building without a window shows its information on a
+    click of its strip button.*
 16. **Switch over**: the game app opens the new screen only and drops the launch option; `TownPanel` stays in the 2D harness as a tool
-    (TOWN-16); `game-town-screen` moves to the new screen. Every action of the old screen is checked off in a window.
+    (TOWN-16); `game-town-screen` moves to the new screen. Every action of the old screen is checked off in a window. *Done (ADR-296).*
 
 #### Step 3: The 3D scene in greybox
 

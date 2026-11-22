@@ -256,7 +256,7 @@ public partial class ObjectServicePanel : PanelContainer
     {
         var state = _session.State;
         _rows.AddChild(new Label { Text = "Heroes of any faction, the same for every player; a new pool every week." });
-        if (TavernRules.Rumour(state) is { } rumour)
+        if (TavernRules.Rumour(state, player.Id) is { } rumour)
         {
             _rows.AddChild(new Label { Text = $"Rumour has it: {rumour}", AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(UiTheme.ScreenTextWidth, 0) });
         }

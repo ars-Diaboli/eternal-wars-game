@@ -21,6 +21,9 @@ public sealed record BuildingLevel(Common.BuildingId Building, int Level, string
 {
     public string? Town { get; init; }
 
+    /// <summary>The Hall's column the building stands in (ADR-296); a building's first level names it.</summary>
+    public BuildingKind Kind { get; init; } = BuildingKind.Unique;
+
     public ResourceSet Cost { get; init; }
 
     public IReadOnlyList<BuildingRequirement> Requires { get; init; } = [];
@@ -107,9 +110,28 @@ public static class BuiltInBuildings
     }
 }
 
+/// <summary>The Hall's columns (ADR-296): what a building is for, by the <c>kind</c> column of <c>buildings.csv</c>.</summary>
+public enum BuildingKind
+{
+    /// <summary>The town hall, the tavern, the marketplace.</summary>
+    Core,
+
+    /// <summary>The fort, the blacksmith, the caravan.</summary>
+    Military,
+
+    /// <summary>The mage guild or war lodge, the spell buildings and other magic.</summary>
+    Magic,
+
+    /// <summary>The dwellings and the growth buildings.</summary>
+    Dwelling,
+
+    /// <summary>The town's own buildings and the Grail building; a row without a kind.</summary>
+    Unique,
+}
+
 /// <summary>
 /// The building table (<c>src/Core/data/buildings.csv</c>), one row per building level, in the
-/// <see cref="CsvTable"/> conventions: <c>id, town, level, name, gold, resources, requires, income, growth, notes</c>. Requirements read
+/// <see cref="CsvTable"/> conventions: <c>id, town, level, name, gold, resources, requires, income, growth, kind, notes</c>. Requirements read
 /// <c>fort 2; tavern 1</c>; a dwelling requirement (<c>dwelling-3 1</c>) is met by any dwelling of that tier. <c>growth</c> reads
 /// <c>dwelling-1 5</c>: every dwelling of the tier grows 5 more a week (ADR-071). An empty <c>town</c> is a row every town shares; a town
 /// type's own rows of a building replace the shared ones for that town, or add a building only that town has (ADR-070, TOWN-3). A town's
@@ -126,10 +148,11 @@ public static class BuildingTable
     public const string Requires = "requires";
     public const string Income = "income";
     public const string Growth = "growth";
+    public const string Kind = "kind";
     public const string Notes = "notes";
 
     /// <summary>The columns of the shipped table, in order.</summary>
-    public static IReadOnlyList<string> Columns { get; } = [Id, Town, Level, Name, Gold, Resources, Requires, Income, Growth, Notes];
+    public static IReadOnlyList<string> Columns { get; } = [Id, Town, Level, Name, Gold, Resources, Requires, Income, Growth, Kind, Notes];
 
     private static readonly string[] Required = [Id, Level, Name];
 
@@ -147,7 +170,13 @@ public static class BuildingTable
             Requires = row.List(Requires).Select(r => ParseRequirement(row, r)).ToList(),
             Income = CreatureTable.ParseResources(row, Income),
             Growth = row.Optional(Growth) is { } growth ? ParseGrowth(row, growth) : null,
+            Kind = row.Optional(Kind) is { } kind ? ParseKind(row, kind) : BuildingKind.Unique,
         };
+
+    private static BuildingKind ParseKind(CsvTable.Row row, string text) =>
+        Enum.TryParse<BuildingKind>(text, ignoreCase: true, out var kind) && Enum.IsDefined(kind) && !int.TryParse(text, out _)
+            ? kind
+            : throw row.Error(Kind, $"'{text}' is not one of core, military, magic, dwelling, unique");
 
     private static BuildingRequirement ParseRequirement(CsvTable.Row row, string text) =>
         text.Split(' ', StringSplitOptions.RemoveEmptyEntries) is [var building, var level]
@@ -225,6 +254,12 @@ public sealed class BuildingCatalog
 
     /// <summary>Highest level of a building; 0 for unknown ids.</summary>
     public int MaxLevel(Common.BuildingId building) => _buildings.TryGetValue(building, out var list) ? list.Count : 0;
+
+    /// <summary>The Hall's column of a building (ADR-296): its first level's kind; a dwelling is <see cref="BuildingKind.Dwelling"/>.</summary>
+    public BuildingKind KindOf(Common.BuildingId building) =>
+        BuiltInBuildings.DwellingTier(building) is not null ? BuildingKind.Dwelling
+        : _buildings.TryGetValue(building, out var list) && list.Count > 0 ? list[0].Kind
+        : BuildingKind.Unique;
 
     public BuildingLevel Get(Common.BuildingId building, int level) =>
         _buildings.TryGetValue(building, out var list) && level >= 1 && level <= list.Count

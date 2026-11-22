@@ -12,8 +12,17 @@ mercury.
 ADR-050.
 - **One building per town per day**. At any time on the owner's turn: build, recruit into the garrison or the visiting hero, upgrade stacks
   for the price difference, move stacks between garrison and visiting hero.
-- New towns start with town hall 1, fort 1 and tavern 1; pre-built buildings keep the requirements. The town screen is 2D, in the 3D game too; a 3D town scene with full town
-  windows is *(planned)* (ADR-246, [plan](../papers/town-screen-plan.md)).
+- New towns start with town hall 1, fort 1 and tavern 1; pre-built buildings keep the requirements. The town screen is its windows over the
+  faction's key painting ([presentation.md](presentation.md#town-screen)); the 3D town scene behind them is *(planned)* (ADR-246,
+  [plan](../papers/town-screen-plan.md)).
+- **Recruit all** (ADR-296): line by line, top tier first, the most the treasury pays of the best creature each dwelling sells (the upgraded
+  one in an upgraded dwelling), into the garrison while it has room for it, else into the visiting hero; a line without room or money is
+  skipped. The screen shows the lines and the total before paying; all of it is recruited or none.
+- **Upgrade all** (ADR-296): every stack of the garrison and the visiting hero the town can upgrade, best first (highest tier, then the
+  larger stack), each while the treasury still pays for the whole stack; a stack it cannot pay for is skipped and cheaper ones still count.
+- **Dismissing** a stack (ADR-296): its creatures leave for good, nothing is paid back. A hero never dismisses its last stack; a garrison may
+  be emptied.
+- **Renaming** (ADR-296): the owner may rename a town, one line of 1 to 32 characters.
 
 ## Buildings
 Each building's levels, cost, requirements and effect: [town-buildings.md](../content/town-buildings.md) (ADR-046). Rules kept here:
@@ -105,6 +114,10 @@ ADR-060, ADR-070, ADR-081.
   Only heroes on the map count: not prisoners, garrison heroes, or heroes waiting in a tavern.
 - **Rumours** (ADR-257): a map may have rumours (one line each); every tavern (a town's and the map's) tells one a week, the map's first in the first week,
   in order, starting over after the last. They are the same for every player and draw nothing.
+- On a map without its own rumours, a player's taverns tell one from the **rumour table** (`src/Core/data/rumours.csv`, ADR-296), the same in
+  all its taverns and all week while what it names stays: drawn by the game's seed, the player and the week, like the tavern's offers. A line may name things the game fills
+  in: the player with the strongest armies, the most gold or the most towns, or an artifact lying on the map and the part of the land it
+  lies in (a third of the map, or the underground); a line naming something the game has not got is not told.
 - **Offers**: a pool per player and town faction, reshuffled weekly (same offers in a player's towns of one faction); never heroes on the
   map. Ranked by the [ring](../content/lore.md): native, adjacent, not opposing, opposing (Stronghold, Swamp Bestiary: native, warriors,
   others); an empty rank falls through:
@@ -155,6 +168,11 @@ ADR-067. Gold is traded against one resource at a time. **X** = the player's tow
   marketplaces.
 - **Map marketplace**: a visiting hero trades for its owner as if X were 4 (factor 5): basic 1000 / 62, magic 2000 / 125; for any player,
   also without a marketplace town. Generator placement: [random-maps.md](random-maps.md#pipeline) (TOWN-2).
+- **Resource for resource** (ADR-296, TOWN-17 c): any resource for any other, gold on neither side, at the same rates: B units cost
+  `ceil(B × buy price of B / sell price of A)` units of A, so a trade never gives more than selling A and buying B through gold. One
+  marketplace: 100 lumber or ore for 1 of the other, 200 for 1 crystal; nine: 4 and 8.
+- **Sending to an ally** (ADR-296, TOWN-17 e): a player with a marketplace town sends any resources to a teammate still in the game; never to
+  an enemy.
 
 ## Income
 Paid at the owner's turn start. **No base income** (ADR-025): only sources pay, each an `IIncomeSource` summed by

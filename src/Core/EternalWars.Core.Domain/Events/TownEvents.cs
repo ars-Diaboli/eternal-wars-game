@@ -43,6 +43,14 @@ public sealed record DwellingBuilt(MapObjectId Town, CreatureId Line, int Level,
 [SeenBy(Audience.Witnesses)]
 public sealed record CreaturesRecruited(MapObjectId Town, CreatureId Creature, int Count, HeroId? Hero, int Available) : IEvent;
 
+/// <summary>Several lines were recruited at once (Recruit all, ADR-296): each order's creatures went into the garrison or the visiting hero.</summary>
+[SeenBy(Audience.Witnesses)]
+public sealed record CreaturesRecruitedMany(MapObjectId Town, IReadOnlyList<Towns.RecruitOrder> Orders) : IEvent;
+
+/// <summary>An own town got a new name (ADR-296).</summary>
+[SeenBy(Audience.Witnesses)]
+public sealed record TownRenamed(MapObjectId Town, string Name) : IEvent;
+
 /// <summary>A stack of the garrison (<paramref name="Hero"/> null) or the visiting hero was upgraded in a town.</summary>
 [SeenBy(Audience.Witnesses)]
 public sealed record StackUpgraded(MapObjectId Town, HeroId? Hero, int Slot, CreatureId From, CreatureId To, int Count) : IEvent;

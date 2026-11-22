@@ -15,7 +15,8 @@ namespace EternalWars.Godot.UI.Hud;
 /// Basic town screen (ADR-046) for the current player's town: build the next level of a building, build or upgrade
 /// dwellings, recruit (a count in a <see cref="SliderDialog"/>), and manage the garrison and the visiting hero as two <see cref="ArmyBar"/>s
 /// (ADR-294: drag, split, spread, upgrade badges, the heroes swapped), turn stacks into undead at a Necropolis's Undead Transformer (ADR-137), and appoint or dismiss the governor (ADR-063). Every action is a town command; refusals show
-/// below. Opened with <see cref="Open"/>. With <see cref="FullScreen"/> (the game app) it fills its parent and scrolls;
+/// below. Opened with <see cref="Open"/>. The 2D harness keeps it as a tool (TOWN-16); the game has <see cref="TownScreen.TownScreenPanel"/> (ADR-296).
+/// With <see cref="FullScreen"/> it fills its parent and scrolls;
 /// Escape or "Close" shut it. A right click on a building, a dwelling, a recruit button or a stack opens its information window (ADR-154).
 /// The screen is made of <see cref="TownSection"/>s (ADR-223), each rebuilt alone on its own events; the screen rebuilds them all when it opens
 /// and on the events that change what it shows at all or what every section reads (the owner, a decision, the turn, a building, the governor).

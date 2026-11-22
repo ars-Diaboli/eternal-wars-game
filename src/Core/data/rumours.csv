@@ -1,0 +1,14 @@
+id,text,notes
+roads,"The roads are safer near the towns; the wild places keep their own counsel.",ADR-296 TOWN-17 h: draft rumours; {strongest} {richest} {mosttowns} {towns} {treasure} {where} are filled from the game
+mercenaries,"A captain swears every stack fights harder with a hero who has seen its kind before.",
+wells,"Drink at a well before a long march, the old soldiers say, and the spells come back to you.",
+markets,"A town with a marketplace pays better for ore the more marketplaces its lord holds.",
+weeks,"The astrologers watch the turn of every week; some weeks a whole kind of creature multiplies.",
+graves,"Diggers who know where to look find the Grail beneath the obelisks' hints.",
+walls,"A castle's walls and towers have turned back armies twice their garrison's size.",
+taverns,"Heroes who lost their armies come back to the taverns in time, hoping to be hired again.",
+strongest,"Travellers say {strongest} fields the mightiest host in the land.",
+richest,"Merchants whisper that {richest} sits on the deepest treasury of any lord.",
+towns,"{mosttowns} is said to hold the most towns: {towns} of them.",
+treasure,"A shepherd swears the {treasure} lies unclaimed somewhere in the {where} of the land.",
+treasure2,"They say a hero who walks the {where} will stumble on the {treasure}.",

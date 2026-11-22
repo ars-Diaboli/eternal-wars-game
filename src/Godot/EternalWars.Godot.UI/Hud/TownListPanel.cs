@@ -49,6 +49,7 @@ public partial class TownListPanel : BoxContainer
         this.SubscribeWhileInTree<TownBuilt>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<TownBuildingDowngraded>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<DwellingBuilt>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<TownRenamed>(session.Events, _ => Refresh());
     }
 
     /// <summary>A player's towns in map order, for the list and the town hotkey.</summary>

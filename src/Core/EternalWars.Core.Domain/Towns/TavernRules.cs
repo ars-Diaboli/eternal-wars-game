@@ -18,14 +18,20 @@ namespace EternalWars.Core.Domain.Towns;
 public static class TavernRules
 {
     /// <summary>
-    /// The rumour the taverns tell this week (ADR-257): the map's rumours in turn, the first in the first week, starting over after the last; null
-    /// when the map has none. It draws nothing, so it is the same in every tavern and for every player.
+    /// The rumour the taverns tell this week: the map's rumours in turn (ADR-257), the first in the first week, starting over after the last, the
+    /// same in every tavern and for every player; on a map without rumours, <paramref name="player"/>'s rumour from the rumour table
+    /// (<see cref="Rumours.OfWeek"/>, ADR-296). Null when there is none (no map rumours and no player given, or nothing the table can fill).
     /// </summary>
-    public static string? Rumour(GameState state)
+    public static string? Rumour(GameState state, PlayerId? player = null)
     {
         ArgumentNullException.ThrowIfNull(state);
         var rumours = state.Rules.Rumours;
-        return rumours.Count == 0 ? null : rumours[(state.Date.AbsoluteWeek - 1) % rumours.Count];
+        if (rumours.Count > 0)
+        {
+            return rumours[(state.Date.AbsoluteWeek - 1) % rumours.Count];
+        }
+
+        return player is { } who ? Rumours.OfWeek(state, who) : null;
     }
 
     /// <summary>What hiring a hero costs.</summary>

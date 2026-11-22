@@ -127,10 +127,14 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   events uses a `RefreshScheduler` (Godot.Shared/Events: `.On<T>(events)`), which refreshes once at the end of the frame however many
   asked; with `.OnlyWhileShown()` a hidden view (a tab not shown, the editor's events panel) waits and refreshes once when it shows. A large screen is made of sections (`ScreenSection<TSubject>`, ADR-223: the town screen's in `Hud/TownScreen`, the hero
   screen's in `Hud/HeroScreen`), each with its own scheduler and events, rebuilding only itself; the screen rebuilds them all when it
-  opens and on the few events that change what it shows at all; the town screen's sections take an `ITownSectionHost`, so today's
-  `TownPanel` and the new `TownScreenPanel` hold the same ones. Widgets shared by several screens are in `Widgets/` (ADR-294): the army
-  row (`ArmyBar`, its moves given by the screen through an `ArmyBarGroup`), `CostLabel`, `SliderDialog`, `CreatureCard`, `BuildingTile`,
-  `WindowFrame` and `FocusOrder`. The editor's inspector has one `InspectorSection<T>` per map object
+  opens and on the few events that change what it shows at all; the town screen's sections take an `ITownSectionHost`, so the game's
+  `TownScreenPanel` and the 2D harness's `TownPanel` hold the same ones. `TownScreenPanel` is one partial class over several files (ADR-296):
+  the frame (bars, building strip, window host, keys) and one file per group of windows (`.Hall`, `.Recruitment`, `.Shops`, `.Defences`);
+  the open window is rebuilt whole on the screen's events. The numbers they show come from core read models: `TownOverview` (income, each
+  line's growth by part, built today, the governor's discounts, each plot's state) and `TownPlans` (what Recruit all and Upgrade all
+  would do), which `RecruitManyCommand` and `UpgradeAllCommand` carry out. Widgets shared by several screens are in `Widgets/` (ADR-294,
+  ADR-296): the army row (`ArmyBar`, its moves given by the screen through an `ArmyBarGroup`), `CostLabel`, `SliderDialog` (with an
+  optional choice beside the count), `ConfirmDialog`, `CreatureCard`, `BuildingTile`, `WindowFrame` and `FocusOrder`. The editor's inspector has one `InspectorSection<T>` per map object
   type in the `InspectorSections` registry (`Editor/Inspector`). The map editor's actions are commands in a `CommandRegistry` (`Editor/Shell`), from which its menus and toolbar are built and which
   runs the shortcuts. Its tools are classes (`IEditorTool`, `Editor/Tools`): the app routes
   the pointer to the one in use, and the tool edits through the session. The editor's
@@ -322,7 +326,8 @@ heroes, artifacts, spells and skills; `PickerItems` builds its lists.
 Map settings (ADR-256): `MapSettingsWindow` (Godot.UI, Editor.Shell) is an overlay with one tab per settings panel
 (`GeneralSettingsPanel`, `PlayersPanel`, `ConditionsPanel`, `BansPanel`, `WeekEventsPanel`, `RumoursPanel`, `TextsPanel`); each panel
 edits through the session, so the window adds no rule of its own.
-Map content (ADR-257): rumours are `ScenarioRules.Rumours` (`TavernRules.Rumour` picks the week's), a player's factions `Player.Factions`
+Map content (ADR-257): rumours are `ScenarioRules.Rumours` (`TavernRules.Rumour` picks the week's, the rumour table's `Rumours.OfWeek` on a
+map without them, ADR-296), a player's factions `Player.Factions`
 (`PlayerFactions`: what the new-game screen offers and what a random choice draws among), an object's name `MapObject.Name` (a town's is
 its own name; `ObjectNames` finds an object or a hero by id or name), a hero's `Biography` and `Portrait`. The map format reads an object's
 name through `MapObject.WithName`, since `Core.Data` sees only the domain's public members.

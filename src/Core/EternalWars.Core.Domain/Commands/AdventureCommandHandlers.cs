@@ -19,6 +19,7 @@ internal static class AdventureCommandHandlers
         handlers.Add<RespondToGuardCommand>(c => guards.Respond(c.Accept));
         handlers.Add<ChooseSkillCommand>(c => progression.Choose(c.Skill));
         handlers.Add<MoveStackCommand>(c => armies.MoveStack(c.Player, c.FromHero, c.FromSlot, c.ToHero, c.ToSlot, c.Count));
+        handlers.Add<DismissStackCommand>(c => armies.Dismiss(c.Player, c.Slot, c.Hero, c.Town));
         handlers.Add<CastAdventureSpellCommand>(c => magic.Cast(c.Player, c.Hero, c.Spell, c.Target));
         handlers.Add<DigCommand>(c => grail.Dig(c.Hero));
     }

@@ -69,6 +69,18 @@ public static class MarketplaceRules
     /// <summary>The fixed rate of a map marketplace.</summary>
     public static MarketRate MapRate(ResourceType resource) => RateAtHalves(resource, MapMarketplaceTowns * 2);
 
+    /// <summary>
+    /// What <paramref name="amount"/> units of <paramref name="get"/> cost in units of the resource whose rate is <paramref name="give"/>
+    /// (ADR-296, TOWN-17 c): the gold they would cost to buy divided by the gold one unit of the given resource sells for, rounded up, so a trade
+    /// never gives more than selling and buying through gold would.
+    /// </summary>
+    public static long ExchangeCost(MarketRate give, MarketRate get, int amount) =>
+        give.SellPrice <= 0 ? long.MaxValue : (((long)amount * get.BuyPrice) + give.SellPrice - 1) / give.SellPrice;
+
+    /// <summary>The most units of the resource rated <paramref name="get"/> that <paramref name="have"/> units of the one rated <paramref name="give"/> pay for.</summary>
+    public static int MaxExchange(MarketRate give, MarketRate get, int have) =>
+        get.BuyPrice <= 0 ? 0 : (int)Math.Min(int.MaxValue, (long)have * give.SellPrice / get.BuyPrice);
+
     /// <summary>The rate with X given in half towns.</summary>
     public static MarketRate RateAtHalves(ResourceType resource, int halves)
     {

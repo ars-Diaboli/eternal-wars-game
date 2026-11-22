@@ -7,8 +7,7 @@ using EternalWars.Godot.UI.Widgets;
 namespace EternalWars.Godot.UI.Hud.TownScreen;
 
 /// <summary>
-/// A town screen as the adventure HUD opens it: today's <see cref="TownPanel"/>, or the new <see cref="TownScreenPanel"/> while the overhaul is
-/// built (ADR-246, ADR-294; <c>--town-screen=new</c> until the plan's step 2 ends).
+/// A town screen: the game's <see cref="TownScreenPanel"/> (ADR-246, ADR-296), or the 2D harness's <see cref="TownPanel"/>, kept as a tool (TOWN-16).
 /// </summary>
 public interface ITownScreen
 {

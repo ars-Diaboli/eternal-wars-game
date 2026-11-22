@@ -131,19 +131,38 @@ $scenarios = @(
     # "Orrin into the garrison", "Lead Orrin out", close the town screen.
     @{ Name = 'game-town-screen'; App = 'EternalWars.Game'; Frames = 170; Map = $townsMap
        Input = '3:key:Enter;12:key:T;24:key:Escape;30:key:T;40:key:Escape;48:key:K;60:key:Escape;66:key:K;76:key:Escape;84:key:H;96:key:Escape;102:key:H;112:key:Escape;120:key:Up;130:press:Orrin into the garrison;145:press:Lead Orrin out;158:key:Escape' },
-    # The new town screen's shell (ADR-294, --town-screen=new): T opens Castlebridge over Haven's key painting; B opens the Hall (building tiles
+    # The town screen's shell (ADR-294, ADR-296): T opens Castlebridge over Haven's key painting; B opens the Hall (building tiles
     # with their states), Escape closes it; R the recruitment window (creature cards), Recruit Footman opens the recruit dialog, Max, Recruit;
-    # G a window still empty, a click on the dimmed painting closes it; ] with one town does nothing; Escape leaves the town.
-    @{ Name = 'game-town-shell'; App = 'EternalWars.Game'; Frames = 90; Map = $townsMap; Args = @('--town-screen=new')
+    # G the mage guild's window, a click on the dimmed painting closes it; Escape leaves the town.
+    @{ Name = 'game-town-shell'; App = 'EternalWars.Game'; Frames = 90; Map = $townsMap
        Input = '3:key:Enter;12:key:T;20:key:B;32:key:Escape;38:key:R;48:press:Recruit Footman;56:press:Max;60:press:Recruit;68:key:G;74:click:200,300;80:key:Escape' },
     # The second font pairing (Marcellus SC and Fira Sans, ADR-294) on the same screens, for the owner's pick beside game-town-shell.
-    @{ Name = 'game-fonts-b'; App = 'EternalWars.Game'; Frames = 60; Map = $townsMap; Args = @('--town-screen=new', '--fonts=b')
+    @{ Name = 'game-fonts-b'; App = 'EternalWars.Game'; Frames = 60; Map = $townsMap; Args = @('--fonts=b')
        Input = '3:key:Enter;12:key:T;20:key:B;32:key:Escape;38:key:R;48:key:Escape;52:key:Escape;54:key:H' },
     # The army bars (ADR-294) on the new screen's bottom bar: Orrin walks into Castlebridge; his pikemen dragged into the garrison; Shift + drag
     # of the archers asks how many (the split dialog), Split takes half; Alt + click spreads the pikemen over the empty garrison slots; Orrin's
     # portrait dragged onto the garrison's empty frame moves him in; Swap is greyed with one hero; his frame dragged back leads him out.
-    @{ Name = 'game-town-armies'; App = 'EternalWars.Game'; Frames = 96; Map = $townsMap; Args = @('--town-screen=new')
+    @{ Name = 'game-town-armies'; App = 'EternalWars.Game'; Frames = 96; Map = $townsMap
        Input = '3:key:Enter;12:key:Up;26:drag:@20 | Pikeman>@—#1;34:hold:Shift,8;35:drag:@10 | Archer>@—#2;46:press:Split;54:hold:Alt,4;55:click:@20 | Pikeman;66:drag:@Hero Orrin>@No hero;78:drag:@Hero Orrin>@No hero' },
+    # The town screen opened (ADR-296): T opens Castlebridge (the bars, the building strip, the notices); a click on its name renames it
+    # Brightwatch; the governor list from the portrait; Escape twice leaves.
+    @{ Name = 'game-town-open'; App = 'EternalWars.Game'; Frames = 70; Map = $townsMap
+       Input = '3:key:Enter;12:key:T;22:click:@Castlebridge;28:text:Brightwatch;42:key:Enter;48:press:No governor;58:key:Escape;62:key:Escape' },
+    # Switching towns (ADR-296): T opens Castlebridge, ] opens Dawnford, [ comes back, the Next town button goes on; Escape leaves.
+    @{ Name = 'game-town-switch'; App = 'EternalWars.Game'; Frames = 64; Map = $magicMap
+       Input = '3:key:Enter;12:key:T;22:key:Bracketright;34:key:Bracketleft;46:press:Next town;58:key:Escape' },
+    # The Hall (ADR-296): B opens it; the Brotherhood tile (the tavern's second level) selected shows its card, Build builds it; the Archer's
+    # dwelling selected shows what it needs; Escape twice leaves.
+    @{ Name = 'game-town-build'; App = 'EternalWars.Game'; Frames = 76; Map = $townsMap
+       Input = '3:key:Enter;12:key:T;20:key:B;30:click:@Brotherhood;40:press:Build;52:click:@Archer;64:key:Escape;70:key:Escape' },
+    # Recruiting (ADR-296): R, Recruit Footman with its destination, Max, Recruit; Recruit all shows its summary, Recruit; then the Pikeman's
+    # dwelling window from the building strip; Escape twice leaves.
+    @{ Name = 'game-town-recruit'; App = 'EternalWars.Game'; Frames = 92; Map = $townsMap
+       Input = '3:key:Enter;12:key:T;20:key:R;30:press:Recruit Footman;38:press:Max;44:press:Recruit;52:press:Recruit all;62:press:Recruit;70:key:Escape;74:press:Pikeman dwelling;84:key:Escape;88:key:Escape' },
+    # The other windows (ADR-296) in a town with them all: G the mage guild's shelves, V the tavern, M the marketplace (gold for ore, Trade),
+    # S the blacksmith's cards, F the defences, C the caravan; Escape twice leaves.
+    @{ Name = 'game-town-windows'; App = 'EternalWars.Game'; Frames = 100; Map = $caravanMap
+       Input = '3:key:Enter;12:key:T;20:key:G;30:key:V;40:key:M;50:press:Trade;58:key:S;68:key:F;78:key:C;88:key:Escape;94:key:Escape' },
     # The hero screen's army bar (ADR-294): Tab selects Orrin, H opens his screen; the pikemen dragged to an empty slot; Ctrl + drag moves one
     # archer; Alt + click spreads the archers; a right click on a stack opens its information.
     @{ Name = 'game-hero-armies'; App = 'EternalWars.Game'; Frames = 70; Map = $townsMap
@@ -202,20 +221,20 @@ $scenarios = @(
     # ballista (Basic Ballistics) shoots the upper wall, two more defend, quick combat mid-animation (ADR-112 check), Enter on the result.
     @{ Name = 'game-siege'; App = 'EternalWars.Game'; Frames = 150; Map = $siegeMap
        Input = '3:key:Enter;10:key:Up;62:key:D;72:click:955,280;90:key:D;100:key:D;125:key:Q;140:key:Enter' },
-    # Dwellings and caravans (ADR-054, ADR-073): visit a map dwelling and recruit the week, close; T, scroll to the caravan section, hire
-    # from the owned dwelling, close, end two turns (hot-seat) and look again: the footmen are in the garrison.
+    # Dwellings and caravans (ADR-054, ADR-073): visit a map dwelling and recruit the week, close; T, C opens the caravan window, hire
+    # from the owned dwelling, Escape twice, end two turns (hot-seat) and look again: the footmen are in the garrison.
     @{ Name = 'game-dwelling-caravan'; App = 'EternalWars.Game'; Frames = 100; Map = $caravanMap
-       Input = '3:key:Enter;10:key:Up;22:click:@Recruit week (16) | 960 gold;28:click:@Close;34:key:T;42:wheel:down,15;50:click:@Hire 9 | 55 gold each;58:key:Escape;64:click:@End turn;72:click:@End turn;82:key:T;90:wheel:down,15' },
+       Input = '3:key:Enter;10:key:Up;22:click:@Recruit week (16) | 960 gold;28:click:@Close;34:key:T;42:key:C;50:click:@Hire 9 | 55 gold each;56:key:Escape;60:key:Escape;64:click:@End turn;72:click:@End turn;82:key:T;90:key:C' },
     # The generated connections map in the editor (no fog): pan to the portal, the blue border guard, the blue keymaster, the garrison,
     # the red border gate and the red keymaster (frames 16, 49, 86, 109, 153, 172).
     @{ Name = 'editor-generated-connections'; App = 'EternalWars.MapEditor'; Frames = 175; Map = $connectionsMap
        Input = '5:hold:S,8;18:hold:A,19;38:hold:W,8;51:hold:S,18;70:hold:D,13;88:hold:D,10;99:hold:S,7;111:hold:D,8;120:hold:W,30;155:hold:W,10;166:hold:D,3' },
     # Information windows on the screens (ADR-154, ADR-178): the kingdom overview's town row, then its total, each closed with Escape before
-    # the screen is. Then the town screen: the Thieves' Guild (ADR-079) from its button, closed with Escape; scroll to the tavern row,
-    # "Visit the tavern…" (ADR-114), the tavern's first hero (on its card), then the second (on its Hire button), each window closed with
-    # Escape, then the tavern and the town screen.
+    # the screen is. Then the town screen's tavern window (V, ADR-296): the Thieves' Guild (ADR-079) from its button, closed with Escape;
+    # the first hero's and the second hero's information on their Hire buttons, each closed with Escape, then the tavern window and the
+    # town screen.
     @{ Name = 'game-info-screens'; App = 'EternalWars.Game'; Frames = 88; Map = $townsMap
-       Input = '3:key:Enter;10:key:K;16:rclick:468,299;20:key:Escape;22:rclick:457,353;26:key:Escape;28:key:Escape;32:key:T;38:click:@Thieves'' guild;48:key:Escape;54:wheel:down,25;60:click:@Visit the tavern…;68:rclick:590,450;72:key:Escape;74:rclick:862,607;78:key:Escape;80:key:Escape;82:key:Escape' },
+       Input = '3:key:Enter;10:key:K;16:rclick:468,299;20:key:Escape;22:rclick:457,353;26:key:Escape;28:key:Escape;32:key:T;36:key:V;42:click:@Thieves'' guild;50:key:Escape;56:rclick:@Hire | 2500 gold#1;62:key:Escape;66:rclick:@Hire | 2500 gold#2;72:key:Escape;76:key:Escape;80:key:Escape' },
     # Ember March (ADR-114): start, end the turn (the computer plays Red), open the town screen with its building tree, close it.
     @{ Name = 'game-ember-march'; App = 'EternalWars.Game'; Frames = 60; Map = $emberMap
        Input = '3:key:Enter;12:click:@End turn;40:key:T;52:key:Escape' },
@@ -283,7 +302,7 @@ $scenarios = @(
     # transforms them; Ilya enters the Sylvan town (Elder Grove: a notice and a level-up). Stables and the Marketplace screen (ADR-067):
     # Gareth enters the Haven town (Stables: a notice), then the HUD's Marketplace button.
     @{ Name = 'game-unique-buildings'; App = 'EternalWars.Game'; Frames = 100; Map = $uniqueMap
-       Input = '3:key:Enter;10:key:Up;20:press:Garrison: 12 Pikeman;24:press:Hero: 20 Footman;30:press:Transform;36:key:Escape;40:press:Ilya;44:key:Up;56:press:→ Basic;60:key:Escape;64:press:OK;68:key:Escape;74:press:Gareth;78:key:Up;90:key:Escape;92:key:Escape;94:press:Marketplace' },
+       Input = '3:key:Enter;10:key:Up;17:press:Undead Transformer;20:press:Garrison: 12 Pikeman;24:press:Hero: 20 Footman;30:press:Transform;34:key:Escape;37:key:Escape;40:press:Ilya;44:key:Up;56:press:→ Basic;60:key:Escape;64:press:OK;68:key:Escape;74:press:Gareth;78:key:Up;90:key:Escape;92:key:Escape;94:press:Marketplace' },
     # Map sites (ADR-079, ADR-080, ADR-082, ADR-105, ADR-139): each hero steps north onto its site: the University's lessons, the War
     # Academy's, the Arena's choice, Pandora's Box, the Witch Hut, the Sphinx (the map's riddle, answered wrong: a right answer's 5000 experience would bring level-ups), the Sacrificial Altar, the Artifact Merchant.
     # At the Witch Hut, information windows on a decision prompt (ADR-178), in the middle of the screen (ADR-186): right-click the prompt
@@ -295,9 +314,9 @@ $scenarios = @(
     @{ Name = 'game-grail'; App = 'EternalWars.Game'; Frames = 100; Map = $grailMap
        Input = '3:key:Enter;8:press:Obelisa;12:key:Up;24:key:P;34:key:P;38:press:Spade;42:key:G;50:press:Digby;54:key:G;62:press:End turn;68:press:End turn;76:press:Digby;80:key:Up' },
     # Magic (ADR-110, ADR-121, ADR-122, ADR-123): Magus enters the guild town (fixed guild spells), the hero screen with ranks and the Assemble
-    # button, Detect Magic's window; then Bookless buys a spell book in the second town.
-    @{ Name = 'game-magic'; App = 'EternalWars.Game'; Frames = 84; Map = $magicMap
-       Input = '3:key:Enter;8:press:Magus;12:key:Up;24:key:Escape;28:key:H;34:press:Detect Magic (4 mana);44:press:Close;50:press:Close;56:press:Bookless;60:key:Up;72:press:spell book' },
+    # button, Detect Magic's window; then Bookless buys a spell book in the second town's mage guild window (G).
+    @{ Name = 'game-magic'; App = 'EternalWars.Game'; Frames = 86; Map = $magicMap
+       Input = '3:key:Enter;8:press:Magus;12:key:Up;24:key:Escape;28:key:H;34:press:Detect Magic (4 mana);44:press:Close;50:press:Close;56:press:Bookless;60:key:Up;68:key:G;74:press:spell book' },
     # Battle magic (ADR-122, ADR-123) and surrender (ADR-081): Distant Vision on the computer mage, then Magus attacks it, casts Blind, defends
     # until the AI has cast its spells, surrenders.
     @{ Name = 'game-battle-magic'; App = 'EternalWars.Game'; Frames = 196; Map = $magicMap

@@ -45,6 +45,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         Pay(player, TownRules.BuildCost(state, town, level));
         town.LastBuilt = state.Date;
         town.LastBuiltName = level.Name;
+        town.LastBuiltPlot = building.Value;
         _construction.Raise(town, building, level.Level);
     }
 
@@ -58,12 +59,76 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         Pay(player, TownRules.BuildCost(state, town, level));
         town.LastBuilt = state.Date;
         town.LastBuiltName = level.Level == 1 ? $"{definition.Name} dwelling" : $"{definition.Name} dwelling upgrade";
+        town.LastBuiltPlot = TownOverview.DwellingPlot(line);
         _construction.RaiseDwelling(town, definition, level.Level);
     }
 
     internal void Recruit(PlayerId player, MapObjectId townId, Common.CreatureId creature, int count, HeroId? heroId)
     {
         var town = OwnTown(player, townId);
+        var (army, hero) = ArmyOf(town, heroId is null ? TownArmy.Garrison : TownArmy.VisitingHero, heroId);
+        var line = CheckRecruit(town, creature, count, town.Available, army);
+
+        Pay(player, TownRules.RecruitCost(state, town, state.Creatures.Get(creature), count));
+        town.SetAvailable(line.Id, town.AvailableOf(line.Id) - count);
+        army.TryAdd(new CreatureStack(creature, count));
+        events.Publish(new CreaturesRecruited(town.Id, creature, count, hero?.Id, town.AvailableOf(line.Id)));
+        PublishArmy(town, hero);
+    }
+
+    /// <summary>
+    /// Recruit all (ADR-296): every order as <see cref="Recruit"/> would, checked one after another on copies of the armies and of what waits, then
+    /// carried out together and paid in one sum; one refused order refuses them all.
+    /// </summary>
+    internal void RecruitMany(PlayerId player, MapObjectId townId, IReadOnlyList<RecruitOrder> orders)
+    {
+        var town = OwnTown(player, townId);
+        if (orders.Count == 0)
+        {
+            throw new CommandRefusedException("Nothing to recruit.");
+        }
+
+        var garrison = new Army(town.Garrison.Slots);
+        Army? heroCopy = null;
+        var waiting = new Dictionary<Common.CreatureId, int>(town.Available);
+        var cost = ResourceSet.Empty;
+        var planned = new List<(RecruitOrder Order, Common.CreatureId Line, Hero? Hero)>();
+        foreach (var order in orders)
+        {
+            var (army, hero) = ArmyOf(town, order.Hero is null ? TownArmy.Garrison : TownArmy.VisitingHero, order.Hero);
+            var copy = hero is null ? garrison : heroCopy ??= new Army(army.Slots);
+            var line = CheckRecruit(town, order.Creature, order.Count, waiting, copy);
+            copy.TryAdd(new CreatureStack(order.Creature, order.Count));
+            waiting[line.Id] = waiting.GetValueOrDefault(line.Id) - order.Count;
+            cost += TownRules.RecruitCost(state, town, state.Creatures.Get(order.Creature), order.Count);
+            planned.Add((order, line.Id, hero));
+        }
+
+        Pay(player, cost);
+        foreach (var (order, line, hero) in planned)
+        {
+            town.SetAvailable(line, town.AvailableOf(line) - order.Count);
+            (hero?.Army ?? town.Garrison).TryAdd(new CreatureStack(order.Creature, order.Count));
+        }
+
+        events.Publish(new CreaturesRecruitedMany(town.Id, orders.ToList()));
+        if (planned.Any(p => p.Hero is null))
+        {
+            PublishArmy(town, null);
+        }
+
+        if (planned.Select(p => p.Hero).OfType<Hero>().FirstOrDefault() is { } visitor)
+        {
+            PublishArmy(town, visitor);
+        }
+    }
+
+    /// <summary>
+    /// The line of a recruit that may go ahead, or a refusal: the town recruits the creature, its dwelling is built (upgraded for an upgraded
+    /// creature), at least <paramref name="count"/> of the line wait in <paramref name="waiting"/>, and <paramref name="army"/> has room for it.
+    /// </summary>
+    private Creatures.CreatureDefinition CheckRecruit(Town town, Common.CreatureId creature, int count, IReadOnlyDictionary<Common.CreatureId, int> waiting, Army army)
+    {
         var line = TownRules.LineOf(state, town, creature) ?? throw new CommandRefusedException($"{town.Name} does not recruit '{creature}'.");
         var upgraded = creature != line.Id;
         if (town.DwellingLevel(line.Id) < (upgraded ? 2 : 1))
@@ -71,22 +136,13 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
             throw new CommandRefusedException(upgraded ? $"The {line.Name} dwelling is not upgraded." : $"{town.Name} has no {line.Name} dwelling.");
         }
 
-        if (count < 1 || count > town.AvailableOf(line.Id))
+        var left = waiting.GetValueOrDefault(line.Id);
+        if (count < 1 || count > left)
         {
-            throw new CommandRefusedException($"Only {town.AvailableOf(line.Id)} {line.Name} can be recruited.");
+            throw new CommandRefusedException($"Only {left} {line.Name} can be recruited.");
         }
 
-        var (army, hero) = ArmyOf(town, heroId is null ? TownArmy.Garrison : TownArmy.VisitingHero, heroId);
-        if (!army.CanAccept(creature))
-        {
-            throw new CommandRefusedException("There is no free slot for the recruits.");
-        }
-
-        Pay(player, TownRules.RecruitCost(state, town, state.Creatures.Get(creature), count));
-        town.SetAvailable(line.Id, town.AvailableOf(line.Id) - count);
-        army.TryAdd(new CreatureStack(creature, count));
-        events.Publish(new CreaturesRecruited(town.Id, creature, count, hero?.Id, town.AvailableOf(line.Id)));
-        PublishArmy(town, hero);
+        return army.CanAccept(creature) ? line : throw new CommandRefusedException("There is no free slot for the recruits.");
     }
 
     internal void UpgradeStack(PlayerId player, MapObjectId townId, TownArmy which, int slot)
@@ -101,6 +157,48 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         army.Set(slot, new CreatureStack(line.UpgradesTo!.Value, stack.Count));
         events.Publish(new StackUpgraded(town.Id, hero?.Id, slot, line.Id, line.UpgradesTo!.Value, stack.Count));
         PublishArmy(town, hero);
+    }
+
+    /// <summary>Upgrade all (ADR-296): the stacks <see cref="TownPlans.Upgrade"/> lists, paid in one sum; refused when it lists none.</summary>
+    internal void UpgradeAll(PlayerId player, MapObjectId townId)
+    {
+        var town = OwnTown(player, townId);
+        var plan = TownPlans.Upgrade(state, town);
+        if (plan.IsEmpty)
+        {
+            throw new CommandRefusedException($"Nothing in {town.Name} can be upgraded that you can pay for.");
+        }
+
+        Pay(player, plan.Cost);
+        var hero = TownRules.VisitingHero(state, town);
+        foreach (var order in plan.Orders)
+        {
+            (order.Army == TownArmy.Garrison ? town.Garrison : hero!.Army).Set(order.Slot, new CreatureStack(order.To, order.Count));
+        }
+
+        foreach (var order in plan.Orders)
+        {
+            events.Publish(new StackUpgraded(town.Id, order.Army == TownArmy.Garrison ? null : hero!.Id, order.Slot, order.From, order.To, order.Count));
+        }
+
+        if (plan.Orders.Any(o => o.Army == TownArmy.Garrison))
+        {
+            PublishArmy(town, null);
+        }
+
+        if (plan.Orders.Any(o => o.Army == TownArmy.VisitingHero))
+        {
+            PublishArmy(town, hero);
+        }
+    }
+
+    /// <summary>Renames an own town (ADR-296, <see cref="TownRules.CheckName"/>).</summary>
+    internal void Rename(PlayerId player, MapObjectId townId, string name)
+    {
+        var town = OwnTown(player, townId);
+        Refuse(TownRules.CheckName(name));
+        town.Rename(name);
+        events.Publish(new TownRenamed(town.Id, town.Name));
     }
 
     /// <summary>

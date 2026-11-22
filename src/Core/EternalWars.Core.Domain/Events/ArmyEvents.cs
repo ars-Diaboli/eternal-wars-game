@@ -23,3 +23,7 @@ public sealed record HeroSurrendered(HeroId Hero, PlayerId Owner, PlayerId To, i
 /// <summary>Editor: primary stats or Tactics of a hero changed.</summary>
 [SeenBy(Audience.Witnesses)]
 public sealed record HeroStatsChanged(HeroId Hero, int Attack, int Defense, SkillLevel Tactics) : IEvent;
+
+/// <summary>A stack was dismissed for good (ADR-296): from the hero <paramref name="Hero"/>'s army, or from the town <paramref name="Town"/>'s garrison.</summary>
+[SeenBy(Audience.Witnesses)]
+public sealed record StackDismissed(HeroId? Hero, MapObjectId? Town, int Slot, CreatureStack Stack) : IEvent;

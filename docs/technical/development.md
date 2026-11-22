@@ -175,9 +175,14 @@ Pickups `artifact.minor` / `.major` / `.relic` roll at game start; the editor ca
 | `requires` | `blacksmith 1; fort 2`; `dwelling-3 1` is met by any tier-3 dwelling |
 | `income` | daily while this is the highest level built: `gold 500` |
 | `growth` | flat weekly bonus for every dwelling of a tier: `dwelling-1 5` (ADR-112) |
+| `kind` | the town screen Hall's column: `core`, `military`, `magic`, `dwelling` or `unique` (empty: unique); the first level's counts (ADR-296) |
 
 `dwelling-1` … `dwelling-5` price the dwellings of a tier (level 1 builds, 2 upgrades) for every line of that tier; the
 lines come from the creature table. The 7-of-9 rule (ADR-030) is in code.
+
+`rumours.csv` (ADR-296) holds the taverns' rumours for maps without their own: `id, text, notes`, one line each. A text may name
+`{strongest}`, `{richest}`, `{mosttowns}` with `{towns}`, and `{treasure}` with `{where}`; the game fills them, and does not tell a line
+naming something it has not got.
 
 ### Editing heroes
 `heroes.csv` (ADR-048).

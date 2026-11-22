@@ -108,6 +108,40 @@ creatures and buildings, heraldic player colours, iconic map objects).
   button shows only in a game (F10 still opens the menu). The F10 menu and the result screen are opaque, so the map does not show through.
 - **Audio**: per-terrain ambient music, faction town themes.
 
+<a id="town-screen"></a>
+## Town screen
+ADR-246, ADR-294, ADR-296; the plan and its 3D scene: [town-screen-plan.md](../papers/town-screen-plan.md).
+- **Main screen**: the top bar has the town's crest and name (a click renames it), ◄ ► through the player's towns ([ and ] too), the faction,
+  town hall and governor, the quick buttons of the windows and the close "×". The main area is the faction's key painting, with a strip of
+  the town's buildings along its bottom (a click opens a building's window, or the information of one without a window) and a notices card
+  (built today, caravans coming, the governor's discount); the 3D town scene replaces the painting later. The bottom bar has the town's
+  crest with its governor, the garrison and visiting hero as [army rows](#camera-and-ui) with the swap or garrison button between them,
+  Split, Upgrade all, Swap and Dismiss (Split and Dismiss act on the picked stack, Upgrade all and Dismiss ask first), the daily income,
+  next Monday's growth (each line's parts in its tooltip: base, fort, artifacts, growth building, Grail; next week's event is drawn on
+  Monday) and the date.
+- **Windows**: one at a time over the dimmed painting, as large as the main area; Escape closes it, a second Escape leaves the town. B, R,
+  G, V, M, S, F and C open the Hall, Recruitment, the Mage guild, the Tavern, the Marketplace, the Blacksmith, the Fort and the Caravan; U
+  is Upgrade all, H the visiting hero's screen, Space swaps the heroes.
+  - **Hall**: the buildings in columns by kind (Core, Military, Magic, Dwellings, Unique; the `kind` column of `buildings.csv`) as tiles
+    with their state by frame and symbol, the requirements drawn as lines between them; hovering a tile lights its chain of requirements
+    and dims the rest. The dwellings stand as the 7-of-9 block, a column per tier. A click selects a tile for the card below: the next
+    level, its cost with what is lacking, the requirements as ✓ / ✗ buttons that select them, what it gives, the refusal and Build; a
+    dwelling that would close others draws them crossed through, with the warning on the card.
+  - **Recruitment**: a creature card per line (unbuilt lines greyed), Recruit opening the count dialog with **Garrison** or the visiting
+    hero (preselected to where the creature fits), and Recruit all with its summary. A dwelling of the strip opens its own window: the
+    card, its building, recruiting base or upgraded, and building or upgrading the dwelling.
+  - **Mage guild**: a shelf per level, dark with what it needs until built; the spell buildings' spells framed in their school's colour;
+    the visiting hero's known spells marked, those learned on this visit marked apart, those it cannot learn greyed with the reason; the
+    spell book is bought here. The war lodge shows the warcries by level.
+  - **Tavern**: the hero cards (the returning heroes marked), the week's rumour and the Thieves' Guild; the tavern's strip button names the
+    next hire. **Marketplace**: what you give and what you get as two columns of the six resources, the rate between them, a slider with
+    Max and Trade; the Resource Silo's income; sending to an ally when the player has one. **Blacksmith**: a card per machine with its
+    stats, price and Buy, greyed with the reason without a visiting hero. **Fort**: the walls, keep, towers, gate and moat of its level,
+    the next level's gain, the garrison's strength and the siege bonus of the town's buildings. **Caravan**: the dwellings in reach, the
+    resource stores and the queue. The town's crest opens the **governor list** (each hero with Stewardship and its discounts), the Undead
+    Transformer's strip button its window.
+- The 2D harness keeps the earlier one-screen town panel as a tool (TOWN-16).
+
 ## Information windows
 ADR-118, ADR-154, ADR-178, ADR-190. A right click opens the window of what is under the pointer: on the map a hero, a stack, a town, an object or the ground;
 in battle a stack; on the screens a stack, a skill, a spell, an artifact or a building; in the kingdom overview a row (what it pays,
