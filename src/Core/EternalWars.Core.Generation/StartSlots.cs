@@ -46,11 +46,11 @@ public static class StartSlots
         || zone.StartDwellings is not { } tiers
         || !tiers.Contains(1);
 
-    /// <summary>The heroes a player of <paramref name="town"/> can start with, by name.</summary>
+    /// <summary>The heroes a player of <paramref name="town"/> can start with, by name; no campaign heroes (ADR-298).</summary>
     public static IReadOnlyList<HeroDefinition> Heroes(HeroCatalog roster, string town)
     {
         ArgumentNullException.ThrowIfNull(roster);
-        return roster.All.Where(h => h.Town == town).OrderBy(h => h.Name, StringComparer.Ordinal).ToList();
+        return roster.Standard.Where(h => h.Town == town).OrderBy(h => h.Name, StringComparer.Ordinal).ToList();
     }
 
     private static bool HumanAllowed(MapTemplate template, int slot) =>

@@ -146,7 +146,7 @@ public static class MapTavernRules
     /// </summary>
     public static IReadOnlyList<HeroDefinition> Offers(GameState state, MapTavern tavern)
     {
-        var heroes = state.HeroRoster.All.OrderBy(h => h.Id, StringComparer.Ordinal).ToList();
+        var heroes = state.HeroRoster.Standard.OrderBy(h => h.Id, StringComparer.Ordinal).ToList();
         var week = (ulong)((state.Date.AbsoluteDay - 1) / GameDate.DaysPerWeek);
         var seed = (state.Options.Seed * 0xD6E8FEB86659FD93UL) ^ ((ulong)(tavern.Id.Value + 1) * 0xBF58476D1CE4E5B9UL) ^ (week * 0x94D049BB133111EBUL);
         var random = new GameRandom(seed);

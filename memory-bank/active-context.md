@@ -9,6 +9,8 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Campaign heroes and the hero portraits redone (ADR-298): 48 campaign heroes (4 per town, 8 each for Conflux and Dragon
+  Utopia) never drawn at random; 14 heroes renamed as men (about a third women); varied close-crop prompts. Generator version 13.
 - Stronghold's Wolf Rider line moved to tier 2 and the Centaur line to tier 3, numbers swapped with the tier; generator version 12,
   maps re-pinned (ADR-295).
 - The town screen plan's step 3, task 1 (ADR-297): `TownScene3D` behind the town screen's bars for town types with a layout (Haven

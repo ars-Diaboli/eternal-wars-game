@@ -29,7 +29,7 @@ public sealed class ObjectLifecycleService(ObjectInteractionContext context, Art
                 var towns = BuiltInMapObjects.PlayableTowns;
                 var town = towns[state.Random.Next(towns.Count)];
                 var free = MapBans.Allowed(
-                    state.HeroRoster.All.Where(h => !taken.Contains(h.Id)).OrderBy(h => h.Id, StringComparer.Ordinal).ToList(), h => state.Rules.Bans.BansHero(h.Id));
+                    state.HeroRoster.Standard.Where(h => !taken.Contains(h.Id)).OrderBy(h => h.Id, StringComparer.Ordinal).ToList(), h => state.Rules.Bans.BansHero(h.Id));
                 var native = free.Where(h => h.Town == town).ToList();
                 var pool = native.Count > 0 ? native : [.. free];
                 if (pool.Count > 0)

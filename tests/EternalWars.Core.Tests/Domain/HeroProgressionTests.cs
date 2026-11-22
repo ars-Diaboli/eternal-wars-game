@@ -58,9 +58,9 @@ public class HeroProgressionTests
         var roster = HeroCatalog.Default;
 
         Assert.Empty(roster.Check(CreatureCatalog.Default));
-        Assert.Equal(128, roster.All.Count());
-        Assert.All(roster.All.GroupBy(h => h.Town), town => Assert.Equal(8, town.Count(h => h.Class == HeroClass.Mage)));
-        Assert.All(roster.All.Where(h => h.Class == HeroClass.Mage),
+        Assert.Equal(128, roster.Standard.Count());
+        Assert.All(roster.Standard.GroupBy(h => h.Town), town => Assert.Equal(8, town.Count(h => h.Class == HeroClass.Mage)));
+        Assert.All(roster.Standard.Where(h => h.Class == HeroClass.Mage),
             mage => Assert.Equal(SkillLevel.Basic, mage.StartingSkills.GetValueOrDefault(BuiltInSkills.IsPrimalFuryTown(mage.Town) ? BuiltInSkills.BloodRage : $"magic.{mage.Town}.spells")));
     }
 

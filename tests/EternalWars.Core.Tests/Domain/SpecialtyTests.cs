@@ -10,7 +10,7 @@ namespace EternalWars.Core.Tests.Domain;
 /// <summary>The rarer specialties (ADR-093, ADR-107) and the skill specialties built in ADR-114.</summary>
 public class SpecialtyTests
 {
-    private static IEnumerable<HeroDefinition> Roster => HeroCatalog.Default.All;
+    private static IEnumerable<HeroDefinition> Roster => HeroCatalog.Default.Standard; // campaign heroes copy these (ADR-298)
 
     // The roster ----------------------------------------------------------------------------------
 

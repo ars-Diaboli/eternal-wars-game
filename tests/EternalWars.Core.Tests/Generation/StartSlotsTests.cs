@@ -53,7 +53,8 @@ public sealed class StartSlotsTests : IDisposable
 
         Assert.NotEmpty(heroes);
         Assert.All(heroes, h => Assert.Equal(TownIds.Inferno, h.Town));
-        Assert.Equal(HeroCatalog.Default.All.Count(h => h.Town == TownIds.Inferno), heroes.Count);
+        Assert.Equal(HeroCatalog.Default.Standard.Count(h => h.Town == TownIds.Inferno), heroes.Count);
+        Assert.DoesNotContain(heroes, h => h.Campaign);
         Assert.Equal(heroes.Select(h => h.Name).Order(StringComparer.Ordinal), heroes.Select(h => h.Name));
     }
 

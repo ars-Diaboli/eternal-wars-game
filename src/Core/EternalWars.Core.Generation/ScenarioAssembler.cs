@@ -260,7 +260,7 @@ public static class ScenarioAssembler
     /// <summary>A hero of the town nobody has yet, drawn in roster-id order so it replays.</summary>
     private static HeroDefinition Draw(HeroCatalog roster, string town, HashSet<string> taken, GameRandom random)
     {
-        var free = roster.All.Where(h => h.Town == town && !taken.Contains(h.Id)).OrderBy(h => h.Id, StringComparer.Ordinal).ToList();
+        var free = roster.Standard.Where(h => h.Town == town && !taken.Contains(h.Id)).OrderBy(h => h.Id, StringComparer.Ordinal).ToList();
         var hero = free.Count > 0 ? free[random.Next(free.Count)] : throw new InvalidOperationException($"No hero of {town} is left.");
         taken.Add(hero.Id);
         return hero;

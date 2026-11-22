@@ -51,7 +51,7 @@ public sealed class PlaceholderService(GameState state, IEventPublisher events)
             hero.IsPlaceholder = false;
             var faction = FactionOf(hero.Owner, drawn, fromTowns: true);
             var free = MapBans.Allowed(
-                state.HeroRoster.All.Where(h => !taken.Contains(h.Id)).OrderBy(h => h.Id, StringComparer.Ordinal).ToList(), h => state.Rules.Bans.BansHero(h.Id));
+                state.HeroRoster.Standard.Where(h => !taken.Contains(h.Id)).OrderBy(h => h.Id, StringComparer.Ordinal).ToList(), h => state.Rules.Bans.BansHero(h.Id));
             var native = free.Where(h => h.Town == faction).ToList();
             var pool = native.Count > 0 ? native : [.. free];
             if (pool.Count == 0)

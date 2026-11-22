@@ -98,7 +98,7 @@ public static class TavernRules
     /// </summary>
     public static IReadOnlyList<HeroDefinition> PoolOrder(GameState state, PlayerId player, string town)
     {
-        var heroes = state.HeroRoster.All.OrderBy(h => h.Id, StringComparer.Ordinal).ToList();
+        var heroes = state.HeroRoster.Standard.OrderBy(h => h.Id, StringComparer.Ordinal).ToList();
         var week = (ulong)((state.Date.AbsoluteDay - 1) / GameDate.DaysPerWeek);
         var faction = town.Aggregate(14695981039346656037UL, (hash, c) => (hash ^ c) * 1099511628211UL); // FNV-1a: stable across runs
         var seed = (state.Options.Seed * 0x9E3779B97F4A7C15UL) ^ ((ulong)(player.Value + 1) * 0xBF58476D1CE4E5B9UL) ^ (week * 0x94D049BB133111EBUL) ^ faction;

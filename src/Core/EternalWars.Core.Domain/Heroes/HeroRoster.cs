@@ -87,7 +87,8 @@ public sealed record HeroSpecialty(SpecialtyKind Kind, string Target, int Amount
 
 /// <summary>
 /// A hero of the roster (ADR-048): 16 per playable town, a mage and a warrior for each of its eight tier 1–4 creature
-/// lines, which is their preferred creature (flat bonus in battle, <see cref="SkillEffects"/>).
+/// lines, which is their preferred creature (flat bonus in battle, <see cref="SkillEffects"/>). A <see cref="Campaign"/> hero (ADR-298)
+/// comes on top: it is never drawn at random (taverns, placeholders, prisons, random starts) and plays only where a map places it.
 /// </summary>
 public sealed record HeroDefinition(string Id, string Name, string Town, HeroClass Class, Common.CreatureId PreferredCreature, HeroSpecialty Specialty)
 {
@@ -100,6 +101,9 @@ public sealed record HeroDefinition(string Id, string Name, string Town, HeroCla
     public int SpellPower { get; init; }
 
     public int Knowledge { get; init; }
+
+    /// <summary>A campaign hero (ADR-298): left out of every random draw, in play only where a map or campaign places it.</summary>
+    public bool Campaign { get; init; }
 }
 
 /// <summary>The hero roster as a CSV table (<c>data/heroes.csv</c>), same conventions as the creature table.</summary>
@@ -116,9 +120,13 @@ public static class HeroTable
     public const string Defense = "defense";
     public const string SpellPower = "spell_power";
     public const string Knowledge = "knowledge";
+    public const string Campaign = "campaign";
     public const string Notes = "notes";
 
-    public static IReadOnlyList<string> Columns { get; } = [Id, Name, Town, Class, Preferred, Specialty, Skills, Attack, Defense, SpellPower, Knowledge, Notes];
+    /// <summary>The <see cref="Campaign"/> cell of a campaign hero (ADR-298); empty for the others.</summary>
+    public const string CampaignMark = "yes";
+
+    public static IReadOnlyList<string> Columns { get; } = [Id, Name, Town, Class, Preferred, Specialty, Skills, Attack, Defense, SpellPower, Knowledge, Campaign, Notes];
 
     public static IReadOnlyList<HeroDefinition> Parse(string text) =>
         CsvTable.Parse(text, "Hero", [Id, Name, Town, Class, Preferred, Specialty])
@@ -131,7 +139,7 @@ public static class HeroTable
         [
             h.Id, h.Name, h.Town, h.Class.ToString(), h.PreferredCreature.Value, h.Specialty.ToString(),
             FormatSkills(h.StartingSkills), CsvTable.Number(h.Attack), CsvTable.Number(h.Defense),
-            CsvTable.Number(h.SpellPower), CsvTable.Number(h.Knowledge), notes?.Invoke(h) ?? "",
+            CsvTable.Number(h.SpellPower), CsvTable.Number(h.Knowledge), h.Campaign ? CampaignMark : "", notes?.Invoke(h) ?? "",
         ]));
 
     /// <summary><c>offense.melee Basic; tactics.tactics Advanced</c>.</summary>
@@ -189,6 +197,12 @@ public static class HeroTable
             Defense = row.Int(Defense, 0),
             SpellPower = row.Int(SpellPower, 0),
             Knowledge = row.Int(Knowledge, 0),
+            Campaign = row.Optional(Campaign) switch
+            {
+                null => false,
+                CampaignMark => true,
+                var other => throw row.Error(Campaign, $"'{other}' is not '{CampaignMark}' or empty"),
+            },
         };
     }
 }
@@ -213,6 +227,9 @@ public sealed class HeroCatalog
 
     public IEnumerable<HeroDefinition> All => _heroes.Values;
 
+    /// <summary>The heroes random draws pick from: all but the campaign heroes (ADR-298).</summary>
+    public IEnumerable<HeroDefinition> Standard => _heroes.Values.Where(h => !h.Campaign);
+
     public HeroDefinition Get(string id) =>
         _heroes.TryGetValue(id, out var hero) ? hero : throw new KeyNotFoundException($"Unknown hero '{id}'.");
 
@@ -220,7 +237,7 @@ public sealed class HeroCatalog
 
     /// <summary>
     /// Problems against the creature roster: every preferred creature must be a tier 1–4 base line of the hero's town,
-    /// and each such line has exactly one mage and one warrior (ADR-048).
+    /// and each such line has exactly one mage and one warrior among the standard heroes (ADR-048; campaign heroes come on top, ADR-298).
     /// </summary>
     public IReadOnlyList<string> Check(CreatureCatalog creatures)
     {
@@ -234,13 +251,13 @@ public sealed class HeroCatalog
             }
         }
 
-        foreach (var town in All.Select(h => h.Town).Distinct())
+        foreach (var town in Standard.Select(h => h.Town).Distinct())
         {
             foreach (var line in creatures.BaseCreaturesOf(town).Where(c => c.Tier <= 4))
             {
                 foreach (var heroClass in Enum.GetValues<HeroClass>())
                 {
-                    var count = All.Count(h => h.Town == town && h.Class == heroClass && h.PreferredCreature == line.Id);
+                    var count = Standard.Count(h => h.Town == town && h.Class == heroClass && h.PreferredCreature == line.Id);
                     if (count != 1)
                     {
                         problems.Add($"{town}: {count} {heroClass.ToString().ToLowerInvariant()}s prefer {line.Id} (should be 1).");

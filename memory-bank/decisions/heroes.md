@@ -15,6 +15,7 @@
 | [081](#adr-081-surrender-the-ais-retreat-returning-heroes-tavern-pools-per-faction-the-brotherhood-price-and-starter-stacks-2026-10-26) | Surrender, the AI's retreat, returning heroes, tavern pools per faction, the Brotherhood price and starter stacks (2026-10-26) | implemented |
 | [093](#adr-093-rarer-resource-specialties-necromancy-and-logistics-specialties-2026-10-29) | Rarer resource specialties, Necromancy and Logistics specialties (2026-10-29) | accepted |
 | [107](#adr-107-rarer-specialties-the-hero-8-proposals-for-now-2026-10-30) | Rarer specialties: the HERO-8 proposals, for now (2026-10-30) | accepted |
+| [298](#adr-298-campaign-heroes-more-varied-portraits-about-a-third-women-owner-2026-11-22) | Campaign heroes, more varied portraits, about a third women (owner, 2026-11-22) | implemented |
 
 
 ### ADR-048: Heroes, skills and levels
@@ -301,3 +302,27 @@ once the roster is play-tested. **Nothing implemented.**
   **+5 points on top of the skill** (Basic 5 → 10 % … Master 20 → 25 %), stacking with the Necromancy Amplifier; only with the skill.
 - **Logistics** (g): a flat **+10 % movement on land**, even without the Logistics skill. The other skill specialties (Melee, Archery,
   Tactics, the attunements) keep +5 % per hero level.
+
+### ADR-298: Campaign heroes, more varied portraits, about a third women (owner, 2026-11-22)
+**Status**: implemented.
+
+- **Owner**, on the first Haven portraits: the women's faces were identical apart from the hair; every hero should differ in face,
+  clothing style and colour, not all in armour and armour of different makes; no town colour scheme for clothing; a closer crop with
+  less shoulder; no books, staves or vials. Fewer women: 5–8 of a town's 20 heroes, about a third. Four more heroes per town for
+  campaigns, off in standard games, with specialties copied from existing heroes; eight each for Conflux and Dragon Utopia.
+- **Campaign heroes**: a `campaign` column in `heroes.csv` (`yes` or empty, `HeroDefinition.Campaign`). Random draws use
+  `HeroCatalog.Standard` (every hero but these): the tavern pool, the second-hand tavern, hero placeholders, random prisons, the
+  generator's random start hero and the new-game hero list. A map or campaign brings one into play by placing it (a hero, a prison,
+  Give hero, a carried hero). The one-mage-one-warrior-per-line check counts standard heroes only.
+- **Roster**: 4 campaign heroes per playable town and 8 each for Conflux and Dragon Utopia (towns still not playable), 48 in all; each
+  copies one standard hero's specialty, starting skills and stats, and in a playable town its preferred line too; the Conflux and
+  Dragon Utopia heroes prefer a line of their own town and keep the copied hero's magic school.
+- **Women**: 14 heroes of the first roster become men with new names and ids (`haven.brenna` → `haven.bertram`, the full list in
+  [hero-roster.md](../../docs/content/hero-roster.md)); each town has 5 women among its 16 standard heroes and 6 or 7 among its 20.
+  Old maps and saves that name a renamed id no longer find that hero. Generator version 13 (draws are ordered by id), maps re-pinned.
+- **Portraits** ([hero-town-icon-prompts.md](../../docs/content/prompts/hero-town-icon-prompts.md)): close crop from the top of the head
+  to the collarbones; the creature sheets' high-contrast light (ADR-289); every cell names face shape, nose, eyes, age, skin, hair and
+  the hero's own clothes and colours; nothing held; the town looks no longer set clothing colours; the negative prompt adds identical
+  faces, matching outfits, hands and props. Five sheets per playable town (the fifth its campaign heroes), two each for Conflux and
+  Dragon Utopia: regenerate every hero sheet.
+- Tests: `CampaignHeroTests`; the roster tests count standard heroes.

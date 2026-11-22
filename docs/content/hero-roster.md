@@ -1,16 +1,19 @@
 # Hero roster
 
-All 128 roster heroes of the eight playable towns, with the rules that come with a hero. Rules: ADR-048 (roster,
-skills, levels), ADR-055 (primary stats), ADR-056 (war machines). The roster is the table
-`src/Core/data/heroes.csv` (columns in [development.md](../technical/development.md#editing-heroes);
-it moves to a core-owned folder, ADR-071, not done yet); update this page when the table changes. Skill effects
-are listed in [skills.md](skills.md), towns and dwellings in [town-buildings.md](town-buildings.md). Names and
-numbers are a draft.
+All 128 standard heroes of the eight playable towns and the 48 campaign heroes, with the rules that come with a hero. Rules:
+ADR-048 (roster, skills, levels), ADR-055 (primary stats), ADR-056 (war machines). The roster is the table
+`src/Core/data/heroes.csv` (columns in [development.md](../technical/development.md#editing-heroes); it moves to a core-owned
+folder, ADR-071, not done yet); update this page when the table changes. Skill effects are listed in [skills.md](skills.md), towns
+and dwellings in [town-buildings.md](town-buildings.md). Names and numbers are a draft.
 
 ## What every hero has
 
 - **Town and class**: every playable town has **16 heroes**, a **warrior** and a **mage** for each of its eight
-  tier 1–4 creature lines. Conflux and Dragon Utopia have no heroes (not playable).
+  tier 1–4 creature lines.
+- **Campaign heroes** (ADR-298): four more per playable town and eight each for Conflux and Dragon Utopia (whose towns
+  are not playable). Random draws never pick them (taverns, hero placeholders, random prisons, random starts); a map or campaign
+  brings one into play by placing it (a hero on the map, a prison, a Give hero event). Each copies a standard hero's specialty,
+  starting skills and stats (`campaign` column of `heroes.csv`).
 - **Preferred creature**: that line, base and upgrade, gets **+2 Attack, +2 Defense and +1 battlefield speed** in the
   hero's army.
 - **Specialty** (HoMM3-style): a daily resource, a skill or a spell ([skills.md](skills.md#specialties)). Since ADR-114 (the ADR-093 /
@@ -95,10 +98,10 @@ School **Light** · native terrain highlands, grass · rival Necropolis (arch-ri
 | Aldric Vane | Warrior | Footman / Crusader (T1) | Melee | Melee Basic, Tactics Basic | 2 / 1 / 1 / 1 |
 | Ansel Wren | Mage | Footman / Crusader (T1) | spell: Bless | Light magic Basic, Treasury Basic | 0 / 0 / 3 / 2 |
 | Maren Holt | Warrior | Pikeman / Guardian (T1) | Logistics (flat +10 % movement) | Armor Basic, Melee Basic | 1 / 2 / 1 / 1 |
-| Ilse Varro | Mage | Pikeman / Guardian (T1) | Light attunement | Light magic Basic, Spell resistance Basic | 0 / 1 / 2 / 2 |
+| Ivo Varro | Mage | Pikeman / Guardian (T1) | Light attunement | Light magic Basic, Spell resistance Basic | 0 / 1 / 2 / 2 |
 | Corwin Ashby | Warrior | Zealot / Inquisitor (T2) | Archery | Logistics Basic, Archery Basic | 2 / 1 / 1 / 1 |
 | Matthias Crane | Mage | Zealot / Inquisitor (T2) | spell: Heal | Light magic Basic, Logistics Basic | 0 / 0 / 3 / 2 |
-| Brenna Stahl | Warrior | Archer / Marksman (T2) | War Tempo | War Tempo Basic, Armor Basic | 1 / 2 / 1 / 1 |
+| Bertram Stahl | Warrior | Archer / Marksman (T2) | War Tempo | War Tempo Basic, Armor Basic | 1 / 2 / 1 / 1 |
 | Rowena Pell | Mage | Archer / Marksman (T2) | +1 sulfur a day | Light magic Basic, Light attunement Basic | 0 / 1 / 2 / 2 |
 | Edric Morrow | Warrior | Monk / Priest (T3) | Archery | Archery Basic, Pathfinding Basic | 2 / 1 / 1 / 1 |
 | Fabian Lorne | Mage | Monk / Priest (T3) | spell: Smite | Light magic Basic, Prospecting Basic | 0 / 0 / 3 / 2 |
@@ -106,8 +109,17 @@ School **Light** · native terrain highlands, grass · rival Necropolis (arch-ri
 | Agathe Sorrel | Mage | Griffin / Royal Griffin (T3) | Light attunement | Light magic Basic, Armor Basic | 0 / 1 / 2 / 2 |
 | Gerrit Hale | Warrior | Lancer / Champion (T4) | Tactics | Tactics Basic, Armor Basic | 2 / 1 / 1 / 1 |
 | Cyprian Vey | Mage | Lancer / Champion (T4) | spell: Sanctuary | Light magic Basic, Pathfinding Basic | 0 / 0 / 3 / 2 |
-| Ottilie Brand | Warrior | Paladin / Sacred Warrior (T4) | Scouting | Scouting Basic, Melee Basic | 1 / 2 / 1 / 1 |
+| Osric Brand | Warrior | Paladin / Sacred Warrior (T4) | Scouting | Scouting Basic, Melee Basic | 1 / 2 / 1 / 1 |
 | Elodie Marsh | Mage | Paladin / Sacred Warrior (T4) | Light attunement | Light magic Basic, Light attunement Basic | 0 / 1 / 2 / 2 |
+
+Campaign heroes (ADR-298), never drawn at random; each copies a standard hero's preferred creature, specialty, skills and stats.
+
+| Hero | Class | Copies | Who |
+|---|---|---|---|
+| Leopold Ardent | Warrior | Gerrit Hale | The old Lord Marshal of the Sun Throne, who broke the first siege of the Ashen March |
+| Isaura Voss | Mage | Cyprian Vey | A seer cast out by the Synod, who reads the future in eclipses |
+| Tamsin Rook | Warrior | Corwin Ashby | A poacher turned captain of the King's rangers |
+| Benedikt Grau | Mage | Fabian Lorne | The Grand Inquisitor of the Synod, feared in every province |
 
 ## Sylvan
 
@@ -119,8 +131,8 @@ School **Nature** · native terrain forest floor, grass · rival Dungeon (arch-r
 | Elowen | Mage | Pixie / Sprite (T1) | spell: Entangle | Nature magic Basic, Treasury Basic | 0 / 0 / 3 / 2 |
 | Faelar | Warrior | Satyr / Satyr Warrior (T1) | Armor | Armor Basic, Melee Basic | 1 / 2 / 1 / 1 |
 | Taeral | Mage | Satyr / Satyr Warrior (T1) | Nature attunement | Nature magic Basic, Spell resistance Basic | 0 / 1 / 2 / 2 |
-| Ilyra | Warrior | Blade Dancer / War Dancer (T2) | Archery | Logistics Basic, Archery Basic | 2 / 1 / 1 / 1 |
-| Ysolde | Mage | Blade Dancer / War Dancer (T2) | spell: Regrowth | Nature magic Basic, Logistics Basic | 0 / 0 / 3 / 2 |
+| Aerendil | Warrior | Blade Dancer / War Dancer (T2) | Archery | Logistics Basic, Archery Basic | 2 / 1 / 1 / 1 |
+| Eredan | Mage | Blade Dancer / War Dancer (T2) | spell: Regrowth | Nature magic Basic, Logistics Basic | 0 / 0 / 3 / 2 |
 | Caelwyn | Warrior | Hunter / Arcane Archer (T2) | War Tempo | War Tempo Basic, Armor Basic | 1 / 2 / 1 / 1 |
 | Faenor | Mage | Hunter / Arcane Archer (T2) | Logistics (flat +10 % movement) | Nature magic Basic, Nature attunement Basic | 0 / 1 / 2 / 2 |
 | Sylvara | Warrior | Druid / Druid Elder (T3) | Archery | Archery Basic, Pathfinding Basic | 2 / 1 / 1 / 1 |
@@ -131,6 +143,15 @@ School **Nature** · native terrain forest floor, grass · rival Dungeon (arch-r
 | Calen | Mage | Moon Doe / Unicorn (T4) | spell: Barkskin | Nature magic Basic, Pathfinding Basic | 0 / 0 / 3 / 2 |
 | Neriah | Warrior | Treant / Ancient Treant (T4) | +1 crystal a day | Scouting Basic, Melee Basic | 1 / 2 / 1 / 1 |
 | Nymara | Mage | Treant / Ancient Treant (T4) | Nature attunement | Nature magic Basic, Nature attunement Basic | 0 / 1 / 2 / 2 |
+
+Campaign heroes (ADR-298), never drawn at random; each copies a standard hero's preferred creature, specialty, skills and stats.
+
+| Hero | Class | Copies | Who |
+|---|---|---|---|
+| Lithariel | Mage | Calen | The queen-mother of the Silverwood, who has outlived three forests |
+| Rhovan | Warrior | Thalion | A wild elf of the deep forest who has never lived in a city |
+| Siannon | Warrior | Caelwyn | The hunt-mistress of the outer glades |
+| Orrindel | Mage | Taeral | A hermit druid, the last who speaks the tongue of the oaks |
 
 ## Academy
 
@@ -145,8 +166,8 @@ School **Arcana** · native terrain snow, ice · rival Inferno (arch-rival, ADR-
 | Ingrid Vael | Warrior | Gargoyle / Obsidian Gargoyle (T2) | Archery | Logistics Basic, Archery Basic | 2 / 1 / 1 / 1 |
 | Theodric Wynn | Mage | Gargoyle / Obsidian Gargoyle (T2) | spell: Haste | Arcana magic Basic, Logistics Basic | 0 / 0 / 3 / 2 |
 | Tobias Rime | Warrior | Iron Golem / Animated Armor (T2) | War Tempo | War Tempo Basic, Armor Basic | 1 / 2 / 1 / 1 |
-| Isolde Marrow | Mage | Iron Golem / Animated Armor (T2) | Arcana attunement | Arcana magic Basic, Arcana attunement Basic | 0 / 1 / 2 / 2 |
-| Hedda Strom | Warrior | Snow Maiden / Enchantress (T3) | Archery | Archery Basic, Pathfinding Basic | 2 / 1 / 1 / 1 |
+| Ivar Marrow | Mage | Iron Golem / Animated Armor (T2) | Arcana attunement | Arcana magic Basic, Arcana attunement Basic | 0 / 1 / 2 / 2 |
+| Henrik Strom | Warrior | Snow Maiden / Enchantress (T3) | Archery | Archery Basic, Pathfinding Basic | 2 / 1 / 1 / 1 |
 | Cassius Thorne | Mage | Snow Maiden / Enchantress (T3) | spell: Frost Bolt | Arcana magic Basic, Prospecting Basic | 0 / 0 / 3 / 2 |
 | Kasimir Lode | Warrior | Sorcerer / Mage (T3) | Treasury | Treasury Basic, Tactics Basic | 1 / 2 / 1 / 1 |
 | Mirela Quist | Mage | Sorcerer / Mage (T3) | Arcana attunement | Arcana magic Basic, Armor Basic | 0 / 1 / 2 / 2 |
@@ -154,6 +175,15 @@ School **Arcana** · native terrain snow, ice · rival Inferno (arch-rival, ADR-
 | Lucan Esk | Mage | Djinn / Djinn Sultan (T4) | spell: Dispel | Arcana magic Basic, Pathfinding Basic | 0 / 0 / 3 / 2 |
 | Dorian Quill | Warrior | Naga / Naga Queen (T4) | Scouting | Scouting Basic, Melee Basic | 1 / 2 / 1 / 1 |
 | Valeska Rune | Mage | Naga / Naga Queen (T4) | +1 crystal a day | Arcana magic Basic, Arcana attunement Basic | 0 / 1 / 2 / 2 |
+
+Campaign heroes (ADR-298), never drawn at random; each copies a standard hero's preferred creature, specialty, skills and stats.
+
+| Hero | Class | Copies | Who |
+|---|---|---|---|
+| Magnus Hollin | Mage | Theodric Wynn | The Archmage of the White Spire, who bound the djinn to the city |
+| Liv Ostrander | Warrior | Stellan Frost | A shieldmaiden of the northern passes, trained by the dwarves |
+| Edvard Lunde | Warrior | Tobias Rime | The master of the golem foundries |
+| Nadia Sorell | Mage | Lucan Esk | A young prodigy who unmade a storm over the White Spire |
 
 ## Necropolis
 
@@ -173,10 +203,19 @@ School **Death** · native terrain cursed lands · rival Haven (arch-rival, ADR-
 | Kael Duskmire | Mage | Vampire / Vampire Lord (T3) | spell: Drain Life | Death magic Basic, Prospecting Basic | 0 / 0 / 3 / 2 |
 | Corvane | Warrior | Wight / Wraith (T2) | Necromancy (+5 points) | Treasury Basic, Tactics Basic | 1 / 2 / 1 / 1 |
 | Lethe | Mage | Wight / Wraith (T2) | Death attunement | Death magic Basic, Armor Basic | 0 / 1 / 2 / 2 |
-| Drusa | Warrior | Dark Knight / Death Knight (T4) | Tactics | Tactics Basic, Armor Basic | 2 / 1 / 1 / 1 |
+| Drusus | Warrior | Dark Knight / Death Knight (T4) | Tactics | Tactics Basic, Armor Basic | 2 / 1 / 1 / 1 |
 | Ozmund | Mage | Dark Knight / Death Knight (T4) | spell: Plague | Death magic Basic, Pathfinding Basic | 0 / 0 / 3 / 2 |
 | Malgrin | Warrior | Lich / Arch Lich (T4) | Scouting | Scouting Basic, Melee Basic | 1 / 2 / 1 / 1 |
 | Thessaly | Mage | Lich / Arch Lich (T4) | Death attunement | Death magic Basic, Death attunement Basic | 0 / 1 / 2 / 2 |
+
+Campaign heroes (ADR-298), never drawn at random; each copies a standard hero's preferred creature, specialty, skills and stats.
+
+| Hero | Class | Copies | Who |
+|---|---|---|---|
+| Maladrea | Mage | Necrys | The Pale Matriarch, who first bound the dead of the plague years |
+| Aldous Wraithe | Warrior | Hespera | A Haven crusader who fell at the Black Ford and rose again |
+| Ravenna | Warrior | Morthal | A bone-witch duellist who commands the skeleton legions |
+| Ossian Grael | Mage | Kael Duskmire | The gravekeeper of the old kings' crypts |
 
 ## Inferno
 
@@ -198,8 +237,17 @@ School **Chaos** · native terrain lava · rival Academy (arch-rival, ADR-072) �
 | Veshra | Mage | Hell Charger / Nightmare (T3) | Chaos attunement | Chaos magic Basic, Armor Basic | 0 / 1 / 2 / 2 |
 | Zarduk | Warrior | Pit Fiend / Pit Lord (T4) | Tactics | Tactics Basic, Armor Basic | 2 / 1 / 1 / 1 |
 | Orzhul | Mage | Pit Fiend / Pit Lord (T4) | spell: Hellfire | Chaos magic Basic, Pathfinding Basic | 0 / 0 / 3 / 2 |
-| Kezra | Warrior | Juggernaut / Ravager (T4) | Scouting | Scouting Basic, Melee Basic | 1 / 2 / 1 / 1 |
+| Kezrath | Warrior | Juggernaut / Ravager (T4) | Scouting | Scouting Basic, Melee Basic | 1 / 2 / 1 / 1 |
 | Sythra | Mage | Juggernaut / Ravager (T4) | +350 gold a day | Chaos magic Basic, Chaos attunement Basic | 0 / 1 / 2 / 2 |
+
+Campaign heroes (ADR-298), never drawn at random; each copies a standard hero's preferred creature, specialty, skills and stats.
+
+| Hero | Class | Copies | Who |
+|---|---|---|---|
+| Vazgoroth | Warrior | Zarduk | The Pit King's warmaster, who led the first breach of the Veil |
+| Ishara | Mage | Belzra | A mortal sorceress who sold her soul and kept her face |
+| Grizhak | Warrior | Vorhaz | A hell-hound master scarred by his own pack |
+| Zethrax | Mage | Ashmedai | A demon scholar, keeper of the burning library |
 
 ## Dungeon
 
@@ -214,15 +262,24 @@ School **Shadow** · native terrain subterranean · rival Sylvan (arch-rival, AD
 | Ilvara | Warrior | Medusa / Putrid Medusa (T2) | Archery | Logistics Basic, Archery Basic | 2 / 1 / 1 / 1 |
 | Ghaunis | Mage | Medusa / Putrid Medusa (T2) | spell: Shadow Step | Shadow magic Basic, Logistics Basic | 0 / 0 / 3 / 2 |
 | Kharis | Warrior | Minotaur / Minotaur Guard (T2) | War Tempo | War Tempo Basic, Armor Basic | 1 / 2 / 1 / 1 |
-| Zesyra | Mage | Minotaur / Minotaur Guard (T2) | Shadow attunement | Shadow magic Basic, Shadow attunement Basic | 0 / 1 / 2 / 2 |
-| Shyntra | Warrior | Dark Raider / Grim Raider (T3) | Archery | Archery Basic, Pathfinding Basic | 2 / 1 / 1 / 1 |
+| Zesrin | Mage | Minotaur / Minotaur Guard (T2) | Shadow attunement | Shadow magic Basic, Shadow attunement Basic | 0 / 1 / 2 / 2 |
+| Shyrran | Warrior | Dark Raider / Grim Raider (T3) | Archery | Archery Basic, Pathfinding Basic | 2 / 1 / 1 / 1 |
 | Dryel | Mage | Dark Raider / Grim Raider (T3) | spell: Despair | Shadow magic Basic, Prospecting Basic | 0 / 0 / 3 / 2 |
 | Vorn | Warrior | Shadow Mistress / Shadow Matriarch (T3) | +350 gold a day | Treasury Basic, Tactics Basic | 1 / 2 / 1 / 1 |
 | Vhaeris | Mage | Shadow Mistress / Shadow Matriarch (T3) | Shadow attunement | Shadow magic Basic, Armor Basic | 0 / 1 / 2 / 2 |
-| Lysara | Warrior | Manticore / Scorpicore (T4) | Tactics | Tactics Basic, Armor Basic | 2 / 1 / 1 / 1 |
+| Lyrthas | Warrior | Manticore / Scorpicore (T4) | Tactics | Tactics Basic, Armor Basic | 2 / 1 / 1 / 1 |
 | Phyrra | Mage | Manticore / Scorpicore (T4) | spell: Dark Bolt | Shadow magic Basic, Pathfinding Basic | 0 / 0 / 3 / 2 |
 | Xundar | Warrior | Spectator / Beholder (T4) | Scouting | Scouting Basic, Melee Basic | 1 / 2 / 1 / 1 |
 | Ilphar | Mage | Spectator / Beholder (T4) | Shadow attunement | Shadow magic Basic, Shadow attunement Basic | 0 / 1 / 2 / 2 |
+
+Campaign heroes (ADR-298), never drawn at random; each copies a standard hero's preferred creature, specialty, skills and stats.
+
+| Hero | Class | Copies | Who |
+|---|---|---|---|
+| Malaroth | Warrior | Kharis | The Lord of the Labyrinth, who tamed the first minotaurs |
+| Seyrissa | Mage | Phyrra | The oracle of the spider shrines |
+| Kaelvorn | Warrior | Vaelrith | A renegade who fought the surface wars for gold |
+| Ozrael | Mage | Sabal | A blind seer who hears the deep |
 
 ## Stronghold
 
@@ -233,7 +290,7 @@ Faction group **Primal Fury** (no magic school, ADR-063, ADR-069) · native terr
 | Grukk | Warrior | Goblin / Hobgoblin (T1) | Melee | Melee Basic, Tactics Basic | 2 / 1 / 1 / 1 |
 | Ugra | Mage | Goblin / Hobgoblin (T1) | Blood Rage | Primal Fury (1st) Basic, Treasury Basic | 0 / 0 / 3 / 2 |
 | Mazga | Warrior | Harpy / Fury (T1) | +1 mercury a day | Armor Basic, Melee Basic | 1 / 2 / 1 / 1 |
-| Zhaka | Mage | Harpy / Fury (T1) | Warcry | Primal Fury (1st) Basic, Spell resistance Basic | 0 / 1 / 2 / 2 |
+| Zhakar | Mage | Harpy / Fury (T1) | Warcry | Primal Fury (1st) Basic, Spell resistance Basic | 0 / 1 / 2 / 2 |
 | Thrak | Warrior | Orc / Orc Berserker (T2) | Archery | Logistics Basic, Archery Basic | 2 / 1 / 1 / 1 |
 | Mograth | Mage | Orc / Orc Berserker (T2) | Blood Rage | Primal Fury (1st) Basic, Logistics Basic | 0 / 0 / 3 / 2 |
 | Kragash | Warrior | Wolf Rider / Wolf Raider (T2) | Treasury | Treasury Basic, Melee Basic | 1 / 2 / 1 / 1 |
@@ -247,6 +304,15 @@ Faction group **Primal Fury** (no magic school, ADR-063, ADR-069) · native terr
 | Durgash | Warrior | Cyclops / Cyclops King (T4) | Scouting | Scouting Basic, Melee Basic | 1 / 2 / 1 / 1 |
 | Nazgra | Mage | Cyclops / Cyclops King (T4) | Blood Rage | Primal Fury (1st) Basic, Primal Fury (2nd) Basic | 0 / 1 / 2 / 2 |
 
+Campaign heroes (ADR-298), never drawn at random; each copies a standard hero's preferred creature, specialty, skills and stats.
+
+| Hero | Class | Copies | Who |
+|---|---|---|---|
+| Gorthak Ironjaw | Warrior | Shara | The Great Khan who united the clans |
+| Sakra | Mage | Vrolk | A storm-singer who calls the thunderbirds |
+| Snikket | Warrior | Thrak | A goblin cutthroat who rose to lead the raiders |
+| Uthgar | Mage | Kurgh | An ogre magus who learned his spells from captured wizards |
+
 ## Swamp Bestiary
 
 Faction group **Primal Fury** (no magic school, ADR-063, ADR-069) · native terrain swamp, shallow water · rivals – · offensive machine **Catapult**
@@ -258,7 +324,7 @@ Faction group **Primal Fury** (no magic school, ADR-063, ADR-069) · native terr
 | Kethra | Warrior | Kappa / Kappa Shaman (T1) | +1 sulfur a day | Armor Basic, Melee Basic | 1 / 2 / 1 / 1 |
 | Sethek | Mage | Kappa / Kappa Shaman (T1) | Warcry | Primal Fury (1st) Basic, Spell resistance Basic | 0 / 1 / 2 / 2 |
 | Mudjaw | Warrior | Jungle Horror / Jungle Terror (T2) | Armor | Logistics Basic, Armor Basic | 2 / 1 / 1 / 1 |
-| Murra | Mage | Jungle Horror / Jungle Terror (T2) | Blood Rage | Primal Fury (1st) Basic, Logistics Basic | 0 / 0 / 3 / 2 |
+| Murrok | Mage | Jungle Horror / Jungle Terror (T2) | Blood Rage | Primal Fury (1st) Basic, Logistics Basic | 0 / 0 / 3 / 2 |
 | Vessk | Warrior | Mantis / Serpent Fly (T2) | War Tempo | War Tempo Basic, Armor Basic | 1 / 2 / 1 / 1 |
 | Zhessk | Mage | Mantis / Serpent Fly (T2) | Blood Rage | Primal Fury (1st) Basic, Primal Fury (2nd) Basic | 0 / 1 / 2 / 2 |
 | Brakkis | Warrior | Basilisk / Greater Basilisk (T3) | Archery | Archery Basic, Leadership Basic | 2 / 1 / 1 / 1 |
@@ -269,3 +335,43 @@ Faction group **Primal Fury** (no magic school, ADR-063, ADR-069) · native terr
 | Venna | Mage | Gorgon / Mighty Gorgon (T4) | Blood Rage | Primal Fury (1st) Basic, Pathfinding Basic | 0 / 0 / 3 / 2 |
 | Oszrak | Warrior | Wyvern / Wyvern Monarch (T4) | Scouting | Scouting Basic, Armor Basic | 1 / 2 / 1 / 1 |
 | Szask | Mage | Wyvern / Wyvern Monarch (T4) | Blood Rage | Primal Fury (1st) Basic, Primal Fury (2nd) Basic | 0 / 1 / 2 / 2 |
+
+Campaign heroes (ADR-298), never drawn at random; each copies a standard hero's preferred creature, specialty, skills and stats.
+
+| Hero | Class | Copies | Who |
+|---|---|---|---|
+| Ssethrak | Warrior | Tharg | The Drowned King, oldest of the lizard lords |
+| Nhalla | Mage | Hissla | The frog-witch of the sunken temple |
+| Krusk | Warrior | Ssarkh | A snapping-turtle champion of the fighting pits |
+| Ruuk | Mage | Gossk | A heron-folk storm caller |
+
+## Conflux
+
+The Firstborn's elemental wardens (non-playable town, [lore.md](lore.md)): only campaign heroes. Each copies a standard hero's specialty,
+starting skills and stats, magic school included; its preferred creature is its own element.
+
+| Hero | Class | Preferred creature | Copies | Who |
+|---|---|---|---|---|
+| Orrath | Warrior | Earth Elemental (T3) | Stellan Frost (Academy) | The warden of the mountain roots |
+| Zephra | Warrior | Air Elemental (T3) | Corwin Ashby (Haven) | The wind warden who rides the high storms |
+| Ignar | Warrior | Fire Elemental (T3) | Azgaroth (Inferno) | The flame warden of the burning gate |
+| Maerin | Warrior | Water Elemental (T3) | Varis (Sylvan) | The tide warden of the drowned shore |
+| Ilumiel | Mage | Wisp (T1) | Ansel Wren (Haven) | The light warden, a voice of the Wheel itself |
+| Kalderon | Mage | Magma Elemental (T4) | Belzra (Inferno) | The forge warden, smith of the elemental lords |
+| Vaeyra | Mage | Storm Elemental (T4) | Theodric Wynn (Academy) | The storm warden of the high peaks |
+| Hrimnar | Mage | Ice Elemental (T4) | Cassius Thorne (Academy) | The frost warden of the world's northern edge |
+
+## Dragon Utopia
+
+The dragon-blooded wardens (non-playable town): only campaign heroes, copied like Conflux's.
+
+| Hero | Class | Preferred creature | Copies | Who |
+|---|---|---|---|---|
+| Vharos | Warrior | Dragonyte (T4) | Aldric Vane (Haven) | The Wyrmguard captain who rides at the black dragon's side |
+| Seravyn | Warrior | Haspid / Royal Haspid (T4) | Ilvara (Dungeon) | A haspid rider of the cliff eyries |
+| Garundar | Warrior | Haspid / Royal Haspid (T4) | Faelar (Sylvan) | The old shield of the Utopia's gate |
+| Kaira Ashwing | Warrior | Dragonyte (T4) | Dorian Quill (Academy) | The scout who maps the dragons' lost lands |
+| Solvaric | Mage | Dragonyte (T4) | Matthias Crane (Haven) | The gold dragon's high priest |
+| Nymeriss | Mage | Haspid / Royal Haspid (T4) | Elowen (Sylvan) | A faerie-dragon singer |
+| Ruvak | Mage | Haspid / Royal Haspid (T4) | Orzhul (Inferno) | A red dragon's fire-speaker |
+| Morvayne | Mage | Dragonyte (T4) | Dryel (Dungeon) | The black dragon's whisperer |

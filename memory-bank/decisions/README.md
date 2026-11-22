@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-298.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-299.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -12,7 +12,7 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [adventure-map.md](adventure-map.md) | The grid, terrain classes and movement, roads, map objects and catalogues, neutral guards, fog-of-war rules, scouting, week events, the Grail. | 30 |
 | [map-events.md](map-events.md) | Pandora's Box, the event tree (triggers, conditions, actions), quests and quest objects, loops, campaign variables. | 9 |
 | [towns-and-economy.md](towns-and-economy.md) | Resources and income, town groups and rosters, creatures, buildings and the tech tree, dwellings and caravans, unique buildings. | 25 |
-| [heroes.md](heroes.md) | Primary stats, skills and levels, specialties, Necromancy, governors, the tavern. | 9 |
+| [heroes.md](heroes.md) | Primary stats, skills and levels, specialties, Necromancy, governors, the tavern. | 10 |
 | [artifacts.md](artifacts.md) | Artifact slots, tiers and effects, assembled relics, the exchange screen. | 7 |
 | [magic.md](magic.md) | Schools, spell levels and ranks, guilds and spell books, scrolls, every battle and adventure spell. | 12 |
 | [combat.md](combat.md) | The battlefield, turn order, damage and cover, morale and luck, capabilities, war machines, deployment, sieges, the 3D battle scene. | 17 |
@@ -324,3 +324,4 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [295](towns-and-economy.md#adr-295-stronghold-the-wolf-rider-line-is-tier-2-the-centaur-line-tier-3-owner-2026-11-22) | towns-and-economy | Stronghold: the Wolf Rider line is tier 2, the Centaur line tier 3 (owner, 2026-11-22) | implemented |
 | [296](presentation.md#adr-296-town-screen-step-2-the-windows-over-the-key-painting-the-overview-and-plans-in-core-recruit-all-upgrade-all-dismissing-renaming-the-rumour-table-resource-for-resource-sending-to-an-ally-town-17-adr-246-adr-292-2026-11-22) | presentation | Town screen step 2: the windows over the key painting, the overview and plans in core, Recruit all, Upgrade all, dismissing, renaming, the rumour table, resource for resource, sending to an ally (TOWN-17, ADR-246, ADR-292, 2026-11-22) | implemented |
 | [297](presentation.md#adr-297-town-screen-step-3-task-1-the-3d-town-scene-behind-the-bars-plots-read-from-layout-scenes-greybox-blocks-hover-and-pick-adr-246-adr-292-2026-11-22) | presentation | Town screen step 3, task 1: the 3D town scene behind the bars, plots read from layout scenes, greybox blocks, hover and pick (ADR-246, ADR-292, 2026-11-22) | implemented |
+| [298](heroes.md#adr-298-campaign-heroes-more-varied-portraits-about-a-third-women-owner-2026-11-22) | heroes | Campaign heroes, more varied portraits, about a third women (owner, 2026-11-22) | implemented |
