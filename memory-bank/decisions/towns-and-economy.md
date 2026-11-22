@@ -29,6 +29,7 @@
 | [138](#adr-138-the-first-set-of-unique-buildings-built-adr-126-2026-11-05) | The first set of unique buildings built (ADR-126, 2026-11-05) | implemented |
 | [139](#adr-139-the-university-and-the-war-academy-built-adr-126-2026-11-05) | The University and the War Academy built (ADR-126, 2026-11-05) | implemented |
 | [143](#adr-143-the-academys-observatory-the-undead-transformer-built-adr-137-adr-138-2026-11-06) | The Academy's Observatory; the Undead Transformer built (ADR-137, ADR-138, 2026-11-06) | implemented |
+| [291](#adr-291-the-capitol-needs-six-dwellings-plots-show-unused-land-and-citizens-homes-town-15-2026-11-22) | The Capitol needs six dwellings; plots show unused land and citizens' homes (TOWN-15, 2026-11-22) | implemented |
 
 
 ### ADR-010: Town roster in four groups; two non-playable towns
@@ -511,3 +512,17 @@ agent's choices.
 - **AI** *(proposal for "every stack it does not need")*: in each army of its town with the Transformer it turns all living stacks into
   undead when the army is already mostly undead by worth (creature value × count), elsewhere only those whose undead are worth at least as
   much; a creature without a class becomes the more valuable line; it never swaps lines. It builds both buildings after the unique building.
+
+### ADR-291: The Capitol needs six dwellings; plots show unused land and citizens' homes (TOWN-15, 2026-11-22)
+**Status**: implemented in core, tested (`TownBuildingListTests`); the plots belong to the 3D town scene (ADR-246, not built yet). The
+owner's answer to TOWN-15 in the [town screen plan](../../docs/papers/town-screen-plan.md#town-15), with a new rule; amends ADR-070 / ADR-074.
+
+- **The Capitol needs six dwellings of tiers 1–4** (owner): besides fort 3 and one Capitol per player. With the 7-of-9 rule (ADR-030) that is
+  every dwelling those tiers may have, so the town's line choices are final before its Capitol, and exactly two tier 1–4 lines are closed.
+  `TownRules.CheckCapitolDwellings` (fewer when a town type has fewer tier 1–4 lines); building refuses, the town screen's tree shows
+  NeedsBuildings, the editor refuses pre-building the Capitol without them or removing one of them, the validator reports a town that lacks
+  them, and the AI builds them before the Capitol (its build order already does). The tier-5 dwelling does not count.
+- **Plots** (owner, supersedes the TOWN-15 proposal): all nine lines have plots. A plot not built, whether it can still be built or its line
+  is closed, is unused land, a piece of the diorama's scenery: no marker stones, no rubble. Scaffolding on the day it is built.
+- **Citizens' homes** (owner): building the Capitol fills the two closed tier 1–4 plots with homes of the town's citizens. *(proposal)* They
+  rise in the Capitol's construction scene, and a captured Capitol that drops to City Hall keeps them.

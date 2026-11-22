@@ -32,7 +32,7 @@ Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature 
 | `town-hall` | 1 | Village Hall | 2 500 gold, lumber 5, ore 5 | – | gold 500 |
 | `town-hall` | 2 | Town Hall | 5 000 gold, lumber 10, ore 10 | blacksmith 1, marketplace 1, mage-guild 1 | gold 1000 |
 | `town-hall` | 3 | City Hall | 10 000 gold, lumber 20, ore 20 | fort 2 | gold 2000 |
-| `town-hall` | 4 | Capitol | 15 000 gold, lumber 25, ore 25 (placeholder) | fort 3 | gold 4000 (placeholder) |
+| `town-hall` | 4 | Capitol | 15 000 gold, lumber 25, ore 25 (placeholder) | fort 3, six dwellings of tiers 1–4 (in code, ADR-291) | gold 4000 (placeholder) |
 | `fort` | 1 | Fort | 1 500 gold, lumber 5, ore 5 | tavern 1 | – |
 | `fort` | 2 | Citadel | 3 000 gold, lumber 10, ore 10 | – | – |
 | `fort` | 3 | Castle | 6 000 gold, lumber 15, ore 15 | – | – |
@@ -59,7 +59,7 @@ In Stronghold and Swamp Bestiary, Town Hall needs `war-lodge 1` instead of `mage
 
 | Building | Effect | Status |
 |---|---|---|
-| Village Hall … Capitol | gold income: 500 / 1000 / 2000 / 4000 a day. The **Capitol** (level 4) is one per player: a second one cannot be built, and a captured one drops to City Hall when the captor already has one (ADR-070, ADR-074) | ✅ |
+| Village Hall … Capitol | gold income: 500 / 1000 / 2000 / 4000 a day. The **Capitol** (level 4) is one per player: a second one cannot be built, and a captured one drops to City Hall when the captor already has one (ADR-070, ADR-074). It needs six dwellings of tiers 1–4 (`TownRules.CheckCapitolDwellings`, ADR-291) | ✅ |
 | Fort | Fort: needed for every dwelling; Citadel: town dwellings grow +50 % (bonus rounded down); Castle: +100 % (`TownRules.WeeklyGrowth`). Sieges: Fort = town wall and gate, Citadel adds a keep, Castle towers and stronger walls (ADR-066) | ✅ dwellings, growth; ⏳ fortifications (sieges before 1.0, ADR-099) |
 | Blacksmith | sells the healing tent, the ammo cart and a lost offensive machine to the visiting hero (ADR-056) | ✅ |
 | Marketplace | level 2 (Resource Silo): +1 lumber, +1 ore a day; trading gold against resources, rates by the number of marketplace towns (ADR-067, [towns-and-economy.md](../design/towns-and-economy.md#marketplace-implemented-adr-067)) | ✅ silo and trading |
@@ -91,14 +91,16 @@ graph LR
   F2 --> TH3
   F2 --> F3[Castle]
   F3 --> TH4
+  DW -- six of tiers 1–4 --> TH4
   MP1 --> MP2[Resource Silo]
   MG1 --> MG2[Mage Guild 2] --> MG3[Mage Guild 3] --> MG4[Mage Guild 4]
   TH2 --> CV[Caravan]
 ```
 
 Since every town starts with Village Hall, Fort and Tavern, the shortest way to the Capitol is Blacksmith, Marketplace and
-Mage Guild 1 (Town Hall), then Citadel, City Hall, Castle and Capitol: eight days and 43 250 gold, 95 lumber, 85 ore and
-2 mercury (the eight buildings' costs added up). Every dwelling needs the Fort (`fort 1` on the `dwelling-*` level-1 rows, ADR-066);
+Mage Guild 1 (Town Hall), then Citadel, City Hall and Castle, the six cheapest dwellings the Capitol needs (both of tiers 1 and 2, one each
+of tiers 3 and 4), and the Capitol: fourteen days and 49 750 gold, 106 lumber, 92 ore and 3 mercury (the fourteen buildings' costs added
+up). Every dwelling needs the Fort (`fort 1` on the `dwelling-*` level-1 rows, ADR-066);
 new towns have it, so this only matters for towns a map places without a fort.
 
 ## Dwellings

@@ -95,6 +95,7 @@ public class TownBuildingListTests
         haven.SetLevel(BuiltInBuildings.TownHall, BuiltInBuildings.CapitolLevel);
         necropolis.SetLevel(BuiltInBuildings.TownHall, BuiltInBuildings.CapitolLevel - 1);
         necropolis.SetLevel(BuiltInBuildings.Fort, 3);
+        BuildCapitolDwellings(session.State, necropolis);
 
         var refused = session.Execute(new BuildCommand(Blue, necropolis.Id, BuiltInBuildings.TownHall));
         Assert.Contains("only one", refused.Error);
@@ -152,10 +153,76 @@ public class TownBuildingListTests
             town.SetLevel(BuiltInBuildings.Marketplace, 1);
             town.SetLevel(BuiltInBuildings.MageGuild, 1);
             town.SetLevel(BuiltInBuildings.TownHall, BuiltInBuildings.CapitolLevel);
+            BuildCapitolDwellings(state, town);
         }
 
         var issue = Assert.Single(MapValidator.Validate(state), i => i.Message.Contains("Capitol", StringComparison.Ordinal));
         Assert.Contains(second.Name, issue.Message);
+    }
+
+    [Fact]
+    public void Capitol_NeedsSixDwellingsOfTiersOneToFour()
+    {
+        var (session, haven, _) = TwoTowns(BuildingCatalog.Default);
+        haven.SetLevel(BuiltInBuildings.TownHall, BuiltInBuildings.CapitolLevel - 1);
+        haven.SetLevel(BuiltInBuildings.Fort, 3);
+        var lines = TownRules.Lines(session.State, haven);
+        foreach (var line in lines.Where(l => l.Tier == 5).Concat(lines.Where(l => l.Tier <= 4).Take(5)))
+        {
+            haven.SetDwelling(line.Id, 1); // the tier 5 dwelling does not count
+        }
+
+        var refused = session.Execute(new BuildCommand(Blue, haven.Id, BuiltInBuildings.TownHall));
+        Assert.Contains("needs 6 dwellings of tiers 1–4 (5 built)", refused.Error);
+        Assert.Equal(BuildingStatus.NeedsBuildings, BuildingTree.For(session.State, haven).Single(n => n.Building == BuiltInBuildings.TownHall).Status);
+
+        haven.SetDwelling(lines.Where(l => l.Tier <= 4).ElementAt(5).Id, 1);
+        session.Execute(new BuildCommand(Blue, haven.Id, BuiltInBuildings.TownHall)).ThrowIfRejected();
+        Assert.Equal(BuiltInBuildings.CapitolLevel, haven.Level(BuiltInBuildings.TownHall));
+    }
+
+    [Fact]
+    public void Editor_KeepsTheCapitolsDwellings()
+    {
+        var state = Create(Rows);
+        var town = AddTown(state, TownIds.Haven, 0, 0, Blue);
+        town.SetLevel(BuiltInBuildings.Fort, 3);
+        town.SetLevel(BuiltInBuildings.Blacksmith, 1);
+        town.SetLevel(BuiltInBuildings.Marketplace, 1);
+        town.SetLevel(BuiltInBuildings.MageGuild, 1);
+        town.SetLevel(BuiltInBuildings.TownHall, BuiltInBuildings.CapitolLevel - 1);
+        var editor = new MapEditorSession(state);
+
+        Assert.Equal(EditResult.RequirementMissing, editor.Towns.SetBuilding(town.Id, BuiltInBuildings.TownHall, BuiltInBuildings.CapitolLevel));
+
+        BuildCapitolDwellings(state, town);
+        Assert.Equal(EditResult.Ok, editor.Towns.SetBuilding(town.Id, BuiltInBuildings.TownHall, BuiltInBuildings.CapitolLevel));
+        var built = TownRules.Lines(state, town).First(l => town.DwellingLevel(l.Id) > 0);
+        Assert.Equal(EditResult.RequirementMissing, editor.Towns.SetDwelling(town.Id, built.Id, 0));
+    }
+
+    [Fact]
+    public void Validator_ReportsACapitolWithoutItsDwellings()
+    {
+        var state = Create(Rows);
+        var town = AddTown(state, TownIds.Haven, 0, 0, Blue);
+        town.SetLevel(BuiltInBuildings.Fort, 3);
+        town.SetLevel(BuiltInBuildings.Blacksmith, 1);
+        town.SetLevel(BuiltInBuildings.Marketplace, 1);
+        town.SetLevel(BuiltInBuildings.MageGuild, 1);
+        town.SetLevel(BuiltInBuildings.TownHall, BuiltInBuildings.CapitolLevel);
+
+        Assert.Contains(MapValidator.Validate(state), i => i.Message.Contains("needs 6 dwellings", StringComparison.Ordinal));
+    }
+
+    /// <summary>Both dwellings of tiers 1 and 2 and one of tiers 3 and 4: the six the Capitol needs (ADR-291).</summary>
+    private static void BuildCapitolDwellings(GameState state, Town town)
+    {
+        var lines = TownRules.Lines(state, town);
+        foreach (var line in lines.Where(l => l.Tier <= 2).Concat(lines.Where(l => l.Tier is 3 or 4).GroupBy(l => l.Tier).Select(g => g.First())))
+        {
+            town.SetDwelling(line.Id, 1);
+        }
     }
 
     private static (GameSession Session, Town Haven, Town Necropolis) TwoTowns(BuildingCatalog catalog)

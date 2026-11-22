@@ -107,6 +107,7 @@ internal sealed partial class TownManager(AiContext ai, ThreatMap threats)
                 || (dwelling && next.Level == 1 && TownRules.CheckDwellingChoice(_state, town, id, 1) is not null)
                 || next.Requires.Any(r => TownRules.Level(_state, town, r.Building) < r.Level)
                 || TownRules.CheckCapitol(_state, town, next) is not null
+                || TownRules.CheckCapitolDwellings(_state, town, next) is not null
                 || !(Reachable(TownRules.BuildCost(_state, town, next), have, income)
                     || Buyable(player, TownRules.BuildCost(_state, town, next), have, income)))
             {
@@ -189,7 +190,7 @@ internal sealed partial class TownManager(AiContext ai, ThreatMap threats)
         yield return (false, BuiltInBuildings.MageGuild);
         yield return (false, BuiltInBuildings.WarLodge);
         yield return (false, BuiltInBuildings.Tavern);
-        yield return (false, BuiltInBuildings.TownHall); // the Capitol, once the Castle stands
+        yield return (false, BuiltInBuildings.TownHall); // the Capitol, once the Castle and six dwellings of tiers 1–4 stand (ADR-291)
     }
 
     /// <summary>

@@ -137,6 +137,30 @@ public static class TownRules
             ? $"{other.Name} is already your Capitol; a player has only one."
             : null;
 
+    /// <summary>The Capitol needs this many dwellings of tiers 1 to <see cref="CapitolDwellingTopTier"/> (ADR-291): with the 7-of-9 rule, every one those tiers may have.</summary>
+    public const int CapitolDwellings = 6;
+
+    /// <summary>The highest tier whose dwellings count for the Capitol (ADR-291).</summary>
+    public const int CapitolDwellingTopTier = 4;
+
+    /// <summary>
+    /// Why the town may not have this level because it lacks the dwellings the Capitol needs (ADR-291), or null:
+    /// <see cref="CapitolDwellings"/> built dwellings of tiers 1–4 (fewer when the town type has fewer such lines).
+    /// <paramref name="dwellingLevel"/> overrides a line's dwelling level, for the editor's "what if".
+    /// </summary>
+    public static string? CheckCapitolDwellings(GameState state, Town town, BuildingLevel level, Func<CreatureDefinition, int>? dwellingLevel = null)
+    {
+        if (level.Building != BuiltInBuildings.TownHall || level.Level < BuiltInBuildings.CapitolLevel)
+        {
+            return null;
+        }
+
+        var lines = Lines(state, town).Where(l => l.Tier <= CapitolDwellingTopTier).ToList();
+        var needed = Math.Min(CapitolDwellings, lines.Count);
+        var built = lines.Count(l => (dwellingLevel?.Invoke(l) ?? town.DwellingLevel(l.Id)) > 0);
+        return built < needed ? $"{level.Name} needs {needed} dwellings of tiers 1–{CapitolDwellingTopTier} ({built} built)." : null;
+    }
+
     /// <summary>The owner's town with a Capitol (town hall 4), other than <paramref name="except"/>, or null.</summary>
     public static Town? CapitolOf(GameState state, PlayerId owner, Town? except = null) =>
         state.ObjectsOf<Town>().Where(t => t.Owner == owner && t != except && t.Level(BuiltInBuildings.TownHall) >= BuiltInBuildings.CapitolLevel)
@@ -342,14 +366,20 @@ public static class TownRules
     /// <summary>
     /// The first requirement a built level lacks (every level up to the built one counts), or null when the town is
     /// consistent. Checks the town as it would be with <paramref name="building"/> at <paramref name="level"/>: the editor
-    /// asks before pre-building or removing something, the validator for whole maps.
+    /// asks before pre-building or removing something, the validator for whole maps. <paramref name="dwellingLevel"/> overrides a line's dwelling
+    /// level in the same way (the Capitol needs dwellings, ADR-291).
     /// </summary>
-    public static string? UnmetRequirement(GameState state, Town town, Common.BuildingId? building = null, int level = 0)
+    public static string? UnmetRequirement(
+        GameState state, Town town, Common.BuildingId? building = null, int level = 0, Func<CreatureDefinition, int>? dwellingLevel = null)
     {
-        int LevelOf(Common.BuildingId id) => id == building ? level : Level(state, town, id);
+        int DwellingOf(CreatureDefinition line) => dwellingLevel?.Invoke(line) ?? town.DwellingLevel(line.Id);
+        int LevelOf(Common.BuildingId id) =>
+            id == building ? level
+            : BuiltInBuildings.DwellingTier(id) is { } tier ? Lines(state, town).Where(l => l.Tier == tier).Select(DwellingOf).DefaultIfEmpty(0).Max()
+            : town.Level(id);
 
         var built = Buildings(state, town).TownBuildings.Select(b => (Building: b, Level: Math.Min(LevelOf(b), Buildings(state, town).MaxLevel(b))))
-            .Concat(Lines(state, town).Select(l => (Building: BuiltInBuildings.Dwelling(l.Tier), Level: town.DwellingLevel(l.Id))));
+            .Concat(Lines(state, town).Select(l => (Building: BuiltInBuildings.Dwelling(l.Tier), Level: DwellingOf(l))));
         foreach (var (id, top) in built)
         {
             for (var l = 1; l <= top; l++)
@@ -362,7 +392,10 @@ public static class TownRules
             }
         }
 
-        return null;
+        var hall = Math.Min(LevelOf(BuiltInBuildings.TownHall), Buildings(state, town).MaxLevel(BuiltInBuildings.TownHall));
+        return hall >= BuiltInBuildings.CapitolLevel
+            ? CheckCapitolDwellings(state, town, Buildings(state, town).Get(BuiltInBuildings.TownHall, hall), DwellingOf)
+            : null;
     }
 
     private static string? CheckLevel(GameState state, Town town, BuildingLevel level)
@@ -375,6 +408,11 @@ public static class TownRules
         if (level.Requires.FirstOrDefault(r => Level(state, town, r.Building) < r.Level) is { } missing)
         {
             return $"{level.Name} needs {Buildings(state, town).Get(missing.Building, missing.Level).Name} first.";
+        }
+
+        if (CheckCapitolDwellings(state, town, level) is { } dwellings)
+        {
+            return dwellings;
         }
 
         if (CheckCapitol(state, town, level) is { } capitol)

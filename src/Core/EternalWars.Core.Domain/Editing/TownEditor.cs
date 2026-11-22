@@ -136,7 +136,7 @@ public sealed class TownEditor
 
     /// <summary>
     /// Pre-builds a line's dwelling: 0 none, 1 built, 2 upgraded; the 7-of-9 rule (ADR-030) and the dwelling's
-    /// requirements (the fort, ADR-066) apply.
+    /// requirements (the fort, ADR-066) apply, and nothing built may lose a dwelling it needs (the Capitol, ADR-291).
     /// </summary>
     public EditResult SetDwelling(MapObjectId id, Common.CreatureId line, int level)
     {
@@ -156,7 +156,8 @@ public sealed class TownEditor
             return EditResult.InvalidValue;
         }
 
-        if (TownRules.UnmetDwellingRequirement(Scenario, town, definition, level) is not null)
+        if (TownRules.UnmetDwellingRequirement(Scenario, town, definition, level) is not null
+            || TownRules.UnmetRequirement(Scenario, town, dwellingLevel: l => l.Id == line ? level : town.DwellingLevel(l.Id)) is not null)
         {
             return EditResult.RequirementMissing;
         }

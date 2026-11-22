@@ -18,7 +18,8 @@ ADR-050.
 ## Buildings
 Each building's levels, cost, requirements and effect: [town-buildings.md](../content/town-buildings.md) (ADR-046). Rules kept here:
 - **Capitol** (town hall 4, ADR-070, ADR-074): one per player; a second cannot be built, and a captured one drops to City Hall when the
-  captor already has one.
+  captor already has one. It needs six dwellings of tiers 1–4 (ADR-291): with the [7-of-9 rule](#creature-tech-tree) that is every dwelling those
+  tiers may have, so a town commits its line choices before its Capitol.
 - **Fort** levels raise [growth](#growth) and add [siege](combat.md#sieges) fortifications; every dwelling needs the Fort.
 - **Mage guild** and spell buildings: [magic.md](magic.md#guilds-and-learning); Stronghold and Swamp Bestiary have the **war lodge**
   instead (warcries; town hall 2 needs it; ADR-112).

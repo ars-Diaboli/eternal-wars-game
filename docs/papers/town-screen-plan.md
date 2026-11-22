@@ -227,10 +227,13 @@ a second Escape leaves the town.
 
   | Plot state | Shows |
   |---|---|
-  | Not built, can be built | Marker stones and a cleared patch |
+  | Not built (whether it can still be built or its line is closed by the 7-of-9 choice) | Unused land: a piece of the diorama's scenery, no markers or rubble |
   | Built today | Scaffolding, then the model |
   | Built | The model for its level |
-  | Dwelling closed for ever by the 7-of-9 choice | Overgrown rubble with a broken marker |
+  | Closed dwelling, once the town has the Capitol | Homes of the town's citizens |
+
+  The Capitol needs six dwellings of tiers 1–4 (ADR-291), so a town with it has exactly two closed tier 1–4 lines. Building the Capitol
+  fills those two plots with citizens' homes, as part of its construction scene; a captured Capitol that drops to City Hall keeps them.
 - **Walls follow the fort**: no walls at level 0. A palisade or low wall with the Fort, towers with the Citadel, and the full wall and
   moat with the Castle. These are the same parts the siege uses ([combat.md](../design/combat.md#sieges)), so the town looks as it
   fights.
@@ -481,7 +484,7 @@ The rules exist. The screen needs **read models** and a few **commands**:
   | Unique building(s) | 1+ |
   | Grail building | 1 |
   | Dwellings | 9 lines × 2 levels = 18 |
-  | Scaffolding, rubble, plot markers | Shared |
+  | Scaffolding, citizens' homes (per faction, 2) | Shared scaffolding; homes per faction |
   | Diorama ground, sky and props | 1 set |
 
   That is about **40 models a faction, about 320 for the eight**, the largest art task in the game. Hence the order: greybox, then two
@@ -522,15 +525,20 @@ until the owner answers.
 **TOWN-14 The town camera.** (a) A fixed hero shot, free orbit, or HoMM5's slow drift? (b) Does a click wait for the camera to fly to
 the building? **Proposal**: (a) a fixed hero shot that the player may turn ±25° and zoom in two steps, no drift; (b) no. The window
 opens at once, and the camera eases behind it.
+Answer : use proposals;
 
 <a id="town-15"></a>
 **TOWN-15 What plots show.** (a) Do the two dwelling alternatives of a tier both have a plot? (b) What does a plot show before it is
 built, and once its line is closed for ever? **Proposal**: (a) yes, all nine lines; (b) marker stones while it can be built, overgrown
 rubble with a broken marker once closed, scaffolding on the day it is built.
+Answer : (a) yes; (b) no marker stones or rubble: a plot not built looks like unused land or a piece of scenery, whether it can still be
+built or is closed; scaffolding on the day it is built. New rule: the Capitol needs all six dwellings of tiers 1–4 first (ADR-291), which
+leaves two unused plots for the closed lines; building the Capitol fills them with homes of the town's citizens.
 
 <a id="town-16"></a>
 **TOWN-16 A 2D fallback.** Keep a 2D main screen (a list or a painted picture) for weak hardware or as a setting? **Proposal**: no. The
 3D scene has a low preset for the Deck, and the windows carry all the information. The harness keeps today's `TownPanel` as a tool.
+Answer : use proposals;
 
 <a id="town-17"></a>
 **TOWN-17 Town mechanics to add.** Which of these join the rules?
@@ -553,32 +561,40 @@ rubble with a broken marker once closed, scaffolding on the day it is built.
 - k: yes, later (UI only).
 - d and f: no. The Sacrificial Altar and the map's merchants already cover them.
 - g: a candidate after step 6.
+- 
+  Answer : use proposals;
 
 <a id="town-18"></a>
 **TOWN-18 Light and weather in the town.** One fixed mood per faction, or a time of day and weather? **Proposal**: one lighting set per
 faction, no day cycle. The week's event shows lightly: banners of the week's creature, or a grey haze in a plague month.
+Answer : use proposals;
 
 <a id="town-19"></a>
 **TOWN-19 How much the town grows in the scene.** Do the town hall's and fort's levels change the scene's own look (a village becoming a
 walled city), beyond each building's model? **Proposal**: yes. The walls follow the fort level, as in a siege. The town hall's level
 adds streets and houses as filler in three steps (village, town, city).
+Answer : use proposals;
 
 <a id="town-20"></a>
 **TOWN-20 Creatures in the scene.** Does each built dwelling show its creature idling before it? **Proposal**: yes, one creature per
 dwelling, once creature models exist (Phase 5 art). Until then the dwellings stand empty.
+Answer : Does each built dwelling show its creature idling before it - no;
 
 <a id="town-21"></a>
 **TOWN-21 How the town art is made.** About 320 models: image-to-3D from concept art with clean-up, a kitbash kit per faction, or
 commissioned work? Which factions come first? **Proposal**: a kit per faction for walls and roofs, and image-to-3D with clean-up for
 the landmark buildings. Haven and Inferno first (the vertical slice, ADR-034). A `town-scene-prompts.md` file in the ADR-245 layout.
+Answer : use proposals, however take into account latest design and atmosphere direction;
 
 <a id="town-22"></a>
 **TOWN-22 Heroes in the scene.** Does the visiting hero appear in the town, and the garrison hero? **Proposal**: the visiting hero's
 model and mount wait at the gate. The garrison hero shows only as its banner on the keep.
+Answer : the visiting hero's model and mount wait at the gate - no, only banner on the keep;
 
 <a id="town-23"></a>
 **TOWN-23 Entering and leaving.** How does the screen open from the map? **Proposal**: a 0.5 s fade through black into the hero shot,
 skipped at instant speed. The adventure map's camera does not fly into the town model.
+Answer : use proposals;
 
 ## Risks
 

@@ -9,6 +9,9 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- The Capitol needs six dwellings of tiers 1–4 (ADR-291, owner's new rule with the TOWN-15 answer): in build, the town tree, the editor,
+  the validator and the AI; the plan's plots show unused land when not built and citizens' homes on the two closed lines once the
+  Capitol stands.
 - The editor plan's second check (ADR-290): every section checked against the code; built what was left out: the gate links drawn as
   arrows while LinkGates is picked, Escape that drops the tool's half-done action, the selection or the tool, a problem's click that
   selects the culprit, the fairness numbers worked out in the background, the Monster and Hero tools' ghost, the owner on the status

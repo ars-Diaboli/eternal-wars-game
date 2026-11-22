@@ -76,7 +76,7 @@ public static class BuildingTree
         next is null ? BuildingStatus.Complete
         : refusal is null ? BuildingStatus.Available
         : next.Building == BuiltInBuildings.Grail ? BuildingStatus.Refused
-        : requires.Any(r => !r.Met) ? BuildingStatus.NeedsBuildings
+        : requires.Any(r => !r.Met) || TownRules.CheckCapitolDwellings(state, town, next) is not null ? BuildingStatus.NeedsBuildings
         : TownRules.HasBuiltToday(state, town) ? BuildingStatus.BuiltToday
         : TownRules.CheckCapitol(state, town, next) is not null ? BuildingStatus.Refused
         : BuildingStatus.CannotAfford;
