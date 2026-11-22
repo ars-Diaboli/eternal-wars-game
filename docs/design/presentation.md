@@ -110,10 +110,10 @@ creatures and buildings, heraldic player colours, iconic map objects).
 
 <a id="town-screen"></a>
 ## Town screen
-ADR-246, ADR-294, ADR-296, ADR-297; the plan and its 3D scene: [town-screen-plan.md](../papers/town-screen-plan.md).
+ADR-246, ADR-294, ADR-296, ADR-297, ADR-300; the plan and its 3D scene: [town-screen-plan.md](../papers/town-screen-plan.md).
 - **Main screen**: the top bar has the town's crest and name (a click renames it), ◄ ► through the player's towns ([ and ] too), the faction,
   town hall and governor, the quick buttons of the windows and the close "×". The main area is the town's 3D scene where its town type
-  has a layout (Haven so far), else the faction's key painting. In the scene each built building stands on its plot (a greybox block with
+  has a layout (every playable town type has one), else the faction's key painting. In the scene each built building stands on its plot (a greybox block with
   a roof and its name on a sign until it has a model) and unbuilt plots are bare land; the pointer over a building shows the hand and its
   name on the status bar, a click opens its window (or its information, for one without a window) and a right click its information. The
   adventure map and its side panels are put away while the scene shows. Along the main area's bottom runs a strip of the town's buildings

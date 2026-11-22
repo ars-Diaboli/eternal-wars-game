@@ -15,12 +15,19 @@ namespace EternalWars.Godot.Shared.Towns;
 /// <c>Camera</c> is the hero shot; a layout without its own environment, sun or camera gets defaults. Input is mapped by the screen that holds it:
 /// <see cref="Hover"/> raises <see cref="BuildingHovered"/>, <see cref="Pick"/> raises <see cref="BuildingPicked"/>. The plots follow
 /// <see cref="TownBuilt"/>, <see cref="DwellingBuilt"/>, <see cref="TownBuildingDowngraded"/> and the new day while it is open. One layout stays
-/// loaded, out of the tree while the scene is closed.
+/// loaded, out of the tree while the scene is closed. A layout missing a plot for one of the town type's buildings or lines reports an error
+/// when it loads (smoke <c>game-town-layouts</c>). The town type's painting (<c>bg_town_&lt;town&gt;</c>), when there is one, is the sky of a
+/// layout with a sky, spread over the part of it the hero shot sees (<c>town_sky.gdshader</c>).
 /// </summary>
 public partial class TownScene3D : Node3D
 {
     /// <summary>Where the layouts are: one scene per town type.</summary>
     public const string LayoutFolder = "res://shared/scenes/towns/";
+
+    /// <summary>Where the town types' sky paintings are (<c>bg_town_&lt;town&gt;.jpg</c>, ui-element-prompts.md).</summary>
+    public const string SkyFolder = "res://shared/textures/ui/backgrounds/towns/";
+
+    private const string SkyShader = "res://shared/shaders/town_sky.gdshader";
 
     private readonly Camera3D _camera = new() { Name = "TownCamera", Fov = 40, Far = 1500 };
     private readonly Dictionary<string, TownPlot> _plots = [];
@@ -60,6 +67,8 @@ public partial class TownScene3D : Node3D
 
     public static string LayoutPath(string townType) => $"{LayoutFolder}{townType}.tscn";
 
+    public static string SkyPath(string townType) => $"{SkyFolder}bg_town_{townType}.jpg";
+
     public void Bind(GameSession session)
     {
         _session = session;
@@ -88,6 +97,7 @@ public partial class TownScene3D : Node3D
         if (_layoutType != shown.TownType)
         {
             Load(shown.TownType);
+            CheckPlots(shown);
         }
         else if (_layout!.GetParent() is null)
         {
@@ -255,7 +265,44 @@ public partial class TownScene3D : Node3D
             _layout.AddChild(new DirectionalLight3D { Name = "Sun", RotationDegrees = new Vector3(-50, -35, 0), ShadowEnabled = true, LightEnergy = 1.3f });
         }
 
+        PaintSky(townType);
         AddChild(_layout);
+    }
+
+    /// <summary>Reports the town type's buildings and lines the layout has no plot for (the core test checks the layouts against a default town).</summary>
+    private void CheckPlots(Town town)
+    {
+        var missing = TownOverview.PlotsOf(_session.State, town).Select(p => TownOverview.PlotNode(p.Id)).Where(n => !_plots.ContainsKey(n)).ToList();
+        if (missing.Count > 0)
+        {
+            GD.PushError($"{LayoutPath(town.TownType)} has no plot for: {string.Join(", ", missing)}");
+        }
+    }
+
+    /// <summary>
+    /// The town type's painting as the layout's sky, when both exist: the middle of the painting where the hero shot looks, its horizon on the
+    /// horizon (the layout's <c>sky_span</c> and <c>sky_horizon</c> metadata: the painting's width in radians, its horizon from the bottom).
+    /// </summary>
+    private void PaintSky(string townType)
+    {
+        if (!ResourceLoader.Exists(SkyPath(townType))
+            || _layout!.FindChildren("*", nameof(WorldEnvironment), recursive: false, owned: false).OfType<WorldEnvironment>().FirstOrDefault() is not { Environment: { } shared } world
+            || shared.BackgroundMode != global::Godot.Environment.BGMode.Sky)
+        {
+            return;
+        }
+
+        var environment = (global::Godot.Environment)shared.Duplicate(); // the loaded scene's own environment stays as authored
+        var above = (shared.Sky?.SkyMaterial as ProceduralSkyMaterial)?.SkyTopColor ?? new Color(0.3f, 0.45f, 0.7f);
+        var forward = -_camera.Transform.Basis.Z;
+        var material = new ShaderMaterial { Shader = GD.Load<Shader>(SkyShader) };
+        material.SetShaderParameter("picture", GD.Load<Texture2D>(SkyPath(townType)));
+        material.SetShaderParameter("azimuth", Mathf.Atan2(forward.X, -forward.Z));
+        material.SetShaderParameter("span", (float)_layout.GetMeta("sky_span", 2.1f));
+        material.SetShaderParameter("horizon", (float)_layout.GetMeta("sky_horizon", 0.35f));
+        material.SetShaderParameter("above", above);
+        environment.Sky = new Sky { SkyMaterial = material };
+        world.Environment = environment;
     }
 
     private static WorldEnvironment DefaultEnvironment() => new()

@@ -41,6 +41,7 @@
 | [294](#adr-294-town-screen-steps-0-and-1-the-shell-behind---town-screennew-havens-style-frame-two-font-pairings-nine-slice-frames-the-shared-widgets-the-heroes-swap-adr-246-adr-292-2026-11-22) | Town screen steps 0 and 1: the shell behind --town-screen=new, Haven's style frame, two font pairings, nine-slice frames, the shared widgets, the heroes' swap (ADR-246, ADR-292, 2026-11-22) | implemented |
 | [296](#adr-296-town-screen-step-2-the-windows-over-the-key-painting-the-overview-and-plans-in-core-recruit-all-upgrade-all-dismissing-renaming-the-rumour-table-resource-for-resource-sending-to-an-ally-town-17-adr-246-adr-292-2026-11-22) | Town screen step 2: the windows over the key painting, the overview and plans in core, Recruit all, Upgrade all, dismissing, renaming, the rumour table, resource for resource, sending to an ally (TOWN-17, ADR-246, ADR-292, 2026-11-22) | implemented |
 | [297](#adr-297-town-screen-step-3-task-1-the-3d-town-scene-behind-the-bars-plots-read-from-layout-scenes-greybox-blocks-hover-and-pick-adr-246-adr-292-2026-11-22) | Town screen step 3, task 1: the 3D town scene behind the bars, plots read from layout scenes, greybox blocks, hover and pick (ADR-246, ADR-292, 2026-11-22) | implemented |
+| [300](#adr-300-town-screen-step-3-task-2-greybox-layouts-for-the-eight-towns-after-their-key-paintings-the-layout-check-in-the-game-the-towns-painting-as-the-sky-adr-246-adr-292-adr-297-2026-11-22) | Town screen step 3, task 2: greybox layouts for the eight towns after their key paintings, the layout check in the game, the town's painting as the sky (ADR-246, ADR-292, ADR-297, 2026-11-22) | implemented |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -785,3 +786,26 @@ TOWN-15 is ADR-291. The plan's step-by-step implementation is in its [roadmap](.
   every model in sight.
 - **Smokes**: `game-town-scene` (the scene, a click on the tavern and on the keep, a right click on a block, back to the map);
   `game-town-open` and the other town smokes now open Haven's scene.
+
+### ADR-300: Town screen step 3, task 2: greybox layouts for the eight towns after their key paintings, the layout check in the game, the town's painting as the sky (ADR-246, ADR-292, ADR-297, 2026-11-22)
+**Status**: implemented. The [town screen plan](../../docs/papers/town-screen-plan.md#implementation-plan)'s step 3, task 2.
+
+- **Eight layouts**: Sylvan, Academy, Necropolis, Inferno, Dungeon, Stronghold and Swamp Bestiary join Haven's (ADR-297) in
+  `scenes/towns/`, each after its key painting and [faction-art.md](../../docs/content/faction-art.md): the faction's ground, sky, fog and
+  sun, and its setting around the town (Sylvan's gorge with a waterfall and giant trees, Academy's snow, frozen lake and the cloud
+  temple's peak, Necropolis' dead plain and far ruins, Inferno's ash and lava channels, Dungeon's cavern with a ceiling of stalactites
+  and no sky, Stronghold's badlands and ruins, Swamp's channels, dark pines and sunken ruins).
+- **One composition**: every layout uses Haven's plot places (the keep and fort on a rise at the back right, the landmark in the middle,
+  the lesser buildings around it, a calm front band), so the shared hero shot frames them all; a few plots move where the painting
+  wants it (Academy's cloud temple on its peak and observatory on a spur, Sylvan's gallery on a ledge, Swamp's Shell Wall before the
+  stronghold). The landmark, the keep, the fort and the buildings the painting names have their own greybox `Model` (primitive meshes,
+  so their hover boxes are written in the layout); the rest are blocks. The landmarks: the Elder Grove, Academy's mage tower with the
+  castle's orrery beside it, the Necromancy Amplifier, the Altar of Brimstone, the Mana Spring, Stronghold's lodge under the beast skull,
+  the Elder Totem (Swamp's War Lodge).
+- **The layout check in the game**: `TownScene3D` reports an error when a layout it loads has no plot for one of the town's buildings or
+  lines (the core `TownLayoutTests` checks both ways against a default town). The smoke `game-town-layouts` opens a fully built town of
+  each type in turn, so it fails on such a layout and leaves a frame of each.
+- **The sky**: when `textures/ui/backgrounds/towns/bg_town_<town>.jpg` exists and the layout's environment has a sky, that painting
+  becomes the sky (`town_sky.gdshader`): its middle where the hero shot looks, its horizon on the horizon, 2.1 radians wide, the sky's
+  top colour above it; the layout's `sky_span` and `sky_horizon` metadata change the fit. The procedural sky stays until the pictures
+  are made; Dungeon's cavern has no sky and keeps none.

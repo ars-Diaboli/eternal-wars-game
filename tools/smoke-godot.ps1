@@ -39,6 +39,7 @@ if (-not $NoBuild) {
 $exchangeMap = Join-Path $PSScriptRoot 'smoke/exchange.ewmap.json'
 $battleMap = Join-Path $PSScriptRoot 'smoke/battle.ewmap.json'
 $townsMap = Join-Path $PSScriptRoot 'smoke/towns.ewmap.json'
+$townLayoutsMap = Join-Path $PSScriptRoot 'smoke/town-layouts.ewmap.json'
 $siegeMap = Join-Path $PSScriptRoot 'smoke/siege.ewmap.json'
 $caravanMap = Join-Path $PSScriptRoot 'smoke/caravan.ewmap.json'
 $questsMap = Join-Path $PSScriptRoot 'smoke/quests.ewmap.json'
@@ -153,6 +154,10 @@ $scenarios = @(
     # the map is back.
     @{ Name = 'game-town-scene'; App = 'EternalWars.Game'; Frames = 76; Map = $townsMap
        Input = '3:key:Enter;12:key:T;20:click:640,470;30:key:Escape;36:click:1140,250;46:key:Escape;52:rclick:470,525;62:key:Escape;66:key:Escape;70:key:Escape' },
+    # The eight town layouts (ADR-300): Blue holds a town of each type with everything built; T opens the first, ] goes through the other seven
+    # (each layout loaded, every plot shown; a layout without a plot for one of its town's buildings or lines reports an error); Escape leaves.
+    @{ Name = 'game-town-layouts'; App = 'EternalWars.Game'; Frames = 104; Map = $townLayoutsMap
+       Input = '3:key:Enter;12:key:T;24:key:Bracketright;34:key:Bracketright;44:key:Bracketright;54:key:Bracketright;64:key:Bracketright;74:key:Bracketright;84:key:Bracketright;96:key:Escape' },
     # Switching towns (ADR-296): T opens Castlebridge, ] opens Dawnford, [ comes back, the Next town button goes on; Escape leaves.
     @{ Name = 'game-town-switch'; App = 'EternalWars.Game'; Frames = 64; Map = $magicMap
        Input = '3:key:Enter;12:key:T;22:key:Bracketright;34:key:Bracketleft;46:press:Next town;58:key:Escape' },

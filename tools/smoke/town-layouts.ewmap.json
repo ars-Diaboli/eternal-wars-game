@@ -1,0 +1,413 @@
+{
+  "formatVersion": 11,
+  "name": "Town Layouts",
+  "description": "",
+  "width": 42,
+  "height": 24,
+  "terrain": [
+    [
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg"
+    ]
+  ],
+  "roads": [
+    [
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      ".........................................."
+    ]
+  ],
+  "players": [
+    {
+      "name": "Blue",
+      "isHuman": true
+    },
+    {
+      "name": "Red",
+      "isHuman": true
+    }
+  ],
+  "teamsLocked": false,
+  "heroes": [
+    {
+      "id": 1,
+      "name": "Orrin",
+      "owner": 0,
+      "x": 4,
+      "y": 9,
+      "level": 0,
+      "attack": 2,
+      "defense": 1,
+      "army": [
+        {
+          "slot": 0,
+          "creature": "haven.pikeman",
+          "count": 20
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Sandro",
+      "owner": 1,
+      "x": 37,
+      "y": 9,
+      "level": 0,
+      "attack": 1,
+      "defense": 2,
+      "army": [
+        {
+          "slot": 0,
+          "creature": "inferno.horned-demon",
+          "count": 22
+        }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "kind": "town",
+      "owner": 0,
+      "name": "Castlebridge",
+      "buildings": {
+        "town-hall": 4,
+        "fort": 3,
+        "blacksmith": 1,
+        "marketplace": 2,
+        "mage-guild": 4,
+        "caravan": 1,
+        "grail": 1,
+        "tavern": 2,
+        "stables": 1,
+        "school-sylvan": 1,
+        "school-academy": 1,
+        "growth-1": 1,
+        "growth-2": 1
+      },
+      "dwellings": {
+        "haven.footman": 1,
+        "haven.pikeman": 1,
+        "haven.archer": 1,
+        "haven.zealot": 1,
+        "haven.griffin": 1,
+        "haven.monk": 1,
+        "haven.lancer": 1,
+        "haven.paladin": 1,
+        "haven.radiant-spirit": 1
+      },
+      "id": 1,
+      "definition": "town.haven",
+      "x": 1,
+      "y": 2,
+      "level": 0
+    },
+    {
+      "kind": "town",
+      "owner": 0,
+      "name": "Mosswatch",
+      "buildings": {
+        "town-hall": 4,
+        "fort": 3,
+        "blacksmith": 1,
+        "marketplace": 2,
+        "mage-guild": 4,
+        "caravan": 1,
+        "grail": 1,
+        "tavern": 2,
+        "elder-grove": 1,
+        "school-inferno": 1,
+        "school-haven": 1,
+        "growth-1": 1,
+        "growth-2": 1
+      },
+      "dwellings": {
+        "sylvan.pixie": 1,
+        "sylvan.satyr": 1,
+        "sylvan.blade-dancer": 1,
+        "sylvan.hunter": 1,
+        "sylvan.druid": 1,
+        "sylvan.pegasus": 1,
+        "sylvan.moon-doe": 1,
+        "sylvan.treant": 1,
+        "sylvan.fire-bird": 1
+      },
+      "id": 2,
+      "definition": "town.sylvan",
+      "x": 9,
+      "y": 2,
+      "level": 0
+    },
+    {
+      "kind": "town",
+      "owner": 0,
+      "name": "Frostspire",
+      "buildings": {
+        "town-hall": 4,
+        "fort": 3,
+        "blacksmith": 1,
+        "marketplace": 2,
+        "mage-guild": 4,
+        "caravan": 1,
+        "grail": 1,
+        "tavern": 2,
+        "hall-of-records": 1,
+        "observatory": 1,
+        "school-haven": 1,
+        "school-dungeon": 1,
+        "growth-1": 1,
+        "growth-2": 1
+      },
+      "dwellings": {
+        "academy.dwarf": 1,
+        "academy.gremlin": 1,
+        "academy.gargoyle": 1,
+        "academy.iron-golem": 1,
+        "academy.snow-maiden": 1,
+        "academy.sorcerer": 1,
+        "academy.djinn": 1,
+        "academy.naga": 1,
+        "academy.colossus": 1
+      },
+      "id": 3,
+      "definition": "town.academy",
+      "x": 17,
+      "y": 2,
+      "level": 0
+    },
+    {
+      "kind": "town",
+      "owner": 0,
+      "name": "Gravemoor",
+      "buildings": {
+        "town-hall": 4,
+        "fort": 3,
+        "blacksmith": 1,
+        "marketplace": 2,
+        "mage-guild": 4,
+        "caravan": 1,
+        "grail": 1,
+        "tavern": 2,
+        "necromancy-amplifier": 1,
+        "undead-transformer": 1,
+        "school-dungeon": 1,
+        "school-inferno": 1,
+        "growth-1": 1,
+        "growth-2": 1
+      },
+      "dwellings": {
+        "necropolis.plague-bearer": 1,
+        "necropolis.skeleton": 1,
+        "necropolis.ghoul": 1,
+        "necropolis.wight": 1,
+        "necropolis.death-weaver": 1,
+        "necropolis.vampire": 1,
+        "necropolis.dark-knight": 1,
+        "necropolis.lich": 1,
+        "necropolis.bone-dragon": 1
+      },
+      "id": 4,
+      "definition": "town.necropolis",
+      "x": 25,
+      "y": 2,
+      "level": 0
+    },
+    {
+      "kind": "town",
+      "owner": 0,
+      "name": "Cinderhold",
+      "buildings": {
+        "town-hall": 4,
+        "fort": 3,
+        "blacksmith": 1,
+        "marketplace": 2,
+        "mage-guild": 4,
+        "caravan": 1,
+        "grail": 1,
+        "tavern": 2,
+        "altar-of-brimstone": 1,
+        "school-necropolis": 1,
+        "school-sylvan": 1,
+        "growth-1": 1,
+        "growth-2": 1
+      },
+      "dwellings": {
+        "inferno.horned-demon": 1,
+        "inferno.imp": 1,
+        "inferno.hell-hound": 1,
+        "inferno.tormentor": 1,
+        "inferno.hell-charger": 1,
+        "inferno.succubus": 1,
+        "inferno.juggernaut": 1,
+        "inferno.pit-fiend": 1,
+        "inferno.devil": 1
+      },
+      "id": 5,
+      "definition": "town.inferno",
+      "x": 1,
+      "y": 13,
+      "level": 0
+    },
+    {
+      "kind": "town",
+      "owner": 0,
+      "name": "Umbervault",
+      "buildings": {
+        "town-hall": 4,
+        "fort": 3,
+        "blacksmith": 1,
+        "marketplace": 2,
+        "mage-guild": 4,
+        "caravan": 1,
+        "grail": 1,
+        "tavern": 2,
+        "mana-spring": 1,
+        "school-academy": 1,
+        "school-necropolis": 1,
+        "growth-1": 1,
+        "growth-2": 1
+      },
+      "dwellings": {
+        "dungeon.scout": 1,
+        "dungeon.troglodyte": 1,
+        "dungeon.medusa": 1,
+        "dungeon.minotaur": 1,
+        "dungeon.dark-raider": 1,
+        "dungeon.shadow-mistress": 1,
+        "dungeon.manticore": 1,
+        "dungeon.spectator": 1,
+        "dungeon.shadow-horror": 1
+      },
+      "id": 6,
+      "definition": "town.dungeon",
+      "x": 9,
+      "y": 13,
+      "level": 0
+    },
+    {
+      "kind": "town",
+      "owner": 0,
+      "name": "Dustfang",
+      "buildings": {
+        "town-hall": 4,
+        "fort": 3,
+        "blacksmith": 1,
+        "marketplace": 2,
+        "caravan": 1,
+        "grail": 1,
+        "tavern": 2,
+        "war-lodge": 3,
+        "proving-ring": 1,
+        "growth-1": 1,
+        "growth-2": 1
+      },
+      "dwellings": {
+        "stronghold.goblin": 1,
+        "stronghold.harpy": 1,
+        "stronghold.orc": 1,
+        "stronghold.wolf-rider": 1,
+        "stronghold.centaur": 1,
+        "stronghold.ogre": 1,
+        "stronghold.cyclops": 1,
+        "stronghold.roc": 1,
+        "stronghold.behemoth": 1
+      },
+      "id": 7,
+      "definition": "town.stronghold",
+      "x": 17,
+      "y": 13,
+      "level": 0
+    },
+    {
+      "kind": "town",
+      "owner": 0,
+      "name": "Mirefen",
+      "buildings": {
+        "town-hall": 4,
+        "fort": 3,
+        "blacksmith": 1,
+        "marketplace": 2,
+        "caravan": 1,
+        "grail": 1,
+        "tavern": 2,
+        "war-lodge": 3,
+        "shell-wall": 1,
+        "growth-1": 1,
+        "growth-2": 1
+      },
+      "dwellings": {
+        "swamp-bestiary.kappa": 1,
+        "swamp-bestiary.lizardman": 1,
+        "swamp-bestiary.jungle-horror": 1,
+        "swamp-bestiary.mantis": 1,
+        "swamp-bestiary.basilisk": 1,
+        "swamp-bestiary.owlbear": 1,
+        "swamp-bestiary.gorgon": 1,
+        "swamp-bestiary.wyvern": 1,
+        "swamp-bestiary.hydra": 1
+      },
+      "id": 8,
+      "definition": "town.swamp-bestiary",
+      "x": 25,
+      "y": 13,
+      "level": 0
+    },
+    {
+      "kind": "town",
+      "owner": 1,
+      "name": "Ashgate",
+      "buildings": {
+        "fort": 1,
+        "tavern": 1,
+        "town-hall": 1
+      },
+      "id": 9,
+      "definition": "town.inferno",
+      "x": 34,
+      "y": 2,
+      "level": 0
+    }
+  ]
+}

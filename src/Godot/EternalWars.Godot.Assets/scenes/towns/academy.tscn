@@ -1,0 +1,2755 @@
+[gd_scene format=3]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_material"]
+sky_top_color = Color(0.28, 0.48, 0.82, 1)
+sky_horizon_color = Color(0.78, 0.85, 0.93, 1)
+ground_bottom_color = Color(0.6, 0.64, 0.7, 1)
+ground_horizon_color = Color(0.8, 0.85, 0.9, 1)
+sun_angle_max = 20
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_material")
+
+[sub_resource type="Environment" id="environment"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 3
+ambient_light_sky_contribution = 0.6
+reflected_light_source = 2
+tonemap_mode = 2
+tonemap_exposure = 1
+tonemap_white = 6.0
+ssao_enabled = true
+ssao_radius = 1.5
+ssao_intensity = 1.6
+glow_enabled = true
+glow_intensity = 0.4
+glow_bloom = 0.05
+fog_enabled = true
+fog_mode = 0
+fog_light_color = Color(0.82, 0.88, 0.95, 1)
+fog_light_energy = 1.0
+fog_sun_scatter = 0.1
+fog_density = 0.0018
+fog_aerial_perspective = 0.35
+fog_sky_affect = 0.15
+adjustment_enabled = true
+adjustment_contrast = 1.1
+adjustment_saturation = 1.05
+
+[sub_resource type="StandardMaterial3D" id="mat_snow"]
+albedo_color = Color(0.86, 0.88, 0.92, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="mat_bluestone"]
+albedo_color = Color(0.56, 0.6, 0.68, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="mat_white"]
+albedo_color = Color(0.88, 0.88, 0.86, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="mat_verdigris"]
+albedo_color = Color(0.32, 0.6, 0.55, 1)
+roughness = 0.6
+metallic = 0.3
+
+[sub_resource type="StandardMaterial3D" id="mat_rock"]
+albedo_color = Color(0.38, 0.4, 0.45, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="mat_pine"]
+albedo_color = Color(0.1, 0.2, 0.15, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="mat_trunk"]
+albedo_color = Color(0.3, 0.24, 0.18, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="mat_mountain"]
+albedo_color = Color(0.4, 0.45, 0.55, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="mat_banner"]
+albedo_color = Color(0.16, 0.26, 0.62, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="mat_cloud"]
+albedo_color = Color(0.95, 0.96, 0.98, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="mat_timber"]
+albedo_color = Color(0.42, 0.32, 0.22, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="mat_ice"]
+albedo_color = Color(0.72, 0.84, 0.92, 1)
+roughness = 0.08
+metallic = 0.1
+
+[sub_resource type="StandardMaterial3D" id="mat_bronze"]
+albedo_color = Color(0.56, 0.42, 0.22, 1)
+roughness = 0.35
+metallic = 0.85
+
+[sub_resource type="StandardMaterial3D" id="mat_gold"]
+albedo_color = Color(0.86, 0.68, 0.22, 1)
+roughness = 0.3
+metallic = 0.8
+
+[sub_resource type="StandardMaterial3D" id="mat_rune"]
+albedo_color = Color(0.3, 0.55, 1, 1)
+roughness = 0.4
+emission_enabled = true
+emission = Color(0.3, 0.55, 1, 1)
+emission_energy_multiplier = 3
+
+[sub_resource type="StandardMaterial3D" id="mat_wisp"]
+albedo_color = Color(0.5, 0.75, 1, 1)
+roughness = 0.4
+emission_enabled = true
+emission = Color(0.45, 0.7, 1, 1)
+emission_energy_multiplier = 4
+
+[sub_resource type="BoxMesh" id="box_0"]
+size = Vector3(1400, 1, 1200)
+material = SubResource("mat_snow")
+
+[sub_resource type="BoxMesh" id="box_1"]
+size = Vector3(100, 0.06, 200)
+material = SubResource("mat_ice")
+
+[sub_resource type="CylinderMesh" id="cyl_2"]
+top_radius = 0
+bottom_radius = 120
+height = 160
+radial_segments = 7
+rings = 0
+material = SubResource("mat_mountain")
+
+[sub_resource type="CylinderMesh" id="cyl_3"]
+top_radius = 0
+bottom_radius = 39.6
+height = 51.2
+radial_segments = 7
+rings = 0
+material = SubResource("mat_snow")
+
+[sub_resource type="CylinderMesh" id="cyl_4"]
+top_radius = 0
+bottom_radius = 150
+height = 210
+radial_segments = 7
+rings = 0
+material = SubResource("mat_mountain")
+
+[sub_resource type="CylinderMesh" id="cyl_5"]
+top_radius = 0
+bottom_radius = 49.5
+height = 67.2
+radial_segments = 7
+rings = 0
+material = SubResource("mat_snow")
+
+[sub_resource type="CylinderMesh" id="cyl_6"]
+top_radius = 0
+bottom_radius = 130
+height = 180
+radial_segments = 7
+rings = 0
+material = SubResource("mat_mountain")
+
+[sub_resource type="CylinderMesh" id="cyl_7"]
+top_radius = 0
+bottom_radius = 42.9
+height = 57.6
+radial_segments = 7
+rings = 0
+material = SubResource("mat_snow")
+
+[sub_resource type="CylinderMesh" id="cyl_8"]
+top_radius = 0
+bottom_radius = 120
+height = 150
+radial_segments = 7
+rings = 0
+material = SubResource("mat_mountain")
+
+[sub_resource type="CylinderMesh" id="cyl_9"]
+top_radius = 0
+bottom_radius = 39.6
+height = 48
+radial_segments = 7
+rings = 0
+material = SubResource("mat_snow")
+
+[sub_resource type="CylinderMesh" id="cyl_10"]
+top_radius = 0
+bottom_radius = 110
+height = 140
+radial_segments = 7
+rings = 0
+material = SubResource("mat_mountain")
+
+[sub_resource type="CylinderMesh" id="cyl_11"]
+top_radius = 0
+bottom_radius = 36.3
+height = 44.8
+radial_segments = 7
+rings = 0
+material = SubResource("mat_snow")
+
+[sub_resource type="BoxMesh" id="box_12"]
+size = Vector3(8, 50, 3)
+material = SubResource("mat_ice")
+
+[sub_resource type="BoxMesh" id="box_13"]
+size = Vector3(40, 60, 12)
+material = SubResource("mat_rock")
+
+[sub_resource type="CylinderMesh" id="cyl_14"]
+top_radius = 13
+bottom_radius = 13
+height = 7
+radial_segments = 9
+rings = 0
+material = SubResource("mat_rock")
+
+[sub_resource type="CylinderMesh" id="cyl_15"]
+top_radius = 17
+bottom_radius = 17
+height = 4
+radial_segments = 9
+rings = 0
+material = SubResource("mat_snow")
+
+[sub_resource type="CylinderMesh" id="cyl_16"]
+top_radius = 12.5
+bottom_radius = 12.5
+height = 0.3
+radial_segments = 9
+rings = 0
+material = SubResource("mat_snow")
+
+[sub_resource type="CylinderMesh" id="cyl_17"]
+top_radius = 4.6
+bottom_radius = 9
+height = 16
+radial_segments = 7
+rings = 0
+material = SubResource("mat_rock")
+
+[sub_resource type="SphereMesh" id="sphere_18"]
+radius = 5
+height = 3.5
+radial_segments = 10
+rings = 4
+material = SubResource("mat_cloud")
+
+[sub_resource type="SphereMesh" id="sphere_19"]
+radius = 4.5
+height = 3.15
+radial_segments = 10
+rings = 4
+material = SubResource("mat_cloud")
+
+[sub_resource type="SphereMesh" id="sphere_20"]
+radius = 4
+height = 2.8
+radial_segments = 10
+rings = 4
+material = SubResource("mat_cloud")
+
+[sub_resource type="SphereMesh" id="sphere_21"]
+radius = 5.5
+height = 3.85
+radial_segments = 10
+rings = 4
+material = SubResource("mat_cloud")
+
+[sub_resource type="CylinderMesh" id="cyl_22"]
+top_radius = 4.5
+bottom_radius = 4.5
+height = 9
+radial_segments = 7
+rings = 0
+material = SubResource("mat_rock")
+
+[sub_resource type="CylinderMesh" id="cyl_23"]
+top_radius = 0.24728
+bottom_radius = 0.24728
+height = 1.41303
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_24"]
+top_radius = 0
+bottom_radius = 1.41303
+height = 4.2391
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_25"]
+top_radius = 0
+bottom_radius = 0.98912
+height = 3.17932
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_26"]
+top_radius = 0.41517
+bottom_radius = 0.41517
+height = 2.37242
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_27"]
+top_radius = 0
+bottom_radius = 2.37242
+height = 7.11725
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_28"]
+top_radius = 0
+bottom_radius = 1.66069
+height = 5.33794
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_29"]
+top_radius = 0.27908
+bottom_radius = 0.27908
+height = 1.59472
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_30"]
+top_radius = 0
+bottom_radius = 1.59472
+height = 4.78416
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_31"]
+top_radius = 0
+bottom_radius = 1.1163
+height = 3.58812
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_32"]
+top_radius = 0.41695
+bottom_radius = 0.41695
+height = 2.38258
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_33"]
+top_radius = 0
+bottom_radius = 2.38258
+height = 7.14775
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_34"]
+top_radius = 0
+bottom_radius = 1.66781
+height = 5.36081
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_35"]
+top_radius = 0.31577
+bottom_radius = 0.31577
+height = 1.8044
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_36"]
+top_radius = 0
+bottom_radius = 1.8044
+height = 5.4132
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_37"]
+top_radius = 0
+bottom_radius = 1.26308
+height = 4.0599
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_38"]
+top_radius = 0.43716
+bottom_radius = 0.43716
+height = 2.49804
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_39"]
+top_radius = 0
+bottom_radius = 2.49804
+height = 7.49412
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_40"]
+top_radius = 0
+bottom_radius = 1.74863
+height = 5.62059
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_41"]
+top_radius = 0.4523
+bottom_radius = 0.4523
+height = 2.58456
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_42"]
+top_radius = 0
+bottom_radius = 2.58456
+height = 7.75368
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_43"]
+top_radius = 0
+bottom_radius = 1.80919
+height = 5.81526
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_44"]
+top_radius = 0.33387
+bottom_radius = 0.33387
+height = 1.90785
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_45"]
+top_radius = 0
+bottom_radius = 1.90785
+height = 5.72354
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_46"]
+top_radius = 0
+bottom_radius = 1.33549
+height = 4.29266
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_47"]
+top_radius = 0.3755
+bottom_radius = 0.3755
+height = 2.14574
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_48"]
+top_radius = 0
+bottom_radius = 2.14574
+height = 6.43723
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_49"]
+top_radius = 0
+bottom_radius = 1.50202
+height = 4.82792
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_50"]
+top_radius = 0.4163
+bottom_radius = 0.4163
+height = 2.37884
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_51"]
+top_radius = 0
+bottom_radius = 2.37884
+height = 7.13651
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_52"]
+top_radius = 0
+bottom_radius = 1.66519
+height = 5.35238
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_53"]
+top_radius = 0.37015
+bottom_radius = 0.37015
+height = 2.11517
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_54"]
+top_radius = 0
+bottom_radius = 2.11517
+height = 6.3455
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_55"]
+top_radius = 0
+bottom_radius = 1.48062
+height = 4.75912
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_56"]
+top_radius = 0.2514
+bottom_radius = 0.2514
+height = 1.43659
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_57"]
+top_radius = 0
+bottom_radius = 1.43659
+height = 4.30978
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_58"]
+top_radius = 0
+bottom_radius = 1.00562
+height = 3.23233
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_59"]
+top_radius = 0.45002
+bottom_radius = 0.45002
+height = 2.57156
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_60"]
+top_radius = 0
+bottom_radius = 2.57156
+height = 7.71469
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_61"]
+top_radius = 0
+bottom_radius = 1.8001
+height = 5.78602
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_62"]
+top_radius = 0.32126
+bottom_radius = 0.32126
+height = 1.83575
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_63"]
+top_radius = 0
+bottom_radius = 1.83575
+height = 5.50726
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_64"]
+top_radius = 0
+bottom_radius = 1.28503
+height = 4.13045
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_65"]
+top_radius = 0.3213
+bottom_radius = 0.3213
+height = 1.83599
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_66"]
+top_radius = 0
+bottom_radius = 1.83599
+height = 5.50796
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_67"]
+top_radius = 0
+bottom_radius = 1.28519
+height = 4.13097
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_68"]
+top_radius = 0.41774
+bottom_radius = 0.41774
+height = 2.38708
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_69"]
+top_radius = 0
+bottom_radius = 2.38708
+height = 7.16124
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_70"]
+top_radius = 0
+bottom_radius = 1.67096
+height = 5.37093
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_71"]
+top_radius = 0.32653
+bottom_radius = 0.32653
+height = 1.8659
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_72"]
+top_radius = 0
+bottom_radius = 1.8659
+height = 5.59769
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_73"]
+top_radius = 0
+bottom_radius = 1.30613
+height = 4.19826
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_74"]
+top_radius = 0.36049
+bottom_radius = 0.36049
+height = 2.05997
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_75"]
+top_radius = 0
+bottom_radius = 2.05997
+height = 6.1799
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_76"]
+top_radius = 0
+bottom_radius = 1.44198
+height = 4.63492
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_77"]
+top_radius = 0.31728
+bottom_radius = 0.31728
+height = 1.81301
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_78"]
+top_radius = 0
+bottom_radius = 1.81301
+height = 5.43904
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_79"]
+top_radius = 0
+bottom_radius = 1.26911
+height = 4.07928
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_80"]
+top_radius = 0.34145
+bottom_radius = 0.34145
+height = 1.95111
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_81"]
+top_radius = 0
+bottom_radius = 1.95111
+height = 5.85334
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_82"]
+top_radius = 0
+bottom_radius = 1.36578
+height = 4.39001
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_83"]
+top_radius = 0.34502
+bottom_radius = 0.34502
+height = 1.97151
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_84"]
+top_radius = 0
+bottom_radius = 1.97151
+height = 5.91454
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_85"]
+top_radius = 0
+bottom_radius = 1.38006
+height = 4.43591
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_86"]
+top_radius = 0.44574
+bottom_radius = 0.44574
+height = 2.54707
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_87"]
+top_radius = 0
+bottom_radius = 2.54707
+height = 7.64121
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_88"]
+top_radius = 0
+bottom_radius = 1.78295
+height = 5.73091
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_89"]
+top_radius = 0.32148
+bottom_radius = 0.32148
+height = 1.83703
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_90"]
+top_radius = 0
+bottom_radius = 1.83703
+height = 5.51109
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_91"]
+top_radius = 0
+bottom_radius = 1.28592
+height = 4.13332
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_92"]
+top_radius = 0.30133
+bottom_radius = 0.30133
+height = 1.7219
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_93"]
+top_radius = 0
+bottom_radius = 1.7219
+height = 5.16571
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_94"]
+top_radius = 0
+bottom_radius = 1.20533
+height = 3.87429
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_95"]
+top_radius = 0.29573
+bottom_radius = 0.29573
+height = 1.6899
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_96"]
+top_radius = 0
+bottom_radius = 1.6899
+height = 5.06971
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_97"]
+top_radius = 0
+bottom_radius = 1.18293
+height = 3.80228
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_98"]
+top_radius = 0.37501
+bottom_radius = 0.37501
+height = 2.14289
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_99"]
+top_radius = 0
+bottom_radius = 2.14289
+height = 6.42868
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_100"]
+top_radius = 0
+bottom_radius = 1.50002
+height = 4.82151
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_101"]
+top_radius = 0.35076
+bottom_radius = 0.35076
+height = 2.00432
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_102"]
+top_radius = 0
+bottom_radius = 2.00432
+height = 6.01296
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_103"]
+top_radius = 0
+bottom_radius = 1.40302
+height = 4.50972
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_104"]
+top_radius = 0.41035
+bottom_radius = 0.41035
+height = 2.34488
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_105"]
+top_radius = 0
+bottom_radius = 2.34488
+height = 7.03465
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_106"]
+top_radius = 0
+bottom_radius = 1.64142
+height = 5.27599
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_107"]
+top_radius = 0.2932
+bottom_radius = 0.2932
+height = 1.67542
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_108"]
+top_radius = 0
+bottom_radius = 1.67542
+height = 5.02625
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_109"]
+top_radius = 0
+bottom_radius = 1.17279
+height = 3.76969
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_110"]
+top_radius = 0.4438
+bottom_radius = 0.4438
+height = 2.53601
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_111"]
+top_radius = 0
+bottom_radius = 2.53601
+height = 7.60804
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_112"]
+top_radius = 0
+bottom_radius = 1.77521
+height = 5.70603
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_113"]
+top_radius = 0.30618
+bottom_radius = 0.30618
+height = 1.74959
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_114"]
+top_radius = 0
+bottom_radius = 1.74959
+height = 5.24876
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_115"]
+top_radius = 0
+bottom_radius = 1.22471
+height = 3.93657
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_116"]
+top_radius = 0.44322
+bottom_radius = 0.44322
+height = 2.53268
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_117"]
+top_radius = 0
+bottom_radius = 2.53268
+height = 7.59805
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_118"]
+top_radius = 0
+bottom_radius = 1.77288
+height = 5.69854
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_119"]
+top_radius = 0.30485
+bottom_radius = 0.30485
+height = 1.74202
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_120"]
+top_radius = 0
+bottom_radius = 1.74202
+height = 5.22607
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_121"]
+top_radius = 0
+bottom_radius = 1.21942
+height = 3.91956
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_122"]
+top_radius = 0.43115
+bottom_radius = 0.43115
+height = 2.46372
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_123"]
+top_radius = 0
+bottom_radius = 2.46372
+height = 7.39117
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_124"]
+top_radius = 0
+bottom_radius = 1.72461
+height = 5.54338
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_125"]
+top_radius = 0.33641
+bottom_radius = 0.33641
+height = 1.92233
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_126"]
+top_radius = 0
+bottom_radius = 1.92233
+height = 5.767
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_127"]
+top_radius = 0
+bottom_radius = 1.34563
+height = 4.32525
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_128"]
+top_radius = 0.3762
+bottom_radius = 0.3762
+height = 2.14969
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_129"]
+top_radius = 0
+bottom_radius = 2.14969
+height = 6.44906
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_130"]
+top_radius = 0
+bottom_radius = 1.50478
+height = 4.83679
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_131"]
+top_radius = 0.40469
+bottom_radius = 0.40469
+height = 2.31252
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_132"]
+top_radius = 0
+bottom_radius = 2.31252
+height = 6.93756
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_133"]
+top_radius = 0
+bottom_radius = 1.61876
+height = 5.20317
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_134"]
+top_radius = 0.36683
+bottom_radius = 0.36683
+height = 2.0962
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_135"]
+top_radius = 0
+bottom_radius = 2.0962
+height = 6.28859
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_136"]
+top_radius = 0
+bottom_radius = 1.46734
+height = 4.71644
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_137"]
+top_radius = 0.39953
+bottom_radius = 0.39953
+height = 2.283
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_138"]
+top_radius = 0
+bottom_radius = 2.283
+height = 6.84901
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_139"]
+top_radius = 0
+bottom_radius = 1.5981
+height = 5.13676
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_140"]
+top_radius = 0.39413
+bottom_radius = 0.39413
+height = 2.25216
+radial_segments = 6
+rings = 0
+material = SubResource("mat_trunk")
+
+[sub_resource type="CylinderMesh" id="cyl_141"]
+top_radius = 0
+bottom_radius = 2.25216
+height = 6.75647
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="CylinderMesh" id="cyl_142"]
+top_radius = 0
+bottom_radius = 1.57651
+height = 5.06735
+radial_segments = 7
+rings = 0
+material = SubResource("mat_pine")
+
+[sub_resource type="BoxMesh" id="box_143"]
+size = Vector3(1.6, 3.6, 1.6)
+material = SubResource("mat_bluestone")
+
+[sub_resource type="BoxMesh" id="box_144"]
+size = Vector3(1.4, 2.2, 1)
+material = SubResource("mat_rock")
+
+[sub_resource type="BoxMesh" id="box_145"]
+size = Vector3(0.9, 0.9, 0.9)
+material = SubResource("mat_rock")
+
+[sub_resource type="BoxMesh" id="box_146"]
+size = Vector3(11.6, 0.6, 1.2)
+material = SubResource("mat_bluestone")
+
+[sub_resource type="BoxMesh" id="box_147"]
+size = Vector3(8, 12, 8)
+material = SubResource("mat_bluestone")
+
+[sub_resource type="SphereMesh" id="sphere_148"]
+radius = 4.3
+height = 4.3
+radial_segments = 16
+rings = 8
+is_hemisphere = true
+material = SubResource("mat_verdigris")
+
+[sub_resource type="CylinderMesh" id="cyl_149"]
+top_radius = 0
+bottom_radius = 0.5
+height = 2.6
+radial_segments = 6
+rings = 0
+material = SubResource("mat_gold")
+
+[sub_resource type="CylinderMesh" id="cyl_150"]
+top_radius = 1.4
+bottom_radius = 1.4
+height = 18
+radial_segments = 10
+rings = 0
+material = SubResource("mat_white")
+
+[sub_resource type="SphereMesh" id="sphere_151"]
+radius = 1.5
+height = 1.6
+radial_segments = 16
+rings = 8
+is_hemisphere = true
+material = SubResource("mat_verdigris")
+
+[sub_resource type="BoxMesh" id="box_152"]
+size = Vector3(1.6, 4, 0.08)
+material = SubResource("mat_banner")
+
+[sub_resource type="BoxMesh" id="box_153"]
+size = Vector3(0.6, 0.6, 0.05)
+material = SubResource("mat_gold")
+
+[sub_resource type="BoxMesh" id="box_154"]
+size = Vector3(20.6, 5, 1.2)
+material = SubResource("mat_white")
+
+[sub_resource type="BoxMesh" id="box_155"]
+size = Vector3(1.2, 5, 14)
+material = SubResource("mat_white")
+
+[sub_resource type="CylinderMesh" id="cyl_156"]
+top_radius = 1.8
+bottom_radius = 1.8
+height = 10
+radial_segments = 10
+rings = 0
+material = SubResource("mat_white")
+
+[sub_resource type="CylinderMesh" id="cyl_157"]
+top_radius = 0
+bottom_radius = 2.16
+height = 3.96
+radial_segments = 10
+rings = 0
+material = SubResource("mat_verdigris")
+
+[sub_resource type="CylinderMesh" id="cyl_158"]
+top_radius = 1.8
+bottom_radius = 1.8
+height = 11.5
+radial_segments = 10
+rings = 0
+material = SubResource("mat_white")
+
+[sub_resource type="CylinderMesh" id="cyl_159"]
+top_radius = 2
+bottom_radius = 2
+height = 8
+radial_segments = 12
+rings = 0
+material = SubResource("mat_bluestone")
+
+[sub_resource type="SphereMesh" id="sphere_160"]
+radius = 2.1
+height = 2
+radial_segments = 16
+rings = 8
+is_hemisphere = true
+material = SubResource("mat_verdigris")
+
+[sub_resource type="TorusMesh" id="torus_161"]
+inner_radius = 3.6
+outer_radius = 3.95
+rings = 24
+ring_segments = 6
+material = SubResource("mat_bronze")
+
+[sub_resource type="SphereMesh" id="sphere_162"]
+radius = 0.9
+height = 1.8
+radial_segments = 12
+rings = 6
+material = SubResource("mat_gold")
+
+[sub_resource type="CylinderMesh" id="cyl_163"]
+top_radius = 2.2
+bottom_radius = 2.6
+height = 20
+radial_segments = 12
+rings = 0
+material = SubResource("mat_bluestone")
+
+[sub_resource type="BoxMesh" id="box_164"]
+size = Vector3(0.5, 1.6, 0.5)
+material = SubResource("mat_rune")
+
+[sub_resource type="CylinderMesh" id="cyl_165"]
+top_radius = 0
+bottom_radius = 2.8
+height = 5
+radial_segments = 12
+rings = 0
+material = SubResource("mat_verdigris")
+
+[sub_resource type="BoxMesh" id="box_166"]
+size = Vector3(9, 5.5, 5)
+material = SubResource("mat_white")
+
+[sub_resource type="BoxMesh" id="box_167"]
+size = Vector3(0.7, 3.6, 0.06)
+material = SubResource("mat_rune")
+
+[sub_resource type="SphereMesh" id="sphere_168"]
+radius = 2.2
+height = 2.2
+radial_segments = 16
+rings = 8
+is_hemisphere = true
+material = SubResource("mat_verdigris")
+
+[sub_resource type="CylinderMesh" id="cyl_169"]
+top_radius = 3.6
+bottom_radius = 3.6
+height = 0.6
+radial_segments = 12
+rings = 0
+material = SubResource("mat_white")
+
+[sub_resource type="CylinderMesh" id="cyl_170"]
+top_radius = 0.28
+bottom_radius = 0.28
+height = 3.6
+radial_segments = 8
+rings = 0
+material = SubResource("mat_white")
+
+[sub_resource type="CylinderMesh" id="cyl_171"]
+top_radius = 3.6
+bottom_radius = 3.6
+height = 0.5
+radial_segments = 12
+rings = 0
+material = SubResource("mat_white")
+
+[sub_resource type="SphereMesh" id="sphere_172"]
+radius = 2.4
+height = 1.8
+radial_segments = 16
+rings = 8
+is_hemisphere = true
+material = SubResource("mat_white")
+
+[sub_resource type="CylinderMesh" id="cyl_173"]
+top_radius = 0.22
+bottom_radius = 0.22
+height = 3.2
+radial_segments = 8
+rings = 0
+material = SubResource("mat_white")
+
+[sub_resource type="CylinderMesh" id="cyl_174"]
+top_radius = 2.8
+bottom_radius = 2.8
+height = 0.4
+radial_segments = 12
+rings = 0
+material = SubResource("mat_white")
+
+[sub_resource type="SphereMesh" id="sphere_175"]
+radius = 2.6
+height = 2.2
+radial_segments = 16
+rings = 8
+is_hemisphere = true
+material = SubResource("mat_verdigris")
+
+[sub_resource type="SphereMesh" id="sphere_176"]
+radius = 0.45
+height = 0.6
+radial_segments = 16
+rings = 8
+material = SubResource("mat_gold")
+
+[sub_resource type="CylinderMesh" id="cyl_177"]
+top_radius = 0
+bottom_radius = 0.35
+height = 1.4
+radial_segments = 8
+rings = 0
+material = SubResource("mat_wisp")
+
+[sub_resource type="BoxMesh" id="box_178"]
+size = Vector3(5, 3, 4)
+material = SubResource("mat_timber")
+
+[sub_resource type="PrismMesh" id="prism_179"]
+size = Vector3(4.6, 1.6, 5.5)
+material = SubResource("mat_bluestone")
+
+[sub_resource type="BoxMesh" id="box_180"]
+size = Vector3(0.4, 9, 0.4)
+material = SubResource("mat_timber")
+
+[sub_resource type="BoxMesh" id="box_181"]
+size = Vector3(3.4, 0.35, 0.35)
+material = SubResource("mat_timber")
+
+[sub_resource type="BoxMesh" id="box_182"]
+size = Vector3(1.4, 2.4, 0.9)
+material = SubResource("mat_bronze")
+
+[sub_resource type="BoxMesh" id="box_183"]
+size = Vector3(0.8, 0.8, 0.8)
+material = SubResource("mat_bronze")
+
+[sub_resource type="BoxShape3D" id="hover_town_hall_0"]
+size = Vector3(9.3, 18.8, 9.3)
+
+[sub_resource type="BoxShape3D" id="hover_fort_0"]
+size = Vector3(20.6, 5, 1.2)
+
+[sub_resource type="BoxShape3D" id="hover_fort_1"]
+size = Vector3(20.6, 5, 1.2)
+
+[sub_resource type="BoxShape3D" id="hover_fort_2"]
+size = Vector3(1.2, 5, 14)
+
+[sub_resource type="BoxShape3D" id="hover_fort_3"]
+size = Vector3(1.2, 5, 14)
+
+[sub_resource type="BoxShape3D" id="hover_fort_4"]
+size = Vector3(3.6, 10, 3.6)
+
+[sub_resource type="BoxShape3D" id="hover_fort_5"]
+size = Vector3(4.32, 3.96, 4.32)
+
+[sub_resource type="BoxShape3D" id="hover_fort_6"]
+size = Vector3(3.6, 10, 3.6)
+
+[sub_resource type="BoxShape3D" id="hover_fort_7"]
+size = Vector3(4.32, 3.96, 4.32)
+
+[sub_resource type="BoxShape3D" id="hover_fort_8"]
+size = Vector3(3.6, 11.5, 3.6)
+
+[sub_resource type="BoxShape3D" id="hover_fort_9"]
+size = Vector3(4.32, 3.96, 4.32)
+
+[sub_resource type="BoxShape3D" id="hover_fort_10"]
+size = Vector3(3.6, 11.5, 3.6)
+
+[sub_resource type="BoxShape3D" id="hover_fort_11"]
+size = Vector3(4.32, 3.96, 4.32)
+
+[sub_resource type="BoxShape3D" id="hover_observatory_0"]
+size = Vector3(7.9, 15.45, 7.9)
+
+[sub_resource type="BoxShape3D" id="hover_mage_guild_0"]
+size = Vector3(5.6, 25, 5.6)
+
+[sub_resource type="BoxShape3D" id="hover_hall_of_records_0"]
+size = Vector3(9, 6.6, 5.05)
+
+[sub_resource type="BoxShape3D" id="hover_dwelling_academy_colossus_0"]
+size = Vector3(7.2, 5.5, 7.2)
+
+[sub_resource type="BoxShape3D" id="hover_dwelling_academy_djinn_0"]
+size = Vector3(5.6, 4.3, 5.6)
+
+[sub_resource type="BoxShape3D" id="hover_dwelling_academy_iron_golem_0"]
+size = Vector3(7.55, 9, 4.6)
+
+[node name="Academy" type="Node3D"]
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = SubResource("environment")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.84805, 0.32625, -0.41758, 0, 0.78801, 0.61566, 0.52992, -0.52211, 0.66827, 0, 40, 0)
+light_color = Color(1, 0.98, 0.95, 1)
+light_energy = 1.7
+shadow_enabled = true
+directional_shadow_max_distance = 220.0
+directional_shadow_blend_splits = true
+
+[node name="Camera" type="Camera3D" parent="."]
+transform = Transform3D(0.99922, -0.0086036, 0.038493, 0, 0.97592, 0.21813, -0.039443, -0.21796, 0.97516, 6, 21, 62)
+current = true
+fov = 40.0
+far = 1500.0
+
+[node name="Town" type="Node3D" parent="."]
+
+[node name="plot_town-hall" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 7, -21)
+
+[node name="Model" type="Node3D" parent="Town/plot_town-hall"]
+
+[node name="Hover" type="Area3D" parent="Town/plot_town-hall"]
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+
+[node name="Shape0" type="CollisionShape3D" parent="Town/plot_town-hall/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 9.4, 0.35)
+shape = SubResource("hover_town_hall_0")
+
+[node name="Focus" type="Marker3D" parent="Town/plot_town-hall"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 10.34, 0.35)
+
+[node name="plot_fort" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 7, -19)
+
+[node name="Model" type="Node3D" parent="Town/plot_fort"]
+
+[node name="Hover" type="Area3D" parent="Town/plot_fort"]
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+
+[node name="Shape0" type="CollisionShape3D" parent="Town/plot_fort/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 7)
+shape = SubResource("hover_fort_0")
+
+[node name="Shape1" type="CollisionShape3D" parent="Town/plot_fort/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -7)
+shape = SubResource("hover_fort_1")
+
+[node name="Shape2" type="CollisionShape3D" parent="Town/plot_fort/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.3, 2.5, 0)
+shape = SubResource("hover_fort_2")
+
+[node name="Shape3" type="CollisionShape3D" parent="Town/plot_fort/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.3, 2.5, 0)
+shape = SubResource("hover_fort_3")
+
+[node name="Shape4" type="CollisionShape3D" parent="Town/plot_fort/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.3, 5, 7)
+shape = SubResource("hover_fort_4")
+
+[node name="Shape5" type="CollisionShape3D" parent="Town/plot_fort/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.3, 11.98, 7)
+shape = SubResource("hover_fort_5")
+
+[node name="Shape6" type="CollisionShape3D" parent="Town/plot_fort/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.3, 5, 7)
+shape = SubResource("hover_fort_6")
+
+[node name="Shape7" type="CollisionShape3D" parent="Town/plot_fort/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.3, 11.98, 7)
+shape = SubResource("hover_fort_7")
+
+[node name="Shape8" type="CollisionShape3D" parent="Town/plot_fort/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.3, 5.75, -7)
+shape = SubResource("hover_fort_8")
+
+[node name="Shape9" type="CollisionShape3D" parent="Town/plot_fort/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.3, 13.48, -7)
+shape = SubResource("hover_fort_9")
+
+[node name="Shape10" type="CollisionShape3D" parent="Town/plot_fort/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.3, 5.75, -7)
+shape = SubResource("hover_fort_10")
+
+[node name="Shape11" type="CollisionShape3D" parent="Town/plot_fort/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.3, 13.48, -7)
+shape = SubResource("hover_fort_11")
+
+[node name="Focus" type="Marker3D" parent="Town/plot_fort"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.503, 0)
+
+[node name="plot_observatory" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 9, -20)
+
+[node name="Model" type="Node3D" parent="Town/plot_observatory"]
+
+[node name="Hover" type="Area3D" parent="Town/plot_observatory"]
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+
+[node name="Shape0" type="CollisionShape3D" parent="Town/plot_observatory/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.725, 0)
+shape = SubResource("hover_observatory_0")
+
+[node name="Focus" type="Marker3D" parent="Town/plot_observatory"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.4975, 0)
+
+[node name="plot_mage-guild" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -12)
+
+[node name="Model" type="Node3D" parent="Town/plot_mage-guild"]
+
+[node name="Hover" type="Area3D" parent="Town/plot_mage-guild"]
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+
+[node name="Shape0" type="CollisionShape3D" parent="Town/plot_mage-guild/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12.5, 0)
+shape = SubResource("hover_mage_guild_0")
+
+[node name="Focus" type="Marker3D" parent="Town/plot_mage-guild"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 13.75, 0)
+
+[node name="plot_hall-of-records" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0, -8)
+
+[node name="Model" type="Node3D" parent="Town/plot_hall-of-records"]
+
+[node name="Hover" type="Area3D" parent="Town/plot_hall-of-records"]
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+
+[node name="Shape0" type="CollisionShape3D" parent="Town/plot_hall-of-records/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.3, 0.025)
+shape = SubResource("hover_hall_of_records_0")
+
+[node name="Focus" type="Marker3D" parent="Town/plot_hall-of-records"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.63, 0.025)
+
+[node name="plot_dwelling-academy_colossus" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 16, -38)
+
+[node name="Model" type="Node3D" parent="Town/plot_dwelling-academy_colossus"]
+
+[node name="Hover" type="Area3D" parent="Town/plot_dwelling-academy_colossus"]
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+
+[node name="Shape0" type="CollisionShape3D" parent="Town/plot_dwelling-academy_colossus/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
+shape = SubResource("hover_dwelling_academy_colossus_0")
+
+[node name="Focus" type="Marker3D" parent="Town/plot_dwelling-academy_colossus"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="plot_dwelling-academy_djinn" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 0, 2)
+
+[node name="Model" type="Node3D" parent="Town/plot_dwelling-academy_djinn"]
+
+[node name="Hover" type="Area3D" parent="Town/plot_dwelling-academy_djinn"]
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+
+[node name="Shape0" type="CollisionShape3D" parent="Town/plot_dwelling-academy_djinn/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.15, 0)
+shape = SubResource("hover_dwelling_academy_djinn_0")
+
+[node name="Focus" type="Marker3D" parent="Town/plot_dwelling-academy_djinn"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.365, 0)
+
+[node name="plot_dwelling-academy_iron-golem" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 0, -3)
+
+[node name="Model" type="Node3D" parent="Town/plot_dwelling-academy_iron-golem"]
+
+[node name="Hover" type="Area3D" parent="Town/plot_dwelling-academy_iron-golem"]
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+
+[node name="Shape0" type="CollisionShape3D" parent="Town/plot_dwelling-academy_iron-golem/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.475, 4.5, 0)
+shape = SubResource("hover_dwelling_academy_iron_golem_0")
+
+[node name="Focus" type="Marker3D" parent="Town/plot_dwelling-academy_iron-golem"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.475, 4.95, 0)
+
+[node name="plot_dwelling-academy_dwarf" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5, 0, -2)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_dwelling-academy_dwarf"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="plot_dwelling-academy_gremlin" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0, -10)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_dwelling-academy_gremlin"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="plot_dwelling-academy_gargoyle" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0, -18)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_dwelling-academy_gargoyle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="plot_dwelling-academy_snow-maiden" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -25)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_dwelling-academy_snow-maiden"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="plot_dwelling-academy_sorcerer" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39, 0, 5)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_dwelling-academy_sorcerer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="plot_dwelling-academy_naga" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31, 0, 12)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_dwelling-academy_naga"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="plot_tavern" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, 8)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_tavern"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="plot_marketplace" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 0, 8)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_marketplace"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="plot_blacksmith" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 0)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_blacksmith"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="plot_caravan" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 10)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_caravan"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="plot_grail" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -22)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_grail"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="plot_school-haven" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, -2)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_school-haven"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="plot_school-dungeon" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, -5)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_school-dungeon"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="plot_growth-1" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 8)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_growth-1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="plot_growth-2" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0, -19)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_growth-2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="Land" type="Node3D" parent="."]
+
+[node name="Ground" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -500)
+mesh = SubResource("box_0")
+
+[node name="FrozenLake" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(0.99452, 0, 0.10453, 0, 1, 0, -0.10453, 0, 0.99452, -80, 0.03, -30)
+mesh = SubResource("box_1")
+
+[node name="Mountain0" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -150, 80, -320)
+mesh = SubResource("cyl_2")
+
+[node name="Cyl4" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -150, 134.4, -320)
+mesh = SubResource("cyl_3")
+
+[node name="Mountain1" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 105, -380)
+mesh = SubResource("cyl_4")
+
+[node name="Cyl6" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 176.4, -380)
+mesh = SubResource("cyl_5")
+
+[node name="Mountain2" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 130, 90, -330)
+mesh = SubResource("cyl_6")
+
+[node name="Cyl8" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 130, 151.2, -330)
+mesh = SubResource("cyl_7")
+
+[node name="Mountain3" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 260, 75, -300)
+mesh = SubResource("cyl_8")
+
+[node name="Cyl10" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 260, 126, -300)
+mesh = SubResource("cyl_9")
+
+[node name="Mountain4" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -280, 70, -260)
+mesh = SubResource("cyl_10")
+
+[node name="Cyl12" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -280, 117.6, -260)
+mesh = SubResource("cyl_11")
+
+[node name="FrozenFall" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70, 25, -95)
+mesh = SubResource("box_12")
+
+[node name="FallCliff" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(0.97815, 0, -0.20791, 0, 1, 0, 0.20791, 0, 0.97815, 80, 30, -100)
+mesh = SubResource("box_13")
+
+[node name="Rise" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3.5, -18)
+mesh = SubResource("cyl_14")
+
+[node name="RiseSlope" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 1.75, -16)
+mesh = SubResource("cyl_15")
+
+[node name="RiseSnow" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 7.15, -18)
+mesh = SubResource("cyl_16")
+
+[node name="Peak" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 8, -38)
+mesh = SubResource("cyl_17")
+
+[node name="Cloud0" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 9, -36)
+mesh = SubResource("sphere_18")
+
+[node name="Cloud1" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 9, -34)
+mesh = SubResource("sphere_19")
+
+[node name="Cloud2" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 9, -30)
+mesh = SubResource("sphere_20")
+
+[node name="Cloud3" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 9, -44)
+mesh = SubResource("sphere_21")
+
+[node name="Cloud4" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 9, -42)
+mesh = SubResource("sphere_19")
+
+[node name="Spur" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 4.5, -20)
+mesh = SubResource("cyl_22")
+
+[node name="Cyl25" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.6372, 0.70652, -72.88796)
+mesh = SubResource("cyl_23")
+
+[node name="Cyl26" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.6372, 3.17932, -72.88796)
+mesh = SubResource("cyl_24")
+
+[node name="Cyl27" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.6372, 5.29887, -72.88796)
+mesh = SubResource("cyl_25")
+
+[node name="Cyl28" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.09677, 1.18621, -57.11422)
+mesh = SubResource("cyl_26")
+
+[node name="Cyl29" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.09677, 5.33794, -57.11422)
+mesh = SubResource("cyl_27")
+
+[node name="Cyl30" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.09677, 8.89657, -57.11422)
+mesh = SubResource("cyl_28")
+
+[node name="Cyl31" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.29018, 0.79736, -37.19342)
+mesh = SubResource("cyl_29")
+
+[node name="Cyl32" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.29018, 3.58812, -37.19342)
+mesh = SubResource("cyl_30")
+
+[node name="Cyl33" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.29018, 5.9802, -37.19342)
+mesh = SubResource("cyl_31")
+
+[node name="Cyl34" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64.18689, 1.19129, -82.94108)
+mesh = SubResource("cyl_32")
+
+[node name="Cyl35" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64.18689, 5.36081, -82.94108)
+mesh = SubResource("cyl_33")
+
+[node name="Cyl36" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64.18689, 8.93469, -82.94108)
+mesh = SubResource("cyl_34")
+
+[node name="Cyl37" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.41989, 0.9022, -7.56654)
+mesh = SubResource("cyl_35")
+
+[node name="Cyl38" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.41989, 4.0599, -7.56654)
+mesh = SubResource("cyl_36")
+
+[node name="Cyl39" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.41989, 6.7665, -7.56654)
+mesh = SubResource("cyl_37")
+
+[node name="Cyl40" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.86051, 1.24902, -82.70584)
+mesh = SubResource("cyl_38")
+
+[node name="Cyl41" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.86051, 5.62059, -82.70584)
+mesh = SubResource("cyl_39")
+
+[node name="Cyl42" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.86051, 9.36765, -82.70584)
+mesh = SubResource("cyl_40")
+
+[node name="Cyl43" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.52648, 1.29228, -79.08264)
+mesh = SubResource("cyl_41")
+
+[node name="Cyl44" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.52648, 5.81526, -79.08264)
+mesh = SubResource("cyl_42")
+
+[node name="Cyl45" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.52648, 9.6921, -79.08264)
+mesh = SubResource("cyl_43")
+
+[node name="Cyl46" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 68.872, 0.95392, -76.49668)
+mesh = SubResource("cyl_44")
+
+[node name="Cyl47" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 68.872, 4.29266, -76.49668)
+mesh = SubResource("cyl_45")
+
+[node name="Cyl48" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 68.872, 7.15443, -76.49668)
+mesh = SubResource("cyl_46")
+
+[node name="Cyl49" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.46701, 1.07287, -52.49512)
+mesh = SubResource("cyl_47")
+
+[node name="Cyl50" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.46701, 4.82792, -52.49512)
+mesh = SubResource("cyl_48")
+
+[node name="Cyl51" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.46701, 8.04653, -52.49512)
+mesh = SubResource("cyl_49")
+
+[node name="Cyl52" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.09437, 1.18942, -69.45431)
+mesh = SubResource("cyl_50")
+
+[node name="Cyl53" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.09437, 5.35238, -69.45431)
+mesh = SubResource("cyl_51")
+
+[node name="Cyl54" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.09437, 8.92064, -69.45431)
+mesh = SubResource("cyl_52")
+
+[node name="Cyl55" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.05965, 1.05758, -39.73917)
+mesh = SubResource("cyl_53")
+
+[node name="Cyl56" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.05965, 4.75912, -39.73917)
+mesh = SubResource("cyl_54")
+
+[node name="Cyl57" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.05965, 7.93187, -39.73917)
+mesh = SubResource("cyl_55")
+
+[node name="Cyl58" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.82835, 0.7183, -43.85023)
+mesh = SubResource("cyl_56")
+
+[node name="Cyl59" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.82835, 3.23233, -43.85023)
+mesh = SubResource("cyl_57")
+
+[node name="Cyl60" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.82835, 5.38722, -43.85023)
+mesh = SubResource("cyl_58")
+
+[node name="Cyl61" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 43.52765, 1.28578, 26.09507)
+mesh = SubResource("cyl_59")
+
+[node name="Cyl62" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 43.52765, 5.78602, 26.09507)
+mesh = SubResource("cyl_60")
+
+[node name="Cyl63" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 43.52765, 9.64337, 26.09507)
+mesh = SubResource("cyl_61")
+
+[node name="Cyl64" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.31354, 0.91788, -47.23858)
+mesh = SubResource("cyl_62")
+
+[node name="Cyl65" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.31354, 4.13045, -47.23858)
+mesh = SubResource("cyl_63")
+
+[node name="Cyl66" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.31354, 6.88408, -47.23858)
+mesh = SubResource("cyl_64")
+
+[node name="Cyl67" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.90927, 0.91799, -61.80331)
+mesh = SubResource("cyl_65")
+
+[node name="Cyl68" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.90927, 4.13097, -61.80331)
+mesh = SubResource("cyl_66")
+
+[node name="Cyl69" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.90927, 6.88495, -61.80331)
+mesh = SubResource("cyl_67")
+
+[node name="Cyl70" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.50139, 1.19354, -86.62281)
+mesh = SubResource("cyl_68")
+
+[node name="Cyl71" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.50139, 5.37093, -86.62281)
+mesh = SubResource("cyl_69")
+
+[node name="Cyl72" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.50139, 8.95155, -86.62281)
+mesh = SubResource("cyl_70")
+
+[node name="Cyl73" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.45069, 0.93295, -38.73083)
+mesh = SubResource("cyl_71")
+
+[node name="Cyl74" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.45069, 4.19826, -38.73083)
+mesh = SubResource("cyl_72")
+
+[node name="Cyl75" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.45069, 6.99711, -38.73083)
+mesh = SubResource("cyl_73")
+
+[node name="Cyl76" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48.77064, 1.02998, -77.68642)
+mesh = SubResource("cyl_74")
+
+[node name="Cyl77" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48.77064, 4.63492, -77.68642)
+mesh = SubResource("cyl_75")
+
+[node name="Cyl78" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48.77064, 7.72487, -77.68642)
+mesh = SubResource("cyl_76")
+
+[node name="Cyl79" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35.7627, 0.90651, -56.81428)
+mesh = SubResource("cyl_77")
+
+[node name="Cyl80" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35.7627, 4.07928, -56.81428)
+mesh = SubResource("cyl_78")
+
+[node name="Cyl81" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35.7627, 6.7988, -56.81428)
+mesh = SubResource("cyl_79")
+
+[node name="Cyl82" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.24691, 0.97556, -83.75294)
+mesh = SubResource("cyl_80")
+
+[node name="Cyl83" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.24691, 4.39001, -83.75294)
+mesh = SubResource("cyl_81")
+
+[node name="Cyl84" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.24691, 7.31668, -83.75294)
+mesh = SubResource("cyl_82")
+
+[node name="Cyl85" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.98876, 0.98576, -56.1725)
+mesh = SubResource("cyl_83")
+
+[node name="Cyl86" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.98876, 4.43591, -56.1725)
+mesh = SubResource("cyl_84")
+
+[node name="Cyl87" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.98876, 7.39318, -56.1725)
+mesh = SubResource("cyl_85")
+
+[node name="Cyl88" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.25603, 1.27354, -32.27706)
+mesh = SubResource("cyl_86")
+
+[node name="Cyl89" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.25603, 5.73091, -32.27706)
+mesh = SubResource("cyl_87")
+
+[node name="Cyl90" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.25603, 9.55151, -32.27706)
+mesh = SubResource("cyl_88")
+
+[node name="Cyl91" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.73025, 0.91852, 20.90997)
+mesh = SubResource("cyl_89")
+
+[node name="Cyl92" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.73025, 4.13332, 20.90997)
+mesh = SubResource("cyl_90")
+
+[node name="Cyl93" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.73025, 6.88887, 20.90997)
+mesh = SubResource("cyl_91")
+
+[node name="Cyl94" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64.88482, 0.86095, -89.19909)
+mesh = SubResource("cyl_92")
+
+[node name="Cyl95" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64.88482, 3.87429, -89.19909)
+mesh = SubResource("cyl_93")
+
+[node name="Cyl96" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64.88482, 6.45714, -89.19909)
+mesh = SubResource("cyl_94")
+
+[node name="Cyl97" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48.62737, 0.84495, -48.98523)
+mesh = SubResource("cyl_95")
+
+[node name="Cyl98" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48.62737, 3.80228, -48.98523)
+mesh = SubResource("cyl_96")
+
+[node name="Cyl99" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48.62737, 6.33714, -48.98523)
+mesh = SubResource("cyl_97")
+
+[node name="Cyl100" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -39.00757, 1.07145, -85.19725)
+mesh = SubResource("cyl_98")
+
+[node name="Cyl101" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -39.00757, 4.82151, -85.19725)
+mesh = SubResource("cyl_99")
+
+[node name="Cyl102" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -39.00757, 8.03585, -85.19725)
+mesh = SubResource("cyl_100")
+
+[node name="Cyl103" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 73.13873, 1.00216, 29.81942)
+mesh = SubResource("cyl_101")
+
+[node name="Cyl104" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 73.13873, 4.50972, 29.81942)
+mesh = SubResource("cyl_102")
+
+[node name="Cyl105" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 73.13873, 7.5162, 29.81942)
+mesh = SubResource("cyl_103")
+
+[node name="Cyl106" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.2504, 1.17244, -51.30523)
+mesh = SubResource("cyl_104")
+
+[node name="Cyl107" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.2504, 5.27599, -51.30523)
+mesh = SubResource("cyl_105")
+
+[node name="Cyl108" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.2504, 8.79331, -51.30523)
+mesh = SubResource("cyl_106")
+
+[node name="Cyl109" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 55.67474, 0.83771, -13.27067)
+mesh = SubResource("cyl_107")
+
+[node name="Cyl110" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 55.67474, 3.76969, -13.27067)
+mesh = SubResource("cyl_108")
+
+[node name="Cyl111" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 55.67474, 6.28281, -13.27067)
+mesh = SubResource("cyl_109")
+
+[node name="Cyl112" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.1055, 1.26801, -58.47863)
+mesh = SubResource("cyl_110")
+
+[node name="Cyl113" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.1055, 5.70603, -58.47863)
+mesh = SubResource("cyl_111")
+
+[node name="Cyl114" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.1055, 9.51005, -58.47863)
+mesh = SubResource("cyl_112")
+
+[node name="Cyl115" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 62.84662, 0.87479, -70.54228)
+mesh = SubResource("cyl_113")
+
+[node name="Cyl116" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 62.84662, 3.93657, -70.54228)
+mesh = SubResource("cyl_114")
+
+[node name="Cyl117" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 62.84662, 6.56095, -70.54228)
+mesh = SubResource("cyl_115")
+
+[node name="Cyl118" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60.4145, 1.26634, -56.6034)
+mesh = SubResource("cyl_116")
+
+[node name="Cyl119" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60.4145, 5.69854, -56.6034)
+mesh = SubResource("cyl_117")
+
+[node name="Cyl120" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60.4145, 9.49757, -56.6034)
+mesh = SubResource("cyl_118")
+
+[node name="Cyl121" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.04002, 0.87101, -64.31166)
+mesh = SubResource("cyl_119")
+
+[node name="Cyl122" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.04002, 3.91956, -64.31166)
+mesh = SubResource("cyl_120")
+
+[node name="Cyl123" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.04002, 6.53259, -64.31166)
+mesh = SubResource("cyl_121")
+
+[node name="Cyl124" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39.82204, 1.23186, -74.19218)
+mesh = SubResource("cyl_122")
+
+[node name="Cyl125" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39.82204, 5.54338, -74.19218)
+mesh = SubResource("cyl_123")
+
+[node name="Cyl126" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39.82204, 9.23897, -74.19218)
+mesh = SubResource("cyl_124")
+
+[node name="Cyl127" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.33713, 0.96117, -61.05227)
+mesh = SubResource("cyl_125")
+
+[node name="Cyl128" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.33713, 4.32525, -61.05227)
+mesh = SubResource("cyl_126")
+
+[node name="Cyl129" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.33713, 7.20876, -61.05227)
+mesh = SubResource("cyl_127")
+
+[node name="Cyl130" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72.63992, 1.07484, -22.80819)
+mesh = SubResource("cyl_128")
+
+[node name="Cyl131" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72.63992, 4.83679, -22.80819)
+mesh = SubResource("cyl_129")
+
+[node name="Cyl132" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72.63992, 8.06132, -22.80819)
+mesh = SubResource("cyl_130")
+
+[node name="Cyl133" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 65.79242, 1.15626, 25.43852)
+mesh = SubResource("cyl_131")
+
+[node name="Cyl134" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 65.79242, 5.20317, 25.43852)
+mesh = SubResource("cyl_132")
+
+[node name="Cyl135" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 65.79242, 8.67195, 25.43852)
+mesh = SubResource("cyl_133")
+
+[node name="Cyl136" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 63.61058, 1.0481, 4.70794)
+mesh = SubResource("cyl_134")
+
+[node name="Cyl137" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 63.61058, 4.71644, 4.70794)
+mesh = SubResource("cyl_135")
+
+[node name="Cyl138" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 63.61058, 7.86074, 4.70794)
+mesh = SubResource("cyl_136")
+
+[node name="Cyl139" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.04002, 1.1415, -45.78359)
+mesh = SubResource("cyl_137")
+
+[node name="Cyl140" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.04002, 5.13676, -45.78359)
+mesh = SubResource("cyl_138")
+
+[node name="Cyl141" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.04002, 8.56126, -45.78359)
+mesh = SubResource("cyl_139")
+
+[node name="Cyl142" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.78263, 1.12608, -87.94656)
+mesh = SubResource("cyl_140")
+
+[node name="Cyl143" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.78263, 5.06735, -87.94656)
+mesh = SubResource("cyl_141")
+
+[node name="Cyl144" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.78263, 8.44559, -87.94656)
+mesh = SubResource("cyl_142")
+
+[node name="GatePost0" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 1.8, 20)
+mesh = SubResource("box_143")
+
+[node name="Golem0" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.8, 1.6, 20.5)
+mesh = SubResource("box_144")
+
+[node name="Box147" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.8, 3.3, 20.5)
+mesh = SubResource("box_145")
+
+[node name="GatePost1" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 1.8, 20)
+mesh = SubResource("box_143")
+
+[node name="Golem1" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.8, 1.6, 20.5)
+mesh = SubResource("box_144")
+
+[node name="Box150" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.8, 3.3, 20.5)
+mesh = SubResource("box_145")
+
+[node name="GateLintel" type="MeshInstance3D" parent="Land"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 3.9, 20)
+mesh = SubResource("box_146")
+
+[node name="Keep" type="MeshInstance3D" parent="Town/plot_town-hall/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0)
+mesh = SubResource("box_147")
+
+[node name="Dome" type="MeshInstance3D" parent="Town/plot_town-hall/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12, 0)
+mesh = SubResource("sphere_148")
+
+[node name="Cyl3" type="MeshInstance3D" parent="Town/plot_town-hall/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 17.3, 0)
+mesh = SubResource("cyl_149")
+
+[node name="Cyl4" type="MeshInstance3D" parent="Town/plot_town-hall/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 9, 3.5)
+mesh = SubResource("cyl_150")
+
+[node name="Sphere5" type="MeshInstance3D" parent="Town/plot_town-hall/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 18, 3.5)
+mesh = SubResource("sphere_151")
+
+[node name="Box6" type="MeshInstance3D" parent="Town/plot_town-hall/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 7, 4.05)
+mesh = SubResource("box_152")
+
+[node name="Box7" type="MeshInstance3D" parent="Town/plot_town-hall/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 7.6, 4.1)
+mesh = SubResource("box_153")
+
+[node name="WallFront" type="MeshInstance3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 7)
+mesh = SubResource("box_154")
+
+[node name="WallBack" type="MeshInstance3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -7)
+mesh = SubResource("box_154")
+
+[node name="WallLeft" type="MeshInstance3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.3, 2.5, 0)
+mesh = SubResource("box_155")
+
+[node name="WallRight" type="MeshInstance3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.3, 2.5, 0)
+mesh = SubResource("box_155")
+
+[node name="Cyl5" type="MeshInstance3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.3, 5, 7)
+mesh = SubResource("cyl_156")
+
+[node name="Cyl6" type="MeshInstance3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.3, 11.98, 7)
+mesh = SubResource("cyl_157")
+
+[node name="Cyl7" type="MeshInstance3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.3, 5, 7)
+mesh = SubResource("cyl_156")
+
+[node name="Cyl8" type="MeshInstance3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.3, 11.98, 7)
+mesh = SubResource("cyl_157")
+
+[node name="Cyl9" type="MeshInstance3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.3, 5.75, -7)
+mesh = SubResource("cyl_158")
+
+[node name="Cyl10" type="MeshInstance3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.3, 13.48, -7)
+mesh = SubResource("cyl_157")
+
+[node name="Cyl11" type="MeshInstance3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.3, 5.75, -7)
+mesh = SubResource("cyl_158")
+
+[node name="Cyl12" type="MeshInstance3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.3, 13.48, -7)
+mesh = SubResource("cyl_157")
+
+[node name="Cyl1" type="MeshInstance3D" parent="Town/plot_observatory/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+mesh = SubResource("cyl_159")
+
+[node name="Sphere2" type="MeshInstance3D" parent="Town/plot_observatory/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, 0)
+mesh = SubResource("sphere_160")
+
+[node name="Torus3" type="MeshInstance3D" parent="Town/plot_observatory/Model"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 11.5, 0)
+mesh = SubResource("torus_161")
+
+[node name="Torus4" type="MeshInstance3D" parent="Town/plot_observatory/Model"]
+transform = Transform3D(0.5, -0.86603, 0, 0, 0, -1, 0.86603, 0.5, 0, 0, 11.5, 0)
+mesh = SubResource("torus_161")
+
+[node name="Torus5" type="MeshInstance3D" parent="Town/plot_observatory/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 11.5, 0)
+mesh = SubResource("torus_161")
+
+[node name="Sphere6" type="MeshInstance3D" parent="Town/plot_observatory/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 11.5, 0)
+mesh = SubResource("sphere_162")
+
+[node name="Tower" type="MeshInstance3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)
+mesh = SubResource("cyl_163")
+
+[node name="Box2" type="MeshInstance3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 2.35)
+mesh = SubResource("box_164")
+
+[node name="Box3" type="MeshInstance3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 2.35, 5, 0)
+mesh = SubResource("box_164")
+
+[node name="Box4" type="MeshInstance3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 5, -2.35)
+mesh = SubResource("box_164")
+
+[node name="Box5" type="MeshInstance3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -2.35, 5, 0)
+mesh = SubResource("box_164")
+
+[node name="Box6" type="MeshInstance3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9, 2.27)
+mesh = SubResource("box_164")
+
+[node name="Box7" type="MeshInstance3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 2.27, 9, 0)
+mesh = SubResource("box_164")
+
+[node name="Box8" type="MeshInstance3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 9, -2.27)
+mesh = SubResource("box_164")
+
+[node name="Box9" type="MeshInstance3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -2.27, 9, 0)
+mesh = SubResource("box_164")
+
+[node name="Box10" type="MeshInstance3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 13, 2.19)
+mesh = SubResource("box_164")
+
+[node name="Box11" type="MeshInstance3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 2.19, 13, 0)
+mesh = SubResource("box_164")
+
+[node name="Box12" type="MeshInstance3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 13, -2.19)
+mesh = SubResource("box_164")
+
+[node name="Box13" type="MeshInstance3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -2.19, 13, 0)
+mesh = SubResource("box_164")
+
+[node name="Box14" type="MeshInstance3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 17, 2.11)
+mesh = SubResource("box_164")
+
+[node name="Box15" type="MeshInstance3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 2.11, 17, 0)
+mesh = SubResource("box_164")
+
+[node name="Box16" type="MeshInstance3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 17, -2.11)
+mesh = SubResource("box_164")
+
+[node name="Box17" type="MeshInstance3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -2.11, 17, 0)
+mesh = SubResource("box_164")
+
+[node name="Cyl18" type="MeshInstance3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 22.5, 0)
+mesh = SubResource("cyl_165")
+
+[node name="Light0" type="OmniLight3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12, 3)
+light_color = Color(0.3, 0.55, 1, 1)
+light_energy = 2
+omni_range = 10
+
+[node name="Box1" type="MeshInstance3D" parent="Town/plot_hall-of-records/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
+mesh = SubResource("box_166")
+
+[node name="Box2" type="MeshInstance3D" parent="Town/plot_hall-of-records/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6, 2.8, 2.52)
+mesh = SubResource("box_167")
+
+[node name="Box3" type="MeshInstance3D" parent="Town/plot_hall-of-records/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 2.8, 2.52)
+mesh = SubResource("box_167")
+
+[node name="Box4" type="MeshInstance3D" parent="Town/plot_hall-of-records/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.8, 2.52)
+mesh = SubResource("box_167")
+
+[node name="Box5" type="MeshInstance3D" parent="Town/plot_hall-of-records/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 2.8, 2.52)
+mesh = SubResource("box_167")
+
+[node name="Box6" type="MeshInstance3D" parent="Town/plot_hall-of-records/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.6, 2.8, 2.52)
+mesh = SubResource("box_167")
+
+[node name="Sphere7" type="MeshInstance3D" parent="Town/plot_hall-of-records/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.5, 0)
+mesh = SubResource("sphere_168")
+
+[node name="Cyl1" type="MeshInstance3D" parent="Town/plot_dwelling-academy_colossus/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+mesh = SubResource("cyl_169")
+
+[node name="Cyl2" type="MeshInstance3D" parent="Town/plot_dwelling-academy_colossus/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 3)
+mesh = SubResource("cyl_170")
+
+[node name="Cyl3" type="MeshInstance3D" parent="Town/plot_dwelling-academy_colossus/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.12132, 2.4, 2.12132)
+mesh = SubResource("cyl_170")
+
+[node name="Cyl4" type="MeshInstance3D" parent="Town/plot_dwelling-academy_colossus/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 2.4, 0)
+mesh = SubResource("cyl_170")
+
+[node name="Cyl5" type="MeshInstance3D" parent="Town/plot_dwelling-academy_colossus/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.12132, 2.4, -2.12132)
+mesh = SubResource("cyl_170")
+
+[node name="Cyl6" type="MeshInstance3D" parent="Town/plot_dwelling-academy_colossus/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, -3)
+mesh = SubResource("cyl_170")
+
+[node name="Cyl7" type="MeshInstance3D" parent="Town/plot_dwelling-academy_colossus/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.12132, 2.4, -2.12132)
+mesh = SubResource("cyl_170")
+
+[node name="Cyl8" type="MeshInstance3D" parent="Town/plot_dwelling-academy_colossus/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 2.4, 0)
+mesh = SubResource("cyl_170")
+
+[node name="Cyl9" type="MeshInstance3D" parent="Town/plot_dwelling-academy_colossus/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.12132, 2.4, 2.12132)
+mesh = SubResource("cyl_170")
+
+[node name="Cyl10" type="MeshInstance3D" parent="Town/plot_dwelling-academy_colossus/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.4, 0)
+mesh = SubResource("cyl_171")
+
+[node name="Sphere11" type="MeshInstance3D" parent="Town/plot_dwelling-academy_colossus/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.6, 0)
+mesh = SubResource("sphere_172")
+
+[node name="Cyl1" type="MeshInstance3D" parent="Town/plot_dwelling-academy_djinn/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 1.6, -1.8)
+mesh = SubResource("cyl_173")
+
+[node name="Cyl2" type="MeshInstance3D" parent="Town/plot_dwelling-academy_djinn/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 1.6, -1.8)
+mesh = SubResource("cyl_173")
+
+[node name="Cyl3" type="MeshInstance3D" parent="Town/plot_dwelling-academy_djinn/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 1.6, 1.8)
+mesh = SubResource("cyl_173")
+
+[node name="Cyl4" type="MeshInstance3D" parent="Town/plot_dwelling-academy_djinn/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 1.6, 1.8)
+mesh = SubResource("cyl_173")
+
+[node name="Cyl5" type="MeshInstance3D" parent="Town/plot_dwelling-academy_djinn/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+mesh = SubResource("cyl_174")
+
+[node name="Sphere6" type="MeshInstance3D" parent="Town/plot_dwelling-academy_djinn/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, 0)
+mesh = SubResource("sphere_175")
+
+[node name="Sphere7" type="MeshInstance3D" parent="Town/plot_dwelling-academy_djinn/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+mesh = SubResource("sphere_176")
+
+[node name="Cyl8" type="MeshInstance3D" parent="Town/plot_dwelling-academy_djinn/Model"]
+transform = Transform3D(1, 0, 0, 0, -1, 0, 0, 0, -1, 0, 1.9, 0)
+mesh = SubResource("cyl_177")
+
+[node name="Light0" type="OmniLight3D" parent="Town/plot_dwelling-academy_djinn/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
+light_color = Color(0.45, 0.7, 1, 1)
+light_energy = 1.8
+omni_range = 7
+
+[node name="Box1" type="MeshInstance3D" parent="Town/plot_dwelling-academy_iron-golem/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 1.5, 0)
+mesh = SubResource("box_178")
+
+[node name="Prism2" type="MeshInstance3D" parent="Town/plot_dwelling-academy_iron-golem/Model"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -1.5, 3.8, 0)
+mesh = SubResource("prism_179")
+
+[node name="Box3" type="MeshInstance3D" parent="Town/plot_dwelling-academy_iron-golem/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8, 4.5, -1)
+mesh = SubResource("box_180")
+
+[node name="Box4" type="MeshInstance3D" parent="Town/plot_dwelling-academy_iron-golem/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 8.8, -1)
+mesh = SubResource("box_181")
+
+[node name="Box5" type="MeshInstance3D" parent="Town/plot_dwelling-academy_iron-golem/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 1.2, 1.4)
+mesh = SubResource("box_182")
+
+[node name="Box6" type="MeshInstance3D" parent="Town/plot_dwelling-academy_iron-golem/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 2.9, 1.4)
+mesh = SubResource("box_183")

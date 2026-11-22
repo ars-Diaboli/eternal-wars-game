@@ -226,7 +226,9 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
 - Town scene (ADR-297): `TownScene3D` (Godot.Shared/Towns) loads a town type's layout scene, keeps one loaded (out of the tree while
   closed, so its environment and lights leave with it) and shows each plot (`TownPlot`) as `TownOverview.PlotsOf` has it: the
   building's model for its level, the layout's own `Model`, or a `PlotBlock`. It refreshes its plots on the building events and the new
-  day. Picking is a ray against the plots' hover boxes, not physics, so it works in the frame a plot appears.
+  day. Picking is a ray against the plots' hover boxes, not physics, so it works in the frame a plot appears. A layout missing a
+  plot reports an error when it loads; the town type's `bg_town_<town>` painting, when there is one, replaces the layout's sky
+  (`town_sky.gdshader`, ADR-300).
 
 ### Map objects
 - **Definition** (`MapObjectDefinition`, data: id, `Kind`, footprint, kind parameters) vs **instance** (`MapObject`

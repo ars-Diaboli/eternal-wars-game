@@ -644,7 +644,9 @@ Core first (tasks 1–7), then the screen (8–16). Each TOWN-17 rule gets its o
    against the hover boxes; the town screen shows the scene where a layout exists and the painting elsewhere.*
 2. **Layouts for the eight towns**, each composed after its key painting ([faction-art.md](../content/faction-art.md)): the landmark
    as the focal point, the setting around a fixed 60 × 40 m ground, the `bg_town_<town>` picture as the sky. A smoke check
-   `game-town-layouts` loads each one and fails on a building or line without a plot.
+   `game-town-layouts` loads each one and fails on a building or line without a plot. *Done (ADR-300): every layout shares Haven's
+   plot places and hero shot, with the landmark, keep, fort and the painting's named buildings as greybox models and the rest as blocks;
+   `TownScene3D` reports a missing plot when it loads a layout; the painting becomes the sky once it exists (Dungeon has none).*
 3. **Plot states**: unused land (a piece of the diorama's scenery, no markers or rubble), the model for its level, scaffolding on the
    day it is built, the citizens' homes on the two closed lines once the Capitol stands (ADR-291); walls by fort level (the siege's
    parts); streets and houses as filler by town hall level in three steps, village, town and city (TOWN-19); banners in the player's

@@ -200,7 +200,14 @@ A built plot shows `models/towns/<town>/<plot id>_<level>.glb` (or the nearest l
 block sized by the building's kind with a roof and a sign. The root's `Camera` is the scene's hero shot, and its `WorldEnvironment` and
 `DirectionalLight3D` its light; a layout without them gets defaults. Moving a plot moves the building: no code changes.
 `TownLayoutTests` fails when a layout lacks a plot for a building or line of its town type, or has one for something the town has not;
-a town type without a layout shows the key painting.
+in the game, `TownScene3D` reports an error when it loads a layout without a plot for one of the town's buildings or lines (smoke
+`game-town-layouts`, which opens a fully built town of each type). Every playable town type has a layout (ADR-300); a town type without
+one shows the key painting.
+
+The town type's painting `textures/ui/backgrounds/towns/bg_town_<town>.jpg`, once it exists, is the sky of a layout whose
+`WorldEnvironment` has a sky (`shaders/town_sky.gdshader`): its middle where the hero shot looks and its horizon on the horizon. The root's
+metadata `sky_span` (the painting's width in radians, 2.1) and `sky_horizon` (its horizon's height from the bottom, 0.35) adjust the fit.
+Without the painting the layout's own sky shows.
 
 ### Editing heroes
 `heroes.csv` (ADR-048).

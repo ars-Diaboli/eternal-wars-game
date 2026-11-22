@@ -260,6 +260,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [ ] Step 3: the 3D town scene in greybox for the eight playable towns: plots and their states, streets and walls, camera, hover and
       pick, construction scene, arrival, loading ahead, budget
       - [x] Task 1: `TownScene3D` behind the bars, plots from the layout scenes, greybox blocks, hover and pick; Haven's layout (ADR-297)
+      - [x] Task 2: greybox layouts for the eight towns after their key paintings, the layout check in the game (`game-town-layouts`), the painting as the sky (ADR-300)
 - [ ] Step 4: Haven and Inferno in full art, light, life, sound and music; Hall pictures; the Deck preset
 - [ ] Step 5: Sylvan, Academy, Necropolis, Dungeon, Stronghold and Swamp Bestiary in full art
 - [ ] Step 6: controller pass, UI scale, the goal building; the plan's target list ticked
