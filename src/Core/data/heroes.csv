@@ -44,21 +44,21 @@ academy.aurelian,Aurelian Vex,academy,Mage,academy.gremlin,spell arcana.magic-ar
 academy.stellan,Stellan Frost,academy,Warrior,academy.dwarf,skill defense.armor,defense.armor Basic; offense.melee Basic,1,2,1,1,,prefers Dwarf
 academy.seraphine,Seraphine Lux,academy,Mage,academy.dwarf,skill magic.academy.attunement,magic.academy.spells Basic; defense.resistance Basic,0,1,2,2,,prefers Dwarf
 academy.ingrid,Ingrid Vael,academy,Warrior,academy.gargoyle,skill offense.archery,pathfinding.logistics Basic; offense.archery Basic,2,1,1,1,,prefers Gargoyle
-academy.theodric,Theodric Wynn,academy,Mage,academy.gargoyle,spell arcana.haste,magic.academy.spells Basic; pathfinding.logistics Basic,0,0,3,2,,prefers Gargoyle
-academy.tobias,Tobias Rime,academy,Warrior,academy.iron-golem,skill tactics.wartempo,tactics.wartempo Basic; defense.armor Basic,1,2,1,1,,prefers Iron Golem
+academy.tariq,Tariq,academy,Mage,academy.gargoyle,spell arcana.haste,magic.academy.spells Basic; pathfinding.logistics Basic,0,0,3,2,,prefers Gargoyle
+academy.talos,Talos,academy,Warrior,academy.iron-golem,skill tactics.wartempo,tactics.wartempo Basic; defense.armor Basic,1,2,1,1,,prefers Iron Golem
 academy.ivar,Ivar Marrow,academy,Mage,academy.iron-golem,skill magic.academy.attunement,magic.academy.spells Basic; magic.academy.attunement Basic,0,1,2,2,,prefers Iron Golem
 academy.henrik,Henrik Strom,academy,Warrior,academy.snow-maiden,skill offense.archery,offense.archery Basic; pathfinding.pathfinding Basic,2,1,1,1,,prefers Snow Maiden
-academy.cassius,Cassius Thorne,academy,Mage,academy.snow-maiden,spell arcana.frost-bolt,magic.academy.spells Basic; estates.prospecting Basic,0,0,3,2,,prefers Snow Maiden
+academy.qadir,Qadir,academy,Mage,academy.snow-maiden,spell arcana.frost-bolt,magic.academy.spells Basic; estates.prospecting Basic,0,0,3,2,,prefers Snow Maiden
 academy.kasimir,Kasimir Lode,academy,Warrior,academy.sorcerer,skill estates.treasury,estates.treasury Basic; tactics.tactics Basic,1,2,1,1,,prefers Sorcerer
-academy.mirela,Mirela Quist,academy,Mage,academy.sorcerer,skill magic.academy.attunement,magic.academy.spells Basic; defense.armor Basic,0,1,2,2,,prefers Sorcerer
-academy.runa,Runa Halvard,academy,Warrior,academy.djinn,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,1,1,,prefers Djinn
-academy.lucan,Lucan Esk,academy,Mage,academy.djinn,spell arcana.dispel,magic.academy.spells Basic; pathfinding.pathfinding Basic,0,0,3,2,,prefers Djinn
+academy.sesha,Sesha,academy,Mage,academy.sorcerer,skill magic.academy.attunement,magic.academy.spells Basic; defense.armor Basic,0,1,2,2,,prefers Sorcerer
+academy.raziya,Raziya,academy,Warrior,academy.djinn,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,1,1,,prefers Djinn
+academy.layth,Layth,academy,Mage,academy.djinn,spell arcana.dispel,magic.academy.spells Basic; pathfinding.pathfinding Basic,0,0,3,2,,prefers Djinn
 academy.dorian,Dorian Quill,academy,Warrior,academy.naga,skill pathfinding.scouting,pathfinding.scouting Basic; offense.melee Basic,1,2,1,1,,prefers Naga
 academy.valeska,Valeska Rune,academy,Mage,academy.naga,resource crystal 1,magic.academy.spells Basic; magic.academy.attunement Basic,0,1,2,2,,prefers Naga
-academy.magnus,Magnus Hollin,academy,Mage,academy.gargoyle,spell arcana.haste,magic.academy.spells Basic; pathfinding.logistics Basic,0,0,3,2,yes,campaign hero (ADR-298); copies Theodric Wynn
-academy.liv,Liv Ostrander,academy,Warrior,academy.dwarf,skill defense.armor,defense.armor Basic; offense.melee Basic,1,2,1,1,yes,campaign hero (ADR-298); copies Stellan Frost
-academy.edvard,Edvard Lunde,academy,Warrior,academy.iron-golem,skill tactics.wartempo,tactics.wartempo Basic; defense.armor Basic,1,2,1,1,yes,campaign hero (ADR-298); copies Tobias Rime
-academy.nadia,Nadia Sorell,academy,Mage,academy.djinn,spell arcana.dispel,magic.academy.spells Basic; pathfinding.pathfinding Basic,0,0,3,2,yes,campaign hero (ADR-298); copies Lucan Esk
+academy.magnus,Magnus Hollin,academy,Mage,academy.gargoyle,spell arcana.haste,magic.academy.spells Basic; pathfinding.logistics Basic,0,0,3,2,yes,campaign hero (ADR-298); copies Tariq
+academy.halvor,Halvor Brenn,academy,Mage,academy.dwarf,skill magic.academy.attunement,magic.academy.spells Basic; defense.resistance Basic,0,1,2,2,yes,campaign hero (ADR-298); copies Seraphine Lux
+academy.edvard,Edvard Lunde,academy,Warrior,academy.iron-golem,skill tactics.wartempo,tactics.wartempo Basic; defense.armor Basic,1,2,1,1,yes,campaign hero (ADR-298); copies Talos
+academy.nadia,Nadia,academy,Mage,academy.djinn,spell arcana.dispel,magic.academy.spells Basic; pathfinding.pathfinding Basic,0,0,3,2,yes,campaign hero (ADR-298); copies Layth
 necropolis.morthal,Morthal,necropolis,Warrior,necropolis.skeleton,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,1,1,,prefers Skeleton
 necropolis.necrys,Necrys,necropolis,Mage,necropolis.skeleton,spell death.raise-dead,magic.necropolis.spells Basic; estates.treasury Basic,0,0,3,2,,prefers Skeleton
 necropolis.vexa,Vexa,necropolis,Warrior,necropolis.plague-bearer,skill defense.armor,defense.armor Basic; offense.melee Basic,1,2,1,1,,prefers Plague Bearer
@@ -165,8 +165,8 @@ conflux.ignar,Ignar,conflux,Warrior,conflux.fire-elemental,skill offense.melee,o
 conflux.maerin,Maerin,conflux,Warrior,conflux.water-elemental,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,1,1,yes,campaign hero (ADR-298); copies Varis
 conflux.ilumiel,Ilumiel,conflux,Mage,conflux.wisp,spell light.bless,magic.haven.spells Basic; estates.treasury Basic,0,0,3,2,yes,campaign hero (ADR-298); copies Ansel Wren
 conflux.kalderon,Kalderon,conflux,Mage,conflux.magma-elemental,spell chaos.fireball,magic.inferno.spells Basic; estates.treasury Basic,0,0,3,2,yes,campaign hero (ADR-298); copies Belzra
-conflux.vaeyra,Vaeyra,conflux,Mage,conflux.storm-elemental,spell arcana.haste,magic.academy.spells Basic; pathfinding.logistics Basic,0,0,3,2,yes,campaign hero (ADR-298); copies Theodric Wynn
-conflux.hrimnar,Hrimnar,conflux,Mage,conflux.ice-elemental,spell arcana.frost-bolt,magic.academy.spells Basic; estates.prospecting Basic,0,0,3,2,yes,campaign hero (ADR-298); copies Cassius Thorne
+conflux.vaeyra,Vaeyra,conflux,Mage,conflux.storm-elemental,spell arcana.haste,magic.academy.spells Basic; pathfinding.logistics Basic,0,0,3,2,yes,campaign hero (ADR-298); copies Tariq
+conflux.hrimnar,Hrimnar,conflux,Mage,conflux.ice-elemental,spell arcana.frost-bolt,magic.academy.spells Basic; estates.prospecting Basic,0,0,3,2,yes,campaign hero (ADR-298); copies Qadir
 dragon-utopia.vharos,Vharos,dragon-utopia,Warrior,dragon-utopia.dragonyte,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,1,1,yes,campaign hero (ADR-298); copies Aldric Vane
 dragon-utopia.seravyn,Seravyn,dragon-utopia,Warrior,dragon-utopia.haspid,skill offense.archery,pathfinding.logistics Basic; offense.archery Basic,2,1,1,1,yes,campaign hero (ADR-298); copies Ilvara
 dragon-utopia.garundar,Garundar,dragon-utopia,Warrior,dragon-utopia.haspid,skill defense.armor,defense.armor Basic; offense.melee Basic,1,2,1,1,yes,campaign hero (ADR-298); copies Faelar

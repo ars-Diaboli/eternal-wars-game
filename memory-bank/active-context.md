@@ -9,6 +9,12 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Necropolis heroes: three living humans, four liches, six vampires, a ghost, a wraith and five other dead; prompts
+  rewritten, data unchanged (ADR-307).
+- Dungeon heroes: four minotaurs, three troglodytes, a medusa and two humans among the dark elves; prompts rewritten,
+  data unchanged (ADR-305).
+- Academy heroes: three dwarves, five ageless djinn (four renamed), a naga and a golem (Talos); the naga Sesha replaces Mirela
+  Quist, new campaign mage Halvor Brenn; prompts rewritten; generator version 14, maps re-pinned (ADR-303).
 - Hero portrait prompts: women's hair medium to long, and a pose of each kind on every sheet (towards the viewer, left, right,
   chin raised) instead of all facing right; Sylvan men beardless, no wide faces, some slightly East Asian; the twenty Haven
   portraits cut into `textures/ui/heroes/`, not yet shown in the game (ADR-299).

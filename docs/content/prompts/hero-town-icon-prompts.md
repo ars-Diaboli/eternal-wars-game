@@ -434,21 +434,21 @@ brows, mouth, age and skin tone, never one face with another hairstyle; every he
 only where the cell names it. Women wear their hair medium to long, never cropped or shaved. No hands and nothing held or carried: no
 books, staves, wands, vials, lanterns, torches, censers or weapons. Not a photograph, not a plastic CGI render, no pixel art. Sylvan
 heroes: elves of a dying forest, long pointed ears, each a distinct person of their own age, build and colouring, dressed in their own
-way; long narrow or oval faces, never wide or broad; the men beardless and clean-shaven, no beard, moustache or stubble; some with
-slightly East Asian features; leaf motifs only in jewellery or embroidery. 4 separate icons arranged in a grid of 2 columns and 2
-rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
-nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
-with alpha. The icons, top row left to right, then bottom row: 1 Lithariel, in three-quarter view facing left: a regal elderly female
-elf with a long noble face, high cheekbones, a slightly hooked nose and stern violet eyes, pale lined skin, long silver hair under a
-delicate circlet of white-gold leaves, a high collar of deep plum velvet; 2 Rhovan, in three-quarter view facing right, eyes on the
-viewer: a rugged male elf with a lean weather-cut face, hollow cheeks, a broken nose, a clean-shaven jaw and fierce green eyes, pale
-skin with white scar lines, long wild black hair, loose and unbraided, a wolf-pelt cloak over bare shoulders; 3 Siannon, in
-three-quarter view facing left, the chin lifted only a little, eyes just above level, the whole face clearly seen: a young female elf
-with a narrow face and slightly East Asian features, a small straight nose, a wide mouth and quick dark brown eyes with a single
-eyelid, light warm skin with a few freckles, long straight black hair with a blunt fringe, loose down her back, a hooded tunic of
-tawny suede; 4 Orrindel, facing the viewer, the head tilted slightly: a very old male elf with a gnarled long face, bushy white brows,
-a long hooked nose and tiny bright green eyes, dark weathered brown skin, clean-shaven, long white hair braided with beads, a patched
-brown hooded cloak
+way; long narrow or oval faces, never wide or broad; the men beardless and clean-shaven, no beard, moustache or stubble, except the
+ancient Orrindel's long beard; some with slightly East Asian features; leaf motifs only in jewellery or embroidery. 4 separate icons
+arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the
+same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no
+numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 Lithariel, in three-quarter view
+facing left: a regal elderly female elf with a long noble face, high cheekbones, a slightly hooked nose and stern violet eyes, pale
+lined skin, long silver hair under a delicate circlet of white-gold leaves, a high collar of deep plum velvet; 2 Rhovan, in
+three-quarter view facing right, eyes on the viewer: a rugged male elf with a lean weather-cut face, hollow cheeks, a broken nose, a
+clean-shaven jaw and fierce green eyes, pale skin with white scar lines, long wild black hair, loose and unbraided, a wolf-pelt cloak
+over bare shoulders; 3 Siannon, in three-quarter view facing left, the chin lifted only a little, eyes just above level, the whole
+face clearly seen: a young female elf with a narrow freckled face, a long straight nose, a wide mouth and quick brown eyes, light tan
+skin, a faint scar on one cheek, long tousled chestnut hair in a high tail, a hooded tunic of tawny suede; 4 Orrindel, facing the
+viewer, the head tilted slightly: a very old male elf with a gnarled long face, bushy white brows, a long hooked nose and tiny bright
+green eyes, weathered brown skin, long white hair, a long white beard with one braid threaded with beads (the one bearded Sylvan), a
+patched brown hooded cloak
 ```
 
 | # | File |
@@ -475,19 +475,23 @@ the figure set apart by value contrast, no drawn outline. Every face a different
 brows, mouth, age and skin tone, never one face with another hairstyle; every hero dressed in their own fashion and colours, armour
 only where the cell names it. Women wear their hair medium to long, never cropped or shaved. No hands and nothing held or carried: no
 books, staves, wands, vials, lanterns, torches, censers or weapons. Not a photograph, not a plastic CGI render, no pixel art. Academy
-heroes: humans of the frozen mage-cities, northern and southern faces alike, each dressed in their own way; fur, steel, gold and a
+heroes: the people of the frozen mage-cities, each as their cell says: humans with northern and southern faces, short broad dwarves
+(the men bearded), djinn (air spirits, only half human: ageless and always young, smooth faintly glowing blue-toned skin, glowing eyes
+without whites, small pointed ears, never any beard, moustache or stubble, shown from the chest up) a naga (a serpent-woman with a
+still, emotionless face, bone-white skin and fine scales) and a forged golem; each dressed in their own way; fur, steel, gold and a
 pale ice-blue rune light as accents, no green and no teal. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in
 its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into
 another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons,
 top row left to right, then bottom row: 1 Corvin Halde, in three-quarter view facing right, eyes on the viewer: a soot-smudged man in
 his thirties with a long rubbery face, a big crooked nose, bushy black eyebrows and quick dark eyes, sallow skin, a mop of greasy
 black hair, a brown leather work coat with brass buttons; 2 Stellan Frost, in three-quarter view facing right, the chin lifted only a
-little, eyes just above level, the whole face clearly seen: a broad man in his sixties with a massive square head, a frost-white beard
-down to the chest, a flattened nose and small ice-blue eyes, ruddy wind-burned skin, fur-lined steel plate with gold trim at the neck;
-3 Ingrid Vael, looking straight at the viewer: a hard-faced woman in her fifties with a broad jaw, high flat cheekbones, a small nose
-and pale grey eyes, weathered pale skin, iron-grey braids coiled over the ears, a stone-grey wool cloak with a carved granite clasp; 4
-Tobias Rime, turned slightly to the left: a heavy-jawed young man with a wide flat face, a thick neck, a short nose and dull blue
-eyes, pale freckled skin, a blond crew cut, the riveted edge of an iron pauldron, pale-blue runes tattooed on the neck
+little, eyes just above level, the whole face clearly seen: a dwarf in his sixties, short and very broad, with a massive square head,
+a frost-white beard braided down to the chest, a flattened nose and small ice-blue eyes, ruddy wind-burned skin, fur-lined steel plate
+with gold trim at the neck; 3 Ingrid Vael, looking straight at the viewer: a hard-faced woman in her fifties with a broad jaw, high
+flat cheekbones, a small nose and pale grey eyes, weathered pale skin, iron-grey braids coiled over the ears, a stone-grey wool cloak
+with a carved granite clasp; 4 Talos, turned slightly to the left: a golem forged of dark iron and riveted bronze plates, a solemn
+mask-like face of hammered iron with a heavy brow and a straight seam for a mouth, two ice-blue rune eyes, a pale-blue rune glowing on
+the brow, a gorget of overlapping iron plates, soot and old scorch marks; a forged statue, not a robot, no machinery
 ```
 
 | # | File |
@@ -495,7 +499,7 @@ eyes, pale freckled skin, a blond crew cut, the riveted edge of an iron pauldron
 | W1 | `icon_hero_academy.corvin` |
 | W2 | `icon_hero_academy.stellan` |
 | W3 | `icon_hero_academy.ingrid` |
-| W4 | `icon_hero_academy.tobias` |
+| W4 | `icon_hero_academy.talos` |
 
 ### Academy · Warriors 5–8
 
@@ -512,26 +516,30 @@ the figure set apart by value contrast, no drawn outline. Every face a different
 brows, mouth, age and skin tone, never one face with another hairstyle; every hero dressed in their own fashion and colours, armour
 only where the cell names it. Women wear their hair medium to long, never cropped or shaved. No hands and nothing held or carried: no
 books, staves, wands, vials, lanterns, torches, censers or weapons. Not a photograph, not a plastic CGI render, no pixel art. Academy
-heroes: humans of the frozen mage-cities, northern and southern faces alike, each dressed in their own way; fur, steel, gold and a
+heroes: the people of the frozen mage-cities, each as their cell says: humans with northern and southern faces, short broad dwarves
+(the men bearded), djinn (air spirits, only half human: ageless and always young, smooth faintly glowing blue-toned skin, glowing eyes
+without whites, small pointed ears, never any beard, moustache or stubble, shown from the chest up) a naga (a serpent-woman with a
+still, emotionless face, bone-white skin and fine scales) and a forged golem; each dressed in their own way; fur, steel, gold and a
 pale ice-blue rune light as accents, no green and no teal. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in
 its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into
 another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons,
 top row left to right, then bottom row: 1 Henrik Strom, in three-quarter view facing left, the chin lifted only a little, eyes just
 above level, the whole face clearly seen: a lean hunter in his forties with a narrow wolfish face, a long pointed nose, icy blue eyes
 and a short grizzled beard, frost-reddened skin, a white fur hood; 2 Kasimir Lode, facing the viewer, the head tilted slightly: a
-portly man in his fifties with a round jowly face, a small pursed mouth, a pointed grey beard and shrewd little eyes, rosy skin, a
-balding head, a heavy black fur coat and a gold chain of office; 3 Runa Halvard, turned slightly to the left: a tall raw-boned woman
-in her twenties with a long face, a strong hooked nose, a wide mouth and stormy grey eyes, wind-chapped pale skin, long wind-blown
-storm-grey hair, a royal-blue quilted gambeson, a broken gold chain round the neck; 4 Dorian Quill, in three-quarter view facing
-right, eyes on the viewer: a sharp-eyed man in his thirties with a lean triangular face, a pencil moustache, an aquiline nose and
-narrow black eyes, light brown skin, slicked black hair, a royal-blue naval coat with a high gold-braided collar
+portly dwarf in his fifties with a round jowly face, a small pursed mouth, a forked grey beard bound with gold rings and shrewd little
+eyes, rosy skin, a balding head, a heavy black fur coat and a gold chain of office; 3 Raziya, turned slightly to the left: a female
+djinn, a young ageless air spirit with a long fierce face, high sharp cheekbones, a narrow nose and glowing storm-grey eyes without
+whites, smooth faintly glowing storm-grey-blue skin, long black hair streaming upward as if in a wind, a royal-blue silk vest edged in
+gold, a broken gold chain round the neck; 4 Dorian Quill, in three-quarter view facing right, eyes on the viewer: a sharp-eyed man in
+his thirties with a lean triangular face, a pencil moustache, an aquiline nose and narrow black eyes, light brown skin, slicked black
+hair, a royal-blue naval coat with a high gold-braided collar
 ```
 
 | # | File |
 |---|---|
 | W5 | `icon_hero_academy.henrik` |
 | W6 | `icon_hero_academy.kasimir` |
-| W7 | `icon_hero_academy.runa` |
+| W7 | `icon_hero_academy.raziya` |
 | W8 | `icon_hero_academy.dorian` |
 
 ### Academy · Mages 1–4
@@ -549,27 +557,29 @@ the figure set apart by value contrast, no drawn outline. Every face a different
 brows, mouth, age and skin tone, never one face with another hairstyle; every hero dressed in their own fashion and colours, armour
 only where the cell names it. Women wear their hair medium to long, never cropped or shaved. No hands and nothing held or carried: no
 books, staves, wands, vials, lanterns, torches, censers or weapons. Not a photograph, not a plastic CGI render, no pixel art. Academy
-heroes: humans of the frozen mage-cities, northern and southern faces alike, each dressed in their own way; fur, steel, gold and a
+heroes: the people of the frozen mage-cities, each as their cell says: humans with northern and southern faces, short broad dwarves
+(the men bearded), djinn (air spirits, only half human: ageless and always young, smooth faintly glowing blue-toned skin, glowing eyes
+without whites, small pointed ears, never any beard, moustache or stubble, shown from the chest up) a naga (a serpent-woman with a
+still, emotionless face, bone-white skin and fine scales) and a forged golem; each dressed in their own way; fur, steel, gold and a
 pale ice-blue rune light as accents, no green and no teal. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in
 its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into
 another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons,
 top row left to right, then bottom row: 1 Aurelian Vex, looking straight at the viewer: a young man with a soft round face, dimpled
-cheeks, a short wide nose and bright curious brown eyes, warm brown skin, a mass of dark curls, a deep blue student's gown, a small
-arrow of pale-blue light hovering by the cheek; 2 Seraphine Lux, in three-quarter view facing left: a composed woman in her forties
-with a long oval face, a narrow nose, thin arched brows and pale ice-blue eyes, very fair skin, straight silver hair to the shoulders,
-a white ermine collar, a pale-blue rune glowing on the brow; 3 Theodric Wynn, in three-quarter view facing right: an old man with a
-long gaunt face, a huge white beard, bushy white brows and kind watery blue eyes, wrinkled pink skin, a black velvet skullcap, a
-midnight-blue robe collar stitched with gold stars, a small gold hourglass amulet; 4 Ivar Marrow, in three-quarter view facing right,
-the chin lifted only a little, eyes just above level, the whole face clearly seen: a severe middle-aged man with a long gaunt face, a
-sharp widow's peak of black hair, a narrow nose and one eye behind a dark-glass monocle, grey pallid skin, a black high-necked coat
-with steel buttons
+cheeks, a short wide nose and bright curious brown eyes, pale skin with a faint warm tone, a mass of dark curls, a deep blue student's
+gown; 2 Seraphine Lux, in three-quarter view facing left: a composed woman in her forties with a long oval face, a narrow nose, thin
+arched brows and pale ice-blue eyes, very fair skin, straight silver hair to the shoulders, a white ermine collar, a pale-blue rune
+glowing on the brow; 3 Tariq, in three-quarter view facing right: a young ageless male djinn with a long serene face, high arched
+brows, a fine straight nose and calm glowing gold eyes, smooth faintly glowing deep sapphire-blue skin, beardless, a midnight-blue
+turban with a gold star pin, a small gold hourglass amulet; 4 Ivar Marrow, in three-quarter view facing right, the chin lifted only a
+little, eyes just above level, the whole face clearly seen: a severe middle-aged man with a long gaunt face, a sharp widow's peak of
+black hair, a narrow nose and one eye behind a dark-glass monocle, grey pallid skin, a black high-necked coat with steel buttons
 ```
 
 | # | File |
 |---|---|
 | M1 | `icon_hero_academy.aurelian` |
 | M2 | `icon_hero_academy.seraphine` |
-| M3 | `icon_hero_academy.theodric` |
+| M3 | `icon_hero_academy.tariq` |
 | M4 | `icon_hero_academy.ivar` |
 
 ### Academy · Mages 5–8
@@ -587,26 +597,32 @@ the figure set apart by value contrast, no drawn outline. Every face a different
 brows, mouth, age and skin tone, never one face with another hairstyle; every hero dressed in their own fashion and colours, armour
 only where the cell names it. Women wear their hair medium to long, never cropped or shaved. No hands and nothing held or carried: no
 books, staves, wands, vials, lanterns, torches, censers or weapons. Not a photograph, not a plastic CGI render, no pixel art. Academy
-heroes: humans of the frozen mage-cities, northern and southern faces alike, each dressed in their own way; fur, steel, gold and a
+heroes: the people of the frozen mage-cities, each as their cell says: humans with northern and southern faces, short broad dwarves
+(the men bearded), djinn (air spirits, only half human: ageless and always young, smooth faintly glowing blue-toned skin, glowing eyes
+without whites, small pointed ears, never any beard, moustache or stubble, shown from the chest up) a naga (a serpent-woman with a
+still, emotionless face, bone-white skin and fine scales) and a forged golem; each dressed in their own way; fur, steel, gold and a
 pale ice-blue rune light as accents, no green and no teal. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in
 its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into
 another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons,
-top row left to right, then bottom row: 1 Cassius Thorne, in three-quarter view facing left: a lean man in his forties with a hatchet
-face, sharp cheekbones, a long straight nose and pale grey eyes, wind-burned skin, frost in his short dark beard, a white fur mantle,
-a shard of ice floating beside the face; 2 Mirela Quist, in three-quarter view facing right: a plump bookish woman in her thirties
-with a round soft face, a small chin, round spectacles and warm brown eyes, olive skin, a messy dark bun stuck with a quill, an ink
-smudge on the cheek, a mustard-yellow wool shawl; 3 Lucan Esk, in three-quarter view facing left, the chin lifted only a little, eyes
-just above level, the whole face clearly seen: a bald tall man with a long skull, sunken cheeks, a thin hooked nose and deep-set black
-eyes, dark brown skin tattooed with fading pale-blue runes, a charcoal-grey robe with a high collar; 4 Valeska Rune, facing the
-viewer, the head tilted slightly: a proud woman in her fifties with a long angular face, a strong jaw, a high-bridged nose and hooded
-dark eyes, olive skin, black hair streaked with white in a tall coil, a circlet set with rose-red crystal shards, a dark sable collar
+top row left to right, then bottom row: 1 Qadir, in three-quarter view facing left: a young ageless male djinn with a lean hatchet
+face, sharp cheekbones, a long straight nose and glowing frost-white eyes, smooth faintly glowing pale icy-blue skin rimed with frost,
+beardless, white hair swept back like blown snow, a white fur mantle, a shard of ice floating beside the face; 2 Sesha, in
+three-quarter view facing right: a naga, a serpent-woman of the Academy's guard, ageless, with a long perfectly still face that shows
+no feeling at all, high smooth cheekbones, a small straight nose and a thin unmoving mouth, unblinking pale gold eyes with slit
+pupils, super pale bone-white skin with fine white scales at the temples and down the throat, long straight black hair bound high with
+gold rings, a collar of overlapping steel and gold scales; 3 Layth, in three-quarter view facing left, the chin lifted only a little,
+eyes just above level, the whole face clearly seen: a young ageless male djinn with a long bald skull, hollow cheeks, a thin hooked
+nose and deep-set eyes glowing white, smooth faintly glowing deep indigo skin traced with pale-blue runes, beardless, gold rings in
+both pointed ears, a charcoal-grey silk collar; 4 Valeska Rune, facing the viewer, the head tilted slightly: a proud woman in her
+fifties with a long angular face, a strong jaw, a high-bridged nose and hooded dark eyes, olive skin, black hair streaked with white
+in a tall coil, a circlet set with rose-red crystal shards, a dark sable collar
 ```
 
 | # | File |
 |---|---|
-| M5 | `icon_hero_academy.cassius` |
-| M6 | `icon_hero_academy.mirela` |
-| M7 | `icon_hero_academy.lucan` |
+| M5 | `icon_hero_academy.qadir` |
+| M6 | `icon_hero_academy.sesha` |
+| M7 | `icon_hero_academy.layth` |
 | M8 | `icon_hero_academy.valeska` |
 
 ### Academy · Campaign 1–4
@@ -624,25 +640,29 @@ the figure set apart by value contrast, no drawn outline. Every face a different
 brows, mouth, age and skin tone, never one face with another hairstyle; every hero dressed in their own fashion and colours, armour
 only where the cell names it. Women wear their hair medium to long, never cropped or shaved. No hands and nothing held or carried: no
 books, staves, wands, vials, lanterns, torches, censers or weapons. Not a photograph, not a plastic CGI render, no pixel art. Academy
-heroes: humans of the frozen mage-cities, northern and southern faces alike, each dressed in their own way; fur, steel, gold and a
+heroes: the people of the frozen mage-cities, each as their cell says: humans with northern and southern faces, short broad dwarves
+(the men bearded), djinn (air spirits, only half human: ageless and always young, smooth faintly glowing blue-toned skin, glowing eyes
+without whites, small pointed ears, never any beard, moustache or stubble, shown from the chest up) a naga (a serpent-woman with a
+still, emotionless face, bone-white skin and fine scales) and a forged golem; each dressed in their own way; fur, steel, gold and a
 pale ice-blue rune light as accents, no green and no teal. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in
 its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into
 another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons,
-top row left to right, then bottom row: 1 Magnus Hollin, in three-quarter view facing right: an imposing old man with a broad
-lion-like face, a mane of white hair and beard, a broad flat nose and fierce gold-brown eyes, ruddy skin, a deep crimson robe with a
-heavy gold collar; 2 Liv Ostrander, in three-quarter view facing right, the chin lifted only a little, eyes just above level, the
-whole face clearly seen: a square-built woman in her forties with a broad round face, a wide flat nose, ruddy cheeks and small blue
-eyes, pale freckled skin, thick blond hair in two braids, a steel gorget over a red wool collar; 3 Edvard Lunde, looking straight at
-the viewer: a burly bald man in his fifties with a heavy brow ridge, a broken nose, a thick black beard and dark eyes, swarthy skin
-marked by small burn scars, a brown leather smith's collar; 4 Nadia Sorell, turned slightly to the left: a girl of about eighteen with
-a narrow elfin face, a sharp chin, large dark eyes and thick straight brows, light brown skin, long black hair in a single braid, a
-royal-blue high-collared jacket, pale-blue rune light in her irises
+top row left to right, then bottom row: 1 Magnus Hollin, in three-quarter view facing right: a tall imposing old human man with a long
+lion-like face, a mane of white hair and a long white beard, a broad flat nose and fierce gold-brown eyes, ruddy skin, a deep crimson
+robe with a heavy gold collar; 2 Halvor Brenn, in three-quarter view facing right, the chin lifted only a little, eyes just above
+level, the whole face clearly seen: a human man in his late forties with a long lean face, a high forehead, a straight nose and calm
+grey-green eyes, fair weathered skin, short dark-brown hair greying at the temples, a close-trimmed greying beard, a slate-grey
+travelling coat with a fur collar and a silver rune clasp; 3 Edvard Lunde, looking straight at the viewer: a burly bald dwarf smith in
+his fifties with a heavy brow ridge, a broken nose, a thick black beard tucked into his collar and dark eyes, swarthy skin marked by
+small burn scars, a brown leather smith's collar; 4 Nadia, turned slightly to the left: a young female djinn with a narrow elfin face,
+a sharp chin, large glowing dark-blue eyes without whites and thick straight brows, smooth faintly glowing sky-blue skin, long black
+hair in a single braid, a royal-blue high-collared jacket
 ```
 
 | # | File |
 |---|---|
 | C1 | `icon_hero_academy.magnus` |
-| C2 | `icon_hero_academy.liv` |
+| C2 | `icon_hero_academy.halvor` |
 | C3 | `icon_hero_academy.edvard` |
 | C4 | `icon_hero_academy.nadia` |
 
@@ -663,19 +683,23 @@ the figure set apart by value contrast, no drawn outline. Every face a different
 brows, mouth, age and skin tone, never one face with another hairstyle; every hero dressed in their own fashion and colours, armour
 only where the cell names it. Women wear their hair medium to long, never cropped or shaved. No hands and nothing held or carried: no
 books, staves, wands, vials, lanterns, torches, censers or weapons. Not a photograph, not a plastic CGI render, no pixel art.
-Necropolis heroes: necromancers, vampires and the risen dead, from the barely living to bare bone, grave-cold skin in many shades of
-pallor, each dressed in their own way; a cold green glow in the eyes of some. 4 separate icons arranged in a grid of 2 columns and 2
-rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
-nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
-with alpha. The icons, top row left to right, then bottom row: 1 Morthal, in three-quarter view facing left, the chin lifted only a
-little, eyes just above level, the whole face clearly seen: a skull-like male face, grey skin stretched thin over the bones, a lipless
-mouth and sunken cold green eyes, a few strands of white hair, a rusted black steel gorget; 2 Vexa, facing the viewer, the head tilted
-slightly: a sharp-faced woman in her thirties with a narrow pointed face, a long thin nose and red-rimmed pale eyes, sickly
-yellow-grey skin, lank shoulder-length black hair, a beaked leather plague mask pushed up on the forehead, green fumes curling at the
-collar of a stained oilskin coat; 3 Grimwald, turned slightly to the left: a hulking risen warrior with a huge square head, grey-blue
-dead skin, a heavy brow, one milky eye and a jaw held on by an iron brace, grey stubble; 4 Ulric Ashgrave, in three-quarter view
-facing right, eyes on the viewer: a gaunt aristocrat with a long horse-like face, a pointed grey beard, a high forehead and
-heavy-lidded eyes, grey parchment skin, a collar of black spider-web lace on a burgundy velvet doublet
+Necropolis heroes: the dead and the few living who serve them, each as their cell says: living human necromancers, vampires (ageless,
+handsome and cruel, bloodless white skin, red or pale gold eyes, small fangs), liches (bare skulls with cold fire in the sockets,
+crowns and rotting finery, no flesh, no skin, shown from the chest up), a ghost and a wraith (translucent, faintly glowing, fading at
+the edges) and other risen dead, as a ghoul, plague corpses, a skeleton and a death knight; each dressed in their own way; a cold
+green glow in the eyes of some. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell,
+centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines,
+no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then
+bottom row: 1 Morthal, in three-quarter view facing left, the chin lifted only a little, eyes just above level, the whole face clearly
+seen: a lich, a broad heavy skull of old brown bone with a cracked brow, cold green fire in the eye sockets, a few strands of white
+hair clinging to it, a rusted black steel gorget and a rotting black mantle; 2 Vexa, facing the viewer, the head tilted slightly: a
+plague corpse, a risen woman with a narrow pointed face, a long thin nose and clouded red-rimmed eyes, sickly yellow-grey rotting skin
+with open sores, lank shoulder-length black hair, a beaked leather plague mask pushed up on the forehead, green fumes curling at the
+collar of a stained oilskin coat; 3 Grimwald, turned slightly to the left: a ghoul, a hulking risen warrior with a huge square head,
+grey-blue dead skin, a heavy brow, one milky eye, a lipless mouth of sharp yellow teeth and a jaw held on by an iron brace, a torn
+leather collar; 4 Ulric Ashgrave, in three-quarter view facing right, eyes on the viewer: a vampire aristocrat with a gaunt long
+horse-like face, a pointed grey beard, a high forehead and heavy-lidded pale gold eyes, small fangs, bloodless grey-white skin, a
+collar of black spider-web lace on a burgundy velvet doublet
 ```
 
 | # | File |
@@ -700,18 +724,22 @@ the figure set apart by value contrast, no drawn outline. Every face a different
 brows, mouth, age and skin tone, never one face with another hairstyle; every hero dressed in their own fashion and colours, armour
 only where the cell names it. Women wear their hair medium to long, never cropped or shaved. No hands and nothing held or carried: no
 books, staves, wands, vials, lanterns, torches, censers or weapons. Not a photograph, not a plastic CGI render, no pixel art.
-Necropolis heroes: necromancers, vampires and the risen dead, from the barely living to bare bone, grave-cold skin in many shades of
-pallor, each dressed in their own way; a cold green glow in the eyes of some. 4 separate icons arranged in a grid of 2 columns and 2
-rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
-nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
-with alpha. The icons, top row left to right, then bottom row: 1 Hespera, looking straight at the viewer: a vampire woman with a sharp
-heart-shaped face, a small cruel mouth, a narrow nose and burning red eyes, alabaster skin, long sleek black hair, a high black
-lacquered collar with a ruby pin; 2 Corvane, in three-quarter view facing left: a revenant knight, half the face bare bone and half
-pale dead flesh with a black beard, one cold green eye, a tattered grey shroud as a hood over black mail; 3 Drusus, in three-quarter
-view facing right, eyes on the viewer: a grim broad-faced death knight in his forties with a heavy jaw, a flattened boxer's nose and
-pale dead eyes, ash-grey skin, a shaved scarred head, black plate with a horned gorget; 4 Malgrin, in three-quarter view facing right,
-the chin lifted only a little, eyes just above level, the whole face clearly seen: a skeletal warrior king, a long bare skull of
-cracked yellow bone, green fire in the eye sockets, a crown of black iron, a rotting brown fur mantle
+Necropolis heroes: the dead and the few living who serve them, each as their cell says: living human necromancers, vampires (ageless,
+handsome and cruel, bloodless white skin, red or pale gold eyes, small fangs), liches (bare skulls with cold fire in the sockets,
+crowns and rotting finery, no flesh, no skin, shown from the chest up), a ghost and a wraith (translucent, faintly glowing, fading at
+the edges) and other risen dead, as a ghoul, plague corpses, a skeleton and a death knight; each dressed in their own way; a cold
+green glow in the eyes of some. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell,
+centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines,
+no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then
+bottom row: 1 Hespera, looking straight at the viewer: a vampire woman with a sharp heart-shaped face, a small cruel mouth, a narrow
+nose and burning red eyes, alabaster skin, long sleek black hair, a high black lacquered collar with a ruby pin; 2 Corvane, in
+three-quarter view facing left: a wraith, a hooded shape of grey shadow and tattered shroud, the gaunt translucent face of a dead
+knight with a black beard, hollow cheeks and cold green burning eyes, faintly glowing at the edges and fading into smoke below, the
+ghost of black mail at the throat; 3 Drusus, in three-quarter view facing right, eyes on the viewer: a death knight, a dead warrior in
+his prime with a broad face, a heavy jaw, a flattened boxer's nose and pale dead eyes glowing faint green, ash-grey dead skin cracked
+at the cheek, a shaved scarred head, black plate with a horned gorget; 4 Malgrin, in three-quarter view facing right, the chin lifted
+only a little, eyes just above level, the whole face clearly seen: a lich warrior king, a long bare skull of cracked yellow bone,
+green fire in the eye sockets, a crown of black iron, a rotting brown fur mantle over old black mail
 ```
 
 | # | File |
@@ -736,19 +764,23 @@ the figure set apart by value contrast, no drawn outline. Every face a different
 brows, mouth, age and skin tone, never one face with another hairstyle; every hero dressed in their own fashion and colours, armour
 only where the cell names it. Women wear their hair medium to long, never cropped or shaved. No hands and nothing held or carried: no
 books, staves, wands, vials, lanterns, torches, censers or weapons. Not a photograph, not a plastic CGI render, no pixel art.
-Necropolis heroes: necromancers, vampires and the risen dead, from the barely living to bare bone, grave-cold skin in many shades of
-pallor, each dressed in their own way; a cold green glow in the eyes of some. 4 separate icons arranged in a grid of 2 columns and 2
-rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
-nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
-with alpha. The icons, top row left to right, then bottom row: 1 Necrys, in three-quarter view facing left: a hooded necromancer with
-a sunken narrow face, a long hooked nose and green light in the deep eye sockets, waxy grey skin, a black wool hood; 2 Sepulka, in
-three-quarter view facing right, eyes on the viewer: an old woman with a wide wrinkled toad-like face, a flat nose, a toothless grin
-and tiny black eyes, earthy brown skin, wild grey hair, grave dirt on the face, a necklace of finger bones over a patched brown shawl;
-3 Vorlath, in three-quarter view facing left, the chin lifted only a little, eyes just above level, the whole face clearly seen: a
-thin man with a narrow ferret face, sunken grey eyes, black lips and a receding chin, pale bluish skin, thin greasy dark hair, a
-high-collared dark violet coat, a twisted iron charm at the throat; 4 Ysmera, facing the viewer, the head tilted slightly: a pale
-woman in her twenties with a long oval face, a delicate nose, large silvery eyes and silver tears of mercury on the cheeks, bloodless
-white skin, long straight ash-blonde hair, a black lace mourning veil, a silver spider brooch
+Necropolis heroes: the dead and the few living who serve them, each as their cell says: living human necromancers, vampires (ageless,
+handsome and cruel, bloodless white skin, red or pale gold eyes, small fangs), liches (bare skulls with cold fire in the sockets,
+crowns and rotting finery, no flesh, no skin, shown from the chest up), a ghost and a wraith (translucent, faintly glowing, fading at
+the edges) and other risen dead, as a ghoul, plague corpses, a skeleton and a death knight; each dressed in their own way; a cold
+green glow in the eyes of some. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell,
+centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines,
+no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then
+bottom row: 1 Necrys, in three-quarter view facing left: a living human necromancer in his fifties with a sunken narrow face, a long
+hooked nose and deep-set dark eyes with a faint green light in them, waxy sallow skin, a short grey beard, a black wool hood; 2
+Sepulka, in three-quarter view facing right, eyes on the viewer: a living human grave-witch, an old woman with a wide wrinkled
+toad-like face, a flat nose, a toothless grin and tiny black eyes, earthy brown skin, wild grey hair, grave dirt on the face, a
+necklace of finger bones over a patched brown shawl; 3 Vorlath, in three-quarter view facing left, the chin lifted only a little, eyes
+just above level, the whole face clearly seen: a lich, a narrow pointed skull of grey bone with a missing lower jaw, sickly violet
+fire in the eye sockets, a high-collared dark violet coat gone to rags, a twisted iron charm at the throat; 4 Ysmera, facing the
+viewer, the head tilted slightly: a young vampire woman with a long oval face, a delicate nose, large silvery eyes and silver tears of
+mercury on the cheeks, small fangs, bloodless white skin, long straight ash-blonde hair, a black lace mourning veil, a silver spider
+brooch
 ```
 
 | # | File |
@@ -773,19 +805,22 @@ the figure set apart by value contrast, no drawn outline. Every face a different
 brows, mouth, age and skin tone, never one face with another hairstyle; every hero dressed in their own fashion and colours, armour
 only where the cell names it. Women wear their hair medium to long, never cropped or shaved. No hands and nothing held or carried: no
 books, staves, wands, vials, lanterns, torches, censers or weapons. Not a photograph, not a plastic CGI render, no pixel art.
-Necropolis heroes: necromancers, vampires and the risen dead, from the barely living to bare bone, grave-cold skin in many shades of
-pallor, each dressed in their own way; a cold green glow in the eyes of some. 4 separate icons arranged in a grid of 2 columns and 2
-rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
-nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
-with alpha. The icons, top row left to right, then bottom row: 1 Kael Duskmire, in three-quarter view facing right: a vampire noble
-with a chiselled long face, a widow's peak of slicked dark hair, a thin smile showing fangs and pale gold eyes, marble-white skin, a
-crimson silk cravat and a black velvet collar; 2 Lethe, in three-quarter view facing right, the chin lifted only a little, eyes just
-above level, the whole face clearly seen: a translucent ghostly woman with a soft round young face, wide sad eyes and parted lips,
-glowing blue-white skin, long hair floating as if under water, a drowned girl's lace collar; 3 Ozmund, looking straight at the viewer:
-a bloated man with a fat round face, sagging jowls, a pocked nose and bloodshot eyes, greenish blotched skin, a few strands of hair,
-stained mustard-yellow plague robes, a black rat on his shoulder; 4 Thessaly, turned slightly to the left: a lich, a narrow elegant
-skull with jewels set in the cheekbones, violet fire in the sockets, a tall jagged crown of tarnished silver, a glowing green
-phylactery on a chain at the throat
+Necropolis heroes: the dead and the few living who serve them, each as their cell says: living human necromancers, vampires (ageless,
+handsome and cruel, bloodless white skin, red or pale gold eyes, small fangs), liches (bare skulls with cold fire in the sockets,
+crowns and rotting finery, no flesh, no skin, shown from the chest up), a ghost and a wraith (translucent, faintly glowing, fading at
+the edges) and other risen dead, as a ghoul, plague corpses, a skeleton and a death knight; each dressed in their own way; a cold
+green glow in the eyes of some. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell,
+centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines,
+no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then
+bottom row: 1 Kael Duskmire, in three-quarter view facing right: a vampire noble with a chiselled long face, a widow's peak of slicked
+dark hair, a thin smile showing fangs and pale gold eyes, marble-white skin, a crimson silk cravat and a black velvet collar; 2 Lethe,
+in three-quarter view facing right, the chin lifted only a little, eyes just above level, the whole face clearly seen: a translucent
+ghostly woman with a soft round young face, wide sad eyes and parted lips, glowing blue-white skin, long hair floating as if under
+water, a drowned girl's lace collar; 3 Ozmund, looking straight at the viewer: a plague corpse, a bloated dead man with a fat round
+face, sagging grey jowls, a rotting pocked nose and clouded bloodshot eyes, greenish blotched skin, a few strands of hair, stained
+mustard-yellow plague robes, a black rat on his shoulder; 4 Thessaly, turned slightly to the left: a lich, a narrow elegant skull with
+jewels set in the cheekbones, violet fire in the sockets, a tall jagged crown of tarnished silver, a glowing green phylactery on a
+chain at the throat
 ```
 
 | # | File |
@@ -810,19 +845,23 @@ the figure set apart by value contrast, no drawn outline. Every face a different
 brows, mouth, age and skin tone, never one face with another hairstyle; every hero dressed in their own fashion and colours, armour
 only where the cell names it. Women wear their hair medium to long, never cropped or shaved. No hands and nothing held or carried: no
 books, staves, wands, vials, lanterns, torches, censers or weapons. Not a photograph, not a plastic CGI render, no pixel art.
-Necropolis heroes: necromancers, vampires and the risen dead, from the barely living to bare bone, grave-cold skin in many shades of
-pallor, each dressed in their own way; a cold green glow in the eyes of some. 4 separate icons arranged in a grid of 2 columns and 2
-rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
-nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
-with alpha. The icons, top row left to right, then bottom row: 1 Maladrea, in three-quarter view facing left, the chin lifted only a
-little, eyes just above level, the whole face clearly seen: a tall regal woman of no clear age with a long angular face, sharp high
-cheekbones, a hooked nose and black eyes with green pinpoints, chalk-white skin, black hair swept up under a tall bone headdress, a
-stiff collar of black and silver; 2 Aldous Wraithe, facing the viewer, the head tilted slightly: a vampire in his fifties with a broad
-scarred face, a broken nose, a clipped grey beard and red eyes, grey-white skin, a cropped grey head, a faded white surcoat collar
-with a scorched sun emblem; 3 Ravenna, turned slightly to the left: a wiry woman in her forties with a narrow hatchet face, sunken
-cheeks, a scar splitting the lips and pale grey eyes, grey-tinged skin, long white hair tied back, a black leather gorget studded with
-small bones; 4 Ossian Grael, in three-quarter view facing right: a hunched ancient man with a long drooping face, a huge hooked nose,
-rheumy grey eyes and a wispy white beard, liver-spotted grey skin, a bald head under a moth-eaten brown cap
+Necropolis heroes: the dead and the few living who serve them, each as their cell says: living human necromancers, vampires (ageless,
+handsome and cruel, bloodless white skin, red or pale gold eyes, small fangs), liches (bare skulls with cold fire in the sockets,
+crowns and rotting finery, no flesh, no skin, shown from the chest up), a ghost and a wraith (translucent, faintly glowing, fading at
+the edges) and other risen dead, as a ghoul, plague corpses, a skeleton and a death knight; each dressed in their own way; a cold
+green glow in the eyes of some. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell,
+centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines,
+no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then
+bottom row: 1 Maladrea, in three-quarter view facing left, the chin lifted only a little, eyes just above level, the whole face
+clearly seen: a vampire matriarch, tall and regal, of no clear age, with a long angular face, sharp high cheekbones, a hooked nose and
+red eyes, small fangs, bloodless chalk-white skin, black hair swept up under a tall bone headdress, a stiff collar of black and
+silver; 2 Aldous Wraithe, facing the viewer, the head tilted slightly: a vampire in his fifties with a broad scarred face, a broken
+nose, a clipped grey beard and red eyes, grey-white skin, a cropped grey head, a faded white surcoat collar with a scorched sun
+emblem; 3 Ravenna, turned slightly to the left: a skeleton duellist, a fine narrow skull of polished white bone, a cracked cheekbone,
+cold pale-grey lights in the eye sockets, long white hair still clinging to the skull and tied back, a black leather gorget studded
+with small bones; 4 Ossian Grael, in three-quarter view facing right: a living human gravekeeper, a hunched ancient man with a long
+drooping face, a huge hooked nose, rheumy grey eyes and a wispy white beard, liver-spotted skin, a bald head under a moth-eaten brown
+cap
 ```
 
 | # | File |
@@ -1032,19 +1071,24 @@ the figure set apart by value contrast, no drawn outline. Every face a different
 brows, mouth, age and skin tone, never one face with another hairstyle; every hero dressed in their own fashion and colours, armour
 only where the cell names it. Women wear their hair medium to long, never cropped or shaved. No hands and nothing held or carried: no
 books, staves, wands, vials, lanterns, torches, censers or weapons. Not a photograph, not a plastic CGI render, no pixel art. Dungeon
-heroes: dark elves of the deep, long pointed ears, skin from ash-grey to slate-blue and charcoal, hair from white to silver, each
-dressed in their own way; a faint violet glow on some. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its
-own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into
-another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons,
-top row left to right, then bottom row: 1 Vaelrith, in three-quarter view facing left: a male dark elf in his prime with a long narrow
-face, high hard cheekbones, a thin nose and pale red eyes, ash-grey skin, long straight white hair, black plate at the neck under a
-cloak of pale troglodyte hide; 2 Zhaun, in three-quarter view facing right: a young male dark elf with a small sharp face, a pointed
-chin and darting violet eyes, slate-blue skin, short spiky white hair, a black scout's hood, a thin silver band across the brow; 3
-Ilvara, in three-quarter view facing left, the chin lifted only a little, eyes just above level, the whole face clearly seen: a female
-dark elf with a broad strong face, a wide mouth, a broken nose and yellow eyes, charcoal-black skin, long white hair with a silver
-snake ornament coiled over one ear, a black leather collar; 4 Kharis, facing the viewer, the head tilted slightly: a massive male dark
-elf with a square heavy face, a thick neck, a flattened nose and dull red eyes, dark grey skin, a white topknot, a helm crowned with
-two bull horns
+heroes: the peoples of the deep, each as their cell says: dark elves (long pointed ears, skin from ash-grey to slate-blue and
+charcoal, hair from white to silver), minotaurs (huge bull-headed men with real bull's heads, muzzles, horns and short hide, nothing
+human in the face, shown from the chest up), troglodytes (hunched cave lizard-folk with flat wide snouts, smooth eyeless faces, pale
+grey scales and no hair), a medusa (a serpent-woman with living snakes for hair) and humans of the surface; each dressed in their own
+way; a faint violet glow on some. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square
+cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid
+lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to
+right, then bottom row: 1 Vaelrith, in three-quarter view facing left: a troglodyte warrior in his prime, a lean hunched lizard-man
+with a flat wide snout full of small sharp teeth, a smooth eyeless face, pale grey scales darker along the brow, a ridge of short
+spines over the skull, a harness of black leather and bone at the neck under a cloak of pale cave-lizard hide; 2 Zhaun, in
+three-quarter view facing right: a young male dark elf with a small sharp face, a pointed chin and darting violet eyes, slate-blue
+skin, short spiky white hair, a black scout's hood, a thin silver band across the brow; 3 Ilvara, in three-quarter view facing left,
+the chin lifted only a little, eyes just above level, the whole face clearly seen: a medusa, a serpent-woman with a broad strong face,
+high hard cheekbones, a wide thin-lipped mouth and cold yellow eyes with slit pupils, grey-olive skin turning to fine dark scales on
+the throat and shoulders, a crown of living hissing snakes instead of hair, a black leather collar with a silver snake clasp; 4
+Kharis, facing the viewer, the head tilted slightly: a massive minotaur warrior in his prime with a broad dark-brown bull's head, a
+heavy wet muzzle with a bronze ring through the nose, small dull red eyes, long curved horns capped with iron, a thick neck, a
+battered black steel gorget
 ```
 
 | # | File |
@@ -1069,18 +1113,21 @@ the figure set apart by value contrast, no drawn outline. Every face a different
 brows, mouth, age and skin tone, never one face with another hairstyle; every hero dressed in their own fashion and colours, armour
 only where the cell names it. Women wear their hair medium to long, never cropped or shaved. No hands and nothing held or carried: no
 books, staves, wands, vials, lanterns, torches, censers or weapons. Not a photograph, not a plastic CGI render, no pixel art. Dungeon
-heroes: dark elves of the deep, long pointed ears, skin from ash-grey to slate-blue and charcoal, hair from white to silver, each
-dressed in their own way; a faint violet glow on some. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its
-own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into
-another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons,
-top row left to right, then bottom row: 1 Shyrran, in three-quarter view facing right: a male dark elf rider with a lean wolfish face,
-a hooked nose, a long scar down one cheek and silver eyes, blue-grey skin, white hair in a long braid, armour of black lizard scales
-at the neck; 2 Vorn, in three-quarter view facing right, the chin lifted only a little, eyes just above level, the whole face clearly
-seen: a heavy-set older male dark elf with a fleshy round face, a double chin, a cold smile and small gold eyes, ash-grey skin, a
-balding head with white side hair, heavy gold earrings and a gold collar; 3 Lyrthas, looking straight at the viewer: a male dark elf
-with an angular cruel face, thin lips, a long sharp nose and pale violet eyes, dark slate skin, silver hair shaved on one side, a helm
-plume shaped like a scorpion's tail; 4 Xundar, turned slightly to the left: an old male dark elf with a gaunt lined face, a bent nose,
-one milky eye and one violet eye, grey skin, a long thin white beard, an amulet of one great violet eye at the throat
+heroes: the peoples of the deep, each as their cell says: dark elves (long pointed ears, skin from ash-grey to slate-blue and
+charcoal, hair from white to silver), minotaurs (huge bull-headed men with real bull's heads, muzzles, horns and short hide, nothing
+human in the face, shown from the chest up), troglodytes (hunched cave lizard-folk with flat wide snouts, smooth eyeless faces, pale
+grey scales and no hair), a medusa (a serpent-woman with living snakes for hair) and humans of the surface; each dressed in their own
+way; a faint violet glow on some. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square
+cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid
+lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to
+right, then bottom row: 1 Shyrran, in three-quarter view facing right: a male dark elf rider with a lean wolfish face, a hooked nose,
+a long scar down one cheek and silver eyes, blue-grey skin, white hair in a long braid, armour of black lizard scales at the neck; 2
+Vorn, in three-quarter view facing right, the chin lifted only a little, eyes just above level, the whole face clearly seen: a heavy
+old minotaur with a grizzled grey-black bull's head, a scarred sagging muzzle, a cold heavy-lidded stare and small gold eyes, thick
+horns hung with gold rings, heavy gold rings in both ears and a broad gold collar; 3 Lyrthas, looking straight at the viewer: a male
+dark elf with an angular cruel face, thin lips, a long sharp nose and pale violet eyes, dark slate skin, silver hair shaved on one
+side, a helm plume shaped like a scorpion's tail; 4 Xundar, turned slightly to the left: an old male dark elf with a gaunt lined face,
+a bent nose, one milky eye and one violet eye, grey skin, a long thin white beard, an amulet of one great violet eye at the throat
 ```
 
 | # | File |
@@ -1105,18 +1152,22 @@ the figure set apart by value contrast, no drawn outline. Every face a different
 brows, mouth, age and skin tone, never one face with another hairstyle; every hero dressed in their own fashion and colours, armour
 only where the cell names it. Women wear their hair medium to long, never cropped or shaved. No hands and nothing held or carried: no
 books, staves, wands, vials, lanterns, torches, censers or weapons. Not a photograph, not a plastic CGI render, no pixel art. Dungeon
-heroes: dark elves of the deep, long pointed ears, skin from ash-grey to slate-blue and charcoal, hair from white to silver, each
-dressed in their own way; a faint violet glow on some. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its
-own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into
-another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons,
-top row left to right, then bottom row: 1 Nethra, in three-quarter view facing left, the chin lifted only a little, eyes just above
-level, the whole face clearly seen: a female dark-elf sorceress with a long elegant face, a straight nose and full dark lips, ash-grey
-skin, the eyes hidden behind a sheer black veil, white hair bound in silver wire; 2 Sabal, facing the viewer, the head tilted
-slightly: a male dark elf with a broad smooth face, a wide flat nose and narrow amber eyes, deep charcoal skin, a shaved head, violet
-tattoos glowing along the jaw; 3 Ghaunis, turned slightly to the left: a female dark elf in her later years with a gaunt narrow face,
-hollow cheeks and pale lilac eyes, ash-grey skin, long ragged white hair, half the face wrapped in drifting shadow smoke; 4 Zesrin, in
-three-quarter view facing right, eyes on the viewer: a young male dark elf with a soft boyish face, large dark violet eyes and a
-nervous mouth, smooth blue-grey skin, shoulder-length silver hair, a deep red silk collar, a minotaur-horn earring
+heroes: the peoples of the deep, each as their cell says: dark elves (long pointed ears, skin from ash-grey to slate-blue and
+charcoal, hair from white to silver), minotaurs (huge bull-headed men with real bull's heads, muzzles, horns and short hide, nothing
+human in the face, shown from the chest up), troglodytes (hunched cave lizard-folk with flat wide snouts, smooth eyeless faces, pale
+grey scales and no hair), a medusa (a serpent-woman with living snakes for hair) and humans of the surface; each dressed in their own
+way; a faint violet glow on some. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square
+cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid
+lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to
+right, then bottom row: 1 Nethra, in three-quarter view facing left, the chin lifted only a little, eyes just above level, the whole
+face clearly seen: a female troglodyte seer, slight and hunched, with a narrow lizard snout, a smooth eyeless face half under a sheer
+black veil, pale ash-grey scales with a faint pearly sheen, thin violet runes painted down the snout, strings of silver wire and bone
+beads at the throat; 2 Sabal, facing the viewer, the head tilted slightly: a male dark elf with a broad smooth face, a wide flat nose
+and narrow amber eyes, deep charcoal skin, a shaved head, violet tattoos glowing along the jaw; 3 Ghaunis, turned slightly to the
+left: a female dark elf in her later years with a gaunt narrow face, hollow cheeks and pale lilac eyes, ash-grey skin, long ragged
+white hair, half the face wrapped in drifting shadow smoke; 4 Zesrin, in three-quarter view facing right, eyes on the viewer: a young
+minotaur shaman with a narrow reddish-brown bull's head, short new horns painted with violet sigils, large dark violet eyes, a silver
+ring through one ear, a deep red silk collar
 ```
 
 | # | File |
@@ -1141,18 +1192,22 @@ the figure set apart by value contrast, no drawn outline. Every face a different
 brows, mouth, age and skin tone, never one face with another hairstyle; every hero dressed in their own fashion and colours, armour
 only where the cell names it. Women wear their hair medium to long, never cropped or shaved. No hands and nothing held or carried: no
 books, staves, wands, vials, lanterns, torches, censers or weapons. Not a photograph, not a plastic CGI render, no pixel art. Dungeon
-heroes: dark elves of the deep, long pointed ears, skin from ash-grey to slate-blue and charcoal, hair from white to silver, each
-dressed in their own way; a faint violet glow on some. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its
-own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into
-another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons,
-top row left to right, then bottom row: 1 Dryel, looking straight at the viewer: a male dark elf with a long grief-worn face, drooping
-eyes shedding violet tears and a thin beard, grey skin, lank white hair, a black mourning collar; 2 Vhaeris, in three-quarter view
-facing left: a female dark-elf high priestess with a long narrow face, a sharp chin and cold white eyes, slate-black skin, long white
-hair under a tall silver headdress like spider legs; 3 Phyrra, in three-quarter view facing right, eyes on the viewer: a young female
-dark elf with a wild angular face, a wide grin and crackling bright violet eyes, light ash skin, long white hair lifting in the air,
-black lightning crackling about her head; 4 Ilphar, in three-quarter view facing right, the chin lifted only a little, eyes just above
-level, the whole face clearly seen: a hunched male dark elf with a round wrinkled face, a pug nose and squinting eyes, mottled grey
-skin, a bald head, an amulet of many small eyes
+heroes: the peoples of the deep, each as their cell says: dark elves (long pointed ears, skin from ash-grey to slate-blue and
+charcoal, hair from white to silver), minotaurs (huge bull-headed men with real bull's heads, muzzles, horns and short hide, nothing
+human in the face, shown from the chest up), troglodytes (hunched cave lizard-folk with flat wide snouts, smooth eyeless faces, pale
+grey scales and no hair), a medusa (a serpent-woman with living snakes for hair) and humans of the surface; each dressed in their own
+way; a faint violet glow on some. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square
+cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid
+lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to
+right, then bottom row: 1 Dryel, looking straight at the viewer: a human man of the surface in his forties with a long grief-worn
+face, drooping dark eyes shedding violet tears and a thin black beard, pale sickly skin, lank black hair, a black mourning collar; 2
+Vhaeris, in three-quarter view facing left: a female dark-elf high priestess with a long narrow face, a sharp chin and cold white
+eyes, slate-black skin, long white hair under a tall silver headdress like spider legs; 3 Phyrra, in three-quarter view facing right,
+eyes on the viewer: a young female dark elf with a wild angular face, a wide grin and crackling bright violet eyes, light ash skin,
+long white hair lifting in the air, black lightning crackling about her head; 4 Ilphar, in three-quarter view facing right, the chin
+lifted only a little, eyes just above level, the whole face clearly seen: an old troglodyte with a broad blunt snout, deep wrinkles
+across the smooth eyeless face, mottled grey scales, a crest of worn broken spines, a bald scarred skull, an amulet of many small
+glass eyes
 ```
 
 | # | File |
@@ -1177,19 +1232,22 @@ the figure set apart by value contrast, no drawn outline. Every face a different
 brows, mouth, age and skin tone, never one face with another hairstyle; every hero dressed in their own fashion and colours, armour
 only where the cell names it. Women wear their hair medium to long, never cropped or shaved. No hands and nothing held or carried: no
 books, staves, wands, vials, lanterns, torches, censers or weapons. Not a photograph, not a plastic CGI render, no pixel art. Dungeon
-heroes: dark elves of the deep, long pointed ears, skin from ash-grey to slate-blue and charcoal, hair from white to silver, each
-dressed in their own way; a faint violet glow on some. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its
-own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into
-another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons,
-top row left to right, then bottom row: 1 Malaroth, in three-quarter view facing left: a towering older male dark elf with a long
-craggy face, a jutting jaw, deep-set red eyes and a scar across both lips, coal-black skin, a white mane, a collar of black horn
-plates; 2 Seyrissa, in three-quarter view facing right, eyes on the viewer: a female dark elf with a small round face, a snub nose,
-full lips and a row of tiny silver studs above each brow, deep violet-grey skin, white hair in two thick braids, a high collar of
-black spider silk; 3 Kaelvorn, in three-quarter view facing left, the chin lifted only a little, eyes just above level, the whole face
-clearly seen: a male dark elf with a rugged square face, a broken nose, white stubble and one silver eye, ash-grey skin burnt darker
-by the sun, short white hair, a weathered brown leather coat; 4 Ozrael, facing the viewer, the head tilted slightly: a very old male
-dark elf with a long skeletal face, a beak nose and white sightless eyes, papery grey skin, long thin white hair, a hood of dark green
-velvet
+heroes: the peoples of the deep, each as their cell says: dark elves (long pointed ears, skin from ash-grey to slate-blue and
+charcoal, hair from white to silver), minotaurs (huge bull-headed men with real bull's heads, muzzles, horns and short hide, nothing
+human in the face, shown from the chest up), troglodytes (hunched cave lizard-folk with flat wide snouts, smooth eyeless faces, pale
+grey scales and no hair), a medusa (a serpent-woman with living snakes for hair) and humans of the surface; each dressed in their own
+way; a faint violet glow on some. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square
+cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid
+lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to
+right, then bottom row: 1 Malaroth, in three-quarter view facing left: a towering old minotaur lord with a massive coal-black bull's
+head, a scar across the muzzle, deep-set red eyes, a grey-flecked mane down the neck, one horn broken short and capped with silver, a
+collar of black horn plates; 2 Seyrissa, in three-quarter view facing right, eyes on the viewer: a female dark elf with a small round
+face, a snub nose, full lips and a row of tiny silver studs above each brow, deep violet-grey skin, white hair in two thick braids, a
+high collar of black spider silk; 3 Kaelvorn, in three-quarter view facing left, the chin lifted only a little, eyes just above level,
+the whole face clearly seen: a human mercenary of the surface in his forties with a rugged square face, a broken nose, grey stubble
+and one milky scarred eye, tanned weathered skin, short dark hair, a weathered brown leather coat; 4 Ozrael, facing the viewer, the
+head tilted slightly: a very old male dark elf with a long skeletal face, a beak nose and white sightless eyes, papery grey skin, long
+thin white hair, a hood of dark green velvet
 ```
 
 | # | File |

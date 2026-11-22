@@ -157,6 +157,9 @@ Campaign heroes (ADR-298), never drawn at random; each copies a standard hero's 
 
 School **Arcana** · native terrain snow, ice · rival Inferno (arch-rival, ADR-072) · offensive machine **Cannon**
 
+Not all of the Academy's heroes are human (ADR-303): Stellan Frost, Kasimir Lode and Edvard Lunde are dwarves; Sesha is a naga;
+Raziya, Layth, Qadir, Tariq and Nadia are djinn, ageless and always young; Talos is a golem.
+
 | Hero | Class | Preferred creature | Specialty | Starting skills | A / D / SP / K |
 |---|---|---|---|---|---|
 | Corvin Halde | Warrior | Gremlin / Gremlin Master (T1) | Melee | Melee Basic, Tactics Basic | 2 / 1 / 1 / 1 |
@@ -164,15 +167,15 @@ School **Arcana** · native terrain snow, ice · rival Inferno (arch-rival, ADR-
 | Stellan Frost | Warrior | Dwarf / Dwarf Defender (T1) | Armor | Armor Basic, Melee Basic | 1 / 2 / 1 / 1 |
 | Seraphine Lux | Mage | Dwarf / Dwarf Defender (T1) | Arcana attunement | Arcana magic Basic, Spell resistance Basic | 0 / 1 / 2 / 2 |
 | Ingrid Vael | Warrior | Gargoyle / Obsidian Gargoyle (T2) | Archery | Logistics Basic, Archery Basic | 2 / 1 / 1 / 1 |
-| Theodric Wynn | Mage | Gargoyle / Obsidian Gargoyle (T2) | spell: Haste | Arcana magic Basic, Logistics Basic | 0 / 0 / 3 / 2 |
-| Tobias Rime | Warrior | Iron Golem / Animated Armor (T2) | War Tempo | War Tempo Basic, Armor Basic | 1 / 2 / 1 / 1 |
+| Tariq | Mage | Gargoyle / Obsidian Gargoyle (T2) | spell: Haste | Arcana magic Basic, Logistics Basic | 0 / 0 / 3 / 2 |
+| Talos | Warrior | Iron Golem / Animated Armor (T2) | War Tempo | War Tempo Basic, Armor Basic | 1 / 2 / 1 / 1 |
 | Ivar Marrow | Mage | Iron Golem / Animated Armor (T2) | Arcana attunement | Arcana magic Basic, Arcana attunement Basic | 0 / 1 / 2 / 2 |
 | Henrik Strom | Warrior | Snow Maiden / Enchantress (T3) | Archery | Archery Basic, Pathfinding Basic | 2 / 1 / 1 / 1 |
-| Cassius Thorne | Mage | Snow Maiden / Enchantress (T3) | spell: Frost Bolt | Arcana magic Basic, Prospecting Basic | 0 / 0 / 3 / 2 |
+| Qadir | Mage | Snow Maiden / Enchantress (T3) | spell: Frost Bolt | Arcana magic Basic, Prospecting Basic | 0 / 0 / 3 / 2 |
 | Kasimir Lode | Warrior | Sorcerer / Mage (T3) | Treasury | Treasury Basic, Tactics Basic | 1 / 2 / 1 / 1 |
-| Mirela Quist | Mage | Sorcerer / Mage (T3) | Arcana attunement | Arcana magic Basic, Armor Basic | 0 / 1 / 2 / 2 |
-| Runa Halvard | Warrior | Djinn / Djinn Sultan (T4) | Tactics | Tactics Basic, Armor Basic | 2 / 1 / 1 / 1 |
-| Lucan Esk | Mage | Djinn / Djinn Sultan (T4) | spell: Dispel | Arcana magic Basic, Pathfinding Basic | 0 / 0 / 3 / 2 |
+| Sesha | Mage | Sorcerer / Mage (T3) | Arcana attunement | Arcana magic Basic, Armor Basic | 0 / 1 / 2 / 2 |
+| Raziya | Warrior | Djinn / Djinn Sultan (T4) | Tactics | Tactics Basic, Armor Basic | 2 / 1 / 1 / 1 |
+| Layth | Mage | Djinn / Djinn Sultan (T4) | spell: Dispel | Arcana magic Basic, Pathfinding Basic | 0 / 0 / 3 / 2 |
 | Dorian Quill | Warrior | Naga / Naga Queen (T4) | Scouting | Scouting Basic, Melee Basic | 1 / 2 / 1 / 1 |
 | Valeska Rune | Mage | Naga / Naga Queen (T4) | +1 crystal a day | Arcana magic Basic, Arcana attunement Basic | 0 / 1 / 2 / 2 |
 
@@ -180,14 +183,19 @@ Campaign heroes (ADR-298), never drawn at random; each copies a standard hero's 
 
 | Hero | Class | Copies | Who |
 |---|---|---|---|
-| Magnus Hollin | Mage | Theodric Wynn | The Archmage of the White Spire, who bound the djinn to the city |
-| Liv Ostrander | Warrior | Stellan Frost | A shieldmaiden of the northern passes, trained by the dwarves |
-| Edvard Lunde | Warrior | Tobias Rime | The master of the golem foundries |
-| Nadia Sorell | Mage | Lucan Esk | A young prodigy who unmade a storm over the White Spire |
+| Magnus Hollin | Mage | Tariq | The Archmage of the White Spire, who bound the djinn to the city |
+| Halvor Brenn | Mage | Seraphine Lux | The White Spire's envoy to the dwarven holds |
+| Edvard Lunde | Warrior | Talos | The dwarf master of the golem foundries |
+| Nadia | Mage | Layth | A young djinn who unmade a storm over the White Spire |
 
 ## Necropolis
 
 School **Death** · native terrain cursed lands · rival Haven (arch-rival, ADR-072) · offensive machine **Ballista**
+
+Not all of the Necropolis's heroes are alike (ADR-307): Necrys, Sepulka and Ossian Grael are living humans; Morthal,
+Vorlath, Malgrin and Thessaly are liches; Hespera, Kael Duskmire, Ulric Ashgrave, Ysmera, Maladrea and Aldous
+Wraithe are vampires; Lethe is a ghost and Corvane a wraith; Grimwald is a ghoul, Vexa and Ozmund plague corpses,
+Drusus a death knight and Ravenna a skeleton.
 
 | Hero | Class | Preferred creature | Specialty | Starting skills | A / D / SP / K |
 |---|---|---|---|---|---|
@@ -212,10 +220,10 @@ Campaign heroes (ADR-298), never drawn at random; each copies a standard hero's 
 
 | Hero | Class | Copies | Who |
 |---|---|---|---|
-| Maladrea | Mage | Necrys | The Pale Matriarch, who first bound the dead of the plague years |
+| Maladrea | Mage | Necrys | The vampire Pale Matriarch, who first bound the dead of the plague years |
 | Aldous Wraithe | Warrior | Hespera | A Haven crusader who fell at the Black Ford and rose again |
-| Ravenna | Warrior | Morthal | A bone-witch duellist who commands the skeleton legions |
-| Ossian Grael | Mage | Kael Duskmire | The gravekeeper of the old kings' crypts |
+| Ravenna | Warrior | Morthal | A skeleton duellist who commands the skeleton legions |
+| Ossian Grael | Mage | Kael Duskmire | The living gravekeeper of the old kings' crypts |
 
 ## Inferno
 
@@ -253,6 +261,9 @@ Campaign heroes (ADR-298), never drawn at random; each copies a standard hero's 
 
 School **Shadow** · native terrain subterranean · rival Sylvan (arch-rival, ADR-072) · offensive machine **Glaivethrower**
 
+Not all of the Dungeon's heroes are dark elves (ADR-305): Kharis, Vorn, Zesrin and Malaroth are minotaurs; Vaelrith,
+Nethra and Ilphar are troglodytes; Ilvara is a medusa; Dryel and Kaelvorn are humans of the surface.
+
 | Hero | Class | Preferred creature | Specialty | Starting skills | A / D / SP / K |
 |---|---|---|---|---|---|
 | Vaelrith | Warrior | Troglodyte / Deep Troglodyte (T1) | Melee | Melee Basic, Tactics Basic | 2 / 1 / 1 / 1 |
@@ -276,9 +287,9 @@ Campaign heroes (ADR-298), never drawn at random; each copies a standard hero's 
 
 | Hero | Class | Copies | Who |
 |---|---|---|---|
-| Malaroth | Warrior | Kharis | The Lord of the Labyrinth, who tamed the first minotaurs |
+| Malaroth | Warrior | Kharis | The minotaur Lord of the Labyrinth |
 | Seyrissa | Mage | Phyrra | The oracle of the spider shrines |
-| Kaelvorn | Warrior | Vaelrith | A renegade who fought the surface wars for gold |
+| Kaelvorn | Warrior | Vaelrith | A human renegade who fought the surface wars for gold |
 | Ozrael | Mage | Sabal | A blind seer who hears the deep |
 
 ## Stronghold

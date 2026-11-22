@@ -16,6 +16,9 @@
 | [093](#adr-093-rarer-resource-specialties-necromancy-and-logistics-specialties-2026-10-29) | Rarer resource specialties, Necromancy and Logistics specialties (2026-10-29) | accepted |
 | [107](#adr-107-rarer-specialties-the-hero-8-proposals-for-now-2026-10-30) | Rarer specialties: the HERO-8 proposals, for now (2026-10-30) | accepted |
 | [298](#adr-298-campaign-heroes-more-varied-portraits-about-a-third-women-owner-2026-11-22) | Campaign heroes, more varied portraits, about a third women (owner, 2026-11-22) | implemented |
+| [303](#adr-303-academy-heroes-three-dwarves-five-djinn-a-naga-and-a-golem-owner-adr-298-2026-11-22) | Academy heroes: three dwarves, five djinn, a naga and a golem (owner, ADR-298, 2026-11-22) | implemented |
+| [305](#adr-305-dungeon-heroes-four-minotaurs-three-troglodytes-a-medusa-and-two-humans-owner-adr-298-adr-303-2026-11-23) | Dungeon heroes: four minotaurs, three troglodytes, a medusa and two humans (owner, ADR-298, ADR-303, 2026-11-23) | implemented |
+| [307](#adr-307-necropolis-heroes-three-humans-four-liches-six-vampires-a-ghost-a-wraith-and-five-other-dead-owner-adr-298-adr-303-2026-11-23) | Necropolis heroes: three humans, four liches, six vampires, a ghost, a wraith and five other dead (owner, ADR-298, ADR-303, 2026-11-23) | implemented |
 
 
 ### ADR-048: Heroes, skills and levels
@@ -326,3 +329,51 @@ once the roster is play-tested. **Nothing implemented.**
   faces, matching outfits, hands and props. Five sheets per playable town (the fifth its campaign heroes), two each for Conflux and
   Dragon Utopia: regenerate every hero sheet.
 - Tests: `CampaignHeroTests`; the roster tests count standard heroes.
+
+### ADR-303: Academy heroes: three dwarves, five djinn, a naga and a golem (owner, ADR-298, 2026-11-22)
+**Status**: implemented.
+
+- **Owner**: not all of the Academy's heroes should be human, as in the classic game; four dwarves, five djinn and one golem.
+- **Dwarves**: Stellan Frost, Kasimir Lode and Edvard Lunde keep their names.
+- **Djinn**: Runa Halvard, Lucan Esk, Cassius Thorne and Theodric Wynn are renamed Raziya, Layth, Qadir and Tariq (ids
+  `academy.raziya`, `academy.layth`, `academy.qadir`, `academy.tariq`); Nadia Sorell is Nadia (id unchanged). Each has its own blue
+  skin tone and glowing eyes.
+- **Golem**: Tobias Rime is Talos (`academy.talos`). Specialties, skills, stats and preferred creatures are unchanged; the campaign
+  heroes' "copies" follow the new names.
+- **Djinn** (owner, on the sheets): less human, ageless and always young, no facial hair, faintly glowing skin; the Academy line and
+  the five cells say so (Tariq is no longer old, Qadir loses his beard).
+- **Liv Ostrander** (owner: too many dwarves among the campaign heroes) takes Mirela Quist's place among the standard heroes, with
+  her class, preferred creature, specialty, skills and stats (`academy.mirela` is gone); the new campaign hero **Halvor Brenn**
+  (`academy.halvor`), a human mage in his late forties, copies Seraphine Lux. Magnus Hollin is described as a tall human.
+- **Sesha** (owner: replace the dwarf woman with a naga, as in the classic game, emotionless, very pale): Liv Ostrander
+  becomes the naga Sesha (`academy.sesha`), a serpent-woman with a still face, bone-white scaled skin and slit gold eyes; her
+  numbers are unchanged. The Academy line names the naga.
+- **Aurelian Vex** (owner): paler skin, no floating arrow.
+- **Random maps**: the ids feed the generator, so `MapGenerator.Version` goes to 14 and the pinned maps are re-pinned.
+- **Prompts**: the Academy line names the peoples (bearded dwarf men, djinn shown from the chest up, a forged golem); the ten cells
+  are rewritten; regenerate the five Academy sheets. [hero-roster.md](../../docs/content/hero-roster.md) lists who is what.
+
+### ADR-305: Dungeon heroes: four minotaurs, three troglodytes, a medusa and two humans (owner, ADR-298, ADR-303, 2026-11-23)
+**Status**: implemented.
+
+- **Owner**: like the Academy (ADR-303) and the classic game, the Dungeon is not all dark elves: two humans, four minotaurs, three
+  troglodytes, one medusa, the rest dark elves.
+- **Who**: minotaurs Kharis, Vorn, Zesrin and Malaroth (Kharis, Zesrin and Malaroth already lead minotaurs); troglodytes Vaelrith,
+  Nethra and Ilphar (eyeless, as troglodytes are); the medusa Ilvara (she leads medusas); humans Dryel and Kaelvorn (the renegade
+  of the surface wars). The other ten stay dark elves; six of the twenty are still women.
+- **Data**: names, ids, specialties, skills, stats and preferred creatures are unchanged, so random maps do not change.
+- **Prompts**: the Dungeon line names the peoples (minotaurs and troglodytes shown from the chest up, troglodytes eyeless); the ten
+  cells are rewritten; regenerate the five Dungeon sheets. [hero-roster.md](../../docs/content/hero-roster.md) lists who is what.
+
+### ADR-307: Necropolis heroes: three humans, four liches, six vampires, a ghost, a wraith and five other dead (owner, ADR-298, ADR-303, 2026-11-23)
+**Status**: implemented.
+
+- **Owner**: like the Academy (ADR-303), the Dungeon (ADR-305) and the classic game: three humans, four liches, six vampires, two
+  ghosts or wraiths, the rest other kinds of undead.
+- **Who**: living humans Necrys, Sepulka and Ossian Grael; liches Morthal, Vorlath, Malgrin and Thessaly (Malgrin and Thessaly lead
+  liches); vampires Hespera, Kael Duskmire, Ulric Ashgrave, Ysmera, Maladrea and Aldous Wraithe; the ghost Lethe and the wraith
+  Corvane (both lead wights); the ghoul Grimwald (he leads ghouls), the plague corpses Vexa and Ozmund, the death knight Drusus (he
+  leads dark knights) and the skeleton Ravenna.
+- **Data**: names, ids, specialties, skills, stats and preferred creatures are unchanged, so random maps do not change.
+- **Prompts**: the Necropolis line names the kinds (liches as bare skulls shown from the chest up); fifteen cells are rewritten
+  (Hespera, Kael, Aldous, Lethe and Thessaly already fit); regenerate the five Necropolis sheets.
