@@ -296,6 +296,9 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] The editor icons of sheets C4, C7, C12 and C13 drawn and cut
 - [x] The editor app's `Main` as composition and input mapping only: its commands, menus and windows in one composer per area
       (ADR-288)
+- [x] The plan's second check (ADR-290): gate links drawn as arrows, Escape drops the selection or the tool, a problem's click selects
+      the culprit, the fairness numbers in the background, the Monster and Hero tools' ghost, the owner on the status bar, Test on the
+      toolbar
 
 ### Platform and art
 - [x] Built: speed settings (ADR-095, UI-1)

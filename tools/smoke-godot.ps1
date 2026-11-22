@@ -46,6 +46,7 @@ $turnStartMap = Join-Path $PSScriptRoot 'smoke/turn-start.ewmap.json'
 $placeholdersMap = Join-Path $PSScriptRoot 'smoke/placeholders.ewmap.json'
 $uniqueMap = Join-Path $PSScriptRoot 'smoke/unique-buildings.ewmap.json'
 $sitesMap = Join-Path $PSScriptRoot 'smoke/sites.ewmap.json'
+$gatesMap = Join-Path $PSScriptRoot 'smoke/gates.ewmap.json'
 $grailMap = Join-Path $PSScriptRoot 'smoke/grail.ewmap.json'
 $magicMap = Join-Path $PSScriptRoot 'smoke/magic.ewmap.json'
 $necromancyMap = Join-Path $PSScriptRoot 'smoke/necromancy.ewmap.json'
@@ -461,6 +462,11 @@ $scenarios = @(
     # and days in the status bar.
     @{ Name = 'editor-measure'; App = 'EternalWars.MapEditor'; Frames = 30; Map = $emberMap
        Input = '3:key:U;6:click:540,545;12:click:420,270' },
+    # The gates' links (ADR-290): the Link tool (K) draws a cyan arc with a head at each end between two linked two-way monoliths, an orange
+    # one from a one-way entrance to its exit, and a post pointing up on the gate whose partner is underground; Escape with nothing
+    # selected drops the tool back to Select, and the arrows go.
+    @{ Name = 'editor-link-arrows'; App = 'EternalWars.MapEditor'; Frames = 24; Map = $gatesMap
+       Input = '3:key:Home;6:key:K;16:key:Escape' },
     # The context menus and the Object tool's options (ADR-286) on Ember March: a right click on the map offers Select all, then (things
     # selected) Deselect; one on a browser entry (found by the search) offers Favourite, then the Object tool; one on a side bar button offers
     # the region's other panels. Then the Object tool's "Snap entrance to a road" and a click that places the chest by the nearest road.

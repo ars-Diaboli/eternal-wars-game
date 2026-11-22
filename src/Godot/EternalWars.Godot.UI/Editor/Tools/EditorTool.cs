@@ -43,6 +43,12 @@ public abstract class EditorTool(EditorToolContext context) : IEditorTool
     {
     }
 
+    public virtual bool IsBusy => false;
+
+    public virtual void Abort()
+    {
+    }
+
     public virtual void Refresh()
     {
     }

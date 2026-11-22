@@ -1,0 +1,19 @@
+{
+  "formatVersion": 4,
+  "name": "Gates test",
+  "width": 16,
+  "height": 12,
+  "terrain": [
+    [ "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg" ],
+    [ "uuuuuuuuuuuuuuuu", "uuuuuuuuuuuuuuuu", "uuuuuuuuuuuuuuuu", "uuuuuuuuuuuuuuuu", "uuuuuuuuuuuuuuuu", "uuuuuuuuuuuuuuuu", "uuuuuuuuuuuuuuuu", "uuuuuuuuuuuuuuuu", "uuuuuuuuuuuuuuuu", "uuuuuuuuuuuuuuuu", "uuuuuuuuuuuuuuuu", "uuuuuuuuuuuuuuuu" ]
+  ],
+  "players": [ { "name": "Blue", "isHuman": true }, { "name": "Red", "isHuman": true } ],
+  "objects": [
+    { "kind": "gate", "id": 1, "definition": "monolith.two-way", "x": 2, "y": 2, "linkedGate": 2 },
+    { "kind": "gate", "id": 2, "definition": "monolith.two-way", "x": 12, "y": 8, "linkedGate": 1 },
+    { "kind": "gateEntrance", "id": 3, "definition": "monolith.entrance", "x": 2, "y": 8, "exit": 4 },
+    { "kind": "gateExit", "id": 4, "definition": "monolith.exit", "x": 13, "y": 2 },
+    { "kind": "gate", "id": 5, "definition": "gate.subterranean", "x": 7, "y": 4, "linkedGate": 6 },
+    { "kind": "gate", "id": 6, "definition": "gate.subterranean", "x": 7, "y": 4, "level": 1, "linkedGate": 5 }
+  ]
+}

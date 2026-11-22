@@ -27,8 +27,9 @@ problems panel, map settings window):
   and edited there; what they can do is in [adventure-map.md](adventure-map.md#pandoras-box-and-map-events);
 - validation; [generate from a template and the template editor](random-maps.md#editor).
 
-**The window** (EDIT-1, ADR-250): a bar on top (the menus, the Map and Template tabs, the toolbar), three docked regions around the map
-view, and a status bar at the bottom. The tools and the options of the one in use are on the left, the inspector on the right
+**The window** (EDIT-1, ADR-250): a bar on top (the menus, the Map and Template tabs, the toolbar: New, the template editor, Open,
+Save, Undo, Redo, the level, the grid, the three regions and Test), three docked regions around the map view, and a status bar at the
+bottom. The tools and the options of the one in use are on the left, the inspector on the right
 (Inspector, Layers, Overlays, Fairness, Events, Generate), Problems, History and Output at the bottom. A tool picked (its button, its key
 or the Tools menu) says in the status bar what a click or a drag on the map does with it.
 - **Side bars** (ADR-282): a thin bar on each edge of the window holds a button per panel, its icon over its name. The left bar has the
@@ -106,7 +107,7 @@ bar's hint, so the object browser keeps the room in the left region (ADR-282).
 **Commands**: every action is a command with a name, an icon, an optional shortcut, and a check whether it can run now. The menus
 (File, Edit, View, Map, Tools, Templates, Test, Help) and the toolbar are built from the commands; an item that cannot run is greyed
 and says why in its tooltip. Shortcuts (each can be rebound in Preferences): the File menu's, Ctrl+Z undo, Ctrl+Y redo, Ctrl+X cut, Ctrl+C copy, Ctrl+V paste, Ctrl+D duplicate, Delete, Ctrl+A select all, Escape
-deselect, Ctrl+F find on the map, Ctrl+G go to, Ctrl+R rotate scenery, Ctrl+M mirror scenery, the tools' keys (T Terrain, R Road, I River, Z StartZone, G Height, O Object,
+drops the selection or the tool (below), Ctrl+F find on the map, Ctrl+G go to, Ctrl+R rotate scenery, Ctrl+M mirror scenery, the tools' keys (T Terrain, R Road, I River, Z StartZone, G Height, O Object,
 C Scatter, N Monster, H Hero, E Erase, K LinkGates, V Select, M Move, P Paste, B Grail, U Measure), L the next level, F11 the panels, F7 the map settings, Ctrl+Shift+P the command palette, Ctrl+, Preferences. The Map
 menu opens the map settings (at a tab) and the Events panel, the Tools menu picks a tool. F5 is Test (below), F1 [help](#editor-help).
 
@@ -130,8 +131,10 @@ leaves the map leaves the selection.
   adds to the selection, Alt takes out of it. A double click on an object selects every object of its kind in view.
 - The **filter** (five boxes in the tool's options: objects, heroes, monsters, scenery, events) says which kinds of things clicks,
   rectangles and Select all pick.
-- **Select all** (Ctrl+A) selects every thing on the shown level that the filter lets through, **Deselect** (Escape) nothing. **Delete**
-  removes the selected objects and heroes as one undo step; selected tiles and events stay.
+- **Select all** (Ctrl+A) selects every thing on the shown level that the filter lets through. **Escape** (Deselect, ADR-290) drops
+  what the tool is in the middle of (a gate picked to link, a route measured), else ends pasting, else drops the selection, and with
+  nothing selected drops the tool: the Select tool is picked. **Delete** removes the selected objects and heroes as one undo step;
+  selected tiles and events stay.
 - Selected tiles are tinted and outlined in blue; a selected object or hero has a yellow outline round its cells with a handle at
   each corner; a selected event's cells are outlined in violet.
 - After a click, a rectangle or a move with these tools the status bar counts what is selected, and a selection whose only thing is
@@ -249,8 +252,8 @@ more of the thing (a player's heroes, the obelisks, the Eyes of one colour). A m
 left to the game's start, a dwelling and an artifact pickup already hold their creature or artifact (one undo step), and a hero is
 placed for the player picked in the tool's options and opens in the inspector. A thing with an owner (a town, a mine, a resource
 provider, a garrison, a dwelling) is placed for the owner the tool's options name, Neutral at the start, in the same undo step: a
-player's town is where that player starts. The **Monster** and **Hero** tools place the same things with their own options. The
-Object tool has two more (ADR-286):
+player's town is where that player starts. The **Monster** and **Hero** tools place the same things with their own options, a ghost
+showing the cell before the click, red where it does not fit (ADR-290). The Object tool has two more (ADR-286):
 - **Random variant** (for an entry with others like it): each click places one of the entries of its group placed alike and of its tier
   (any working mine, a tree of any shape, a monster of the same faction and tier), drawn among those that fit; one other than the chosen
   entry counts only where it suits the terrain. The draw comes from the map's random numbers, so undo puts it back.
@@ -260,7 +263,10 @@ Object tool has two more (ADR-286):
   have another shape and, snapped, another place (the ghost is red only when none fits).
 
 **Link gates** (the LinkGates tool): a click on a two-way gate or a one-way entrance, then one on its partner or its exit, links the
-two as one undo step; a first click on anything else says what to click.
+two as one undo step; a first click on anything else says what to click. The gate picked first is outlined until the second click,
+and Escape drops it. While the tool is picked the map draws every link as an arrow (ADR-290): a cyan arc between two linked two-way
+gates with a head at each end, an orange one from a one-way entrance to its exit, and a post with a head pointing up on a gate whose
+partner is on the other level.
 
 **The Grail** (the Grail tool, ADR-140): a click on open ground at least 10 cells from the edges buries the Grail there, and a click
 on it again takes it away. Left unset, it is drawn at the game's start on maps with obelisks.
@@ -402,7 +408,7 @@ Top-down view, orthographic like a plan, every tile the same size); it goes out 
   town, else its first hero) with the days to the nearest town, mine of each resource and resource provider ("—": none reached), the
   treasure in gold and the guards' army power within 3 and 7 days, and the mines within 3 days; under it the warnings, where a start is
   more than 20 % from the starts' mean or reaches nothing another start reaches. A click on a row shows the start. The numbers follow
-  the edits while the tab shows.
+  the edits while the tab shows, worked out in the background on a copy of the map (ADR-290).
 - **Test** (ADR-267, F5 or Test > Test the map): a window to play the map in the game, started as a separate program while the editor
   stays as it is. It chooses the player played (the others are the computer, or off: they end every turn at once), where the hero
   starts (where the map puts it, at the selected hero, whose owner is then played, or on the selected cell), the starting day, the map
@@ -420,7 +426,7 @@ while Ctrl is held, and on the Template tab. A shortcut pressed in the middle of
 **The bottom panels**:
 - **Problems**: the validator's issues, checked a moment after every change, in the background on a copy of the map. Two buttons with
   the counts show and hide the errors and the warnings; a list picks one kind (heroes, objects, ground, players, rules, content,
-  events). A click on a problem shows its tile; a double click on an event's problem opens the event. Where the fix is clear the row
+  events). A click on a problem shows its tile and selects the hero or object there, the culprit (ADR-290), as a jump link does; a double click on an event's problem opens the event. Where the fix is clear the row
   names it (ADR-265): link an unlinked gate with its only possible partner, point a one-way entrance at the only free exit, make what
   belongs to a missing player neutral, give a player without a start the one neutral town in its start zone, give a player without a
   town the neutral town nearest its heroes (when no other neutral town and no other such player's hero is as near), give a hero without an army what a hired hero
@@ -451,8 +457,9 @@ Over nothing with a page, or from the menu, it opens at the editor's first page.
 its sub-pages, and the decision numbers are left out. The help lists the pages by document, finds them by title, and its links open
 the page they name; Escape or Close closes it.
 
-**The status bar**, left to right: the tile under the pointer (x, y, level, terrain, height, the hero, town or object there); the
-last message; "Checking the map…" while the problems are being checked; the counts of errors and warnings (a click opens Problems);
+**The status bar**, left to right: the tile under the pointer (x, y, level, terrain, height, the hero, town or object there, with its
+owner for a hero or a thing with one: "Gold mine (Red)", "Sawmill (neutral)"); the last message; the background work ("Checking the
+map…" while the problems are being checked, "Analysing fairness…" while the fairness numbers are worked out); the counts of errors and warnings (a click opens Problems);
 the save state ("Not saved" for a map without a file, "No changes" after a file is opened, "Saved" with the time, and "Unsaved changes" whenever the map
 differs from the saved one: undoing back to the saved step clears it); the zoom in percent.
 

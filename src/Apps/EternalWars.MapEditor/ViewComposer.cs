@@ -100,6 +100,26 @@ internal sealed class ViewComposer(EditorParts parts)
     }
 
     /// <summary>
+    /// A click on a problem (ADR-290): the view goes to its tile, and the hero or object there, the culprit, becomes the selection and the
+    /// inspected one as a jump link makes it; a problem of the ground alone just shows its tile.
+    /// </summary>
+    public void ShowIssue(MapPosition position)
+    {
+        if (Editor.Scenario.HeroAt(position) is { } hero)
+        {
+            Jump(new MapLink(hero.Name, position, Hero: hero.Id));
+        }
+        else if (Editor.Scenario.ObjectCellAt(position)?.Object is { } culprit)
+        {
+            Jump(new MapLink(culprit.ToString() ?? "", position, culprit.Id));
+        }
+        else
+        {
+            ShowTile(position);
+        }
+    }
+
+    /// <summary>
     /// Go to (Ctrl+G, ADR-261): a tile or a named thing, which the view shows and, for a thing, selects (as a jump link does). With
     /// <paramref name="find"/>, Find on the map (Ctrl+F, ADR-282): objects by their kind too.
     /// </summary>

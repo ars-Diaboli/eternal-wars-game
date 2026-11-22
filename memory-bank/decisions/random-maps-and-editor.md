@@ -53,6 +53,7 @@
 | [286](#adr-286-context-menus-the-object-tools-random-variant-and-road-snapping-edit-1-2026-11-22) | Context menus; the Object tool's random variant and road snapping (EDIT-1, 2026-11-22) | implemented |
 | [287](#adr-287-the-other-level-ghosted-in-the-map-view-the-height-brushs-falloff-edit-1-2026-11-22) | The other level ghosted in the map view; the height brush's falloff (EDIT-1, 2026-11-22) | implemented |
 | [288](#adr-288-the-editor-apps-composers-edit-1-2026-11-22) | The editor app's composers (EDIT-1, 2026-11-22) | implemented |
+| [290](#adr-290-the-plans-second-check-link-arrows-escape-the-problems-culprit-and-background-fairness-edit-1-2026-11-22) | The plan's second check: link arrows, Escape, the problem's culprit and background fairness (EDIT-1, 2026-11-22) | implemented |
 
 
 ### ADR-015: Editor edits are undoable commands over a scenario GameState
@@ -1202,3 +1203,29 @@ ADR when it is built.
   the map open; `Say`, `IsBusy`, the tab checks and the command helper live there. The editor's folders are `EditorFolders`.
 - Nothing moved to the libraries or the core: the composers hold composition (which window opens, which panel shows, the messages
   said), and the editing goes through `MapEditorSession` as before.
+
+### ADR-290: The plan's second check: link arrows, Escape, the problem's culprit and background fairness (EDIT-1, 2026-11-22)
+**Status**: implemented.
+
+A second check of [the editor plan](../../docs/papers/editor-plan.md) against the code found these left out, and they are built:
+- **Links drawn as arrows** (the plan's tools table): while the LinkGates tool is picked, `SelectionView.ShowLinks` draws every gate
+  link on the shown level as an arc raised over the things between, with an arrowhead where a hero comes out: two-way gates cyan (a
+  pair has a head at each end), one-way portals orange; a gate whose partner is on the other level gets a post with a head pointing up.
+  The gate picked first is outlined until the second click. Redrawn when objects are placed, removed or moved, or a link changes.
+- **Escape drops the selection or the tool** (the plan's shortcuts): a tool can be in the middle of something (`IEditorTool.IsBusy`,
+  `Abort`: a gate picked to link, a route measured); Escape drops that first, then ends pasting, then drops the selection, and with
+  nothing selected picks the Select tool. Before, Escape only deselected and was greyed with nothing selected.
+- **A click on a problem selects the culprit**: the hero, else the object, on the problem's tile is selected and inspected as a jump
+  link does it (ADR-254); a problem of the ground alone shows its tile. `MapIssue` stays as it is: the tile names the culprit.
+- **The fairness numbers in the background** (the plan's "validation, analysis … run on tasks over a snapshot"): the Fairness panel
+  works them out on a task over a copy of the map made as the problems' is, and the status bar shows "Analysing fairness…" beside
+  "Checking the map…". A map the copy refuses is analysed on the main thread, as before.
+- **The Monster and Hero tools' ghost** ("as the Object tool does"): the cell under the pointer, red where it does not fit;
+  `MonsterEditor.Check` gives what `Place` would.
+- **The owner on the status bar** ("Gold mine (Red)" in the plan's layout) for a hero or a thing with an owner; **Test on the
+  toolbar** (the plan's layout).
+
+Left as built, by earlier decisions: the map picture exports the level shown (ADR-266); a player's start is the town or hero placed
+for them, not a setting of the Players tab; the overlays work on the main thread (they read the live view and are quick); the
+template's history is its own list in the Template tab (ADR-268); scenery is turned by commands on the selection, not in the
+inspector (ADR-252).

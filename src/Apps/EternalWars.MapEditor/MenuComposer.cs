@@ -76,7 +76,7 @@ internal sealed class MenuComposer(EditorParts parts, FileComposer files)
         toolbar.Bind(commands,
         [
             "file.new", "templates.editor", "file.open", "file.save", null,
-            "edit.undo", "edit.redo", null, "view.level", "view.grid", null, "view.left", "view.bottom", "view.right",
+            "edit.undo", "edit.redo", null, "view.level", "view.grid", null, "view.left", "view.bottom", "view.right", null, "test.play",
         ]);
     }
 }

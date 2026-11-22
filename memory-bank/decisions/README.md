@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-290.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-291.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -316,3 +316,4 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [287](random-maps-and-editor.md#adr-287-the-other-level-ghosted-in-the-map-view-the-height-brushs-falloff-edit-1-2026-11-22) | random-maps-and-editor | The other level ghosted in the map view; the height brush's falloff (EDIT-1, 2026-11-22) | implemented |
 | [288](random-maps-and-editor.md#adr-288-the-editor-apps-composers-edit-1-2026-11-22) | random-maps-and-editor | The editor app's composers (EDIT-1, 2026-11-22) | implemented |
 | [289](presentation.md#adr-289-creature-portraits-in-high-contrast-with-plain-bases-and-clearly-upgraded-upgrades-academy-creatures-redone-owner-adr-285-2026-11-22) | presentation | Creature portraits in high contrast with plain bases and clearly upgraded upgrades; Academy creatures redone (owner, ADR-285, 2026-11-22) | accepted |
+| [290](random-maps-and-editor.md#adr-290-the-plans-second-check-link-arrows-escape-the-problems-culprit-and-background-fairness-edit-1-2026-11-22) | random-maps-and-editor | The plan's second check: link arrows, Escape, the problem's culprit and background fairness (EDIT-1, 2026-11-22) | implemented |

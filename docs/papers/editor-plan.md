@@ -10,8 +10,8 @@ describes every part of the new editor, and **technical design** how it is built
 proposal for the questions EDIT-1 … EDIT-12 (ADR-250). The overhaul is built and closed (ADR-280); this file stays here as the
 report of how it was planned and built, like the other finished papers. The rules live in [tools.md](../design/tools.md) and
 [random-maps.md](../design/random-maps.md). Two things are left open, in [roadmap.md](../../memory-bank/roadmap.md): the timed
-first-use test with a person, and the owner's look at the workspace (step 0's greybox, overtaken by the built editor). A check of this
-plan against the code after the close found what [after the close](#after-the-close) lists.
+first-use test with a person, and the owner's look at the workspace (step 0's greybox, overtaken by the built editor). Two checks of
+this plan against the code after the close found what [after the close](#after-the-close) lists.
 
 ## Study
 
@@ -712,7 +712,21 @@ for collapsible panels as in IDEs.
    `EditComposer`, `MapComposer`, `ViewComposer`, `TestComposer`, `WindowComposer`, `GenerateComposer`, `MenuComposer`,
    `ContextMenuComposer`), sharing an `EditorParts`; the folders are `EditorFolders`. No change in behaviour.
 
-Nothing is left open from the check.
+**The second check** (ADR-290) of every section against the code found these left out, now built:
+1. **Links drawn as arrows** (the tools table): while LinkGates is picked, every link on the shown level is an arc with a head where a
+   hero comes out (two-way cyan, one-way orange), a post pointing up where the partner is on the other level; the gate picked first is
+   outlined. Smoke `editor-link-arrows`.
+2. **Escape drops the selection or the tool** (the shortcuts table): first what the tool is in the middle of (a gate picked, a route
+   measured), then pasting, then the selection, then the tool, back to Select.
+3. **A click on a problem selects the culprit**: the hero or object on its tile, as a jump link does.
+4. **The fairness numbers in the background**, on a copy of the map like the problems, shown on the status bar as background work.
+5. **The Monster and Hero tools' ghost**, as the Object tool's (`MonsterEditor.Check`, tests in `EditorArmyAndGuardTests`).
+6. **The owner on the status bar** ("Gold mine (Red)") and **Test on the toolbar** (the layout above).
+
+Left as built by earlier decisions: the map picture is the level shown (ADR-266); a player's start is the town or hero placed for them,
+not a setting of the Players tab; the regions show one panel under a header with side bars rather than tabs (ADR-282); the template's
+history is its own list in the Template tab (ADR-268); scenery is turned by commands on the selection (ADR-252); terrain and start zones
+can be hidden, not locked (ADR-262); the overlays read the live map on the main thread. Nothing is left open from the checks.
 
 ## Decisions
 

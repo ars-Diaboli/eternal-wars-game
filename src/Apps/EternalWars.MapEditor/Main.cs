@@ -48,6 +48,7 @@ public partial class Main : Node3D
     private OverlayView _overlayView = null!;
     private EventCellsView _eventCells = null!;
     private ProblemsPanel _problems = null!;
+    private FairnessPanel? _fairness;
     private MapFiles _mapFiles = null!;
 
     /// <summary>The empty state (ADR-259) is still to show: the editor started on a blank map and no other map was opened since.</summary>
@@ -388,8 +389,26 @@ public partial class Main : Node3D
     /// </summary>
     private Func<IReadOnlyList<MapIssue>> ValidationOfSnapshot()
     {
+        var copy = StateOfSnapshot();
+        return () => MapValidator.Validate(copy());
+    }
+
+    /// <summary>The background work on the status bar (ADR-290): the problems' check and the fairness numbers.</summary>
+    private void ShowWork()
+    {
+        var work = new[]
+        {
+            _problems is { IsChecking: true } ? "Checking the map…" : null,
+            _fairness is { IsAnalysing: true } ? "Analysing fairness…" : null,
+        }.OfType<string>().ToList();
+        _parts.StatusBar.ShowWork(work.Count == 0 ? null : string.Join(" · ", work));
+    }
+
+    /// <summary>Copies the map now (on the main thread); the work returned makes the copy's state, on a task, for the background work.</summary>
+    private Func<GameState> StateOfSnapshot()
+    {
         var document = MapConverter.ToDocument(_parts.Editor.Scenario);
-        return () => MapValidator.Validate(MapConverter.ToGameState(document, GameContent.All, checkEvents: false));
+        return () => MapConverter.ToGameState(document, GameContent.All, checkEvents: false);
     }
 
     /// <summary>The workspace and its panels for the map just opened, then the commands, the menus and the toolbar from the registry.</summary>
@@ -456,9 +475,10 @@ public partial class Main : Node3D
         var overlays = _parts.OverlayPanel = new OverlaysPanel { Name = "Overlays" };
         workspace.AddTab(EditorRegion.Right, overlays, UiIcon.Overlays);
         overlays.Bind(editor, state => GeneratedZones.Read(state, _generator.Offered, GameContent.All), workspace.MapView);
-        var fairness = new FairnessPanel { Name = "Fairness" };
+        var fairness = _fairness = new FairnessPanel { Name = "Fairness" };
         workspace.AddTab(EditorRegion.Right, fairness, UiIcon.Fairness);
-        fairness.Bind(editor);
+        fairness.Changed += ShowWork;
+        fairness.Bind(editor, StateOfSnapshot);
         fairness.StartSelected += _view.ShowTile;
         var events = _parts.Events = new EventsPanel { Name = "Events" }.Tag("Map events"); // F1 (ADR-276): not the inspector's Events section
         workspace.AddTab(EditorRegion.Right, events, UiIcon.Events);
@@ -488,10 +508,10 @@ public partial class Main : Node3D
         problems.Changed += () =>
         {
             statusBar.ShowProblems(problems.Errors, problems.Warnings);
-            statusBar.ShowWork(problems.IsChecking ? "Checking the map…" : null);
+            ShowWork();
         };
         problems.Bind(editor, ValidationOfSnapshot);
-        problems.IssueSelected += _view.ShowTile;
+        problems.IssueSelected += _view.ShowIssue;
         problems.EventSelected += _view.OpenEvent;
         problems.FixReported += _parts.Say;
         statusBar.ProblemsRequested += () => workspace.ShowTab(problems);

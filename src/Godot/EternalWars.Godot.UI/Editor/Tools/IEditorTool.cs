@@ -42,6 +42,12 @@ public interface IEditorTool
     /// <summary>Drops what the tool was in the middle of (another tool was picked).</summary>
     void Cancel();
 
+    /// <summary>Whether the tool is in the middle of something Escape drops first (a gate picked, a route started; ADR-290).</summary>
+    bool IsBusy { get; }
+
+    /// <summary>Escape while <see cref="IsBusy"/>: drops what the tool is in the middle of; the tool stays picked.</summary>
+    void Abort();
+
     /// <summary>Fills the palette's options with the tool's own.</summary>
     void BuildOptions(ToolOptions options);
 }

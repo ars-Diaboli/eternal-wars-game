@@ -33,7 +33,7 @@ internal sealed class EditComposer(EditorParts parts)
             }), shortcut: new(Key.A, Ctrl: true), whyNot: () => parts.OnTemplateTab ? null : parts.OnMapTab(), icon: UiIcon.SelectAll);
         parts.Command("edit.deselect", "Deselect", () => parts.OnTab(parts.TemplatePanel.Deselect, Deselect), shortcut: new(Key.Escape),
             whyNot: () => parts.OnTemplateTab ? parts.TemplatePanel.WhyNothingSelected()
-                : parts.OnMapTab() ?? (Editor.Selection.IsEmpty && Tools.Tool is not PasteTool ? "Nothing is selected" : null), icon: UiIcon.Deselect);
+                : parts.OnMapTab() ?? (Editor.Selection.IsEmpty && Tools.Tool is SelectTool ? "Nothing is selected" : null), icon: UiIcon.Deselect);
         parts.Command("edit.cut", "Cut", () => parts.OnTab(() => parts.Say(parts.TemplatePanel.Copy(cut: true)), () => Copy(cut: true)), shortcut: new(Key.X, Ctrl: true),
             whyNot: () => parts.OnTemplateTab ? parts.TemplatePanel.WhyNoZones() : parts.OnMapTab() ?? NothingToCopy(), icon: UiIcon.Cut);
         parts.Command("edit.copy", "Copy", () => parts.OnTab(() => parts.Say(parts.TemplatePanel.Copy(cut: false)), () => Copy(cut: false)), shortcut: new(Key.C, Ctrl: true),
@@ -148,12 +148,20 @@ internal sealed class EditComposer(EditorParts parts)
         parts.Say("Click where it goes; Escape ends");
     }
 
-    /// <summary>Escape: out of pasting back to the Select tool, else nothing is selected any more.</summary>
+    /// <summary>
+    /// Escape, "drop the selection or the tool" (ADR-290): first what the tool is in the middle of (a gate picked, a route started), then
+    /// pasting back to the Select tool, then the selection, and with nothing selected the tool, back to Select.
+    /// </summary>
     private void Deselect()
     {
-        if (Tools.Tool is PasteTool)
+        var select = Tools.Tools.OfType<SelectTool>().First();
+        if (Tools.Tool.IsBusy)
         {
-            Tools.Use(Tools.Tools.OfType<SelectTool>().First());
+            Tools.Tool.Abort();
+        }
+        else if (Tools.Tool is PasteTool || Editor.Selection.IsEmpty)
+        {
+            Tools.Pick(select);
         }
         else
         {

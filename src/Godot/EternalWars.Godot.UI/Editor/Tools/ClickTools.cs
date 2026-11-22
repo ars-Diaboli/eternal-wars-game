@@ -157,10 +157,11 @@ public sealed class ObjectTool(EditorToolContext context) : EditorTool(context)
     }
 }
 
-/// <summary>Places a monster guard.</summary>
+/// <summary>Places a monster guard; before the click a ghost shows its cell, red where it does not fit (ADR-290).</summary>
 public sealed class MonsterTool(EditorToolContext context) : EditorTool(context)
 {
     private string _creature = MonsterGuard.DefaultCreature;
+    private MapPosition? _hovered;
 
     /// <summary>Null: rolled from the tier at game start.</summary>
     private int? _count;
@@ -176,21 +177,52 @@ public sealed class MonsterTool(EditorToolContext context) : EditorTool(context)
 
     public override void BuildOptions(ToolOptions options)
     {
-        options.Picker("Creature", PickerItems.Creatures(Editor.Scenario), _creature, c => _creature = c);
+        options.Picker("Creature", PickerItems.Creatures(Editor.Scenario), _creature, c =>
+        {
+            _creature = c;
+            ShowGhost(_hovered);
+        });
         var count = new SpinBox { MinValue = 0, MaxValue = 999, Value = _count ?? 0, TooltipText = "0 = rolled from the tier at game start" };
         count.ValueChanged += v => _count = v > 0 ? (int)v : null;
         options.Labelled("Count", count);
         options.Choice("Disposition", Enum.GetValues<GuardDisposition>().Select(d => (d.ToString(), d)), _disposition, d => _disposition = d);
     }
 
-    public override void Press(MapPosition tile) =>
+    public override void Hover(MapPosition? tile)
+    {
+        if (tile != _hovered)
+        {
+            ShowGhost(tile);
+        }
+    }
+
+    public override void Press(MapPosition tile)
+    {
         Context.Report(Editor.Monsters.Place(tile, _creature, _count, _disposition, neverFlees: false, out _));
+        ShowGhost(tile);
+    }
+
+    public override void Drag(MapPosition tile) => Hover(tile);
+
+    public override void Refresh() => ShowGhost(_hovered);
+
+    public override void Cancel() => ShowGhost(null);
+
+    private void ShowGhost(MapPosition? tile)
+    {
+        _hovered = tile;
+        Context.Marks?.ShowMove(tile is { } at ? Editor.Monsters.Check(at, _creature) : null);
+    }
 }
 
-/// <summary>Places a hero of the chosen player and opens it in the inspector.</summary>
+/// <summary>
+/// Places a hero of the chosen player and opens it in the inspector; before the click a ghost shows its tile, red where it does not fit
+/// (ADR-290).
+/// </summary>
 public sealed class HeroTool(EditorToolContext context) : EditorTool(context)
 {
     private PlayerId _owner = context.Editor.Scenario.Players[0].Id;
+    private MapPosition? _hovered;
 
     public override string Name => "Hero";
 
@@ -200,19 +232,51 @@ public sealed class HeroTool(EditorToolContext context) : EditorTool(context)
 
     public override UiIcon? Icon => UiIcon.Hero;
 
+    /// <summary>The player a hero is placed for: the picked one, or the first when that player has left the map.</summary>
+    private PlayerId Owner => Editor.Scenario.HasPlayer(_owner) ? _owner : Editor.Scenario.Players[0].Id;
+
     public override void BuildOptions(ToolOptions options) =>
-        options.Choice("Owner", Editor.Scenario.Players.Select(p => (p.Name, p.Id)), _owner, p => _owner = p);
+        options.Choice("Owner", Editor.Scenario.Players.Select(p => (p.Name, p.Id)), Owner, p =>
+        {
+            _owner = p;
+            ShowGhost(_hovered);
+        });
+
+    public override void Hover(MapPosition? tile)
+    {
+        if (tile != _hovered)
+        {
+            ShowGhost(tile);
+        }
+    }
 
     public override void Press(MapPosition tile)
     {
-        if (Context.Report(Editor.Heroes.Place(_owner, tile, $"Hero {Editor.Scenario.NextHeroId().Value}", out var placed)))
+        if (Context.Report(Editor.Heroes.Place(Owner, tile, $"Hero {Editor.Scenario.NextHeroId().Value}", out var placed)))
         {
             Context.Inspect(placed);
         }
+
+        ShowGhost(tile);
+    }
+
+    public override void Drag(MapPosition tile) => Hover(tile);
+
+    public override void Refresh() => ShowGhost(_hovered);
+
+    public override void Cancel() => ShowGhost(null);
+
+    private void ShowGhost(MapPosition? tile)
+    {
+        _hovered = tile;
+        Context.Marks?.ShowMove(tile is { } at && Editor.Heroes.CanPlace(Owner, at) is var fits ? new MoveCheck(fits, [new MoveCell(at, fits == EditResult.Ok)]) : null);
     }
 }
 
-/// <summary>Links gates: the first click picks a two-way gate or a one-way entrance, the second its partner or exit.</summary>
+/// <summary>
+/// Links gates: the first click picks a two-way gate or a one-way entrance, the second its partner or exit. While the tool is picked the
+/// map draws every link as an arrow (ADR-290), and the gate picked first is outlined until the second click or Escape.
+/// </summary>
 public sealed class LinkGatesTool(EditorToolContext context) : EditorTool(context)
 {
     private MapObjectId? _from;
@@ -225,9 +289,44 @@ public sealed class LinkGatesTool(EditorToolContext context) : EditorTool(contex
 
     public override UiIcon? Icon => UiIcon.ToolLinkGates;
 
+    /// <summary>Whether a gate is picked and waits for its partner: Escape drops it first (ADR-290).</summary>
+    public override bool IsBusy => _from is not null;
+
     public override void BuildOptions(ToolOptions options) => options.Hint("Click a gate (or one-way entrance), then its partner (or exit).");
 
-    public override void Cancel() => _from = null;
+    public override void Activate() => Context.Marks?.ShowLinks(true);
+
+    /// <summary>The map's views were made again (a resize) or the map changed: the arrows and the picked gate's outline again.</summary>
+    public override void Refresh()
+    {
+        Context.Marks?.ShowLinks(true);
+        if (_from is { } from && Editor.Scenario.FindObject(from) is { } picked)
+        {
+            Context.Marks?.ShowBrush([.. picked.OccupiedCells().Select(c => c.Position)]);
+        }
+        else
+        {
+            Drop(); // the picked gate went (an undo, a crop)
+        }
+    }
+
+    public override void Cancel()
+    {
+        Context.Marks?.ShowLinks(false);
+        Drop();
+    }
+
+    public override void Abort()
+    {
+        Drop();
+        Context.Say("Linking dropped");
+    }
+
+    private void Drop()
+    {
+        _from = null;
+        Context.Marks?.ShowBrush(null);
+    }
 
     public override void Press(MapPosition tile)
     {
@@ -237,6 +336,7 @@ public sealed class LinkGatesTool(EditorToolContext context) : EditorTool(contex
             if (clicked is TwoWayGate or OneWayGateEntrance)
             {
                 _from = clicked.Id;
+                Context.Marks?.ShowBrush([.. clicked.OccupiedCells().Select(c => c.Position)]);
                 Context.Say($"Linking {clicked}: now click its partner (or exit).");
             }
             else
@@ -247,7 +347,7 @@ public sealed class LinkGatesTool(EditorToolContext context) : EditorTool(contex
             return;
         }
 
-        _from = null;
+        Drop();
         var source = Editor.Scenario.GetObject(from);
         Context.Report(clicked is null ? EditResult.InvalidTarget
             : source is OneWayGateEntrance ? Editor.Objects.SetGateExit(from, clicked.Id)

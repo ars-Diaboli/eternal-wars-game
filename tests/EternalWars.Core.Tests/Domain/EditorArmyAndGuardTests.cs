@@ -38,6 +38,24 @@ public class EditorArmyAndGuardTests
     }
 
     [Fact]
+    public void MonsterCheck_GivesWhatPlaceWould_AndItsCell()
+    {
+        var editor = TestEditor.Blank();
+
+        var free = editor.Monsters.Check(new(5, 5), BuiltInCreatures.Troll);
+        Assert.Equal(EditResult.Ok, free.Result);
+        Assert.Equal([new MoveCell(new(5, 5), true)], free.Cells);
+
+        Assert.Equal(EditResult.UnknownCreature, editor.Monsters.Check(new(5, 5), "neutral.unicorn").Result);
+
+        editor.Monsters.Place(new(5, 5), BuiltInCreatures.Troll, null, GuardDisposition.Hostile, false, out _);
+        var taken = editor.Monsters.Check(new(5, 5), BuiltInCreatures.Troll);
+        Assert.Equal(editor.Monsters.Place(new(5, 5), BuiltInCreatures.Troll, null, GuardDisposition.Hostile, false, out _), taken.Result);
+        Assert.NotEqual(EditResult.Ok, taken.Result);
+        Assert.False(Assert.Single(taken.Cells).Fits);
+    }
+
+    [Fact]
     public void Monsters_ArePlacedConfiguredAndRemovedWithUndo()
     {
         var editor = TestEditor.Blank();

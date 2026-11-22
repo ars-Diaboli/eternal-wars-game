@@ -9,6 +9,10 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- The editor plan's second check (ADR-290): every section checked against the code; built what was left out: the gate links drawn as
+  arrows while LinkGates is picked, Escape that drops the tool's half-done action, the selection or the tool, a problem's click that
+  selects the culprit, the fairness numbers worked out in the background, the Monster and Hero tools' ghost, the owner on the status
+  bar and Test on the toolbar. Smoke `editor-link-arrows`.
 - Creature portraits in high contrast, plain bases and clearly upgraded upgrades on every sheet; Academy creatures redone to the
   owner's review (no teal, musket gremlin, female djinn sultan, living colossus and steel titan); the thanes, efreet and golden golem
   drawn as Academy by lore (A6), the specter and banshee as Necropolis (N5), the wolves as Sylvan (S5) and the gogs and breeders as

@@ -86,6 +86,15 @@ public sealed class MeasureTool(EditorToolContext context) : EditorTool(context)
         Show(say: _kept);
     }
 
+    /// <summary>A route is started or kept: Escape drops it (ADR-290).</summary>
+    public override bool IsBusy => _from is not null;
+
+    public override void Abort()
+    {
+        Cancel();
+        Context.Say("Measure dropped");
+    }
+
     public override void Cancel()
     {
         (_from, _to, _kept) = (null, null, false);

@@ -53,6 +53,19 @@ public sealed class MonsterEditor
         return EditResult.Ok;
     }
 
+    /// <summary>
+    /// Whether a monster of <paramref name="creature"/> fits on <paramref name="position"/>, as <see cref="Place"/> would find it for a count it
+    /// takes, and its cell, red where it does not fit: what the Monster tool's ghost shows before the click (ADR-290).
+    /// </summary>
+    public MoveCheck Check(MapPosition position, Common.CreatureId creature)
+    {
+        var definition = _context.Catalog.OfKind(MapObjectKind.Monster).FirstOrDefault();
+        var result = !Scenario.Creatures.Contains(creature) ? EditResult.UnknownCreature
+            : definition is null ? EditResult.InvalidTarget
+            : _objects.CanPlace(definition, position);
+        return new MoveCheck(result, [new MoveCell(position, result == EditResult.Ok)]);
+    }
+
     public EditResult Set(MapObjectId id, Common.CreatureId creature, int? count, GuardDisposition disposition, bool neverFlees)
     {
         if (_context.Object<MonsterGuard>(id) is not { } monster)

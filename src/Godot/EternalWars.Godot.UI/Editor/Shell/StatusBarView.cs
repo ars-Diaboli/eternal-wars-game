@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
 using Godot;
 
@@ -54,14 +55,19 @@ public partial class StatusBarView : HBoxContainer
             return;
         }
 
-        var there = scenario.HeroAt(at)?.Name ?? scenario.ObjectCellAt(at)?.Object switch
+        // The thing there and, for a hero or a thing with an owner, whose it is: "Gold mine (Red)", "Sawmill (neutral)" (ADR-290).
+        var there = scenario.HeroAt(at) is { } hero ? $"{hero.Name} ({OwnerName(scenario, hero.Owner)})" : scenario.ObjectCellAt(at)?.Object switch
         {
             null => null,
-            Town town => town.Name,
+            Town town => $"{town.Name} ({OwnerName(scenario, town.Owner)})",
+            IFlaggable flagged => $"{((MapObject)flagged).Definition.Name} ({OwnerName(scenario, flagged.Owner)})",
             var other => other.Definition.Name,
         };
         _tile.Text = $"x {at.X}  y {at.Y}  L{at.Level} · {scenario.Map.GetTerrain(at)}, height {scenario.Map.GroundHeightAt(at):0.0}{(there is null ? "" : $" · {there}")}";
     }
+
+    private static string OwnerName(GameState scenario, PlayerId? owner) =>
+        owner is { } id && scenario.HasPlayer(id) ? scenario.GetPlayer(id).Name : "neutral";
 
     /// <summary>The editor's last message; empty clears it.</summary>
     public void ShowMessage(string text)

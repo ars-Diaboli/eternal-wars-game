@@ -29,7 +29,7 @@ public partial class EmptyStateCard : PanelContainer
 
         var buttons = new HBoxContainer();
         rows.AddChild(buttons);
-        var wizard = new Button { Text = "New map…", TooltipText = "The new-map wizard: size, ground, players and a template (Ctrl+N)" };
+        var wizard = new Button { Text = "New map…", TooltipText = "The new-map wizard: size, ground, players and a template (File > New)" };
         wizard.Pressed += newMap;
         buttons.AddChild(wizard);
         var opening = new Button { Text = "Open…" };
