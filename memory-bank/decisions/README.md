@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-295.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-296.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -11,7 +11,7 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [architecture.md](architecture.md) | The engine, the three tiers, events, commands and replays, the map and save formats, code structure, code reviews and refactors. | 28 |
 | [adventure-map.md](adventure-map.md) | The grid, terrain classes and movement, roads, map objects and catalogues, neutral guards, fog-of-war rules, scouting, week events, the Grail. | 30 |
 | [map-events.md](map-events.md) | Pandora's Box, the event tree (triggers, conditions, actions), quests and quest objects, loops, campaign variables. | 9 |
-| [towns-and-economy.md](towns-and-economy.md) | Resources and income, town groups and rosters, creatures, buildings and the tech tree, dwellings and caravans, unique buildings. | 24 |
+| [towns-and-economy.md](towns-and-economy.md) | Resources and income, town groups and rosters, creatures, buildings and the tech tree, dwellings and caravans, unique buildings. | 25 |
 | [heroes.md](heroes.md) | Primary stats, skills and levels, specialties, Necromancy, governors, the tavern. | 9 |
 | [artifacts.md](artifacts.md) | Artifact slots, tiers and effects, assembled relics, the exchange screen. | 7 |
 | [magic.md](magic.md) | Schools, spell levels and ranks, guilds and spell books, scrolls, every battle and adventure spell. | 12 |
@@ -20,7 +20,7 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [game-modes.md](game-modes.md) | Victory and defeat, saves, the turn timer, score, ranking and difficulty, replays and the viewer, the main menu and new-game screen, the arena. | 20 |
 | [random-maps-and-editor.md](random-maps-and-editor.md) | Templates and the generator, scenery density, relief, the standalone editor and the template editor. | 11 |
 | [multiplayer.md](multiplayer.md) | The host and clients, each client's view, the lobby, live battles, LAN saves, start zones and the simultaneous first week. | 13 |
-| [presentation.md](presentation.md) | Art direction, the camera, terrain and fog drawing, the HUD, layout and theme, information windows, icons, cursors and heraldry. | 30 |
+| [presentation.md](presentation.md) | Art direction, the camera, terrain and fog drawing, the HUD, layout and theme, information windows, icons, cursors and heraldry. | 31 |
 | [project-and-scope.md](project-and-scope.md) | Scope and phases, the owner's batches of answers that touch several areas, phase close-outs and the Godot checks, closing reviews. | 20 |
 
 ## All decisions
@@ -319,4 +319,6 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [290](random-maps-and-editor.md#adr-290-the-plans-second-check-link-arrows-escape-the-problems-culprit-and-background-fairness-edit-1-2026-11-22) | random-maps-and-editor | The plan's second check: link arrows, Escape, the problem's culprit and background fairness (EDIT-1, 2026-11-22) | implemented |
 | [291](towns-and-economy.md#adr-291-the-capitol-needs-six-dwellings-plots-show-unused-land-and-citizens-homes-town-15-2026-11-22) | towns-and-economy | The Capitol needs six dwellings; plots show unused land and citizens' homes (TOWN-15, 2026-11-22) | implemented |
 | [292](presentation.md#adr-292-town-screen-answers-the-proposals-no-creatures-or-hero-models-in-the-scene-art-after-the-key-paintings-town-14--town-23-owner-adr-246-2026-11-22) | presentation | Town screen answers: the proposals, no creatures or hero models in the scene, art after the key paintings (TOWN-14 … TOWN-23, owner, ADR-246, 2026-11-22) | accepted |
+| [293](presentation.md#adr-293-sylvan-creatures-redone-to-the-owners-review-owner-adr-289-2026-11-22) | presentation | Sylvan creatures redone to the owner's review (owner, ADR-289, 2026-11-22) | accepted |
 | [294](presentation.md#adr-294-town-screen-steps-0-and-1-the-shell-behind---town-screennew-havens-style-frame-two-font-pairings-nine-slice-frames-the-shared-widgets-the-heroes-swap-adr-246-adr-292-2026-11-22) | presentation | Town screen steps 0 and 1: the shell behind --town-screen=new, Haven's style frame, two font pairings, nine-slice frames, the shared widgets, the heroes' swap (ADR-246, ADR-292, 2026-11-22) | implemented |
+| [295](towns-and-economy.md#adr-295-stronghold-the-wolf-rider-line-is-tier-2-the-centaur-line-tier-3-owner-2026-11-22) | towns-and-economy | Stronghold: the Wolf Rider line is tier 2, the Centaur line tier 3 (owner, 2026-11-22) | implemented |

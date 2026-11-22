@@ -37,6 +37,7 @@
 | [285](#adr-285-creature-portraits-in-2--2-sheets-creature-and-puzzle-prompts-redone-to-the-key-paintings-rocky-ground-is-dark-granite-owner-adr-284-2026-11-22) | Creature portraits in 2 × 2 sheets; creature and puzzle prompts redone to the key paintings; rocky ground is dark granite (owner, ADR-284, 2026-11-22) | accepted |
 | [289](#adr-289-creature-portraits-in-high-contrast-with-plain-bases-and-clearly-upgraded-upgrades-academy-creatures-redone-owner-adr-285-2026-11-22) | Creature portraits in high contrast with plain bases and clearly upgraded upgrades; Academy creatures redone (owner, ADR-285, 2026-11-22) | accepted |
 | [292](#adr-292-town-screen-answers-the-proposals-no-creatures-or-hero-models-in-the-scene-art-after-the-key-paintings-town-14--town-23-owner-adr-246-2026-11-22) | Town screen answers: the proposals, no creatures or hero models in the scene, art after the key paintings (TOWN-14 … TOWN-23, owner, ADR-246, 2026-11-22) | accepted |
+| [293](#adr-293-sylvan-creatures-redone-to-the-owners-review-owner-adr-289-2026-11-22) | Sylvan creatures redone to the owner's review (owner, ADR-289, 2026-11-22) | accepted |
 | [294](#adr-294-town-screen-steps-0-and-1-the-shell-behind---town-screennew-havens-style-frame-two-font-pairings-nine-slice-frames-the-shared-widgets-the-heroes-swap-adr-246-adr-292-2026-11-22) | Town screen steps 0 and 1: the shell behind --town-screen=new, Haven's style frame, two font pairings, nine-slice frames, the shared widgets, the heroes' swap (ADR-246, ADR-292, 2026-11-22) | implemented |
 
 
@@ -650,6 +651,25 @@ TOWN-15 is ADR-291. The plan's step-by-step implementation is in its [roadmap](.
 - **TOWN-21** (owner): the proposal (a kit per faction, image-to-3D with clean-up for landmarks, Haven and Inferno first,
   `town-scene-prompts.md`), following the latest art direction: the key paintings and faction-art.md (ADR-284) and realistic, not
   cartoon (ADR-248). The style frame of step 0 is Haven's greybox lit after `key_haven-1`.
+
+### ADR-293: Sylvan creatures redone to the owner's review (owner, ADR-289, 2026-11-22)
+**Status**: accepted. Asset prompts only; no rule or format change.
+
+- **Owner**, on the first Sylvan sheets: the pixie and sprite looked like goblins and carried weapons; the satyr smoked a pipe and its
+  upgrade looked the same; the dancers should be men with sabers, closer to the classic elven blade dancers; the hunter a woman and
+  her upgrade a man, with a composite or recurve bow, not roots and branches; the druid a man, its upgrade looked the same; the
+  pegasus needs a rider, its upgrade in mithril; the moon doe a glowing ghost; the unicorn too hairy; no lanterns on the ancient
+  treant; no leaves and moss on the wolves, the dire wolf bigger and black.
+- **Sylvan look**: leaves, moss and vines only as patterns on clothing and armour, never growing on bodies, fur or weapons; elves in
+  fitted leather and pale carved-wood armour with leaf-shaped steel and gold-leaf trim.
+- **Subjects**: the pixie a tiny elven faerie woman with bright dragonfly wings and empty hands, the sprite with luminous blue-violet
+  butterfly wings; the satyr bare-chested with a club, its upgrade in a cuirass with gold-capped horns, a war sickle and a shield; the
+  blade and war dancers elf men with two curved sabers; the hunter an elf woman and the arcane archer an elf man, both with clean
+  composite recurve bows; the druid a bearded man in plain robes, the elder an old white-bearded man in a grand mantle with an antler
+  crown; the pegasus ridden by an elf with a spear, the silver pegasus and its rider in mithril; the moon doe a translucent glowing
+  spirit; the unicorn with a short neat mane; the ancient treant with a bark beard and autumn crown; the timber wolf clean grey, the
+  dire wolf a massive black wolf.
+- **Regenerate**: Sylvan sheets S1–S5.
 
 ### ADR-294: Town screen steps 0 and 1: the shell behind --town-screen=new, Haven's style frame, two font pairings, nine-slice frames, the shared widgets, the heroes' swap (ADR-246, ADR-292, 2026-11-22)
 **Status**: implemented; the font pairing waits for the owner's pick, the budget numbers for the reference PC and the Deck. The

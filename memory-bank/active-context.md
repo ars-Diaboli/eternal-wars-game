@@ -9,11 +9,15 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Stronghold's Wolf Rider line moved to tier 2 and the Centaur line to tier 3, numbers swapped with the tier; generator version 12,
+  maps re-pinned (ADR-295).
 - The town screen plan's steps 0 and 1 (ADR-294): the new screen's shell behind `--town-screen=new` over the key painting, Haven's
   greybox style frame (`scenes/towns/haven.tscn`), two font pairings for the owner's pick (`game-fonts-b`), nine-slice frames and a style
   for every control, `CostLabel`, `SliderDialog`, `ArmyBar` on the town, hero and exchange screens, `CreatureCard`, `BuildingTile`, the
   heroes' swap and the stack spread in core, the town screen's keys. Open: the owner's font pick, the frame budget on the reference PC
   and the Deck; next is step 2 (core read models and the TOWN-17 rules first).
+- Sylvan creature prompts redone to the owner's review: faerie pixies, male saber dancers, huntress and male archer with
+  recurve bows, ridden pegasi, ghostly moon doe, black dire wolf, no moss or leaves on bodies (ADR-293).
 - The town screen plan's questions answered (ADR-292: the proposals, no creatures or hero models in the scene, art after the key
   paintings) and its roadmap broken into tasks per step ([implementation plan](../docs/papers/town-screen-plan.md#implementation-plan));
   next is step 0's greybox shell and Haven's style frame.

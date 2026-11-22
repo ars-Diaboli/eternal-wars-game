@@ -35,7 +35,7 @@ public static class ScoreRules
         (20, "stronghold.goblin"),
         (40, "necropolis.skeleton"),
         (60, "haven.pikeman"),
-        (80, "stronghold.centaur"),
+        (80, "stronghold.wolf-rider"),
         (100, "dungeon.medusa"),
         (125, "haven.griffin"),
         (150, "necropolis.vampire"),

@@ -113,12 +113,12 @@ stronghold.harpy,Harpy,stronghold,1,Small,stronghold.fury,B,6,4,3,5,16,15,6,14,,
 stronghold.fury,Fury,stronghold,1,Small,,B,7,5,4,6,16,18,7,15,,,,76,14,90,,beast,Flying; NoEnemyRetaliation,
 stronghold.orc,Orc,stronghold,2,Small,stronghold.orc-berserker,A,9,6,6,9,27,11,5,11,,,,177,9,185,,orc,,
 stronghold.orc-berserker,Orc Berserker,stronghold,2,Small,,A,11,5,7,11,28,12,5,12,,,,226,9,240,,orc,Relentless 20,
-stronghold.centaur,Centaur,stronghold,2,Medium,stronghold.centaur-warchief,B,10,8,6,8,28,18,8,13,,,,186,8,210,,beast,,
-stronghold.centaur-warchief,Centaur Warchief,stronghold,2,Medium,,B,11,9,7,9,32,20,8,14,,,,256,8,270,,beast,PackHunter 10,
+stronghold.wolf-rider,Wolf Rider,stronghold,2,Medium,stronghold.wolf-raider,B,10,8,6,8,28,18,8,13,,,,186,8,210,,orc; mounted,PackHunter 10,tier 2 since the owner swapped it with the Centaur (ADR-295)
+stronghold.wolf-raider,Wolf Raider,stronghold,2,Medium,,B,11,9,7,9,32,20,8,14,,,,256,8,270,,orc; mounted,PackHunter 15; Relentless 10,upgrade of Wolf Rider
 stronghold.ogre,Ogre,stronghold,3,Medium,stronghold.ogre-mage,B,13,10,9,14,55,9,4,9,,,,679,5,450,,giant,,
 stronghold.ogre-mage,Ogre Mage,stronghold,3,Medium,,B,14,11,11,15,63,10,5,10,,,,921,5,580,,giant,Caster chaos.bloodlust 1,
-stronghold.wolf-rider,Wolf Rider,stronghold,3,Medium,stronghold.wolf-raider,A,12,9,9,13,50,18,8,13,,,,563,5,450,,orc; mounted,PackHunter 10,new: fills tier 3 (sandbox had only Ogre there)
-stronghold.wolf-raider,Wolf Raider,stronghold,3,Medium,,A,13,10,10,15,56,20,9,14,,,,752,5,580,,orc; mounted,PackHunter 15; Relentless 10,new: upgrade of Wolf Rider
+stronghold.centaur,Centaur,stronghold,3,Medium,stronghold.centaur-warchief,A,12,9,9,13,50,18,8,13,,,,563,5,450,,beast,,tier 3 since the owner swapped it with the Wolf Rider (ADR-295)
+stronghold.centaur-warchief,Centaur Warchief,stronghold,3,Medium,,A,13,10,10,15,56,20,9,14,,,,752,5,580,,beast,PackHunter 10,
 stronghold.roc,Roc,stronghold,4,Medium,stronghold.thunderbird,A,13,11,13,18,74,22,9,13,,,,1513,5,660,,beast,Flying,tier 4 as in the sandbox
 stronghold.thunderbird,Thunderbird,stronghold,4,Medium,,A,14,12,15,21,82,24,10,14,,,,2036,5,860,,beast,Flying; Caster nature.call-lightning 1,tier 4 as in the sandbox
 stronghold.cyclops,Cyclops,stronghold,4,Medium,stronghold.cyclops-king,B,17,14,14,19,93,11,5,11,12,,,2934,3,1100,,giant,,not flying (sandbox flag was copy-paste)

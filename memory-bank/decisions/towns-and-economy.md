@@ -30,6 +30,7 @@
 | [139](#adr-139-the-university-and-the-war-academy-built-adr-126-2026-11-05) | The University and the War Academy built (ADR-126, 2026-11-05) | implemented |
 | [143](#adr-143-the-academys-observatory-the-undead-transformer-built-adr-137-adr-138-2026-11-06) | The Academy's Observatory; the Undead Transformer built (ADR-137, ADR-138, 2026-11-06) | implemented |
 | [291](#adr-291-the-capitol-needs-six-dwellings-plots-show-unused-land-and-citizens-homes-town-15-2026-11-22) | The Capitol needs six dwellings; plots show unused land and citizens' homes (TOWN-15, 2026-11-22) | implemented |
+| [295](#adr-295-stronghold-the-wolf-rider-line-is-tier-2-the-centaur-line-tier-3-owner-2026-11-22) | Stronghold: the Wolf Rider line is tier 2, the Centaur line tier 3 (owner, 2026-11-22) | implemented |
 
 
 ### ADR-010: Town roster in four groups; two non-playable towns
@@ -526,3 +527,13 @@ owner's answer to TOWN-15 in the [town screen plan](../../docs/papers/town-scree
   is closed, is unused land, a piece of the diorama's scenery: no marker stones, no rubble. Scaffolding on the day it is built.
 - **Citizens' homes** (owner): building the Capitol fills the two closed tier 1–4 plots with homes of the town's citizens. *(proposal)* They
   rise in the Capitol's construction scene, and a captured Capitol that drops to City Hall keeps them.
+
+### ADR-295: Stronghold: the Wolf Rider line is tier 2, the Centaur line tier 3 (owner, 2026-11-22)
+**Status**: implemented.
+
+- **Owner**: swap the Stronghold's Wolf Rider and Centaur tiers.
+- **Swap**: each line takes the other's tier, class (ADR-135), numbers (attack to price, growth and fight value) and dwelling: the
+  Wolf Rider and Wolf Raider are tier 2, class B, growth 8, 210 / 270 gold; the Centaur and Centaur Warchief tier 3, class A, growth
+  5, 450 / 580 gold. Each keeps its own name, tags and capabilities (`creatures.csv`). The score title at 80 is now the Wolf Rider.
+- **Random maps**: guards and dwellings are drawn by tier, so `MapGenerator.Version` goes to 12 and the pinned maps are re-pinned.
+- Test: `CreatureTests.StrongholdWolfRidersAreTierTwo_AndCentaursTierThree`.

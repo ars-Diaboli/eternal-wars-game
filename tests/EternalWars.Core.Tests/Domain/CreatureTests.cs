@@ -229,4 +229,19 @@ public class CreatureTests
 
         Assert.Contains("tier", error.Message);
     }
+
+    [Theory]
+    [InlineData("stronghold.wolf-rider", 2, CreatureCategory.B, 8)]
+    [InlineData("stronghold.wolf-raider", 2, CreatureCategory.B, 8)]
+    [InlineData("stronghold.centaur", 3, CreatureCategory.A, 5)]
+    [InlineData("stronghold.centaur-warchief", 3, CreatureCategory.A, 5)]
+    public void StrongholdWolfRidersAreTierTwo_AndCentaursTierThree(string id, int tier, CreatureCategory category, int growth)
+    {
+        // ADR-295: the owner swapped the two lines; each took the other's tier, class and numbers.
+        var creature = CreatureCatalog.Default.Get(id);
+
+        Assert.Equal(tier, creature.Tier);
+        Assert.Equal(category, creature.Category);
+        Assert.Equal(growth, creature.WeeklyGrowth);
+    }
 }

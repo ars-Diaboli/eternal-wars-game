@@ -69,7 +69,8 @@ The [faction groups](../design/factions.md) keep the colours already given to th
   living trees at the back right; a gallery hall on a cliff ledge; a white gazebo in a hedged garden; a ring of carved standing stones;
   rope and plank suspension bridges; a gate grown from arching roots.
 - **Colours**: dark moss green, grey-brown bark, blue-teal mist, pale carved wood, amber light, pale green lanterns.
-- **Creatures**: the timber wolf and the dire wolf are Sylvan creatures by lore, drawn in its style, though not hired in the
+- **Creatures**: leaves, moss and vines only as patterns on clothing and armour, never growing on bodies, fur or weapons.
+  The timber wolf and the dire wolf are Sylvan creatures by lore, drawn in its style, though not hired in the
   town (neutral in the game).
 - **Avoid**: candy fairy forest, mushrooms (Dungeon's), a lush healthy look.
 

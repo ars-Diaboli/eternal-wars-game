@@ -236,12 +236,12 @@ Faction group **Primal Fury** (no magic school, ADR-063, ADR-069) · native terr
 | Zhaka | Mage | Harpy / Fury (T1) | Warcry | Primal Fury (1st) Basic, Spell resistance Basic | 0 / 1 / 2 / 2 |
 | Thrak | Warrior | Orc / Orc Berserker (T2) | Archery | Logistics Basic, Archery Basic | 2 / 1 / 1 / 1 |
 | Mograth | Mage | Orc / Orc Berserker (T2) | Blood Rage | Primal Fury (1st) Basic, Logistics Basic | 0 / 0 / 3 / 2 |
-| Urzog | Warrior | Centaur / Centaur Warchief (T2) | War Tempo | War Tempo Basic, Melee Basic | 1 / 2 / 1 / 1 |
-| Yazna | Mage | Centaur / Centaur Warchief (T2) | Blood Rage | Primal Fury (1st) Basic, Primal Fury (2nd) Basic | 0 / 1 / 2 / 2 |
+| Kragash | Warrior | Wolf Rider / Wolf Raider (T2) | Treasury | Treasury Basic, Melee Basic | 1 / 2 / 1 / 1 |
+| Ashka | Mage | Wolf Rider / Wolf Raider (T2) | Warcry | Primal Fury (1st) Basic, Armor Basic | 0 / 1 / 2 / 2 |
+| Urzog | Warrior | Centaur / Centaur Warchief (T3) | War Tempo | War Tempo Basic, Melee Basic | 1 / 2 / 1 / 1 |
+| Yazna | Mage | Centaur / Centaur Warchief (T3) | Blood Rage | Primal Fury (1st) Basic, Primal Fury (2nd) Basic | 0 / 1 / 2 / 2 |
 | Borka | Warrior | Ogre / Ogre Mage (T3) | Archery | Archery Basic, Pathfinding Basic | 2 / 1 / 1 / 1 |
 | Kurgh | Mage | Ogre / Ogre Mage (T3) | Blood Rage | Primal Fury (1st) Basic, Prospecting Basic | 0 / 0 / 3 / 2 |
-| Kragash | Warrior | Wolf Rider / Wolf Raider (T3) | Treasury | Treasury Basic, Melee Basic | 1 / 2 / 1 / 1 |
-| Ashka | Mage | Wolf Rider / Wolf Raider (T3) | Warcry | Primal Fury (1st) Basic, Armor Basic | 0 / 1 / 2 / 2 |
 | Shara | Warrior | Roc / Thunderbird (T4) | Tactics | Tactics Basic, Melee Basic | 2 / 1 / 1 / 1 |
 | Vrolk | Mage | Roc / Thunderbird (T4) | Blood Rage | Primal Fury (1st) Basic, Pathfinding Basic | 0 / 0 / 3 / 2 |
 | Durgash | Warrior | Cyclops / Cyclops King (T4) | Scouting | Scouting Basic, Melee Basic | 1 / 2 / 1 / 1 |

@@ -226,9 +226,9 @@ B**, one of each a tier (the `category` column, ADR-135); an upgrade has its bas
 | 1 | Goblin (22, 45 gold) | Hobgoblin (60 gold) |
 | 1 | Harpy (14, 70 gold) | Fury (90 gold) |
 | 2 | Orc (9, 185 gold) | Orc Berserker (240 gold) |
-| 2 | Centaur (8, 210 gold) | Centaur Warchief (270 gold) |
+| 2 | Wolf Rider (8, 210 gold) | Wolf Raider (270 gold) |
+| 3 | Centaur (5, 450 gold) | Centaur Warchief (580 gold) |
 | 3 | Ogre (5, 450 gold) | Ogre Mage (580 gold) |
-| 3 | Wolf Rider (5, 450 gold) | Wolf Raider (580 gold) |
 | 4 | Roc (5, 660 gold) | Thunderbird (860 gold) |
 | 4 | Cyclops (3, 1 100 gold) | Cyclops King (1 450 gold) |
 | 5 | Behemoth (1, 3 300 gold, crystal 1) | Ancient Behemoth (4 300 gold, crystal 2) |

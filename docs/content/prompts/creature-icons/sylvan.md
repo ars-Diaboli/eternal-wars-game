@@ -19,17 +19,22 @@ rim light, deep rich shadows and high contrast, a full range of values from near
 colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
 facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
 dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
-Not a photograph, not a plastic CGI render, no pixel art. Sylvan creatures: elves and fey of an ancient misty forest, grey-brown bark,
-pale carved wood, dark moss green and green-gold leaves, a faint pale-green glow, grey rot at the edges; graceful and failing. 4
-separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty
-margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no
-text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a tiny fey
-creature with dragonfly wings and a pale-green glow, a thorn held like a spear, the whole body shown; 2 a goat-legged satyr with
-curled horns and a shaggy beard, a wooden pipe in one hand and a short knotted club in the other; 3 the same creature as the one above
-it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour:
-moth wings patterned with eye spots, a crown of tiny white flowers, a silver glow; 4 the same creature as the one above it, clearly
-upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: horns capped
-in carved pale wood, a leather jerkin, a curved bone-handled sickle
+Not a photograph, not a plastic CGI render, no pixel art. Sylvan creatures: elves, fey and beasts of an ancient misty forest; elves in
+fitted leather and pale carved-wood armour with leaf-shaped steel and gold-leaf trim, deep forest green, grey-brown and silver, a
+faint pale-green glow; graceful and proud. Leaves, moss and vines appear only as patterns on clothing and armour, never growing on
+bodies, fur or weapons. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred
+with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no
+borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then
+bottom row: 1 a tiny faerie, a slender elven woman with pointed ears and a delicate fine-featured face, long fair hair, a short gown
+of pale petals, large bright translucent dragonfly wings shimmering green and gold, a pale-green glow around her, open empty hands and
+no weapon, the whole body shown; not a goblin, not grotesque; 2 a goat-legged satyr with short curled horns and a shaggy beard,
+bare-chested with a plain leather belt, a short knotted wooden club; no pipe, no armour; 3 the same creature as the one above it,
+clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour:
+large luminous butterfly wings of bright blue, violet and gold, a crown of tiny white flowers, a silver gown, a bright silver-green
+glow, still no weapon; 4 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build
+but larger, heavier armed, more ornate and richer in colour: long ram horns capped in gold, a full leather and bronze cuirass and a
+green cloak, the beard braided with gold rings, a large curved bronze war sickle and a round wooden shield; armoured where the base is
+bare
 ```
 
 | # | File |
@@ -49,17 +54,21 @@ rim light, deep rich shadows and high contrast, a full range of values from near
 colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
 facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
 dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
-Not a photograph, not a plastic CGI render, no pixel art. Sylvan creatures: elves and fey of an ancient misty forest, grey-brown bark,
-pale carved wood, dark moss green and green-gold leaves, a faint pale-green glow, grey rot at the edges; graceful and failing. 4
-separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty
-margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no
-text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a lithe elf
-warrior with braided silver hair in grey-green leather, two slim curved blades held crossed; 2 an elf hunter in a mossy green hooded
-cloak, a tall longbow drawn, the arrow at the cheek; 3 the same creature as the one above it, clearly upgraded and told apart at a
-glance: the same face and build but larger, heavier armed, more ornate and richer in colour: caught mid-spin, long green ribbons
-trailing, both blades glinting green-gold; 4 the same creature as the one above it, clearly upgraded and told apart at a glance: the
-same face and build but larger, heavier armed, more ornate and richer in colour: a bow of pale living wood with leaves still growing
-on it, the arrowhead glowing pale green
+Not a photograph, not a plastic CGI render, no pixel art. Sylvan creatures: elves, fey and beasts of an ancient misty forest; elves in
+fitted leather and pale carved-wood armour with leaf-shaped steel and gold-leaf trim, deep forest green, grey-brown and silver, a
+faint pale-green glow; graceful and proud. Leaves, moss and vines appear only as patterns on clothing and armour, never growing on
+bodies, fur or weapons. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred
+with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no
+borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then
+bottom row: 1 a lithe male elf warrior, a man with long silver hair tied back and leaf-pattern tattoos on his bare arms, fitted
+grey-green leather armour, two long slim curved sabers held low and ready; 2 an elf huntress, a woman with braided auburn hair, a
+green hooded cloak over leather armour, drawing a recurve composite bow of horn and dark lacquered wood, the arrow at her cheek; a
+clean crafted bow, no roots, no branches, no leaves; 3 the same creature as the one above it, clearly upgraded and told apart at a
+glance: the same face and build but larger, heavier armed, more ornate and richer in colour: the same man caught mid-spin, longer
+curved sabers with gold-etched blades flashing, gold-leaf trimmed armour, a green sash trailing, the leaf tattoos glowing pale green;
+4 now a man: an elf master archer with a stern face, a tall composite recurve bow of dark wood and horn with silver fittings, an
+arrowhead of pale-green light, a silver-trimmed green cloak and leaf-shaped steel pauldrons; a clean crafted bow, no roots, no
+branches, no leaves
 ```
 
 | # | File |
@@ -79,17 +88,21 @@ rim light, deep rich shadows and high contrast, a full range of values from near
 colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
 facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
 dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
-Not a photograph, not a plastic CGI render, no pixel art. Sylvan creatures: elves and fey of an ancient misty forest, grey-brown bark,
-pale carved wood, dark moss green and green-gold leaves, a faint pale-green glow, grey rot at the edges; graceful and failing. 4
-separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty
-margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no
-text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 an elf druid
-in grey-green robes, a headdress of dead antler-like branches, a gnarled staff with a pale-green crystal; 2 a slender white winged
-horse with grey dapples, wings raised, a braided mane; 3 the same creature as the one above it, clearly upgraded and told apart at a
-glance: the same face and build but larger, heavier armed, more ornate and richer in colour: a long white braid and a mantle of moss,
-the staff crackling with silver-white lightning; 4 the same creature as the one above it, clearly upgraded and told apart at a glance:
-the same face and build but larger, heavier armed, more ornate and richer in colour: a silver-white coat with a faint sheen, feathers
-tipped in silver, a carved pale-wood brow plate
+Not a photograph, not a plastic CGI render, no pixel art. Sylvan creatures: elves, fey and beasts of an ancient misty forest; elves in
+fitted leather and pale carved-wood armour with leaf-shaped steel and gold-leaf trim, deep forest green, grey-brown and silver, a
+faint pale-green glow; graceful and proud. Leaves, moss and vines appear only as patterns on clothing and armour, never growing on
+bodies, fur or weapons. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred
+with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no
+borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then
+bottom row: 1 a male elf druid, a man with long brown hair and a short beard, plain brown-green hooded robes, a simple wooden staff
+with a small pale-green crystal; 2 a slender white winged horse with grey dapples, wings raised, ridden by an elf rider in light
+leather with a long spear; the horse's head, chest and wings with the rider on its back; 3 the same creature as the one above it,
+clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: an
+old man with a long white beard, a tall antler crown, a grand green-and-gold embroidered mantle with a bearskin over the shoulders, a
+tall staff of carved white wood crowned with a blazing silver-white crystal crackling with lightning; 4 the same creature as the one
+above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in
+colour: a silver-white coat, wings tipped in silver, the horse in barding of bright mithril armour and the rider in shining mithril
+plate with a winged helm and a lance
 ```
 
 | # | File |
@@ -109,17 +122,20 @@ rim light, deep rich shadows and high contrast, a full range of values from near
 colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
 facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
 dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
-Not a photograph, not a plastic CGI render, no pixel art. Sylvan creatures: elves and fey of an ancient misty forest, grey-brown bark,
-pale carved wood, dark moss green and green-gold leaves, a faint pale-green glow, grey rot at the edges; graceful and failing. 4
-separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty
-margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no
-text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a pale
-silver deer with large dark eyes and long slim legs, a faint crescent of moonlight on its brow; 2 a walking tree with a face of
-knotted bark, branch arms and a half-bare crown, grey rot creeping up from its roots; 3 the same creature as the one above it, clearly
-upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: a white
-unicorn with one long spiral horn of pale gold and a mane like mist; 4 the same creature as the one above it, clearly upgraded and
-told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: huge and older, its split
-bark braced with woven living branches, pale-green lanterns hanging in its crown
+Not a photograph, not a plastic CGI render, no pixel art. Sylvan creatures: elves, fey and beasts of an ancient misty forest; elves in
+fitted leather and pale carved-wood armour with leaf-shaped steel and gold-leaf trim, deep forest green, grey-brown and silver, a
+faint pale-green glow; graceful and proud. Leaves, moss and vines appear only as patterns on clothing and armour, never growing on
+bodies, fur or weapons. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred
+with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no
+borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then
+bottom row: 1 the glowing ghost of a slender doe, a translucent pale silver-blue body lit from within, soft light streaming off it
+like mist, large dark eyes, a crescent of moonlight on the brow, the whole body shown; a spirit, no antlers, no moss; 2 a walking tree
+with a face of knotted bark, branch arms and a half-bare crown, grey rot creeping up from its roots; 3 the same creature as the one
+above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in
+colour: a unicorn: a solid white horse with one long spiral horn of pale gold, a short neat mane and a neat tail, a faint silvery
+glow, a bridle of gold leaves; no long flowing hair; 4 the same creature as the one above it, clearly upgraded and told apart at a
+glance: the same face and build but larger, heavier armed, more ornate and richer in colour: huge and older, its split bark braced
+with woven living branches, a thick bark beard, a broad crown of autumn-gold leaves; no lanterns, no hanging lights
 ```
 
 | # | File |
@@ -139,18 +155,19 @@ rim light, deep rich shadows and high contrast, a full range of values from near
 colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
 facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
 dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
-Not a photograph, not a plastic CGI render, no pixel art. Sylvan creatures: elves and fey of an ancient misty forest, grey-brown bark,
-pale carved wood, dark moss green and green-gold leaves, a faint pale-green glow, grey rot at the edges; graceful and failing. 4
-separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty
-margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no
-text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a
-long-tailed bird of flame, red and orange feathers burning at the tips, the whole body shown; 2 a grey timber wolf of the misty forest
-with raised hackles, snarling, moss and dry leaves caught in its grey-brown fur, pale-green eyes, the whole body shown; 3 the same
-creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more
-ornate and richer in colour: wings of white-gold fire spread wide, a crest of flame, embers falling from it; 4 the same creature as
+Not a photograph, not a plastic CGI render, no pixel art. Sylvan creatures: elves, fey and beasts of an ancient misty forest; elves in
+fitted leather and pale carved-wood armour with leaf-shaped steel and gold-leaf trim, deep forest green, grey-brown and silver, a
+faint pale-green glow; graceful and proud. Leaves, moss and vines appear only as patterns on clothing and armour, never growing on
+bodies, fur or weapons. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred
+with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no
+borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then
+bottom row: 1 a long-tailed bird of flame, red and orange feathers burning at the tips, the whole body shown; 2 a grey timber wolf
+with raised hackles, snarling, clean thick grey fur, pale-green eyes, the whole body shown; no leaves, no moss; 3 the same creature as
 the one above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and
-richer in colour: huge and scarred, a ridge of bristling black fur, an elven collar of carved pale wood and antler bone, faint
-pale-green rune marks on its shoulder
+richer in colour: wings of white-gold fire spread wide, a crest of flame, embers falling from it; 4 the same creature as the one above
+it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour:
+a massive broad-chested black wolf filling the cell, far heavier than the grey one, shoulders hunched high, a thick black coat and a
+bristling mane, a scarred muzzle, glowing pale-green eyes, an elven collar of carved pale wood; no leaves, no moss
 ```
 
 | # | File |
