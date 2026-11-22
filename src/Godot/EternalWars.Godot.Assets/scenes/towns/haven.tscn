@@ -118,6 +118,72 @@ albedo_color = Color(0.85, 0.66, 0.2, 1)
 roughness = 0.4
 metallic = 0.6
 
+[sub_resource type="BoxShape3D" id="hover_town_hall_0"]
+size = Vector3(10, 18, 7.4)
+
+[sub_resource type="BoxShape3D" id="hover_fort_0"]
+size = Vector3(20.6, 6, 2)
+
+[sub_resource type="BoxShape3D" id="hover_fort_1"]
+size = Vector3(20.6, 6, 2)
+
+[sub_resource type="BoxShape3D" id="hover_fort_2"]
+size = Vector3(2, 6, 14)
+
+[sub_resource type="BoxShape3D" id="hover_fort_3"]
+size = Vector3(2, 6, 14)
+
+[sub_resource type="BoxShape3D" id="hover_fort_4"]
+size = Vector3(4.3, 13, 4.3)
+
+[sub_resource type="BoxShape3D" id="hover_fort_5"]
+size = Vector3(4.3, 13, 4.3)
+
+[sub_resource type="BoxShape3D" id="hover_fort_6"]
+size = Vector3(4.3, 15, 4.3)
+
+[sub_resource type="BoxShape3D" id="hover_fort_7"]
+size = Vector3(4.3, 14, 4.3)
+
+[sub_resource type="BoxShape3D" id="hover_fort_8"]
+size = Vector3(4.3, 14, 4.3)
+
+[sub_resource type="BoxShape3D" id="hover_mage_guild_0"]
+size = Vector3(5, 19.5, 5)
+
+[sub_resource type="BoxShape3D" id="hover_tavern_0"]
+size = Vector3(8.6, 9, 6.2)
+
+[sub_resource type="BoxShape3D" id="hover_blacksmith_0"]
+size = Vector3(6.6, 8, 5.4)
+
+[sub_resource type="BoxShape3D" id="hover_stables_0"]
+size = Vector3(14.6, 6.2, 9.6)
+
+[sub_resource type="BoxShape3D" id="hover_dwelling_haven_archer_0"]
+size = Vector3(6.6, 2.6, 2)
+
+[sub_resource type="BoxShape3D" id="hover_dwelling_haven_monk_0"]
+size = Vector3(7.4, 9.6, 11.6)
+
+[sub_resource type="BoxShape3D" id="hover_dwelling_haven_monk_1"]
+size = Vector3(3.4, 15, 3.4)
+
+[sub_resource type="BoxShape3D" id="hover_marketplace_0"]
+size = Vector3(7.4, 6.2, 4.9)
+
+[sub_resource type="BoxShape3D" id="hover_marketplace_1"]
+size = Vector3(3.8, 11.2, 3.8)
+
+[sub_resource type="BoxShape3D" id="hover_marketplace_2"]
+size = Vector3(12.4, 1, 3.4)
+
+[sub_resource type="BoxShape3D" id="hover_marketplace_3"]
+size = Vector3(5.6, 5, 1)
+
+[sub_resource type="BoxShape3D" id="hover_marketplace_4"]
+size = Vector3(5, 4.4, 1.8)
+
 [node name="Haven" type="Node3D"]
 
 [node name="Environment" type="WorldEnvironment" parent="."]
@@ -138,6 +204,289 @@ fov = 40.0
 far = 1500.0
 
 [node name="Town" type="Node3D" parent="."]
+
+[node name="plot_town-hall" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 7, -21)
+
+[node name="Model" type="Node3D" parent="Town/plot_town-hall"]
+
+[node name="Hover" type="Area3D" parent="Town/plot_town-hall"]
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+
+[node name="Shape0" type="CollisionShape3D" parent="Town/plot_town-hall/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 9, 0)
+shape = SubResource("hover_town_hall_0")
+
+[node name="Focus" type="Marker3D" parent="Town/plot_town-hall"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)
+
+[node name="plot_fort" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 7, -19)
+
+[node name="Model" type="Node3D" parent="Town/plot_fort"]
+
+[node name="Hover" type="Area3D" parent="Town/plot_fort"]
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+
+[node name="Shape0" type="CollisionShape3D" parent="Town/plot_fort/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 7)
+shape = SubResource("hover_fort_0")
+
+[node name="Shape1" type="CollisionShape3D" parent="Town/plot_fort/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -7)
+shape = SubResource("hover_fort_1")
+
+[node name="Shape2" type="CollisionShape3D" parent="Town/plot_fort/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 3, 0)
+shape = SubResource("hover_fort_2")
+
+[node name="Shape3" type="CollisionShape3D" parent="Town/plot_fort/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3, 0)
+shape = SubResource("hover_fort_3")
+
+[node name="Shape4" type="CollisionShape3D" parent="Town/plot_fort/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 6.5, 7)
+shape = SubResource("hover_fort_4")
+
+[node name="Shape5" type="CollisionShape3D" parent="Town/plot_fort/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 6.5, 7)
+shape = SubResource("hover_fort_5")
+
+[node name="Shape6" type="CollisionShape3D" parent="Town/plot_fort/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 7.5, 7)
+shape = SubResource("hover_fort_6")
+
+[node name="Shape7" type="CollisionShape3D" parent="Town/plot_fort/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 7, -7)
+shape = SubResource("hover_fort_7")
+
+[node name="Shape8" type="CollisionShape3D" parent="Town/plot_fort/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 7, -7)
+shape = SubResource("hover_fort_8")
+
+[node name="Focus" type="Marker3D" parent="Town/plot_fort"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 7)
+
+[node name="plot_mage-guild" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -12)
+
+[node name="Model" type="Node3D" parent="Town/plot_mage-guild"]
+
+[node name="Hover" type="Area3D" parent="Town/plot_mage-guild"]
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+
+[node name="Shape0" type="CollisionShape3D" parent="Town/plot_mage-guild/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.75, 0)
+shape = SubResource("hover_mage_guild_0")
+
+[node name="Focus" type="Marker3D" parent="Town/plot_mage-guild"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)
+
+[node name="plot_tavern" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, 8)
+
+[node name="Model" type="Node3D" parent="Town/plot_tavern"]
+
+[node name="Hover" type="Area3D" parent="Town/plot_tavern"]
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+
+[node name="Shape0" type="CollisionShape3D" parent="Town/plot_tavern/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 0)
+shape = SubResource("hover_tavern_0")
+
+[node name="Focus" type="Marker3D" parent="Town/plot_tavern"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="plot_blacksmith" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 0)
+
+[node name="Model" type="Node3D" parent="Town/plot_blacksmith"]
+
+[node name="Hover" type="Area3D" parent="Town/plot_blacksmith"]
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+
+[node name="Shape0" type="CollisionShape3D" parent="Town/plot_blacksmith/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 4, 0)
+shape = SubResource("hover_blacksmith_0")
+
+[node name="Focus" type="Marker3D" parent="Town/plot_blacksmith"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
+
+[node name="plot_stables" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 0, 2)
+
+[node name="Model" type="Node3D" parent="Town/plot_stables"]
+
+[node name="Hover" type="Area3D" parent="Town/plot_stables"]
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+
+[node name="Shape0" type="CollisionShape3D" parent="Town/plot_stables/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1, 2.1)
+shape = SubResource("hover_stables_0")
+
+[node name="Focus" type="Marker3D" parent="Town/plot_stables"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="plot_dwelling-haven_archer" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.4, 0, 13)
+
+[node name="Model" type="Node3D" parent="Town/plot_dwelling-haven_archer"]
+
+[node name="Hover" type="Area3D" parent="Town/plot_dwelling-haven_archer"]
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+
+[node name="Shape0" type="CollisionShape3D" parent="Town/plot_dwelling-haven_archer/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
+shape = SubResource("hover_dwelling_haven_archer_0")
+
+[node name="Focus" type="Marker3D" parent="Town/plot_dwelling-haven_archer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+
+[node name="plot_dwelling-haven_monk" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0, -8)
+
+[node name="Model" type="Node3D" parent="Town/plot_dwelling-haven_monk"]
+
+[node name="Hover" type="Area3D" parent="Town/plot_dwelling-haven_monk"]
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+
+[node name="Shape0" type="CollisionShape3D" parent="Town/plot_dwelling-haven_monk/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.8, 0)
+shape = SubResource("hover_dwelling_haven_monk_0")
+
+[node name="Shape1" type="CollisionShape3D" parent="Town/plot_dwelling-haven_monk/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.5, 6.5)
+shape = SubResource("hover_dwelling_haven_monk_1")
+
+[node name="Focus" type="Marker3D" parent="Town/plot_dwelling-haven_monk"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 0)
+
+[node name="plot_marketplace" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 0, 8)
+
+[node name="Model" type="Node3D" parent="Town/plot_marketplace"]
+
+[node name="Hover" type="Area3D" parent="Town/plot_marketplace"]
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+
+[node name="Shape0" type="CollisionShape3D" parent="Town/plot_marketplace/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 3.1, -3)
+shape = SubResource("hover_marketplace_0")
+
+[node name="Shape1" type="CollisionShape3D" parent="Town/plot_marketplace/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 5.6, -3.5)
+shape = SubResource("hover_marketplace_1")
+
+[node name="Shape2" type="CollisionShape3D" parent="Town/plot_marketplace/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.4, 4)
+shape = SubResource("hover_marketplace_2")
+
+[node name="Shape3" type="CollisionShape3D" parent="Town/plot_marketplace/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 2.5, 3)
+shape = SubResource("hover_marketplace_3")
+
+[node name="Shape4" type="CollisionShape3D" parent="Town/plot_marketplace/Hover"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.1, 7)
+shape = SubResource("hover_marketplace_4")
+
+[node name="Focus" type="Marker3D" parent="Town/plot_marketplace"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 2, 0)
+
+[node name="plot_caravan" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 10)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_caravan"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="plot_grail" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -21)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_grail"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="plot_school-sylvan" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0, -5)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_school-sylvan"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+
+[node name="plot_school-academy" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, -7)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_school-academy"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+
+[node name="plot_growth-1" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 8)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_growth-1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="plot_growth-2" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0, -19)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_growth-2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="plot_dwelling-haven_footman" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5, 0, -4)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_dwelling-haven_footman"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="plot_dwelling-haven_pikeman" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5, 0, -10)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_dwelling-haven_pikeman"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="plot_dwelling-haven_zealot" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0, -17)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_dwelling-haven_zealot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="plot_dwelling-haven_griffin" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -24)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_dwelling-haven_griffin"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="plot_dwelling-haven_lancer" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 0, -3)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_dwelling-haven_lancer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="plot_dwelling-haven_paladin" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31, 0, 12)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_dwelling-haven_paladin"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="plot_dwelling-haven_radiant-spirit" type="Marker3D" parent="Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 0, 4)
+
+[node name="Focus" type="Marker3D" parent="Town/plot_dwelling-haven_radiant-spirit"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
 
 [node name="Ground" type="CSGBox3D" parent="Town"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -500)
@@ -197,375 +546,375 @@ radial_segments = 8
 rings = 4
 material = SubResource("rock")
 
-[node name="Keep" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 13.5, -21)
+[node name="Keep" type="CSGBox3D" parent="Town/plot_town-hall/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.5, 0)
 size = Vector3(7, 13, 7)
 material = SubResource("stone")
 
-[node name="KeepRoof" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(0.70711, 0, 0.70711, 0, 1, 0, -0.70711, 0, 0.70711, 24, 22.5, -21)
+[node name="KeepRoof" type="CSGCylinder3D" parent="Town/plot_town-hall/Model"]
+transform = Transform3D(0.70711, 0, 0.70711, 0, 1, 0, -0.70711, 0, 0.70711, 0, 15.5, 0)
 radius = 5.5
 height = 5
 sides = 4
 material = SubResource("slate")
 cone = true
 
-[node name="CurtainFront" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 9.75, -12)
+[node name="CurtainFront" type="CSGBox3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 7)
 size = Vector3(20, 5.5, 1.4)
 material = SubResource("stone")
 
-[node name="CurtainLeft" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 9.75, -19)
+[node name="CurtainLeft" type="CSGBox3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.75, 0)
 size = Vector3(1.4, 5.5, 14)
 material = SubResource("stone")
 
-[node name="CurtainRight" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 9.75, -19)
+[node name="CurtainRight" type="CSGBox3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.75, 0)
 size = Vector3(1.4, 5.5, 14)
 material = SubResource("stone")
 
-[node name="CurtainBack" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 9.75, -26)
+[node name="CurtainBack" type="CSGBox3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, -7)
 size = Vector3(20, 5.5, 1.4)
 material = SubResource("stone")
 
-[node name="Tower0" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 11.5, -12)
+[node name="Tower0" type="CSGCylinder3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 4.5, 7)
 radius = 1.7
 height = 9
 sides = 12
 material = SubResource("stone")
 
-[node name="Tower0Roof" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 18.04, -12)
+[node name="Tower0Roof" type="CSGCylinder3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 11.04, 7)
 radius = 2.125
 height = 4.08
 sides = 12
 material = SubResource("slate")
 cone = true
 
-[node name="Tower1" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 11.5, -12)
+[node name="Tower1" type="CSGCylinder3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 4.5, 7)
 radius = 1.7
 height = 9
 sides = 12
 material = SubResource("stone")
 
-[node name="Tower1Roof" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 18.04, -12)
+[node name="Tower1Roof" type="CSGCylinder3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 11.04, 7)
 radius = 2.125
 height = 4.08
 sides = 12
 material = SubResource("slate")
 cone = true
 
-[node name="Tower2" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 12, -26)
+[node name="Tower2" type="CSGCylinder3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 5, -7)
 radius = 1.7
 height = 10
 sides = 12
 material = SubResource("stone")
 
-[node name="Tower2Roof" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 19.04, -26)
+[node name="Tower2Roof" type="CSGCylinder3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 12.04, -7)
 radius = 2.125
 height = 4.08
 sides = 12
 material = SubResource("slate")
 cone = true
 
-[node name="Tower3" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 12, -26)
+[node name="Tower3" type="CSGCylinder3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 5, -7)
 radius = 1.7
 height = 10
 sides = 12
 material = SubResource("stone")
 
-[node name="Tower3Roof" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 19.04, -26)
+[node name="Tower3Roof" type="CSGCylinder3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 12.04, -7)
 radius = 2.125
 height = 4.08
 sides = 12
 material = SubResource("slate")
 cone = true
 
-[node name="Tower4" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 12.5, -12)
+[node name="Tower4" type="CSGCylinder3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 5.5, 7)
 radius = 1.7
 height = 11
 sides = 12
 material = SubResource("stone")
 
-[node name="Tower4Roof" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 20.04, -12)
+[node name="Tower4Roof" type="CSGCylinder3D" parent="Town/plot_fort/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 13.04, 7)
 radius = 2.125
 height = 4.08
 sides = 12
 material = SubResource("slate")
 cone = true
 
-[node name="Tower5" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 13.5, -21)
+[node name="Tower5" type="CSGCylinder3D" parent="Town/plot_town-hall/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 6.5, 0)
 radius = 1.9
 height = 13
 sides = 12
 material = SubResource("stone")
 
-[node name="Tower5Roof" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 22.28, -21)
+[node name="Tower5Roof" type="CSGCylinder3D" parent="Town/plot_town-hall/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 15.28, 0)
 radius = 2.375
 height = 4.56
 sides = 12
 material = SubResource("slate")
 cone = true
 
-[node name="Banner" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 15, -17.4)
+[node name="Banner" type="CSGBox3D" parent="Town/plot_town-hall/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, 3.6)
 size = Vector3(2.2, 4.5, 0.1)
 material = SubResource("banner")
 
-[node name="BannerSun" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 6.1232e-17, -1, 0, 1, 6.1232e-17, 24, 16, -17.3)
+[node name="BannerSun" type="CSGCylinder3D" parent="Town/plot_town-hall/Model"]
+transform = Transform3D(1, 0, 0, 0, 6.1232e-17, -1, 0, 1, 6.1232e-17, 0, 9, 3.7)
 radius = 0.7
 height = 0.12
 sides = 12
 material = SubResource("sun_gold")
 
-[node name="Church" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 2.75, -8)
+[node name="Church" type="CSGBox3D" parent="Town/plot_dwelling-haven_monk/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0)
 size = Vector3(7, 5.5, 11)
 material = SubResource("stone")
 
-[node name="ChurchRoof" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(6.1232e-17, -6.1232e-17, 1, 1, 3.7494e-33, -6.1232e-17, 0, 1, 6.1232e-17, -9, 6.7, -8)
+[node name="ChurchRoof" type="CSGCylinder3D" parent="Town/plot_dwelling-haven_monk/Model"]
+transform = Transform3D(6.1232e-17, -6.1232e-17, 1, 1, 3.7494e-33, -6.1232e-17, 0, 1, 6.1232e-17, 0, 6.7, 0)
 radius = 4.734
 height = 11.6
 sides = 3
 material = SubResource("terracotta")
 
-[node name="BellTower" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 5.5, -1.5)
+[node name="BellTower" type="CSGBox3D" parent="Town/plot_dwelling-haven_monk/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.5, 6.5)
 size = Vector3(3, 11, 3)
 material = SubResource("stone")
 
-[node name="BellTowerRoof" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(0.70711, 0, 0.70711, 0, 1, 0, -0.70711, 0, 0.70711, -9, 13, -1.5)
+[node name="BellTowerRoof" type="CSGCylinder3D" parent="Town/plot_dwelling-haven_monk/Model"]
+transform = Transform3D(0.70711, 0, 0.70711, 0, 1, 0, -0.70711, 0, 0.70711, 0, 13, 6.5)
 radius = 2.6
 height = 4
 sides = 4
 material = SubResource("terracotta")
 cone = true
 
-[node name="ChurchSun" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 6.1232e-17, -1, 0, 1, 6.1232e-17, -9, 4.2, -2.95)
+[node name="ChurchSun" type="CSGCylinder3D" parent="Town/plot_dwelling-haven_monk/Model"]
+transform = Transform3D(1, 0, 0, 0, 6.1232e-17, -1, 0, 1, 6.1232e-17, 0, 4.2, 5.05)
 radius = 0.6
 height = 0.1
 sides = 12
 material = SubResource("sun_gold")
 
-[node name="MageTower" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 7.5, -12)
+[node name="MageTower" type="CSGCylinder3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.5, 0)
 radius = 1.9
 height = 15
 sides = 10
 material = SubResource("stone")
 
-[node name="MageCrown" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 15.6, -12)
+[node name="MageCrown" type="CSGCylinder3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15.6, 0)
 radius = 2.4
 height = 1.2
 sides = 10
 material = SubResource("stone")
 
-[node name="MageRing" type="CSGTorus3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 6.1232e-17, -1, 0, 1, 6.1232e-17, 2, 18.4, -12)
+[node name="MageRing" type="CSGTorus3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(1, 0, 0, 0, 6.1232e-17, -1, 0, 1, 6.1232e-17, 0, 18.4, 0)
 inner_radius = 1.3
 outer_radius = 1.55
 sides = 16
 ring_sides = 6
 material = SubResource("bronze")
 
-[node name="MageOrb" type="CSGSphere3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 18.4, -12)
+[node name="MageOrb" type="CSGSphere3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 18.4, 0)
 radius = 0.95
 radial_segments = 16
 rings = 8
 material = SubResource("orb")
 
-[node name="OrbLight" type="OmniLight3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 18.4, -12)
+[node name="OrbLight" type="OmniLight3D" parent="Town/plot_mage-guild/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 18.4, 0)
 light_color = Color(0.3, 0.5, 1, 1)
 light_energy = 2.0
 omni_range = 9.0
 
-[node name="Tavern" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 1.8, 8)
+[node name="Tavern" type="CSGBox3D" parent="Town/plot_tavern/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
 size = Vector3(8, 3.6, 5.5)
 material = SubResource("stone")
 
-[node name="TavernUpper" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 4.4, 8)
+[node name="TavernUpper" type="CSGBox3D" parent="Town/plot_tavern/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.4, 0)
 size = Vector3(8.4, 1.6, 5.9)
 material = SubResource("timber")
 
-[node name="TavernRoof" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(3.7494e-33, 1, 1.2246e-16, 1, 3.7494e-33, -6.1232e-17, -6.1232e-17, 1.2246e-16, -1, -3, 6.6, 8)
+[node name="TavernRoof" type="CSGCylinder3D" parent="Town/plot_tavern/Model"]
+transform = Transform3D(3.7494e-33, 1, 1.2246e-16, 1, 3.7494e-33, -6.1232e-17, -6.1232e-17, 1.2246e-16, -1, 0, 6.6, 0)
 radius = 4.330
 height = 9.4
 sides = 3
 material = SubResource("thatch")
 
-[node name="TavernChimney" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.5, 7)
+[node name="TavernChimney" type="CSGBox3D" parent="Town/plot_tavern/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 7.5, -1)
 size = Vector3(1, 3, 1)
 material = SubResource("stone")
 
-[node name="Smithy" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 1.7, 0)
+[node name="Smithy" type="CSGBox3D" parent="Town/plot_blacksmith/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
 size = Vector3(6, 3.4, 5)
 material = SubResource("timber")
 
-[node name="SmithyRoof" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(3.7494e-33, 1, 1.2246e-16, 1, 3.7494e-33, -6.1232e-17, -6.1232e-17, 1.2246e-16, -1, 9, 4.7, 0)
+[node name="SmithyRoof" type="CSGCylinder3D" parent="Town/plot_blacksmith/Model"]
+transform = Transform3D(3.7494e-33, 1, 1.2246e-16, 1, 3.7494e-33, -6.1232e-17, -6.1232e-17, 1.2246e-16, -1, 0, 4.7, 0)
 radius = 3.464
 height = 6.6
 sides = 3
 material = SubResource("slate")
 
-[node name="SmithyChimney" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 4, -1.5)
+[node name="SmithyChimney" type="CSGBox3D" parent="Town/plot_blacksmith/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 4, -1.5)
 size = Vector3(1.4, 8, 1.4)
 material = SubResource("stone")
 
-[node name="Forge" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0.9, 2.55)
+[node name="Forge" type="CSGBox3D" parent="Town/plot_blacksmith/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 2.55)
 size = Vector3(1.2, 0.8, 0.6)
 material = SubResource("forge")
 
-[node name="ForgeLight" type="OmniLight3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 1.2, 3.4)
+[node name="ForgeLight" type="OmniLight3D" parent="Town/plot_blacksmith/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 3.4)
 light_color = Color(1, 0.5, 0.15, 1)
 light_energy = 2.5
 omni_range = 5.0
 
-[node name="Stables" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 1.5, 2)
+[node name="Stables" type="CSGBox3D" parent="Town/plot_stables/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 size = Vector3(13, 3, 5)
 material = SubResource("timber")
 
-[node name="StablesRoof" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(3.7494e-33, 1, 1.2246e-16, 1, 3.7494e-33, -6.1232e-17, -6.1232e-17, 1.2246e-16, -1, 23, 4.4, 2)
+[node name="StablesRoof" type="CSGCylinder3D" parent="Town/plot_stables/Model"]
+transform = Transform3D(3.7494e-33, 1, 1.2246e-16, 1, 3.7494e-33, -6.1232e-17, -6.1232e-17, 1.2246e-16, -1, 0, 4.4, 0)
 radius = 3.580
 height = 13.6
 sides = 3
 material = SubResource("slate")
 
-[node name="Fence0" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0.55, 6.5)
+[node name="Fence0" type="CSGBox3D" parent="Town/plot_stables/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.55, 4.5)
 size = Vector3(0.15, 1.1, 0.15)
 material = SubResource("timber")
 
-[node name="Fence1" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.6, 0.55, 6.5)
+[node name="Fence1" type="CSGBox3D" parent="Town/plot_stables/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.4, 0.55, 4.5)
 size = Vector3(0.15, 1.1, 0.15)
 material = SubResource("timber")
 
-[node name="Fence2" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.2, 0.55, 6.5)
+[node name="Fence2" type="CSGBox3D" parent="Town/plot_stables/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 0.55, 4.5)
 size = Vector3(0.15, 1.1, 0.15)
 material = SubResource("timber")
 
-[node name="Fence3" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.8, 0.55, 6.5)
+[node name="Fence3" type="CSGBox3D" parent="Town/plot_stables/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 0.55, 4.5)
 size = Vector3(0.15, 1.1, 0.15)
 material = SubResource("timber")
 
-[node name="Fence4" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26.4, 0.55, 6.5)
+[node name="Fence4" type="CSGBox3D" parent="Town/plot_stables/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.4, 0.55, 4.5)
 size = Vector3(0.15, 1.1, 0.15)
 material = SubResource("timber")
 
-[node name="Fence5" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29, 0.55, 6.5)
+[node name="Fence5" type="CSGBox3D" parent="Town/plot_stables/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.55, 4.5)
 size = Vector3(0.15, 1.1, 0.15)
 material = SubResource("timber")
 
-[node name="FenceRail" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.5, 0.9, 6.5)
+[node name="FenceRail" type="CSGBox3D" parent="Town/plot_stables/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.9, 4.5)
 size = Vector3(13.2, 0.12, 0.1)
 material = SubResource("timber")
 
-[node name="Target0" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 0.17365, -0.98481, 0, 0.98481, 0.17365, 18, 1.3, 13)
+[node name="Target0" type="CSGCylinder3D" parent="Town/plot_dwelling-haven_archer/Model"]
+transform = Transform3D(1, 0, 0, 0, 0.17365, -0.98481, 0, 0.98481, 0.17365, -2.4, 1.3, 0)
 radius = 0.8
 height = 0.15
 sides = 12
 material = SubResource("banner")
 
-[node name="Target1" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 0.17365, -0.98481, 0, 0.98481, 0.17365, 20.4, 1.3, 13)
+[node name="Target1" type="CSGCylinder3D" parent="Town/plot_dwelling-haven_archer/Model"]
+transform = Transform3D(1, 0, 0, 0, 0.17365, -0.98481, 0, 0.98481, 0.17365, 0, 1.3, 0)
 radius = 0.8
 height = 0.15
 sides = 12
 material = SubResource("banner")
 
-[node name="Target2" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 0.17365, -0.98481, 0, 0.98481, 0.17365, 22.8, 1.3, 13)
+[node name="Target2" type="CSGCylinder3D" parent="Town/plot_dwelling-haven_archer/Model"]
+transform = Transform3D(1, 0, 0, 0, 0.17365, -0.98481, 0, 0.98481, 0.17365, 2.4, 1.3, 0)
 radius = 0.8
 height = 0.15
 sides = 12
 material = SubResource("banner")
 
-[node name="Pier" type="CSGBox3D" parent="Town"]
-transform = Transform3D(0.99027, 0, -0.13917, 0, 1, 0, 0.13917, 0, 0.99027, -22, 0.35, 12)
+[node name="Pier" type="CSGBox3D" parent="Town/plot_marketplace/Model"]
+transform = Transform3D(0.99027, 0, -0.13917, 0, 1, 0, 0.13917, 0, 0.99027, -5, 0.35, 4)
 size = Vector3(12, 0.4, 3)
 material = SubResource("timber")
 
-[node name="Warehouse" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 1.7, 5)
+[node name="Warehouse" type="CSGBox3D" parent="Town/plot_marketplace/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1.7, -3)
 size = Vector3(7, 3.4, 4.5)
 material = SubResource("stone")
 
-[node name="WarehouseRoof" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(3.7494e-33, 1, 1.2246e-16, 1, 3.7494e-33, -6.1232e-17, -6.1232e-17, 1.2246e-16, -1, -16, 4.6, 5)
+[node name="WarehouseRoof" type="CSGCylinder3D" parent="Town/plot_marketplace/Model"]
+transform = Transform3D(3.7494e-33, 1, 1.2246e-16, 1, 3.7494e-33, -6.1232e-17, -6.1232e-17, 1.2246e-16, -1, 1, 4.6, -3)
 radius = 3.002
 height = 7.6
 sides = 3
 material = SubResource("terracotta")
 
-[node name="HarbourTower" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.5, 3.5, 4.5)
+[node name="HarbourTower" type="CSGCylinder3D" parent="Town/plot_marketplace/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 3.5, -3.5)
 radius = 1.7
 height = 7
 sides = 12
 material = SubResource("stone")
 
-[node name="HarbourTowerRoof" type="CSGCylinder3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.5, 9.04, 4.5)
+[node name="HarbourTowerRoof" type="CSGCylinder3D" parent="Town/plot_marketplace/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 9.04, -3.5)
 radius = 2.125
 height = 4.08
 sides = 12
 material = SubResource("terracotta")
 cone = true
 
-[node name="CraneArm" type="CSGBox3D" parent="Town"]
-transform = Transform3D(0.97815, 0.20791, 0, -0.20791, 0.97815, 0, 0, 0, 1, -26, 4.5, 11)
+[node name="CraneArm" type="CSGBox3D" parent="Town/plot_marketplace/Model"]
+transform = Transform3D(0.97815, 0.20791, 0, -0.20791, 0.97815, 0, 0, 0, 1, -9, 4.5, 3)
 size = Vector3(5, 0.3, 0.3)
 material = SubResource("timber")
 
-[node name="CranePost" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 2.25, 11)
+[node name="CranePost" type="CSGBox3D" parent="Town/plot_marketplace/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 2.25, 3)
 size = Vector3(0.3, 4.5, 0.3)
 material = SubResource("timber")
 
-[node name="BoatHull" type="CSGBox3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27, 0.35, 15)
+[node name="BoatHull" type="CSGBox3D" parent="Town/plot_marketplace/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0.35, 7)
 size = Vector3(4.5, 0.8, 1.5)
 material = SubResource("timber")
 
-[node name="BoatSail" type="CSGPolygon3D" parent="Town"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27, 0.8, 15)
+[node name="BoatSail" type="CSGPolygon3D" parent="Town/plot_marketplace/Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0.8, 7)
 polygon = PackedVector2Array(-1.6, 0, 1.2, 0, -0.2, 3.2)
 depth = 0.05
 material = SubResource("banner")

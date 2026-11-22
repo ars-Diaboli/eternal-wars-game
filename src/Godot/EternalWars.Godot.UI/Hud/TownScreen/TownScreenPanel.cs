@@ -8,6 +8,7 @@ using EternalWars.Core.Domain.Info;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
+using EternalWars.Godot.Shared.Towns;
 using EternalWars.Godot.UI.Widgets;
 using Godot;
 
@@ -37,8 +38,9 @@ public enum TownWindow
 
 /// <summary>
 /// The town screen (the town screen plan, ADR-246, ADR-294, ADR-296). The top bar: crest, name (a click renames the town), ◄ ► through the
-/// player's towns, the faction, town hall and governor, the quick buttons, ×. The main area: the faction's key painting with a strip of the
-/// town's buildings until the 3D scene (step 3) and the notices card (built today, caravans, the discount). The bottom bar: the town's crest
+/// player's towns, the faction, town hall and governor, the quick buttons, ×. The main area: the town's 3D scene (<see cref="Scene"/>, ADR-297)
+/// where its town type has a layout, else the faction's key painting; a strip of the town's buildings and the notices card (built today,
+/// caravans, the discount). A click on a building of the scene opens its window, as its strip button does; a right click its information. The bottom bar: the town's crest
 /// with its governor, the garrison and visiting hero as <see cref="ArmyBar"/>s, Split, Upgrade all, Swap and Dismiss, the income, the week's
 /// growth (its parts on hover) and the date. One window at a time over the dimmed main area (the windows are this class's other parts); Escape
 /// closes the window, a second Escape leaves. The keys are <see cref="TownScreenKeys"/>'.
@@ -51,6 +53,10 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
     private readonly TextureRect _crest = new() { StretchMode = TextureRect.StretchModeEnum.KeepCentered, CustomMinimumSize = new Vector2(Heraldry.TitleSize, Heraldry.TitleSize) };
     private readonly Button _title = new() { ThemeTypeVariation = UiTheme.TitleLabel, Flat = true, TooltipText = "Rename the town" };
     private readonly Label _facts = new() { ThemeTypeVariation = UiTheme.QuietLabel, VerticalAlignment = VerticalAlignment.Center };
+    private readonly ColorRect _backdrop = new() { Color = UiTheme.Background, MouseFilter = MouseFilterEnum.Ignore };
+
+    /// <summary>The main area's input for the 3D scene: the pointer's hover and clicks (it lets them by while the painting shows).</summary>
+    private readonly Control _stage = new() { MouseFilter = MouseFilterEnum.Ignore };
     private readonly TextureRect _painting = new()
     {
         ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
@@ -79,6 +85,7 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
     private MapObjectId? _town;
     private WindowFrame? _window;
     private CreatureId? _dwelling;
+    private TownScene3D? _scene;
 
     public TownScreenPanel()
     {
@@ -104,6 +111,27 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
 
     /// <summary>◄ ► or [ ]: another own town; the adventure HUD centres the map on it and opens it. Without a listener the screen opens it itself.</summary>
     public event Action<MapObjectId>? SwitchRequested;
+
+    /// <summary>The name and state of the scene's building under the pointer, or null when it left them: the app shows it on the status bar.</summary>
+    public event Action<string?>? Hovered;
+
+    /// <summary>
+    /// The town's 3D scene behind the bars (ADR-297), set by the game app once; without it (the harness) or for a town type without a layout the
+    /// main area is the key painting.
+    /// </summary>
+    public TownScene3D? Scene
+    {
+        get => _scene;
+        set
+        {
+            _scene = value;
+            if (value is not null)
+            {
+                value.BuildingHovered += ShowHovered;
+                value.BuildingPicked += OpenPlot;
+            }
+        }
+    }
 
     /// <summary>Whether another screen covers this one (the hero screen, the Thieves' Guild): its keys then stay off.</summary>
     public Func<bool>? IsCovered { get; set; }
@@ -146,6 +174,13 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
         _parked.AddChild(_caravan.Rows);
         _parked.AddChild(_transformer.Row);
         Visible = false;
+        VisibilityChanged += () =>
+        {
+            if (!Visible)
+            {
+                _scene?.Close();
+            }
+        };
 
         new RefreshScheduler(this, Refresh)
             .On<TownOwnerChanged>(session.Events)
@@ -422,10 +457,16 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
     private Control MainArea()
     {
         var area = new Control { SizeFlagsVertical = SizeFlags.ExpandFill, ClipContents = true, MouseFilter = MouseFilterEnum.Ignore };
-        area.AddChild(new ColorRect { Color = UiTheme.Background, MouseFilter = MouseFilterEnum.Ignore });
-        area.GetChild<ColorRect>(0).SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        area.AddChild(_backdrop);
+        _backdrop.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         area.AddChild(_painting);
         _painting.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+
+        // The 3D scene shows through where the backdrop and the painting are hidden; the stage hands it the pointer.
+        area.AddChild(_stage);
+        _stage.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        _stage.GuiInput += OnStageInput;
+        _stage.MouseExited += () => _scene?.Hover(null);
 
         // The notices card in the top-right corner: built today, caravans, the governor's discount.
         var card = new PanelContainer { ThemeTypeVariation = UiTheme.CardPanel };
@@ -436,7 +477,7 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
         card.OffsetRight = -UiSpacing.ScreenEdge * 2;
         card.OffsetTop = UiSpacing.ScreenEdge * 2;
 
-        // The town's buildings as a strip along the bottom of the painting, until the 3D scene (step 3).
+        // The town's buildings as a strip along the bottom of the main area (the keyboard's and the controller's way in until the ring of plots).
         var strip = new PanelContainer { ThemeTypeVariation = UiTheme.CardPanel };
         strip.AddChild(_strip);
         area.AddChild(strip);
@@ -526,7 +567,7 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
         _facts.Text = $"{Faction(town.TownType)} · {BuildingName(town, BuiltInBuildings.TownHall)}"
                       + (overview.Governor is { } governor ? $" · governed by {governor.Name}" : "");
         _governor.Text = overview.Governor is { } who ? $"Governor: {who.Name}" : "No governor";
-        _painting.Texture = Painting(town.TownType);
+        ShowScene(town);
         ShowNotices(town, overview);
         ShowStrip(town);
         _income.ClearChildren();
@@ -549,6 +590,89 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
             FillWindow(town);
         }
     }
+
+    /// <summary>The 3D scene where the town type has a layout (the backdrop and the painting hidden so it shows through), else the painting.</summary>
+    private void ShowScene(Town town)
+    {
+        var inScene = _scene?.Open(town.Id) == true;
+        _backdrop.Visible = !inScene;
+        _painting.Visible = !inScene;
+        _painting.Texture = inScene ? null : Painting(town.TownType);
+        _stage.MouseFilter = inScene ? MouseFilterEnum.Stop : MouseFilterEnum.Ignore;
+        if (!inScene)
+        {
+            ShowHovered(null);
+        }
+    }
+
+    private void OnStageInput(InputEvent @event)
+    {
+        if (_scene is not { IsOpen: true } scene)
+        {
+            return;
+        }
+
+        switch (@event)
+        {
+            case InputEventMouseMotion motion:
+                scene.Hover(motion.GlobalPosition);
+                break;
+            case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } click:
+                if (scene.Pick(click.GlobalPosition))
+                {
+                    _stage.AcceptEvent();
+                }
+
+                break;
+            case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right } info:
+                scene.Hover(info.GlobalPosition);
+                if (Current is { } town && scene.Hovered is { } plot)
+                {
+                    InfoWindow.Current?.Open(PlotSheet(town, plot, InfoWindow.Current.Detailed), info.GlobalPosition);
+                    _stage.AcceptEvent();
+                }
+
+                break;
+        }
+    }
+
+    /// <summary>The scene's building under the pointer: the hand cursor, its name as the tooltip and on the status bar.</summary>
+    private void ShowHovered(PlotInfo? plot)
+    {
+        _stage.MouseDefaultCursorShape = plot is null ? CursorShape.Arrow : CursorShape.PointingHand;
+        _stage.TooltipText = plot?.Name ?? "";
+        Hovered?.Invoke(plot is null ? null : HoverText(plot));
+    }
+
+    private static string HoverText(PlotInfo plot) =>
+        plot.Name + (plot.State == PlotState.BuiltToday ? " · built today" : "");
+
+    /// <summary>A building of the scene was clicked: its window, a dwelling's window, or its information, as its strip button does.</summary>
+    private void OpenPlot(PlotInfo plot)
+    {
+        if (Current is not { } town || ConfirmDialog.AnyOpen)
+        {
+            return;
+        }
+
+        if (plot.Line is { } line)
+        {
+            ShowDwelling(line);
+        }
+        else if (WindowOf(plot.Building) is { } window)
+        {
+            ShowWindow(window);
+        }
+        else
+        {
+            InfoWindow.Current?.Open(PlotSheet(town, plot, InfoWindow.Current.Detailed), GetViewport().GetMousePosition());
+        }
+    }
+
+    private InfoSheet PlotSheet(Town town, PlotInfo plot, bool detailed) =>
+        plot.Line is { } line
+            ? InfoSheets.Dwelling(State, town, State.Creatures.Get(line), detailed)
+            : InfoSheets.Building(State, town, plot.Building, detailed);
 
     private void ShowNotices(Town town, TownOverview overview)
     {

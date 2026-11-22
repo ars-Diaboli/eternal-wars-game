@@ -110,16 +110,20 @@ creatures and buildings, heraldic player colours, iconic map objects).
 
 <a id="town-screen"></a>
 ## Town screen
-ADR-246, ADR-294, ADR-296; the plan and its 3D scene: [town-screen-plan.md](../papers/town-screen-plan.md).
+ADR-246, ADR-294, ADR-296, ADR-297; the plan and its 3D scene: [town-screen-plan.md](../papers/town-screen-plan.md).
 - **Main screen**: the top bar has the town's crest and name (a click renames it), ◄ ► through the player's towns ([ and ] too), the faction,
-  town hall and governor, the quick buttons of the windows and the close "×". The main area is the faction's key painting, with a strip of
-  the town's buildings along its bottom (a click opens a building's window, or the information of one without a window) and a notices card
-  (built today, caravans coming, the governor's discount); the 3D town scene replaces the painting later. The bottom bar has the town's
+  town hall and governor, the quick buttons of the windows and the close "×". The main area is the town's 3D scene where its town type
+  has a layout (Haven so far), else the faction's key painting. In the scene each built building stands on its plot (a greybox block with
+  a roof and its name on a sign until it has a model) and unbuilt plots are bare land; the pointer over a building shows the hand and its
+  name on the status bar, a click opens its window (or its information, for one without a window) and a right click its information. The
+  adventure map and its side panels are put away while the scene shows. Along the main area's bottom runs a strip of the town's buildings
+  (a click opens a building's window, or the information of one without a window), and a notices card stands in its corner (built today,
+  caravans coming, the governor's discount). The bottom bar has the town's
   crest with its governor, the garrison and visiting hero as [army rows](#camera-and-ui) with the swap or garrison button between them,
   Split, Upgrade all, Swap and Dismiss (Split and Dismiss act on the picked stack, Upgrade all and Dismiss ask first), the daily income,
   next Monday's growth (each line's parts in its tooltip: base, fort, artifacts, growth building, Grail; next week's event is drawn on
   Monday) and the date.
-- **Windows**: one at a time over the dimmed painting, as large as the main area; Escape closes it, a second Escape leaves the town. B, R,
+- **Windows**: one at a time over the dimmed main area, as large as it; Escape closes it, a second Escape leaves the town. B, R,
   G, V, M, S, F and C open the Hall, Recruitment, the Mage guild, the Tavern, the Marketplace, the Blacksmith, the Fort and the Caravan; U
   is Upgrade all, H the visiting hero's screen, Space swaps the heroes.
   - **Hall**: the buildings in columns by kind (Core, Military, Magic, Dwellings, Unique; the `kind` column of `buildings.csv`) as tiles

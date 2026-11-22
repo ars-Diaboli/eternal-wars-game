@@ -29,6 +29,7 @@ public partial class AdventureHud : CanvasLayer
     private AdventureWorldView _world = null!;
     private StrategyCamera _camera = null!;
     private AdventureHudLayout _layout = null!;
+    private Control _popUps = null!;
     private DwellingPanel _dwellingScreen = null!;
     private MarketplacePanel _marketScreen = null!;
     private ObjectServicePanel _serviceScreen = null!;
@@ -103,6 +104,7 @@ public partial class AdventureHud : CanvasLayer
 
         // Questions and notices open in the middle of the screen, over the map (ADR-186).
         var middle = new CenterContainer { Name = "PopUps", MouseFilter = Control.MouseFilterEnum.Ignore };
+        _popUps = middle;
         AddChild(middle);
         middle.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         var popUps = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, CustomMinimumSize = new Vector2(PopUpWidth, 0) };
@@ -174,6 +176,17 @@ public partial class AdventureHud : CanvasLayer
 
     /// <summary>How wide the questions and notices in the middle of the screen are.</summary>
     private const float PopUpWidth = 520;
+
+    /// <summary>
+    /// Whether the map's parts (the info block, the minimap, the lists, the action buttons) and its notices are put away: behind the town
+    /// screen's 3D scene (ADR-297), which shows through the screen's main area, as the screen's backdrop hid them before. The status bar
+    /// stays; a question hides the town screen, so it shows as usual.
+    /// </summary>
+    public bool MapPartsHidden
+    {
+        get => !_layout.Visible;
+        set => _layout.Visible = _popUps.Visible = !value;
+    }
 
     /// <summary>What the pointer is over on the map goes to the status line (null: nothing there).</summary>
     public void ShowHover(string? text) => StatusBar.ShowHover(text);

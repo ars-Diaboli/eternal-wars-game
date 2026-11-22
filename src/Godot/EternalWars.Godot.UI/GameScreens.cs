@@ -1,6 +1,7 @@
 using EternalWars.Godot.Shared.Battle;
 using EternalWars.Godot.Shared.Cameras;
 using EternalWars.Godot.Shared.Map;
+using EternalWars.Godot.Shared.Towns;
 using EternalWars.Godot.UI.Battle;
 using EternalWars.Godot.UI.Hud;
 using EternalWars.Godot.UI.Setup;
@@ -129,6 +130,30 @@ public sealed class GameScreens(Node owner, Func<bool> playing)
             camera.ProcessMode = Node.ProcessModeEnum.Inherit;
             camera.MakeCurrent();
             PlaceChat(battle: false);
+        };
+    }
+
+    /// <summary>
+    /// The town screen's 3D scene of the game being built (ADR-297): while it is open the adventure world, its light, its camera and the HUD's map
+    /// parts are put away, as for a battle; the town screen's bars and the status bar stay over it.
+    /// </summary>
+    public void ShowTown(TownScene3D town, AdventureWorldView world, StrategyCamera camera, DirectionalLight3D sun)
+    {
+        town.Opened += () =>
+        {
+            _hud!.MapPartsHidden = true;
+            world.Visible = false;
+            sun.Visible = false;
+            camera.ProcessMode = Node.ProcessModeEnum.Disabled;
+            world.PathPreview.Clear();
+        };
+        town.Closed += () =>
+        {
+            _hud!.MapPartsHidden = false;
+            world.Visible = true;
+            sun.Visible = true;
+            camera.ProcessMode = Node.ProcessModeEnum.Inherit;
+            camera.MakeCurrent();
         };
     }
 

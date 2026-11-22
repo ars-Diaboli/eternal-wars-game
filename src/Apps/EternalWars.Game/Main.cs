@@ -14,6 +14,7 @@ using EternalWars.Godot.Shared.Cameras;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.Shared.Map;
+using EternalWars.Godot.Shared.Towns;
 using EternalWars.Godot.UI;
 using EternalWars.Godot.UI.Battle;
 using EternalWars.Godot.UI.Hud;
@@ -398,7 +399,8 @@ public partial class Main : Node3D
         _game.AddChild(_world);
         _world.Bind(_context);
 
-        _game.AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-55, -35, 0), ShadowEnabled = true });
+        var sun = new DirectionalLight3D { Name = "Sun", RotationDegrees = new Vector3(-55, -35, 0), ShadowEnabled = true };
+        _game.AddChild(sun);
         _camera = new StrategyCamera { Name = "Camera" };
         _game.AddChild(_camera);
 
@@ -408,6 +410,7 @@ public partial class Main : Node3D
         BuildHud();
         BuildChat();
         BuildBattle(director);
+        BuildTownScene(sun);
         if (playing)
         {
             BuildResult(director);
@@ -634,6 +637,17 @@ public partial class Main : Node3D
             _result.Campaign = CampaignResultOf(_session.State);
             _result.ShowOutcome(_session.State, outcome);
         }
+    }
+
+    /// <summary>The town screen's 3D scene: behind the town screen's bars, in place of the map while it is open (ADR-297).</summary>
+    private void BuildTownScene(DirectionalLight3D sun)
+    {
+        var town = new TownScene3D { Name = "TownScene" };
+        _game!.AddChild(town);
+        town.Bind(_session);
+        _hud.TownScreen.Scene = town;
+        _hud.TownScreen.Hovered += _hud.ShowHover;
+        _screens.ShowTown(town, _world, _camera, sun);
     }
 
     private void BuildHud()

@@ -184,6 +184,24 @@ lines come from the creature table. The 7-of-9 rule (ADR-030) is in code.
 `{strongest}`, `{richest}`, `{mosttowns}` with `{towns}`, and `{treasure}` with `{where}`; the game fills them, and does not tell a line
 naming something it has not got.
 
+### Town layouts
+The town screen's 3D scene (ADR-297) reads one Godot scene per town type: `scenes/towns/<town>.tscn` in `EternalWars.Godot.Assets`
+(`res://shared/scenes/towns/`), its root a `Node3D`. It holds the diorama (ground, water, trees, mountains) and a `Marker3D` plot for every
+building and dwelling line of the town type, anywhere under the root, named `plot_` and the plot's id with dots as underscores
+(`TownOverview.PlotNode`): `plot_town-hall`, `plot_mage-guild`, `plot_dwelling-haven_footman`. A plot may have these children:
+
+| Child | Meaning |
+|---|---|
+| `Model` (`Node3D`) | the layout's own greybox of the building, shown while it is built |
+| `Hover` (`Area3D`) | its `CollisionShape3D`s are what the pointer picks (as boxes around each shape); without it, a box around what the plot shows |
+| `Focus` (`Marker3D`) | where the camera looks at the building; without it, 3 m above the plot |
+
+A built plot shows `models/towns/<town>/<plot id>_<level>.glb` (or the nearest lower level's) when there is one, else its `Model`, else a
+block sized by the building's kind with a roof and a sign. The root's `Camera` is the scene's hero shot, and its `WorldEnvironment` and
+`DirectionalLight3D` its light; a layout without them gets defaults. Moving a plot moves the building: no code changes.
+`TownLayoutTests` fails when a layout lacks a plot for a building or line of its town type, or has one for something the town has not;
+a town type without a layout shows the key painting.
+
 ### Editing heroes
 `heroes.csv` (ADR-048).
 
@@ -191,7 +209,8 @@ naming something it has not got.
 |---|---|
 | `id`, `name`, `town` | `town.name`; display name; town id |
 | `class` | `Warrior` or `Mage` |
-| `preferred` | base id of a tier 1–4 line of the same town; each line has one mage and one warrior |
+| `preferred` | base id of a tier 1–4 line of the same town; each line has one standard mage and one standard warrior |
 | `specialty` | `skill <id>`, `spell <id>` or `resource <resource> <amount a day>` |
 | `skills` | `offense.melee Basic; tactics.tactics Advanced` (ids in `BuiltInSkills`) |
 | `attack`, `defense`, `spell_power`, `knowledge` | starting primary stats (empty = 0) |
+| `campaign` | `yes` for a campaign hero (ADR-298): never drawn at random, in play only where a map places it; empty otherwise |

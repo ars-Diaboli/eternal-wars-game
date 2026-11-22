@@ -148,6 +148,11 @@ $scenarios = @(
     # Brightwatch; the governor list from the portrait; Escape twice leaves.
     @{ Name = 'game-town-open'; App = 'EternalWars.Game'; Frames = 70; Map = $townsMap
        Input = '3:key:Enter;12:key:T;22:click:@Castlebridge;28:text:Brightwatch;42:key:Enter;48:press:No governor;58:key:Escape;62:key:Escape' },
+    # The town's 3D scene (ADR-297): T opens Castlebridge (Haven's layout behind the bars, the map put away); a click on the tavern opens the
+    # Tavern window, one on the keep the Hall; a right click on the Footman's dwelling (a greybox block) its information; Escape leaves, and
+    # the map is back.
+    @{ Name = 'game-town-scene'; App = 'EternalWars.Game'; Frames = 76; Map = $townsMap
+       Input = '3:key:Enter;12:key:T;20:click:640,470;30:key:Escape;36:click:1140,250;46:key:Escape;52:rclick:470,525;62:key:Escape;66:key:Escape;70:key:Escape' },
     # Switching towns (ADR-296): T opens Castlebridge, ] opens Dawnford, [ comes back, the Next town button goes on; Escape leaves.
     @{ Name = 'game-town-switch'; App = 'EternalWars.Game'; Frames = 64; Map = $magicMap
        Input = '3:key:Enter;12:key:T;22:key:Bracketright;34:key:Bracketleft;46:press:Next town;58:key:Escape' },

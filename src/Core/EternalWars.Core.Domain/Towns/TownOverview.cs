@@ -74,6 +74,16 @@ public sealed record TownOverview(
     /// <summary>The plot id of a dwelling line.</summary>
     public static string DwellingPlot(Common.CreatureId line) => $"dwelling-{line.Value}";
 
+    /// <summary>
+    /// The name of a plot's marker in a town layout scene (<c>scenes/towns/&lt;town&gt;.tscn</c>, ADR-297): <c>plot_</c> and the plot's id with its
+    /// dots as underscores (a node's name has no dots), so <c>plot_town-hall</c> or <c>plot_dwelling-haven_footman</c>. The 3D town scene finds its
+    /// plots by these names.
+    /// </summary>
+    public static string PlotNode(string plotId) => PlotNodePrefix + plotId.Replace('.', '_');
+
+    /// <summary>What every plot marker's name starts with.</summary>
+    public const string PlotNodePrefix = "plot_";
+
     /// <summary>The town as the screen shows it today.</summary>
     public static TownOverview Of(GameState state, Town town)
     {

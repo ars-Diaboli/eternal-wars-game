@@ -11,6 +11,10 @@ Detail: [roadmap.md](roadmap.md).
 ## Last work
 - Stronghold's Wolf Rider line moved to tier 2 and the Centaur line to tier 3, numbers swapped with the tier; generator version 12,
   maps re-pinned (ADR-295).
+- The town screen plan's step 3, task 1 (ADR-297): `TownScene3D` behind the town screen's bars for town types with a layout (Haven
+  so far, its style frame turned into the layout), plots read from `plot_*` markers and shown as the town has them (model, the
+  layout's greybox or a block with a roof and a sign), hover and pick opening the windows, the adventure map put away meanwhile.
+  Next is task 2 (the layouts of the other seven towns and `game-town-layouts`).
 - The town screen plan's step 2 (ADR-296): the game's only town screen is the new one, its windows over the key painting with a strip
   of the town's buildings (Hall with columns by kind and requirement links, Recruitment and the dwelling window, Mage guild, Tavern,
   Marketplace, Blacksmith, Fort, Caravan, governor list, Transformer), the bars with Split, Upgrade all, Swap and Dismiss, rename and

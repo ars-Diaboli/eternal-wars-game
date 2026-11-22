@@ -639,7 +639,9 @@ Core first (tasks 1–7), then the screen (8–16). Each TOWN-17 rule gets its o
 1. **`TownScene3D`**: a `Node3D` with its own camera, light and `WorldEnvironment`; the game app hides the adventure world while it is
    open, as for a battle. It reads a layout (`scenes/towns/<town>.tscn`, `Marker3D` plots named `plot_<building>` and
    `plot_dwelling-<line>`, each with a hover shape and a camera focus) and the town's `TownOverview`. A plot without a model gets a
-   procedural block sized by building kind, with a roof and a sign. Raises `BuildingHovered` and `BuildingPicked`.
+   procedural block sized by building kind, with a roof and a sign. Raises `BuildingHovered` and `BuildingPicked`. *Done (ADR-297):
+   Haven's layout from its style frame (its buildings as the plots' own models); plots named with dots as underscores; picking by a ray
+   against the hover boxes; the town screen shows the scene where a layout exists and the painting elsewhere.*
 2. **Layouts for the eight towns**, each composed after its key painting ([faction-art.md](../content/faction-art.md)): the landmark
    as the focal point, the setting around a fixed 60 × 40 m ground, the `bg_town_<town>` picture as the sky. A smoke check
    `game-town-layouts` loads each one and fails on a building or line without a plot.

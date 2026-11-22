@@ -40,6 +40,7 @@
 | [293](#adr-293-sylvan-creatures-redone-to-the-owners-review-owner-adr-289-2026-11-22) | Sylvan creatures redone to the owner's review (owner, ADR-289, 2026-11-22) | accepted |
 | [294](#adr-294-town-screen-steps-0-and-1-the-shell-behind---town-screennew-havens-style-frame-two-font-pairings-nine-slice-frames-the-shared-widgets-the-heroes-swap-adr-246-adr-292-2026-11-22) | Town screen steps 0 and 1: the shell behind --town-screen=new, Haven's style frame, two font pairings, nine-slice frames, the shared widgets, the heroes' swap (ADR-246, ADR-292, 2026-11-22) | implemented |
 | [296](#adr-296-town-screen-step-2-the-windows-over-the-key-painting-the-overview-and-plans-in-core-recruit-all-upgrade-all-dismissing-renaming-the-rumour-table-resource-for-resource-sending-to-an-ally-town-17-adr-246-adr-292-2026-11-22) | Town screen step 2: the windows over the key painting, the overview and plans in core, Recruit all, Upgrade all, dismissing, renaming, the rumour table, resource for resource, sending to an ally (TOWN-17, ADR-246, ADR-292, 2026-11-22) | implemented |
+| [297](#adr-297-town-screen-step-3-task-1-the-3d-town-scene-behind-the-bars-plots-read-from-layout-scenes-greybox-blocks-hover-and-pick-adr-246-adr-292-2026-11-22) | Town screen step 3, task 1: the 3D town scene behind the bars, plots read from layout scenes, greybox blocks, hover and pick (ADR-246, ADR-292, 2026-11-22) | implemented |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -754,3 +755,33 @@ TOWN-15 is ADR-291. The plan's step-by-step implementation is in its [roadmap](.
   `exchangeResources`, `sendResources` (re-pinned; older saves load unchanged). Smokes `game-town-open`, `game-town-switch`,
   `game-town-build`, `game-town-recruit`, `game-town-windows`; the town smokes run without the option, and `game-dwelling-caravan`,
   `game-info-screens`, `game-unique-buildings` and `game-magic` open the windows they need.
+
+### ADR-297: Town screen step 3, task 1: the 3D town scene behind the bars, plots read from layout scenes, greybox blocks, hover and pick (ADR-246, ADR-292, 2026-11-22)
+**Status**: implemented. The [town screen plan](../../docs/papers/town-screen-plan.md#implementation-plan)'s step 3, task 1.
+
+- **`TownScene3D`** (Godot.Shared/Towns): a town type's layout scene with its own camera, light and `WorldEnvironment`, behind the town
+  screen's bars. It loads `scenes/towns/<town>.tscn`, keeps one layout loaded, out of the tree while closed (its environment and lights
+  leave with it), and frees it with the scene. Its plots follow `TownOverview.PlotsOf` and refresh on `TownBuilt`, `DwellingBuilt`,
+  `TownBuildingDowngraded` and `TurnStarted`; a plot is rebuilt only when its state or level changed.
+- **Layout convention** (the plan's "layouts as assets", made exact): a `Marker3D` per building and dwelling line, named
+  `TownOverview.PlotNode(id)`: `plot_` and the plot id with dots as underscores, since a Godot node's name has no dots
+  (`plot_dwelling-haven_footman`). Optional children: `Model` (the layout's own greybox, shown while built), `Hover` (an `Area3D`
+  whose shapes are picked as boxes) and `Focus` (the camera's point). The root's `Camera` is the hero shot; missing camera, environment
+  or sun get defaults. `TownLayoutTests` checks every layout's plots against its town type, both ways.
+- **What a plot shows**: built (and built today, until the construction scene of task 6), the first of
+  `models/towns/<town>/<plot id>_<level>.glb` (or a lower level's), the layout's `Model`, or a `PlotBlock`: a block sized by the
+  building's kind (core broad, magic tall, a dwelling by its tier, unique), a gabled roof (a cone on magic buildings) and its name on a
+  billboard sign. Not built, closed and citizens' homes show the bare land for now (homes, scaffolding and walls by level are task 3).
+- **Hover and pick** are a ray against the plots' hover boxes, not physics: nothing waits for a physics frame and nothing collides. The
+  town screen hands the scene the pointer through a transparent stage over the main area: the hand cursor, the name as tooltip and on the
+  status bar, a click opens the building's window (a dwelling's window, or the information of a building without one) as its strip
+  button does, a right click its information.
+- **The game app** hides the adventure world, its sun, its camera and the HUD's map parts (`AdventureHud.MapPartsHidden`) while the
+  scene is open (`GameScreens.ShowTown`); the notices go too, as the painting hid them; the status bar stays (a question hides the screen). A town type without a layout keeps the key
+  painting, as does the 2D harness, which has no scene.
+- **Haven's layout**: the style frame (ADR-294) became it: its castle keep is the town hall's model, the curtain walls and corner towers
+  the fort's, the mage tower the mage guild's, the tavern, smithy and stables theirs, the archery targets the Archer's dwelling, the
+  church the Monk's, the harbour the marketplace's; the other 13 plots stand on free ground as blocks. The style frame smoke runs it with
+  every model in sight.
+- **Smokes**: `game-town-scene` (the scene, a click on the tavern and on the keep, a right click on a block, back to the map);
+  `game-town-open` and the other town smokes now open Haven's scene.

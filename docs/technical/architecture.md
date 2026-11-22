@@ -130,7 +130,10 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   opens and on the few events that change what it shows at all; the town screen's sections take an `ITownSectionHost`, so the game's
   `TownScreenPanel` and the 2D harness's `TownPanel` hold the same ones. `TownScreenPanel` is one partial class over several files (ADR-296):
   the frame (bars, building strip, window host, keys) and one file per group of windows (`.Hall`, `.Recruitment`, `.Shops`, `.Defences`);
-  the open window is rebuilt whole on the screen's events. The numbers they show come from core read models: `TownOverview` (income, each
+  the open window is rebuilt whole on the screen's events. Its main area shows the town's `TownScene3D` (Godot.Shared/Towns, ADR-297)
+  where the town type has a layout, the key painting elsewhere and in the harness: the screen hands the scene the pointer (`Hover`,
+  `Pick`) and opens a window on its `BuildingPicked`; the game app hides the adventure world, its light, its camera and the HUD's map
+  parts on the scene's `Opened` (`GameScreens.ShowTown`). The numbers they show come from core read models: `TownOverview` (income, each
   line's growth by part, built today, the governor's discounts, each plot's state) and `TownPlans` (what Recruit all and Upgrade all
   would do), which `RecruitManyCommand` and `UpgradeAllCommand` carry out. Widgets shared by several screens are in `Widgets/` (ADR-294,
   ADR-296): the army row (`ArmyBar`, its moves given by the screen through an `ArmyBarGroup`), `CostLabel`, `SliderDialog` (with an
@@ -220,6 +223,10 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   `BattleAnimationQueue` (the sequenced tween playback), `BattleAnimations` (tween recipes) and the engine-free
   `BattleNarrator` (Core `Battles/`: the combat-log line of each battle event, usable headless). `BattleHud`
   (Godot.UI/Battle) overlays it. The harness's `BattleBoard2D` redraws from live state.
+- Town scene (ADR-297): `TownScene3D` (Godot.Shared/Towns) loads a town type's layout scene, keeps one loaded (out of the tree while
+  closed, so its environment and lights leave with it) and shows each plot (`TownPlot`) as `TownOverview.PlotsOf` has it: the
+  building's model for its level, the layout's own `Model`, or a `PlotBlock`. It refreshes its plots on the building events and the new
+  day. Picking is a ray against the plots' hover boxes, not physics, so it works in the frame a plot appears.
 
 ### Map objects
 - **Definition** (`MapObjectDefinition`, data: id, `Kind`, footprint, kind parameters) vs **instance** (`MapObject`
