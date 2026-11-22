@@ -121,21 +121,6 @@ tail
 **Sheet A5** · 1024 × 1024 · negative [`NEG-CREATURE`](../creature-icon-prompts.md#negative-prompt)
 
 ```text
-Game creature portrait sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a dark-fantasy book
-illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
-scarred skin, matted fur, cracked scales, wet hide). Naturalistic light from the top left with soft shadows and a faint cool fill
-light, deep shadows and a full range of values, muted natural colours. Each portrait shows the creature from the chest up in
-three-quarter view facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant
-creatures and dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no
-drawn outline. Not a photograph, not a plastic CGI render, no pixel art. Academy creatures: mages, dwarves and bound constructs of the
-frozen peaks, blue-grey granite, snow and frost, verdigris bronze and gold trim, deep blue cloth with a gold star, faint pale-blue
-rune light; cold and scholarly. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell,
-centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines,
-no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then
-bottom row: 1 the head and shoulders of a giant carved from grey granite like a statue, pale-blue rune lines across the chest, a stone
-maul; 2 a second take of the creature to its left; 3 the same creature as the one above it, upgraded, bigger and more dangerous:
-living bronze instead of stone, a stern bearded face, a spear of crackling lightning, storm cloud around the shoulders; 4 a second
-take of the creature to its left
 ```
 
 | # | File |

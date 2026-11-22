@@ -56,8 +56,8 @@ public partial class EditorWorkspace : Control
     private readonly Dictionary<EditorRegion, string> _savedTabs = [];
     private readonly Dictionary<Control, Control> _tabOf = [];
 
-    /// <summary>A side bar's width: room for an icon over a short name.</summary>
-    public const int SideBarWidth = 52;
+    /// <summary>A side bar's width: room for an icon over a panel's name ("Inspector", "Problems" whole).</summary>
+    public const int SideBarWidth = 60;
 
     /// <summary>The size of a side bar button's icon.</summary>
     private const int SideIconSize = 20;

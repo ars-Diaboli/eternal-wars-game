@@ -11,20 +11,22 @@ prompt is [`NEG-CREATURE`](../creature-icon-prompts.md#negative-prompt) there.
 ```text
 Game creature portrait sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a dark-fantasy book
 illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
-scarred skin, matted fur, cracked scales, wet hide). Naturalistic light from the top left with soft shadows and a faint cool fill
-light, deep shadows and a full range of values, muted natural colours. Each portrait shows the creature from the chest up in
-three-quarter view facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant
-creatures and dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no
-drawn outline. Not a photograph, not a plastic CGI render, no pixel art. Haven creatures: human soldiers, zealots and their beasts,
-grey steel and black iron, worn brass trim, off-white cloth with a gold sun, a touch of sky blue; disciplined and devout. 4 separate
-icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all
-at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no
-labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a human foot soldier
-in a dented kettle helmet and a grey quilted coat, a short sword raised behind a round iron-rimmed shield; 2 a gaunt human pikeman in
-an open steel sallet and padded coat, a long pike held upright, its head rising above the shoulder; 3 the same creature as the one
-above it, upgraded, bigger and more dangerous: a steel helm with a small brass sun on the brow, a faded off-white tabard with a gold
-sun, a second sword; 4 the same creature as the one above it, upgraded, bigger and more dangerous: full steel plate with brass edges,
-a tall tower shield bearing an iron sun-cage, the pike lowered to strike
+scarred skin, matted fur, cracked scales, wet hide). Strong directional light from the top left with crisp highlights and a faint cool
+rim light, deep rich shadows and high contrast, a full range of values from near-black to bright highlights, rich deep natural
+colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
+facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
+dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
+Not a photograph, not a plastic CGI render, no pixel art. Haven creatures: human soldiers, zealots and their beasts, grey steel and
+black iron, worn brass trim, off-white cloth with a gold sun, a touch of sky blue; disciplined and devout. 4 separate icons arranged
+in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same
+scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no
+numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a human foot soldier in a dented
+kettle helmet and a grey quilted coat, a short sword raised behind a round iron-rimmed shield; 2 a gaunt human pikeman in an open
+steel sallet and padded coat, a long pike held upright, its head rising above the shoulder; 3 the same creature as the one above it,
+clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: a
+steel helm with a small brass sun on the brow, a faded off-white tabard with a gold sun, a second sword; 4 the same creature as the
+one above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer
+in colour: full steel plate with brass edges, a tall tower shield bearing an iron sun-cage, the pike lowered to strike
 ```
 
 | # | File |
@@ -39,20 +41,22 @@ a tall tower shield bearing an iron sun-cage, the pike lowered to strike
 ```text
 Game creature portrait sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a dark-fantasy book
 illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
-scarred skin, matted fur, cracked scales, wet hide). Naturalistic light from the top left with soft shadows and a faint cool fill
-light, deep shadows and a full range of values, muted natural colours. Each portrait shows the creature from the chest up in
-three-quarter view facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant
-creatures and dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no
-drawn outline. Not a photograph, not a plastic CGI render, no pixel art. Haven creatures: human soldiers, zealots and their beasts,
-grey steel and black iron, worn brass trim, off-white cloth with a gold sun, a touch of sky blue; disciplined and devout. 4 separate
-icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all
-at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no
-labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a flagellant zealot
-with a shaved, scarred head and bare welted shoulders, a spiked flail in one hand and a burning torch in the other; 2 a human
-crossbowman in a leather cap and quilted jacket, a heavy crossbow resting on the shoulder; 3 the same creature as the one above it,
-upgraded, bigger and more dangerous: a hood and a black iron mask, long grey robes, a red-hot branding iron glowing in one hand, a
-chain of iron sun medallions; 4 the same creature as the one above it, upgraded, bigger and more dangerous: a steel helmet with a
-lifted visor, a crossbow with a brass winch aimed forward, a bandolier of bolts across the chest
+scarred skin, matted fur, cracked scales, wet hide). Strong directional light from the top left with crisp highlights and a faint cool
+rim light, deep rich shadows and high contrast, a full range of values from near-black to bright highlights, rich deep natural
+colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
+facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
+dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
+Not a photograph, not a plastic CGI render, no pixel art. Haven creatures: human soldiers, zealots and their beasts, grey steel and
+black iron, worn brass trim, off-white cloth with a gold sun, a touch of sky blue; disciplined and devout. 4 separate icons arranged
+in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same
+scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no
+numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a flagellant zealot with a
+shaved, scarred head and bare welted shoulders, a spiked flail in one hand and a burning torch in the other; 2 a human crossbowman in
+a leather cap and quilted jacket, a heavy crossbow resting on the shoulder; 3 the same creature as the one above it, clearly upgraded
+and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: a hood and a black
+iron mask, long grey robes, a red-hot branding iron glowing in one hand, a chain of iron sun medallions; 4 the same creature as the
+one above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer
+in colour: a steel helmet with a lifted visor, a crossbow with a brass winch aimed forward, a bandolier of bolts across the chest
 ```
 
 | # | File |
@@ -67,20 +71,22 @@ lifted visor, a crossbow with a brass winch aimed forward, a bandolier of bolts 
 ```text
 Game creature portrait sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a dark-fantasy book
 illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
-scarred skin, matted fur, cracked scales, wet hide). Naturalistic light from the top left with soft shadows and a faint cool fill
-light, deep shadows and a full range of values, muted natural colours. Each portrait shows the creature from the chest up in
-three-quarter view facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant
-creatures and dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no
-drawn outline. Not a photograph, not a plastic CGI render, no pixel art. Haven creatures: human soldiers, zealots and their beasts,
-grey steel and black iron, worn brass trim, off-white cloth with a gold sun, a touch of sky blue; disciplined and devout. 4 separate
-icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all
-at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no
-labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a monk in a coarse
-grey habit, hood down, a sun mark of ash on the forehead, swinging a smoking iron censer; 2 a griffin with an eagle's head and a tawny
-lion's body, grey and tawny feathers, wings half open, a fierce yellow eye; 3 the same creature as the one above it, upgraded, bigger
-and more dangerous: soot-stained off-white and gold vestments, a tall staff topped with a small iron cage holding a flame; 4 the same
-creature as the one above it, upgraded, bigger and more dangerous: white and pale-gold plumage, a brass chain collar with a sun
-medallion, wings spread wide
+scarred skin, matted fur, cracked scales, wet hide). Strong directional light from the top left with crisp highlights and a faint cool
+rim light, deep rich shadows and high contrast, a full range of values from near-black to bright highlights, rich deep natural
+colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
+facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
+dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
+Not a photograph, not a plastic CGI render, no pixel art. Haven creatures: human soldiers, zealots and their beasts, grey steel and
+black iron, worn brass trim, off-white cloth with a gold sun, a touch of sky blue; disciplined and devout. 4 separate icons arranged
+in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same
+scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no
+numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a monk in a coarse grey habit,
+hood down, a sun mark of ash on the forehead, swinging a smoking iron censer; 2 a griffin with an eagle's head and a tawny lion's
+body, grey and tawny feathers, wings half open, a fierce yellow eye; 3 the same creature as the one above it, clearly upgraded and
+told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: soot-stained off-white
+and gold vestments, a tall staff topped with a small iron cage holding a flame; 4 the same creature as the one above it, clearly
+upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: white and
+pale-gold plumage, a brass chain collar with a sun medallion, wings spread wide
 ```
 
 | # | File |
@@ -95,20 +101,22 @@ medallion, wings spread wide
 ```text
 Game creature portrait sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a dark-fantasy book
 illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
-scarred skin, matted fur, cracked scales, wet hide). Naturalistic light from the top left with soft shadows and a faint cool fill
-light, deep shadows and a full range of values, muted natural colours. Each portrait shows the creature from the chest up in
-three-quarter view facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant
-creatures and dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no
-drawn outline. Not a photograph, not a plastic CGI render, no pixel art. Haven creatures: human soldiers, zealots and their beasts,
-grey steel and black iron, worn brass trim, off-white cloth with a gold sun, a touch of sky blue; disciplined and devout. 4 separate
-icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all
-at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no
-labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a knight in plain
-steel plate on a grey horse barded in mail, the lance held upright; 2 a grim knight on foot in soot-darkened plate, a greatsword held
-point-down in front, a sun etched on the breastplate; 3 the same creature as the one above it, upgraded, bigger and more dangerous: a
-white horse in an off-white caparison with a gold sun, a brass sun crest on the helm, the lance lowered for the charge; 4 the same
-creature as the one above it, upgraded, bigger and more dangerous: gilded edges on the plate, a small burning brazier as the helm's
-crest, the greatsword's blade glowing faint white
+scarred skin, matted fur, cracked scales, wet hide). Strong directional light from the top left with crisp highlights and a faint cool
+rim light, deep rich shadows and high contrast, a full range of values from near-black to bright highlights, rich deep natural
+colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
+facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
+dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
+Not a photograph, not a plastic CGI render, no pixel art. Haven creatures: human soldiers, zealots and their beasts, grey steel and
+black iron, worn brass trim, off-white cloth with a gold sun, a touch of sky blue; disciplined and devout. 4 separate icons arranged
+in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same
+scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no
+numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a knight in plain steel plate on
+a grey horse barded in mail, the lance held upright; 2 a grim knight on foot in soot-darkened plate, a greatsword held point-down in
+front, a sun etched on the breastplate; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the same
+face and build but larger, heavier armed, more ornate and richer in colour: a white horse in an off-white caparison with a gold sun, a
+brass sun crest on the helm, the lance lowered for the charge; 4 the same creature as the one above it, clearly upgraded and told
+apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: gilded edges on the plate, a
+small burning brazier as the helm's crest, the greatsword's blade glowing faint white
 ```
 
 | # | File |
@@ -123,18 +131,20 @@ crest, the greatsword's blade glowing faint white
 ```text
 Game creature portrait sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a dark-fantasy book
 illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
-scarred skin, matted fur, cracked scales, wet hide). Naturalistic light from the top left with soft shadows and a faint cool fill
-light, deep shadows and a full range of values, muted natural colours. Each portrait shows the creature from the chest up in
-three-quarter view facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant
-creatures and dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no
-drawn outline. Not a photograph, not a plastic CGI render, no pixel art. Haven creatures: human soldiers, zealots and their beasts,
-grey steel and black iron, worn brass trim, off-white cloth with a gold sun, a touch of sky blue; disciplined and devout. 4 separate
-icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all
-at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no
-labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a spirit of pale gold
-light shaped like a robed figure with a blank glowing face and two wings of light; 2 a second take of the creature to its left; 3 the
-same creature as the one above it, upgraded, bigger and more dangerous: six wings of white-gold light, a ring of small flames above
-the head, a long spear of light; 4 a second take of the creature to its left
+scarred skin, matted fur, cracked scales, wet hide). Strong directional light from the top left with crisp highlights and a faint cool
+rim light, deep rich shadows and high contrast, a full range of values from near-black to bright highlights, rich deep natural
+colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
+facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
+dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
+Not a photograph, not a plastic CGI render, no pixel art. Haven creatures: human soldiers, zealots and their beasts, grey steel and
+black iron, worn brass trim, off-white cloth with a gold sun, a touch of sky blue; disciplined and devout. 4 separate icons arranged
+in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same
+scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no
+numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a spirit of pale gold light
+shaped like a robed figure with a blank glowing face and two wings of light; 2 a second take of the creature to its left; 3 the same
+creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more
+ornate and richer in colour: six wings of white-gold light, a ring of small flames above the head, a long spear of light; 4 a second
+take of the creature to its left
 ```
 
 | # | File |

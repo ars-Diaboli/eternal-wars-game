@@ -74,6 +74,8 @@ shown last.
 **The look**: the game's theme (ADR-191) in a compact variant: the same colours, a 14 px font, tighter rows and gaps and lower buttons.
 Every tool and command has an icon in the menus, on the toolbar and in the palette; where the art does not exist yet it is a
 placeholder, a coloured tile with the name's two letters.
+A tool's button in the palette is its icon alone, its name and key in the tooltip, and the tools' options never repeat the status
+bar's hint, so the object browser keeps the room in the left region (ADR-282).
 
 **Files** (File menu):
 - **New map** (Ctrl+N, ADR-259) opens the new-map wizard, in three steps: the size (the presets 48 × 48 to 256 × 256, or any size

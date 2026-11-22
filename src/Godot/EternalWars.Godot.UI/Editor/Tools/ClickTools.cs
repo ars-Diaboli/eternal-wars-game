@@ -57,8 +57,7 @@ public sealed class ObjectTool(EditorToolContext context) : EditorTool(context)
     {
         if (Entry is not { } entry)
         {
-            options.Hint("Pick what to place in the browser below.");
-            return;
+            return; // the status bar's hint (ClickHint) says to pick in the browser
         }
 
         if (entry.Placement == BrowserPlacement.Hero)

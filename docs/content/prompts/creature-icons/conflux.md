@@ -11,19 +11,20 @@ and the checks are in [creature-icon-prompts.md](../creature-icon-prompts.md); t
 ```text
 Game creature portrait sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a dark-fantasy book
 illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
-scarred skin, matted fur, cracked scales, wet hide). Naturalistic light from the top left with soft shadows and a faint cool fill
-light, deep shadows and a full range of values, muted natural colours. Each portrait shows the creature from the chest up in
-three-quarter view facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant
-creatures and dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no
-drawn outline. Not a photograph, not a plastic CGI render, no pixel art. Conflux creatures: elemental spirits, the Wheel's ancient
-guardians, each a figure made of its own element with a crystal glowing at its heart in the element's colour, fragments of weathered
-stone and old green bronze floating close around it. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its
-own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into
-another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons,
-top row left to right, then bottom row: 1 a small floating orb of soft white light, a few bronze rune fragments circling it; 2 a
-hulking figure of rough grey stone and packed earth, roots and crystals in its body, a bronze rune plate in its chest; 3 a swirling
-figure of pale grey wind and cloud with a vague face, dust and leaves caught in it; 4 a figure of roaring orange fire over a charred
-black core, bronze bands around its arms
+scarred skin, matted fur, cracked scales, wet hide). Strong directional light from the top left with crisp highlights and a faint cool
+rim light, deep rich shadows and high contrast, a full range of values from near-black to bright highlights, rich deep natural
+colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
+facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
+dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
+Not a photograph, not a plastic CGI render, no pixel art. Conflux creatures: elemental spirits, the Wheel's ancient guardians, each a
+figure made of its own element with a crystal glowing at its heart in the element's colour, fragments of weathered stone and old green
+bronze floating close around it. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell,
+centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines,
+no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then
+bottom row: 1 a small floating orb of soft white light, a few bronze rune fragments circling it; 2 a hulking figure of rough grey
+stone and packed earth, roots and crystals in its body, a bronze rune plate in its chest; 3 a swirling figure of pale grey wind and
+cloud with a vague face, dust and leaves caught in it; 4 a figure of roaring orange fire over a charred black core, bronze bands
+around its arms
 ```
 
 | # | File |
@@ -38,18 +39,19 @@ black core, bronze bands around its arms
 ```text
 Game creature portrait sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a dark-fantasy book
 illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
-scarred skin, matted fur, cracked scales, wet hide). Naturalistic light from the top left with soft shadows and a faint cool fill
-light, deep shadows and a full range of values, muted natural colours. Each portrait shows the creature from the chest up in
-three-quarter view facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant
-creatures and dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no
-drawn outline. Not a photograph, not a plastic CGI render, no pixel art. Conflux creatures: elemental spirits, the Wheel's ancient
-guardians, each a figure made of its own element with a crystal glowing at its heart in the element's colour, fragments of weathered
-stone and old green bronze floating close around it. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its
-own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into
-another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons,
-top row left to right, then bottom row: 1 a figure of clear blue-green water with foam crests, a face in the wave; 2 a heavy figure of
-black cooling rock with glowing orange magma between the plates; 3 a figure of dark storm cloud crackling with white lightning, rain
-streaming off it; 4 a tall slender figure of white-hot blue-and-white fire with sharp edges
+scarred skin, matted fur, cracked scales, wet hide). Strong directional light from the top left with crisp highlights and a faint cool
+rim light, deep rich shadows and high contrast, a full range of values from near-black to bright highlights, rich deep natural
+colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
+facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
+dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
+Not a photograph, not a plastic CGI render, no pixel art. Conflux creatures: elemental spirits, the Wheel's ancient guardians, each a
+figure made of its own element with a crystal glowing at its heart in the element's colour, fragments of weathered stone and old green
+bronze floating close around it. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell,
+centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines,
+no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then
+bottom row: 1 a figure of clear blue-green water with foam crests, a face in the wave; 2 a heavy figure of black cooling rock with
+glowing orange magma between the plates; 3 a figure of dark storm cloud crackling with white lightning, rain streaming off it; 4 a
+tall slender figure of white-hot blue-and-white fire with sharp edges
 ```
 
 | # | File |
@@ -64,18 +66,19 @@ streaming off it; 4 a tall slender figure of white-hot blue-and-white fire with 
 ```text
 Game creature portrait sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a dark-fantasy book
 illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
-scarred skin, matted fur, cracked scales, wet hide). Naturalistic light from the top left with soft shadows and a faint cool fill
-light, deep shadows and a full range of values, muted natural colours. Each portrait shows the creature from the chest up in
-three-quarter view facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant
-creatures and dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no
-drawn outline. Not a photograph, not a plastic CGI render, no pixel art. Conflux creatures: elemental spirits, the Wheel's ancient
-guardians, each a figure made of its own element with a crystal glowing at its heart in the element's colour, fragments of weathered
-stone and old green bronze floating close around it. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its
-own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into
-another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons,
-top row left to right, then bottom row: 1 a figure of jagged blue-white ice crystals, frost mist around it, a spear of ice; 2 a figure
-of crackling violet-white energy, arcs jumping around it; 3 a figure of shimmering pearl-white light with four faint faces, one of
-stone, one of fire, one of water, one of wind; 4 a second take of the creature in cell 1
+scarred skin, matted fur, cracked scales, wet hide). Strong directional light from the top left with crisp highlights and a faint cool
+rim light, deep rich shadows and high contrast, a full range of values from near-black to bright highlights, rich deep natural
+colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
+facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
+dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
+Not a photograph, not a plastic CGI render, no pixel art. Conflux creatures: elemental spirits, the Wheel's ancient guardians, each a
+figure made of its own element with a crystal glowing at its heart in the element's colour, fragments of weathered stone and old green
+bronze floating close around it. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell,
+centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines,
+no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then
+bottom row: 1 a figure of jagged blue-white ice crystals, frost mist around it, a spear of ice; 2 a figure of crackling violet-white
+energy, arcs jumping around it; 3 a figure of shimmering pearl-white light with four faint faces, one of stone, one of fire, one of
+water, one of wind; 4 a second take of the creature in cell 1
 ```
 
 | # | File |
