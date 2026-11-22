@@ -293,8 +293,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       snapping (ADR-286)
 - [x] The other level ghosted in the map view (View > Ghost the other level, with the minimap) and the height brush's falloff
       (ADR-287)
-- [ ] After the close ([plan](../docs/papers/editor-plan.md#after-the-close)): `Main.cs` split into composers; the editor icons of
-      sheets C4, C7, C12 and C13 drawn
+- [x] The editor icons of sheets C4, C7, C12 and C13 drawn and cut
+- [ ] After the close ([plan](../docs/papers/editor-plan.md#after-the-close)): `Main.cs` split into composers
 
 ### Platform and art
 - [x] Built: speed settings (ADR-095, UI-1)

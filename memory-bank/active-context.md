@@ -9,6 +9,8 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Editor icons C4, C7, C12 and C13: the owner's sheets cut into `textures/ui/icons/` (22 files); every editor command, panel and tab
+  now has its drawn icon, none a lettered placeholder.
 - The other level ghosted and the height falloff (ADR-287): View > Ghost the other level (the minimap's box and the map's context menu
   too; `MapViewContext.GhostOtherLevel`) mixes the other level's terrain colours into the shown ground (`terrain_splat.gdshader`'s
   `ghost_map`, `AdventureMapView.Ghost`) and the minimap; the Height tool's Falloff (0–6 tiles, `HeightEditor` brushes' `falloff`).
@@ -91,10 +93,9 @@ Detail: [roadmap.md](roadmap.md).
   templates (`UndoHistory`, `IUndoSession` shared with `MapEditorSession`), `BeginStep`/`EndStep` for a drag, `Load` starts the history
   anew, `TemplateChanged.Replaced` after an undo; the template editor shows its History beside the Issues, and Undo / Redo follow the tab
   shown. Tests in `TemplateEditorSessionTests`; smoke `editor-template-undo`.
-- Editor icons: 77 files cut from the owner's sheets of `editor-icon-prompts.md` (all but C4 and C7) into `textures/ui/icons/`;
+- Editor icons: 77 files cut from the owner's sheets of `editor-icon-prompts.md` into `textures/ui/icons/`;
   `UiIcon` has their values (the file name is the value in snake case), `IEditorTool.Icon` gives each tool its own, and the commands,
-  panel tabs, problems, layers, favourites, brush and height options and the template editor's lists show them. The view and map
-  settings commands keep their placeholders until C4 and C7 are drawn.
+  panel tabs, problems, layers, favourites, brush and height options and the template editor's lists show them.
 - Editor overhaul, step 4 task 8 (ADR-267), which closes step 4: play-test. `PlayTestArguments` (Core.Domain/Game) reads the game's
   `--player= --others= --reveal --start= --day= --cheats` (`LaunchArguments.PlayTest`) and prepares the map; `PlayTestRules` in
   `GameOptions.PlayTest` (save format 7) sets the day, the start tile and the reveal at `GameSession.Start`, and idles the others in
@@ -277,7 +278,7 @@ Detail: [roadmap.md](roadmap.md).
 3. The remaining Phase 5 items in [roadmap.md](roadmap.md) ("Presentation and UI", "Town screen overhaul", "Editor overhaul",
    "Platform and art", "Roster"); the town screen overhaul starts with the owner's answers (TOWN-14 … TOWN-23); the editor
    overhaul is closed, with the first-use test with a person, the owner's look at the workspace and the plan's "After the close"
-   list (`Main.cs` split, the icon art; ADR-282) open.
+   list (`Main.cs` split; ADR-282) open.
 4. The "Code health" list in [roadmap.md](roadmap.md): skills, heroes and town types as typed ids; `InfoSheets` as data once localisation
    is decided (ADR-239).
 

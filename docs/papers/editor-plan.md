@@ -686,8 +686,8 @@ for collapsible panels as in IDEs.
    the bar on and off without end. Smoke: the editor scenarios.
 4. **Find** (Ctrl+F, the table of shortcuts): Go to's box, which also finds the map's objects by their kind ("gold mine": every one,
    named or not); **Go to by id** ("#12"); the **top-down view orthographic**. Tests in `MapGoToTests`; smoke `editor-side-bars`.
-5. **Icons**: `UiIcon` values for the prompted icons not drawn yet (sheets C4, C7) and new prompts for those that had none (sheets C12,
-   C13 in [editor-icon-prompts.md](../content/prompts/editor-icon-prompts.md)).
+5. **Icons**: `UiIcon` values for the icons of sheets C4 and C7, and new prompts for those that had none (sheets C12 and C13 in
+   [editor-icon-prompts.md](../content/prompts/editor-icon-prompts.md)).
 
 **Built after the check**:
 1. **Measure tool** (U, the tools table, ADR-283): two clicks pick the tiles, the options the hero's movement points a day and its
@@ -706,11 +706,11 @@ for collapsible panels as in IDEs.
    Smoke `editor-minimap`.
 5. **The height brush's falloff** (ADR-287): the Height tool's Falloff, 0–6 tiles past the brush over which the strength fades (0 a
    hard edge, 1 unless changed), a parameter of `HeightEditor.Raise`, `Lower`, `Level` and `Smooth`; tests in `HeightEditorTests`.
+6. **The editor's icon art**: sheets C4, C7, C12 and C13 cut into the icons folder; no editor command keeps a lettered placeholder.
 
-**Left open** (in [roadmap.md](../../memory-bank/roadmap.md)), the larger first:
+**Left open** (in [roadmap.md](../../memory-bank/roadmap.md)):
 1. **`Main.cs` as composition only**: it holds about 1400 lines (the plan expected it to shrink from 548). Its commands, menus and
    file handling move to composers in the app, each one area, so the app stays composition and input mapping.
-2. **The editor's icon art**: sheets C4, C7, C12 and C13 generated and cut into the icons folder.
 
 ## Decisions
 

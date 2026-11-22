@@ -122,8 +122,6 @@ public enum UiIcon
     StrengthWeak,
     StrengthAverage,
     StrengthStrong,
-
-    // Prompted in editor-icon-prompts.md (C4, C7, C12) and not drawn yet: a placeholder stands in until the file exists.
     Grid,
     TopDown,
     Focus,

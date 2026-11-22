@@ -41,9 +41,9 @@ sheets of [icon-prompts.md](../../../../../../docs/content/prompts/icon-prompts.
 
 ## Map and template editor
 
-Generated for this project by the owner (2026-11-21), cut from the sheets of
-[editor-icon-prompts.md](../../../../../../docs/content/prompts/editor-icon-prompts.md) (E1–E6, C1–C3, C5, C6, C8–C11; one cell each, the
-E6 spare unused). Sheets C4 (view) and C7 (map settings) are not drawn yet: those commands keep their lettered placeholders.
+Generated for this project by the owner (2026-11-21; sheets C4, C7, C12 and C13 2026-11-22), cut from the sheets of
+[editor-icon-prompts.md](../../../../../../docs/content/prompts/editor-icon-prompts.md) (E1–E6, C1–C13; one cell each, the E6 spare
+unused).
 
 | File | Used for |
 |---|---|
@@ -70,5 +70,11 @@ E6 spare unused). Sheets C4 (view) and C7 (map settings) are not drawn yet: thos
 | generate, new_seed, arrange | Generate (the panel and the template editor), New seed, Arrange |
 | mirror_vertical, mirror_horizontal, mirror_diagonal | the template's Symmetry list |
 | strength_none, strength_weak, strength_average, strength_strong | the template zone's Monsters list |
+| grid, top_down, focus, whole_map, go_to, bookmark | the View menu's Grid, Top-down view, Focus, Whole map, Go to and bookmarks |
+| map, players, conditions, week_events, rumours, texts | Map settings and its window's tabs |
+| tool_panel, overlays, fairness, minimap | the side bars' Tools, Overlays and Fairness panels, the minimap's heading |
+| find, sample_maps | Find on the map; the sample maps on the empty map's card |
+| export_report, export_picture | Export report, Export map picture |
+| map_tab, template_tab | the Map and Template tabs |
 
 The resource icons are in `../resources/` (see its CREDITS.md).

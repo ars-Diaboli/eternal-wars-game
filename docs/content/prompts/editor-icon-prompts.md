@@ -36,11 +36,6 @@ These editor actions use icons that exist, and get no new art: Open (`load`), Sa
 (`plus`, `minus`), Close and OK (`close`, `confirm`), Zoom (`zoom_in`, `zoom_out`), a layer locked or unlocked (`lock`, `unlock`), Move
 up and down (`arrow_up`, `arrow_down`), the template's Monsters guard (`tool_monster`, below).
 
-## Still to draw
-
-The editor already asks for these files and shows a lettered placeholder until each exists: sheets **C4** (view), **C7** (map
-settings), **C12** (panels of the side bars) and **C13** (export and workspaces).
-
 ## Tier B · Emblems: tools and template parts
 
 Painted emblems like the adventure map's action icons (sheets 15–18 of [icon-prompts.md](icon-prompts.md)): every tool and template
