@@ -41,6 +41,7 @@
 | [294](#adr-294-town-screen-steps-0-and-1-the-shell-behind---town-screennew-havens-style-frame-two-font-pairings-nine-slice-frames-the-shared-widgets-the-heroes-swap-adr-246-adr-292-2026-11-22) | Town screen steps 0 and 1: the shell behind --town-screen=new, Haven's style frame, two font pairings, nine-slice frames, the shared widgets, the heroes' swap (ADR-246, ADR-292, 2026-11-22) | implemented |
 | [296](#adr-296-town-screen-step-2-the-windows-over-the-key-painting-the-overview-and-plans-in-core-recruit-all-upgrade-all-dismissing-renaming-the-rumour-table-resource-for-resource-sending-to-an-ally-town-17-adr-246-adr-292-2026-11-22) | Town screen step 2: the windows over the key painting, the overview and plans in core, Recruit all, Upgrade all, dismissing, renaming, the rumour table, resource for resource, sending to an ally (TOWN-17, ADR-246, ADR-292, 2026-11-22) | implemented |
 | [297](#adr-297-town-screen-step-3-task-1-the-3d-town-scene-behind-the-bars-plots-read-from-layout-scenes-greybox-blocks-hover-and-pick-adr-246-adr-292-2026-11-22) | Town screen step 3, task 1: the 3D town scene behind the bars, plots read from layout scenes, greybox blocks, hover and pick (ADR-246, ADR-292, 2026-11-22) | implemented |
+| [299](#adr-299-hero-portraits-womens-hair-medium-to-long-a-pose-of-each-kind-on-every-sheet-owner-adr-298-2026-11-22) | Hero portraits: women's hair medium to long, a pose of each kind on every sheet (owner, ADR-298, 2026-11-22) | accepted |
 | [300](#adr-300-town-screen-step-3-task-2-greybox-layouts-for-the-eight-towns-after-their-key-paintings-the-layout-check-in-the-game-the-towns-painting-as-the-sky-adr-246-adr-292-adr-297-2026-11-22) | Town screen step 3, task 2: greybox layouts for the eight towns after their key paintings, the layout check in the game, the town's painting as the sky (ADR-246, ADR-292, ADR-297, 2026-11-22) | implemented |
 | [301](#adr-301-town-screen-step-3-task-3-plot-states-walls-as-the-siege-has-them-streets-by-the-town-hall-banners-and-the-garrison-heros-banner-town-15-town-19-town-22-adr-291-2026-11-22) | Town screen step 3, task 3: plot states, walls as the siege has them, streets by the town hall, banners and the garrison hero's banner (TOWN-15, TOWN-19, TOWN-22, ADR-291, 2026-11-22) | implemented |
 
@@ -787,6 +788,28 @@ TOWN-15 is ADR-291. The plan's step-by-step implementation is in its [roadmap](.
   every model in sight.
 - **Smokes**: `game-town-scene` (the scene, a click on the tavern and on the keep, a right click on a block, back to the map);
   `game-town-open` and the other town smokes now open Haven's scene.
+
+### ADR-299: Hero portraits: women's hair medium to long, a pose of each kind on every sheet (owner, ADR-298, 2026-11-22)
+**Status**: accepted. Asset prompts only.
+
+- **Owner**, on the redone Haven sheets: they look better; no short-haired women, medium to long hair; every portrait looked the same
+  way, so vary the angle: some straight at the viewer, some to the left or right, some slightly upward.
+- **Hair**: the style passage says women wear their hair medium to long, never cropped or shaved; the 30 cells of women with short,
+  cropped, shaved or unnamed hair now name medium or long hair; the negative prompt adds short-haired women.
+- **Pose**: each cell names its pose after the hero's name; every sheet has one towards the viewer (straight or head tilted), one
+  turned left, one turned right (three-quarter, sometimes eyes on the viewer) and one with the chin lifted only a little (a first try
+  tipped the head right back; the negative prompt adds head tipped back), in an order that changes
+  from sheet to sheet; the light stays top left. The game does not mirror portraits (the old "face right" rule is dropped).
+- **Sylvan** (owner, on the Sylvan sheet): elven men have no beards; no wide faces; some may look slightly East Asian. The Sylvan
+  line asks for long narrow or oval faces, beardless clean-shaven men and some slightly East Asian features; Faelar, Calen, Rhovan and
+  Orrindel lose their beards, Faelar, Caelwyn, Neriah, Calen and Rhovan their wide or square faces, and Aerendil, Varis, Ithiel and
+  Siannon get slightly East Asian features.
+- **Single cells** (owner, on the generated sheets): Benedikt Grau's chin lifted less; Sabine Kell more European; Rowena Pell a
+  younger European woman; Sylvara, Faenor and Rhovan paler (Rhovan's dreadlocks loose hair); Neriah and Calen new non-African
+  faces; Nymara young.
+- **Haven portraits**: the owner's five Haven sheets are cut into `textures/ui/heroes/icon_hero_haven.<hero id>.png` (specks and
+  fringe cleared); the game does not show hero portraits yet.
+- **Regenerate**: every other hero sheet.
 
 ### ADR-300: Town screen step 3, task 2: greybox layouts for the eight towns after their key paintings, the layout check in the game, the town's painting as the sky (ADR-246, ADR-292, ADR-297, 2026-11-22)
 **Status**: implemented. The [town screen plan](../../docs/papers/town-screen-plan.md#implementation-plan)'s step 3, task 2.

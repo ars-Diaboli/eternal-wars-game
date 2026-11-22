@@ -9,6 +9,9 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Hero portrait prompts: women's hair medium to long, and a pose of each kind on every sheet (towards the viewer, left, right,
+  chin raised) instead of all facing right; Sylvan men beardless, no wide faces, some slightly East Asian; the twenty Haven
+  portraits cut into `textures/ui/heroes/`, not yet shown in the game (ADR-299).
 - Campaign heroes and the hero portraits redone (ADR-298): 48 campaign heroes (4 per town, 8 each for Conflux and Dragon
   Utopia) never drawn at random; 14 heroes renamed as men (about a third women); varied close-crop prompts. Generator version 13.
 - Stronghold's Wolf Rider line moved to tier 2 and the Centaur line to tier 3, numbers swapped with the tier; generator version 12,
