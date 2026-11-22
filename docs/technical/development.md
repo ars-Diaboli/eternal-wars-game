@@ -209,6 +209,22 @@ The town type's painting `textures/ui/backgrounds/towns/bg_town_<town>.jpg`, onc
 metadata `sky_span` (the painting's width in radians, 2.1) and `sky_horizon` (its horizon's height from the bottom, 0.35) adjust the fit.
 Without the painting the layout's own sky shows.
 
+Besides the plots a layout holds the town's scenery (ADR-301), shown as the town has it (`TownScenery`); every piece is a marker that
+`TownDressing` builds in the town's siege look, unless the marker has children of its own (the layout's art):
+
+| Node | Meaning |
+|---|---|
+| `Walls` with `Post0`, `Post1`, … and `Gate` (`Marker3D`s) | the wall's line in order and its gate: sections, gatehouse, moat outside (away from the plots) and towers, as the siege has them |
+| `Streets/Village`, `Streets/Town`, `Streets/City` | shown from that settlement on (the town hall's level 1, 2, 3) |
+| `Street*` in a street group | a strip of paving; metadata `size` (`Vector2`, width × length along the marker's Z) |
+| `House*` in a street group | a house; metadata `size` (`Vector3`) |
+| `Banner*` in a street group | a banner in the owner's colour with the faction's charge |
+| `HeroBanner` | where the garrison hero's banner flies; without it, on top of the town hall's plot |
+| a plot's `Land` | shown while the plot is not built or its line is closed |
+| a plot's `Homes` | the citizens' homes on a closed line once the town has the Capitol; without it, a few greybox houses |
+
+`TownLayoutTests` fails on a layout without a `Walls` line (two posts and a gate) or without houses for each settlement.
+
 ### Editing heroes
 `heroes.csv` (ADR-048).
 

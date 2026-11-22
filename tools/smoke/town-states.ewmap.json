@@ -1,0 +1,217 @@
+{
+  "formatVersion": 11,
+  "name": "Town States",
+  "description": "",
+  "width": 42,
+  "height": 24,
+  "terrain": [
+    [
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggg"
+    ]
+  ],
+  "roads": [
+    [
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      "..........................................",
+      ".........................................."
+    ]
+  ],
+  "players": [
+    {
+      "name": "Blue",
+      "isHuman": true
+    },
+    {
+      "name": "Red",
+      "isHuman": true
+    }
+  ],
+  "teamsLocked": false,
+  "heroes": [
+    {
+      "id": 1,
+      "name": "Orrin",
+      "owner": 0,
+      "x": 4,
+      "y": 9,
+      "level": 0,
+      "attack": 2,
+      "defense": 1,
+      "army": [
+        {
+          "slot": 0,
+          "creature": "haven.pikeman",
+          "count": 20
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Sandro",
+      "owner": 1,
+      "x": 37,
+      "y": 9,
+      "level": 0,
+      "attack": 1,
+      "defense": 2,
+      "army": [
+        {
+          "slot": 0,
+          "creature": "inferno.horned-demon",
+          "count": 22
+        }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "kind": "town",
+      "owner": 0,
+      "name": "Oakhollow",
+      "buildings": {
+        "town-hall": 1,
+        "tavern": 1
+      },
+      "dwellings": {
+        "haven.footman": 1
+      },
+      "id": 1,
+      "definition": "town.haven",
+      "x": 1,
+      "y": 2,
+      "level": 0
+    },
+    {
+      "kind": "town",
+      "owner": 0,
+      "name": "Millbrook",
+      "buildings": {
+        "town-hall": 2,
+        "fort": 1,
+        "tavern": 1,
+        "blacksmith": 1,
+        "marketplace": 1,
+        "mage-guild": 1
+      },
+      "dwellings": {
+        "haven.footman": 1,
+        "haven.archer": 1
+      },
+      "id": 2,
+      "definition": "town.haven",
+      "x": 9,
+      "y": 2,
+      "level": 0
+    },
+    {
+      "kind": "town",
+      "owner": 0,
+      "name": "Highcrest",
+      "buildings": {
+        "town-hall": 3,
+        "fort": 2,
+        "tavern": 1,
+        "blacksmith": 1,
+        "marketplace": 1,
+        "mage-guild": 2
+      },
+      "dwellings": {
+        "haven.footman": 1,
+        "haven.pikeman": 1,
+        "haven.archer": 1,
+        "haven.monk": 1
+      },
+      "id": 3,
+      "definition": "town.haven",
+      "x": 17,
+      "y": 2,
+      "level": 0
+    },
+    {
+      "kind": "town",
+      "owner": 0,
+      "name": "Crownmere",
+      "buildings": {
+        "town-hall": 4,
+        "fort": 3,
+        "tavern": 1,
+        "blacksmith": 1,
+        "marketplace": 1,
+        "mage-guild": 2
+      },
+      "dwellings": {
+        "haven.footman": 1,
+        "haven.pikeman": 1,
+        "haven.archer": 1,
+        "haven.zealot": 1,
+        "haven.monk": 1,
+        "haven.lancer": 1,
+        "haven.radiant-spirit": 1
+      },
+      "id": 4,
+      "definition": "town.haven",
+      "x": 25,
+      "y": 2,
+      "level": 0
+    },
+    {
+      "kind": "town",
+      "owner": 1,
+      "name": "Ashgate",
+      "buildings": {
+        "fort": 1,
+        "tavern": 1,
+        "town-hall": 1
+      },
+      "id": 5,
+      "definition": "town.inferno",
+      "x": 34,
+      "y": 2,
+      "level": 0
+    }
+  ]
+}

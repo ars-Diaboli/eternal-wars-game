@@ -42,6 +42,7 @@
 | [296](#adr-296-town-screen-step-2-the-windows-over-the-key-painting-the-overview-and-plans-in-core-recruit-all-upgrade-all-dismissing-renaming-the-rumour-table-resource-for-resource-sending-to-an-ally-town-17-adr-246-adr-292-2026-11-22) | Town screen step 2: the windows over the key painting, the overview and plans in core, Recruit all, Upgrade all, dismissing, renaming, the rumour table, resource for resource, sending to an ally (TOWN-17, ADR-246, ADR-292, 2026-11-22) | implemented |
 | [297](#adr-297-town-screen-step-3-task-1-the-3d-town-scene-behind-the-bars-plots-read-from-layout-scenes-greybox-blocks-hover-and-pick-adr-246-adr-292-2026-11-22) | Town screen step 3, task 1: the 3D town scene behind the bars, plots read from layout scenes, greybox blocks, hover and pick (ADR-246, ADR-292, 2026-11-22) | implemented |
 | [300](#adr-300-town-screen-step-3-task-2-greybox-layouts-for-the-eight-towns-after-their-key-paintings-the-layout-check-in-the-game-the-towns-painting-as-the-sky-adr-246-adr-292-adr-297-2026-11-22) | Town screen step 3, task 2: greybox layouts for the eight towns after their key paintings, the layout check in the game, the town's painting as the sky (ADR-246, ADR-292, ADR-297, 2026-11-22) | implemented |
+| [301](#adr-301-town-screen-step-3-task-3-plot-states-walls-as-the-siege-has-them-streets-by-the-town-hall-banners-and-the-garrison-heros-banner-town-15-town-19-town-22-adr-291-2026-11-22) | Town screen step 3, task 3: plot states, walls as the siege has them, streets by the town hall, banners and the garrison hero's banner (TOWN-15, TOWN-19, TOWN-22, ADR-291, 2026-11-22) | implemented |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -809,3 +810,29 @@ TOWN-15 is ADR-291. The plan's step-by-step implementation is in its [roadmap](.
   becomes the sky (`town_sky.gdshader`): its middle where the hero shot looks, its horizon on the horizon, 2.1 radians wide, the sky's
   top colour above it; the layout's `sky_span` and `sky_horizon` metadata change the fit. The procedural sky stays until the pictures
   are made; Dungeon's cavern has no sky and keeps none.
+
+### ADR-301: Town screen step 3, task 3: plot states, walls as the siege has them, streets by the town hall, banners and the garrison hero's banner (TOWN-15, TOWN-19, TOWN-22, ADR-291, 2026-11-22)
+**Status**: implemented. The [town screen plan](../../docs/papers/town-screen-plan.md#implementation-plan)'s step 3, task 3.
+
+- **Plot states** (`TownPlot`, as `TownOverview.PlotsOf` has them): a plot not built, or a closed line, is unused land (its `Land` child
+  when the layout has one, else the layout's ground) with nothing to pick; a building built today stands in scaffolding round its model
+  until the next day; a closed line once the town has the Capitol shows the citizens' homes (its `Homes` child, else a few greybox houses in
+  the town's look), with nothing to pick.
+- **The scenery** is a core read model, `TownScenery`: the settlement (none, village, town, city by the town hall's level 0, 1, 2, 3–4), the
+  wall's parts from `SiegeRules.Create` itself (Fort: wall and gate; Citadel: the moat too; Castle: towers and a wall as high as it is
+  strong, `WallHealth`), the owner and the garrison hero with the town type of the hero's school. The siege's keep is not built: the
+  layouts model it as the town hall on its rise, inside the fort's own walls.
+- **Walls**: a layout's `Walls` node holds the wall's line (`Post0`, `Post1`, … markers) and its `Gate` marker; `TownDressing` builds the
+  parts along it in the town's siege look (ADR-144): sections, the gatehouse, the moat outside (away from the plots) with a bridge, a
+  tower with a banner at every post. Every layout's line runs up its left side and across its back to the keep's rise, the front left
+  open for the hero shot.
+- **Streets**: `Streets/Village`, `Streets/Town` and `Streets/City`, each shown from its settlement on, hold `Street*` (paving), `House*`
+  (a house in the town's look) and `Banner*` markers; the layouts place them clear of the plots and the setting: a street in from the
+  gate, lanes inside the walls, houses along them and in the gaps between the plots, the village nearest the middle of the hero shot.
+- **Banners**: the owner's colour (grey for a neutral town) with the faction's charge (ADR-211) on the gatehouse, the towers and the
+  streets; the garrison hero's banner, bigger and with the charge of the hero's own town type, on top of the town hall (the layout's
+  `HeroBanner` marker moves it). A marker with children of its own is the layout's art and shows as it is.
+- The scene follows `TownOwnerChanged`, `HeroEnteredGarrison` and `HeroLeftGarrison` besides the building events and the new day. Smoke
+  `game-town-states` opens a village, a town, a city and a Capitol; `game-town-build` shows the scaffolding, `game-town-armies` the hero's
+  banner.
+- Not yet: a captured Capitol dropping to City Hall loses the homes (the plan keeps them; it needs the town to remember the Capitol).

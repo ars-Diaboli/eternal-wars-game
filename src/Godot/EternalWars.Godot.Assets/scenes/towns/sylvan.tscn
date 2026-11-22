@@ -2910,3 +2910,108 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 2.5)
 light_color = Color(0.6, 0.95, 0.55, 1)
 light_energy = 1.2
 omni_range = 6
+
+[node name="Scenery" type="Node3D" parent="."]
+
+[node name="Walls" type="Node3D" parent="Scenery"]
+
+[node name="Post0" type="Marker3D" parent="Scenery/Walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.5, 0, 4)
+
+[node name="Post1" type="Marker3D" parent="Scenery/Walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.5, 0, -39)
+
+[node name="Post2" type="Marker3D" parent="Scenery/Walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -39)
+
+[node name="Gate" type="Marker3D" parent="Scenery/Walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.5, 0, -15.5)
+
+[node name="Streets" type="Node3D" parent="Scenery"]
+
+[node name="Village" type="Node3D" parent="Scenery/Streets"]
+
+[node name="Street0" type="Marker3D" parent="Scenery/Streets/Village"]
+transform = Transform3D(6.123e-17, 0, 1, 0, 1, 0, -1, 0, 6.123e-17, -25.8, 0, -15.5)
+metadata/size = Vector2(3.2, 10)
+
+[node name="House0" type="Marker3D" parent="Scenery/Streets/Village"]
+transform = Transform3D(6.123e-17, 0, 1, 0, 1, 0, -1, 0, 6.123e-17, -9, 0, -25)
+metadata/size = Vector3(2.9, 3.3, 3.5)
+
+[node name="House1" type="Marker3D" parent="Scenery/Streets/Village"]
+transform = Transform3D(-1.837e-16, 0, -1, 0, 1, 0, 1, 0, -1.837e-16, 29, 0, 5)
+metadata/size = Vector3(3.6, 2.4, 3.1)
+
+[node name="House2" type="Marker3D" parent="Scenery/Streets/Village"]
+transform = Transform3D(-1, 0, 1.225e-16, 0, 1, 0, -1.225e-16, 0, -1, -7, 0, -29)
+metadata/size = Vector3(3.7, 2.4, 3.5)
+
+[node name="House3" type="Marker3D" parent="Scenery/Streets/Village"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 0, -32.9)
+metadata/size = Vector3(3.3, 2.8, 3)
+
+[node name="Banner0" type="Marker3D" parent="Scenery/Streets/Village"]
+transform = Transform3D(-1, 0, 1.225e-16, 0, 1, 0, -1.225e-16, 0, -1, -7, 2.6, -29)
+
+[node name="Town" type="Node3D" parent="Scenery/Streets"]
+
+[node name="Street0" type="Marker3D" parent="Scenery/Streets/Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29.3, 0, -17.5)
+metadata/size = Vector2(3, 43)
+
+[node name="House0" type="Marker3D" parent="Scenery/Streets/Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 0, -32.9)
+metadata/size = Vector3(3.5, 3.3, 3.5)
+
+[node name="House1" type="Marker3D" parent="Scenery/Streets/Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0, -25)
+metadata/size = Vector3(3.6, 2.4, 2.8)
+
+[node name="House2" type="Marker3D" parent="Scenery/Streets/Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -32.9)
+metadata/size = Vector3(3.2, 3.2, 2.8)
+
+[node name="House3" type="Marker3D" parent="Scenery/Streets/Town"]
+transform = Transform3D(6.123e-17, 0, 1, 0, 1, 0, -1, 0, 6.123e-17, -15, 0, -29)
+metadata/size = Vector3(3.1, 2.5, 2.8)
+
+[node name="House4" type="Marker3D" parent="Scenery/Streets/Town"]
+transform = Transform3D(-1.837e-16, 0, -1, 0, 1, 0, 1, 0, -1.837e-16, -19, 0, -25)
+metadata/size = Vector3(3.7, 2.7, 3.4)
+
+[node name="Banner0" type="Marker3D" parent="Scenery/Streets/Town"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 3.4, -32.9)
+
+[node name="City" type="Node3D" parent="Scenery/Streets"]
+
+[node name="Street0" type="Marker3D" parent="Scenery/Streets/City"]
+transform = Transform3D(6.123e-17, 0, 1, 0, 1, 0, -1, 0, 6.123e-17, -10.75, 0, -36.8)
+metadata/size = Vector2(3, 41.5)
+
+[node name="House0" type="Marker3D" parent="Scenery/Streets/City"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.2, 0, -32.9)
+metadata/size = Vector3(2.9, 3, 2.9)
+
+[node name="House1" type="Marker3D" parent="Scenery/Streets/City"]
+transform = Transform3D(6.123e-17, 0, 1, 0, 1, 0, -1, 0, 6.123e-17, -25.4, 0, -7.1)
+metadata/size = Vector3(4, 3.1, 3)
+
+[node name="House2" type="Marker3D" parent="Scenery/Streets/City"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.4, 0, -32.9)
+metadata/size = Vector3(3.3, 2.6, 3.5)
+
+[node name="House3" type="Marker3D" parent="Scenery/Streets/City"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.6, 0, -32.9)
+metadata/size = Vector3(3.4, 2.5, 3.5)
+
+[node name="House4" type="Marker3D" parent="Scenery/Streets/City"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 43, 0, -15)
+metadata/size = Vector3(3.9, 2.7, 3.2)
+
+[node name="House5" type="Marker3D" parent="Scenery/Streets/City"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39, 0, 13)
+metadata/size = Vector3(2.9, 3.3, 3.2)
+
+[node name="Banner0" type="Marker3D" parent="Scenery/Streets/City"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.6, 2.7, -32.9)

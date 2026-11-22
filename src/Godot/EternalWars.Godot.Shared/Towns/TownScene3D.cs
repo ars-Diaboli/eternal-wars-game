@@ -3,6 +3,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Godot.Shared.Events;
+using EternalWars.Godot.Shared.Map;
 using Godot;
 
 namespace EternalWars.Godot.Shared.Towns;
@@ -17,7 +18,9 @@ namespace EternalWars.Godot.Shared.Towns;
 /// <see cref="TownBuilt"/>, <see cref="DwellingBuilt"/>, <see cref="TownBuildingDowngraded"/> and the new day while it is open. One layout stays
 /// loaded, out of the tree while the scene is closed. A layout missing a plot for one of the town type's buildings or lines reports an error
 /// when it loads (smoke <c>game-town-layouts</c>). The town type's painting (<c>bg_town_&lt;town&gt;</c>), when there is one, is the sky of a
-/// layout with a sky, spread over the part of it the hero shot sees (<c>town_sky.gdshader</c>).
+/// layout with a sky, spread over the part of it the hero shot sees (<c>town_sky.gdshader</c>). Besides the plots the layout shows the town's
+/// <see cref="TownScenery"/> (<see cref="TownDressing"/>, ADR-301): streets and houses by the town hall's level, the walls as the siege has them,
+/// banners in the owner's colour and the garrison hero's banner on the keep; they follow the owner and the garrison hero too.
 /// </summary>
 public partial class TownScene3D : Node3D
 {
@@ -33,6 +36,7 @@ public partial class TownScene3D : Node3D
     private readonly Dictionary<string, TownPlot> _plots = [];
     private GameSession _session = null!;
     private Node3D? _layout;
+    private TownDressing? _dressing;
     private string? _layoutType;
     private MapObjectId? _town;
     private TownPlot? _hovered;
@@ -78,6 +82,9 @@ public partial class TownScene3D : Node3D
             .On<TownBuilt>(session.Events)
             .On<DwellingBuilt>(session.Events)
             .On<TownBuildingDowngraded>(session.Events)
+            .On<TownOwnerChanged>(session.Events)
+            .On<HeroEnteredGarrison>(session.Events)
+            .On<HeroLeftGarrison>(session.Events)
             .On<TurnStarted>(session.Events);
     }
 
@@ -146,6 +153,7 @@ public partial class TownScene3D : Node3D
             _layout.Free(); // the kept layout is out of the tree while closed: it goes with the scene (nothing is freed in a queue at exit)
             (_layout, _layoutType) = (null, null);
             _plots.Clear();
+            _dressing = null;
         }
     }
 
@@ -215,6 +223,8 @@ public partial class TownScene3D : Node3D
             }
         }
 
+        var colour = town.Owner is { } owner ? Palette.ForPlayer(_session.State, owner) : Palette.Neutral;
+        _dressing?.Show(TownScenery.Of(_session.State, town), colour, _plots.GetValueOrDefault(TownOverview.PlotNode(BuiltInBuildings.TownHall)));
         if (_hovered is { IsShown: false })
         {
             SetHovered(null);
@@ -265,6 +275,7 @@ public partial class TownScene3D : Node3D
             _layout.AddChild(new DirectionalLight3D { Name = "Sun", RotationDegrees = new Vector3(-50, -35, 0), ShadowEnabled = true, LightEnergy = 1.3f });
         }
 
+        _dressing = new TownDressing(_layout, townType);
         PaintSky(townType);
         AddChild(_layout);
     }

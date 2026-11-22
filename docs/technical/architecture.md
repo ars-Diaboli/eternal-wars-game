@@ -228,7 +228,9 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   building's model for its level, the layout's own `Model`, or a `PlotBlock`. It refreshes its plots on the building events and the new
   day. Picking is a ray against the plots' hover boxes, not physics, so it works in the frame a plot appears. A layout missing a
   plot reports an error when it loads; the town type's `bg_town_<town>` painting, when there is one, replaces the layout's sky
-  (`town_sky.gdshader`, ADR-300).
+  (`town_sky.gdshader`, ADR-300). Around the plots `TownDressing` shows the core's `TownScenery` (ADR-301): the layout's wall line
+  built as the siege has it (`SiegeRules.Create`), the street groups by the town hall's level, banners in the owner's colour and
+  the garrison hero's banner; `TownPlot` adds scaffolding the day a building goes up and the citizens' homes (`SceneryKit`).
 
 ### Map objects
 - **Definition** (`MapObjectDefinition`, data: id, `Kind`, footprint, kind parameters) vs **instance** (`MapObject`

@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Towns;
+using EternalWars.Godot.Shared.Battle;
 using Godot;
 
 namespace EternalWars.Godot.Shared.Towns;
@@ -8,8 +9,10 @@ namespace EternalWars.Godot.Shared.Towns;
 /// of the building), <c>Hover</c> (an <see cref="Area3D"/> whose <see cref="CollisionShape3D"/>s are what the pointer picks) and <c>Focus</c> (where
 /// the camera looks at the building). A built plot shows, first found: the model for its level (<c>models/towns/&lt;town&gt;/&lt;id&gt;_&lt;level&gt;.glb</c>,
 /// or the nearest lower level's), the layout's <c>Model</c>, or a procedural block sized by the building's kind with a roof and a sign
-/// (<see cref="PlotBlock"/>). A plot not built (closed lines too, for now) is the layout's land: nothing shown, nothing to pick. Without a
-/// <c>Hover</c> the plot picks by a box around what it shows.
+/// (<see cref="PlotBlock"/>). What a plot shows follows its state (TOWN-15, ADR-291, ADR-301): a plot not built, or a closed line, is unused
+/// land (its <c>Land</c> child when the layout has one, else the layout's ground), with nothing to pick; a plot built today stands in
+/// scaffolding; a closed line once the town has the Capitol shows the citizens' homes (its <c>Homes</c> child, else a few greybox houses in the
+/// town's look), with nothing to pick. Without a <c>Hover</c> the plot picks by a box around what it shows.
 /// </summary>
 internal sealed class TownPlot
 {
@@ -18,7 +21,10 @@ internal sealed class TownPlot
 
     private readonly Node3D? _model;
     private readonly Area3D? _hover;
+    private readonly Node3D? _land;
+    private readonly Node3D? _homes;
     private Node3D? _look;
+    private Node3D? _extra;
     private Area3D? _generatedHover;
     private (PlotState State, int Level)? _shown;
 
@@ -27,6 +33,12 @@ internal sealed class TownPlot
         Marker = marker;
         _model = marker.GetNodeOrNull<Node3D>("Model");
         _hover = marker.GetNodeOrNull<Area3D>("Hover");
+        _land = marker.GetNodeOrNull<Node3D>("Land");
+        _homes = marker.GetNodeOrNull<Node3D>("Homes");
+        if (_homes is not null)
+        {
+            _homes.Visible = false;
+        }
         foreach (var area in new[] { _hover }.OfType<Area3D>())
         {
             (area.Monitoring, area.Monitorable, area.InputRayPickable) = (false, false, false); // picked by TownScene3D's own ray, not physics
@@ -40,6 +52,9 @@ internal sealed class TownPlot
 
     /// <summary>Whether a building stands here (shown and pickable).</summary>
     public bool IsShown { get; private set; }
+
+    /// <summary>The box around the building shown, in the marker's space (empty while none is).</summary>
+    public Aabb ShownBounds { get; private set; }
 
     /// <summary>The <c>Focus</c> marker, or a point above the plot.</summary>
     public Vector3 Focus => Marker.GetNodeOrNull<Node3D>("Focus")?.GlobalPosition ?? Marker.GlobalPosition + new Vector3(0, 3, 0);
@@ -56,6 +71,27 @@ internal sealed class TownPlot
         _shown = (info.State, info.Level);
         Clear();
         IsShown = info.State is PlotState.Built or PlotState.BuiltToday;
+        if (_land is not null)
+        {
+            _land.Visible = info.State is PlotState.NotBuilt or PlotState.Closed;
+        }
+
+        if (info.State == PlotState.CitizensHomes)
+        {
+            if (_homes is not null)
+            {
+                _homes.Visible = true;
+            }
+            else
+            {
+                var block = PlotBlock.Size(kind, tier);
+                _extra = SceneryKit.Homes(SiegeLook.Of(townType), new Vector2(Mathf.Max(block.X, 7), Mathf.Max(block.Z, 7)));
+                Marker.AddChild(_extra);
+            }
+
+            return;
+        }
+
         if (!IsShown)
         {
             return;
@@ -79,6 +115,13 @@ internal sealed class TownPlot
             _look = block.Node;
             Marker.AddChild(block.Node);
             bounds = block.Bounds;
+        }
+
+        ShownBounds = bounds;
+        if (info.State == PlotState.BuiltToday)
+        {
+            _extra = SceneryKit.Scaffold(bounds);
+            Marker.AddChild(_extra);
         }
 
         if (_hover is null)
@@ -160,9 +203,23 @@ internal sealed class TownPlot
             _model.Visible = false;
         }
 
-        _look?.QueueFree();
+        if (_homes is not null)
+        {
+            _homes.Visible = false;
+        }
+
+        foreach (var node in new[] { _look, _extra, _generatedHover })
+        {
+            if (node is not null)
+            {
+                Marker.RemoveChild(node);
+                node.QueueFree();
+            }
+        }
+
         _look = null;
-        _generatedHover?.QueueFree();
+        _extra = null;
+        ShownBounds = default;
         _generatedHover = null;
     }
 

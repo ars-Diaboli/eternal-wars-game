@@ -237,8 +237,8 @@ a second Escape leaves the town.
   fills those two plots with citizens' homes, as part of its construction scene; a captured Capitol that drops to City Hall keeps them.
 - **Streets follow the town hall** (TOWN-19): streets and houses fill the space between the buildings in three steps, village, town and
   city, by the town hall's level; the Capitol adds the citizens' homes on the closed plots.
-- **Walls follow the fort**: no walls at level 0. A palisade or low wall with the Fort, towers with the Citadel, and the full wall and
-  moat with the Castle. These are the same parts the siege uses ([combat.md](../design/combat.md#sieges)), so the town looks as it
+- **Walls follow the fort**: no walls at level 0. The wall and its gate with the Fort, the moat with the Citadel, and towers and a higher
+  wall with the Castle. These are the same parts the siege uses ([combat.md](../design/combat.md#sieges)), so the town looks as it
   fights.
 - **Camera** (TOWN-14):
   - a fixed "hero shot" of the whole town;
@@ -650,7 +650,9 @@ Core first (tasks 1–7), then the screen (8–16). Each TOWN-17 rule gets its o
 3. **Plot states**: unused land (a piece of the diorama's scenery, no markers or rubble), the model for its level, scaffolding on the
    day it is built, the citizens' homes on the two closed lines once the Capitol stands (ADR-291); walls by fort level (the siege's
    parts); streets and houses as filler by town hall level in three steps, village, town and city (TOWN-19); banners in the player's
-   colour; the garrison hero's banner on the keep (TOWN-22).
+   colour; the garrison hero's banner on the keep (TOWN-22). *Done (ADR-301): `TownScenery` in the core (the settlement, the siege's own
+   parts, the owner, the garrison hero); each layout's `Walls` line and `Streets` markers; scaffolding until the next day; homes as a few
+   houses in the town's look; banners with the faction's charge. A captured Capitol dropping to City Hall still loses its homes.*
 4. **Camera** (TOWN-14): the hero shot, turned ±25° and zoomed in two steps; a click opens the window at once while the camera eases
    toward the building, and eases back after Escape.
 5. **Hover and pick**: the bronze outline, name and state on the status line, the hand cursor, right click for the info window;
