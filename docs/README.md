@@ -40,6 +40,7 @@ The game design document, split by mechanic. Start at the overview.
 | [editor-icon-prompts.md](content/prompts/editor-icon-prompts.md) | Image-model prompts for the map and template editor icons: tools, commands, panel tabs, tool options, template zones and connections |
 | [hero-town-icon-prompts.md](content/prompts/hero-town-icon-prompts.md) | Image-model prompts for the 128 hero portraits and the town icons |
 | [ui-element-prompts.md](content/prompts/ui-element-prompts.md) | Image-model prompts for frames, buttons, slots, bars and screen backgrounds |
+| [question-picture-prompts.md](content/prompts/question-picture-prompts.md) | Image-model prompts for the pictures on the adventure map's question cards, one for each kind of question |
 | [puzzle-map-prompts.md](content/prompts/puzzle-map-prompts.md) | Image-model prompts for the puzzle map's faction pictures |
 | [terrain-texture-prompts.md](content/prompts/terrain-texture-prompts.md) | Image-model prompts for the terrain textures of the adventure map and the battlefield |
 | [town-model-prompts.md](content/prompts/town-model-prompts.md) | 3D-model prompts for the ten town types on the adventure map: format, style block, lore per town |
@@ -58,6 +59,7 @@ The game design document, split by mechanic. Start at the overview.
 
 | Document | What it covers |
 |---|---|
+| [adventure-hud-plan.md](papers/adventure-hud-plan.md) | The adventure HUD redesign: the guide to every part as decided from the mockups, the open points, a six-step plan and the prompts for the next adventure and battle HUD mockups |
 | [code-review-2026-11.md](papers/code-review-2026-11.md) | The November 2026 code review and what became of each item (ADR-165 … ADR-175) |
 | [relief-plan.md](papers/relief-plan.md) | How the adventure map's relief was built in five steps (ADR-181, ADR-182) |
 | [town-screen-plan.md](papers/town-screen-plan.md) | The town screen overhaul: a study of today's screen, HoMM3 with HotA and HoMM5, the target, every screen, the technical and art plan, six steps and the open questions (ADR-246) |

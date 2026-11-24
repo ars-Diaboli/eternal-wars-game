@@ -76,8 +76,8 @@ pixel art, blurry, cropped subject, subjects touching or overlapping, two subjec
 | Tier | What | Where it is shown | Sheets |
 |---|---|---|---|
 | **A · Objects** | realistically painted objects with materials | hero screen, level-up and trade windows, the resource bar, the difficulty row; 48–64 px | 1–7, 29 |
-| **B · Emblems** | symbols made as real objects (metal, stone, enamel), two or three colours and a glow | skill and spell rows, the action panel, the battle bar; 32–48 px | 8–18 |
-| **C · Plain** | one-colour symbols the theme tints | buttons; 24–32 px | 19–22 |
+| **B · Emblems** | symbols made as real objects (metal, stone, enamel), two or three colours and a glow | skill and spell rows, the action panel, the battle bar, the adventure HUD's marks; 32–48 px | 8–18, 30, 32 |
+| **C · Plain** | one-colour symbols the theme tints | buttons, the replay bar; 24–32 px | 19–22, 31 |
 | **Heraldry** | faction crests in colour, and their one-colour charges | town and player panels, flags and banners; 24–128 px | 23–28 |
 
 ## Tier A · Objects
@@ -539,9 +539,9 @@ and wear. Two or three muted colours plus a soft glow where named, the glow ligh
 top left, the shape set apart by value contrast and a faint dark edge, no drawn outline. Not a photograph, not a plastic CGI render, no
 pixel art. 6 separate icons arranged in a grid of 3 columns and 2 rows, each alone in its own equal square cell, centred with about 10
 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames,
-no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 an old
-iron horseshoe with a small glowing gold rune on it, and a short trail of three hoof prints curving ahead of it toward the upper right;
-2 a knight's helmet in profile facing right, a small gold arrow pointing right in front of it; 3 an hourglass in a dark wooden frame,
+no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 two bold
+chevrons pointing right side by side, cut from hammered bronze, a faint gold glow along their leading edges; 2 a hero's head and
+shoulders in profile facing right, a cloak over the shoulder, cast in dark bronze like a medal; 3 an hourglass in a dark wooden frame,
 the top bulb almost empty, the last grains of pale sand falling; 4 a closed thick spell book in dark-violet leather, gold corners and a
 gold clasp, a faint rune glowing on the cover; 5 an iron shovel with a wooden handle stuck upright in a small mound of dark earth, a
 few clods around it; 6 a dark cave mouth in a grey rock face, one small gold arrow above it pointing up and one beside it pointing down
@@ -551,7 +551,10 @@ few clods around it; 6 a dark cave mouth in a grey rock face, one small gold arr
 | # | File |
 |---|---|
 | 1 | `icon_action_move` |
-| 2 | `icon_action_next-hero` |
+| 2 | `icon_action_hero` |
+
+Move walks the selected hero along its route; there is no Next hero button (Tab), and the hero screen opens from the grid and the hero
+card's portrait.
 | 3 | `icon_action_end-turn` |
 | 4 | `icon_action_spell-book` |
 | 5 | `icon_action_dig` |
@@ -581,6 +584,66 @@ hanging from the cord
 | 2 | `icon_action_marketplace` |
 | 3 | `icon_action_thieves-guild` |
 | 4 | `icon_action_quest-log` |
+
+### 30 · Adventure HUD: town marks and levels (2 × 2) — the town list, the minimap's level caption
+
+**Prompt** · 1024 × 1024 · negative `NEG-PAINTED`
+
+```text
+Game UI icon sheet of dark-fantasy emblems in a realistic painterly style, flat front view, each emblem one strong symbolic shape made
+as a real object: hammered and engraved metal, carved stone or bone, aged enamel or worn cloth, with true material texture, small dents
+and wear. Two or three muted colours plus a soft glow where named, the glow lighting the surface around it naturally. Light from the
+top left, the shape set apart by value contrast and a faint dark edge, no drawn outline. Not a photograph, not a plastic CGI render, no
+pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10
+% empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames,
+no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a
+mason's hammer with an iron head and a wooden handle laid diagonally over a squared grey building stone, a warm gold glow on the hammer's
+face; 2 a small stone keep seen from the front, a gold laurel wreath hanging on its gate, a faint golden glow; 3 a low green hill under
+a small pale sun with short rays, a blue sky disc behind it; 4 a dark cave arch in grey rock with three stalactites hanging from its top,
+a small violet crystal glowing inside
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_town_can-build` |
+| 2 | `icon_town_fully-built` |
+| 3 | `icon_level_surface` |
+| 4 | `icon_level_underground` |
+
+The town list shows `icon_town_can-build` lit when the town can build today and dimmed (the game darkens it) when it built today;
+`icon_town_fully-built` replaces it when nothing is left to build. The level caption under the minimap shows the level's icon beside its
+name.
+
+### 32 · Adventure map: route end markers (2 × 3) — the marker at the end of a hero's route
+
+**Prompt** · 1536 × 1024 · negative `NEG-PAINTED`
+
+```text
+Game UI icon sheet of dark-fantasy emblems in a realistic painterly style, flat front view, each emblem one strong symbolic shape made
+as a real object: hammered and engraved metal, carved stone or bone, aged enamel or worn cloth, with true material texture, small dents
+and wear. Two or three muted colours plus a soft glow where named, the glow lighting the surface around it naturally. Light from the
+top left, the shape set apart by value contrast and a faint dark edge, no drawn outline. Not a photograph, not a plastic CGI render, no
+pixel art. 6 separate icons arranged in a grid of 3 columns and 2 rows, each alone in its own equal square cell, centred with about 10
+% empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames,
+no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 two short
+swords crossed point up, steel blades and dark leather grips, a faint red glow where they cross; 2 an open hand seen from the front,
+palm out in greeting, made of dark bronze, a soft warm glow in the palm; 3 an open hand seen from above reaching down toward a single
+gold coin, dark bronze, a small gold glint on the coin; 4 a small stone town gate seen from the front, an open arch between two towers,
+warm light inside the arch; 5 two gauntlets clasped in a handshake, dark steel, a faint gold glow where they meet; 6 a second take of
+cell 3
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_route_attack` |
+| 2 | `icon_route_visit` |
+| 3 | `icon_route_pick-up` |
+| 4 | `icon_route_enter-town` |
+| 5 | `icon_route_meet-hero` |
+
+The marker at a route's end shows the icon of what the hero does there, as the adventure cursor decides it (`AdventureCursors`):
+attack, visit, enter a town, meet an own hero; picking up (a resource, an artifact, a chest) gets its own. A plain move shows no icon,
+only the bigger marker.
 
 ### 17 · Battle: unit actions (2 × 3) — the battle bar, the cursor
 
@@ -725,6 +788,32 @@ equal length, evenly spaced
 | 4 | `icon_button_lock` |
 | 5 | `icon_button_unlock` |
 | 6 | `icon_action_menu` |
+
+### 31 · Replay bar (2 × 3)
+
+**Prompt** · 1536 × 1024 · negative `NEG-PLAIN`
+
+```text
+Game UI button symbol sheet, flat front view, each symbol a single light-grey shape with a subtle bevel and a thick dark outline, no
+other colour, no glow, bold and simple, equal stroke weight on every symbol. 6 separate icons arranged in a grid of 3 columns and 2
+rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
+nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
+with alpha. The icons, top row left to right, then bottom row: 1 two thick upright bars of equal height side by side; 2 a solid
+triangle pointing right against one thick upright bar; 3 two solid triangles pointing right, the second touching the first; 4 a solid
+triangle pointing right toward a small flag on a pole; 5 a gauntlet seen from the side gripping an upright pole; 6 a second take of
+cell 5
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_button_pause` |
+| 2 | `icon_button_next-turn` |
+| 3 | `icon_button_next-day` |
+| 4 | `icon_button_skip-to-result` |
+| 5 | `icon_button_take-over` |
+
+The replay bar's one Play/Pause toggle shows `icon_button_pause` while playing and the play icon while paused; `icon_button_take-over` is
+"Play from here".
 
 ## Heraldry
 
