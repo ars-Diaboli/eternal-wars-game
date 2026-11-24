@@ -81,6 +81,7 @@ public partial class HeroPanel : PanelContainer
         {
             SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
             OffsetBottom = -StatusBar.Height; // the status bar stays in sight below (ADR-204)
+            OffsetTop = ResourceTopBar.Height; // and the top bar above (ADR-309)
             this.UseOpaqueBackground();
             var scroll = new ScrollContainer { SizeFlagsVertical = SizeFlags.ExpandFill, SizeFlagsHorizontal = SizeFlags.ExpandFill };
             AddChild(scroll);

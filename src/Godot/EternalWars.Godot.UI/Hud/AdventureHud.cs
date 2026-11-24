@@ -1,7 +1,9 @@
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Cursors;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Info;
 using EternalWars.Core.Domain.Magic;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Settings;
@@ -15,7 +17,8 @@ namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
 /// The adventure map's HUD (ADR-050, ADR-186, ADR-309): this layer holds the side panel's parts, on the side the "Layout" tab's mirror picks
-/// (the turn block, the minimap, the hero and town lists, the 3×3 action buttons of ADR-210), the <see cref="StatusBar"/> along the bottom (the status line and the resources), and
+/// (the turn block, the minimap, the hero and town lists, the 3×3 action buttons of ADR-210), the <see cref="StatusBar"/> along the bottom (the subject, the
+/// detail and the calendar) and the <see cref="TopBar"/> with the resources (both on a layer over the full-screen panels), and
 /// the questions and notices in the middle of the screen; a second layer above it, added beside it, holds the full-screen
 /// panels (town, hero, exchange, dwelling, marketplace, services, Thieves' Guild, tavern, kingdom, quest log, puzzle map, intel) and the
 /// spell book. A hero stepping into an own town, a dwelling, a marketplace or a service opens its screen. In the replay viewer (<c>playing</c>
@@ -53,8 +56,11 @@ public partial class AdventureHud : CanvasLayer
     /// <summary>The status line on the status bar: the HUD's and the map's messages.</summary>
     public Label Status => StatusBar.Message;
 
-    /// <summary>The stripe along the bottom of the screen (ADR-186): the status line and the resources.</summary>
+    /// <summary>The stripe along the bottom of the screen (ADR-186, ADR-309): the subject, the detail and the calendar.</summary>
     public StatusBar StatusBar { get; private set; } = null!;
+
+    /// <summary>The resources in the top corner away from the minimap (ADR-309).</summary>
+    public ResourceTopBar TopBar { get; private set; } = null!;
 
     public HeroListPanel HeroList { get; private set; } = null!;
 
@@ -90,14 +96,17 @@ public partial class AdventureHud : CanvasLayer
         _layout.SetInfo(turn);
         turn.Bind(session, endTurn: playing);
 
-        // The status bar along the bottom (ADR-186): the hints line first, then the messages and what the pointer is over; the resources on
-        // the right. In the replay viewer it stands above the viewer's bar.
+        // The status bar along the bottom (ADR-186, ADR-309): the hints line first, then the messages and what the pointer is over; the
+        // calendar on the right. In the replay viewer it stands above the viewer's bar. The resources are on the top bar.
         StatusBar = new StatusBar
         {
             BottomOffset = playing ? 0 : ReplayControlBar.ReservedHeight, // the menu button is one of the action buttons (ADR-210)
         };
         AddChild(StatusBar);
-        StatusBar.Bind(session, () => context.ListedPlayer, calendar: true);
+        StatusBar.Bind(session);
+        TopBar = new ResourceTopBar();
+        AddChild(TopBar);
+        TopBar.Bind(session, () => context.ListedPlayer);
         Status.Text = playing
             ? "Click: route, click again: go. Tab: next hero  H: hero  C: spell book  L: level  K: kingdom  Q: quests  P: puzzle  G: dig  WASD/QE/wheel: camera"
             : "Watching. Space: play or pause  L: level  right click: information  WASD/QE/wheel: camera";
@@ -163,12 +172,18 @@ public partial class AdventureHud : CanvasLayer
         BuildScreens(playing, screens);
         BuildActions(playing);
 
-        // The status bar stands over the town, hero and exchange screens too (ADR-204), which stop short of it: its own layer above
-        // theirs, shown while the HUD is.
+        // The status bar and the top bar stand over the town, hero and exchange screens too (ADR-204, ADR-309), which stop short of
+        // them: their own layer above theirs, shown while the HUD is. While one of those screens is open the top bar runs across it.
         var barLayer = new CanvasLayer { Name = "StatusBarLayer", Layer = 1 };
         screens.AddChild(barLayer);
         StatusBar.Reparent(barLayer, keepGlobalTransform: false);
+        TopBar.Reparent(barLayer, keepGlobalTransform: false);
         VisibilityChanged += () => barLayer.Visible = Visible;
+        foreach (var screen in _fullScreens)
+        {
+            screen.VisibilityChanged += () => TopBar.Wide = _fullScreens.Any(s => s.Visible);
+        }
+
         _layout.BottomReserve = StatusBar.Height + StatusBar.BottomOffset; // the bottom parts stand above the status bar
         ApplyLayout(layout);
     }
@@ -187,11 +202,18 @@ public partial class AdventureHud : CanvasLayer
         set => _layout.Visible = _popUps.Visible = !value;
     }
 
-    /// <summary>What the pointer is over on the map goes to the status line (null: nothing there).</summary>
-    public void ShowHover(string? text) => StatusBar.ShowHover(text);
+    /// <summary>What the pointer is over on the map goes to the status bar: its name as the subject, its description as the detail (null: nothing there).</summary>
+    public void ShowHover(MapDescription? description) => StatusBar.ShowSubject(description?.Name, description?.Status);
 
     /// <summary>Places the parts as <paramref name="layout"/> says (the "Layout" tab changed): the default or its mirror (ADR-309).</summary>
-    public void ApplyLayout(LayoutSettings layout) => _layout.Apply(layout);
+    public void ApplyLayout(LayoutSettings layout)
+    {
+        _layout.Apply(layout);
+        TopBar.OnRight = HudArrangement.SideOf(layout, HudPart.Minimap) == ScreenSide.Left; // the corner away from the minimap
+    }
+
+    /// <summary>The screens that cover the map and stop short of the top and status bars: town, hero, exchange.</summary>
+    private readonly List<Control> _fullScreens = [];
 
     /// <summary>The 3×3 action buttons (ADR-210).</summary>
     private GridContainer _actions = null!;
@@ -251,16 +273,16 @@ public partial class AdventureHud : CanvasLayer
     private void BuildActions(bool playing)
     {
         _playing = playing;
-        _heroButton = AddAction("Hero screen (H)", UiIcon.Hero, () => ShowHero(_selected));
-        _bookButton = AddAction("Spell book (C)", UiIcon.SpellBook, () => OpenSpellBook(_selected));
-        AddAction("Kingdom (K)", UiIcon.Kingdom, () => KingdomScreen.Open(_session.State.CurrentPlayer.Id), "Every source of income and the totals");
-        AddAction("Quests (Q)", UiIcon.Quests, () => QuestScreen.Open(_session.State.CurrentPlayer.Id), "The quests your heroes were shown");
-        AddAction("Puzzle map (P)", UiIcon.PuzzleMap, () => PuzzleScreen.Open(_session.State.CurrentPlayer.Id), "The ground around the Grail, as your obelisks show it");
-        _digButton = AddAction("Dig (G)", UiIcon.Dig, () => DigRequested?.Invoke());
+        _heroButton = AddAction(Hint(AdventureAction.HeroScreen), UiIcon.Hero, () => ShowHero(_selected));
+        _bookButton = AddAction(Hint(AdventureAction.SpellBook), UiIcon.SpellBook, () => OpenSpellBook(_selected));
+        AddAction(Hint(AdventureAction.Kingdom), UiIcon.Kingdom, () => KingdomScreen.Open(_session.State.CurrentPlayer.Id), "Every source of income and the totals");
+        AddAction(Hint(AdventureAction.Quests), UiIcon.Quests, () => QuestScreen.Open(_session.State.CurrentPlayer.Id), "The quests your heroes were shown");
+        AddAction(Hint(AdventureAction.PuzzleMap), UiIcon.PuzzleMap, () => PuzzleScreen.Open(_session.State.CurrentPlayer.Id), "The ground around the Grail, as your obelisks show it");
+        _digButton = AddAction(Hint(AdventureAction.Dig), UiIcon.Dig, () => DigRequested?.Invoke());
 
         // Trading belongs to the player, not a hero: this button, or a hero visiting a map marketplace (ADR-067).
         _marketButton = AddAction("Marketplace", UiIcon.Marketplace, () => _marketScreen.Open());
-        var level = AddAction("Switch level (L)", UiIcon.SwitchLevel, () => _context.SetLevel((_context.Level + 1) % _session.State.Map.Levels),
+        var level = AddAction(Hint(AdventureAction.SwitchLevel), UiIcon.SwitchLevel, () => _context.SetLevel((_context.Level + 1) % _session.State.Map.Levels),
             "Between the surface and the underground");
         if (_session.State.Map.Levels < 2)
         {
@@ -283,7 +305,7 @@ public partial class AdventureHud : CanvasLayer
             level.TreeExiting += () => _context.LevelChanged -= ShowTarget;
         }
 
-        AddAction("Menu (F10)", UiIcon.Menu, () => MenuRequested?.Invoke(), "Save, load, settings");
+        AddAction(Hint(AdventureAction.Menu), UiIcon.Menu, () => MenuRequested?.Invoke(), "Save, load, settings");
 
         RefreshActions();
         this.SubscribeWhileInTree<TownBuilt>(_session.Events, _ => RefreshActions());
@@ -292,6 +314,9 @@ public partial class AdventureHud : CanvasLayer
         this.SubscribeWhileInTree<SpellBookBought>(_session.Events, _ => RefreshActions());
         this.SubscribeWhileInTree<HeroDefeated>(_session.Events, _ => RefreshActions());
     }
+
+    /// <summary>An action's name and key from the hotkey table (ADR-309): "Dig [G]".</summary>
+    private static string Hint(AdventureAction action) => AdventureHotkeys.Of(action).Hint;
 
     private Button AddAction(string label, UiIcon icon, Action pressed, string tooltip = "")
     {
@@ -405,12 +430,14 @@ public partial class AdventureHud : CanvasLayer
         HeroScreen = new HeroPanel { FullScreen = true };
         townLayer.AddChild(HeroScreen);
         HeroScreen.Bind(_session);
+        _fullScreens.AddRange([TownScreen, HeroScreen]);
         // Two own heroes met: the exchange screen covers the map like the hero screen (ADR-153).
         if (playing)
         {
             var exchange = new ExchangePanel(); // it opens itself when two own heroes meet; not in the replay viewer
             townLayer.AddChild(exchange);
             exchange.Bind(_session);
+            _fullScreens.Add(exchange);
         }
 
         HeroScreen.AdventureSpellArmed += (hero, spell) =>

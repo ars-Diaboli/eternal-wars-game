@@ -42,20 +42,27 @@ creatures and buildings, heraldic player colours, iconic map objects).
 - **Camera** (ADR-022): tilted **15–30° from vertical** (more tilted zoomed in), **rotatable ±45°**, zoom, pan.
 - **UI**: a HoMM-style side panel on the right, or the left when mirrored (ADR-191, ADR-309): one framed column from the top to the status bar with the minimap,
   the hero and town lists and the action buttons, which takes the clicks on it; End turn among the action
-  buttons (ADR-204) and the calendar (date, week's event) on the status bar right of the resources (ADR-225); full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips, the
+  buttons (ADR-204), the resources on the top bar and the calendar (date, week's event) on the status bar's right end (ADR-225, ADR-309);
+  full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips, the
   fog's look, the tile grid, the window mode) and "Layout".
 - **Action buttons** (ADR-210): a 3 × 3 grid of 48 px icon buttons: hero screen (H), spell book (C), kingdom (K); quests (Q), puzzle map
-  (P), dig (G); marketplace, switch level (L), menu (F10). Switch level shows the level it goes to: the sunlit hill from the
+  (P), dig (G); marketplace, switch level (L), menu (F10). Their names and keys come from one hotkey table, which the keys also follow
+  ("Dig [G]", ADR-309). Switch level shows the level it goes to: the sunlit hill from the
   underground, the cave from the surface (ADR-309). The hero screen, spell book and dig act on the selected hero and are greyed
   without one (the spell book also when the hero has none); the marketplace without a town marketplace; the level switch on a one-level map.
   In the replay viewer the hero, spell book, dig and marketplace buttons are greyed. The spell book is a window over the map: the hero's
   mana, its adventure spells to cast, its battle spells by school with their costs.
-- **Status bar** (ADR-186, ADR-204): a narrow stripe along the bottom of the adventure map, as wide as the screen up to 16:9 and a centred
-  16:9 width on a wider screen. The battle, town and hero screens and the screens before a game have the same stripe (resources only on
-  the map and the town screen); windows over a screen use that screen's bar; the map editor keeps pop-up tooltips. On the left the status line: the hints, the game's messages and what the pointer is over (a HUD control's tooltip, or
-  the name of the hero, object or ground under it on the map), whichever came last. On the right the resources (short amounts past 6 digits
-  for gold and 4 for the others, the full one in the tooltip), and on the adventure map the calendar after them (ADR-225). On the adventure map the menu is one of the action buttons; in battle the
-  "Menu (F10)" button stands on the bar's right end, and before a game and in the replay viewer's battles in the bottom right corner. In
+- **Top bar** (ADR-309): the six resources (short amounts past 6 digits for gold and 4 for the others, the full one in the tooltip) in the
+  top corner away from the minimap, within the status bar's 16:9 width, on a layer over the full-screen panels. The town, hero and exchange
+  screens stop short of it, and while one is open it runs across that width.
+- **Status bar** (ADR-186, ADR-204, ADR-309): a narrow stripe along the bottom of the adventure map, as wide as the screen up to 16:9 and a
+  centred 16:9 width on a wider screen. The battle, town and hero screens and the screens before a game have the same stripe; windows over
+  a screen use that screen's bar; the map editor keeps pop-up tooltips. On the left the subject: the icon and name of what the pointer is
+  over (a HUD control's icon and label, a town building's name, the hero, object or ground under it on the map), then a divider and the
+  detail: the subject's description while the pointer is over it (a control's tooltip, a building's state, a map object's wording by
+  ownership: "Yours: +2 ore a day" against "Produces 2 ore a day when captured"), else the latest message; the hotkey hints are the
+  first. On the adventure map the calendar is on the right (ADR-225). On the adventure map the menu is one of the action buttons; in battle the
+  "Menu [F10]" button stands on the bar's right end, and before a game and in the replay viewer's battles in the bottom right corner. In
   the replay viewer the bar stands above the viewer's bar.
 - **Icon buttons** (ADR-204): a button with an icon shows the icon alone on a square button, 48 px in bars and panels (the action
   buttons; the battle bar; End turn), 32 px in rows, window headers and the replay viewer's bar (Play/Pause as one button showing what
@@ -111,7 +118,7 @@ creatures and buildings, heraldic player colours, iconic map objects).
   above a section's heading (Army, Worn artifacts, Buildings, ...), 8 inside a panel, 16 inside a screen or window over the map, 8 from
   the window's edge to the HUD parts and between them.
 - **Before a game** (ADR-163): the main menu, the new-game screen and the leaderboard stand on a full-window picture (cropped to fit, never
-  stretched, a little darkened), in dark panels that let some of it through; the main menu is a column on its left. The game's "Menu (F10)"
+  stretched, a little darkened), in dark panels that let some of it through; the main menu is a column on its left. The game's "Menu [F10]"
   button shows only in a game (F10 still opens the menu). The F10 menu and the result screen are opaque, so the map does not show through.
 - **Audio**: per-terrain ambient music, faction town themes.
 

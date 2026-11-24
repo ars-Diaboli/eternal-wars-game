@@ -93,7 +93,7 @@ buttons need no labels.
 - Army strip: always 7 slots, empty ones dim; click a stack for the hero screen, right click for its information window.
 
 **Action buttons**
-- Bottom right, beside End turn: a 2×5 grid of buttons wider than tall: Move (»), Spellbook, Kingdom, Quests, Puzzle map / Dig,
+- Bottom right, beside End turn: a 2×5 grid of buttons wider than tall: Move (»), Spell book, Kingdom, Quests, Puzzle map / Dig,
   Marketplace, Switch level, Hero screen, Menu (amends ADR-210). No Next hero button: Tab stays.
 - Move walks the selected hero along its route; disabled with no route or no movement left.
 
@@ -104,7 +104,7 @@ buttons need no labels.
 
 **Route on the map**
 - Markers coloured by the day each step is reached, in placeholder colours until the art pass: today's steps warm gold (RGB 217, 173, 92, the
-  frames' bronze highlight), later days alternating pale steel blue (140, 170, 200) and pale silver (200, 200, 205); a tag "Day N" at the start of the first two days and the last; a
+  frames' bronze highlight), later days alternating pale steel blue (140, 170, 200) and pale silver (200, 200, 205); a tag "Day N" (the day counted from the game's start, as on the replay bar) at the start of the route's first two days and its last; a
   bigger marker at the end, rimmed in the player's colour, holding the icon of what the hero does there: attack, visit, pick up, enter a
   town, meet an own hero (none for a plain move; icon sheet 32).
 - The selection ring under the selected hero, in the player's colour.
@@ -142,7 +142,7 @@ Every hotkey shows on the status bar with its action's name; M, Space and Z are 
 | Next hero | Tab | today, no button |
 | Next town | T | today |
 | Hero screen | H | today |
-| Spellbook | C | today |
+| Spell book | C | today |
 | Kingdom | K | today |
 | Quests | Q | today |
 | Puzzle map | P | today |
@@ -187,20 +187,21 @@ memory-bank entries updated.
 ### 2. Core (engine-free, with tests)
 - [x] `LayoutSettings`: only a mirrored flag; `HudArrangement` reduced to it; older saved layouts load as the default or its mirror.
 - [x] `InterfaceSettings.UiScalePercent`: 100, 150 or 200, clamped like `EditorPreferences`.
-- [ ] A hero card model: movement, mana, experience progress (`TrainingRules.ExperienceToNextLevel`), total morale and luck
+- [x] A hero card model: movement, mana, experience progress (`TrainingRules.ExperienceToNextLevel`), total morale and luck
   (`Hero.TotalMorale`, `TotalLuck`), 7 slots.
 - [x] A town build state: can build, built today (`TownRules.HasBuiltToday`), fully built (a new rule: every faction
   building at its highest level, 7 of the 9 dwellings under the 7-of-9 rule, ADR-030; `BuildingTree.IsFullyBuilt`).
-- [ ] Object descriptions by ownership (the status line and the hover card), with `TestWorld` maps for owned and unowned mines.
-- [ ] Route days for the tags: the day each step is reached, as the route preview already colours it. The action at the route's
-  end, as `AdventureCursors` decides it, plus picking up (resources, artifacts, chests): done (`AdventureCursors.RouteEndOf`); the
-  days still to do.
-- [ ] The hotkey table as data the status bar and the input controller both read (new: Space, M, Z). The own heroes that can still
-  move today, for End turn's question.
+- [x] Object descriptions by ownership (the status line and the hover card), with `TestWorld` maps for owned and unowned mines.
+- [x] Route days for the tags: the day each step is reached, as the route preview already colours it (`RouteDays`: the tags and the
+  shades). The action at the route's end, as `AdventureCursors` decides it, plus picking up (resources, artifacts, chests):
+  `AdventureCursors.RouteEndOf`.
+- [x] The hotkey table as data the status bar and the input controller both read (new: Space, M, Z). The own heroes that can still
+  move today, for End turn's question (`AdventureHotkeys`, `EndTurnCheck`; the input controller and the action buttons read the table,
+  Space, M and Z get their actions in step 3).
 
 ### 3. The HUD, on the flat theme
-- [ ] Top resource bar on its own layer over the full-screen panels; the status bar drops the resources.
-- [ ] Status bar: subject and detail, calendar on the right, hints first.
+- [x] Top resource bar on its own layer over the full-screen panels; the status bar drops the resources (`ResourceTopBar`).
+- [x] Status bar: subject and detail, calendar on the right, hints first (`StatusBar.ShowSubject`; the map's wording by ownership).
 - [ ] Turn banner; timer pill and warning ribbon (`TurnTimerPanel`).
 - [ ] Minimap: zoom buttons, the editor's view frame, the level caption, pictograms for towns and heroes.
 - [ ] Hero list: portraits, two bars, a hover card. Town list: 4 slots, scroll arrows, picture, governor, build mark (the build mark

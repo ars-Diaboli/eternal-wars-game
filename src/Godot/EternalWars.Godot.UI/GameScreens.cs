@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Cursors;
 using EternalWars.Godot.Shared.Battle;
 using EternalWars.Godot.Shared.Cameras;
 using EternalWars.Godot.Shared.Map;
@@ -48,7 +49,7 @@ public sealed class GameScreens(Node owner, Func<bool> playing)
         owner.AddChild(layer);
         Menu = new GameMenuPanel();
         layer.AddChild(Menu);
-        _menuButton = new Button { Text = "Menu (F10)" }.WithIcon(UiIcon.Menu, UiIcons.StatusBarSize);
+        _menuButton = new Button { Text = AdventureHotkeys.Of(AdventureAction.Menu).Hint }.WithIcon(UiIcon.Menu, UiIcons.StatusBarSize);
         _menuButton.Pressed += Menu.Toggle;
         layer.AddChild(_menuButton);
         PlaceMenuButton();

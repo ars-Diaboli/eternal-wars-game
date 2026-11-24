@@ -122,7 +122,7 @@ $scenarios = @(
     # The action buttons (ADR-210), 3×3 in the side panel: Magus' spell book from its button (Escape closes it), then with C (C closes it);
     # the hero screen from its button; the game menu from its button. Bookless selected, the spell book button is disabled.
     @{ Name = 'game-action-buttons'; App = 'EternalWars.Game'; Frames = 62; Map = $magicMap
-       Input = '3:key:Enter;8:press:Magus;12:press:Spell book (C);20:key:Escape;24:key:C;31:key:C;36:press:Hero screen (H);42:key:Escape;46:press:Menu (F10);52:key:Escape;56:press:Bookless' },
+       Input = '3:key:Enter;8:press:Magus;12:press:Spell book [C];20:key:Escape;24:key:C;31:key:C;36:press:Hero screen [H];42:key:Escape;46:press:Menu [F10];52:key:Escape;56:press:Bookless' },
     # The turn timer (ADR-091, ADR-225): tick it on the new-game screen and type 1 minute, start, open the hero screen and wait. The warnings come,
     # the turn passes to Red with the full time and the hero screen closes. At 2 frames a second, so the minute takes 120 frames instead of 600.
     @{ Name = 'game-turn-timer'; App = 'EternalWars.Game'; Frames = 140; Fps = 2

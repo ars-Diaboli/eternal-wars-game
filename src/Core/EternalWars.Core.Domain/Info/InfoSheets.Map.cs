@@ -18,7 +18,21 @@ public static partial class InfoSheets
     /// What a right click on a map cell shows <paramref name="viewer"/> (ADR-154): a hero it sees there, else the object covering the cell (live
     /// while in sight, as last seen under the fog), else the ground. Null for a cell the player has not explored.
     /// </summary>
-    public static InfoSheet? MapCell(GameState state, PlayerId viewer, MapPosition cell, bool detailed)
+    public static InfoSheet? MapCell(GameState state, PlayerId viewer, MapPosition cell, bool detailed) => Pointed(state, viewer, cell) switch
+    {
+        null => null,
+        { Hero: { } hero } => Hero(state, hero, viewer, detailed),
+        { Live: { } live } => MapObject(state, viewer, live, detailed),
+        { Remembered: { } known } => Remembered(state, known, detailed),
+        _ => Ground(state, cell),
+    };
+
+    /// <summary>
+    /// What <paramref name="viewer"/> may know is at <paramref name="cell"/>, for the information window and the map's descriptions alike: a
+    /// hero it sees there, else the object covering the cell (live while in sight, as remembered under the fog), else the ground (all
+    /// null). Null for a cell the player has not explored.
+    /// </summary>
+    internal static PointedAt? Pointed(GameState state, PlayerId viewer, MapPosition cell)
     {
         if (!state.Map.Contains(cell) || !state.Fog.IsExplored(viewer, cell))
         {
@@ -27,7 +41,7 @@ public static partial class InfoSheets
 
         if (state.HeroAt(cell) is { } hero && state.CanSee(viewer, hero))
         {
-            return Hero(state, hero, viewer, detailed);
+            return new PointedAt(hero, null, null);
         }
 
         var known = state.Memory.Of(viewer).FirstOrDefault(k => k.Cells().Contains(cell) || (k.Footprint.HasVisit && k.Position.Offset(
@@ -35,11 +49,14 @@ public static partial class InfoSheets
         if (known is not null)
         {
             var inSight = known.Cells().Any(c => state.Fog.IsInSight(viewer, c));
-            return inSight && state.FindObject(known.Id) is { } live ? MapObject(state, viewer, live, detailed) : Remembered(state, known, detailed);
+            return inSight && state.FindObject(known.Id) is { } live ? new PointedAt(null, live, null) : new PointedAt(null, null, known);
         }
 
-        return Ground(state, cell);
+        return new PointedAt(null, null, null);
     }
+
+    /// <summary>What a map cell shows a player: at most one of a hero, a live object or a remembered one; none is the ground.</summary>
+    internal sealed record PointedAt(Heroes.Hero? Hero, MapObject? Live, KnownObject? Remembered);
 
     /// <summary>A map object the player sees now.</summary>
     public static InfoSheet MapObject(GameState state, PlayerId viewer, MapObject mapObject, bool detailed)

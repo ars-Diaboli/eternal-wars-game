@@ -664,7 +664,7 @@ public partial class Main : Node3D
         town.Bind(_session);
         town.Speed = () => _context?.Speeds.OwnHeroes ?? AnimationSpeed.Normal; // the construction scene's speed (ADR-090, ADR-304)
         _hud.TownScreen.Scene = town;
-        _hud.TownScreen.Hovered += _hud.ShowHover;
+        _hud.TownScreen.Hovered += (name, state) => _hud.StatusBar.ShowSubject(name, state);
         _screens.ShowTown(town, _world, _camera, sun);
         var arrival = new TownArrival(); // the fade into the hero shot, the layout loaded ahead (TOWN-23, ADR-306)
         _game.AddChild(arrival);

@@ -118,8 +118,11 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
     /// <summary>◄ ► or [ ]: another own town; the adventure HUD centres the map on it and opens it. Without a listener the screen opens it itself.</summary>
     public event Action<MapObjectId>? SwitchRequested;
 
-    /// <summary>The name and state of the scene's building under the pointer, or null when it left them: the app shows it on the status bar.</summary>
-    public event Action<string?>? Hovered;
+    /// <summary>
+    /// The name and the state of the scene's building under the pointer, or nulls when it left them: the app shows them on the status bar as its
+    /// subject and detail (ADR-309).
+    /// </summary>
+    public event Action<string?, string?>? Hovered;
 
     /// <summary>
     /// The town's 3D scene behind the bars (ADR-297), set by the game app once; without it (the harness) or for a town type without a layout the
@@ -171,6 +174,7 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
         _session = session;
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         OffsetBottom = -StatusBar.Height; // the status bar stays in sight below (ADR-204)
+        OffsetTop = ResourceTopBar.Height; // and the top bar above (ADR-309)
         var page = new VBoxContainer();
         page.AddThemeConstantOverride("separation", 0);
         AddChild(page);
@@ -748,15 +752,14 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
         }
     }
 
-    /// <summary>The scene's building under the pointer: the hand cursor, its name as the tooltip and on the status bar.</summary>
+    /// <summary>The scene's building under the pointer: the hand cursor, its name and state on the status bar (the subject and the detail, ADR-309).</summary>
     private void ShowHovered(PlotInfo? plot)
     {
         _stage.MouseDefaultCursorShape = plot is null ? CursorShape.Arrow : CursorShape.PointingHand;
-        _stage.TooltipText = plot?.Name ?? "";
-        Hovered?.Invoke(plot is null ? null : HoverText(plot));
+        Hovered?.Invoke(plot?.Name, plot is null ? null : HoverText(plot));
     }
 
-    /// <summary>A building's name and state for the status bar: built (today), or not; then what its next level waits for (ADR-304).</summary>
+    /// <summary>A building's state for the status bar's detail: built (today), or not; then what its next level waits for (ADR-304).</summary>
     private string HoverText(PlotInfo plot)
     {
         var built = plot.State switch
@@ -767,7 +770,7 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
         };
         if (Current is not { } town)
         {
-            return $"{plot.Name} · {built}";
+            return built;
         }
 
         var status = plot.Line is { } line
@@ -782,7 +785,7 @@ public partial class TownScreenPanel : Control, ITownScreen, ITownSectionHost
             _ => null,
         };
         var click = plot.State == PlotState.NotBuilt ? " · click for the Hall" : "";
-        return $"{plot.Name} · {built}{(next is null ? "" : $" · {next}")}{click}";
+        return $"{built}{(next is null ? "" : $" · {next}")}{click}";
     }
 
     /// <summary>A building of the scene was clicked: its window, a dwelling's window, or its information, as its strip button does.</summary>

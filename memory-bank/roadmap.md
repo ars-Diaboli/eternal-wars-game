@@ -274,12 +274,15 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 
 ### Adventure HUD redesign (ADR-309; [plan](../docs/papers/adventure-hud-plan.md#plan), HUD-1 and HUD-2 open)
 - [x] Step 1: the decisions recorded (ADR-309); the two open points moved to HUD-1 and HUD-2
-- [ ] Step 2: core models (layout mirrored flag, UI scale, hero card, town build state, descriptions by ownership, route days, hotkeys)
+- [x] Step 2: core models (layout mirrored flag, UI scale, hero card, town build state, descriptions by ownership, route days, hotkeys)
       - [x] The fully built rule (`BuildingTree.IsFullyBuilt`) and the route's end action (`AdventureCursors.RouteEndOf`)
       - [x] The layout as a mirrored flag (`LayoutSettings.Mirrored`, `HudArrangement`; older layouts load as the default or its mirror;
             the side panel follows it until step 3) and the UI scale (`InterfaceSettings.UiScalePercent`)
+      - [x] The hero card (`HeroCard`) and the descriptions by ownership (`MapDescriptions`)
+      - [x] Route days (`RouteDays`), the hotkey table (`AdventureHotkeys`) and End turn's question (`EndTurnCheck`)
 - [ ] Step 3: the HUD rebuilt on the flat theme (the town list's build mark, the route end's mark, the replay bar's icons and the level
       icons on Switch level already in)
+      - [x] The top resource bar (`ResourceTopBar`) and the status bar's subject and detail
 - [ ] Step 4: checked at every target size, UI scale and mirror
 - [ ] Step 5: the painted pieces (icon sheets 30–32 already cut into `textures/ui/icons/`)
 - [ ] Step 6: the battle HUD's mockups decided and planned

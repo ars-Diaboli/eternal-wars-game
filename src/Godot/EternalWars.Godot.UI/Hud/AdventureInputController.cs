@@ -16,7 +16,8 @@ namespace EternalWars.Godot.UI.Hud;
 /// The mouse and keys on the adventure map for the player whose turn it is, and the selected hero. Click an own hero to select it, click a tile
 /// to preview the route (markers coloured by day), click the same tile again to go; an armed adventure spell casts on the next clicked cell.
 /// Right click clears the preview (and the armed spell) and opens the information window of what is there (ADR-154). Keys: arrows/numpad
-/// step, Tab next hero, T next town, H hero screen, K kingdom, Q quest log, P puzzle map, G dig, L switch level. Results, and the name of what
+/// step, and the hotkey table's (<see cref="AdventureHotkeys"/>): Tab next hero, T next town, H hero screen, C spell book, K kingdom, Q quest
+/// log, P puzzle map, G dig, L switch level. Results, and the name of what
 /// the pointer is over, go to the HUD's status line.
 /// </summary>
 public sealed class AdventureInputController(
@@ -37,14 +38,14 @@ public sealed class AdventureInputController(
     /// <summary>Handles an unhandled input event on the map (no battle, menu or question in the way); true when it was the map's.</summary>
     public bool Handle(InputEvent @event)
     {
-        if (hud.QuestScreen.Visible && @event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Q })
+        if (hud.QuestScreen.Visible && @event is InputEventKey { Pressed: true, Echo: false } closeQuests && ActionOf(closeQuests) == AdventureAction.Quests)
         {
             hud.QuestScreen.Visible = false;
             camera.IgnoreHeldKeys(); // Q also turns the camera; this press only closes the log
             return true;
         }
 
-        if (hud.PuzzleScreen.Visible && @event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.P })
+        if (hud.PuzzleScreen.Visible && @event is InputEventKey { Pressed: true, Echo: false } closePuzzle && ActionOf(closePuzzle) == AdventureAction.PuzzleMap)
         {
             hud.PuzzleScreen.Visible = false;
             return true;
@@ -86,33 +87,33 @@ public sealed class AdventureInputController(
                 }
 
                 break;
-            case InputEventKey { Pressed: true, Keycode: Key.Tab }:
+            case InputEventKey { Pressed: true } key when ActionOf(key) == AdventureAction.NextHero:
                 SelectNextHero();
                 break;
-            case InputEventKey { Pressed: true, Keycode: Key.T }:
+            case InputEventKey { Pressed: true } key when ActionOf(key) == AdventureAction.NextTown:
                 hud.OpenNextTown();
                 break;
-            case InputEventKey { Pressed: true, Keycode: Key.H }:
+            case InputEventKey { Pressed: true } key when ActionOf(key) == AdventureAction.HeroScreen:
                 hud.ShowHero(SelectedHero);
                 break;
-            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.C } when context.PlaysHere(session.State.CurrentPlayer.Id):
+            case InputEventKey { Pressed: true, Echo: false } key when ActionOf(key) == AdventureAction.SpellBook && context.PlaysHere(session.State.CurrentPlayer.Id):
                 hud.OpenSpellBook(SelectedHero);
                 break;
-            case InputEventKey { Pressed: true, Keycode: Key.K } when context.PlaysHere(session.State.CurrentPlayer.Id):
+            case InputEventKey { Pressed: true } key when ActionOf(key) == AdventureAction.Kingdom && context.PlaysHere(session.State.CurrentPlayer.Id):
                 hud.KingdomScreen.Open(session.State.CurrentPlayer.Id);
                 break;
-            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.Q } when context.PlaysHere(session.State.CurrentPlayer.Id):
+            case InputEventKey { Pressed: true, Echo: false } key when ActionOf(key) == AdventureAction.Quests && context.PlaysHere(session.State.CurrentPlayer.Id):
                 hud.QuestScreen.Open(session.State.CurrentPlayer.Id);
                 camera.IgnoreHeldKeys(); // Q also turns the camera; this press only opens the log
                 break;
-            case InputEventKey { Pressed: true, Keycode: Key.L }:
+            case InputEventKey { Pressed: true } key when ActionOf(key) == AdventureAction.SwitchLevel:
                 context.SetLevel((context.Level + 1) % session.State.Map.Levels);
                 camera.FocusOn(MapSpace.ToWorld(new MapPosition(session.State.Map.Width / 2, session.State.Map.Height / 2, context.Level)));
                 break;
-            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.P } when context.PlaysHere(session.State.CurrentPlayer.Id):
+            case InputEventKey { Pressed: true, Echo: false } key when ActionOf(key) == AdventureAction.PuzzleMap && context.PlaysHere(session.State.CurrentPlayer.Id):
                 hud.PuzzleScreen.Open(session.State.CurrentPlayer.Id);
                 break;
-            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.G } when context.PlaysHere(session.State.CurrentPlayer.Id):
+            case InputEventKey { Pressed: true, Echo: false } key when ActionOf(key) == AdventureAction.Dig && context.PlaysHere(session.State.CurrentPlayer.Id):
                 Dig();
                 break;
             case InputEventKey { Pressed: true } key when SelectedHero is { } hero && KeyboardDirections.ToDirection(key.Keycode) is { } direction:
@@ -140,15 +141,15 @@ public sealed class AdventureInputController(
             GameCursors.Show(CursorAt(cell));
         }
 
-        if (cell == _hovered)
+        if (cell == _hovered && !hud.StatusBar.ControlSubject)
         {
-            return;
+            return; // named already, unless a HUD control took the subject since
         }
 
         _hovered = cell;
-        hud.ShowHover(cell is { } pointed && InfoSheets.MapCell(session.State, session.State.CurrentPlayer.Id, pointed, detailed: false) is { } sheet
-            ? sheet.Title
-            : null);
+        // In the words of whoever the map is drawn for: in a computer's turn, or the hot-seat handover, not the player whose turn it is.
+        var viewer = context.Viewer ?? session.State.CurrentPlayer.Id;
+        hud.ShowHover(cell is { } pointed ? MapDescriptions.At(session.State, viewer, pointed) : null);
     }
 
     /// <summary>The cursor over <paramref name="cell"/>: busy on a turn not played here, else what the chosen hero would do there.</summary>
@@ -267,6 +268,15 @@ public sealed class AdventureInputController(
 
     /// <summary>The route end mark's texture size, in pixels.</summary>
     private const int RouteEndMarkSize = 96;
+
+    /// <summary>
+    /// The hotkey table (ADR-309) by Godot key. Each name is parsed when the controller's type first loads, so a name that is not a
+    /// <see cref="Key"/> fails at start rather than leaving its key dead.
+    /// </summary>
+    private static readonly Dictionary<Key, AdventureAction> HotkeyActions = AdventureHotkeys.All.ToDictionary(h => Enum.Parse<Key>(h.Key), h => h.Action);
+
+    /// <summary>The action the hotkey table puts on <paramref name="key"/>; null for none.</summary>
+    private static AdventureAction? ActionOf(InputEventKey key) => HotkeyActions.TryGetValue(key.Keycode, out var action) ? action : null;
 
     private void SelectNextHero()
     {

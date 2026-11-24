@@ -289,9 +289,19 @@ public static class UiIcons
     /// <summary>What the status bar says while the pointer is over <paramref name="control"/>: an icon-only button's label, then its tooltip.</summary>
     public static string StatusText(Control control)
     {
+        var (label, tip) = StatusParts(control);
+        return label.Length == 0 ? tip : tip.Length == 0 ? label : $"{label}: {tip}";
+    }
+
+    /// <summary>
+    /// <paramref name="control"/>'s status-bar label (an icon-only button's, <see cref="StatusLabelMeta"/>) and its tooltip: the status bar's
+    /// subject and detail (ADR-309). A tooltip that only repeats the label is left out; either may be empty.
+    /// </summary>
+    public static (string Label, string Tip) StatusParts(Control control)
+    {
         var label = control.HasMeta(StatusLabelMeta) ? control.GetMeta(StatusLabelMeta).AsString() : "";
         var tip = control.TooltipText;
-        return label.Length == 0 ? tip : tip.Length == 0 || tip == label ? label : $"{label}: {tip}";
+        return (label, tip == label ? "" : tip);
     }
 
     /// <summary><paramref name="text"/> after <paramref name="icon"/>, for a heading that is no button; just the label if the icon is missing.</summary>
