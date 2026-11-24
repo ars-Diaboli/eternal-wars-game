@@ -3,12 +3,14 @@ using EternalWars.Core.Domain.Cursors;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Info;
 using EternalWars.Core.Domain.Magic;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Settings;
 using EternalWars.Core.Domain.Towns;
+using EternalWars.Core.Domain.Turns;
 using EternalWars.Godot.Shared.Cameras;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.Shared.Map;
@@ -17,14 +19,15 @@ using Godot;
 namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
-/// The adventure map's HUD (ADR-050, ADR-186, ADR-309): this layer holds the side panel's parts, on the side the "Layout" tab's mirror picks
-/// (the turn block, the minimap, the town list, the 3×3 action buttons of ADR-210; the hero list at the other edge, the turn banner at the top centre), the <see cref="StatusBar"/> along the bottom (the subject, the
-/// detail and the calendar) and the <see cref="TopBar"/> with the resources (both on a layer over the full-screen panels), and
-/// the questions and notices in the middle of the screen; a second layer above it, added beside it, holds the full-screen
-/// panels (town, hero, exchange, dwelling, marketplace, services, Thieves' Guild, tavern, kingdom, quest log, puzzle map, intel) and the
-/// spell book. A hero stepping into an own town, a dwelling, a marketplace or a service opens its screen. In the replay viewer (<c>playing</c>
-/// false) nothing here issues a command: no End Turn, questions or exchange; the hero, spell book, Dig and Marketplace buttons are disabled,
-/// and the town list only moves the camera (ADR-164).
+/// The adventure map's HUD (ADR-050, ADR-186, ADR-309): this layer holds the map's parts as the "Layout" tab's mirror places them (the minimap
+/// and the town list in the side column, the hero list at the other edge, the turn banner at the top centre, and the bottom row: the selected
+/// hero's card and army, the 2×5 action buttons and End turn), the <see cref="StatusBar"/> along the bottom (the subject, the detail and the
+/// calendar) and the <see cref="TopBar"/> with the resources (both on a layer over the full-screen panels), and the questions and notices in
+/// the middle of the screen; a second layer above it, added beside it, holds the full-screen panels (town, hero, exchange, dwelling,
+/// marketplace, services, Thieves' Guild, tavern, kingdom, quest log, puzzle map, intel) and the spell book. A hero stepping into an own
+/// town, a dwelling, a marketplace or a service opens its screen. In the replay viewer (<c>playing</c> false) nothing here issues a command:
+/// no End turn, questions or exchange; Move and the hero, spell book, Dig and Marketplace buttons are disabled, and the town list only moves
+/// the camera (ADR-164).
 /// </summary>
 public partial class AdventureHud : CanvasLayer
 {
@@ -50,6 +53,12 @@ public partial class AdventureHud : CanvasLayer
 
     /// <summary>The Dig button (ADR-140).</summary>
     public event Action? DigRequested;
+
+    /// <summary>The Move button (ADR-309): the selected hero walks the route shown on the map.</summary>
+    public event Action? MoveRequested;
+
+    /// <summary>A stack of the army strip was right-clicked: the hero, the slot and where, for its information window.</summary>
+    public event Action<HeroId, int, Vector2>? StackInfoRequested;
 
     /// <summary>An adventure spell was armed on the hero screen and waits for its cell; the status line says what to click.</summary>
     public event Action<HeroId, string>? SpellAimed;
@@ -93,9 +102,6 @@ public partial class AdventureHud : CanvasLayer
         // The side panel's parts (ADR-191), on the side the "Layout" tab's mirror picks (ADR-309): the info block, the minimap, the lists and the action panel.
         _layout = new AdventureHudLayout();
         AddChild(_layout);
-        var turn = new TurnPanel();
-        _layout.SetInfo(turn);
-        turn.Bind(session, endTurn: playing);
 
         // The status bar along the bottom (ADR-186, ADR-309): the hints line first, then the messages and what the pointer is over; the
         // calendar on the right. In the replay viewer it stands above the viewer's bar. The resources are on the top bar.
@@ -170,14 +176,7 @@ public partial class AdventureHud : CanvasLayer
             }
         };
 
-        // The action buttons (ADR-210): a 3×3 grid of square icon buttons under the lists.
-        _actions = new GridContainer { Columns = 3 };
-        _actions.AddThemeConstantOverride("h_separation", UiSpacing.Gap);
-        _actions.AddThemeConstantOverride("v_separation", UiSpacing.Gap);
-        var actionsPart = new CenterContainer(); // centred in a stack made wider by the minimap or the lists
-        actionsPart.AddChild(_actions);
-        _layout.AddToColumn(actionsPart);
-
+        BuildBottomRow(playing, popUps);
         BuildScreens(playing, screens);
         BuildActions(playing);
 
@@ -190,11 +189,213 @@ public partial class AdventureHud : CanvasLayer
         VisibilityChanged += () => barLayer.Visible = Visible;
         foreach (var screen in _fullScreens)
         {
-            screen.VisibilityChanged += () => TopBar.Wide = _fullScreens.Any(s => s.Visible);
+            screen.VisibilityChanged += () =>
+            {
+                TopBar.Wide = _fullScreens.Any(s => s.Visible);
+                EndTurnQuestion.Visible &= !screen.Visible; // a screen opened over it: asked again on the next End turn
+            };
         }
 
         _layout.BottomReserve = StatusBar.Height + StatusBar.BottomOffset; // the bottom parts stand above the status bar
         ApplyLayout(layout);
+    }
+
+    /// <summary>The selected hero's card in the bottom row (ADR-309); hidden with no own hero selected.</summary>
+    public SelectedHeroCard HeroCard { get; private set; } = null!;
+
+    /// <summary>The selected hero's army beside its card (ADR-309); hidden with it.</summary>
+    public ArmyStrip ArmyStrip { get; private set; } = null!;
+
+    /// <summary>End turn's tile (ADR-309); null in the replay viewer.</summary>
+    public TurnPanel? EndTurnTile { get; private set; }
+
+    /// <summary>End turn's question while a hero can still move (ADR-309); hidden otherwise.</summary>
+    public PanelContainer EndTurnQuestion { get; private set; } = null!;
+
+    private Control _cardFrame = null!;
+    private Control _armyFrame = null!;
+    private Label _questionText = null!;
+
+    /// <summary>
+    /// The bottom row (ADR-309), every part in a frame of one height: the selected hero's card and army strip, the action buttons and End
+    /// turn; and End turn's question in the middle of the screen.
+    /// </summary>
+    private void BuildBottomRow(bool playing, Control popUps)
+    {
+        _playing = playing;
+        HeroCard = new SelectedHeroCard();
+        _cardFrame = Framed("HeroCardFrame", HeroCard);
+        _layout.SetBottom(HudPart.HeroCard, _cardFrame);
+        HeroCard.HeroScreenRequested += hero => ShowHero(hero);
+        ArmyStrip = new ArmyStrip();
+        _armyFrame = Framed("ArmyStripFrame", ArmyStrip);
+        _layout.SetBottom(HudPart.ArmyStrip, _armyFrame);
+        ArmyStrip.HeroScreenRequested += hero => ShowHero(hero);
+        ArmyStrip.StackInfoRequested += (hero, slot, at) => StackInfoRequested?.Invoke(hero, slot, at);
+
+        _actions = new GridContainer { Columns = AdventureActionGrid.Columns, Name = "Actions" };
+        _actions.AddThemeConstantOverride("h_separation", UiSpacing.Cell);
+        _actions.AddThemeConstantOverride("v_separation", UiSpacing.Cell);
+        _layout.SetBottom(HudPart.Actions, Framed("ActionsFrame", _actions));
+
+        // End turn's question: the heroes that can still move, End turn or Cancel.
+        EndTurnQuestion = new PanelContainer { Name = "EndTurnQuestion", Visible = false };
+        EndTurnQuestion.UseOpaqueBackground();
+        var box = new VBoxContainer();
+        box.AddThemeConstantOverride("separation", UiSpacing.Gap);
+        EndTurnQuestion.AddChild(box);
+        _questionText = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(360, 0) };
+        box.AddChild(_questionText);
+        var confirm = new Button { Text = "End the turn" }.WithIcon(UiIcon.EndTurn, keepText: true);
+        confirm.Pressed += () =>
+        {
+            EndTurnQuestion.Visible = false;
+            EndTurnTile?.EndTurnNow();
+        };
+        var cancel = new Button { Text = "Cancel" }.WithIcon(UiIcon.Close, keepText: true);
+        cancel.Pressed += () => EndTurnQuestion.Visible = false;
+        box.AddChild(Screens.ButtonRow(confirm, cancel));
+        popUps.AddChild(EndTurnQuestion);
+
+        if (playing)
+        {
+            EndTurnTile = new TurnPanel();
+            _layout.SetBottom(HudPart.EndTurn, Framed("EndTurnFrame", EndTurnTile));
+            EndTurnTile.SizeFlagsVertical = Control.SizeFlags.Fill; // the hourglass fills the row's height
+            EndTurnTile.Bind(_session, endTurn: true, mine: () => _context.PlaysHere(_session.State.CurrentPlayer.Id), listed: () => _context.ListedPlayer);
+            EndTurnTile.EndTurnPressed += RequestEndTurn;
+        }
+
+        RefreshHero();
+        foreach (var refresh in new Action<Action>[]
+                 {
+                     a => this.SubscribeWhileInTree<TurnStarted>(_session.Events, _ => { EndTurnQuestion.Visible = false; a(); }),
+                     a => this.SubscribeWhileInTree<HeroMoved>(_session.Events, _ => { EndTurnQuestion.Visible = false; a(); }),
+                     a => this.SubscribeWhileInTree<DecisionRequested>(_session.Events, _ => { EndTurnQuestion.Visible = false; a(); }),
+                     a => this.SubscribeWhileInTree<HeroHired>(_session.Events, _ => { EndTurnQuestion.Visible = false; a(); }),
+                     a => this.SubscribeWhileInTree<ArtifactGained>(_session.Events, _ => a()),
+                     a => this.SubscribeWhileInTree<ArtifactLost>(_session.Events, _ => a()),
+                     a => this.SubscribeWhileInTree<HeroStatusGained>(_session.Events, _ => a()), // a temple's morale, a fountain's luck
+                     a => this.SubscribeWhileInTree<HeroStatusesExpired>(_session.Events, _ => a()),
+                     a => this.SubscribeWhileInTree<WitchHutSkillLearned>(_session.Events, _ => a()), // Leadership, Luck
+                     a => this.SubscribeWhileInTree<MapEventSkillGained>(_session.Events, _ => a()),
+                     a => this.SubscribeWhileInTree<LessonTaken>(_session.Events, _ => a()),
+                     a => this.SubscribeWhileInTree<HeroMovementRestored>(_session.Events, _ => a()),
+                     a => this.SubscribeWhileInTree<HeroMovementGained>(_session.Events, _ => a()),
+                     a => this.SubscribeWhileInTree<HoleDug>(_session.Events, _ => a()),
+                     a => this.SubscribeWhileInTree<SphinxAnswered>(_session.Events, _ => a()),
+                     a => this.SubscribeWhileInTree<HeroDefeated>(_session.Events, _ => a()),
+                     a => this.SubscribeWhileInTree<ArmyChanged>(_session.Events, _ => a()),
+                     a => this.SubscribeWhileInTree<HeroManaSpent>(_session.Events, _ => a()),
+                     a => this.SubscribeWhileInTree<HeroManaRestored>(_session.Events, _ => a()),
+                     a => this.SubscribeWhileInTree<AdventureSpellCast>(_session.Events, _ => a()),
+                     a => this.SubscribeWhileInTree<HeroLeveledUp>(_session.Events, _ => a()),
+                     a => this.SubscribeWhileInTree<HeroExperienceGained>(_session.Events, _ => a()),
+                     a => this.SubscribeWhileInTree<HeroPrimaryStatRaised>(_session.Events, _ => a()),
+                     a => this.SubscribeWhileInTree<HeroArtifactsChanged>(_session.Events, _ => a()),
+                     a => this.SubscribeWhileInTree<ArtifactEquipped>(_session.Events, _ => a()),
+                     a => this.SubscribeWhileInTree<ArtifactUnequipped>(_session.Events, _ => a()),
+                     a => this.SubscribeWhileInTree<RelicAssembled>(_session.Events, _ => a()),
+                     a => this.SubscribeWhileInTree<RelicTakenApart>(_session.Events, _ => a()),
+                 })
+        {
+            refresh(() =>
+            {
+                RefreshHero();
+                RefreshActions();
+            });
+        }
+
+        _world.PathPreview.Shown += OnRouteChanged;
+        _world.PathPreview.Cleared += RefreshActions;
+        TreeExiting += () =>
+        {
+            _world.PathPreview.Shown -= OnRouteChanged;
+            _world.PathPreview.Cleared -= RefreshActions;
+        };
+    }
+
+    private void OnRouteChanged(Core.Domain.Pathfinding.HeroPath _) => RefreshActions();
+
+    /// <summary>A bottom-row part in its frame, as tall as the row (the layout stretches the frame; the part stays centred).</summary>
+    private static PanelContainer Framed(string name, Control part)
+    {
+        var frame = new PanelContainer { Name = name };
+        part.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+        frame.AddChild(part);
+        return frame;
+    }
+
+    /// <summary>
+    /// Shows the selected hero's card and army (a hero of the listed player: in a LAN game this screen's player's in another's turn), or hides
+    /// both with no such hero. Its clicks open the hero screen only in its owner's turn, and never in the replay viewer.
+    /// </summary>
+    private void RefreshHero()
+    {
+        var hero = _selected is { } wanted ? _session.State.HeroesOf(_context.ListedPlayer).FirstOrDefault(h => h.Id == wanted) : null;
+        _cardFrame.Visible = _armyFrame.Visible = hero is not null;
+        if (hero is null)
+        {
+            HeroCard.Clear();
+            return;
+        }
+
+        var card = Core.Domain.Heroes.HeroCard.Of(hero);
+        var refusal = !_playing ? "Not while watching a replay"
+            : hero.Owner != _session.State.CurrentPlayer.Id ? "Not in another player's turn" : null;
+        HeroCard.Show(card, refusal);
+        ArmyStrip.Show(_session.State, card, refusal);
+    }
+
+    /// <summary>
+    /// End turn (the hourglass, Z): asks first when a hero can still move ("Mara and Aldric can still move. End the turn?"), else ends the turn.
+    /// While the question is open, Z answers it.
+    /// </summary>
+    public void RequestEndTurn()
+    {
+        if (EndTurnTile is not { CanEndTurn: true } tile)
+        {
+            return;
+        }
+
+        if (EndTurnQuestion.Visible)
+        {
+            EndTurnQuestion.Visible = false;
+            tile.EndTurnNow();
+            return;
+        }
+
+        if (EndTurnCheck.Question(_session.State, _session.State.CurrentPlayer.Id) is not { } question)
+        {
+            tile.EndTurnNow();
+            return;
+        }
+
+        _questionText.Text = question;
+        EndTurnQuestion.Visible = true;
+    }
+
+    /// <summary>Enter answers End turn's question while it shows, before a focused button takes the key.</summary>
+    public override void _Input(InputEvent @event)
+    {
+        if (EndTurnQuestion?.IsVisibleInTree() == true && @event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Enter or Key.KpEnter }
+            && !IsScreenOpen && _session.State.PendingDecision is null && GetViewport().GuiGetFocusOwner() is not (LineEdit or TextEdit))
+        {
+            GetViewport().SetInputAsHandled();
+            RequestEndTurn();
+        }
+    }
+
+    /// <summary>M, or the Marketplace button: the marketplace, when one of the player's towns has one.</summary>
+    public void OpenMarketplace()
+    {
+        if (_marketButton.Disabled)
+        {
+            Status.Text = _marketButton.TooltipText;
+            return;
+        }
+
+        _marketScreen.Open();
     }
 
     /// <summary>The turn banner at the top centre (ADR-309); null in the replay viewer.</summary>
@@ -314,9 +515,10 @@ public partial class AdventureHud : CanvasLayer
     /// <summary>The screens that cover the map and stop short of the top and status bars: town, hero, exchange.</summary>
     private readonly List<Control> _fullScreens = [];
 
-    /// <summary>The 3×3 action buttons (ADR-210).</summary>
+    /// <summary>The 2×5 action buttons (ADR-309).</summary>
     private GridContainer _actions = null!;
 
+    private Button _moveButton = null!;
     private Button _heroButton = null!;
     private Button _bookButton = null!;
     private Button _digButton = null!;
@@ -333,6 +535,7 @@ public partial class AdventureHud : CanvasLayer
     {
         _selected = hero;
         HeroList.ShowSelected(hero);
+        RefreshHero();
         RefreshActions();
     }
 
@@ -365,24 +568,43 @@ public partial class AdventureHud : CanvasLayer
         id is { } wanted ? _session.State.HeroesOf(_session.State.CurrentPlayer.Id).FirstOrDefault(h => h.Id == wanted) : null;
 
     /// <summary>
-    /// The action buttons, three to a row (ADR-210): hero screen, spell book, kingdom; quests, puzzle map, dig; marketplace, level, menu. A
-    /// button whose action cannot be taken now is disabled, with the reason in its tooltip. In the replay viewer the ones that would issue a
-    /// command or open a hero's screens stay disabled.
+    /// The action buttons (ADR-309): two rows of five icons, wider than tall, in <see cref="AdventureActionGrid.Order"/>: Move, spell book,
+    /// kingdom, quests, puzzle map; dig, marketplace, level, hero screen, menu. Each one's name and key ("Dig [G]") go to the status bar on
+    /// hover. A button whose action cannot be taken now is greyed, with the reason after its name. In the replay viewer the ones that would
+    /// issue a command or open a hero's screens stay greyed.
     /// </summary>
     private void BuildActions(bool playing)
     {
         _playing = playing;
-        _heroButton = AddAction(Hint(AdventureAction.HeroScreen), UiIcon.Hero, () => ShowHero(_selected));
-        _bookButton = AddAction(Hint(AdventureAction.SpellBook), UiIcon.SpellBook, () => OpenSpellBook(_selected));
-        AddAction(Hint(AdventureAction.Kingdom), UiIcon.Kingdom, () => KingdomScreen.Open(_session.State.CurrentPlayer.Id), "Every source of income and the totals");
-        AddAction(Hint(AdventureAction.Quests), UiIcon.Quests, () => QuestScreen.Open(_session.State.CurrentPlayer.Id), "The quests your heroes were shown");
-        AddAction(Hint(AdventureAction.PuzzleMap), UiIcon.PuzzleMap, () => PuzzleScreen.Open(_session.State.CurrentPlayer.Id), "The ground around the Grail, as your obelisks show it");
-        _digButton = AddAction(Hint(AdventureAction.Dig), UiIcon.Dig, () => DigRequested?.Invoke());
+        var buttons = new Dictionary<AdventureAction, Button>();
+        foreach (var action in AdventureActionGrid.Order)
+        {
+            buttons[action] = action switch
+            {
+                AdventureAction.Move => AddAction(action, UiIcon.ArrowRight, () => MoveRequested?.Invoke()),
+                AdventureAction.SpellBook => AddAction(action, UiIcon.SpellBook, () => OpenSpellBook(_selected)),
+                AdventureAction.Kingdom => AddAction(action, UiIcon.Kingdom, () => KingdomScreen.Open(_session.State.CurrentPlayer.Id), "Every source of income and the totals"),
+                AdventureAction.Quests => AddAction(action, UiIcon.Quests, () => QuestScreen.Open(_session.State.CurrentPlayer.Id), "The quests your heroes were shown"),
+                AdventureAction.PuzzleMap => AddAction(action, UiIcon.PuzzleMap, () => PuzzleScreen.Open(_session.State.CurrentPlayer.Id),
+                    "The ground around the Grail, as your obelisks show it"),
+                AdventureAction.Dig => AddAction(action, UiIcon.Dig, () => DigRequested?.Invoke()),
 
-        // Trading belongs to the player, not a hero: this button, or a hero visiting a map marketplace (ADR-067).
-        _marketButton = AddAction("Marketplace", UiIcon.Marketplace, () => _marketScreen.Open());
-        var level = AddAction(Hint(AdventureAction.SwitchLevel), UiIcon.SwitchLevel, () => _context.SetLevel((_context.Level + 1) % _session.State.Map.Levels),
-            "Between the surface and the underground");
+                // Trading belongs to the player, not a hero: this button, or a hero visiting a map marketplace (ADR-067).
+                AdventureAction.Marketplace => AddAction(action, UiIcon.Marketplace, OpenMarketplace),
+                AdventureAction.SwitchLevel => AddAction(action, UiIcon.SwitchLevel, () => _context.SetLevel((_context.Level + 1) % _session.State.Map.Levels),
+                    "Between the surface and the underground"),
+                AdventureAction.HeroScreen => AddAction(action, UiIcon.Hero, () => ShowHero(_selected)),
+                AdventureAction.Menu => AddAction(action, UiIcon.Menu, () => MenuRequested?.Invoke(), "Save, load, settings"),
+                _ => throw new InvalidOperationException($"No button for {action}"),
+            };
+        }
+
+        _moveButton = buttons[AdventureAction.Move];
+        _heroButton = buttons[AdventureAction.HeroScreen];
+        _bookButton = buttons[AdventureAction.SpellBook];
+        _digButton = buttons[AdventureAction.Dig];
+        _marketButton = buttons[AdventureAction.Marketplace];
+        var level = buttons[AdventureAction.SwitchLevel];
         if (_session.State.Map.Levels < 2)
         {
             level.Disabled = true;
@@ -393,7 +615,7 @@ public partial class AdventureHud : CanvasLayer
             // The button shows the level it goes to (ADR-309): the sunlit hill from the underground, the cave from the surface.
             void ShowTarget()
             {
-                if (UiIcons.Get(_context.Level == 0 ? UiIcon.LevelUnderground : UiIcon.LevelSurface, UiIcons.BarSize) is { } target)
+                if (UiIcons.Get(_context.Level == 0 ? UiIcon.LevelUnderground : UiIcon.LevelSurface, ActionIconSize) is { } target)
                 {
                     level.Icon = target;
                 }
@@ -403,8 +625,6 @@ public partial class AdventureHud : CanvasLayer
             _context.LevelChanged += ShowTarget;
             level.TreeExiting += () => _context.LevelChanged -= ShowTarget;
         }
-
-        AddAction(Hint(AdventureAction.Menu), UiIcon.Menu, () => MenuRequested?.Invoke(), "Save, load, settings");
 
         RefreshActions();
         this.SubscribeWhileInTree<TownBuilt>(_session.Events, _ => RefreshActions());
@@ -417,9 +637,14 @@ public partial class AdventureHud : CanvasLayer
     /// <summary>An action's name and key from the hotkey table (ADR-309): "Dig [G]".</summary>
     private static string Hint(AdventureAction action) => AdventureHotkeys.Of(action).Hint;
 
-    private Button AddAction(string label, UiIcon icon, Action pressed, string tooltip = "")
+    /// <summary>An action button's icon side; the button is wider than tall.</summary>
+    private const int ActionIconSize = 36;
+
+    private Button AddAction(AdventureAction action, UiIcon icon, Action pressed, string tooltip = "")
     {
-        var button = new Button { Text = label, TooltipText = tooltip }.WithIcon(icon, UiIcons.BarSize);
+        var button = new Button { Text = Hint(action), TooltipText = tooltip, FocusMode = Control.FocusModeEnum.None }.WithIcon(icon, ActionIconSize);
+        button.CustomMinimumSize = new Vector2(ActionIconSize + (6 * UiIcons.IconPadding), ActionIconSize + (2 * UiIcons.IconPadding));
+        button.SizeFlagsHorizontal = Control.SizeFlags.Fill;
         button.Pressed += pressed;
         _actions.AddChild(button);
         return button;
@@ -430,6 +655,8 @@ public partial class AdventureHud : CanvasLayer
     {
         var hero = OwnHero(_selected);
         var noHero = hero is null ? "Select a hero first" : null;
+        Enable(_moveButton, _playing ? AdventureActionGrid.MoveRefusal(hero, _world.PathPreview.Path) : "Not while watching a replay",
+            "The selected hero walks the route shown on the map");
         Enable(_heroButton, _playing ? noHero : "Not while watching a replay");
         Enable(_bookButton, !_playing ? "Not while watching a replay" : noHero ?? (hero!.HasSpellBook ? null : $"{hero.Name} has no spell book"));
         Enable(_digButton, _playing ? noHero : "Not while watching a replay", "The selected hero digs where it stands, with a whole day's movement");

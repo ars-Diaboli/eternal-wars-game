@@ -207,10 +207,11 @@ memory-bank entries updated.
   `MapLevels`).
 - [x] Hero list: portraits, two bars, a hover card (`HeroHoverCard`). Town list: 4 slots, scroll arrows, picture, governor, build mark
   (the picture is the faction's crest until towns have pictures).
-- [ ] Hero card and army strip (`ArmyBar`), hidden with no hero.
-- [ ] The 2×5 action grid, Move first; icon-only with names and keys on the status bar; End turn hourglass with day dots, on Z, asking
-  first when a hero can still move.
-- [ ] Route: day colours and tags in `PathPreview`; selection ring in the player's colour (the end's action mark is in).
+- [x] Hero card and army strip (`SelectedHeroCard`, `ArmyStrip`: the screens' `ArmyBar` drags and picks, the strip only opens), hidden
+  with no hero.
+- [x] The 2×5 action grid, Move first (`AdventureActionGrid`); icon-only with names and keys on the status bar; End turn hourglass with
+  day dots, on Z, asking first when a hero can still move (Enter or Z answers).
+- [x] Route: day colours and tags in `PathPreview`; selection ring in the player's colour (the end's action mark is in).
 - [ ] Hover card on map objects; question, notice and pause cards; dimming behind questions; the chat beside the town list.
 - [ ] Replay bar: one toggle, a day slider, the other controls kept (the icons and the one Play/Pause toggle are in; the slider to do).
 - [ ] Narrow screens: the army strip cut off with a fade, shown whole over the action buttons on hover; UI scale applied at start and from the settings.

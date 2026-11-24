@@ -46,6 +46,14 @@ public sealed record HeroCard(
             [.. hero.Army.Slots]);
     }
 
+    /// <summary>Morale or luck as the card shows it beside its icon: "+2", "0", "−1" (a minus sign, not a hyphen).</summary>
+    public static string Signed(int value) => value switch
+    {
+        > 0 => $"+{value}",
+        < 0 => $"−{-value}",
+        _ => "0",
+    };
+
     /// <summary>
     /// The experience gained within the hero's shown <see cref="Hero.Level"/>, out of what that level spans: empty at its start, and short
     /// of full by <see cref="TrainingRules.ExperienceToNextLevel"/>. Full while level-ups wait to be chosen, and at the table's last level.

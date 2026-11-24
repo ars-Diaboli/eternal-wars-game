@@ -15,6 +15,9 @@ public enum HeroStatIcon
     Knowledge,
     Mana,
     Experience,
+    Movement,
+    Morale,
+    Luck,
 }
 
 /// <summary>
@@ -178,6 +181,9 @@ public static class HeroIcons
         HeroStatIcon.Knowledge => "knowledge",
         HeroStatIcon.Mana => "mana",
         HeroStatIcon.Experience => "experience",
+        HeroStatIcon.Movement => "movement",
+        HeroStatIcon.Morale => "morale",
+        HeroStatIcon.Luck => "luck",
         _ => "",
     };
 }

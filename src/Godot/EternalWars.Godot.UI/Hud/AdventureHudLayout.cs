@@ -4,12 +4,13 @@ using Godot;
 namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
-/// Places the adventure map's HUD parts: a framed column (ADR-191) down the minimap's side of the screen (<see cref="HudArrangement"/>; the right,
-/// or the left in the mirrored layout, ADR-309), from the top to the status bar, holding the minimap, the town list and the action
-/// buttons from the top, and the turn block at its bottom (ADR-204). The column is as wide as its widest part, and every part fills that width;
-/// it takes the clicks on it. The hero list (<see cref="SetOpposite"/>) stands at the other edge, under the top bar (ADR-309). The layer covers the screen but lets the mouse through; each part is a child that is moved, never reparented (a
-/// part's event subscriptions last while it is in the tree). It re-places the parts whenever one's size changes. The arrangement of ADR-309
-/// replaces this column in the plan's step 3.
+/// Places the adventure map's HUD parts (ADR-309, <see cref="HudArrangement"/>): a framed column (ADR-191) down the minimap's side of the
+/// screen (the right, or the left when mirrored) holding the minimap and the town list, as wide as its widest part; the hero list
+/// (<see cref="SetOpposite"/>) at the other edge, under the top bar; and the bottom row above the status bar (<see cref="SetBottom"/>): the
+/// hero card and the army strip from the column's far edge, the action buttons and End turn from the column's edge, all as tall as the
+/// tallest. A hidden part leaves its place empty and the others where they are. The layer covers the screen but lets the mouse through; each
+/// part is a child that is moved, never reparented (a part's event subscriptions last while it is in the tree). It re-places the parts
+/// whenever one's size changes.
 /// </summary>
 public partial class AdventureHudLayout : Container
 {
@@ -18,7 +19,7 @@ public partial class AdventureHudLayout : Container
 
     private readonly List<Control> _column = [];
     private readonly Panel _sidePanel = new() { Name = "SidePanel", MouseFilter = MouseFilterEnum.Stop };
-    private Control? _info;
+    private readonly Dictionary<HudPart, Control> _bottom = [];
     private Control? _opposite;
     private Control? _oppositeContent;
     private LayoutSettings _layout = LayoutSettings.Default;
@@ -49,12 +50,15 @@ public partial class AdventureHudLayout : Container
         AddChild(_sidePanel); // first, so it is drawn behind the parts
     }
 
-    /// <summary>The turn block, at the column's bottom.</summary>
-    public void SetInfo(Control info)
+    /// <summary>One of the bottom row's parts (<see cref="HudArrangement.BottomRow"/>): the hero card, the army strip, the actions, End turn.</summary>
+    public void SetBottom(HudPart part, Control control)
     {
-        _info = info;
-        AddChild(info);
+        _bottom[part] = control;
+        AddChild(control);
     }
+
+    /// <summary>The bottom row's height: its tallest part's, the parts hidden or not, so the row does not jump when the hero card hides.</summary>
+    public float BottomRowHeight => _bottom.Values.Select(p => p.GetCombinedMinimumSize().Y).DefaultIfEmpty(0).Max();
 
     /// <summary>
     /// The part at the edge away from the column, under the top bar (<see cref="ResourceTopBar"/>): the hero list's <paramref name="frame"/>,
@@ -97,7 +101,10 @@ public partial class AdventureHudLayout : Container
         var width = _column.Select(p => p.GetCombinedMinimumSize().X).DefaultIfEmpty(0).Max();
         var panelWidth = width + (2 * Margin);
         var panelX = left ? 0 : screen.X - panelWidth;
-        FitChildInRect(_sidePanel, new Rect2(panelX, 0, panelWidth, screen.Y - _bottomReserve));
+        var rowHeight = BottomRowHeight;
+        var rowTop = screen.Y - _bottomReserve - Margin - rowHeight;
+        var bottom = _bottom.Count == 0 ? screen.Y - _bottomReserve : rowTop - Margin; // where the column and the hero list stop
+        FitChildInRect(_sidePanel, new Rect2(panelX, 0, panelWidth, bottom));
 
         var x = panelX + Margin;
         var y = Margin;
@@ -113,15 +120,36 @@ public partial class AdventureHudLayout : Container
             var size = _opposite.GetCombinedMinimumSize();
             size.Y += _oppositeContent?.GetCombinedMinimumSize().Y ?? 0;
             var top = ResourceTopBar.Height + Margin;
-            size.Y = Math.Min(size.Y, Math.Max(0, screen.Y - _bottomReserve - Margin - top));
+            size.Y = Math.Min(size.Y, Math.Max(0, bottom - Margin - top));
             FitChildInRect(_opposite, new Rect2(left ? screen.X - size.X - Margin : Margin, top, size.X, size.Y));
         }
 
-        if (_info is not null)
+        PlaceBottomRow(screen, rowTop, rowHeight);
+    }
+
+    /// <summary>The bottom row: the parts on the left packed from the left edge, those on the right from the right edge, in the row's order.</summary>
+    private void PlaceBottomRow(Vector2 screen, float top, float height)
+    {
+        var row = HudArrangement.BottomRow(_layout).Where(_bottom.ContainsKey).ToList();
+        var x = Margin;
+        foreach (var part in row.Where(p => HudArrangement.SideOf(_layout, p) == ScreenSide.Left))
         {
-            _info.Size = new Vector2(width, 0); // the wrapping lines take their height at this width
-            var height = _info.GetCombinedMinimumSize().Y;
-            FitChildInRect(_info, new Rect2(x, screen.Y - _bottomReserve - Margin - height, width, height));
+            var width = _bottom[part].GetCombinedMinimumSize().X;
+            FitChildInRect(_bottom[part], new Rect2(x, top, width, height));
+            _bottom[part].ZIndex = 0;
+            x += width + Margin;
+        }
+
+        // A screen too narrow for both groups keeps the right group whole and lets it cover the left one's end (step 4 of the plan cuts
+        // the army strip with a fade instead).
+        x = screen.X - Margin;
+        foreach (var part in Enumerable.Reverse(row.Where(p => HudArrangement.SideOf(_layout, p) == ScreenSide.Right).ToList()))
+        {
+            var width = _bottom[part].GetCombinedMinimumSize().X;
+            x -= width;
+            FitChildInRect(_bottom[part], new Rect2(x, top, width, height));
+            _bottom[part].ZIndex = 1; // drawn over the left group where they meet
+            x -= Margin;
         }
     }
 }

@@ -17,8 +17,8 @@ namespace EternalWars.Godot.UI.Hud;
 /// to preview the route (markers coloured by day), click the same tile again to go; an armed adventure spell casts on the next clicked cell.
 /// Right click clears the preview (and the armed spell) and opens the information window of what is there (ADR-154). Keys: arrows/numpad
 /// step, and the hotkey table's (<see cref="AdventureHotkeys"/>): Tab next hero, T next town, H hero screen, C spell book, K kingdom, Q quest
-/// log, P puzzle map, G dig, L switch level. Results, and the name of what
-/// the pointer is over, go to the HUD's status line.
+/// log, P puzzle map, G dig, L switch level, M marketplace, Space move along the route, Z end turn (Z answers its question, as Enter does). Results, and the name of what the pointer
+/// is over, go to the HUD's status line.
 /// </summary>
 public sealed class AdventureInputController(
     GameSession session, MapViewContext context, AdventureWorldView world, StrategyCamera camera, AdventureHud hud, InfoWindow info)
@@ -115,6 +115,15 @@ public sealed class AdventureInputController(
                 break;
             case InputEventKey { Pressed: true, Echo: false } key when ActionOf(key) == AdventureAction.Dig && context.PlaysHere(session.State.CurrentPlayer.Id):
                 Dig();
+                break;
+            case InputEventKey { Pressed: true, Echo: false } key when ActionOf(key) == AdventureAction.Marketplace && context.PlaysHere(session.State.CurrentPlayer.Id):
+                hud.OpenMarketplace();
+                break;
+            case InputEventKey { Pressed: true, Echo: false } key when ActionOf(key) == AdventureAction.Move && context.PlaysHere(session.State.CurrentPlayer.Id):
+                MoveAlongRoute();
+                break;
+            case InputEventKey { Pressed: true, Echo: false } key when ActionOf(key) == AdventureAction.EndTurn:
+                hud.RequestEndTurn();
                 break;
             case InputEventKey { Pressed: true } key when SelectedHero is { } hero && KeyboardDirections.ToDirection(key.Keycode) is { } direction:
                 world.PathPreview.Clear();
@@ -244,13 +253,37 @@ public sealed class AdventureInputController(
 
         if (session.Movement.FindPath(hero, tile) is { } path)
         {
-            world.PathPreview.Show(path, RouteEndMark(path));
+            world.PathPreview.Show(path, RouteEndMark(path), session.State.Date);
             hud.Status.Text = MoveOutcomeText.Route(path);
         }
         else
         {
             world.PathPreview.Clear();
             hud.Status.Text = "No route there.";
+        }
+    }
+
+    /// <summary>Move (the button, Space): the selected hero walks the route shown on the map; the status line says why not.</summary>
+    public void MoveAlongRoute()
+    {
+        var hero = SelectedHero is { } id ? session.State.HeroesOf(session.State.CurrentPlayer.Id).FirstOrDefault(h => h.Id == id) : null;
+        var route = world.PathPreview.Path;
+        if (AdventureActionGrid.MoveRefusal(hero, route) is { } refusal)
+        {
+            hud.Status.Text = refusal + ".";
+            return;
+        }
+
+        world.PathPreview.Clear();
+        Report(session.Execute(new MoveHeroCommand(session.State.CurrentPlayer.Id, hero!.Id, route!.Destination)));
+    }
+
+    /// <summary>A stack of the army strip right-clicked: its creature's information window at the pointer.</summary>
+    public void ShowStackInfo(HeroId hero, int slot, Vector2 at)
+    {
+        if (session.State.Heroes.FirstOrDefault(h => h.Id == hero)?.Army.Slots[slot] is { } stack)
+        {
+            info.Open(InfoSheets.Creature(session.State, stack.Creature, info.Detailed, InfoSheets.Known(stack)), at);
         }
     }
 

@@ -40,18 +40,31 @@ creatures and buildings, heraldic player colours, iconic map objects).
 
 ## Camera and UI
 - **Camera** (ADR-022): tilted **15–30° from vertical** (more tilted zoomed in), **rotatable ±45°**, zoom, pan.
-- **UI**: a HoMM-style side panel on the right, or the left when mirrored (ADR-191, ADR-309): one framed column from the top to the status bar with the minimap,
-  the town list and the action buttons, which takes the clicks on it; the hero list at the other edge; End turn among the action
-  buttons (ADR-204), the resources on the top bar and the calendar (date, week's event) on the status bar's right end (ADR-225, ADR-309);
+- **UI**: a HoMM-style side panel on the right, or the left when mirrored (ADR-191, ADR-309): one framed column from the top down to the
+  bottom row with the minimap and the town list, which takes the clicks on it; the hero list at the other edge; the bottom row above the
+  status bar; the resources on the top bar and the calendar (date, week's event) on the status bar's right end (ADR-225, ADR-309);
   full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips, the
   fog's look, the tile grid, the window mode) and "Layout".
-- **Action buttons** (ADR-210): a 3 × 3 grid of 48 px icon buttons: hero screen (H), spell book (C), kingdom (K); quests (Q), puzzle map
-  (P), dig (G); marketplace, switch level (L), menu (F10). Their names and keys come from one hotkey table, which the keys also follow
-  ("Dig [G]", ADR-309). Switch level shows the level it goes to: the sunlit hill from the
-  underground, the cave from the surface (ADR-309). The hero screen, spell book and dig act on the selected hero and are greyed
-  without one (the spell book also when the hero has none); the marketplace without a town marketplace; the level switch on a one-level map.
-  In the replay viewer the hero, spell book, dig and marketplace buttons are greyed. The spell book is a window over the map: the hero's
-  mana, its adventure spells to cast, its battle spells by school with their costs.
+- **Bottom row** (ADR-309): above the status bar, framed panels of one height: from the edge away from the minimap the selected hero's
+  card and its army strip, from the minimap's edge End turn and the action buttons (mirrored with the layout). With no own hero selected
+  the card and the strip are hidden and the others keep their places.
+- **Hero card** (ADR-309): the portrait (a click opens the hero screen), three thin bars beside it (movement green, mana blue, experience
+  to the next level gold; the numbers in their tooltips), the name and level, Attack, Defence, Spell power and Knowledge, and morale and
+  luck as icons with a signed value ("+2", "−1"). The army strip: always seven slots, empty ones dim; a stack shows the creature and the
+  count, its name on the status bar; a click opens the hero screen, a right click the creature's information window.
+- **Action buttons** (ADR-210, ADR-309): two rows of five icon buttons, wider than tall: Move (Space), spell book (C), kingdom (K),
+  quests (Q), puzzle map (P); dig (G), marketplace (M), switch level (L), hero screen (H), menu (F10). No labels: each one's name and key
+  come from one hotkey table, which the keys also follow, and show on the status bar ("Dig [G]"); a greyed button adds why ("Move [Space]
+  · Click a cell to plan a route first"). Move walks the selected hero along the route shown on the map; it is greyed with no hero, no
+  route of its or no movement left today. Switch level shows the level it goes to: the sunlit hill from the underground, the cave from the
+  surface. The hero screen, spell book and dig act on the selected hero and are greyed without one (the spell book also when the hero has
+  none); the marketplace without a town marketplace; the level switch on a one-level map. In the replay viewer Move and the hero, spell
+  book, dig and marketplace buttons are greyed. The spell book is a window over the map: the hero's mana, its adventure spells to cast,
+  its battle spells by school with their costs.
+- **End turn** (ADR-204, ADR-309): an hourglass tile with no label ("End turn [Z]" on the status bar) and under it the week's seven
+  dots, today's lit in the colour of the player whose HUD it is; greyed while it is not this screen's player's turn, left out in the
+  replay viewer. Pressed (or Z) while a hero can still move, it asks first in the middle of the screen: "Mara and Aldric can still move.
+  End the turn?", with End the turn and Cancel; Z or Enter answers it, and a new turn closes it.
 - **Top bar** (ADR-309): the six resources (short amounts past 6 digits for gold and 4 for the others, the full one in the tooltip) in the
   top corner away from the minimap, within the status bar's 16:9 width, on a layer over the full-screen panels. The town, hero and exchange
   screens stop short of it, and while one is open it runs across that width.
@@ -64,8 +77,8 @@ creatures and buildings, heraldic player colours, iconic map objects).
   first. On the adventure map the calendar is on the right (ADR-225). On the adventure map the menu is one of the action buttons; in battle the
   "Menu [F10]" button stands on the bar's right end, and before a game and in the replay viewer's battles in the bottom right corner. In
   the replay viewer the bar stands above the viewer's bar.
-- **Icon buttons** (ADR-204): a button with an icon shows the icon alone on a square button, 48 px in bars and panels (the action
-  buttons; the battle bar; End turn), 32 px in rows, window headers and the replay viewer's bar (Play/Pause as one button showing what
+- **Icon buttons** (ADR-204): a button with an icon shows the icon alone on a square button, 48 px in bars and panels (the battle
+  bar; End turn; the action buttons 36 px on buttons wider than tall), 32 px in rows, window headers and the replay viewer's bar (Play/Pause as one button showing what
   pressing it does, Next turn, Next day, Skip to the result, Play from here; ADR-309) (a window's or screen's
   close "×" always in its top-right corner, ADR-225); hovering it puts its label and hotkey on the
   status bar, with no pop-up tooltip. A button whose icon is missing keeps its text. The buttons along a window's bottom (OK, Accept,
@@ -91,7 +104,9 @@ creatures and buildings, heraldic player colours, iconic map objects).
   nothing is left to build: every building at its last level and every dwelling line built out or closed by the 7-of-9 rule (ADR-030),
   the Grail building and a second Capitol not counted. The name and the build state go to the status bar on hover; a click centres the
   map on the town and opens its screen.
-- **Route** (ADR-309): the route's markers are coloured by the day each step is reached; over the last one floats the mark of what the
+- **Route** (ADR-309): the route's markers are coloured by the day each step is reached (placeholders until the art pass: today's warm
+  gold, the later days alternating pale steel blue and pale silver), with a "Day N" tag (the day counted from the game's start) at the
+  start of the route's first two days and its last; the selected hero stands in a ring of its owner's colour. Over the last marker floats the mark of what the
   hero does there, as the cursor decides it: crossed swords (attack), an open hand (visit), a hand reaching for a coin (pick up a pile, a
   chest or an artifact), a town gate (enter an own town), a handshake (meet an own hero); a plain move shows none.
 - **Heraldry** (ADR-211): each town type has a crest (its figure on a painted shield). It stands before the faction's name wherever the

@@ -68,7 +68,8 @@ public partial class HeroView : Node3D
         {
             InnerRadius = 0.36f,
             OuterRadius = 0.46f,
-            Material = new StandardMaterial3D { AlbedoColor = Colors.White, ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded },
+            // The selection ring in its owner's colour (ADR-309): the colour of the player whose HUD selected it.
+            Material = new StandardMaterial3D { AlbedoColor = Palette.ForPlayer(context.State, hero.Owner), ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded },
         };
         _ring.Position = new Vector3(0, 0.05f, 0);
         AddChild(_ring);

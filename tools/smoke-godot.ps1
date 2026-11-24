@@ -82,7 +82,7 @@ $scenarios = @(
     # A route and a walk, then a week of turns through "End turn" (two human seats, 14 clicks): the new week's notice and its event next
     # to the date (ADR-084).
     @{ Name = 'game-route-and-move'; App = 'EternalWars.Game'; Frames = 150
-       Input = (@('3:key:Enter', '10:click:960,520', '25:click:960,520') + (0..13 | ForEach-Object { "$(60 + 6 * $_):press:End turn" })) -join ';' },
+       Input = (@('3:key:Enter', '10:click:960,520', '25:click:960,520') + (0..13 | ForEach-Object { "$(60 + 6 * $_):press:End turn;$(64 + 6 * $_):key:Enter" })) -join ';' },
     # Two own heroes meet (ADR-153): Orrin's blade onto Valeska's doll, his ring into her backpack, her griffins to him; Close, then the gate.
     @{ Name = 'game-exchange-and-gate'; App = 'EternalWars.Game'; Frames = 72; Map = $exchangeMap
        Input = '3:key:Enter;10:key:Right;16:click:@Weapon: Rusted Blade;19:click:@Weapon: Centaur''s Axe;22:click:@Iron Band (Ring);25:click:@Into the backpack#2;28:click:@2 | Griffin;31:click:@—;36:click:@Close;42:click:960,557;48:click:960,557' },
@@ -99,11 +99,11 @@ $scenarios = @(
     # An arena map against the computer (ADR-097, ADR-159): Blue ends day 1, Red prepares, day 2's battle opens by itself at the combat place;
     # quick combat, the result screen (not ranked), then "Play again" starts the map anew.
     @{ Name = 'game-arena'; App = 'EternalWars.Game'; Frames = 110; Map = $arenaMap
-       Input = '3:key:Enter;8:press:End turn;50:key:Q;75:key:Enter;85:press:Play again' },
+       Input = '3:key:Enter;8:press:End turn;12:key:Enter;50:key:Q;75:key:Enter;85:press:Play again' },
     # A shipped arena map from the new-game screen's Arenas tab (ADR-180, ADR-201): Four Banners, two against two with random towns; start,
     # then end day 1 and the computer players prepare (their battles show; day 2 and the result are the game-arena scenario's).
     @{ Name = 'game-arena-shipped'; App = 'EternalWars.Game'; Frames = 60
-       Input = '4:press:Arenas;8:click:@Four Banners;12:click:@Start;30:press:End turn' },
+       Input = '4:press:Arenas;8:click:@Four Banners;12:click:@Start;30:press:End turn;34:key:Enter' },
     # Step next to a savage monster: the 3D battle scene opens; wait, defend, a click on the field, quick combat, leave.
     @{ Name = 'game-battle-3d'; App = 'EternalWars.Game'; Frames = 80; Map = $battleMap
        Input = '3:key:Enter;10:key:Right;30:key:W;40:key:D;48:click:960,600;58:key:Q;68:key:Enter' },
@@ -127,6 +127,11 @@ $scenarios = @(
     # buttons under it, pressed in and out; the hero list's entry hovered (its card beside the list, its name on the status bar); the town list.
     @{ Name = 'game-hud-parts'; App = 'EternalWars.Game'; Frames = 44; Map = $townsMap
        Input = '3:key:Enter;14:move:46,78;22:move:800,450;26:press:Zoom in;30:press:Zoom in;36:press:Zoom out' },
+    # The bottom row (ADR-309) on the towns map: Tab selects Orrin (his card and army show), a click plans a route (day colours and tags),
+    # Move walks it; a right click on his first stack opens its information window, Escape closes it; End turn asks while he can still move,
+    # Cancel; Z asks again and Z answers it.
+    @{ Name = 'game-bottom-row'; App = 'EternalWars.Game'; Frames = 76; Map = $townsMap
+       Input = '3:key:Enter;8:key:Tab;14:click:1100,300;22:press:Move [Space];34:rclick:528,800;40:key:Escape;46:press:End turn [Z];52:press:Cancel;58:key:Z;64:key:Z' },
     # The turn timer (ADR-091, ADR-225): tick it on the new-game screen and type 1 minute, start, open the hero screen and wait. The warnings come,
     # the turn passes to Red with the full time and the hero screen closes. At 2 frames a second, so the minute takes 120 frames instead of 600.
     @{ Name = 'game-turn-timer'; App = 'EternalWars.Game'; Frames = 140; Fps = 2
@@ -243,7 +248,7 @@ $scenarios = @(
     # A campaign (ADR-241, ADR-242): Campaign in the main menu, Border Watch at Normal, the first map's intro, then its briefing dialogue line by
     # line (Next, OK) and the end of Blue's first turn.
     @{ Name = 'game-campaign'; App = 'EternalWars.Game'; Frames = 75; MainMenu = $true
-       Input = '3:press:Campaign;10:press:Start;17:press:Start the map;40:press:Next;47:press:OK;55:press:End turn' },
+       Input = '3:press:Campaign;10:press:Start;17:press:Start the map;40:press:Next;47:press:OK;55:press:End turn;59:key:Enter' },
     # The viewer on a recorded computer game (the sim's demo record, 4 days): pause at once, Fast, next day three times (day 4), next turn (Red's,
     # with the battle against the wolves), Normal, play: Red walks, the computer's battle plays move by move; skip to its result, which closes
     # by itself, then the replay plays to its end.
@@ -261,7 +266,7 @@ $scenarios = @(
     # "Play from here" on the map (ADR-185): the same record paused, next day (Blue's day 2), Play from here: the viewer's bar goes, the game's
     # HUD comes with End turn; End turn passes to Red.
     @{ Name = 'game-replay-play-on'; App = 'EternalWars.Game'; Frames = 40; Replay = $replayFile
-       Input = '3:key:Space;6:press:Next day;12:press:Play from here;24:press:End turn' },
+       Input = '3:key:Space;6:press:Next day;12:press:Play from here;24:press:End turn;28:key:Enter' },
     # A siege (ADR-106, ADR-109): step into the neutral Castle-level town; walls, gate, moat, towers and keep. The footman defends, the
     # ballista (Basic Ballistics) shoots the upper wall, two more defend, quick combat mid-animation (ADR-112 check), Enter on the result.
     @{ Name = 'game-siege'; App = 'EternalWars.Game'; Frames = 150; Map = $siegeMap
@@ -353,11 +358,11 @@ $scenarios = @(
     # At the Witch Hut, information windows on a decision prompt (ADR-178), in the middle of the screen (ADR-186): right-click the prompt
     # (the hut), then the skill offered. After Blue's turn Red's map sites: the Refugee Camp and the Cartographer (Buy reveals the surface).
     @{ Name = 'game-map-sites'; App = 'EternalWars.Game'; Frames = 244; Map = $sitesMap
-       Input = '3:key:Enter;8:press:Ulric;12:key:Up;24:key:Escape;28:press:Wenda;32:key:Up;44:key:Escape;48:press:Lior;52:key:Up;62:press:+2 Attack;68:press:Pella;72:key:Up;82:press:Open;90:key:Escape;94:press:Hagan;98:key:Up;108:rclick:800,430;112:key:Escape;114:rclick:640,477;118:key:Escape;120:press:Leave;124:press:Sefra;128:key:Up;138:press:A cave;144:press:Mortis;148:key:Up;158:key:Escape;160:press:Bram;164:key:Up;176:key:Escape;180:press:End turn;188:press:Corin;192:key:Up;204:key:Escape;208:press:Tamsin;212:key:Up;224:press:Buy' },
+       Input = '3:key:Enter;8:press:Ulric;12:key:Up;24:key:Escape;28:press:Wenda;32:key:Up;44:key:Escape;48:press:Lior;52:key:Up;62:press:+2 Attack;68:press:Pella;72:key:Up;82:press:Open;90:key:Escape;94:press:Hagan;98:key:Up;108:rclick:800,430;112:key:Escape;114:rclick:640,477;118:key:Escape;120:press:Leave;124:press:Sefra;128:key:Up;138:press:A cave;144:press:Mortis;148:key:Up;158:key:Escape;160:press:Bram;164:key:Up;176:key:Escape;180:press:End turn;184:key:Enter;188:press:Corin;192:key:Up;204:key:Escape;208:press:Tamsin;212:key:Up;224:press:Buy' },
     # The Grail (ADR-140): Obelisa visits the obelisk (notice), P opens the puzzle map and closes it; Spade digs (an empty hole), Digby digs up the
     # Grail; two turns later Digby carries it into Castlebridge (the Grail building's notice).
     @{ Name = 'game-grail'; App = 'EternalWars.Game'; Frames = 100; Map = $grailMap
-       Input = '3:key:Enter;8:press:Obelisa;12:key:Up;24:key:P;34:key:P;38:press:Spade;42:key:G;50:press:Digby;54:key:G;62:press:End turn;68:press:End turn;76:press:Digby;80:key:Up' },
+       Input = '3:key:Enter;8:press:Obelisa;12:key:Up;24:key:P;34:key:P;38:press:Spade;42:key:G;50:press:Digby;54:key:G;62:press:End turn;66:key:Enter;68:press:End turn;72:key:Enter;76:press:Digby;80:key:Up' },
     # Magic (ADR-110, ADR-121, ADR-122, ADR-123): Magus enters the guild town (fixed guild spells), the hero screen with ranks and the Assemble
     # button, Detect Magic's window; then Bookless buys a spell book in the second town's mage guild window (G).
     @{ Name = 'game-magic'; App = 'EternalWars.Game'; Frames = 86; Map = $magicMap
@@ -400,7 +405,7 @@ $scenarios = @(
        Input = '3:key:Enter;8:press:Medic;12:key:Right;36:key:D;46:key:D;56:key:D;66:key:D;76:key:D;86:key:D;96:key:D;106:key:D;116:key:D;120:press:Resurrection (25);124:click:335,490;136:key:D;146:key:D;156:key:D;166:key:D;176:key:D;186:key:D;196:key:D;206:key:D;216:key:D;226:key:D;236:key:D;246:key:D;256:key:D;266:key:D;276:key:D;286:key:D;296:key:D' },
     # A dug hole on the map: Digger digs (G), the turn ends, and on day 2 Digger steps west off the hole.
     @{ Name = 'game-dug-hole'; App = 'EternalWars.Game'; Frames = 70; Map = $spellsMap; Seed = 1
-       Input = '3:key:Enter;8:press:Digger;12:key:G;20:press:End turn;44:press:Digger;50:key:Left' },
+       Input = '3:key:Enter;8:press:Digger;12:key:G;20:press:End turn;24:key:Enter;44:press:Digger;50:key:Left' },
     # A guild spell set by hand in the editor: select Emberkeep, open the inspector, open a guild slot's picker (the press scrolls the slots into
     # view), then the first level-1 slot's, which closes the other, and pick Brand from its grid (ADR-255).
     @{ Name = 'editor-guild-spell'; App = 'EternalWars.MapEditor'; Frames = 40; Map = $spellsMap

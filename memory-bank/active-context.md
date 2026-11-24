@@ -18,11 +18,12 @@ Detail: [roadmap.md](roadmap.md).
   one ready block each. Step 2 begun: the layout is a mirrored flag (`LayoutSettings.Mirrored`; older layouts load as the default or
   its mirror; the Layout tab offers the mirror, and today's side panel follows it until step 3) and the UI scale is a setting
   (`InterfaceSettings.UiScalePercent`, 100/150/200, not yet in the menu). The hero card (`HeroCard`), the descriptions by
-  ownership (`MapDescriptions`), the route's day tags (`RouteDays`) and End turn's question (`EndTurnCheck`) are Core models, not yet
-  on screen; the keys and action buttons read the hotkey table (`AdventureHotkeys`). Step 3 under way: the resources on a top bar over the
+  ownership (`MapDescriptions`), the route's day tags (`RouteDays`) and End turn's question (`EndTurnCheck`) are Core models; the keys
+  and action buttons read the hotkey table (`AdventureHotkeys`). Step 3 under way: the resources on a top bar over the
   full-screen panels (`ResourceTopBar`), the status bar's subject and detail, the turn banner and timer pill, the minimap's caption,
-  zoom buttons, frame and pictograms, the hero list (portraits, bars, hover card) and the town list (four slots). Next: the hero card
-  and army strip.
+  zoom buttons, frame and pictograms, the hero list (portraits, bars, hover card) and the town list (four slots), the bottom row (hero
+  card, army strip, 2×5 action grid with Move, End turn's hourglass and question) and the route's day colours and tags. Next: the map's
+  hover card and the question, notice and pause cards.
 - Necropolis heroes: three living humans, four liches, six vampires, a ghost, a wraith and five other dead; prompts
   rewritten, data unchanged (ADR-307).
 - Dungeon heroes: four minotaurs, three troglodytes, a medusa and two humans among the dark elves; prompts rewritten,

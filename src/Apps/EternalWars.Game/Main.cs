@@ -683,6 +683,8 @@ public partial class Main : Node3D
         _mapInput = new AdventureInputController(_session, _context, _world, _camera, _hud, _info);
         _hud.HeroSelected += hero => _mapInput.Select(hero, focus: true);
         _hud.DigRequested += _mapInput.Dig;
+        _hud.MoveRequested += _mapInput.MoveAlongRoute;
+        _hud.StackInfoRequested += _mapInput.ShowStackInfo;
         _hud.SpellAimed += _mapInput.Aim;
         _hud.MenuRequested += _menu.Toggle;
         _screens.ShowHud(_hud);

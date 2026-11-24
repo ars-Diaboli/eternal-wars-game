@@ -284,6 +284,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       icons on Switch level already in)
       - [x] The top resource bar (`ResourceTopBar`) and the status bar's subject and detail
       - [x] The turn banner and timer pill, the minimap's caption, zoom buttons, frame and pictograms, the hero and town lists
+      - [x] The bottom row (hero card, army strip, 2×5 action grid, End turn's hourglass and question), the route's day colours and tags
 - [ ] Step 4: checked at every target size, UI scale and mirror
 - [ ] Step 5: the painted pieces (icon sheets 30–32 already cut into `textures/ui/icons/`)
 - [ ] Step 6: the battle HUD's mockups decided and planned

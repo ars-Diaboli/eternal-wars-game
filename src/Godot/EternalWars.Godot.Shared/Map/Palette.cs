@@ -3,6 +3,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Pathfinding;
 using Godot;
 
 namespace EternalWars.Godot.Shared.Map;
@@ -154,12 +155,14 @@ public static class Palette
     private static Color Ramp(float t) =>
         t < 0.5f ? new Color(0.25f, 0.85f, 0.30f).Lerp(new Color(0.95f, 0.85f, 0.20f), t * 2) : new Color(0.95f, 0.85f, 0.20f).Lerp(new Color(0.90f, 0.20f, 0.20f), (t - 0.5f) * 2);
 
-    /// <summary>Path markers: today green, tomorrow yellow, the day after orange, later red (HoMM-style).</summary>
-    public static Color ForPathDay(int day) => day switch
+    /// <summary>
+    /// Route markers by the day they are reached (ADR-309, placeholders until the art pass): today's warm gold (the frames' bronze highlight),
+    /// the later days alternating pale steel blue and pale silver.
+    /// </summary>
+    public static Color ForPathDay(int day) => RouteDays.ShadeOf(day) switch
     {
-        0 => new Color(0.30f, 0.90f, 0.30f),
-        1 => new Color(0.95f, 0.85f, 0.20f),
-        2 => new Color(0.95f, 0.55f, 0.15f),
-        _ => new Color(0.90f, 0.20f, 0.20f),
+        RouteShade.Today => Color.Color8(217, 173, 92),
+        RouteShade.LaterOdd => Color.Color8(140, 170, 200),
+        _ => Color.Color8(200, 200, 205),
     };
 }
