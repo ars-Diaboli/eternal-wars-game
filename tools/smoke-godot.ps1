@@ -132,6 +132,10 @@ $scenarios = @(
     # Cancel; Z asks again and Z answers it.
     @{ Name = 'game-bottom-row'; App = 'EternalWars.Game'; Frames = 76; Map = $townsMap
        Input = '3:key:Enter;8:key:Tab;14:click:1100,300;22:press:Move [Space];34:rclick:528,800;40:key:Escape;46:press:End turn [Z];52:press:Cancel;58:key:Z;64:key:Z' },
+    # The UI scale (ADR-309) on the towns map: the Layout tab sets 150 %, the HUD grows at once; Tab selects Orrin, and on the narrow screen
+    # his army strip is cut with a fade at its right end; the pointer on it shows it whole over the action buttons, then off it, cut again.
+    @{ Name = 'game-ui-scale'; App = 'EternalWars.Game'; Frames = 50; Map = $townsMap
+       Input = '3:key:Enter;8:key:F10;10:click:@Layout;13:click:@100 %;16:choose:150 %;19:key:Escape;24:key:Tab;30:move:525,520;40:move:500,200' },
     # The turn timer (ADR-091, ADR-225): tick it on the new-game screen and type 1 minute, start, open the hero screen and wait. The warnings come,
     # the turn passes to Red with the full time and the hero screen closes. At 2 frames a second, so the minute takes 120 frames instead of 600.
     @{ Name = 'game-turn-timer'; App = 'EternalWars.Game'; Frames = 140; Fps = 2
@@ -263,10 +267,11 @@ $scenarios = @(
     # combat, Enter on the result: back to the replay, paused.
     @{ Name = 'game-replay-computer-battle'; App = 'EternalWars.Game'; Frames = 130; Replay = $computerReplayFile
        Input = '3:key:Space;6:click:@Normal;9:choose:Fast;12:press:Next day;16:press:Next day;20:press:Next day;24:press:Next turn;28:click:@Fast;31:choose:Normal;34:key:Space;88:press:Play from here;100:key:Q;118:key:Enter' },
-    # "Play from here" on the map (ADR-185): the same record paused, next day (Blue's day 2), Play from here: the viewer's bar goes, the game's
+    # "Play from here" on the map (ADR-185): the same record paused, next day (Blue's day 2), back to day 1 by a click at the day slider's
+    # start (ADR-309), next day again, Play from here: the viewer's bar goes, the game's
     # HUD comes with End turn; End turn passes to Red.
     @{ Name = 'game-replay-play-on'; App = 'EternalWars.Game'; Frames = 40; Replay = $replayFile
-       Input = '3:key:Space;6:press:Next day;12:press:Play from here;24:press:End turn;28:key:Enter' },
+       Input = '3:key:Space;6:press:Next day;9:click:296,832;12:press:Next day;16:press:Play from here;28:press:End turn;32:key:Enter' },
     # A siege (ADR-106, ADR-109): step into the neutral Castle-level town; walls, gate, moat, towers and keep. The footman defends, the
     # ballista (Basic Ballistics) shoots the upper wall, two more defend, quick combat mid-animation (ADR-112 check), Enter on the result.
     @{ Name = 'game-siege'; App = 'EternalWars.Game'; Frames = 150; Map = $siegeMap

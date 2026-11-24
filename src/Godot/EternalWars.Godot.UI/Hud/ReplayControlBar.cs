@@ -18,8 +18,8 @@ namespace EternalWars.Godot.UI.Hud;
 public sealed record ReplayBarState(bool Playing, string Status, int Day, int LastDay, bool InBattle, bool CanTakeOver, bool AtEnd, bool FromTheStart = false);
 
 /// <summary>
-/// The replay viewer's controls along the bottom of the screen (ADR-101, ADR-164): play and pause (Space), the four speeds, next turn, next day,
-/// a day to go to, whose eyes the map is seen through (the whole map or a player's), "Skip to the result" in a battle, "Play from here" (a battle
+/// The replay viewer's controls along the bottom of the screen (ADR-101, ADR-164, ADR-309): the one Play/Pause toggle (Space), the four speeds,
+/// next turn, next day, a slider by day with a mark per week ("Day 5 / 34"), whose eyes the map is seen through (the whole map or a player's), "Skip to the result" in a battle, "Play from here" (a battle
 /// on by hand, or the game on from the map), and leaving for the main menu. While a battle is played on from the replay (<see cref="TakingOver"/>) only "Back to the replay" is shown. The bar
 /// only shows and asks: the app runs the replay.
 /// </summary>
@@ -32,8 +32,13 @@ public partial class ReplayControlBar : PanelContainer
     private readonly OptionButton _speed = new() { TooltipText = "How fast heroes walk and battles play" };
     private readonly Button _nextTurn = new() { Text = "Next turn", TooltipText = "Jump to the start of the next turn" };
     private readonly Button _nextDay = new() { Text = "Next day", TooltipText = "Jump to the start of the next day" };
-    private readonly SpinBox _day = new() { MinValue = 1, Prefix = "Day", TooltipText = "The day to go to" };
-    private readonly Button _goToDay = new() { Text = "Go", TooltipText = "Jump to the start of this day, back or forward" };
+    private readonly HSlider _day = new()
+    {
+        Name = "DaySlider", MinValue = 1, MaxValue = 1, Step = 1, Scrollable = false, CustomMinimumSize = new Vector2(220, 0), SizeFlagsVertical = SizeFlags.ShrinkCenter,
+        TooltipText = "The day to go to: drag or click, back or forward; a mark per week",
+    };
+    private readonly Label _dayText = new() { Name = "DayText", VerticalAlignment = VerticalAlignment.Center };
+    private bool _dragging;
     private readonly OptionButton _viewer = new() { TooltipText = "Whose eyes the map is seen through" };
     private readonly Button _skip = new() { Text = "Skip to the result", Visible = false };
     private readonly Button _takeOver = new() { Text = "Play from here" };
@@ -116,7 +121,7 @@ public partial class ReplayControlBar : PanelContainer
         _nextDay.WithIcon(UiIcon.NextDay, UiIcons.WindowSize);
         _skip.WithIcon(UiIcon.SkipToResult, UiIcons.WindowSize);
         _takeOver.WithIcon(UiIcon.TakeOver, UiIcons.WindowSize);
-        foreach (var control in new Control[] { _play, _speed, _nextTurn, _nextDay, _day, _goToDay, _viewer, _skip, _takeOver, _leave })
+        foreach (var control in new Control[] { _play, _speed, _nextTurn, _nextDay, _day, _dayText, _viewer, _skip, _takeOver, _leave })
         {
             control.FocusMode = FocusModeEnum.None; // Space and Enter stay the viewer's keys
             _controls.AddChild(control);
@@ -126,8 +131,27 @@ public partial class ReplayControlBar : PanelContainer
         _speed.ItemSelected += index => SpeedChanged?.Invoke((AnimationSpeed)index);
         _nextTurn.Pressed += () => NextTurnRequested?.Invoke();
         _nextDay.Pressed += () => NextDayRequested?.Invoke();
-        _goToDay.Pressed += () => DayRequested?.Invoke((int)_day.Value);
-        _day.GetLineEdit().TextSubmitted += _ => DayRequested?.Invoke((int)_day.Value);
+        // A click or a drag goes to its day when the button is let go (a seek builds the views, this bar too, again); the day shown follows
+        // the knob meanwhile, and the replay's own day does not move it.
+        _day.GuiInput += e =>
+        {
+            if (e is not InputEventMouseButton { ButtonIndex: MouseButton.Left } button)
+            {
+                return;
+            }
+
+            if (button.Pressed)
+            {
+                _dragging = true;
+            }
+            else if (_dragging)
+            {
+                _dragging = false;
+                DayRequested?.Invoke((int)_day.Value);
+            }
+        };
+        _day.ValueChanged += value => ShowDay((int)value);
+        _day.Draw += DrawWeekMarks;
         _viewer.ItemSelected += index => ViewerChanged?.Invoke((int)index);
         _skip.Pressed += () => SkipRequested?.Invoke();
         _takeOver.Pressed += () => TakeOverRequested?.Invoke();
@@ -146,10 +170,17 @@ public partial class ReplayControlBar : PanelContainer
 
         _play.Disabled = state.AtEnd;
         _nextTurn.Disabled = _nextDay.Disabled = state.AtEnd;
-        _day.MaxValue = state.LastDay;
-        if (!_day.GetLineEdit().HasFocus())
+        _day.MaxValue = Math.Max(1, state.LastDay);
+        if (!_dragging)
         {
             _day.SetValueNoSignal(state.Day);
+            ShowDay(state.Day);
+        }
+
+        if (_lastDay != state.LastDay)
+        {
+            _lastDay = state.LastDay;
+            _day.QueueRedraw(); // the week marks
         }
 
         _skip.Visible = state.InBattle;
@@ -164,6 +195,29 @@ public partial class ReplayControlBar : PanelContainer
             _ => "Only a game that is not over, with a person still in it, can be played on.",
         };
         _status.Text = state.Status;
+    }
+
+    private int _lastDay;
+
+    private void ShowDay(int day) => _dayText.Text = $"Day {day} / {Math.Max(1, (int)_day.MaxValue)}";
+
+    /// <summary>A mark under the slider at each week's first day (days 1, 8, 15, ...).</summary>
+    private void DrawWeekMarks()
+    {
+        var last = (int)_day.MaxValue;
+        if (last <= 1)
+        {
+            return;
+        }
+
+        var size = _day.Size;
+        var grabber = _day.GetThemeIcon("grabber").GetWidth();
+        var colour = new Color(1, 1, 1, 0.6f);
+        for (var day = 1; day <= last; day += 7)
+        {
+            var x = (grabber / 2) + ((size.X - grabber) * (day - 1) / (last - 1));
+            _day.DrawLine(new Vector2(x, size.Y - 5), new Vector2(x, size.Y), colour, 1);
+        }
     }
 
     /// <summary>Shows a line in the status without changing the controls (the take-over's battle).</summary>

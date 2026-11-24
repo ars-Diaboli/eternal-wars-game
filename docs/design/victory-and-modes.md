@@ -44,8 +44,8 @@ ADR-092, ADR-101, built ADR-102 … ADR-104, the viewer ADR-164.
 - **Replay viewer** (ADR-164): "Watch a replay" lists two tabs, **Replays** (`user://replays`) and **Saves** (autosaves too), newest
   first. A record that does not replay to its digest is refused with the reason (other content). The viewer plays the record command by
   command on the map and in battles, computer turns and battles in full; it issues no command of its own. A bar along the bottom:
-  play / pause (Space), four speeds (heroes and battles alike), next turn, next day, a day to go to (forward, the game plays on to it at
-  once; back, it is replayed from the start to that day's first turn), the whole map or a player's eyes, and the main menu. In a battle, **"Skip to the result"** plays its moves at
+  play / pause (Space), four speeds (heroes and battles alike), next turn, next day, a slider by day with a mark per week and "Day 5 / 34" (a click or a let-go drag goes to that day: forward,
+  the game plays on to it at once; back, it is replayed from the start to that day's first turn), the whole map or a player's eyes, and the main menu. In a battle, **"Skip to the result"** plays its moves at
   once and shows the result, which closes by itself after a moment (Enter at once). A save plays to its last command and stops. Nothing is
   ranked, saved or autosaved.
 - **"Play from here"**, in a battle: the battle goes on by hand as a separate game, not ranked, the computer's side played as usual; when

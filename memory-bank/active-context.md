@@ -16,15 +16,17 @@ Detail: [roadmap.md](roadmap.md).
   replay bar's icons and the level icons on Switch level (icon sheets 30–32). New prompt file
   [question-picture-prompts.md](../docs/content/prompts/question-picture-prompts.md); the UI element and question picture prompts are
   one ready block each. Step 2 begun: the layout is a mirrored flag (`LayoutSettings.Mirrored`; older layouts load as the default or
-  its mirror; the Layout tab offers the mirror, and today's side panel follows it until step 3) and the UI scale is a setting
-  (`InterfaceSettings.UiScalePercent`, 100/150/200, not yet in the menu). The hero card (`HeroCard`), the descriptions by
+  its mirror; the Layout tab offers the mirror) and the UI scale is a setting
+  (`InterfaceSettings.UiScalePercent`, 100/150/200). The hero card (`HeroCard`), the descriptions by
   ownership (`MapDescriptions`), the route's day tags (`RouteDays`) and End turn's question (`EndTurnCheck`) are Core models; the keys
-  and action buttons read the hotkey table (`AdventureHotkeys`). Step 3 under way: the resources on a top bar over the
+  and action buttons read the hotkey table (`AdventureHotkeys`). Step 3: the resources on a top bar over the
   full-screen panels (`ResourceTopBar`), the status bar's subject and detail, the turn banner and timer pill, the minimap's caption,
   zoom buttons, frame and pictograms, the hero list (portraits, bars, hover card) and the town list (four slots), the bottom row (hero
   card, army strip, 2×5 action grid with Move, End turn's hourglass and question), the route's day colours and tags, the map's hover
   card, the question card (picture placeholders, a list past four answers), notices with Continue, the dim behind questions and the
-  pause card, and the LAN chat by the town list. Next: the replay bar's day slider, then narrow screens and the UI scale.
+  pause card, the LAN chat by the town list, the replay bar's day slider, the army strip cut with a fade on narrow screens and the UI
+  scale on the Layout tab (applied at start and when changed): step 3 done. Next: step 4, the check at every target size, UI scale and
+  mirror.
 - Necropolis heroes: three living humans, four liches, six vampires, a ghost, a wraith and five other dead; prompts
   rewritten, data unchanged (ADR-307).
 - Dungeon heroes: four minotaurs, three troglodytes, a medusa and two humans among the dark elves; prompts rewritten,

@@ -46,6 +46,7 @@ public partial class Main
         _interface = settings;
         _info.Detailed = settings.DetailedTooltips;
         WindowModes.Apply(settings.Window);
+        ApplyUiScale();
         if (_context is not null)
         {
             _context.FogLook = settings.Fog;
@@ -54,6 +55,9 @@ public partial class Main
 
         KeepSettings();
     }
+
+    /// <summary>The UI scale (ADR-309), like the map editor's: the screens' 2D parts drawn larger, the 3D views at the window's own pixels.</summary>
+    private void ApplyUiScale() => GetWindow().ContentScaleFactor = _interface.Normalized().UiScalePercent / 100f;
 
     /// <summary>Alt+Enter: the other window mode, shown in the menu too.</summary>
     private void ToggleWindowMode()
@@ -113,6 +117,7 @@ public partial class Main
         // "Detailed tooltips" (ADR-154): the information windows' formulas and numbers, kept with the speeds.
         _interface = SettingsFile.LoadInterface(_settingsPath);
         WindowModes.Apply(_interface.Window); // the window mode (ADR-186), at start and whenever it changes
+        ApplyUiScale();
         AddChild(_info);
         _info.Detailed = _interface.DetailedTooltips;
         _menu.ShowInterface(_interface);

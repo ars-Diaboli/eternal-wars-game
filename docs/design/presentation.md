@@ -44,14 +44,16 @@ creatures and buildings, heraldic player colours, iconic map objects).
   bottom row with the minimap and the town list, which takes the clicks on it; the hero list at the other edge; the bottom row above the
   status bar; the resources on the top bar and the calendar (date, week's event) on the status bar's right end (ADR-225, ADR-309);
   full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips, the
-  fog's look, the tile grid, the window mode) and "Layout".
+  fog's look, the tile grid, the window mode) and "Layout" (the initiative bar, the adventure map's mirror, the UI scale).
 - **Bottom row** (ADR-309): above the status bar, framed panels of one height: from the edge away from the minimap the selected hero's
   card and its army strip, from the minimap's edge End turn and the action buttons (mirrored with the layout). With no own hero selected
   the card and the strip are hidden and the others keep their places.
 - **Hero card** (ADR-309): the portrait (a click opens the hero screen), three thin bars beside it (movement green, mana blue, experience
   to the next level gold; the numbers in their tooltips), the name and level, Attack, Defence, Spell power and Knowledge, and morale and
   luck as icons with a signed value ("+2", "−1"). The army strip: always seven slots, empty ones dim; a stack shows the creature and the
-  count, its name on the status bar; a click opens the hero screen, a right click the creature's information window.
+  count, its name on the status bar; a click opens the hero screen, a right click the creature's information window. A screen too
+  narrow for the whole row cuts the army strip at its end towards the middle, fading out over the map; the pointer on it shows it whole,
+  over the action buttons.
 - **Action buttons** (ADR-210, ADR-309): two rows of five icon buttons, wider than tall: Move (Space), spell book (C), kingdom (K),
   quests (Q), puzzle map (P); dig (G), marketplace (M), switch level (L), hero screen (H), menu (F10). No labels: each one's name and key
   come from one hotkey table, which the keys also follow, and show on the status bar ("Dig [G]"); a greyed button adds why ("Move [Space]
@@ -135,8 +137,9 @@ creatures and buildings, heraldic player colours, iconic map objects).
 - **Layout** (ADR-118, ADR-156, ADR-309): the "Layout" tab sets the battle's initiative bar (top or bottom) and the adventure map's HUD:
   the default arrangement or its mirror, left and right swapped. The change shows at once and is kept in `settings.json` with the speeds,
   not in saves. An older saved layout loads as the default or its mirror, whichever side its HUD stood on.
-- **UI scale** (ADR-309): 100, 150 or 200 % of the game's UI, kept in `settings.json` with the interface settings; a value outside the
-  range is brought into it and onto the nearest of the three (the smaller of two as near).
+- **UI scale** (ADR-309): 100, 150 or 200 % of the game's UI, chosen on the "Layout" tab and applied at once and at start like the map
+  editor's (the 2D parts drawn larger, the 3D views at the window's own pixels); kept in `settings.json` with the interface settings; a
+  value outside the range is brought into it and onto the nearest of the three (the smaller of two as near).
 - **Theme** (ADR-191, ADR-294): dark slate panels and buttons framed in bronze; screens and windows in a bevelled nine-slice frame whose
   inner line takes the faction's accent on a town's windows (greybox frames until the art of
   [ui-element-prompts.md](../content/prompts/ui-element-prompts.md)). Every control the screens use (tabs, check boxes, fields, scroll

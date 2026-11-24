@@ -40,6 +40,8 @@ public partial class GameMenuPanel : CenterContainer
     private readonly OptionButton _mirrored = WithTooltip(
         Choices("Minimap on the right", "Mirrored: minimap on the left"), "The adventure map's parts, or the same with left and right swapped");
     private LayoutSettings _layout = LayoutSettings.Default;
+    private readonly OptionButton _uiScale = WithTooltip(
+        Choices([.. InterfaceSettings.UiScales.Select(s => $"{s} %")]), "The size of the game's buttons, panels and text");
     private IReadOnlyList<SaveItem> _entries = [];
     private Func<IReadOnlyList<SaveItem>> _listSaves = null!;
     private Action<string> _deleteSave = null!;
@@ -158,6 +160,8 @@ public partial class GameMenuPanel : CenterContainer
         layout.AddRow("Adventure map", _mirrored, 180);
         _initiativeBar.ItemSelected += index => ChangeLayout(_layout with { InitiativeBar = (ScreenEdge)index });
         _mirrored.ItemSelected += index => ChangeLayout(_layout with { Mirrored = index == 1 });
+        layout.AddRow("UI scale", _uiScale, 180);
+        _uiScale.ItemSelected += index => ChangeInterface(_interface with { UiScalePercent = InterfaceSettings.UiScales[(int)index] });
         var reset = new Button { Text = "Default layout", SizeFlagsHorizontal = SizeFlags.ShrinkBegin };
         reset.Pressed += () =>
         {
@@ -257,6 +261,7 @@ public partial class GameMenuPanel : CenterContainer
         _fog.Selected = (int)settings.Fog;
         _grid.SetPressedNoSignal(settings.ShowGrid);
         _window.Selected = (int)settings.Window;
+        _uiScale.Selected = Math.Max(0, InterfaceSettings.UiScales.ToList().IndexOf(settings.Normalized().UiScalePercent));
     }
 
     private void ChangeInterface(InterfaceSettings settings)

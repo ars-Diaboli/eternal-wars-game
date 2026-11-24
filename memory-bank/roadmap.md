@@ -277,15 +277,16 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Step 2: core models (layout mirrored flag, UI scale, hero card, town build state, descriptions by ownership, route days, hotkeys)
       - [x] The fully built rule (`BuildingTree.IsFullyBuilt`) and the route's end action (`AdventureCursors.RouteEndOf`)
       - [x] The layout as a mirrored flag (`LayoutSettings.Mirrored`, `HudArrangement`; older layouts load as the default or its mirror;
-            the side panel follows it until step 3) and the UI scale (`InterfaceSettings.UiScalePercent`)
+            the side panel follows it) and the UI scale (`InterfaceSettings.UiScalePercent`)
       - [x] The hero card (`HeroCard`) and the descriptions by ownership (`MapDescriptions`)
       - [x] Route days (`RouteDays`), the hotkey table (`AdventureHotkeys`) and End turn's question (`EndTurnCheck`)
-- [ ] Step 3: the HUD rebuilt on the flat theme (the town list's build mark, the route end's mark, the replay bar's icons and the level
+- [x] Step 3: the HUD rebuilt on the flat theme (the town list's build mark, the route end's mark, the replay bar's icons and the level
       icons on Switch level already in)
       - [x] The top resource bar (`ResourceTopBar`) and the status bar's subject and detail
       - [x] The turn banner and timer pill, the minimap's caption, zoom buttons, frame and pictograms, the hero and town lists
       - [x] The bottom row (hero card, army strip, 2×5 action grid, End turn's hourglass and question), the route's day colours and tags
       - [x] The map's hover card, the question card with its picture, notices with Continue, the dim behind questions and the pause card, the chat by the town list
+      - [x] The replay bar's day slider; the army strip cut with a fade on narrow screens; the UI scale on the Layout tab, applied
 - [ ] Step 4: checked at every target size, UI scale and mirror
 - [ ] Step 5: the painted pieces (icon sheets 30–32 already cut into `textures/ui/icons/`)
 - [ ] Step 6: the battle HUD's mockups decided and planned

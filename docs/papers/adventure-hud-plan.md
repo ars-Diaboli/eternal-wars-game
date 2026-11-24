@@ -159,7 +159,7 @@ Every hotkey shows on the status bar with its action's name; M, Space and Z are 
   bottom row and the side panel go (ADR-156, ADR-191, ADR-204 superseded in part). Saved layouts still load, as the default or its mirror.
 - **Target sizes:** 1280×720, 1280×800 (Steam Deck), 1920×1080, 2560×1440 and 21:9.
 - **Narrow screens:** the buttons are already in 2 rows; where the bottom row still does not fit, the army strip is cut off with a fade at
-  its right end, and hovering it shows it whole, over the action buttons.
+  its end towards the middle, and hovering it shows it whole, over the action buttons.
 - **UI scale:** a game setting, 100 %, 150 % or 200 %, applied like the map editor's (`ContentScaleFactor`); the editor offers 100–200 %
   in steps of 25.
 
@@ -214,8 +214,9 @@ memory-bank entries updated.
 - [x] Route: day colours and tags in `PathPreview`; selection ring in the player's colour (the end's action mark is in).
 - [x] Hover card on map objects (`MapHoverCard`); question, notice and pause cards (the question pictures as `QuestionPictures`, slate
   placeholders until painted; more than four answers as a list); dimming behind questions; the chat beside the town list.
-- [ ] Replay bar: one toggle, a day slider, the other controls kept (the icons and the one Play/Pause toggle are in; the slider to do).
-- [ ] Narrow screens: the army strip cut off with a fade, shown whole over the action buttons on hover; UI scale applied at start and from the settings.
+- [x] Replay bar: one toggle, a day slider with a mark per week ("Day 5 / 34"), the other controls kept.
+- [x] Narrow screens: the army strip cut off with a fade (`CutPart`), shown whole over the action buttons on hover; UI scale on the
+  Layout tab, applied at start and when changed (smoke `game-ui-scale`).
 
 ### 4. Check
 - [ ] Smoke screenshots of the map at 1280×720, 1280×800, 1920×1080, 2560×1440 and 21:9, at 100, 150 and 200 %, both mirrors.

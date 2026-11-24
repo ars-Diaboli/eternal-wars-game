@@ -96,7 +96,8 @@ public partial class BudgetOverlay : CanvasLayer
     public void RenderAt(int width)
     {
         var viewport = GetViewport() ?? throw new InvalidOperationException("The overlay is not in the tree.");
-        void Scale() => viewport.Scaling3DScale = Mathf.Clamp(width / viewport.GetVisibleRect().Size.X, 0.25f, 2f);
+        // The 3D renders at the window's own pixels, which a UI scale (ADR-309) makes wider than the visible rect.
+        void Scale() => viewport.Scaling3DScale = Mathf.Clamp(width / (float)GetWindow().Size.X, 0.25f, 2f);
         Scale();
         viewport.SizeChanged += Scale; // still that wide after a resize or Alt+Enter
         _title.Text += $", 3D at {width} wide";

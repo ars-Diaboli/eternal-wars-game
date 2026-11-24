@@ -992,7 +992,9 @@ bottom row: the hero card (`SelectedHeroCard`) and army strip (`ArmyStrip`), the
 Space, Marketplace on M), End turn's hourglass with the week's dots and its question (Z); the route's day colours and tags, the
 selection ring in the owner's colour; the map's hover card (`MapHoverCard`, `MapDescription.HasCard`), the question card with its
 picture (`QuestionPictures`) and its list for more than four answers, notices with Continue, the map dimmed behind questions and the
-the pause card in the middle, and the LAN chat by the town list (amends ADR-194's bottom left).
+the pause card in the middle, and the LAN chat by the town list (amends ADR-194's bottom left); the replay bar's day slider with its
+week marks; on a narrow screen the army strip cut with a fade (`CutPart`) and shown whole on hover; the UI scale on the Layout tab,
+applied at start and when changed.
 
 - **Why**: the side panel (ADR-191) and the Layout tab's corners (ADR-156) grew part by part; the owner's six mockups set one HUD that
   leaves the map's middle free. The owner decided each of their 71 differences; the paper states the result once.

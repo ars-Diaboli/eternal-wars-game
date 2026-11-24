@@ -149,29 +149,43 @@ public partial class AdventureHudLayout : Container
         Placed?.Invoke();
     }
 
-    /// <summary>The bottom row: the parts on the left packed from the left edge, those on the right from the right edge, in the row's order.</summary>
+    /// <summary>
+    /// The bottom row: the parts on the left packed from the left edge, those on the right from the right edge, in the row's order. A screen
+    /// too narrow for the whole row cuts the army strip (<see cref="CutPart"/>) at its end towards the middle; one too narrow even then lets
+    /// the right group cover the left one's end.
+    /// </summary>
     private void PlaceBottomRow(Vector2 screen, float top, float height)
     {
         var row = HudArrangement.BottomRow(_layout).Where(_bottom.ContainsKey).ToList();
+        float Wanted(HudPart part) => _bottom[part] is CutPart cut ? cut.FullWidth : _bottom[part].GetCombinedMinimumSize().X;
+        var over = Math.Max(0, row.Sum(Wanted) + (Margin * (row.Count + 1)) - screen.X);
+        float Width(HudPart part) => _bottom[part] is CutPart ? Math.Max(0, Wanted(part) - over) : Wanted(part);
+
         var x = Margin;
         foreach (var part in row.Where(p => HudArrangement.SideOf(_layout, p) == ScreenSide.Left))
         {
-            var width = _bottom[part].GetCombinedMinimumSize().X;
-            FitChildInRect(_bottom[part], new Rect2(x, top, width, height));
-            _bottom[part].ZIndex = 0;
-            x += width + Margin;
+            Put(part, new Rect2(x, top, Width(part), height), cutAtRight: true, z: 0);
+            x += Width(part) + Margin;
         }
 
-        // A screen too narrow for both groups keeps the right group whole and lets it cover the left one's end (step 4 of the plan cuts
-        // the army strip with a fade instead).
         x = screen.X - Margin;
         foreach (var part in Enumerable.Reverse(row.Where(p => HudArrangement.SideOf(_layout, p) == ScreenSide.Right).ToList()))
         {
-            var width = _bottom[part].GetCombinedMinimumSize().X;
-            x -= width;
-            FitChildInRect(_bottom[part], new Rect2(x, top, width, height));
-            _bottom[part].ZIndex = 1; // drawn over the left group where they meet
+            x -= Width(part);
+            Put(part, new Rect2(x, top, Width(part), height), cutAtRight: false, z: 1); // drawn over the left group where they meet
             x -= Margin;
         }
+    }
+
+    private void Put(HudPart part, Rect2 rect, bool cutAtRight, int z)
+    {
+        if (_bottom[part] is CutPart cut)
+        {
+            cut.Place(rect, cutAtRight);
+            return;
+        }
+
+        FitChildInRect(_bottom[part], rect);
+        _bottom[part].ZIndex = z;
     }
 }

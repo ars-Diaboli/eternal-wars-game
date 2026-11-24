@@ -276,7 +276,7 @@ public partial class AdventureHud : CanvasLayer
         _layout.SetBottom(HudPart.HeroCard, _cardFrame);
         HeroCard.HeroScreenRequested += hero => ShowHero(hero);
         ArmyStrip = new ArmyStrip();
-        _armyFrame = Framed("ArmyStripFrame", ArmyStrip);
+        _armyFrame = new CutPart("ArmyStripCut", Framed("ArmyStripFrame", ArmyStrip)); // cut with a fade on a narrow screen
         _layout.SetBottom(HudPart.ArmyStrip, _armyFrame);
         ArmyStrip.HeroScreenRequested += hero => ShowHero(hero);
         ArmyStrip.StackInfoRequested += (hero, slot, at) => StackInfoRequested?.Invoke(hero, slot, at);
