@@ -179,11 +179,15 @@ public partial class AdventureMapView : Node3D
         };
     }
 
-    /// <summary>Where a terrain's texture is (its own or a borrowed one); the file may be missing.</summary>
-    internal static string TexturePath(TerrainType terrain) => $"{TextureFolder}{FileName(TextureOf(terrain))}.png";
+    /// <summary>Where a terrain's texture is (its own, else a borrowed one); the file may be missing.</summary>
+    internal static string TexturePath(TerrainType terrain) => OwnPath(Borrows(terrain) ? BorrowedFrom(terrain) : terrain);
 
-    /// <summary>Terrains without a texture of their own borrow a related one and are told apart by <see cref="Tint"/>.</summary>
-    private static TerrainType TextureOf(TerrainType terrain) => terrain switch
+    private static string OwnPath(TerrainType terrain) => $"{TextureFolder}{FileName(terrain)}.png";
+
+    /// <summary>A terrain whose own texture is missing borrows a related one and is told apart by <see cref="Tint"/>.</summary>
+    private static bool Borrows(TerrainType terrain) => BorrowedFrom(terrain) != terrain && !ResourceLoader.Exists(OwnPath(terrain));
+
+    private static TerrainType BorrowedFrom(TerrainType terrain) => terrain switch
     {
         TerrainType.ShallowWater => TerrainType.Water,
         TerrainType.RockyGround => TerrainType.Rough,
@@ -192,15 +196,12 @@ public partial class AdventureMapView : Node3D
         _ => terrain,
     };
 
-    /// <summary>Colour multiplied into the texture: lava darker and redder, water blue, rocky ground dark blue-grey, the rest untouched.</summary>
-    internal static Color Tint(TerrainType terrain) => terrain switch
+    /// <summary>Colour multiplied into a borrowed texture (rocky ground's rough turned dark blue-grey granite, ADR-284); own textures are untouched.</summary>
+    internal static Color Tint(TerrainType terrain) => !Borrows(terrain) ? Colors.White : terrain switch
     {
         TerrainType.ShallowWater => new Color(0.55f, 0.75f, 0.95f),
-        TerrainType.RockyGround => new Color(0.45f, 0.48f, 0.55f), // dark blue-grey granite (ADR-284)
+        TerrainType.RockyGround => new Color(0.45f, 0.48f, 0.55f),
         TerrainType.CursedLands => new Color(0.60f, 0.50f, 0.65f),
-        TerrainType.Lava => new Color(0.75f, 0.35f, 0.25f),
-        TerrainType.Water => new Color(0.35f, 0.55f, 0.95f),
-        TerrainType.Rock => new Color(0.55f, 0.55f, 0.58f),
         _ => Colors.White,
     };
 
