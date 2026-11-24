@@ -4,6 +4,7 @@ using EternalWars.Core.Domain.Cursors;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Info;
+using EternalWars.Core.Domain.Pathfinding;
 using EternalWars.Godot.Shared.Cameras;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Map;
@@ -242,7 +243,7 @@ public sealed class AdventureInputController(
 
         if (session.Movement.FindPath(hero, tile) is { } path)
         {
-            world.PathPreview.Show(path);
+            world.PathPreview.Show(path, RouteEndMark(path));
             hud.Status.Text = MoveOutcomeText.Route(path);
         }
         else
@@ -251,6 +252,21 @@ public sealed class AdventureInputController(
             hud.Status.Text = "No route there.";
         }
     }
+
+    /// <summary>The mark over a route's end: what the hero does there, as the cursor says (none for a plain move).</summary>
+    private Texture2D? RouteEndMark(HeroPath path) =>
+        AdventureCursors.RouteEndOf(session.State, session.State.CurrentPlayer.Id, path) switch
+        {
+            RouteEnd.Attack => UiIcons.Get(UiIcon.RouteAttack, RouteEndMarkSize),
+            RouteEnd.Visit => UiIcons.Get(UiIcon.RouteVisit, RouteEndMarkSize),
+            RouteEnd.PickUp => UiIcons.Get(UiIcon.RoutePickUp, RouteEndMarkSize),
+            RouteEnd.EnterTown => UiIcons.Get(UiIcon.RouteEnterTown, RouteEndMarkSize),
+            RouteEnd.MeetHero => UiIcons.Get(UiIcon.RouteMeetHero, RouteEndMarkSize),
+            _ => null,
+        };
+
+    /// <summary>The route end mark's texture size, in pixels.</summary>
+    private const int RouteEndMarkSize = 96;
 
     private void SelectNextHero()
     {

@@ -272,6 +272,16 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [ ] Step 5: Sylvan, Academy, Necropolis, Dungeon, Stronghold and Swamp Bestiary in full art
 - [ ] Step 6: controller pass, UI scale, the goal building; the plan's target list ticked
 
+### Adventure HUD redesign (ADR-309; [plan](../docs/papers/adventure-hud-plan.md#plan), HUD-1 and HUD-2 open)
+- [x] Step 1: the decisions recorded (ADR-309); the two open points moved to HUD-1 and HUD-2
+- [ ] Step 2: core models (layout mirrored flag, UI scale, hero card, town build state, descriptions by ownership, route days, hotkeys)
+      - [x] The fully built rule (`BuildingTree.IsFullyBuilt`) and the route's end action (`AdventureCursors.RouteEndOf`)
+- [ ] Step 3: the HUD rebuilt on the flat theme (the town list's build mark, the route end's mark, the replay bar's icons and the level
+      icons on Switch level already in)
+- [ ] Step 4: checked at every target size, UI scale and mirror
+- [ ] Step 5: the painted pieces (icon sheets 30–32 already cut into `textures/ui/icons/`)
+- [ ] Step 6: the battle HUD's mockups decided and planned
+
 ### Editor overhaul (ADR-247, ADR-250; [plan](../docs/papers/editor-plan.md#implementation-plan), EDIT-1 … EDIT-12 answered)
 - [x] Step 0a: answers to EDIT-1 … EDIT-12 (ADR-250: the proposals)
 - [ ] Step 0: the owner's look at the workspace (the greybox was overtaken by the built editor, ADR-280)

@@ -1,6 +1,6 @@
 # Active context
 
-**As of 2026-11-23.** Refresh this file at the end of every piece of work: replace, do not append.
+**As of 2026-11-24.** Refresh this file at the end of every piece of work: replace, do not append.
 
 ## Where the project is
 Phases 0–4 are done and closed out (ADR-114, ADR-117). Phase 5 (content and polish) is in progress: magic, sieges, relics, map events,
@@ -9,6 +9,13 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- The adventure HUD redesign recorded (ADR-309; [plan](../docs/papers/adventure-hud-plan.md)): the owner's six mockups decided row by
+  row into one arrangement, mirrored or not, with a bottom row of equal panels and a 2 × 5 icon grid; it supersedes in part ADR-156,
+  ADR-186, ADR-191, ADR-204 and ADR-210. Open: HUD-1 (notice cards) and HUD-2 (long answer lists). Already in: the town list's build
+  mark with the fully built rule (`BuildingTree.IsFullyBuilt`), the mark over a route's end (`AdventureCursors.RouteEndOf`), the
+  replay bar's icons and the level icons on Switch level (icon sheets 30–32). New prompt file
+  [question-picture-prompts.md](../docs/content/prompts/question-picture-prompts.md); the UI element and question picture prompts are
+  one ready block each. Next is the plan's step 2 (the core models).
 - Necropolis heroes: three living humans, four liches, six vampires, a ghost, a wraith and five other dead; prompts
   rewritten, data unchanged (ADR-307).
 - Dungeon heroes: four minotaurs, three troglodytes, a medusa and two humans among the dark elves; prompts rewritten,
@@ -330,7 +337,7 @@ Detail: [roadmap.md](roadmap.md).
 ## Next
 1. A person's full game on Ember March (the Phase 3 exit's last check).
 2. The prologue map (CAMP-1), as the first map of a campaign; Border Watch's story is a placeholder.
-3. The remaining Phase 5 items in [roadmap.md](roadmap.md) ("Presentation and UI", "Town screen overhaul", "Editor overhaul",
+3. The remaining Phase 5 items in [roadmap.md](roadmap.md) ("Presentation and UI", "Adventure HUD redesign", "Town screen overhaul", "Editor overhaul",
    "Platform and art", "Roster"); the town screen overhaul starts with the owner's answers (TOWN-14 … TOWN-23); the editor
    overhaul is closed (the plan's "After the close" list done, ADR-288), with the first-use test with a person and the owner's look
    at the workspace open.

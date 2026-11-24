@@ -4,7 +4,7 @@ The plan to rebuild the adventure map's HUD from the mockups decided on 2026-11-
 [Adventure HUD redesign: discrepancies and decisions](https://claude.ai/artifact/C6tLszBWFkrV3VsMh3dqeH); its row numbers, such as 3.7, are
 cited below). This file has three parts. The **guide** says what the new HUD is and how each part behaves. The **plan** has six steps from
 the ADR to the painted pieces. The **mockup prompts** produce the next round of pictures: the adventure HUD with every decision applied, and
-the battle HUD in the same style. Nothing here is built yet; ADR-309 is to record it. When every step is built, this file stays in
+the battle HUD in the same style. ADR-309 records it; the roadmap tracks the steps, and the plan's ticks say what is built. When every step is built, this file stays in
 `papers/` as the report and the rules move into [presentation.md](../design/presentation.md).
 
 ## Guide
@@ -165,14 +165,12 @@ Every hotkey shows on the status bar with its action's name; M, Space and Z are 
 
 ### Still open
 
-Two points are unsettled. Settled on 2026-11-24: Move on Space, Marketplace on M, End turn on Z, Tab stays for the next hero, End turn
-asks when a hero can still move, the hero card's clicks as recommended, Switch level both in the grid and on the caption, the hero list
-grows while the town list scrolls; then the timer under the banner, placeholder route colours, an action icon on the route's end, the
-fully built rule, the question pictures, the chat's place and the narrow-screen army strip.
-
-- [ ] **Notice cards** (9.2): which events stop play with a card and which only write the status line.
-- [ ] **Long answer lists** (9.1): up to four answers as buttons, more (a town gate's towns) as a scrolling list of rows. Confirm the
-  proposal.
+Two points are unsettled and are now open questions: [HUD-1](../../memory-bank/open-questions.md#hud-1), which events stop play with
+a notice card (decision 9.2), and [HUD-2](../../memory-bank/open-questions.md#hud-2), long answer lists (decision 9.1). Settled on
+2026-11-24: Move on Space, Marketplace on M, End turn on Z, Tab stays for the next hero, End turn asks when a hero can still move, the
+hero card's clicks as recommended, Switch level both in the grid and on the caption, the hero list grows while the town list scrolls;
+then the timer under the banner, placeholder route colours, an action icon on the route's end, the fully built rule, the question
+pictures, the chat's place and the narrow-screen army strip.
 
 ## Plan
 
@@ -181,21 +179,22 @@ then swap in the painted pieces. The battle HUD only gets mockup prompts for now
 memory-bank entries updated.
 
 ### 1. Record the decisions
-- [ ] ADR-309 (presentation): the adventure HUD redesign, citing this paper; it supersedes in part ADR-156 (Layout tab), ADR-186 (resources
+- [x] ADR-309 (presentation): the adventure HUD redesign, citing this paper; it supersedes in part ADR-156 (Layout tab), ADR-186 (resources
   on the status bar), ADR-191 (side panel), ADR-204 (End turn in the side panel) and ADR-210 (grid order).
-- [ ] Index row in `memory-bank/decisions/README.md`, next free number 310; roadmap checkboxes; refresh `active-context.md`.
-- [ ] Answer the guide's Still open list, or move it to `open-questions.md`.
+- [x] Index row in `memory-bank/decisions/README.md`, next free number 310; roadmap checkboxes; refresh `active-context.md`.
+- [x] Answer the guide's Still open list, or move it to `open-questions.md` (HUD-1, HUD-2).
 
 ### 2. Core (engine-free, with tests)
 - [ ] `LayoutSettings`: only a mirrored flag; `HudArrangement` reduced to it; older saved layouts load as the default or its mirror.
 - [ ] `InterfaceSettings.UiScalePercent`: 100, 150 or 200, clamped like `EditorPreferences`.
 - [ ] A hero card model: movement, mana, experience progress (`TrainingRules.ExperienceToNextLevel`), total morale and luck
   (`Hero.TotalMorale`, `TotalLuck`), 7 slots.
-- [ ] A town build state: can build, built today (`TownRules.HasBuiltToday`), fully built (a new rule: every faction
-  building at its highest level, 7 of the 9 dwellings under the 7-of-9 rule, ADR-030).
+- [x] A town build state: can build, built today (`TownRules.HasBuiltToday`), fully built (a new rule: every faction
+  building at its highest level, 7 of the 9 dwellings under the 7-of-9 rule, ADR-030; `BuildingTree.IsFullyBuilt`).
 - [ ] Object descriptions by ownership (the status line and the hover card), with `TestWorld` maps for owned and unowned mines.
 - [ ] Route days for the tags: the day each step is reached, as the route preview already colours it. The action at the route's
-  end, as `AdventureCursors` decides it, plus picking up (resources, artifacts, chests).
+  end, as `AdventureCursors` decides it, plus picking up (resources, artifacts, chests): done (`AdventureCursors.RouteEndOf`); the
+  days still to do.
 - [ ] The hotkey table as data the status bar and the input controller both read (new: Space, M, Z). The own heroes that can still
   move today, for End turn's question.
 
@@ -204,13 +203,14 @@ memory-bank entries updated.
 - [ ] Status bar: subject and detail, calendar on the right, hints first.
 - [ ] Turn banner; timer pill and warning ribbon (`TurnTimerPanel`).
 - [ ] Minimap: zoom buttons, the editor's view frame, the level caption, pictograms for towns and heroes.
-- [ ] Hero list: portraits, two bars, a hover card. Town list: 4 slots, scroll arrows, picture, governor, build mark.
+- [ ] Hero list: portraits, two bars, a hover card. Town list: 4 slots, scroll arrows, picture, governor, build mark (the build mark
+  is in).
 - [ ] Hero card and army strip (`ArmyBar`), hidden with no hero.
 - [ ] The 2×5 action grid, Move first; icon-only with names and keys on the status bar; End turn hourglass with day dots, on Z, asking
   first when a hero can still move.
-- [ ] Route: day colours and tags in `PathPreview`; selection ring in the player's colour.
+- [ ] Route: day colours and tags in `PathPreview`; selection ring in the player's colour (the end's action mark is in).
 - [ ] Hover card on map objects; question, notice and pause cards; dimming behind questions; the chat beside the town list.
-- [ ] Replay bar: one toggle, a day slider, the other controls kept.
+- [ ] Replay bar: one toggle, a day slider, the other controls kept (the icons and the one Play/Pause toggle are in; the slider to do).
 - [ ] Narrow screens: the army strip cut off with a fade, shown whole over the action buttons on hover; UI scale applied at start and from the settings.
 
 ### 4. Check
@@ -219,11 +219,11 @@ memory-bank entries updated.
 - [ ] Budget overlay (F3): draw calls stay under the 2,000 limit with the new HUD (ADR-308).
 
 ### 5. Painted pieces
-- [ ] Generate the new and changed sheets: icon sheet 15 changed (Move as », Hero screen in place of Next hero), new sheets 30 (town
-  marks, level icons) and 31 (replay bar) in [icon-prompts.md](../content/prompts/icon-prompts.md); the list-slot sheet L4, the movement
-  fill, the HUD pieces and the player-colour rule in [ui-element-prompts.md](../content/prompts/ui-element-prompts.md).
-- [ ] Generate the question pictures ([question-picture-prompts.md](../content/prompts/question-picture-prompts.md), new) and the route
-  end icons (icon sheet 32).
+- [x] Icon sheets 30 (town marks, level icons), 31 (replay bar) and 32 (route end icons) in
+  [icon-prompts.md](../content/prompts/icon-prompts.md), cut into `textures/ui/icons/`.
+- [ ] Generate the rest: icon sheet 15 changed (Move as », Hero screen in place of Next hero); the list-slot sheet L4, the movement fill
+  and the HUD pieces in [ui-element-prompts.md](../content/prompts/ui-element-prompts.md); the question pictures
+  ([question-picture-prompts.md](../content/prompts/question-picture-prompts.md)).
 - [ ] Swap them in for the flat theme's boxes; player-colour pieces are tinted at run time. Rewrite the HUD part of
   [presentation.md](../design/presentation.md) to state the new rules once.
 

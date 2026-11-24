@@ -15,6 +15,9 @@ namespace EternalWars.Godot.UI.Hud;
 /// </summary>
 public partial class TownListPanel : BoxContainer
 {
+    /// <summary>The size of the building mark after a town's name.</summary>
+    private const int BuildMarkSize = 24;
+
     private GameSession _session = null!;
     private Func<PlayerId> _listed = null!;
 
@@ -66,18 +69,38 @@ public partial class TownListPanel : BoxContainer
         foreach (var town in TownsOf(state, player.Id))
         {
             var governor = StewardshipRules.GovernorOf(state, town);
+            var fullyBuilt = BuildingTree.IsFullyBuilt(state, town);
+            var builtToday = TownRules.HasBuiltToday(state, town);
+            var buildState = fullyBuilt ? "Nothing left to build" : builtToday ? "Built something today" : "Can build today";
             var button = new Button
             {
                 Text = $"{town.Name} ({town.TownType}){(governor is null ? "" : $"  governor {governor.Name}")}",
-                TooltipText = TownRules.HasBuiltToday(state, town) ? "Built something today" : "Can build today",
+                TooltipText = buildState,
                 Alignment = HorizontalAlignment.Left,
                 ClipText = true,
                 CustomMinimumSize = new Vector2(Horizontal ? 200 : 320, 0),
+                SizeFlagsHorizontal = SizeFlags.ExpandFill,
             }.WithCrest(town.TownType);
             button.AddThemeColorOverride("font_color", Palette.ForPlayer(state, town.Owner!.Value).Lightened(0.4f));
             var id = town.Id;
             button.Pressed += () => TownSelected?.Invoke(id);
-            AddChild(button);
+
+            // The building mark after the name (ADR-309): the hammer lit while the town can build today and dimmed once it has, the keep with a laurel wreath when
+            // nothing is left to build.
+            var row = new HBoxContainer();
+            row.AddChild(button);
+            if (UiIcons.Get(fullyBuilt ? UiIcon.TownFullyBuilt : UiIcon.TownCanBuild, BuildMarkSize) is { } mark)
+            {
+                row.AddChild(new TextureRect
+                {
+                    Texture = mark,
+                    StretchMode = TextureRect.StretchModeEnum.KeepCentered,
+                    TooltipText = buildState,
+                    Modulate = !fullyBuilt && builtToday ? new Color(0.4f, 0.4f, 0.4f) : Colors.White,
+                });
+            }
+
+            AddChild(row);
         }
     }
 }

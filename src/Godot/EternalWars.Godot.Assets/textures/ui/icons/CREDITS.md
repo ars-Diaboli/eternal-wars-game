@@ -1,7 +1,7 @@
 # UI icons
 
-Button icons, 128 × 128 with transparency, generated for this project by the owner (2026-11-05, 2026-11-11, 2026-11-17; the action and battle icons of sets 15–18 and the buttons of sets 19–22 replaced 2026-11-21), cut from the
-sheets of [icon-prompts.md](../../../../../../docs/content/prompts/icon-prompts.md) (sets 15–22). Loaded through
+Button icons, 128 × 128 with transparency, generated for this project by the owner (2026-11-05, 2026-11-11, 2026-11-17; the action and battle icons of sets 15–18 and the buttons of sets 19–22 replaced 2026-11-21; sets 30–32 2026-11-24), cut from the
+sheets of [icon-prompts.md](../../../../../../docs/content/prompts/icon-prompts.md) (sets 15–22, 30–32). Loaded through
 `EternalWars.Godot.UI.UiIcons`, which scales them to button size; a missing file leaves the button text-only.
 
 | File | Used for |
@@ -76,5 +76,9 @@ unused).
 | find, sample_maps | Find on the map; the sample maps on the empty map's card |
 | export_report, export_picture | Export report, Export map picture |
 | map_tab, template_tab | the Map and Template tabs |
+| town_can_build.png (mason's hammer on a stone), town_fully_built.png (keep with a laurel wreath on its gate) | the town list's mark after each town: the hammer lit while the town can build today, dimmed once it has; the keep when nothing is left to build; sheet 30 |
+| level_surface.png (hill under a sun), level_underground.png (cave with a violet crystal) | the Switch level (L) button, showing the level it goes to; sheet 30 |
+| pause.png, next_turn.png, next_day.png, skip_to_result.png (triangle to a flag), take_over.png (gauntlet gripping a pole) | the replay bar: Play/Pause (play.png while paused), Next turn, Next day, Skip to the result, Play from here; sheet 31, the spare gauntlet unused |
+| route_attack.png (crossed swords), route_visit.png (open hand), route_pick_up.png (hand reaching for a coin), route_enter_town.png (town gate), route_meet_hero.png (handshake) | the mark over a route's end: what the hero does there; sheet 32, the spare pick-up unused |
 
 The resource icons are in `../resources/` (see its CREDITS.md).

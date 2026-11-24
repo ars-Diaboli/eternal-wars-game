@@ -10,21 +10,21 @@
 | [022](#adr-022-strategy-camera) | Strategy camera | accepted |
 | [095](#adr-095-speed-settings-and-hero-walking-implementation-2026-10-29) | Speed settings and hero walking (implementation, 2026-10-29) | implemented |
 | [154](#adr-154-right-click-information-windows-and-detailed-tooltips-adr-118-ui-3-cd-adr-125-2026-11-09) | Right-click information windows and "Detailed tooltips" (ADR-118 UI-3 c–d, ADR-125, 2026-11-09) | implemented |
-| [156](#adr-156-the-configurable-layout-and-the-layout-tab-adr-118-ui-3-2026-11-09) | The configurable layout and the "Layout" tab (ADR-118 UI-3, 2026-11-09) | implemented |
+| [156](#adr-156-the-configurable-layout-and-the-layout-tab-adr-118-ui-3-2026-11-09) | The configurable layout and the "Layout" tab (ADR-118 UI-3, 2026-11-09) | implemented; partly superseded |
 | [163](#adr-163-the-spacing-pass-the-main-menus-picture-and-small-usability-fixes-adr-101-adr-118-ui-3-b-2026-11-09) | The spacing pass, the main menu's picture and small usability fixes (ADR-101, ADR-118, UI-3 b, 2026-11-09) | implemented |
 | [176](#adr-176-fog-of-war-looks-a-starry-void-or-clouds-opening-as-the-hero-walks-2026-11-11) | Fog of war looks: a starry void or clouds, opening as the hero walks (2026-11-11) | accepted |
 | [178](#adr-178-information-windows-for-the-kingdom-overview-the-tavern-and-the-decision-prompts-adr-154-2026-11-11) | Information windows for the kingdom overview, the tavern and the decision prompts (ADR-154, 2026-11-11) | implemented |
 | [179](#adr-179-a-rounder-smoother-fog-edge-half-the-stars-coloured-like-real-ones-adr-176-2026-11-11) | A rounder, smoother fog edge; half the stars, coloured like real ones (ADR-176, 2026-11-11) | accepted |
 | [183](#adr-183-the-ground-is-one-splat-shaded-mesh-the-tile-grid-is-an-overlay-and-a-setting-adr-011-adr-182-2026-11-13) | The ground is one splat-shaded mesh; the tile grid is an overlay and a setting (ADR-011, ADR-182, 2026-11-13) | implemented |
-| [186](#adr-186-fullscreen-short-resource-amounts-a-status-bar-along-the-bottom-and-centred-pop-ups-adr-118-adr-156-owner-notes-2026-11-16) | Fullscreen, short resource amounts, a status bar along the bottom and centred pop-ups (ADR-118, ADR-156, owner notes, 2026-11-16) | accepted |
+| [186](#adr-186-fullscreen-short-resource-amounts-a-status-bar-along-the-bottom-and-centred-pop-ups-adr-118-adr-156-owner-notes-2026-11-16) | Fullscreen, short resource amounts, a status bar along the bottom and centred pop-ups (ADR-118, ADR-156, owner notes, 2026-11-16) | accepted; partly superseded |
 | [190](#adr-190-a-long-press-opens-the-information-window-on-touch-adr-154-roadmap-2026-11-16) | A long press opens the information window on touch (ADR-154, roadmap, 2026-11-16) | implemented |
-| [191](#adr-191-the-ui-theme-and-the-homm-style-side-panel-adr-118-adr-156-adr-163-adr-186-roadmap-2026-11-16) | The UI theme and the HoMM-style side panel (ADR-118, ADR-156, ADR-163, ADR-186, roadmap, 2026-11-16) | implemented |
+| [191](#adr-191-the-ui-theme-and-the-homm-style-side-panel-adr-118-adr-156-adr-163-adr-186-roadmap-2026-11-16) | The UI theme and the HoMM-style side panel (ADR-118, ADR-156, ADR-163, ADR-186, roadmap, 2026-11-16) | implemented; partly superseded |
 | [200](#adr-200-terrains-blend-by-height-on-the-adventure-map-adr-183-2026-11-17) | Terrains blend by height on the adventure map (ADR-183, 2026-11-17) | implemented |
-| [204](#adr-204-cursors-icon-only-buttons-a-status-bar-on-every-screen-sorted-map-lists-difficulty-icons-adr-116-adr-186-adr-201-owner-notes-2026-11-17) | Cursors, icon-only buttons, a status bar on every screen, sorted map lists, difficulty icons (ADR-116, ADR-186, ADR-201, owner notes, 2026-11-17) | accepted |
+| [204](#adr-204-cursors-icon-only-buttons-a-status-bar-on-every-screen-sorted-map-lists-difficulty-icons-adr-116-adr-186-adr-201-owner-notes-2026-11-17) | Cursors, icon-only buttons, a status bar on every screen, sorted map lists, difficulty icons (ADR-116, ADR-186, ADR-201, owner notes, 2026-11-17) | accepted; partly superseded |
 | [207](#adr-207-the-ground-is-drawn-in-chunks-editor-strokes-redraw-only-what-they-reach-adr-183-adr-197-2026-11-17) | The ground is drawn in chunks; editor strokes redraw only what they reach (ADR-183, ADR-197, 2026-11-17) | implemented |
 | [208](#adr-208-map-objects-are-drawn-in-batches-captions-show-nearby-or-under-the-pointer-adr-031-adr-207-2026-11-18) | Map objects are drawn in batches; captions show nearby or under the pointer (ADR-031, ADR-207, 2026-11-18) | implemented |
 | [209](#adr-209-the-ground-is-shown-as-a-smooth-surface-each-tile-drawn-as-2--2-squares-adr-182-adr-207-2026-11-18) | The ground is shown as a smooth surface, each tile drawn as 2 × 2 squares (ADR-182, ADR-207, 2026-11-18) | implemented |
-| [210](#adr-210-the-adventure-maps-action-buttons-are-a-3--3-grid-in-a-corner-of-their-own-with-a-spell-book-adr-156-adr-191-adr-204-owner-notes-2026-11-18) | The adventure map's action buttons are a 3 × 3 grid in a corner of their own, with a spell book (ADR-156, ADR-191, ADR-204, owner notes, 2026-11-18) | implemented |
+| [210](#adr-210-the-adventure-maps-action-buttons-are-a-3--3-grid-in-a-corner-of-their-own-with-a-spell-book-adr-156-adr-191-adr-204-owner-notes-2026-11-18) | The adventure map's action buttons are a 3 × 3 grid in a corner of their own, with a spell book (ADR-156, ADR-191, ADR-204, owner notes, 2026-11-18) | implemented; partly superseded |
 | [211](#adr-211-faction-crests-stand-beside-a-faction-wherever-the-ui-names-one-owners-heraldry-sheets-2026-11-18) | Faction crests stand beside a faction wherever the UI names one (owner's heraldry sheets, 2026-11-18) | — |
 | [212](#adr-212-terrain-borders-blend-over-two-thirds-of-a-tile-a-picture-repeats-every-16-tiles-with-the-repeat-hidden-owner-2026-11-18) | Terrain borders blend over two thirds of a tile; a picture repeats every 16 tiles with the repeat hidden (owner, 2026-11-18) | — |
 | [240](#adr-240-the-splat-reads-adventure-only-pictures-and-normal-roughness-and-occlusion-maps-owner-adr-183-2026-11-19) | The splat reads adventure-only pictures and normal, roughness and occlusion maps (owner, ADR-183, 2026-11-19) | implemented |
@@ -48,6 +48,7 @@
 | [304](#adr-304-town-screen-step-3-tasks-5-and-6-the-bronze-outline-picking-unused-land-the-ring-of-plots-show-in-town-and-the-construction-scene-town-14-town-15-adr-090-adr-292-2026-11-23) | Town screen step 3, tasks 5 and 6: the bronze outline, picking unused land, the ring of plots, "Show in town" and the construction scene (TOWN-14, TOWN-15, ADR-090, ADR-292, 2026-11-23) | implemented |
 | [306](#adr-306-town-screen-step-3-task-7-the-fade-through-black-into-the-hero-shot-and-the-layout-loaded-ahead-town-23-adr-090-adr-292-2026-11-23) | Town screen step 3, task 7: the fade through black into the hero shot and the layout loaded ahead (TOWN-23, ADR-090, ADR-292, 2026-11-23) | implemented |
 | [308](#adr-308-town-screen-step-3-task-8-the-budget-overlay-the-town-scenes-budget-set-and-a-layouts-resources-let-go-town-23-adr-294-adr-306-2026-11-23) | Town screen step 3, task 8: the budget overlay, the town scene's budget set and a layout's resources let go (TOWN-23, ADR-294, ADR-306, 2026-11-23) | implemented |
+| [309](#adr-309-the-adventure-hud-redesign-one-arrangement-mirrored-parts-along-the-edges-and-a-bottom-row-of-equal-panels-icon-only-buttons-in-a-2--5-grid-adr-156-adr-186-adr-191-adr-204-adr-210-owners-mockups-2026-11-24) | The adventure HUD redesign: one arrangement, mirrored; parts along the edges and a bottom row of equal panels; icon-only buttons in a 2 × 5 grid (ADR-156, ADR-186, ADR-191, ADR-204, ADR-210, owner's mockups, 2026-11-24) | accepted |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -111,7 +112,7 @@ viewing direction; zoom and pan. Implemented in `StrategyCamera` (Godot.Shared),
 - **Not done**: a long press on touch; windows for the kingdom overview, the tavern's heroes and the decision prompts.
 
 ### ADR-156: The configurable layout and the "Layout" tab (ADR-118 UI-3, 2026-11-09)
-**Status**: implemented (2026-11-09); *(proposal)* marks the agent's choices, for play-testing.
+**Status**: implemented (2026-11-09); superseded in part by ADR-309 (one arrangement, mirrored or not). *(proposal)* marks the agent's choices, for play-testing.
 
 - **The tab**: the F10 menu now has three tabs, "Save and load", "Settings" (auto combat, the speeds, "Detailed tooltips") and "Layout".
   Close and "Main menu" stay below the tabs. The layout choices: the battle's initiative bar (top, under the title, or bottom), the
@@ -235,7 +236,7 @@ viewing direction; zoom and pan. Implemented in `StrategyCamera` (Godot.Shared),
   the ground; the textures are still the placeholders (no normal or roughness maps yet: the look-dev spike and the PBR art).
 
 ### ADR-186: Fullscreen, short resource amounts, a status bar along the bottom and centred pop-ups (ADR-118, ADR-156, owner notes, 2026-11-16)
-**Status**: accepted (2026-11-16), built (2026-11-16). From the owner's notes in `ideas.md`;
+**Status**: accepted (2026-11-16), built (2026-11-16); superseded in part by ADR-309 (the resources leave the status bar). From the owner's notes in `ideas.md`;
 *(proposal)* marks the agent's fill-ins, for the owner to change.
 
 - **Fullscreen**: the game plays only in a window today. A "Window mode" row in the F10 menu's "Settings" tab: Windowed or Fullscreen
@@ -286,7 +287,7 @@ viewing direction; zoom and pan. Implemented in `StrategyCamera` (Godot.Shared),
   `TouchGestureTests`; smoke scenario `game-info-touch`. The map editor does not take touch. No save format change.
 
 ### ADR-191: The UI theme and the HoMM-style side panel (ADR-118, ADR-156, ADR-163, ADR-186, roadmap, 2026-11-16)
-**Status**: implemented (2026-11-16); *(proposal)* marks the agent's choices, for play-testing and the art pass.
+**Status**: implemented (2026-11-16); superseded in part by ADR-309 (the side panel goes, the theme stays). *(proposal)* marks the agent's choices, for play-testing and the art pass.
 
 - **The side panel**: one framed column down a side of the adventure map, from the top edge to the status bar (ADR-186), holding the
   minimap with "Switch level", the hero and town lists and the action panel, as in HoMM. It is opaque and takes the clicks on it, so a
@@ -325,7 +326,7 @@ viewing direction; zoom and pan. Implemented in `StrategyCamera` (Godot.Shared),
 - **Not changed**: the battlefield's single-terrain material; terrain textures, the influence kernel and the edge noise.
 
 ### ADR-204: Cursors, icon-only buttons, a status bar on every screen, sorted map lists, difficulty icons (ADR-116, ADR-186, ADR-201, owner notes, 2026-11-17)
-**Status**: accepted (2026-11-17); built: the map lists' sort and filter (`MapListView`, `MapSizeClass` in Core.Domain, kept as
+**Status**: accepted (2026-11-17); superseded in part by ADR-309 (End turn leaves the side panel); built: the map lists' sort and filter (`MapListView`, `MapSizeClass` in Core.Domain, kept as
 `InterfaceSettings.MapSort` / `MapSortReversed` / `MapSizeFilter`; a map file that does not load has no size: listed under All sizes only, last
 by size); the cursors' choice (`AdventureCursors`, `BattleCursors`, `GameCursor`, Core.Domain `Cursors`) and the melee side
 (`BattleTargeting.SideOf`, `CompassSide`), shown by `GameCursors` (Godot.UI), which falls back to system cursors (arrow, hand, cross,
@@ -427,7 +428,7 @@ map format changes. Changes ADR-183's and ADR-207's mesh (a vertex per corner an
   dab's ground rebuild 1–2 → 4–9 ms.
 
 ### ADR-210: The adventure map's action buttons are a 3 × 3 grid in a corner of their own, with a spell book (ADR-156, ADR-191, ADR-204, owner notes, 2026-11-18)
-**Status**: implemented. No rule, save or map format change; the settings file's layout loses `actionPanel` (a side) for `actionButtons` (a corner).
+**Status**: implemented; superseded in part by ADR-309 (a 2 × 5 grid with Move). No rule, save or map format change; the settings file's layout loses `actionPanel` (a side) for `actionButtons` (a corner).
 
 - **The grid** (`AdventureHud.BuildActions`): nine square 48 px icon buttons, three to a row: hero screen (H), spell book (C), kingdom
   (K); quests (Q), puzzle map (P), dig (G); marketplace, switch level (L), menu (F10). It takes in the level switch that stood under the
@@ -971,3 +972,38 @@ TOWN-15 is ADR-291. The plan's step-by-step implementation is in its [roadmap](.
   collection, which video memory does not prompt. They are disposed as soon as the scene holds what they wrap, so one layout's resources
   stay, as TOWN-23 wants: the second round of the eight stays at about 510 MB.
 - Smokes `game-town-open` and `game-town-build` show the 3D scene (Haven's, since ADR-297); their descriptions say so.
+
+### ADR-309: The adventure HUD redesign: one arrangement, mirrored; parts along the edges and a bottom row of equal panels; icon-only buttons in a 2 × 5 grid (ADR-156, ADR-186, ADR-191, ADR-204, ADR-210, owner's mockups, 2026-11-24)
+**Status**: accepted (2026-11-24); building by the [adventure HUD plan](../../docs/papers/adventure-hud-plan.md#plan). Supersedes in part
+ADR-156, ADR-186, ADR-191, ADR-204 and ADR-210, as said below. No rule, save or map format change; the settings file's layout shrinks
+(the plan's step 2). The guide to every part is the [paper's guide](../../docs/papers/adventure-hud-plan.md#guide); the owner's decisions,
+row by row, are in the Claude doc it cites. Built so far: the town list's build mark and the "fully built" rule
+(`BuildingTree.IsFullyBuilt`), the mark over a route's end (`AdventureCursors.RouteEndOf`, `RouteEnd`), the replay bar's icons, and the
+level icons on Switch level (icon sheets 30–32).
+
+- **Why**: the side panel (ADR-191) and the Layout tab's corners (ADR-156) grew part by part; the owner's six mockups set one HUD that
+  leaves the map's middle free. The owner decided each of their 71 differences; the paper states the result once.
+- **The arrangement**: resources top left; the turn banner top centre (single player: a few seconds at the turn's start; hot-seat and
+  LAN: the whole turn, the timer pill under it); the minimap top right with the level caption and zoom buttons under it; the hero list
+  down the left edge, growing; the town list down the right edge, four slots that scroll; along the bottom the selected hero's card, the
+  army strip (7 slots), the action grid and End turn, panels of one height; the status bar under them. The default and its mirror (left
+  and right columns swapped) are the only layouts.
+- **Supersedes in part**:
+  - ADR-156: the Layout tab's choices (minimap corner, lists beside the minimap or along the bottom, the action panel's side) become one
+    choice, mirrored or not; older saved layouts load as the default or its mirror.
+  - ADR-186: the resources leave the status bar for a bar of their own at the top left, which stays over the full-screen panels; the
+    status bar keeps the hints, the messages, what the pointer is over and the calendar.
+  - ADR-191: the side panel goes; its parts move to the edges and the bottom row. The theme (dark slate in worn bronze) stays.
+  - ADR-204: End turn leaves the side panel for an hourglass tile at the bottom right with the week's seven day dots, today's in the
+    player's colour, on Z, asking first when a hero can still move. Icon-only buttons, with names and reasons on the status bar, stay.
+  - ADR-210: the 3 × 3 grid becomes 2 × 5 buttons wider than tall: Move (new, Space), Spellbook, Kingdom, Quests, Puzzle map / Dig,
+    Marketplace (new key M), Switch level, Hero screen, Menu. Tab stays the next hero, with no button.
+- **Player colour**: selections, the turn banner, the day dots and the hero's ring take the colour of the player whose HUD it is; the
+  painted pieces that take it are painted pale and tinted at run time ([ui-element-prompts.md](../../docs/content/prompts/ui-element-prompts.md)).
+- **Fully built** (the town list's mark): every building of the town's faction at its last level, and every dwelling line built out or
+  closed for good by the 7-of-9 rule (ADR-030), so 7 of 9 dwellings count as all; the Grail building and a second Capitol do not count.
+- **The route's end** shows what the hero does there, as the cursor decides it (ADR-204), with picking up (a pile, a chest, an artifact)
+  told apart from other visits; a plain move shows nothing. The route's day colours are placeholders until the art pass.
+- **UI scale**: a game setting of 100, 150 or 200 %, applied as the map editor's is.
+- **Open**: [HUD-1](../open-questions.md#hud-1) (which events stop play with a notice card) and [HUD-2](../open-questions.md#hud-2)
+  (long answer lists).

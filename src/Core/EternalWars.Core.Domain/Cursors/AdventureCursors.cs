@@ -6,6 +6,22 @@ using EternalWars.Core.Domain.Towns;
 
 namespace EternalWars.Core.Domain.Cursors;
 
+/// <summary>What a hero does at the end of its route, shown over the route's last step (<see cref="AdventureCursors.RouteEndOf"/>).</summary>
+public enum RouteEnd
+{
+    /// <summary>A plain move: no mark.</summary>
+    None,
+    Attack,
+    Visit,
+
+    /// <summary>A resource pile, a treasure chest or an artifact on the ground.</summary>
+    PickUp,
+    EnterTown,
+
+    /// <summary>One of the player's own heroes: the exchange.</summary>
+    MeetHero,
+}
+
 /// <summary>
 /// Which cursor the adventure map shows (ADR-204, cursor-prompts.md): the horse for where the chosen hero can go and what it would do there,
 /// the helmet and the keep to select, the spell cursor while an adventure spell waits for its cell. It reads only what
@@ -64,6 +80,24 @@ public static class AdventureCursors
         }
 
         return selected is null ? GameCursor.Pointer : reach ? new CursorChoice(GameCursor.Move, days) : GameCursor.Blocked;
+    }
+
+    /// <summary>
+    /// What the hero does at the end of <paramref name="path"/>, for the mark over the route's last step (ADR-309): as the cursor there says, with
+    /// a pile, a chest or an artifact told apart from other visits as a pick-up; a plain move shows nothing.
+    /// </summary>
+    public static RouteEnd RouteEndOf(GameState state, PlayerId viewer, HeroPath path)
+    {
+        var cell = path.Destination;
+        return For(state, viewer, path.Hero, cell, path, spellAimed: false).Cursor switch
+        {
+            GameCursor.Attack => RouteEnd.Attack,
+            GameCursor.EnterTown => RouteEnd.EnterTown,
+            GameCursor.Exchange => RouteEnd.MeetHero,
+            GameCursor.Visit => state.Memory.Of(viewer).FirstOrDefault(k => k.Cells().Contains(cell) || IsVisitCell(k, cell)) is { } known
+                && state.FindObject(known.Id) is ResourcePile or TreasureChest or ArtifactPickup ? RouteEnd.PickUp : RouteEnd.Visit,
+            _ => RouteEnd.None,
+        };
     }
 
     private static bool IsVisitCell(Visibility.KnownObject known, MapPosition cell) =>

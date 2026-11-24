@@ -137,6 +137,16 @@ public static class BuildingTree
     }
 
     /// <summary>
+    /// Whether the town has nothing left to build, for the town list's mark (ADR-309): every building at its last level and every dwelling line built
+    /// out or closed for good by the 7-of-9 rule (ADR-030), so 7 of 9 dwellings count as all. A building refused for good does not count: the
+    /// Grail building, which needs the Grail, and a second Capitol.
+    /// </summary>
+    public static bool IsFullyBuilt(GameState state, Town town) =>
+        For(state, town).All(n => n.Status is BuildingStatus.Complete or BuildingStatus.Refused
+            || TownRules.CheckCapitol(state, town, n.Next!) is not null) // a second Capitol, also on a day the town built
+        && TownRules.Lines(state, town).All(l => DwellingStatus(state, town, l) is BuildingStatus.Complete or BuildingStatus.Closed);
+
+    /// <summary>
     /// For each dwelling the town has not built: the tiers that would be left without room for a dwelling if it were built now, and the lines
     /// that could no longer be built afterwards (the 7-of-9 rule). Empty lists when the choice closes nothing. A line whose building is refused by
     /// the rule itself lists the tier it would leave out.

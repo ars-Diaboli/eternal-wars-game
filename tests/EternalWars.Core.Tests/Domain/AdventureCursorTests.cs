@@ -57,6 +57,35 @@ public class AdventureCursorTests
     }
 
     [Fact]
+    public void ARoutesEnd_IsMarkedWithWhatTheHeroDoesThere()
+    {
+        var state = Create(
+            [.. new[] { "A.C.......B........." }.Concat(Enumerable.Repeat("....................", 15))]);
+        var own = AddTown(state, TownIds.Haven, 12, 2, Blue);
+        var monster = Add<MonsterGuard>(state, BuiltInMapObjects.Monster, 7, 0);
+        (monster.Creature, monster.Count) = (BuiltInCreatures.Footman, 1);
+        var chest = Add<TreasureChest>(state, BuiltInMapObjects.TreasureChest, 4, 4);
+        var ring = Add<BuffSite>(state, BuiltInMapObjects.FaerieRing, 1, 4);
+        var pile = Add<ResourcePile>(state, BuiltInMapObjects.PileId(EternalWars.Core.Domain.Economy.ResourceType.Gold), 10, 12);
+        var artifact = Add<ArtifactPickup>(state, BuiltInMapObjects.ArtifactId(EternalWars.Core.Domain.Artifacts.ArtifactTier.Minor), 14, 12);
+        var enemy = AddTown(state, TownIds.Haven, 1, 7, Red);
+        var session = Start(state);
+
+        RouteEnd End(int x, int y) =>
+            AdventureCursors.RouteEndOf(session.State, Blue, session.Movement.FindPath(A, new MapPosition(x, y, 0))!);
+
+        Assert.Equal(RouteEnd.None, End(5, 1));
+        Assert.Equal(RouteEnd.Attack, End(7, 0));
+        Assert.Equal(RouteEnd.MeetHero, End(2, 0));
+        Assert.Equal(RouteEnd.PickUp, End(chest.VisitPosition.X, chest.VisitPosition.Y));
+        Assert.Equal(RouteEnd.Visit, End(ring.VisitPosition.X, ring.VisitPosition.Y));
+        Assert.Equal(RouteEnd.PickUp, End(pile.VisitPosition.X, pile.VisitPosition.Y));
+        Assert.Equal(RouteEnd.PickUp, End(artifact.VisitPosition.X, artifact.VisitPosition.Y));
+        Assert.Equal(RouteEnd.Attack, End(enemy.VisitPosition.X, enemy.VisitPosition.Y));
+        Assert.Equal(RouteEnd.EnterTown, End(own.VisitPosition.X, own.VisitPosition.Y));
+    }
+
+    [Fact]
     public void AMoveBeyondToday_SaysHowManyDays()
     {
         var session = World(out _, out _);

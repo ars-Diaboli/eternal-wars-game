@@ -7,7 +7,7 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-11-22**: TOWN-14 … TOWN-23 (the town screen overhaul) answered in ADR-291 and ADR-292.
+**Updated 2026-11-24**: HUD-1 and HUD-2 (the adventure HUD redesign, ADR-309) added.
 
 ## 🚧 Blocking now
 
@@ -25,6 +25,21 @@ Nothing blocking.
 faction-specific buildings does each town get (HoMM3 has 2–4 a town)?
 
 **Proposal**: open; the owner adds them here.
+
+## Adventure HUD (ADR-309, [plan](../docs/papers/adventure-hud-plan.md))
+
+<a id="hud-1"></a>
+**HUD-1 Notice cards** (decision 9.2). Which events stop play with a card in the middle of the screen (with Continue), and which only
+write the status bar's line?
+
+**Proposal**: a card for what the player must not miss: a map event's message, the new week's announcement, a town or hero lost, a player
+defeated, a quest done or failed; the status line only for routine outcomes: resources and artifacts picked up, a site's ordinary reward,
+a mine or dwelling flagged.
+
+<a id="hud-2"></a>
+**HUD-2 Long answer lists** (decision 9.1). A question card shows one button per answer; how does it show many (a town gate's towns)?
+
+**Proposal**: up to four answers are buttons; more are a scrolling list of rows (picture and name), with the card's height capped.
 
 ## Game flow and content
 

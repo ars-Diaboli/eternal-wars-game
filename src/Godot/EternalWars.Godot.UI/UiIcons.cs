@@ -44,6 +44,22 @@ public enum UiIcon
     Unlock,
     Menu,
 
+    // The adventure HUD's marks (icon-prompts.md sheets 30–32): the town list, the levels, the replay bar, the route's end.
+    TownCanBuild,
+    TownFullyBuilt,
+    LevelSurface,
+    LevelUnderground,
+    Pause,
+    NextTurn,
+    NextDay,
+    SkipToResult,
+    TakeOver,
+    RouteAttack,
+    RouteVisit,
+    RoutePickUp,
+    RouteEnterTown,
+    RouteMeetHero,
+
     // The map and template editor's icons (editor-icon-prompts.md): the tools, then the template's parts, then the plain commands and options.
     ToolTerrain,
     ToolRoad,

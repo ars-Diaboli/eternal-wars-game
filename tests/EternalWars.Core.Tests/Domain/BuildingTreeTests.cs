@@ -107,4 +107,63 @@ public class BuildingTreeTests
         Assert.Equal(["haven.griffin", "haven.paladin"], choices["haven.lancer"].ClosedLines.Select(l => l.Id));
         Assert.Equal(["haven.griffin"], choices["haven.radiant-spirit"].ClosedLines.Select(l => l.Id)); // tier 4 still needs the last place
     }
+
+    [Fact]
+    public void FullyBuilt_CountsSevenOfNineDwellings_AndLeavesOutTheGrailBuilding()
+    {
+        var (session, town) = Haven(Rich);
+        var state = session.State;
+        Assert.False(BuildingTree.IsFullyBuilt(state, town));
+
+        var catalog = TownRules.Buildings(state, town);
+        foreach (var building in catalog.TownBuildings.Where(b => b != BuiltInBuildings.Grail))
+        {
+            town.SetLevel(building, catalog.MaxLevel(building));
+        }
+
+        var lines = TownRules.Lines(state, town).OrderBy(l => l.Tier).ToList();
+        foreach (var line in lines.Where(l => TownRules.CheckDwellingChoice(state, town, l.Id, 1) is null))
+        {
+            while (TownRules.NextDwellingLevel(state, town, line) is { } next)
+            {
+                town.SetDwelling(line.Id, next.Level);
+            }
+        }
+
+        Assert.Equal(TownRules.MaxDwellings, lines.Count(l => town.DwellingLevel(l.Id) > 0));
+        Assert.True(BuildingTree.IsFullyBuilt(state, town));
+
+        var upgraded = lines.First(l => town.DwellingLevel(l.Id) > 1);
+        town.SetDwelling(upgraded.Id, 1); // one upgrade still to build
+        Assert.False(BuildingTree.IsFullyBuilt(state, town));
+    }
+
+    [Fact]
+    public void FullyBuilt_LeavesOutASecondCapitol_AlsoOnADayTheTownBuilt()
+    {
+        var state = Create([.. Enumerable.Repeat("....................", 8), "A..................B"]);
+        var capitol = AddTown(state, TownIds.Haven, 0, 0, Blue);
+        var town = AddTown(state, TownIds.Haven, 10, 0, Blue);
+        var session = Start(state);
+        state.GetPlayer(Blue).Resources = Rich;
+        capitol.SetLevel(BuiltInBuildings.TownHall, BuiltInBuildings.CapitolLevel);
+
+        var catalog = TownRules.Buildings(state, town);
+        foreach (var building in catalog.TownBuildings.Where(b => b != BuiltInBuildings.Grail))
+        {
+            town.SetLevel(building, building == BuiltInBuildings.TownHall ? BuiltInBuildings.CapitolLevel - 1 : catalog.MaxLevel(building));
+        }
+
+        foreach (var line in TownRules.Lines(state, town).OrderBy(l => l.Tier).Where(l => TownRules.CheckDwellingChoice(state, town, l.Id, 1) is null))
+        {
+            while (TownRules.NextDwellingLevel(state, town, line) is { } next)
+            {
+                town.SetDwelling(line.Id, next.Level);
+            }
+        }
+
+        Assert.True(BuildingTree.IsFullyBuilt(session.State, town));
+        town.LastBuilt = state.Date; // built today: the Capitol is still refused, not waiting
+        Assert.True(BuildingTree.IsFullyBuilt(session.State, town));
+    }
 }

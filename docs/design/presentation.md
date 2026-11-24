@@ -45,7 +45,8 @@ creatures and buildings, heraldic player colours, iconic map objects).
   buttons (ADR-204) and the calendar (date, week's event) on the status bar right of the resources (ADR-225); full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips, the
   fog's look, the tile grid, the window mode) and "Layout".
 - **Action buttons** (ADR-210): a 3 × 3 grid of 48 px icon buttons: hero screen (H), spell book (C), kingdom (K); quests (Q), puzzle map
-  (P), dig (G); marketplace, switch level (L), menu (F10). The hero screen, spell book and dig act on the selected hero and are greyed
+  (P), dig (G); marketplace, switch level (L), menu (F10). Switch level shows the level it goes to: the sunlit hill from the
+  underground, the cave from the surface (ADR-309). The hero screen, spell book and dig act on the selected hero and are greyed
   without one (the spell book also when the hero has none); the marketplace without a town marketplace; the level switch on a one-level map.
   In the replay viewer the hero, spell book, dig and marketplace buttons are greyed. The spell book is a window over the map: the hero's
   mana, its adventure spells to cast, its battle spells by school with their costs.
@@ -57,10 +58,17 @@ creatures and buildings, heraldic player colours, iconic map objects).
   "Menu (F10)" button stands on the bar's right end, and before a game and in the replay viewer's battles in the bottom right corner. In
   the replay viewer the bar stands above the viewer's bar.
 - **Icon buttons** (ADR-204): a button with an icon shows the icon alone on a square button, 48 px in bars and panels (the action
-  buttons; the battle bar; End turn), 32 px in rows and window headers (a window's or screen's
+  buttons; the battle bar; End turn), 32 px in rows, window headers and the replay viewer's bar (Play/Pause as one button showing what
+  pressing it does, Next turn, Next day, Skip to the result, Play from here; ADR-309) (a window's or screen's
   close "×" always in its top-right corner, ADR-225); hovering it puts its label and hotkey on the
   status bar, with no pop-up tooltip. A button whose icon is missing keeps its text. The buttons along a window's bottom (OK, Accept,
   Start, Back, Close, Save, Load) keep their text after a small icon, as wide as the text, at the right of their row.
+- **Town list marks** (ADR-309): after each town's name, a hammer on a stone, lit while the town can build today and dimmed once it
+  has; a keep with a laurel wreath instead when nothing is left to build: every building at its last level and every dwelling line
+  built out or closed by the 7-of-9 rule (ADR-030), the Grail building and a second Capitol not counted.
+- **Route** (ADR-309): the route's markers are coloured by the day each step is reached; over the last one floats the mark of what the
+  hero does there, as the cursor decides it: crossed swords (attack), an open hand (visit), a hand reaching for a coin (pick up a pile, a
+  chest or an artifact), a town gate (enter an own town), a handshake (meet an own hero); a plain move shows none.
 - **Heraldry** (ADR-211): each town type has a crest (its figure on a painted shield). It stands before the faction's name wherever the
   UI names one: the town list, the town and hero screens' titles, the kingdom overview, the tavern's cards, the new-game screen's
   factions, the leaderboard and the map editor's faction choices.

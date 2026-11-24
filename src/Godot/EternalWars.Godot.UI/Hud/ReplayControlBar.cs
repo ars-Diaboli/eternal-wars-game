@@ -28,7 +28,7 @@ public partial class ReplayControlBar : PanelContainer
     /// <summary>The height the bar takes at the bottom of the screen, edge included; the HUDs keep it free.</summary>
     public const float ReservedHeight = 84;
 
-    private readonly Button _play = new() { Text = "Play (Space)", CustomMinimumSize = new Vector2(120, 0) };
+    private readonly Button _play = new() { Text = "Play (Space)" };
     private readonly OptionButton _speed = new() { TooltipText = "How fast heroes walk and battles play" };
     private readonly Button _nextTurn = new() { Text = "Next turn", TooltipText = "Jump to the start of the next turn" };
     private readonly Button _nextDay = new() { Text = "Next day", TooltipText = "Jump to the start of the next day" };
@@ -111,6 +111,11 @@ public partial class ReplayControlBar : PanelContainer
         }
 
         _viewer.Selected = Math.Clamp(viewer, 0, players.Count);
+        _play.WithIcon(UiIcon.Play, UiIcons.WindowSize);
+        _nextTurn.WithIcon(UiIcon.NextTurn, UiIcons.WindowSize);
+        _nextDay.WithIcon(UiIcon.NextDay, UiIcons.WindowSize);
+        _skip.WithIcon(UiIcon.SkipToResult, UiIcons.WindowSize);
+        _takeOver.WithIcon(UiIcon.TakeOver, UiIcons.WindowSize);
         foreach (var control in new Control[] { _play, _speed, _nextTurn, _nextDay, _day, _goToDay, _viewer, _skip, _takeOver, _leave })
         {
             control.FocusMode = FocusModeEnum.None; // Space and Enter stay the viewer's keys
@@ -133,7 +138,12 @@ public partial class ReplayControlBar : PanelContainer
     /// <summary>Shows where the replay is and what may be done now.</summary>
     public void Display(ReplayBarState state)
     {
-        _play.Text = state.AtEnd ? "Ended" : state.Playing ? "Pause (Space)" : "Play (Space)";
+        _play.SetLabel(state.AtEnd ? "Ended" : state.Playing ? "Pause (Space)" : "Play (Space)");
+        if (_play.Icon is not null && UiIcons.Get(state.Playing && !state.AtEnd ? UiIcon.Pause : UiIcon.Play, UiIcons.WindowSize) is { } icon)
+        {
+            _play.Icon = icon; // the one toggle shows what pressing it does
+        }
+
         _play.Disabled = state.AtEnd;
         _nextTurn.Disabled = _nextDay.Disabled = state.AtEnd;
         _day.MaxValue = state.LastDay;

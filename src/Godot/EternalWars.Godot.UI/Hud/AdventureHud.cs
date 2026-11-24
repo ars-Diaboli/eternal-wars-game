@@ -275,6 +275,21 @@ public partial class AdventureHud : CanvasLayer
             level.Disabled = true;
             level.TooltipText = "This map has one level";
         }
+        else
+        {
+            // The button shows the level it goes to (ADR-309): the sunlit hill from the underground, the cave from the surface.
+            void ShowTarget()
+            {
+                if (UiIcons.Get(_context.Level == 0 ? UiIcon.LevelUnderground : UiIcon.LevelSurface, UiIcons.BarSize) is { } target)
+                {
+                    level.Icon = target;
+                }
+            }
+
+            ShowTarget();
+            _context.LevelChanged += ShowTarget;
+            level.TreeExiting += () => _context.LevelChanged -= ShowTarget;
+        }
 
         AddAction("Menu (F10)", UiIcon.Menu, () => MenuRequested?.Invoke(), "Save, load, settings");
 
