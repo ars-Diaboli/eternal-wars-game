@@ -137,8 +137,8 @@ public sealed class AdventureInputController(
     }
 
     /// <summary>
-    /// What the pointer is over goes to the status line (ADR-186): the name the information window would give, once per cell; the cursor says
-    /// what a click would do there (ADR-204).
+    /// What the pointer is over goes to the status line (ADR-186) and the hover card beside the pointer (ADR-309): the name the information
+    /// window would give, once per cell; the cursor says what a click would do there (ADR-204).
     /// </summary>
     private void ShowHover(Vector2 pointer)
     {
@@ -152,13 +152,14 @@ public sealed class AdventureInputController(
 
         if (cell == _hovered && !hud.StatusBar.ControlSubject)
         {
+            hud.FollowHover(pointer);
             return; // named already, unless a HUD control took the subject since
         }
 
         _hovered = cell;
         // In the words of whoever the map is drawn for: in a computer's turn, or the hot-seat handover, not the player whose turn it is.
         var viewer = context.Viewer ?? session.State.CurrentPlayer.Id;
-        hud.ShowHover(cell is { } pointed ? MapDescriptions.At(session.State, viewer, pointed) : null);
+        hud.ShowHover(cell is { } pointed ? MapDescriptions.At(session.State, viewer, pointed) : null, pointer);
     }
 
     /// <summary>The cursor over <paramref name="cell"/>: busy on a turn not played here, else what the chosen hero would do there.</summary>

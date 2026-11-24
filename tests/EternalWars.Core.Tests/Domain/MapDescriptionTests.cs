@@ -114,8 +114,10 @@ public class MapDescriptionTests
         var shown = MapDescriptions.At(state, Blue, pile.VisitPosition)!;
         Assert.Equal((pile.Definition.Name, null, "A pile of gold."), (shown.Name, shown.Owner, shown.Status));
         Assert.Equal([pile.Definition.Name], shown.CardLines);
+        Assert.True(shown.HasCard);
         Assert.Null(MapDescriptions.At(state, Blue, free.Position)); // not yet explored
-        Assert.Equal("Grass", MapDescriptions.At(state, Blue, new MapPosition(0, 5))!.Name);
+        var grass = MapDescriptions.At(state, Blue, new MapPosition(0, 5))!;
+        Assert.Equal(("Grass", false), (grass.Name, grass.HasCard)); // the bare ground has no hover card
     }
 
     [Fact]

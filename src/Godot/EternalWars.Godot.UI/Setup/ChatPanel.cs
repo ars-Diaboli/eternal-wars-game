@@ -80,21 +80,31 @@ public partial class ChatPanel : VBoxContainer
     }
 
     /// <summary>
-    /// The chat over the map, in the screen's bottom-left corner above the status bar (<see cref="UiTheme.MapChatSize"/> and its neighbours): the
-    /// lines on a see-through ground that lets the map's clicks through, and the line let go once sent, so the keys go back to the map.
+    /// The chat over the map: the lines on a see-through ground that lets the map's clicks through, and the line let go once sent, so the keys
+    /// go back to the map. The adventure HUD's layout gives its place (<see cref="PlaceAt"/>), a battle another (<see cref="PlaceOverBattle"/>).
     /// </summary>
     public void OverTheMap()
     {
-        (AnchorLeft, AnchorRight, AnchorTop, AnchorBottom) = (0, 0, 1, 1);
-        OffsetLeft = UiTheme.MapChatLeft;
-        OffsetRight = UiTheme.MapChatLeft + UiTheme.MapChatSize.X;
-        OffsetBottom = -UiTheme.MapChatBottom;
-        OffsetTop = -UiTheme.MapChatBottom - UiTheme.MapChatSize.Y;
         MouseFilter = MouseFilterEnum.Ignore;
         _releaseAfterSending = true;
         _log.MouseFilter = MouseFilterEnum.Ignore;
         _log.SelectionEnabled = false;
         _log.AddThemeStyleboxOverride("normal", UiTheme.Box(UiTheme.MapChatBackground, Colors.Transparent, 4, borderWidth: 0));
+    }
+
+    /// <summary>Places the chat in <paramref name="rect"/> of its layer (the map's place beside the town list, ADR-309).</summary>
+    public void PlaceAt(Rect2 rect)
+    {
+        (AnchorLeft, AnchorRight, AnchorTop, AnchorBottom) = (0, 0, 0, 0);
+        (OffsetLeft, OffsetTop, OffsetRight, OffsetBottom) = (rect.Position.X, rect.Position.Y, rect.End.X, rect.End.Y);
+    }
+
+    /// <summary>Over a battle: at the screen's bottom left, above the battle's log.</summary>
+    public void PlaceOverBattle()
+    {
+        (AnchorLeft, AnchorRight, AnchorTop, AnchorBottom) = (0, 0, 1, 1);
+        (OffsetLeft, OffsetRight) = (UiTheme.MapChatLeft, UiTheme.MapChatLeft + UiTheme.MapChatSize.X);
+        (OffsetTop, OffsetBottom) = (-430, -250);
     }
 
     /// <summary>Puts the keys in the line, to write.</summary>

@@ -9,9 +9,9 @@ namespace EternalWars.Godot.UI.Setup;
 public sealed record PausedColour(PlayerId Id, string Colour);
 
 /// <summary>
-/// A LAN game paused for a colour nobody plays (ADR-195), at the top of the screen over the map and the battle: why, and on the host one button
-/// per colour that lets the computer play it. Waiting needs no button: the game goes on by itself once a player joins the colour. The chat stays
-/// usable meanwhile.
+/// The pause card of a LAN game paused for a colour nobody plays (ADR-195, ADR-309), in the middle of the screen over the map and the battle,
+/// the map dimmed behind it: "Game paused", why, and on the host one button per colour that lets the computer play it. No Resume: the game
+/// goes on by itself once a player joins the colour. The chat stays usable meanwhile.
 /// </summary>
 public partial class PausePanel : PanelContainer
 {
@@ -22,15 +22,15 @@ public partial class PausePanel : PanelContainer
     {
         Name = "Pause";
         Visible = false;
-        AnchorLeft = 0.5f;
-        AnchorRight = 0.5f;
-        GrowHorizontal = GrowDirection.Both;
-        OffsetTop = 48;
+        (AnchorLeft, AnchorRight, AnchorTop, AnchorBottom) = (0.5f, 0.5f, 0.5f, 0.5f);
+        GrowHorizontal = GrowVertical = GrowDirection.Both;
         this.UseOpaqueBackground();
         var rows = new VBoxContainer();
         rows.AddThemeConstantOverride("separation", UiSpacing.Gap);
         AddChild(rows);
-        rows.AddChild(new Label { Text = "Game paused", HorizontalAlignment = HorizontalAlignment.Center });
+        var title = new Label { Text = "Game paused", HorizontalAlignment = HorizontalAlignment.Center };
+        title.AddThemeFontSizeOverride("font_size", 22);
+        rows.AddChild(title);
         rows.AddChild(_text);
         _buttons.AddThemeConstantOverride("separation", UiSpacing.Gap);
         rows.AddChild(_buttons);

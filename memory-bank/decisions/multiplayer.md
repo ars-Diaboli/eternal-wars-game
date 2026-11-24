@@ -147,7 +147,7 @@ cannot look under its fog). *(proposal)* marks the agent's choices.
 - **Starting**: a LAN colour nobody has joined asks for "Start anyway"; it then waits for a player during the game (ADR-192), who finds the game
   on the list as playing. A player without a colour is turned away when the game starts. The seated players get the game once it has
   started (`GameHost` seats them at its first `Poll` after the start).
-- **Chat**: in the lobby and over the map (bottom left; Enter starts writing, Enter sends, Escape leaves the line). The host passes each line
+- **Chat**: in the lobby and over the map (by the town list, ADR-309; Enter starts writing, Enter sends, Escape leaves the line). The host passes each line
   to everyone; joins, colours taken and players leaving are the game's own lines. Lines are cut to 200 characters.
 - **The simultaneous first week**: its switch is on the lobby, shown off and disabled, until maps have start zones (MP-2, MP-4).
 - **Wire**: protocol 3; new messages `lobby` (the lobby and the player's colour), `takeSeat`, `say` and `chat`.

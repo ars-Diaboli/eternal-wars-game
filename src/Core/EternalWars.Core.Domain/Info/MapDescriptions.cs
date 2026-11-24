@@ -11,10 +11,14 @@ namespace EternalWars.Core.Domain.Info;
 /// What the adventure map says about the thing under the pointer (ADR-309). <see cref="Name"/> is the status bar's subject;
 /// <see cref="Status"/> its detail, worded by ownership ("Yours: +2 ore a day" against "Produces 2 ore a day when captured");
 /// <see cref="CardLines"/> the hover card (name, owner, what it gives). <see cref="Owner"/> is "you", the owning player's name, "none" for
-/// an ownable thing nobody holds, and null for what cannot be owned. Null parts are left out.
+/// an ownable thing nobody holds, and null for what cannot be owned. Null parts are left out. <see cref="IsGround"/> marks the bare ground,
+/// which has no hover card.
 /// </summary>
-public sealed record MapDescription(string Name, string? Owner, string? Gives, string? Status)
+public sealed record MapDescription(string Name, string? Owner, string? Gives, string? Status, bool IsGround = false)
 {
+    /// <summary>Whether the map shows a hover card for it: for a hero or an object, live or remembered, not for the bare ground.</summary>
+    public bool HasCard => !IsGround;
+
     /// <summary>The hover card's lines: the name, the owner, what it gives.</summary>
     public IReadOnlyList<string> CardLines =>
         [Name, .. Owner is { } owner ? [$"Owner: {owner}"] : Array.Empty<string>(), .. Gives is { } gives ? [gives] : Array.Empty<string>()];
@@ -47,7 +51,7 @@ public static class MapDescriptions
                     "Last seen here; it may have changed since.");
             default:
                 var ground = MapCell(state, viewer, cell, detailed: false)!;
-                return new MapDescription(ground.Title, null, null, ground.Lines.FirstOrDefault());
+                return new MapDescription(ground.Title, null, null, ground.Lines.FirstOrDefault(), IsGround: true);
         }
     }
 

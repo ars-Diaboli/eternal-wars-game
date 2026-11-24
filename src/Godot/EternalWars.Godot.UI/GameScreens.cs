@@ -108,11 +108,20 @@ public sealed class GameScreens(Node owner, Func<bool> playing)
 
     /// <summary>
     /// The battle scene of the game being built: while it is open it replaces the adventure map, its HUD and its camera, and the chat of a LAN game
-    /// (<paramref name="chat"/>) moves above the battle's log.
+    /// (<paramref name="chat"/>) moves above the battle's log; over the map it stands where the HUD's layout puts it, by the town list (ADR-309).
     /// </summary>
     public void ShowBattle(BattleView3D battle, AutoCombatPanel? autoCombat, AdventureWorldView world, StrategyCamera camera, ChatPanel? chat)
     {
         (_battle, _autoCombat, _chat) = (battle, autoCombat, chat);
+        var hud = _hud!;
+        hud.ChatPlaceChanged += () =>
+        {
+            if (!battle.IsOpen)
+            {
+                PlaceChat(battle: false);
+            }
+        };
+        PlaceChat(battle: battle.IsOpen);
         battle.Opened += () =>
         {
             world.Visible = false;
@@ -158,12 +167,21 @@ public sealed class GameScreens(Node owner, Func<bool> playing)
         };
     }
 
-    /// <summary>The chat at the bottom left of the map; over a battle, above the battle's log.</summary>
+    /// <summary>The chat by the map's town list, where the HUD's layout puts it; over a battle, above the battle's log.</summary>
     private void PlaceChat(bool battle)
     {
-        if (_chat is not null)
+        if (_chat is null || !GodotObject.IsInstanceValid(_chat))
         {
-            (_chat.OffsetTop, _chat.OffsetBottom) = battle ? (-430, -250) : (-190, -40);
+            return;
+        }
+
+        if (battle)
+        {
+            _chat.PlaceOverBattle();
+        }
+        else if (GodotObject.IsInstanceValid(_hud))
+        {
+            _chat.PlaceAt(_hud!.ChatRect);
         }
     }
 

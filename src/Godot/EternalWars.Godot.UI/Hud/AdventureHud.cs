@@ -22,8 +22,9 @@ namespace EternalWars.Godot.UI.Hud;
 /// The adventure map's HUD (ADR-050, ADR-186, ADR-309): this layer holds the map's parts as the "Layout" tab's mirror places them (the minimap
 /// and the town list in the side column, the hero list at the other edge, the turn banner at the top centre, and the bottom row: the selected
 /// hero's card and army, the 2×5 action buttons and End turn), the <see cref="StatusBar"/> along the bottom (the subject, the detail and the
-/// calendar) and the <see cref="TopBar"/> with the resources (both on a layer over the full-screen panels), and the questions and notices in
-/// the middle of the screen; a second layer above it, added beside it, holds the full-screen panels (town, hero, exchange, dwelling,
+/// calendar) and the <see cref="TopBar"/> with the resources (both on a layer over the full-screen panels), the questions and notices in
+/// the middle of the screen (the map dimmed behind a question and the LAN pause card), and the hover card beside the pointer over a map
+/// object (<see cref="HoverCard"/>); a second layer above it, added beside it, holds the full-screen panels (town, hero, exchange, dwelling,
 /// marketplace, services, Thieves' Guild, tavern, kingdom, quest log, puzzle map, intel) and the spell book. A hero stepping into an own
 /// town, a dwelling, a marketplace or a service opens its screen. In the replay viewer (<c>playing</c> false) nothing here issues a command:
 /// no End turn, questions or exchange; Move and the hero, spell book, Dig and Marketplace buttons are disabled, and the town list only moves
@@ -118,6 +119,16 @@ public partial class AdventureHud : CanvasLayer
             ? "Click: route, click again: go. Tab: next hero  H: hero  C: spell book  L: level  K: kingdom  Q: quests  P: puzzle  G: dig  WASD/QE/wheel: camera"
             : "Watching. Space: play or pause  L: level  right click: information  WASD/QE/wheel: camera";
 
+        // The map behind a question, End turn's question and the LAN pause card is dimmed (ADR-309): over the map, under the HUD's parts.
+        _dim = new ColorRect { Name = "Dim", Color = UiTheme.MapDim, MouseFilter = Control.MouseFilterEnum.Ignore, Visible = false };
+        AddChild(_dim);
+        MoveChild(_dim, 0);
+        _dim.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        HoverCard = new MapHoverCard();
+        AddChild(HoverCard);
+        VisibilityChanged += HoverCard.Leave;
+        Callable.From(RefreshDim).CallDeferred(); // once in the tree: a loaded game may already be waiting for an answer
+
         // Questions and notices open in the middle of the screen, over the map (ADR-186).
         var middle = new CenterContainer { Name = "PopUps", MouseFilter = Control.MouseFilterEnum.Ignore };
         _popUps = middle;
@@ -129,10 +140,11 @@ public partial class AdventureHud : CanvasLayer
         if (playing)
         {
             // The replay viewer leaves out the questions: the record answers them (and an unbound panel's parts would never enter the tree).
-            var decisions = new DecisionPanel();
-            decisions.UseOpaqueBackground();
-            popUps.AddChild(decisions);
-            decisions.Bind(session, context.PlaysHere);
+            _decisions = new DecisionPanel();
+            _decisions.UseOpaqueBackground();
+            popUps.AddChild(_decisions);
+            _decisions.VisibilityChanged += RefreshDim;
+            _decisions.Bind(session, context.PlaysHere);
         }
 
         var notice = new NoticePanel();
@@ -193,11 +205,47 @@ public partial class AdventureHud : CanvasLayer
             {
                 TopBar.Wide = _fullScreens.Any(s => s.Visible);
                 EndTurnQuestion.Visible &= !screen.Visible; // a screen opened over it: asked again on the next End turn
+                HoverCard.Leave();
             };
         }
 
         _layout.BottomReserve = StatusBar.Height + StatusBar.BottomOffset; // the bottom parts stand above the status bar
+        _layout.Placed += () => ChatPlaceChanged?.Invoke();
         ApplyLayout(layout);
+    }
+
+    /// <summary>The card beside the pointer over a map object or a hero (ADR-309).</summary>
+    public MapHoverCard HoverCard { get; private set; } = null!;
+
+    /// <summary>Where the LAN chat goes over the map (ADR-309): under the town list, or beside it on a short screen.</summary>
+    public Rect2 ChatRect => _layout.ChatRect;
+
+    /// <summary>The HUD's parts were placed again: the chat's place may have moved.</summary>
+    public event Action? ChatPlaceChanged;
+
+    /// <summary>A LAN game is paused (ADR-195): the map is dimmed behind the pause card.</summary>
+    public bool Paused
+    {
+        get => _paused;
+        set
+        {
+            _paused = value;
+            RefreshDim();
+        }
+    }
+
+    private bool _paused;
+    private ColorRect _dim = null!;
+    private DecisionPanel? _decisions;
+
+    /// <summary>The map is dimmed while a question waits (a pending decision's, End turn's) or the LAN game is paused; the hover card goes.</summary>
+    private void RefreshDim()
+    {
+        _dim.Visible = _paused || EndTurnQuestion?.IsVisibleInTree() == true || _decisions?.IsVisibleInTree() == true; // not over the town scene
+        if (_dim.Visible)
+        {
+            HoverCard.Leave();
+        }
     }
 
     /// <summary>The selected hero's card in the bottom row (ADR-309); hidden with no own hero selected.</summary>
@@ -256,6 +304,7 @@ public partial class AdventureHud : CanvasLayer
         cancel.Pressed += () => EndTurnQuestion.Visible = false;
         box.AddChild(Screens.ButtonRow(confirm, cancel));
         popUps.AddChild(EndTurnQuestion);
+        EndTurnQuestion.VisibilityChanged += RefreshDim;
 
         if (playing)
         {
@@ -497,11 +546,32 @@ public partial class AdventureHud : CanvasLayer
     public bool MapPartsHidden
     {
         get => !_layout.Visible;
-        set => _layout.Visible = _popUps.Visible = !value;
+        set
+        {
+            _layout.Visible = _popUps.Visible = !value;
+            HoverCard.Leave();
+            RefreshDim();
+        }
     }
 
-    /// <summary>What the pointer is over on the map goes to the status bar: its name as the subject, its description as the detail (null: nothing there).</summary>
-    public void ShowHover(MapDescription? description) => StatusBar.ShowSubject(description?.Name, description?.Status);
+    /// <summary>
+    /// What the pointer is over on the map goes to the status bar (its name as the subject, its description as the detail; null: nothing
+    /// there) and, for a map object or a hero, to the hover card at <paramref name="pointer"/>; none while the map is dimmed.
+    /// </summary>
+    public void ShowHover(MapDescription? description, Vector2 pointer)
+    {
+        StatusBar.ShowSubject(description?.Name, description?.Status);
+        HoverCard.Point(_dim.Visible ? null : description, pointer);
+    }
+
+    /// <summary>The pointer moved on the same cell: the hover card goes with it, or comes back unless the map is dimmed.</summary>
+    public void FollowHover(Vector2 pointer)
+    {
+        if (!_dim.Visible)
+        {
+            HoverCard.Follow(pointer);
+        }
+    }
 
     /// <summary>Places the parts as <paramref name="layout"/> says (the "Layout" tab changed): the default or its mirror (ADR-309).</summary>
     public void ApplyLayout(LayoutSettings layout)

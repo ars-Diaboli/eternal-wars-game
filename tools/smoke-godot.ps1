@@ -159,10 +159,10 @@ $scenarios = @(
     @{ Name = 'game-town-arrival'; App = 'EternalWars.Game'; Frames = 64; Map = $townsMap
        Input = '3:key:Enter;12:key:Up;34:key:Escape;44:key:T;58:key:Escape' },
     # A route to a town loads its layout ahead (ADR-306): on the layouts map a click on Mosswatch's gate shows Orrin's route there (Sylvan's layout
-    # loads in place of Haven's, loaded at the turn's start); a second click walks him in (the Elder Grove's experience: OK, a skill for the
+    # loads in place of Haven's, loaded at the turn's start); a second click walks him in (the Elder Grove's experience: Continue, a skill for the
     # level) and the screen fades into Mosswatch's scene, opened at once; Escape leaves.
     @{ Name = 'game-town-route'; App = 'EternalWars.Game'; Frames = 52; Map = $townLayoutsMap
-       Input = '3:key:Enter;12:click:1103,398;20:click:1103,398;28:press:OK;32:click:822,462;46:key:Escape' },
+       Input = '3:key:Enter;12:click:1103,398;20:click:1103,398;28:press:Continue;32:click:822,462;46:key:Escape' },
     # The town screen opened (ADR-296): T opens Castlebridge (Haven's 3D scene behind the bars, the building strip, the notices, ADR-308); a click on its name renames it
     # Brightwatch; the governor list from the portrait; Escape twice leaves.
     @{ Name = 'game-town-open'; App = 'EternalWars.Game'; Frames = 70; Map = $townsMap
@@ -352,7 +352,7 @@ $scenarios = @(
     # transforms them; Ilya enters the Sylvan town (Elder Grove: a notice and a level-up). Stables and the Marketplace screen (ADR-067):
     # Gareth enters the Haven town (Stables: a notice), then the HUD's Marketplace button.
     @{ Name = 'game-unique-buildings'; App = 'EternalWars.Game'; Frames = 100; Map = $uniqueMap
-       Input = '3:key:Enter;10:key:Up;17:press:Undead Transformer;20:press:Garrison: 12 Pikeman;24:press:Hero: 20 Footman;30:press:Transform;34:key:Escape;37:key:Escape;40:press:Ilya;44:key:Up;56:press:→ Basic;60:key:Escape;64:press:OK;68:key:Escape;74:press:Gareth;78:key:Up;90:key:Escape;92:key:Escape;94:press:Marketplace' },
+       Input = '3:key:Enter;10:key:Up;17:press:Undead Transformer;20:press:Garrison: 12 Pikeman;24:press:Hero: 20 Footman;30:press:Transform;34:key:Escape;37:key:Escape;40:press:Ilya;44:key:Up;56:press:→ Basic;60:key:Escape;64:press:Continue;68:key:Escape;74:press:Gareth;78:key:Up;90:key:Escape;92:key:Escape;94:press:Marketplace' },
     # Map sites (ADR-079, ADR-080, ADR-082, ADR-105, ADR-139): each hero steps north onto its site: the University's lessons, the War
     # Academy's, the Arena's choice, Pandora's Box, the Witch Hut, the Sphinx (the map's riddle, answered wrong: a right answer's 5000 experience would bring level-ups), the Sacrificial Altar, the Artifact Merchant.
     # At the Witch Hut, information windows on a decision prompt (ADR-178), in the middle of the screen (ADR-186): right-click the prompt

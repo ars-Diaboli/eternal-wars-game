@@ -22,8 +22,9 @@ Detail: [roadmap.md](roadmap.md).
   and action buttons read the hotkey table (`AdventureHotkeys`). Step 3 under way: the resources on a top bar over the
   full-screen panels (`ResourceTopBar`), the status bar's subject and detail, the turn banner and timer pill, the minimap's caption,
   zoom buttons, frame and pictograms, the hero list (portraits, bars, hover card) and the town list (four slots), the bottom row (hero
-  card, army strip, 2×5 action grid with Move, End turn's hourglass and question) and the route's day colours and tags. Next: the map's
-  hover card and the question, notice and pause cards.
+  card, army strip, 2×5 action grid with Move, End turn's hourglass and question), the route's day colours and tags, the map's hover
+  card, the question card (picture placeholders, a list past four answers), notices with Continue, the dim behind questions and the
+  pause card, and the LAN chat by the town list. Next: the replay bar's day slider, then narrow screens and the UI scale.
 - Necropolis heroes: three living humans, four liches, six vampires, a ghost, a wraith and five other dead; prompts
   rewritten, data unchanged (ADR-307).
 - Dungeon heroes: four minotaurs, three troglodytes, a medusa and two humans among the dark elves; prompts rewritten,

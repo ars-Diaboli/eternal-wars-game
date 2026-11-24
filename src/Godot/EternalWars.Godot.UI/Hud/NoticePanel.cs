@@ -8,7 +8,7 @@ namespace EternalWars.Godot.UI.Hud;
 /// <summary>
 /// A short message from the map for the player whose turn it is (ADR-068): a sign's text, why an object turned the hero away, an emptied
 /// object, a freed prisoner, what a Pandora's Box held, what an Astrologer's Tower foretells, what a town's unique building gave (ADR-138), a sphinx's verdict, and the week's event when a human's first turn of the week starts (ADR-073).
-/// Hidden again by "OK", Escape or the hero's next step.
+/// It is the question card's look with one answer (ADR-309), hidden again by Continue, Escape or the hero's next step.
 /// </summary>
 public partial class NoticePanel : PanelContainer
 {
@@ -21,7 +21,7 @@ public partial class NoticePanel : PanelContainer
         var box = new VBoxContainer();
         AddChild(box);
         box.AddChild(_text);
-        var ok = new Button { Text = "OK" }.WithIcon(UiIcon.Confirm, keepText: true);
+        var ok = new Button { Text = "Continue" }.WithIcon(UiIcon.Confirm, keepText: true);
         ok.Pressed += () => Visible = false;
         box.AddChild(Screens.ButtonRow(ok));
         Visible = false;

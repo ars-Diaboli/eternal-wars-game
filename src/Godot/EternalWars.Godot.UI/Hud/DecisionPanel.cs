@@ -14,14 +14,33 @@ using Godot;
 namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
-/// Placeholder prompt for pending decisions: chest reward, guard offers, map event messages, questions and full armies, the battle
-/// width and quick combat. Answers are commands; the panel hides itself when the decision is resolved. A right click on the prompt opens the
-/// information window of what it is about, on a skill, a town or a stack to choose that one's (ADR-154).
+/// The question card (ADR-309) for pending decisions: chest reward, guard offers, map event messages, questions and full armies, the battle
+/// width and quick combat. A picture of the kind of question on top (<see cref="QuestionPictures"/>), the question, then one button per
+/// answer; more than <see cref="MaxButtons"/> answers (a town gate's towns) are a scrolling list of rows. Answers are commands; the card hides
+/// itself when the decision is resolved. A right click on the question opens the information window of what it is about, on a skill, a
+/// town or a stack to choose that one's (ADR-154).
 /// </summary>
 public partial class DecisionPanel : PanelContainer
 {
+    /// <summary>The most answers shown as a row of buttons; more are a list.</summary>
+    public const int MaxButtons = 4;
+
+    /// <summary>The picture's size on the card (the files are 1024 × 576).</summary>
+    public static readonly Vector2 PictureSize = new(480, 270);
+
+    /// <summary>Where the question pictures are, <c>q_&lt;id&gt;.png</c>.</summary>
+    private const string PictureFolder = "res://shared/textures/ui/questions/";
+
+    /// <summary>The list's tallest before it scrolls.</summary>
+    private const float ListHeight = 240;
+
     private readonly Label _prompt = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart };
     private readonly HBoxContainer _buttons = new() { Alignment = BoxContainer.AlignmentMode.End }; // along the bottom, at the right (ADR-204)
+    private readonly VBoxContainer _list = new() { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+    private Button? _closer; // the answer that declines or confirms: it stays a button under a long list
+    private readonly ScrollContainer _listScroll = new() { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, Visible = false };
+    private readonly PanelContainer _picture = new() { Name = "Picture", CustomMinimumSize = new Vector2(0, 0) };
+    private string? _pictureId;
     private GameSession _session = null!;
     private Func<Core.Domain.Common.PlayerId, bool> _playsHere = null!;
 
@@ -38,10 +57,17 @@ public partial class DecisionPanel : PanelContainer
         _session = session;
         _playsHere = playsHere ?? (player => session.State.GetPlayer(player).IsHuman);
         var box = new VBoxContainer();
+        box.AddThemeConstantOverride("separation", UiSpacing.Gap);
         AddChild(box);
+        _picture.AddThemeStyleboxOverride("panel", UiTheme.Box(QuestionSlate, Colors.Transparent, 0, borderWidth: 0));
+        _picture.SizeFlagsHorizontal = SizeFlags.ShrinkCenter;
+        box.AddChild(_picture);
         box.AddChild(_prompt.WithInfo(detailed => _session.State.PendingDecision is { } decision
             ? InfoSheets.Decision(_session.State, _session.State.CurrentPlayer.Id, decision, detailed)
             : null));
+        _list.AddThemeConstantOverride("separation", UiSpacing.Cell);
+        _listScroll.AddChild(_list);
+        box.AddChild(_listScroll);
         box.AddChild(_buttons);
         Visible = false;
 
@@ -54,7 +80,9 @@ public partial class DecisionPanel : PanelContainer
 
     private void Refresh()
     {
-        _buttons.ClearChildren();
+        _buttons.ClearChildren(detach: true);
+        _list.ClearChildren(detach: true);
+        _closer = null;
 
         var state = _session.State;
         var player = state.CurrentPlayer.Id;
@@ -107,7 +135,7 @@ public partial class DecisionPanel : PanelContainer
                         .WithInfo(detailed => InfoSheets.SkillChoice(_session.State.GetHero(hut.Hero), skill, detailed));
                 }
 
-                Button("Leave", new ChooseWitchHutSkillCommand(player, null));
+                _closer = Button("Leave", new ChooseWitchHutSkillCommand(player, null));
                 break;
             case TownGateDecision gate:
                 _prompt.Text = "Town gate: go to which town?";
@@ -119,7 +147,7 @@ public partial class DecisionPanel : PanelContainer
                             : null);
                 }
 
-                Button("Stay", new ChooseTownGateCommand(player, null));
+                _closer = Button("Stay", new ChooseTownGateCommand(player, null));
                 break;
             case TrainingDecision training:
                 var site = (Core.Domain.Objects.TrainingSite)state.GetObject(training.Site);
@@ -140,7 +168,7 @@ public partial class DecisionPanel : PanelContainer
 
                 if (training.CanDecline)
                 {
-                    Button("Leave", new ChooseTrainingCommand(player, null));
+                    _closer = Button("Leave", new ChooseTrainingCommand(player, null));
                 }
 
                 break;
@@ -195,6 +223,78 @@ public partial class DecisionPanel : PanelContainer
 
                 break;
         }
+
+        ShowPicture(state.PendingDecision is { } pending ? QuestionPictures.Of(state, pending) : null);
+        ListLongAnswers();
+    }
+
+    /// <summary>The card's slate, which the pictures' faded edges meet (RGB 28, 31, 38).</summary>
+    private static readonly Color QuestionSlate = new(28 / 255f, 31 / 255f, 38 / 255f);
+
+    /// <summary>
+    /// The picture of the kind of question, <paramref name="id"/>'s file; until the file exists, a low slate box with the picture's name. No
+    /// picture (null): the card has none.
+    /// </summary>
+    private void ShowPicture(string? id)
+    {
+        _picture.Visible = id is not null;
+        if (id == _pictureId)
+        {
+            return;
+        }
+
+        _pictureId = id;
+        _picture.ClearChildren(detach: true);
+        if (id is null)
+        {
+            return;
+        }
+
+        var path = PictureFolder + id + ".png";
+        if (ResourceLoader.Exists(path) && ResourceLoader.Load<Texture2D>(path) is { } texture)
+        {
+            _picture.AddChild(new TextureRect
+            {
+                Texture = texture, CustomMinimumSize = PictureSize, ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, MouseFilter = MouseFilterEnum.Ignore,
+            });
+            return;
+        }
+
+        // A placeholder until the question pictures are painted (step 5 of the HUD plan): low, so the card does not stand empty.
+        var name = id.StartsWith("q_", StringComparison.Ordinal) ? id[2..] : id;
+        _picture.AddChild(new Label
+        {
+            Text = char.ToUpperInvariant(name[0]) + name[1..].Replace('-', ' '), ThemeTypeVariation = UiTheme.QuietLabel,
+            HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
+            CustomMinimumSize = new Vector2(PictureSize.X, 72), MouseFilter = MouseFilterEnum.Ignore,
+        });
+    }
+
+    /// <summary>More than <see cref="MaxButtons"/> answers: they move into the scrolling list, one row each, the text at the left; the
+    /// answer that declines or confirms (Leave, Stay, Keep) stays a button below it.</summary>
+    private void ListLongAnswers()
+    {
+        var answers = _buttons.GetChildren().OfType<Control>().ToList();
+        _listScroll.Visible = answers.Count > MaxButtons;
+        if (!_listScroll.Visible)
+        {
+            return;
+        }
+
+        foreach (var answer in answers.Where(a => a != _closer))
+        {
+            _buttons.RemoveChild(answer);
+            answer.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            if (answer is Button row)
+            {
+                row.Alignment = HorizontalAlignment.Left;
+            }
+
+            _list.AddChild(answer);
+        }
+
+        _listScroll.CustomMinimumSize = new Vector2(0, Math.Min(ListHeight, _list.GetCombinedMinimumSize().Y));
     }
 
     private static string StatName(PrimaryStat stat) => stat switch
@@ -252,6 +352,7 @@ public partial class DecisionPanel : PanelContainer
 
         keep.Pressed += () => _session.Execute(new ChooseEventArmyCommand(player, [.. ticks.Select((t, i) => (t, i)).Where(x => x.t.ButtonPressed).Select(x => x.i)]));
         _buttons.AddChild(keep);
+        _closer = keep;
         Check();
     }
 

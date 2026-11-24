@@ -120,8 +120,16 @@ creatures and buildings, heraldic player colours, iconic map objects).
   pointer's place round the target's centre (eight 45° sectors) picks the side to strike from, one of eight; the sword points that way and the cells the
   attacker would stand on are highlighted; an unreachable side gives way to the nearest reachable one. Still images drawn at 64 px, shown at 43 px (the arrow, the hourglass and the
   blocked sign at 32 px); while an image is missing the nearest system cursor stands in (arrow, hand, cross, forbidden, busy). Controls show the arrow.
-- **Pop-ups** (ADR-186): decision prompts (questions, choices) and notices open in the middle of the screen, over the map, in opaque
-  panels. The information window (right click) opens at the pointer.
+- **Pop-ups** (ADR-186, ADR-309): questions open in the middle of the screen as a card: a picture of the kind of question on top (one
+  per kind, `q_<id>.png`; until it is painted a low slate box with its name; none for the battle), the question, one button per answer;
+  more than four answers (a town gate's towns) are a scrolling list of rows. Notices are the same card with Continue. The map (not the
+  HUD) is dimmed behind a question, End turn's question and the LAN pause card. The pause card stands in the middle: "Game paused", why,
+  and on the host "Computer plays <colour>" buttons; no Resume. The information window (right click) opens at the pointer.
+- **Hover card** (ADR-309): resting the pointer on a map object or a hero for a moment shows a small card beside it: the name, the owner
+  ("you", a player's name, "none") and what it gives ("+2 ore a day"); no picture, none for the bare ground, none over a HUD control or
+  while the map is dimmed. The name and its description are on the status bar at once.
+- **LAN chat** (ADR-194, ADR-309): over the map in the side column under the town list when the column has room for it, else beside the
+  town list towards the middle; over a battle at the bottom left above the battle's log.
 - **Window mode** (ADR-186): Windowed or Fullscreen (borderless, the screen's own size), in the "Settings" tab; Alt+Enter switches it, in
   the game and in the map editor. Kept in `settings.json`, applied at once and at start.
 - **Layout** (ADR-118, ADR-156, ADR-309): the "Layout" tab sets the battle's initiative bar (top or bottom) and the adventure map's HUD:

@@ -250,7 +250,7 @@ public partial class Main
         lobby.Waiting);
 
     /// <summary>
-    /// The chat over the map in a LAN game, at the bottom left (Enter starts writing), and the pause panel at the top, over the battle too.
+    /// The chat in a LAN game, placed by the HUD's layout by the town list (Enter starts writing), and the pause card in the middle, over the battle too.
     /// </summary>
     private void BuildChat()
     {
@@ -287,7 +287,7 @@ public partial class Main
         _chat.Add("", "Enter writes to the other players.");
     }
 
-    /// <summary>The pause panel as the game stands: why it is paused and, on the host, the colours the computer may take over.</summary>
+    /// <summary>The pause card as the game stands: why it is paused and, on the host, the colours the computer may take over; the map dimmed behind it.</summary>
     private void ShowPause()
     {
         if (_host is not null)
@@ -299,6 +299,11 @@ public partial class Main
         else if (_client is not null)
         {
             _pause?.ShowPause(_client.Paused, []);
+        }
+
+        if (GodotObject.IsInstanceValid(_hud))
+        {
+            _hud.Paused = _pause?.Visible == true;
         }
     }
 

@@ -8,7 +8,8 @@ namespace EternalWars.Godot.UI.Hud;
 /// screen (the right, or the left when mirrored) holding the minimap and the town list, as wide as its widest part; the hero list
 /// (<see cref="SetOpposite"/>) at the other edge, under the top bar; and the bottom row above the status bar (<see cref="SetBottom"/>): the
 /// hero card and the army strip from the column's far edge, the action buttons and End turn from the column's edge, all as tall as the
-/// tallest. A hidden part leaves its place empty and the others where they are. The layer covers the screen but lets the mouse through; each
+/// tallest. The LAN chat's place (<see cref="ChatRect"/>) is under the column's last part (the town list) when the column has room for it,
+/// else beside that part, towards the middle of the screen. A hidden part leaves its place empty and the others where they are. The layer covers the screen but lets the mouse through; each
 /// part is a child that is moved, never reparented (a part's event subscriptions last while it is in the tree). It re-places the parts
 /// whenever one's size changes.
 /// </summary>
@@ -38,6 +39,18 @@ public partial class AdventureHudLayout : Container
     }
 
     private float _bottomReserve;
+
+    /// <summary>The chat's height when it stands beside the town list, and the least room under the town list that takes it.</summary>
+    public static float ChatHeight => UiTheme.MapChatSize.Y;
+
+    /// <summary>The chat's tallest, in the column on a tall screen.</summary>
+    public const float ChatMaxHeight = 300;
+
+    /// <summary>Where the LAN chat goes over the map (ADR-309), in the layer's coordinates; set at each placing.</summary>
+    public Rect2 ChatRect { get; private set; }
+
+    /// <summary>The parts were placed again (the screen's size, a part's size, the mirror): the chat's place may have moved.</summary>
+    public event Action? Placed;
 
     public AdventureHudLayout()
     {
@@ -108,12 +121,20 @@ public partial class AdventureHudLayout : Container
 
         var x = panelX + Margin;
         var y = Margin;
+        var last = new Rect2(x, y, width, 0);
         foreach (var part in _column)
         {
             var height = part.GetCombinedMinimumSize().Y;
-            FitChildInRect(part, new Rect2(x, y, width, height));
+            last = new Rect2(x, y, width, height);
+            FitChildInRect(part, last);
             y += height + Margin;
         }
+
+        // The chat: between the town list and the bottom row when the column has the room, else beside the town list towards the middle.
+        var room = bottom - Margin - y;
+        ChatRect = room >= ChatHeight
+            ? new Rect2(x, y, width, Math.Min(room, ChatMaxHeight))
+            : new Rect2(left ? panelX + panelWidth + Margin : panelX - Margin - UiTheme.MapChatSize.X, last.Position.Y, UiTheme.MapChatSize.X, ChatHeight);
 
         if (_opposite is not null)
         {
@@ -125,6 +146,7 @@ public partial class AdventureHudLayout : Container
         }
 
         PlaceBottomRow(screen, rowTop, rowHeight);
+        Placed?.Invoke();
     }
 
     /// <summary>The bottom row: the parts on the left packed from the left edge, those on the right from the right edge, in the row's order.</summary>
