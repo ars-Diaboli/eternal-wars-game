@@ -59,15 +59,15 @@ public static partial class UiFrames
         return style;
     }
 
-    /// <summary>A check box's mark: an empty bronze square, or one with a tick.</summary>
+    /// <summary>A check box's mark: an empty grey square (ADR-310), or one with a tick.</summary>
     public static Texture2D CheckMark(bool ticked, bool disabled = false) => Mark($"check-{ticked}-{disabled}", 20, image =>
     {
-        var frame = disabled ? UiTheme.BorderDim.Darkened(0.3f) : UiTheme.Border;
+        var frame = disabled ? UiTheme.RimDim : UiTheme.Rim;
         DrawRect(image, 2, 2, 16, 16, frame);
-        DrawRect(image, 4, 4, 12, 12, UiTheme.ButtonFace.Darkened(0.4f));
+        DrawRect(image, 3, 3, 14, 14, UiTheme.Face.Darkened(0.4f));
         if (ticked)
         {
-            var tick = disabled ? UiTheme.TextDone : UiTheme.BorderBright;
+            var tick = disabled ? UiTheme.TextDone : UiTheme.RimBright;
             for (var i = 0; i < 4; i++)
             {
                 DrawRect(image, 5 + i, 9 + i, 2, 2, tick); // down stroke
@@ -80,22 +80,22 @@ public static partial class UiFrames
         }
     });
 
-    /// <summary>A radio button's mark: an empty bronze ring, or one with a dot.</summary>
+    /// <summary>A radio button's mark: an empty grey ring, or one with a dot.</summary>
     public static Texture2D RadioMark(bool chosen) => Mark($"radio-{chosen}", 20, image =>
     {
-        DrawDisc(image, 10, 10, 8, UiTheme.Border);
-        DrawDisc(image, 10, 10, 6, UiTheme.ButtonFace.Darkened(0.4f));
+        DrawDisc(image, 10, 10, 8, UiTheme.Rim);
+        DrawDisc(image, 10, 10, 7, UiTheme.Face.Darkened(0.4f));
         if (chosen)
         {
-            DrawDisc(image, 10, 10, 3, UiTheme.BorderBright);
+            DrawDisc(image, 10, 10, 3, UiTheme.RimBright);
         }
     });
 
-    /// <summary>A slider's grabber: a bronze disc.</summary>
+    /// <summary>A slider's grabber: a grey disc.</summary>
     public static Texture2D Grabber(bool lit) => Mark($"grabber-{lit}", 18, image =>
     {
-        DrawDisc(image, 9, 9, 8, lit ? UiTheme.BorderBright : UiTheme.Border);
-        DrawDisc(image, 9, 9, 5, UiTheme.ButtonFace);
+        DrawDisc(image, 9, 9, 8, lit ? UiTheme.RimBright : UiTheme.Rim);
+        DrawDisc(image, 9, 9, 6, UiTheme.Face);
     });
 
     private static Texture2D FrameTexture(Color accent)

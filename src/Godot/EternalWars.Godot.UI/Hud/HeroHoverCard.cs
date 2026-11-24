@@ -1,3 +1,4 @@
+using EternalWars.Godot.UI.Widgets;
 using EternalWars.Core.Domain.Heroes;
 using Godot;
 
@@ -87,7 +88,7 @@ public partial class HeroHoverCard : PanelContainer
     private static Control Slot(Core.Domain.Armies.CreatureStack? stack)
     {
         var slot = new PanelContainer { CustomMinimumSize = new Vector2(SlotSize, SlotSize), MouseFilter = MouseFilterEnum.Ignore };
-        slot.AddThemeStyleboxOverride("panel", UiTheme.Box(UiTheme.SideBarBackground, stack is null ? UiTheme.BorderDim : UiTheme.Border, 0));
+        slot.AddThemeStyleboxOverride("panel", UiFrames.Themed(BevelKind.Slot, 0, flat: UiTheme.Box(UiTheme.SideBarBackground, stack is null ? UiTheme.BorderDim : UiTheme.Border, 0)));
         if (stack is null)
         {
             slot.Modulate = new Color(1, 1, 1, 0.5f);

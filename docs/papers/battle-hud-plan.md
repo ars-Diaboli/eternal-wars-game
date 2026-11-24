@@ -86,8 +86,8 @@ green and its memory-bank entries updated.
 
 ### 1. Record the decisions
 - [ ] The owner fills the Decision column; the guide above is brought in line with it.
-- [ ] ADR-311 (presentation): the battle HUD restyle, citing this paper; it supersedes in part ADR-156 (the initiative bar's default
-  place), ADR-110 (spells as buttons) and ADR-195 (the chat's place over a battle). Index row, next free number 312; roadmap; active
+- [ ] ADR-312 (presentation): the battle HUD restyle, citing this paper; it supersedes in part ADR-156 (the initiative bar's default
+  place), ADR-110 (spells as buttons) and ADR-195 (the chat's place over a battle). Index row, next free number 313; roadmap; active
   context.
 
 ### 2. Core (engine-free, with tests)

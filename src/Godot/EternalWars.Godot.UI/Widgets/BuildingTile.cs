@@ -30,7 +30,8 @@ public partial class BuildingTile : Button
             var lit = state is "hover" or "hover_pressed" or "focus";
             var box = UiTheme.Box(UiTheme.ButtonFace.Darkened(state == "pressed" ? 0.3f : 0.15f), lit ? colour.Lightened(0.3f) : colour, 4, lit ? 3 : 2);
             box.DrawCenter = state != "focus";
-            AddThemeStyleboxOverride(state, box);
+            // The shader's button with the state's colour on its rim (ADR-310); the focus stays a coloured line over it.
+            AddThemeStyleboxOverride(state, state == "focus" ? box : UiFrames.Themed(BevelKind.Button, 4, tint: colour, flat: box));
         }
 
         var box2 = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore };

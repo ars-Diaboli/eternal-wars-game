@@ -1,3 +1,4 @@
+using EternalWars.Godot.UI.Widgets;
 using Godot;
 
 namespace EternalWars.Godot.UI;
@@ -5,7 +6,8 @@ namespace EternalWars.Godot.UI;
 /// <summary>
 /// The rest of the game's look (ADR-294; not the editor's compact variant): styles for the Godot controls the screens use beside panels and buttons (tabs, check boxes, text fields,
 /// scroll bars, sliders, lists, menus, tooltips, separators, progress bars, embedded windows), the heading and title labels in the heading face,
-/// and the slot buttons of armies. The frames are <see cref="UiFrames"/>' (the painted tooltip and divider where they exist).
+/// and the slot buttons of armies. Panels, slots, lists, text fields, tooltips and pop-ups are framed by the shader (ADR-310,
+/// <see cref="UiFrames.Themed"/>); the rest is drawn flat in its colours, a near-black face and a grey rim (<see cref="Rim"/>).
 /// </summary>
 public static partial class UiTheme
 {
@@ -22,7 +24,7 @@ public static partial class UiTheme
     public const string BarPanel = "BarPanel";
 
     /// <summary>The tooltip's and the field's ground: a shade darker than a panel.</summary>
-    private static Color FieldBackground => HighContrast ? new(0f, 0f, 0f) : new(0.07f, 0.075f, 0.095f);
+    private static Color FieldBackground => HighContrast ? new(0f, 0f, 0f) : new(0.04f, 0.042f, 0.047f);
 
     /// <summary>Adds the styles of every other control to <paramref name="theme"/>.</summary>
     private static void AddControlStyles(Theme theme)
@@ -44,25 +46,26 @@ public static partial class UiTheme
 
         // Army slots.
         theme.SetTypeVariation(SlotButton, "Button");
-        theme.SetStylebox("normal", SlotButton, UiFrames.Slot());
-        theme.SetStylebox("hover", SlotButton, UiFrames.Slot(lit: true));
-        theme.SetStylebox("pressed", SlotButton, UiFrames.Slot(lit: true));
-        theme.SetStylebox("hover_pressed", SlotButton, UiFrames.Slot(lit: true));
-        theme.SetStylebox("disabled", SlotButton, UiFrames.Slot());
+        foreach (var state in new[] { "normal", "hover", "pressed", "hover_pressed", "disabled" })
+        {
+            // Sunk in, lit under the pointer by the frame itself (ADR-310).
+            theme.SetStylebox(state, SlotButton, UiFrames.Themed(BevelKind.Slot, 2, flat: UiFrames.Slot(lit: state is "hover" or "pressed" or "hover_pressed")));
+        }
+
         theme.SetTypeVariation(BarPanel, "PanelContainer");
-        theme.SetStylebox("panel", BarPanel, Box(Background, Border, padding));
+        theme.SetStylebox("panel", BarPanel, UiFrames.Themed(BevelKind.Panel, padding, flat: Box(Background, Border, padding)));
 
         // Tabs: the chosen tab joins the panel below it.
         foreach (var type in new[] { "TabContainer", "TabBar" })
         {
-            theme.SetStylebox("tab_selected", type, Tab(PanelBackground.Lightened(0.06f) with { A = 1 }, Border));
-            theme.SetStylebox("tab_unselected", type, Tab(ButtonFace.Darkened(0.2f), BorderDim));
-            theme.SetStylebox("tab_hovered", type, Tab(ButtonFace, BorderBright));
-            theme.SetStylebox("tab_disabled", type, Tab(ButtonFace.Darkened(0.4f), BorderDim.Darkened(0.4f)));
+            theme.SetStylebox("tab_selected", type, Tab(Face.Lightened(0.06f), Rim));
+            theme.SetStylebox("tab_unselected", type, Tab(Face, RimDim));
+            theme.SetStylebox("tab_hovered", type, Tab(Face.Lightened(0.04f), RimBright));
+            theme.SetStylebox("tab_disabled", type, Tab(Face.Darkened(0.4f), RimDim.Darkened(0.4f)));
             theme.SetStylebox("tab_focus", type, Focus());
         }
 
-        theme.SetStylebox("panel", "TabContainer", Box(PanelBackground with { A = 1 }, Border, padding));
+        theme.SetStylebox("panel", "TabContainer", Rounded(Box(Face.Lightened(0.06f), Rim, padding)));
 
         // Check boxes and radio buttons: a bronze mark, no button face.
         foreach (var type in new[] { "CheckBox", "CheckButton" })
@@ -85,8 +88,9 @@ public static partial class UiTheme
         // Text fields.
         foreach (var type in new[] { "LineEdit", "TextEdit" })
         {
-            theme.SetStylebox("normal", type, Field(BorderDim));
-            theme.SetStylebox("focus", type, Field(BorderBright));
+            var field = Field(BorderDim);
+            theme.SetStylebox("normal", type, UiFrames.Themed(BevelKind.Slot, (int)field.ContentMarginTop, (int)field.ContentMarginLeft, flat: field));
+            theme.SetStylebox("focus", type, HighContrast ? Field(BorderBright) : Rounded(new StyleBoxFlat { DrawCenter = false, BorderColor = RimBright }, width: 1));
             theme.SetStylebox("read_only", type, Field(BorderDim.Darkened(0.4f)));
         }
 
@@ -94,18 +98,18 @@ public static partial class UiTheme
         foreach (var type in new[] { "VScrollBar", "HScrollBar" })
         {
             theme.SetStylebox("scroll", type, Margined(Box(FieldBackground, FieldBackground, 0), 4));
-            theme.SetStylebox("scroll_focus", type, Margined(Box(FieldBackground, BorderDim, 0), 4));
-            theme.SetStylebox("grabber", type, Grabber(BorderDim));
-            theme.SetStylebox("grabber_highlight", type, Grabber(Border));
-            theme.SetStylebox("grabber_pressed", type, Grabber(BorderBright));
+            theme.SetStylebox("scroll_focus", type, Margined(Box(FieldBackground, RimDim, 0), 4));
+            theme.SetStylebox("grabber", type, Grabber(RimDim.Lightened(0.15f)));
+            theme.SetStylebox("grabber_highlight", type, Grabber(Rim));
+            theme.SetStylebox("grabber_pressed", type, Grabber(RimBright));
         }
 
         // Sliders: a groove, the lit part bronze, a disc to drag.
         foreach (var type in new[] { "HSlider", "VSlider" })
         {
-            theme.SetStylebox("slider", type, Margined(Box(FieldBackground, BorderDim, 0), 3));
-            theme.SetStylebox("grabber_area", type, Margined(Box(BorderDim, BorderDim, 0), 3));
-            theme.SetStylebox("grabber_area_highlight", type, Margined(Box(Border, Border, 0), 3));
+            theme.SetStylebox("slider", type, Margined(Box(FieldBackground, RimDim, 0), 3));
+            theme.SetStylebox("grabber_area", type, Margined(Box(Rim, Rim, 0), 3));
+            theme.SetStylebox("grabber_area_highlight", type, Margined(Box(RimBright, RimBright, 0), 3));
             theme.SetIcon("grabber", type, UiFrames.Grabber(false));
             theme.SetIcon("grabber_highlight", type, UiFrames.Grabber(true));
             theme.SetIcon("grabber_disabled", type, UiFrames.Grabber(false));
@@ -114,29 +118,31 @@ public static partial class UiTheme
         // Lists, trees and menus.
         foreach (var type in new[] { "ItemList", "Tree" })
         {
-            theme.SetStylebox("panel", type, Box(FieldBackground, BorderDim, padding));
+            theme.SetStylebox("panel", type, UiFrames.Themed(BevelKind.Slot, padding, flat: Box(FieldBackground, BorderDim, padding)));
             theme.SetStylebox("focus", type, Focus());
-            theme.SetStylebox("selected", type, Box(ButtonFace.Lightened(0.1f), Border, 2));
-            theme.SetStylebox("selected_focus", type, Box(ButtonFace.Lightened(0.14f), BorderBright, 2));
+            theme.SetStylebox("selected", type, Rounded(Box(Face.Lightened(0.1f), Rim, 2)));
+            theme.SetStylebox("selected_focus", type, Rounded(Box(Face.Lightened(0.14f), RimBright, 2)));
             theme.SetStylebox("cursor", type, Focus());
             theme.SetStylebox("cursor_unfocused", type, new StyleBoxEmpty());
         }
 
-        theme.SetStylebox("hovered", "ItemList", Box(ButtonFace, BorderDim, 2));
-        theme.SetStylebox("panel", "PopupMenu", Box(Background, Border, padding));
-        theme.SetStylebox("hover", "PopupMenu", Box(ButtonFace.Lightened(0.08f), BorderBright, 2));
-        theme.SetStylebox("panel", "PopupPanel", Box(Background, Border, padding));
-        theme.SetStylebox("panel", "TooltipPanel", UiFrames.Tooltip(padding) ?? (StyleBox)Box(FieldBackground with { A = 0.97f }, Border, padding));
+        theme.SetStylebox("hovered", "ItemList", Rounded(Box(Face.Lightened(0.05f), RimDim, 2)));
+        theme.SetStylebox("panel", "PopupMenu", Rounded(Box(Face, Rim, padding)));
+        theme.SetStylebox("hover", "PopupMenu", Rounded(Box(Face.Lightened(0.08f), RimBright, 2)));
+        theme.SetStylebox("panel", "PopupPanel", UiFrames.Themed(BevelKind.Panel, padding, flat: Box(Background, Border, padding)));
+        theme.SetStylebox("panel", "TooltipPanel", HighContrast
+            ? Box(FieldBackground, Border, padding)
+            : UiFrames.Themed(BevelKind.Panel, UiFrames.Tooltip(padding), padding));
         theme.SetColor("font_color", "TooltipLabel", HighContrast ? Colors.White : new Color(0.92f, 0.9f, 0.85f));
 
         // Separators, progress bars and the windows Godot embeds (dialogs).
-        theme.SetStylebox("separator", "HSeparator", UiFrames.Divider() ?? (StyleBox)new StyleBoxLine { Color = BorderDim, Thickness = 1 });
-        theme.SetStylebox("separator", "VSeparator", new StyleBoxLine { Color = BorderDim, Thickness = 1, Vertical = true });
-        theme.SetStylebox("background", "ProgressBar", Box(FieldBackground, BorderDim, 0));
-        theme.SetStylebox("fill", "ProgressBar", Box(Border.Darkened(0.1f), Border, 0));
-        theme.SetStylebox("embedded_border", "Window", Box(Background, Border, padding, FrameWidth));
-        theme.SetStylebox("embedded_unfocused_border", "Window", Box(Background, BorderDim, padding, FrameWidth));
-        theme.SetStylebox("panel", "AcceptDialog", Box(Background, Border, padding));
+        theme.SetStylebox("separator", "HSeparator", new StyleBoxLine { Color = RimDim, Thickness = 1 });
+        theme.SetStylebox("separator", "VSeparator", new StyleBoxLine { Color = RimDim, Thickness = 1, Vertical = true });
+        theme.SetStylebox("background", "ProgressBar", Rounded(Box(FieldBackground, RimDim, 0), radius: 3));
+        theme.SetStylebox("fill", "ProgressBar", Rounded(Box(Rim, RimBright, 0), radius: 3));
+        theme.SetStylebox("embedded_border", "Window", Rounded(Box(Face, Rim, padding, FrameWidth)));
+        theme.SetStylebox("embedded_unfocused_border", "Window", Rounded(Box(Face, RimDim, padding, FrameWidth)));
+        theme.SetStylebox("panel", "AcceptDialog", UiFrames.Themed(BevelKind.Panel, padding, flat: Box(Background, Border, padding)));
     }
 
     private static StyleBoxFlat Tab(Color face, Color border)
@@ -165,6 +171,22 @@ public static partial class UiTheme
         return style;
     }
 
+    /// <summary>The shader frames' corners on a flat box (<paramref name="radius"/>, 6 px), <paramref name="width"/> its rim; square in high contrast.</summary>
+    private static StyleBoxFlat Rounded(StyleBoxFlat style, int radius = 6, int? width = null)
+    {
+        if (!HighContrast)
+        {
+            style.SetCornerRadiusAll(radius);
+        }
+
+        if (width is { } w)
+        {
+            style.SetBorderWidthAll(w);
+        }
+
+        return style;
+    }
+
     private static StyleBoxFlat Margined(StyleBoxFlat style, int margin)
     {
         style.SetContentMarginAll(margin);
@@ -173,7 +195,7 @@ public static partial class UiTheme
 
     private static StyleBoxFlat Focus()
     {
-        var focus = new StyleBoxFlat { DrawCenter = false, BorderColor = BorderBright };
+        var focus = new StyleBoxFlat { DrawCenter = false, BorderColor = RimBright };
         focus.SetBorderWidthAll(HighContrast ? 2 : 1);
         return focus;
     }

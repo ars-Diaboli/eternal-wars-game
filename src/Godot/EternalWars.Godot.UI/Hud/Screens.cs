@@ -1,3 +1,4 @@
+using EternalWars.Godot.UI.Widgets;
 using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
@@ -6,13 +7,13 @@ namespace EternalWars.Godot.UI.Hud;
 public static class Screens
 {
     /// <summary>
-    /// Gives the panel an opaque background in the bevelled bronze frame of a window (<see cref="UiFrames.Window"/>, ADR-294): Godot's default
-    /// panel is translucent, so the map and the HUD showed through a screen and its text ran into theirs. Inside the frame it keeps
-    /// <paramref name="padding"/> (by default a screen's, <see cref="UiSpacing.ScreenPadding"/>).
+    /// Gives the panel a window's frame drawn by the shader (ADR-310), opaque whatever the panel opacity setting: the map and the HUD do not
+    /// show through a screen or a question. Inside the frame it keeps <paramref name="padding"/> (by default a screen's,
+    /// <see cref="UiSpacing.ScreenPadding"/>).
     /// </summary>
     public static void UseOpaqueBackground(this PanelContainer panel, int padding = UiSpacing.ScreenPadding)
     {
-        panel.AddThemeStyleboxOverride("panel", UiFrames.Window(UiTheme.BorderBright, padding));
+        panel.AddThemeStyleboxOverride("panel", UiFrames.Themed(BevelKind.Panel, padding, flat: UiFrames.Window(UiTheme.BorderBright, padding)));
     }
 
     /// <summary>
@@ -21,7 +22,8 @@ public static class Screens
     /// </summary>
     public static void UseMenuPanel(this PanelContainer panel)
     {
-        panel.AddThemeStyleboxOverride("panel", UiTheme.Box(UiTheme.MenuBackground, UiTheme.Border, UiSpacing.ScreenPadding));
+        panel.AddThemeStyleboxOverride("panel", UiFrames.Themed(BevelKind.Panel, UiSpacing.ScreenPadding, opacity: UiTheme.MenuBackground.A,
+            flat: UiTheme.Box(UiTheme.MenuBackground, UiTheme.Border, UiSpacing.ScreenPadding)));
     }
 
     /// <summary>

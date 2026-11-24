@@ -11,8 +11,8 @@ namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
 /// End turn (ADR-204, ADR-309, ADR-310): an hourglass with no label (its name and key, "End turn [Z]", on the status bar) and no frame of its
-/// own (the tile's frame is the button's), ringed by seven dots for the days of the week, the first at the top and on clockwise, today's lit
-/// in the colour of the player whose HUD it is. The hourglass brightens under the pointer and greys while it is not this screen's player's turn.
+/// own (the tile's frame is the button's), a square as tall as the bottom row, ringed by seven dots for the days of the week, the first at the
+/// top and on clockwise: the days gone by in the colour of the player whose HUD it is, today's in it with a soft glow, the days to come grey. The hourglass brightens under the pointer and greys while it is not this screen's player's turn.
 /// The adventure HUD asks first when a hero can still move (<see cref="EndTurnPressed"/>); without a listener it ends the turn at once.
 /// The calendar is on the status bar (<see cref="CalendarLabel"/>, ADR-225).
 /// </summary>
@@ -52,6 +52,7 @@ public partial class TurnPanel : BoxContainer
         _endTurn.SizeFlagsHorizontal = SizeFlags.Fill;
         _endTurn.SizeFlagsVertical = SizeFlags.ExpandFill;
         _endTurn.CustomMinimumSize = new Vector2(WeekDots.Side, WeekDots.Side); // room for the ring round the hourglass
+        _endTurn.Resized += () => _endTurn.CustomMinimumSize = new Vector2(Math.Max(WeekDots.Side, _endTurn.Size.Y), WeekDots.Side); // square
         foreach (var state in (string[])["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"])
         {
             _endTurn.AddThemeStyleboxOverride(state, new StyleBoxEmpty());
@@ -104,13 +105,15 @@ public partial class TurnPanel : BoxContainer
         _dots.Lit = Palette.ForPlayer(_session.State, _listed());
     }
 
-    /// <summary>The week's seven dots on a ring round the hourglass, the first at the top and on clockwise, today's lit.</summary>
+    /// <summary>The week's seven dots on a ring round the hourglass, the first at the top and on clockwise: past days lit, today's glowing, the rest grey.</summary>
     private sealed partial class WeekDots : Control
     {
         private const float Radius = 3.5f;
 
-        /// <summary>How far in from the button's edge the dots' centres lie.</summary>
-        private const float Inset = Radius + 5;
+        /// <summary>How far in from the button's edge the dots' centres lie: the ring as wide as the tile allows, room left for the glow.</summary>
+        private const float Inset = Radius + 3;
+
+        private static readonly Color Future = new(0.42f, 0.42f, 0.42f);
 
         /// <summary>The button's least side: the hourglass, a gap, and a dot on each side.</summary>
         public const float Side = UiIcons.BarSize + (4 * Inset);
@@ -148,8 +151,16 @@ public partial class TurnPanel : BoxContainer
             {
                 var angle = (-Mathf.Pi / 2) + (Mathf.Tau * (day - 1) / GameDate.DaysPerWeek);
                 var centre = middle + (ring * new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)));
+                if (day == Today)
+                {
+                    for (var halo = 4; halo >= 1; halo--) // a soft glow: wider rings, fainter outwards
+                    {
+                        DrawCircle(centre, Radius + 1 + halo, new Color(Lit, 0.1f));
+                    }
+                }
+
                 DrawCircle(centre, Radius + 1, Colors.Black);
-                DrawCircle(centre, Radius, day == Today ? Lit : UiTheme.BorderDim);
+                DrawCircle(centre, Radius, day < Today ? Lit : day == Today ? Lit.Lightened(0.25f) : Future);
             }
         }
     }

@@ -50,10 +50,10 @@ creatures and buildings, heraldic player colours, iconic map objects).
   card and its army strip, from the minimap's edge End turn and the action buttons (mirrored with the layout). With no own hero selected
   the card and the strip are hidden and the others keep their places.
 - **Hero card** (ADR-309, ADR-310): the portrait as tall as the card, the same margin to its frame all round (a click opens the hero
-  screen), three thin bars beside it (movement green, mana blue, experience to the next level gold; the numbers in their tooltips), then
-  three rows: the name and level; Attack, Defence, Spell power and Knowledge; morale and luck as icons with a signed value ("+2",
-  "−1"). The army strip: always seven slots as tall as the row and two thirds as wide, empty ones dim; a stack shows the creature cut to
-  2:3 and the count, its name on the status bar; a click opens the hero screen, a right click the creature's information window. A screen too
+  screen), two thin bars beside it (movement green, experience to the next level gold; the numbers in their tooltips), then three rows:
+  the level and name ("LV 3 | Orrin"); Attack, Defence, Spell power and Knowledge; morale and luck as icons with a signed value ("+2",
+  "−1") and the mana left as an icon and a number (the maximum in its tooltip); the card 360 px wide. The army strip: always seven slots
+  as tall as the row and two thirds as wide, empty ones dim; a stack shows the creature cut to 2:3 and the count in large type, its name on the status bar; a click opens the hero screen, a right click the creature's information window. A screen too
   narrow for the whole row cuts the army strip at its end towards the middle, fading out over the map; the pointer on it shows it whole,
   over the action buttons.
 - **Action buttons** (ADR-210, ADR-309): two rows of five square icon buttons: Move (Space), spell book (C), kingdom (K),
@@ -65,9 +65,9 @@ creatures and buildings, heraldic player colours, iconic map objects).
   none); the marketplace without a town marketplace; the level switch on a one-level map. In the replay viewer Move and the hero, spell
   book, dig and marketplace buttons are greyed. The spell book is a window over the map: the hero's mana, its adventure spells to cast,
   its battle spells by school with their costs.
-- **End turn** (ADR-204, ADR-309, ADR-310): an hourglass tile with no label ("End turn [Z]" on the status bar) and no button frame
-  inside the tile's own, ringed by the week's seven dots (the first at the top, then clockwise), today's lit in the colour of the player
-  whose HUD it is; the hourglass brightens under the pointer; greyed while it is not this screen's player's turn, left out in the
+- **End turn** (ADR-204, ADR-309, ADR-310): a square hourglass tile as tall as the bottom row, with no label ("End turn [Z]" on the status
+  bar) and no button frame inside the tile's own, ringed near its edge by the week's seven dots (the first at the top, then clockwise):
+  the days gone by in the colour of the player whose HUD it is, today's in it with a soft glow, the days to come grey; the hourglass brightens under the pointer; greyed while it is not this screen's player's turn, left out in the
   replay viewer. Pressed (or Z) while a hero can still move, it asks first in the middle of the screen: "Mara and Aldric can still move.
   End the turn?", with End the turn and Cancel; Z or Enter answers it, and a new turn closes it.
 - **Top bar** (ADR-309): the six resources (short amounts past 6 digits for gold and 4 for the others, the full one in the tooltip) in the
@@ -145,23 +145,24 @@ creatures and buildings, heraldic player colours, iconic map objects).
   value outside the range is brought into it and onto the nearest of the three (the smaller of two as near). On a small window the scale
   is lowered, never below 100 %, so the UI keeps at least 960 by 540 of its own pixels (where the HUD fits whole): 1280×720 draws 200 %
   at 133 %.
-- **Adventure HUD frames** (ADR-310): the map's HUD (the column, the hero list, the bottom row, the top bar, the status bar, the turn
-  banner, the map's hover card) is drawn in code by one shader, not painted: a near-black face with a faint top-to-bottom shade, corners
+- **Frames** (ADR-310, ADR-311): every frame of the game is drawn in code by one shader, not painted: the map's HUD (the column, the
+  hero list, the bottom row, the top bar, the status bar, the turn banner and timer, the map's hover card), the screens and their
+  windows, questions, notices and the pause card, dialogs, tooltips, the menu's panels, cards and tiles, lists and text fields, and every
+  button. The look: a near-black face with a faint top-to-bottom shade, corners
   of 6 px, a thin grey rim lit from the upper left (bright where it faces the light and near the lit corners, fading and a little worn
   along the edges, near black on the far side), a dark line inside it and a soft drop shadow. Panels stand out with a slight bevel;
-  slots (army stacks, the hero and town entries, the portrait, the minimap) are sunk in; buttons bulge slightly, light up under the
-  pointer, sink while held and dim when disabled. The selected hero's entry takes the player's colour on its rim with a glow, a town's
-  entry its owner's colour on the rim, the turn banner its player's. Each part keeps the content margins of the painted frame it
-  replaced, so nothing moves.
+  slots (army stacks, the hero and town entries, the portrait, the minimap, a tile, a list, a text field) are sunk in; buttons bulge
+  slightly, light up under the pointer, sink while held and dim when disabled. The selected hero's entry takes the player's colour on its
+  rim with a glow, a town's entry its owner's colour on the rim, the turn banner its player's, a town's windows its faction's accent, a
+  building tile its state's colour and a spell its school's. Windows, dialogs and tooltips are opaque; a screen's panel over the main
+  menu's picture lets a little of it through. Each part keeps the content margins of the frame it replaced, so nothing moves.
 - **Panel opacity** (ADR-310): 40, 60, 80 or 100 % (the default), chosen on the "Layout" tab, applied at once and at start, kept in
   `settings.json` with the interface settings; a value off the list goes to the nearest (the smaller of two as near). It is the
   opacity of the HUD frames' faces; their rims and shadows stay whole, and a button's face is never under 55 %.
-- **Theme** (ADR-191, ADR-294): dark slate panels and buttons framed in bronze. The painted frames of
-  [ui-element-prompts.md](../content/prompts/ui-element-prompts.md) are nine-slice boxes: screens, windows and the map's cards in the
-  window frame with a line in the faction's accent on a town's windows; window titles on the title plate (in place of the divider under
-  them); tooltips in the tooltip frame; dividers as the bronze rod. A piece whose file is missing, and every piece in high contrast, falls back to the flat
-  look (the window to a bevelled frame drawn in code). Every control the screens use (tabs, check boxes, fields, scroll
-  bars, sliders, lists, menus, tooltips) has the look, so no default Godot control shows. Two faces: headings and titles in a carved
+- **Theme** (ADR-191, ADR-294, ADR-311): the frames above, and the controls the shader does not frame drawn flat to match: a
+  near-black face and a thin grey rim with 6 px corners on tabs, drop-down menus, scroll bars, sliders, progress bars, check boxes and
+  radio buttons; dividers a quiet grey line; a window's title over a divider. Every control the screens use has the look, so no default
+  Godot control shows. High contrast keeps flat boxes in light frames. Two faces: headings and titles in a carved
   capital face, the rest in a humanist sans, body text at least 16 px at 1080p; two pairings are proposed for the owner's pick (Cinzel with
   Alegreya Sans, the default, and Marcellus SC with Fira Sans), the licences beside them in `fonts/`. The map editor keeps the colours and
   Godot's font in its compact variant.

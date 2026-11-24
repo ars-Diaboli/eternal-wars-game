@@ -1,3 +1,4 @@
+using EternalWars.Godot.UI.Widgets;
 using Godot;
 
 namespace EternalWars.Godot.UI;
@@ -56,6 +57,18 @@ public static partial class UiTheme
 
     /// <summary>The frame of a button under the pointer or with the focus.</summary>
     public static Color BorderBright => HighContrast ? new(1f, 0.95f, 0.7f) : new(0.85f, 0.68f, 0.36f);
+
+    /// <summary>The game's grey rim (ADR-310) on the controls the shader does not frame: tabs, menus, scroll bars, separators, marks.</summary>
+    public static Color Rim => HighContrast ? Border : new(0.46f, 0.46f, 0.49f);
+
+    /// <summary>The grey rim under the pointer or with the focus.</summary>
+    public static Color RimBright => HighContrast ? BorderBright : new(0.78f, 0.78f, 0.81f);
+
+    /// <summary>A quiet grey rim: an inner line, a groove.</summary>
+    public static Color RimDim => HighContrast ? BorderDim : new(0.24f, 0.24f, 0.26f);
+
+    /// <summary>The shader frames' near-black face (ADR-310), for the flat boxes beside them.</summary>
+    public static Color Face => HighContrast ? Background : new(0.068f, 0.07f, 0.076f);
 
     /// <summary>A button's face.</summary>
     public static Color ButtonFace => HighContrast ? new(0.1f, 0.1f, 0.12f) : new(0.17f, 0.18f, 0.22f);
@@ -163,14 +176,19 @@ public static partial class UiTheme
     public static Theme CreateTheme(bool compact = false)
     {
         var theme = UiSpacing.CreateTheme(compact);
-        theme.SetStylebox("panel", "PanelContainer", Box(PanelBackground, Border, compact ? UiSpacing.CompactPadding : UiSpacing.Padding));
+        var padding = compact ? UiSpacing.CompactPadding : UiSpacing.Padding;
+
+        // The game's panels and buttons are framed by the shader (ADR-310, UiFrames.Themed); the editor keeps its flat boxes (ADR-250).
+        StyleBox Framed(BevelKind kind, StyleBoxFlat flat, float? opacity = 1f) =>
+            compact ? flat : UiFrames.Themed(kind, (int)flat.ContentMarginTop, (int)flat.ContentMarginLeft, opacity, flat: flat);
+        theme.SetStylebox("panel", "PanelContainer", Framed(BevelKind.Panel, Box(PanelBackground, Border, padding), opacity: null));
         foreach (var (variation, style) in new[]
         {
-            (RegionPanel, Box(new Color(PanelBackground, 1), Border, UiSpacing.Padding)),
-            (DialogPanel, Box(new Color(PanelBackground, 1), Border, UiSpacing.Padding * 2)),
-            (CardPanel, Box(new Color(PanelBackground, 0.94f), Border, UiSpacing.Padding * 2)),
-            (TilePanel, Box(ButtonFace, BorderDim, UiSpacing.Padding)),
-            (PagePanel, Box(Background, Border, UiSpacing.ScreenPadding)),
+            (RegionPanel, Framed(BevelKind.Panel, Box(new Color(PanelBackground, 1), Border, UiSpacing.Padding))),
+            (DialogPanel, Framed(BevelKind.Panel, Box(new Color(PanelBackground, 1), Border, UiSpacing.Padding * 2))),
+            (CardPanel, Framed(BevelKind.Panel, Box(new Color(PanelBackground, 0.94f), Border, UiSpacing.Padding * 2))),
+            (TilePanel, Framed(BevelKind.Slot, Box(ButtonFace, BorderDim, UiSpacing.Padding))),
+            (PagePanel, Framed(BevelKind.Panel, Box(Background, Border, UiSpacing.ScreenPadding))),
         })
         {
             theme.SetTypeVariation(variation, "PanelContainer");
@@ -191,7 +209,7 @@ public static partial class UiTheme
             }
         }
 
-        StyleBoxFlat ButtonBox(Color face, Color border) => ButtonStyle(face, border, compact);
+        StyleBox ButtonBox(Color face, Color border) => Framed(BevelKind.Button, ButtonStyle(face, border, compact)); // the frame follows the state
         foreach (var type in new[] { "Button", "OptionButton", "MenuButton" })
         {
             theme.SetStylebox("normal", type, ButtonBox(ButtonFace, BorderDim));
@@ -199,8 +217,9 @@ public static partial class UiTheme
             theme.SetStylebox("pressed", type, ButtonBox(ButtonFace.Darkened(0.3f), BorderBright));
             theme.SetStylebox("hover_pressed", type, ButtonBox(ButtonFace.Darkened(0.2f), BorderBright));
             theme.SetStylebox("disabled", type, ButtonBox(ButtonFace.Darkened(0.35f), BorderDim.Darkened(0.4f)));
-            var focus = new StyleBoxFlat { DrawCenter = false, BorderColor = BorderBright };
+            var focus = new StyleBoxFlat { DrawCenter = false, BorderColor = compact ? BorderBright : RimBright };
             focus.SetBorderWidthAll(HighContrast ? 2 : 1);
+            focus.SetCornerRadiusAll(compact ? 0 : 6);
             theme.SetStylebox("focus", type, focus);
         }
 
@@ -236,6 +255,11 @@ public static partial class UiTheme
 
         HighContrast = highContrast;
         theme.MergeWith(CreateTheme(compact));
+        if (!compact)
+        {
+            ThemedBevels.Install(); // the shader's frames behind the theme's panels and buttons (ADR-310)
+        }
+
         if (compact)
         {
             theme.DefaultFontSize = CompactFontSize;

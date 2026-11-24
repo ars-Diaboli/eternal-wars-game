@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-311.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-312.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -337,3 +337,4 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [308](presentation.md#adr-308-town-screen-step-3-task-8-the-budget-overlay-the-town-scenes-budget-set-and-a-layouts-resources-let-go-town-23-adr-294-adr-306-2026-11-23) | presentation | Town screen step 3, task 8: the budget overlay, the town scene's budget set and a layout's resources let go (TOWN-23, ADR-294, ADR-306, 2026-11-23) | implemented |
 | [309](presentation.md#adr-309-the-adventure-hud-redesign-one-arrangement-mirrored-parts-along-the-edges-and-a-bottom-row-of-equal-panels-icon-only-buttons-in-a-2--5-grid-adr-156-adr-186-adr-191-adr-204-adr-210-owners-mockups-2026-11-24) | presentation | The adventure HUD redesign: one arrangement, mirrored; parts along the edges and a bottom row of equal panels; icon-only buttons in a 2 × 5 grid (ADR-156, ADR-186, ADR-191, ADR-204, ADR-210, owner's mockups, 2026-11-24) | accepted |
 | [310](presentation.md#adr-310-the-adventure-huds-frames-drawn-by-a-shader-a-bevelled-dark-panel-with-a-lit-worn-grey-rim-slots-sunk-in-the-panel-opacity-a-setting-adr-191-adr-294-adr-309-owner-2026-11-24) | presentation | The adventure HUD's frames drawn by a shader: a bevelled dark panel with a lit, worn grey rim; slots sunk in; the panel opacity a setting (ADR-191, ADR-294, ADR-309, owner, 2026-11-24) | implemented |
+| [311](presentation.md#adr-311-every-frame-of-the-game-drawn-by-the-shader-windows-dialogs-tooltips-cards-buttons-the-rest-of-the-theme-in-its-grey-adr-191-adr-294-adr-310-owner-2026-11-24) | presentation | Every frame of the game drawn by the shader: windows, dialogs, tooltips, cards, buttons; the rest of the theme in its grey (ADR-191, ADR-294, ADR-310, owner, 2026-11-24) | implemented |

@@ -50,6 +50,7 @@
 | [308](#adr-308-town-screen-step-3-task-8-the-budget-overlay-the-town-scenes-budget-set-and-a-layouts-resources-let-go-town-23-adr-294-adr-306-2026-11-23) | Town screen step 3, task 8: the budget overlay, the town scene's budget set and a layout's resources let go (TOWN-23, ADR-294, ADR-306, 2026-11-23) | implemented |
 | [309](#adr-309-the-adventure-hud-redesign-one-arrangement-mirrored-parts-along-the-edges-and-a-bottom-row-of-equal-panels-icon-only-buttons-in-a-2--5-grid-adr-156-adr-186-adr-191-adr-204-adr-210-owners-mockups-2026-11-24) | The adventure HUD redesign: one arrangement, mirrored; parts along the edges and a bottom row of equal panels; icon-only buttons in a 2 × 5 grid (ADR-156, ADR-186, ADR-191, ADR-204, ADR-210, owner's mockups, 2026-11-24) | accepted |
 | [310](#adr-310-the-adventure-huds-frames-drawn-by-a-shader-a-bevelled-dark-panel-with-a-lit-worn-grey-rim-slots-sunk-in-the-panel-opacity-a-setting-adr-191-adr-294-adr-309-owner-2026-11-24) | The adventure HUD's frames drawn by a shader: a bevelled dark panel with a lit, worn grey rim; slots sunk in; the panel opacity a setting (ADR-191, ADR-294, ADR-309, owner, 2026-11-24) | implemented |
+| [311](#adr-311-every-frame-of-the-game-drawn-by-the-shader-windows-dialogs-tooltips-cards-buttons-the-rest-of-the-theme-in-its-grey-adr-191-adr-294-adr-310-owner-2026-11-24) | Every frame of the game drawn by the shader: windows, dialogs, tooltips, cards, buttons; the rest of the theme in its grey (ADR-191, ADR-294, ADR-310, owner, 2026-11-24) | implemented |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -1027,7 +1028,8 @@ applied at start and when changed.
 
 ### ADR-310: The adventure HUD's frames drawn by a shader: a bevelled dark panel with a lit, worn grey rim; slots sunk in; the panel opacity a setting (ADR-191, ADR-294, ADR-309, owner, 2026-11-24)
 
-**Status**: implemented (2026-11-24); supersedes in part ADR-294 (the adventure HUD's painted frames) and ADR-309 (the HUD's frames).
+**Status**: implemented (2026-11-24); supersedes in part ADR-294 (the adventure HUD's painted frames) and ADR-309 (the HUD's frames);
+superseded in part by ADR-311 (the frames everywhere, not the HUD's only).
 
 - **Decision**: the adventure map's HUD frames are drawn in code by one shader (`shaders/ui_bevel.gdshader`, `BevelFrame` behind the part,
   `UiFrames.Bevel`) in place of the painted column, overlay, minimap, bar and tooltip frames and the flat slot and button boxes. The look
@@ -1038,9 +1040,28 @@ applied at start and when changed.
 - **Kept**: each part keeps the content margins of the painted frame it replaced, so the layout (ADR-309) does not move; the town and
   hero screens, windows and tooltips elsewhere keep the painted frames (ADR-294). Two changes to the parts themselves, at the owner's
   word: the action buttons are square (they were wider than tall), and End turn's hourglass has no frame of its own inside the tile's,
-  with the week's dots on a ring round it instead of a row under it. Then: the hero card's portrait as tall as the card (the same margin
-  to the frame all round) and its name, primary stats and morale and luck on three rows (the card 400 px wide); the army strip's slots as
+  with the week's dots on a ring round it instead of a row under it (the tile square, the days gone by in the player's colour, today's glowing, the days to come grey). Then: the hero card's portrait as tall as the card (the same margin
+  to the frame all round) and "LV 3 | Orrin", the primary stats, and morale, luck and mana (no mana bar) on three rows (the card 360 px wide); the stacks' counts in large type; the army strip's slots as
   tall as the row and two thirds as wide, the creature cut to 2:3; the hero list down on the bottom row, growing upwards.
 - **Panel opacity**: an interface setting of 40, 60, 80 or 100 % (`InterfaceSettings.PanelOpacityPercent`), on the Layout tab, applied at
   once; the faces' opacity only, a button's never under 55 %.
 - **Cost**: one draw call per frame (each has its own material for its size), a few dozen on the map, far inside ADR-308's budget.
+
+### ADR-311: Every frame of the game drawn by the shader: windows, dialogs, tooltips, cards, buttons; the rest of the theme in its grey (ADR-191, ADR-294, ADR-310, owner, 2026-11-24)
+
+**Status**: implemented (2026-11-24); supersedes in part ADR-191 (bronze on slate), ADR-294 (the painted window, title plate, tooltip
+and divider) and ADR-310 (the shader for the HUD only).
+
+- **Decision**: the adventure map's look (ADR-310) is the whole game's: the screens and their windows, questions and notices, dialogs,
+  tooltips, the menu's panels, cards, tiles, lists, text fields and every button are framed by the shader, and the controls it does not
+  frame (tabs, drop-down menus, scroll bars, sliders, marks, dividers) are drawn flat in its near-black and grey. The rules are stated
+  once in [presentation.md](../../docs/design/presentation.md) (Frames, Theme).
+- **Why**: the owner saw the end-turn question in the painted bronze frame beside the new HUD and asked for one look across windows,
+  tooltips, questions and the other elements.
+- **How**: the game theme's boxes are empty boxes marked with a frame kind (`UiFrames.Themed`); `ThemedBevels` gives every control drawn
+  with one its frame behind it as it enters the tree or its box changes, as an internal child, so the screens' children are untouched. A
+  frame's tint and opacity ride on the box: a faction's accent, a building's state, a spell's school; windows opaque, the HUD's panels
+  the panel opacity setting.
+- **Kept**: the map editor's compact theme and high contrast keep their flat boxes (ADR-250, ADR-277); the painted pieces stay as high
+  contrast's window and as the content margins the frames keep. The battle HUD's own panels wait for its restyle (ADR-312).
+- **Cost**: one draw call per framed control; the town screen's windows and the menu stay far inside ADR-308's budget.

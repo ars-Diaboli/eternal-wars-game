@@ -4,9 +4,9 @@ namespace EternalWars.Godot.UI;
 
 /// <summary>
 /// The painted frames (ADR-294) of ui-element-prompts.md in <c>res://shared/textures/ui/frames/</c>, scaled there to their size on screen and
-/// drawn as nine-slice boxes: a window (with a line in the faction's accent painted on), a panel over the map, a tooltip, a title plate, a
-/// divider, the bars, the side column and the minimap's frame. Each is null while its file is missing and in high contrast, and its caller keeps
-/// its flat box (the window, the greybox frame).
+/// drawn as nine-slice boxes: a window (with a line in the faction's accent painted on), a panel over the map, a tooltip, the bars, the side
+/// column and the minimap's frame. The shader's frames took their place (ADR-310) and keep their content margins; the window stands in for
+/// them in high contrast. Each is null while its file is missing and in high contrast, and its caller keeps its flat box.
 /// </summary>
 public static partial class UiFrames
 {
@@ -32,25 +32,6 @@ public static partial class UiFrames
     /// <summary>A tooltip's and the map's hover card's box: a fine bronze line with corner studs.</summary>
     public static StyleBoxTexture? Tooltip(int padding = UiSpacing.Padding) =>
         Painted("tooltip") is { } art ? NineSlice(art, 7, 7, Math.Max(padding, 7)) : null;
-
-    /// <summary>A window's title plate: slate between bronze rails with scrolled ends; the title sits on its slate.</summary>
-    public static StyleBoxTexture? Header() => Painted("header") is { } art ? NineSlice(art, 27, 16, 8, horizontalPadding: 30) : null;
-
-    /// <summary>A divider (the HSeparator's line): a thin bronze rod with a diamond at each end, <see cref="DividerHeight"/> tall.</summary>
-    public static StyleBoxTexture? Divider()
-    {
-        if (Painted("divider") is not { } art)
-        {
-            return null;
-        }
-
-        var style = new StyleBoxTexture { Texture = art, TextureMarginLeft = 11, TextureMarginRight = 11 };
-        style.ContentMarginTop = style.ContentMarginBottom = art.GetHeight() / 2f; // the separator draws the box at its minimum height
-        return style;
-    }
-
-    /// <summary>The painted divider's height, or 0 without it.</summary>
-    public static int DividerHeight => Painted("divider")?.GetHeight() ?? 0;
 
     /// <summary>The status bar's and the top bar's ground: a slate strip between bronze rails, an end cap at each end; <paramref name="padding"/> at the ends.</summary>
     public static StyleBoxTexture? Bar(int padding) =>

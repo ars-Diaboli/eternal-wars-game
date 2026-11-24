@@ -99,7 +99,7 @@ public partial class TownScreenPanel
         var slot = new PanelContainer { CustomMinimumSize = new Vector2(150, 0) };
         if (school is { } colour)
         {
-            slot.AddThemeStyleboxOverride("panel", UiTheme.Box(UiTheme.ButtonFace, colour, 4, 2));
+            slot.AddThemeStyleboxOverride("panel", UiFrames.Themed(BevelKind.Slot, 4, tint: colour, flat: UiTheme.Box(UiTheme.ButtonFace, colour, 4, 2))); // the school's colour on the rim
         }
 
         var box = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore };

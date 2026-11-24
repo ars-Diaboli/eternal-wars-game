@@ -81,6 +81,22 @@ public partial class BevelFrame : Node2D
 
     public BevelKind Kind { get; }
 
+    /// <summary>
+    /// The fill's own opacity in place of the interface setting's (<see cref="Opacity"/>): a window, a dialog or a tooltip is not see-through
+    /// whatever the HUD's panels are; null follows the setting.
+    /// </summary>
+    public float? OwnOpacity
+    {
+        get => _ownOpacity;
+        set
+        {
+            _ownOpacity = value;
+            Refresh();
+        }
+    }
+
+    private float? _ownOpacity;
+
     /// <summary>The rim's and glow's colour while the toggle button it lies behind is on (a selected hero: the player's colour).</summary>
     public Color? SelectedTint { get; set; }
 
@@ -207,8 +223,8 @@ public partial class BevelFrame : Node2D
 
         var opacity = Kind == BevelKind.Button ? Math.Max(_opacity, ButtonMinOpacity) : _opacity;
         var lift = hover ? 0.035f : 0f;
-        _material.SetShaderParameter("fill_top", Lighter(_fillTop, lift, opacity));
-        _material.SetShaderParameter("fill_bottom", Lighter(_fillBottom, lift, opacity));
+        _material.SetShaderParameter("fill_top", Lighter(_fillTop, lift, _ownOpacity ?? (_fillTop.A * opacity)));
+        _material.SetShaderParameter("fill_bottom", Lighter(_fillBottom, lift, _ownOpacity ?? (_fillBottom.A * opacity)));
         _material.SetShaderParameter("highlight", _highlight * (disabled ? 0.55f : hover ? 1.4f : 1f));
         _material.SetShaderParameter("raised", Kind == BevelKind.Slot || held ? -1f : 1f);
 
@@ -225,8 +241,7 @@ public partial class BevelFrame : Node2D
         }
     }
 
-    private static Color Lighter(Color colour, float lift, float opacity) =>
-        new(colour.R + lift, colour.G + lift, colour.B + lift, colour.A * opacity);
+    private static Color Lighter(Color colour, float lift, float alpha) => new(colour.R + lift, colour.G + lift, colour.B + lift, alpha);
 
     private void Apply(BevelKind kind)
     {

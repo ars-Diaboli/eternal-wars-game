@@ -53,7 +53,7 @@ public partial class ArmyStrip : HBoxContainer
             {
                 HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom, MouseFilter = MouseFilterEnum.Ignore,
             };
-            count.AddThemeFontSizeOverride("font_size", 13);
+            count.AddThemeFontSizeOverride("font_size", 18);
             count.AddThemeConstantOverride("outline_size", 4);
             count.AddThemeColorOverride("font_outline_color", Colors.Black);
             button.AddChild(picture);

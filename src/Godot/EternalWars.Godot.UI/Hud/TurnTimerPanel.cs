@@ -1,3 +1,4 @@
+using EternalWars.Godot.UI.Widgets;
 using EternalWars.Core.Domain.Turns;
 using Godot;
 
@@ -46,10 +47,7 @@ public partial class TurnTimerPanel : VBoxContainer
         AddThemeConstantOverride("separation", UiSpacing.Cell);
         Visible = false;
 
-        var pill = UiTheme.Box(UiTheme.Background, UiTheme.Border, UiSpacing.Cell, borderWidth: 2);
-        pill.ContentMarginLeft = pill.ContentMarginRight = UiSpacing.Section;
-        pill.SetCornerRadiusAll(14);
-        _pill.AddThemeStyleboxOverride("panel", pill);
+        _pill.AddThemeStyleboxOverride("panel", UiFrames.Themed(BevelKind.Panel, UiSpacing.Cell, UiSpacing.Section)); // the HUD's frame (ADR-310)
         _clock.AddThemeFontSizeOverride("font_size", 18);
         _pill.AddChild(_clock);
         AddChild(_pill);

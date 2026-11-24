@@ -4,8 +4,8 @@ using Godot;
 namespace EternalWars.Godot.UI.Widgets;
 
 /// <summary>
-/// A window's frame (ADR-294): the nine-slice bronze frame of <see cref="UiFrames.Window"/> with the faction's accent on its inner line, a title
-/// in the heading face on the painted title plate (<see cref="UiFrames.Header"/>; over a divider without it), an optional "×" that raises
+/// A window's frame (ADR-294, ADR-310): the shader's opaque frame with the faction's accent on its rim, a title in the heading face over a
+/// divider, an optional "×" that raises
 /// <see cref="CloseRequested"/>, and the <see cref="Content"/> box below. The town screen's windows and the dialogs are built in it; the frame
 /// does not place itself.
 /// </summary>
@@ -23,28 +23,14 @@ public partial class WindowFrame : PanelContainer
         AddChild(box);
         _title.Text = title;
         _header.AddChild(_title);
-        if (UiFrames.Header() is { } plate)
-        {
-            // The title on the painted title plate, which takes the divider's place.
-            var plated = new PanelContainer { Name = "TitlePlate" };
-            plated.AddThemeStyleboxOverride("panel", plate);
-            plated.AddChild(_header);
-            box.AddChild(plated);
-        }
-        else
-        {
-            box.AddChild(_header);
-        }
+        box.AddChild(_header);
 
         if (closable)
         {
             _close = _header.AddCloseButton(() => CloseRequested?.Invoke());
         }
 
-        if (UiFrames.Header() is null)
-        {
-            box.AddChild(new HSeparator());
-        }
+        box.AddChild(new HSeparator());
 
         Content.SizeFlagsVertical = SizeFlags.ExpandFill;
         box.AddChild(Content);
@@ -65,14 +51,15 @@ public partial class WindowFrame : PanelContainer
         set => _title.Text = value;
     }
 
-    /// <summary>The colour of the frame's inner line: the faction's accent (<see cref="UiFrames.Accent"/>).</summary>
+    /// <summary>The colour the frame's rim takes: the faction's accent (<see cref="UiFrames.Accent"/>); the default leaves it grey.</summary>
     public Color Accent
     {
         get;
         set
         {
             field = value;
-            AddThemeStyleboxOverride("panel", UiFrames.Window(value));
+            var tint = value == UiTheme.BorderBright ? (Color?)null : value;
+            AddThemeStyleboxOverride("panel", UiFrames.Themed(BevelKind.Panel, UiSpacing.ScreenPadding, tint: tint, flat: UiFrames.Window(value)));
         }
     }
 

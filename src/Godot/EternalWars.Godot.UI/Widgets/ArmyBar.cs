@@ -88,11 +88,12 @@ public partial class ArmyBar : HBoxContainer
             AddChild(new Label { Text = caption, CustomMinimumSize = new Vector2(UiTheme.ArmyNameWidth, 0), VerticalAlignment = VerticalAlignment.Center });
         }
 
-        // The hero's frame: a portrait's frame, set apart from the slots by its bronze border and a lighter ground.
+        // The hero's frame: a portrait's, raised where the slots beside it are sunk in (ADR-310).
         foreach (var state in new[] { "normal", "hover", "pressed", "hover_pressed", "disabled" })
         {
             var lit = state is "hover" or "hover_pressed";
-            _hero.AddThemeStyleboxOverride(state, UiTheme.Box(UiTheme.ButtonFace.Lightened(0.04f), lit ? UiTheme.BorderBright : UiTheme.Border, 2, 2));
+            _hero.AddThemeStyleboxOverride(state, UiFrames.Themed(BevelKind.Button, 2,
+                flat: UiTheme.Box(UiTheme.ButtonFace.Lightened(0.04f), lit ? UiTheme.BorderBright : UiTheme.Border, 2, 2)));
         }
 
         AddChild(_hero);
