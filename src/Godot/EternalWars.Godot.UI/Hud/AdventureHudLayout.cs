@@ -5,9 +5,9 @@ namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
 /// Places the adventure map's HUD parts: a framed column (ADR-191) down the minimap's side of the screen (<see cref="HudArrangement"/>; the right,
-/// or the left in the mirrored layout, ADR-309), from the top to the status bar, holding the minimap, the hero and town lists and the action
+/// or the left in the mirrored layout, ADR-309), from the top to the status bar, holding the minimap, the town list and the action
 /// buttons from the top, and the turn block at its bottom (ADR-204). The column is as wide as its widest part, and every part fills that width;
-/// it takes the clicks on it. The layer covers the screen but lets the mouse through; each part is a child that is moved, never reparented (a
+/// it takes the clicks on it. The hero list (<see cref="SetOpposite"/>) stands at the other edge, under the top bar (ADR-309). The layer covers the screen but lets the mouse through; each part is a child that is moved, never reparented (a
 /// part's event subscriptions last while it is in the tree). It re-places the parts whenever one's size changes. The arrangement of ADR-309
 /// replaces this column in the plan's step 3.
 /// </summary>
@@ -19,6 +19,8 @@ public partial class AdventureHudLayout : Container
     private readonly List<Control> _column = [];
     private readonly Panel _sidePanel = new() { Name = "SidePanel", MouseFilter = MouseFilterEnum.Stop };
     private Control? _info;
+    private Control? _opposite;
+    private Control? _oppositeContent;
     private LayoutSettings _layout = LayoutSettings.Default;
 
     /// <summary>
@@ -52,6 +54,18 @@ public partial class AdventureHudLayout : Container
     {
         _info = info;
         AddChild(info);
+    }
+
+    /// <summary>
+    /// The part at the edge away from the column, under the top bar (<see cref="ResourceTopBar"/>): the hero list's <paramref name="frame"/>,
+    /// as tall as its <paramref name="content"/> (which scrolls inside it) up to the room above the bottom.
+    /// </summary>
+    public void SetOpposite(Control frame, Control content)
+    {
+        _opposite = frame;
+        _oppositeContent = content;
+        AddChild(frame);
+        content.MinimumSizeChanged += QueueSort; // the frame's own minimum leaves the scrolled content out
     }
 
     /// <summary>Adds <paramref name="control"/> to the column, under the parts added before it.</summary>
@@ -92,6 +106,15 @@ public partial class AdventureHudLayout : Container
             var height = part.GetCombinedMinimumSize().Y;
             FitChildInRect(part, new Rect2(x, y, width, height));
             y += height + Margin;
+        }
+
+        if (_opposite is not null)
+        {
+            var size = _opposite.GetCombinedMinimumSize();
+            size.Y += _oppositeContent?.GetCombinedMinimumSize().Y ?? 0;
+            var top = ResourceTopBar.Height + Margin;
+            size.Y = Math.Min(size.Y, Math.Max(0, screen.Y - _bottomReserve - Margin - top));
+            FitChildInRect(_opposite, new Rect2(left ? screen.X - size.X - Margin : Margin, top, size.X, size.Y));
         }
 
         if (_info is not null)

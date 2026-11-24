@@ -985,7 +985,9 @@ hero card's model (`HeroCard`, its bars as `Gauge`s) and the descriptions by own
 (`MapDescriptions`), the route's day tags and shades (`RouteDays`) and End turn's question (`EndTurnCheck`), not yet on screen; the
 hotkey table (`AdventureHotkeys`), which the input controller and the action buttons read (Space, M and Z not yet bound); the top bar
 with the resources (`ResourceTopBar`), and the status bar's subject and detail (`StatusBar.ShowSubject`, the map's from
-`MapDescriptions`).
+`MapDescriptions`); the turn banner (`TurnBanner`, `TurnBannerPanel`) and the timer's pill and ribbon (`TurnClockText`,
+`TurnTimerPanel`); the minimap's pictograms (`Minimap.Pictograms`), camera frame, level caption (`MapLevels`) and zoom buttons; the hero
+list with portraits, bars and its hover card (`HeroHoverCard`) at the edge away from the minimap; the town list's four slots.
 
 - **Why**: the side panel (ADR-191) and the Layout tab's corners (ADR-156) grew part by part; the owner's six mockups set one HUD that
   leaves the map's middle free. The owner decided each of their 71 differences; the paper states the result once.

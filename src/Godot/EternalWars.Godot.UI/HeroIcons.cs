@@ -19,7 +19,8 @@ public enum HeroStatIcon
 
 /// <summary>
 /// The hero's painted icons: one per skill in <c>res://shared/textures/ui/skills/</c> (named by the skill id, <c>offense.melee.png</c>), one
-/// per stat in <c>res://shared/textures/ui/stats/</c> and one per war machine in <c>res://shared/textures/ui/machines/</c>. Scaled once per size and cached, like <see cref="UiIcons"/>; a missing file gives
+/// per stat in <c>res://shared/textures/ui/stats/</c>, one per war machine in <c>res://shared/textures/ui/machines/</c> and the heroes' portraits in
+/// <c>res://shared/textures/ui/heroes/</c>. Scaled once per size and cached, like <see cref="UiIcons"/>; a missing file gives
 /// null, and callers show the text alone (skills without art yet).
 /// </summary>
 public static class HeroIcons
@@ -33,7 +34,18 @@ public static class HeroIcons
     private const string SkillFolder = "res://shared/textures/ui/skills/";
     private const string StatFolder = "res://shared/textures/ui/stats/";
     private const string MachineFolder = "res://shared/textures/ui/machines/";
+    private const string PortraitFolder = "res://shared/textures/ui/heroes/";
     private static readonly Dictionary<(string, int), Texture2D?> Cache = [];
+
+    /// <summary>
+    /// The painted portrait of the hero <paramref name="heroId"/> (<c>icon_hero_haven.aldric.png</c>, <see cref="Hero.PortraitHero"/>) at
+    /// <paramref name="size"/> pixels, or null if it has none yet.
+    /// </summary>
+    public static Texture2D? Portrait(string? heroId, int size) => string.IsNullOrEmpty(heroId) ? null : Load($"{PortraitFolder}icon_hero_{heroId}.png", size);
+
+    /// <summary>The hero's portrait, or the lettered placeholder of <paramref name="name"/> while it has none (ADR-245).</summary>
+    public static Texture2D PortraitOrPlaceholder(string? heroId, string name, int size) =>
+        Portrait(heroId, size) ?? Editor.Shell.PlaceholderIcons.Of(name, size);
 
     /// <summary>The icon of the skill <paramref name="skillId"/>, or null if it has none yet.</summary>
     public static Texture2D? Skill(string skillId, int size = SkillSize) => Load($"{SkillFolder}{skillId}.png", size);

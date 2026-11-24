@@ -5,6 +5,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Info;
 using EternalWars.Core.Domain.Magic;
+using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Settings;
 using EternalWars.Core.Domain.Towns;
@@ -17,7 +18,7 @@ namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
 /// The adventure map's HUD (ADR-050, ADR-186, ADR-309): this layer holds the side panel's parts, on the side the "Layout" tab's mirror picks
-/// (the turn block, the minimap, the hero and town lists, the 3×3 action buttons of ADR-210), the <see cref="StatusBar"/> along the bottom (the subject, the
+/// (the turn block, the minimap, the town list, the 3×3 action buttons of ADR-210; the hero list at the other edge, the turn banner at the top centre), the <see cref="StatusBar"/> along the bottom (the subject, the
 /// detail and the calendar) and the <see cref="TopBar"/> with the resources (both on a layer over the full-screen panels), and
 /// the questions and notices in the middle of the screen; a second layer above it, added beside it, holds the full-screen
 /// panels (town, hero, exchange, dwelling, marketplace, services, Thieves' Guild, tavern, kingdom, quest log, puzzle map, intel) and the
@@ -132,21 +133,29 @@ public partial class AdventureHud : CanvasLayer
         notice.UseOpaqueBackground();
         popUps.AddChild(notice);
         notice.Bind(session);
-        // HoMM-style: the minimap, the hero and town lists and the action panel down the right, or the left when mirrored.
-        var minimapBox = new VBoxContainer();
-        _layout.AddToColumn(minimapBox);
-        var minimap = new MinimapWidget { CellPixels = Math.Max(2, 320f / Math.Max(session.State.Map.Width, session.State.Map.Height)) };
-        minimapBox.AddChild(minimap);
-        minimap.Bind(context);
-        minimap.TileClicked += tile => _camera.FocusOn(MapSpace.ToWorld(tile));
-        var lists = new VBoxContainer();
-        _layout.AddToColumn(lists);
+        // The turn banner at the top centre (ADR-309), put away with the map's other parts; the replay viewer has none.
+        if (playing)
+        {
+            Banner = new TurnBannerPanel();
+            _layout.AddChild(Banner);
+            Banner.Bind(session);
+        }
+
+        // The minimap, the town list and the action panel down the right, or the left when mirrored; the hero list at the other edge (ADR-309).
+        _layout.AddToColumn(BuildMinimap());
+        var heroes = new PanelContainer { Name = "HeroListFrame" };
+        var heroScroll = new ScrollContainer // more heroes than the edge holds scroll (the wheel), with no bar
+        {
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, VerticalScrollMode = ScrollContainer.ScrollMode.ShowNever,
+        };
+        heroes.AddChild(heroScroll);
         HeroList = new HeroListPanel();
-        lists.AddChild(HeroList);
+        heroScroll.AddChild(HeroList);
+        _layout.SetOpposite(heroes, HeroList);
         HeroList.Bind(session, () => context.ListedPlayer);
         HeroList.HeroSelected += hero => HeroSelected?.Invoke(hero);
-        var townList = new TownListPanel();
-        lists.AddChild(townList);
+        var townList = new TownListPanel { SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter };
+        _layout.AddToColumn(townList);
         townList.Bind(session, () => context.ListedPlayer);
         townList.TownSelected += town =>
         {
@@ -188,6 +197,94 @@ public partial class AdventureHud : CanvasLayer
         ApplyLayout(layout);
     }
 
+    /// <summary>The turn banner at the top centre (ADR-309); null in the replay viewer.</summary>
+    public TurnBannerPanel? Banner { get; private set; }
+
+    /// <summary>The minimap's level caption (two-level maps); null on a one-level map.</summary>
+    public Button? LevelCaption { get; private set; }
+
+    /// <summary>
+    /// The minimap (ADR-309): the map's proportions, towns and heroes as pictograms, the camera's frame on it; under it, on one line, the
+    /// level caption ("Surface" or "Underground" with its icon, on two-level maps; a click switches level), then the zoom buttons, which zoom
+    /// the camera as the wheel does.
+    /// </summary>
+    private Control BuildMinimap()
+    {
+        var box = new VBoxContainer();
+        box.AddThemeConstantOverride("separation", UiSpacing.Cell);
+        var map = _session.State.Map;
+        var minimap = new MinimapWidget
+        {
+            CellPixels = Math.Max(2, 320f / Math.Max(map.Width, map.Height)), ClipContents = true, SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
+        };
+        box.AddChild(minimap);
+        minimap.Bind(_context);
+        minimap.TileClicked += tile => _camera.FocusOn(MapSpace.ToWorld(tile));
+        minimap.ViewFrame = ViewFrame;
+
+        var caption = new HBoxContainer();
+        caption.AddThemeConstantOverride("separation", UiSpacing.Cell);
+        box.AddChild(caption);
+        if (map.Levels > 1)
+        {
+            var level = new Button
+            {
+                TooltipText = Hint(AdventureAction.SwitchLevel), FocusMode = Control.FocusModeEnum.None, Flat = true,
+                SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, Alignment = HorizontalAlignment.Left,
+            };
+            LevelCaption = level;
+            void ShowLevel()
+            {
+                level.Text = MapLevels.Name(_context.Level);
+                level.Icon = UiIcons.Get(_context.Level == 0 ? UiIcon.LevelSurface : UiIcon.LevelUnderground, UiIcons.StatusBarSize);
+            }
+
+            ShowLevel();
+            _context.LevelChanged += ShowLevel;
+            level.TreeExiting += () => _context.LevelChanged -= ShowLevel;
+            level.Pressed += () => _context.SetLevel((_context.Level + 1) % map.Levels);
+            caption.AddChild(level);
+        }
+        else
+        {
+            caption.AddChild(new Control { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, MouseFilter = Control.MouseFilterEnum.Ignore });
+        }
+
+        var zoomIn = new Button { Text = "Zoom in", TooltipText = "As the mouse wheel does", FocusMode = Control.FocusModeEnum.None }
+            .WithIcon(UiIcon.ZoomIn, UiIcons.StatusBarSize);
+        zoomIn.Pressed += () => _camera.Zoom(1);
+        caption.AddChild(zoomIn);
+        var zoomOut = new Button { Text = "Zoom out", TooltipText = "As the mouse wheel does", FocusMode = Control.FocusModeEnum.None }
+            .WithIcon(UiIcon.ZoomOut, UiIcons.StatusBarSize);
+        zoomOut.Pressed += () => _camera.Zoom(-1);
+        caption.AddChild(zoomOut);
+        return box;
+    }
+
+    /// <summary>The ground under the screen's corners, in tiles: the camera's frame on the minimap; null when a corner looks past the ground.</summary>
+    private IReadOnlyList<Vector2>? ViewFrame()
+    {
+        if (!_camera.IsInsideTree() || !_camera.Current)
+        {
+            return null;
+        }
+
+        var screen = _camera.GetViewport().GetVisibleRect().Size;
+        Vector2[] corners = [Vector2.Zero, new(screen.X, 0), screen, new(0, screen.Y)];
+        var frame = new Vector2[corners.Length];
+        for (var i = 0; i < corners.Length; i++)
+        {
+            if (_camera.GroundAt(corners[i]) is not { } ground)
+            {
+                return null;
+            }
+
+            frame[i] = new Vector2(ground.X, ground.Z) / MapSpace.TileSize;
+        }
+
+        return frame;
+    }
+
     /// <summary>How wide the questions and notices in the middle of the screen are.</summary>
     private const float PopUpWidth = 520;
 
@@ -209,7 +306,9 @@ public partial class AdventureHud : CanvasLayer
     public void ApplyLayout(LayoutSettings layout)
     {
         _layout.Apply(layout);
-        TopBar.OnRight = HudArrangement.SideOf(layout, HudPart.Minimap) == ScreenSide.Left; // the corner away from the minimap
+        var mirrored = HudArrangement.SideOf(layout, HudPart.Minimap) == ScreenSide.Left;
+        TopBar.OnRight = mirrored; // the corner away from the minimap
+        HeroList.CardToLeft = mirrored; // the hero list on the right: its card opens towards the middle
     }
 
     /// <summary>The screens that cover the map and stop short of the top and status bars: town, hero, exchange.</summary>

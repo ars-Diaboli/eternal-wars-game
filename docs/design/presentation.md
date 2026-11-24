@@ -41,7 +41,7 @@ creatures and buildings, heraldic player colours, iconic map objects).
 ## Camera and UI
 - **Camera** (ADR-022): tilted **15–30° from vertical** (more tilted zoomed in), **rotatable ±45°**, zoom, pan.
 - **UI**: a HoMM-style side panel on the right, or the left when mirrored (ADR-191, ADR-309): one framed column from the top to the status bar with the minimap,
-  the hero and town lists and the action buttons, which takes the clicks on it; End turn among the action
+  the town list and the action buttons, which takes the clicks on it; the hero list at the other edge; End turn among the action
   buttons (ADR-204), the resources on the top bar and the calendar (date, week's event) on the status bar's right end (ADR-225, ADR-309);
   full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips, the
   fog's look, the tile grid, the window mode) and "Layout".
@@ -70,9 +70,27 @@ creatures and buildings, heraldic player colours, iconic map objects).
   close "×" always in its top-right corner, ADR-225); hovering it puts its label and hotkey on the
   status bar, with no pop-up tooltip. A button whose icon is missing keeps its text. The buttons along a window's bottom (OK, Accept,
   Start, Back, Close, Save, Load) keep their text after a small icon, as wide as the text, at the right of their row.
-- **Town list marks** (ADR-309): after each town's name, a hammer on a stone, lit while the town can build today and dimmed once it
-  has; a keep with a laurel wreath instead when nothing is left to build: every building at its last level and every dwelling line
-  built out or closed by the 7-of-9 rule (ADR-030), the Grail building and a second Capitol not counted.
+- **Turn banner and timer** (ADR-091, ADR-309): "<Player>'s turn" with the player's crest (its first town's faction) on the player's
+  colour at the top centre. With one person at the game it shows for 3 s when that person's turn starts, and not in the computer's
+  turns; in hot-seat and LAN games it stays while every turn lasts ("Everyone's turn" on a simultaneous day). The replay viewer has none.
+  A timed game's clock is a pill just under it, over the map and the battle: the time left ("1:05"), white above a minute and red from
+  it down, "0:30 stopped during the battle", "Time is up: the turn ends as soon as it can"; each warning ("1 minute left!") shows 3 s
+  in a red ribbon under the pill.
+- **Minimap** (ADR-309): in the map's proportions, unexplored cells black, other owned objects as cells in their owner's colour, towns
+  as a little keep and heroes as a pennant in their owner's colour; the camera's frame drawn on it. Under it, on one line, the level
+  caption ("Surface" or "Underground" with that level's icon; a click switches level; not on one-level maps), then Zoom in and Zoom out,
+  which zoom the camera as the wheel does. A click on it centres the map there.
+- **Hero list** (ADR-309): at the edge away from the minimap, under the top bar, one entry per hero and growing with them, no heading:
+  the portrait (a lettered placeholder while a hero has none), then two thin upright bars, movement left (green) and mana (blue); the
+  selected hero's entry framed in the player's colour. Hovering one puts the name on the status bar and a card beside the list, towards
+  the middle: name and level, movement and mana as numbers, the four stats, the army's seven slots. A click selects the hero. More heroes than
+  the edge holds scroll with the wheel. In a computer's turn the lists and the resources stay the person's, never the computer's.
+- **Town list** (ADR-309): under the minimap, four narrow slots, with arrows above and below when there are more towns; no heading.
+  An entry is the town's picture (its faction's crest for now), the governor's portrait in the top corner and the build mark in the
+  bottom one: a hammer on a stone, lit while the town can build today and dimmed once it has; a keep with a laurel wreath instead when
+  nothing is left to build: every building at its last level and every dwelling line built out or closed by the 7-of-9 rule (ADR-030),
+  the Grail building and a second Capitol not counted. The name and the build state go to the status bar on hover; a click centres the
+  map on the town and opens its screen.
 - **Route** (ADR-309): the route's markers are coloured by the day each step is reached; over the last one floats the mark of what the
   hero does there, as the cursor decides it: crossed swords (attack), an open hand (visit), a hand reaching for a coin (pick up a pile, a
   chest or an artifact), a town gate (enter an own town), a handshake (meet an own hero); a plain move shows none.

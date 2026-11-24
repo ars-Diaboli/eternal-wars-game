@@ -133,11 +133,36 @@ public partial class StrategyCamera : Camera3D
 
             if (zoom != 0f)
             {
-                _distance = Mathf.Clamp(_distance + zoom, MinDistance, MaxDistance);
-                UpdateTransform();
-                Zoomed?.Invoke();
+                Zoom(zoom > 0 ? -1 : 1);
             }
         }
+    }
+
+    /// <summary>Zooms in by <paramref name="notches"/> of the wheel (out when negative): the minimap's zoom buttons (ADR-309).</summary>
+    public void Zoom(int notches)
+    {
+        var distance = Mathf.Clamp(_distance - (notches * ZoomStep), MinDistance, MaxDistance);
+        if (distance == _distance)
+        {
+            return;
+        }
+
+        _distance = distance;
+        UpdateTransform();
+        Zoomed?.Invoke();
+    }
+
+    /// <summary>The point of the ground plane under <paramref name="screen"/>, a point of the viewport; null where the view looks past it.</summary>
+    public Vector3? GroundAt(Vector2 screen)
+    {
+        var origin = ProjectRayOrigin(screen);
+        var direction = ProjectRayNormal(screen);
+        if (direction.Y >= -1e-3f)
+        {
+            return null;
+        }
+
+        return origin + (direction * ((_focus.Y - origin.Y) / direction.Y));
     }
 
     private void UpdateTransform()

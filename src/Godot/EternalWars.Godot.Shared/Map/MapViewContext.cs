@@ -31,8 +31,12 @@ public sealed class MapViewContext(GameState state, IEventSubscriber events, Pla
     /// </summary>
     public Func<PlayerId, bool> PlaysElsewhere { get; set; } = _ => false;
 
-    /// <summary>Whose heroes, towns and resources the HUD lists: the current player's, unless it plays on another computer; then the viewer's.</summary>
-    public PlayerId ListedPlayer => Viewer is { } viewer && PlaysElsewhere(State.CurrentPlayer.Id) ? viewer : State.CurrentPlayer.Id;
+    /// <summary>
+    /// Whose heroes, towns and resources the HUD lists: the current player's, unless it plays on another computer or is the computer; then the
+    /// viewer's (a computer's heroes and armies are not shown in its turn).
+    /// </summary>
+    public PlayerId ListedPlayer =>
+        Viewer is { } viewer && (PlaysElsewhere(State.CurrentPlayer.Id) || !State.CurrentPlayer.IsHuman) ? viewer : State.CurrentPlayer.Id;
 
     /// <summary>
     /// Whether a player plays at this screen, so its questions and screens open here: every human on one computer (hot-seat), in a LAN game only

@@ -9,8 +9,9 @@ namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
 /// Minimap of the shown level through the context's viewer (<see cref="Minimap.Build"/>): unexplored black,
-/// terrain colours, objects and heroes as markers in owner colours. Clicking reports the tile. The tiles are an image, one pixel each, of which
-/// only the changed pixels are written again; it is rebuilt once a frame however many events ask for it, and heroes are drawn over it. Painted
+/// terrain colours, objects as cells in their owner's colour, towns and heroes as small pictograms over them (<see cref="Minimap.Pictograms"/>,
+/// ADR-309). Clicking reports the tile. The tiles are an image, one pixel each, of which only the changed pixels are written again; it is
+/// rebuilt once a frame however many events ask for it, and the pictograms are drawn over it. Painted
 /// terrain only writes the painted tiles' pixels (ADR-278: a whole picture of a large map for every dab of a brush cost a frame).
 /// The map editor (ADR-261) also has it follow a drag (<see cref="DragMoves"/>), draw the view's frame (<see cref="ViewFrame"/>) and show
 /// the other level faintly through the shown one (<see cref="GhostOtherLevel"/>).
@@ -22,7 +23,7 @@ public partial class MinimapWidget : Control
     private MinimapCell[] _cells = [];
     private Image? _image;
     private ImageTexture? _texture;
-    private readonly List<(int Index, Color Color)> _heroes = [];
+    private IReadOnlyList<MinimapPictogram> _pictograms = [];
     private RefreshScheduler? _rebuild;
     private RefreshScheduler? _upload;
     private Vector2[]? _frame;
@@ -148,11 +149,10 @@ public partial class MinimapWidget : Control
             return;
         }
 
-        var width = _context.State.Map.Width;
         DrawTextureRect(_texture, new Rect2(Vector2.Zero, CustomMinimumSize), tile: false);
-        foreach (var (index, color) in _heroes)
+        foreach (var pictogram in _pictograms)
         {
-            DrawRect(new Rect2(new Vector2(index % width, index / width) * CellPixels, Vector2.One * CellPixels).Grow(1), color);
+            DrawPictogram(pictogram);
         }
 
         if (_frame is { Length: > 1 } frame)
@@ -163,6 +163,39 @@ public partial class MinimapWidget : Control
             points[^1] = points[0];
             DrawPolyline(points, Colors.White, 1.5f);
         }
+    }
+
+    /// <summary>The side of a pictogram in pixels: a few cells, never too small to tell apart.</summary>
+    private float PictogramSide => Math.Clamp(CellPixels * 2.5f, 9f, 18f);
+
+    /// <summary>A town as a little keep with three merlons, a hero as a pennant on its pole; in the owner's colour with a dark outline.</summary>
+    private void DrawPictogram(MinimapPictogram pictogram)
+    {
+        var centre = (new Vector2((float)pictogram.X, (float)pictogram.Y) + (Vector2.One * 0.5f)) * CellPixels;
+        var side = PictogramSide;
+        var colour = pictogram.Owner is { } owner ? Palette.ForPlayer(_context.State, owner) : Palette.Neutral;
+        var outline = new Color(0, 0, 0, 0.85f);
+        var corner = centre - (Vector2.One * side / 2);
+        if (pictogram.Kind == MinimapPictogramKind.Town)
+        {
+            var merlon = side / 5;
+            Vector2[] keep =
+            [
+                corner + new Vector2(0, side), corner + new Vector2(0, 0), corner + new Vector2(merlon, 0), corner + new Vector2(merlon, merlon),
+                corner + new Vector2(2 * merlon, merlon), corner + new Vector2(2 * merlon, 0), corner + new Vector2(3 * merlon, 0),
+                corner + new Vector2(3 * merlon, merlon), corner + new Vector2(4 * merlon, merlon), corner + new Vector2(4 * merlon, 0),
+                corner + new Vector2(side, 0), corner + new Vector2(side, side),
+            ];
+            DrawColoredPolygon(keep, colour);
+            DrawPolyline([.. keep, keep[0]], outline, 1f);
+            return;
+        }
+
+        var pole = corner.X + (side * 0.25f);
+        Vector2[] pennant = [new(pole, corner.Y), new(corner.X + side, corner.Y + (side * 0.3f)), new(pole, corner.Y + (side * 0.6f))];
+        DrawLine(new Vector2(pole, corner.Y), new Vector2(pole, corner.Y + side), outline, 2f);
+        DrawColoredPolygon(pennant, colour);
+        DrawPolyline([.. pennant, pennant[0]], outline, 1f);
     }
 
     public override void _Process(double delta)
@@ -235,7 +268,6 @@ public partial class MinimapWidget : Control
             _image = Image.CreateEmpty(map.Width, map.Height, false, Image.Format.Rgba8);
         }
 
-        _heroes.Clear();
         for (var i = 0; i < cells.Length; i++)
         {
             var cell = cells[i];
@@ -244,15 +276,11 @@ public partial class MinimapWidget : Control
                 var colour = ColorOf(cell);
                 _image!.SetPixel(i % map.Width, i / map.Width, ghost is null ? colour : colour.Lerp(ColorOf(ghost[i]), GhostShare));
             }
-
-            if (cell.Explored && cell.Marker == MinimapMarker.Hero)
-            {
-                _heroes.Add((i, ColorOf(cell)));
-            }
         }
 
         _cells = cells;
         _ghostCells = ghost;
+        _pictograms = Minimap.Pictograms(_context.State, _context.Viewer, _context.Level);
         if (_texture is null || fresh)
         {
             _texture = ImageTexture.CreateFromImage(_image);

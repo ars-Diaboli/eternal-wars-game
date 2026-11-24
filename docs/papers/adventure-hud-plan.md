@@ -202,10 +202,11 @@ memory-bank entries updated.
 ### 3. The HUD, on the flat theme
 - [x] Top resource bar on its own layer over the full-screen panels; the status bar drops the resources (`ResourceTopBar`).
 - [x] Status bar: subject and detail, calendar on the right, hints first (`StatusBar.ShowSubject`; the map's wording by ownership).
-- [ ] Turn banner; timer pill and warning ribbon (`TurnTimerPanel`).
-- [ ] Minimap: zoom buttons, the editor's view frame, the level caption, pictograms for towns and heroes.
-- [ ] Hero list: portraits, two bars, a hover card. Town list: 4 slots, scroll arrows, picture, governor, build mark (the build mark
-  is in).
+- [x] Turn banner; timer pill and warning ribbon (`TurnBannerPanel`, `TurnTimerPanel`; the words in `TurnBanner`, `TurnClockText`).
+- [x] Minimap: zoom buttons, the editor's view frame, the level caption, pictograms for towns and heroes (`Minimap.Pictograms`,
+  `MapLevels`).
+- [x] Hero list: portraits, two bars, a hover card (`HeroHoverCard`). Town list: 4 slots, scroll arrows, picture, governor, build mark
+  (the picture is the faction's crest until towns have pictures).
 - [ ] Hero card and army strip (`ArmyBar`), hidden with no hero.
 - [ ] The 2×5 action grid, Move first; icon-only with names and keys on the status bar; End turn hourglass with day dots, on Z, asking
   first when a hero can still move.

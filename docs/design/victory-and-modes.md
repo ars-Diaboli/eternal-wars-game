@@ -146,7 +146,7 @@ or "Random" ([random placeholders](adventure-map.md#map-bans-and-random-placehol
 - **Teams** (ADR-070): **2 to 8 teams** (8 = free for all; free for all when nothing is defined). The map or template sets defaults and may
   fix the teams (story maps) or limit the team count; setup may change them unless locked; the map editor may override a template's.
 - **Turn timer** (ADR-088, ADR-091): off, or 1–30 minutes a turn for humans; a loaded game restarts the turn at full time. Warnings at 1
-  min, 30, 15, 5 s. Runs on the map and in battles against computer or neutrals (finished first); stops in human-vs-human battles. At zero,
+  min, 30, 15, 5 s (shown as presentation.md's turn banner and timer say). Runs on the map and in battles against computer or neutrals (finished first); stops in human-vs-human battles. At zero,
   pending choices take their default (chest gold; leave or stay as offered; neutrals' offers taken), a level-up or riddle waits, and the
   turn ends. A LAN game has **one clock, the host's** (ADR-198): every computer shows it, and the host ends a client's turn on it. A
   **simultaneous day** has one clock for the day: it runs while any person's turn is open (one who has ended waits for the others), and at
