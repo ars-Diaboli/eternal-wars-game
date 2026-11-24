@@ -76,6 +76,10 @@ the script under Movie Maker and saves frames to `.shots/<scenario>/`. **A pass 
   window taking the focus closes the other windows' drop-down lists and loses their clicks.
   The windows share the one mouse pointer, so hover highlights can differ between runs; `-Jobs 1` when a frame must be exact.
 - A scenario runs at 10 frames a second; `Fps = <n>` in its entry changes that (the turn timer runs at 2, so its minute is 120 frames).
+- `Settings = '<json>'` starts a game scenario from that settings file (a UI scale, the mirror). `Resolution = '<w>x<h>'` records it at
+  that window size: Movie Maker ignores `--resolution`, so such scenarios run in groups of one size with an `override.cfg` beside the app's
+  `project.godot`, removed after them; the window must fit on the desktop to be recorded whole. The `hud-*` scenarios shoot the adventure
+  HUD at each target size, UI scale and mirror.
 - Script entries are `frame:kind:argument`: `click` / `rclick` (`x,y`), `key` (Godot key name, modifiers before it: `Ctrl+Shift+P`), `hold` (`Key,frames`),
   `wheel` (`up|down,count`), `drag` / `rdrag` (`x1,y1,x2,y2`, over three frames). Replayed by `AutoInput`.
 - Game scenarios start with `--new-game` and `key:Enter` (Start has focus), so they do not depend on the screen layout;
@@ -104,7 +108,8 @@ share beside them), the game's video memory and the frame time (CPU and GPU), ea
 1.5 M triangles, 2,000 draw calls with the depth pass and the shadow cascades counted, 1 GB, 60 fps, or 40 on a Steam Deck), and the town
 scene's opening time (a second). `--budget` starts with it shown and logs a `Budget [<town type>]: …` line every ten frames;
 `--budget=2560x1440` also renders the 3D that wide whatever the window. `./tools/smoke-godot.ps1 -Only game-town-budget` goes round the
-eight fully built greybox towns twice that way: read the numbers in its `godot.log`. The times are the machine's own.
+eight fully built greybox towns twice that way: read the numbers in its `godot.log`. `game-map-budget` does the same for the adventure map with its HUD (Ember
+March at 2560×1440); Godot's draw call count is the 3D scene's, the 2D HUD's canvas is not in it. The times are the machine's own.
 
 CI (`.github/workflows/ci.yml`) runs build + test + `sim selftest`, and a parallel `generated-maps` job; no Godot.
 

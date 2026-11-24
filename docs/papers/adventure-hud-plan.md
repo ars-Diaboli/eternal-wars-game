@@ -219,9 +219,15 @@ memory-bank entries updated.
   Layout tab, applied at start and when changed (smoke `game-ui-scale`).
 
 ### 4. Check
-- [ ] Smoke screenshots of the map at 1280×720, 1280×800, 1920×1080, 2560×1440 and 21:9, at 100, 150 and 200 %, both mirrors.
-- [ ] Smokes `game-town-open` and `game-town-build` still pass; the replay viewer and a LAN game on one machine.
-- [ ] Budget overlay (F3): draw calls stay under the 2,000 limit with the new HUD (ADR-308).
+- [x] Smoke screenshots of the map at 1280×720, 1280×800, 1920×1080, 2560×1440 and 21:9 (2560×1080), at 100, 150 and 200 %, both
+  mirrors (smokes `hud-*`; a scenario's `Resolution` and `Settings`). Found: on 1280-wide screens above 100 % the column covered the turn
+  banner and, at 200 %, ran into the bottom row, so the scale is lowered to keep 960 × 540 of the UI's own pixels
+  (`InterfaceSettings.ScaleFor`). Open: with under about 1,000 of them (1920×1080 at 200 %, 1280 wide above 100 %) the army strip has no
+  room left and cannot be hovered.
+- [x] Smokes `game-town-open` and `game-town-build` pass (the Hall scrolled to the Brotherhood's tile); the replay viewer's smokes pass;
+  a LAN game on one machine (`--host`, `--join=127.0.0.1`): the client joins as Red, the turns pass, the chat stands under the town list.
+- [x] Budget overlay (F3): about 170 draw calls of 2,000 on Ember March at 2560×1440 with the HUD (smoke `game-map-budget`, ADR-308);
+  Godot's count is the 3D scene's, the HUD's canvas is not in it.
 
 ### 5. Painted pieces
 - [x] Icon sheets 30 (town marks, level icons), 31 (replay bar) and 32 (route end icons) in

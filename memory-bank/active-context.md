@@ -9,6 +9,10 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Adventure HUD step 4 checked (ADR-309): the `hud-*` smokes shoot the map at five sizes, three scales and both mirrors (a scenario's
+  `Resolution` runs its group with an `override.cfg`, Movie Maker ignoring `--resolution`); the UI scale is lowered on small windows
+  (`InterfaceSettings.ScaleFor`, [presentation.md](../docs/design/presentation.md)); `game-town-build` scrolls the Hall; `game-map-budget` logs the map's budget; a LAN game
+  run on one machine. Open: the army strip has no room on under ~1,000 px of UI width.
 - The painted UI frames are in (ADR-294; `textures/ui/frames/`, `UiFrames.Painted.cs`): the eight pieces of ui-element-prompts.md's
   "Frames and panels" on windows, title plates, the bottom row, tooltips and the hover card, the bars, the side column, the minimap and
   dividers; high contrast and a missing file keep the flat look.

@@ -139,7 +139,9 @@ creatures and buildings, heraldic player colours, iconic map objects).
   not in saves. An older saved layout loads as the default or its mirror, whichever side its HUD stood on.
 - **UI scale** (ADR-309): 100, 150 or 200 % of the game's UI, chosen on the "Layout" tab and applied at once and at start like the map
   editor's (the 2D parts drawn larger, the 3D views at the window's own pixels); kept in `settings.json` with the interface settings; a
-  value outside the range is brought into it and onto the nearest of the three (the smaller of two as near).
+  value outside the range is brought into it and onto the nearest of the three (the smaller of two as near). On a small window the scale
+  is lowered, never below 100 %, so the UI keeps at least 960 by 540 of its own pixels (where the HUD fits whole): 1280×720 draws 200 %
+  at 133 %.
 - **Theme** (ADR-191, ADR-294): dark slate panels and buttons framed in bronze. The painted frames of
   [ui-element-prompts.md](../content/prompts/ui-element-prompts.md) are nine-slice boxes: screens, windows and the map's cards in the
   window frame with a line in the faction's accent on a town's windows; window titles on the title plate (in place of the divider under

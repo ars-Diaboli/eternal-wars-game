@@ -56,8 +56,15 @@ public partial class Main
         KeepSettings();
     }
 
-    /// <summary>The UI scale (ADR-309), like the map editor's: the screens' 2D parts drawn larger, the 3D views at the window's own pixels.</summary>
-    private void ApplyUiScale() => GetWindow().ContentScaleFactor = _interface.Normalized().UiScalePercent / 100f;
+    /// <summary>
+    /// The UI scale (ADR-309), like the map editor's: the screens' 2D parts drawn larger, the 3D views at the window's own pixels; lowered on a
+    /// small window so the HUD still fits (<see cref="InterfaceSettings.ScaleFor"/>).
+    /// </summary>
+    private void ApplyUiScale()
+    {
+        var window = GetWindow();
+        window.ContentScaleFactor = _interface.ScaleFor(window.Size.X, window.Size.Y);
+    }
 
     /// <summary>Alt+Enter: the other window mode, shown in the menu too.</summary>
     private void ToggleWindowMode()
@@ -118,6 +125,8 @@ public partial class Main
         _interface = SettingsFile.LoadInterface(_settingsPath);
         WindowModes.Apply(_interface.Window); // the window mode (ADR-186), at start and whenever it changes
         ApplyUiScale();
+        // A smaller window may need a smaller scale. Setting the factor fires the signal once more; the size is the same, so is the factor.
+        GetWindow().SizeChanged += ApplyUiScale;
         AddChild(_info);
         _info.Detailed = _interface.DetailedTooltips;
         _menu.ShowInterface(_interface);

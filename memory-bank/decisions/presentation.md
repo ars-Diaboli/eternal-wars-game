@@ -1019,6 +1019,7 @@ applied at start and when changed.
   closed for good by the 7-of-9 rule (ADR-030), so 7 of 9 dwellings count as all; the Grail building and a second Capitol do not count.
 - **The route's end** shows what the hero does there, as the cursor decides it (ADR-204), with picking up (a pile, a chest, an artifact)
   told apart from other visits; a plain move shows nothing. The route's day colours are placeholders until the art pass.
-- **UI scale**: a game setting of 100, 150 or 200 %, applied as the map editor's is.
+- **UI scale**: a game setting of 100, 150 or 200 %, applied as the map editor's is, lowered on a window too small to keep 960 by 540 of the
+  UI's own pixels (not below 100 %).
 - **Open**: [HUD-1](../open-questions.md#hud-1) (which events stop play with a notice card) and [HUD-2](../open-questions.md#hud-2)
   (long answer lists).

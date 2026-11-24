@@ -70,4 +70,6 @@ src/Apps/*/shared
 .vs/
 *.user
 .shots/
+# The window size the smoke script sets for a group of scenarios (tools/smoke-godot.ps1), removed after them.
+src/Apps/*/override.cfg
 .perf/

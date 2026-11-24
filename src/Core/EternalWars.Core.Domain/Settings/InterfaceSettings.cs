@@ -8,7 +8,7 @@ namespace EternalWars.Core.Domain.Settings;
 /// <see cref="ShowGrid"/> draws the tile grid over its ground (ADR-183; off by default). <see cref="Window"/> is whether the game fills the
 /// screen (ADR-186; a window by default). <see cref="MapSort"/>, <see cref="MapSortReversed"/> and <see cref="MapSizeFilter"/> are how the
 /// new-game screen's map lists are sorted and filtered (ADR-204; by name, every size, by default). <see cref="UiScalePercent"/> is the size of
-/// the game's UI (ADR-309; 100 % by default). Kept per computer in the settings file, like <see cref="SpeedSettings"/>; it changes no rule.
+/// the game's UI (ADR-309; 100 % by default; <see cref="ScaleFor"/> lowers it on a small window). Kept per computer in the settings file, like <see cref="SpeedSettings"/>; it changes no rule.
 /// </summary>
 public sealed record InterfaceSettings(
     bool DetailedTooltips = false,
@@ -26,7 +26,21 @@ public sealed record InterfaceSettings(
     /// <summary>The UI scales the game offers, in percent (ADR-309).</summary>
     public static IReadOnlyList<int> UiScales { get; } = [100, 150, 200];
 
+    /// <summary>The smallest screen, in the UI's own pixels, the adventure HUD fits on whole (ADR-309): a UI scale never leaves less.</summary>
+    public const int MinScaledWidth = 960, MinScaledHeight = 540;
+
     public static InterfaceSettings Default { get; } = new();
+
+    /// <summary>
+    /// The factor the UI is drawn at in a window of <paramref name="width"/> by <paramref name="height"/> pixels: the chosen scale (normalized),
+    /// lowered as far as needed to leave the UI <see cref="MinScaledWidth"/> by <see cref="MinScaledHeight"/>, never below 1.
+    /// </summary>
+    public float ScaleFor(int width, int height)
+    {
+        var chosen = Normalized().UiScalePercent / 100f;
+        var fits = Math.Min((float)width / MinScaledWidth, (float)height / MinScaledHeight);
+        return Math.Max(1f, Math.Min(chosen, fits));
+    }
 
     /// <summary>
     /// The same settings with the UI scale inside its range, as the map editor's preferences are, then on the nearest scale offered (the

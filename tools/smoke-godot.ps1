@@ -208,7 +208,7 @@ $scenarios = @(
     # closes and the construction scene plays (ADR-304: the tavern rising through its scaffolding); B opens the Hall again, the Archer's
     # dwelling selected shows what it needs; Escape twice leaves.
     @{ Name = 'game-town-build'; App = 'EternalWars.Game'; Frames = 90; Map = $townsMap
-       Input = '3:key:Enter;12:key:T;20:key:B;30:click:@Brotherhood;40:press:Build;60:key:B;68:click:@Archer;80:key:Escape;84:key:Escape' },
+       Input = '3:key:Enter;12:key:T;20:key:B;26:wheel:down,3,120,500;30:click:@Brotherhood;40:press:Build;60:key:B;68:click:@Archer;80:key:Escape;84:key:Escape' },
     # Recruiting (ADR-296): R, Recruit Footman with its destination, Max, Recruit; Recruit all shows its summary, Recruit; then the Pikeman's
     # dwelling window from the building strip; Escape twice leaves.
     @{ Name = 'game-town-recruit'; App = 'EternalWars.Game'; Frames = 92; Map = $townsMap
@@ -593,6 +593,24 @@ $scenarios = @(
        Input = '20:click:@Resources' }
 )
 
+# The adventure map's budget with the new HUD (ADR-308, ADR-309): Ember March at 2560x1440 with the overlay from the start (its numbers in the
+# log every ten frames); Tab selects a hero (the bottom row filled), the pointer crosses the map (hover cards), the camera pans over it.
+$scenarios += @{ Name = 'game-map-budget'; App = 'EternalWars.Game'; Frames = 90; Map = $emberMap; Resolution = '2560x1440'; Args = @('--budget=2560x1440')
+    Input = '3:key:Enter;12:key:Tab;20:move:1100,600;30:move:1400,800;40:hold:D,15;60:hold:S,15;80:key:F3' }
+
+# The adventure HUD's screenshot set (ADR-309): the towns map at each window size (21:9 as 2560x1080: a window must fit on the desktop to be recorded whole) and UI scale, as set and mirrored, with
+# Orrin selected (his card and army in the bottom row). Each starts from a settings file with the scale
+# and the mirror already chosen.
+foreach ($size in '1280x720', '1280x800', '1920x1080', '2560x1440', '2560x1080') {
+    foreach ($scale in 100, 150, 200) {
+        foreach ($mirrored in $false, $true) {
+            $scenarios += @{ Name = "hud-$size-$scale$(if ($mirrored) { '-mirrored' })"; App = 'EternalWars.Game'; Frames = 24; Map = $townsMap
+                Resolution = $size; Settings = "{ `"interface`": { `"uiScalePercent`": $scale }, `"layout`": { `"mirrored`": $($mirrored.ToString().ToLower()) } }"
+                Input = '3:key:Enter;10:key:Tab' }
+        }
+    }
+}
+
 # Every scenario has a seed of its own, so its games and battles are the same on every run (ADR-239): the entry's Seed, else one made from
 # its name (32-bit FNV-1a); -Seed overrides both. Scenarios without a new game (the main menu, a replay, the editor) pass it unused.
 foreach ($scenario in $scenarios) {
@@ -605,7 +623,7 @@ foreach ($scenario in $scenarios) {
 }
 $selected = @($scenarios | Where-Object { $_.Name -like $Only } | Sort-Object { -$_.Frames }) # the longest first, so they do not end the run alone
 $watch = [Diagnostics.Stopwatch]::StartNew()
-$results = $selected | ForEach-Object -ThrottleLimit ([Math]::Max(1, $Jobs)) -Parallel {
+$run = {
     $scenario = $_
     $started = [Diagnostics.Stopwatch]::StartNew()
     $dir = Join-Path $using:Out $scenario.Name
@@ -620,6 +638,8 @@ $results = $selected | ForEach-Object -ThrottleLimit ([Math]::Max(1, $Jobs)) -Pa
     Remove-Item (Join-Path $dir 'editor-settings.cfg') -ErrorAction SilentlyContinue
     # ... unless the scenario starts with preferences of its own (the UI's scale, the contrast: ADR-277).
     if ($scenario.Preferences) { Set-Content (Join-Path $dir 'editor-settings.cfg') "[preferences]`n$($scenario.Preferences)" }
+    # ... or the game's settings of its own (the UI scale, the mirror).
+    if ($scenario.Settings) { Set-Content $settings $scenario.Settings }
     # ... and its maps folder and its autosaves with the session marker, which a run ended by --quit-after leaves behind.
     Remove-Item (Join-Path $dir 'maps'), (Join-Path $dir 'autosave'), (Join-Path $dir 'stamps'), (Join-Path $dir 'cache'), (Join-Path $dir 'templates'), (Join-Path $dir 'template-autosave') -Recurse -ErrorAction SilentlyContinue
     # ... and the files it writes beside its map (exports), so no save dialog asks to overwrite them.
@@ -690,6 +710,24 @@ $results = $selected | ForEach-Object -ThrottleLimit ([Math]::Max(1, $Jobs)) -Pa
     }
 
     $ok
+}
+
+# Movie Maker records at the project's window size whatever --resolution says: a scenario with a Resolution runs with that size in an
+# override.cfg beside its app's project.godot, which every scenario of the app reads, so the scenarios run in groups of one size each.
+Remove-Item (Join-Path $root 'src/Apps/*/override.cfg') -ErrorAction SilentlyContinue # one a killed run left behind
+$results = foreach ($group in $selected | Group-Object { "$($_.Resolution)" }) {
+    $overrides = @()
+    if ($group.Name) {
+        $width, $height = $group.Name -split 'x'
+        foreach ($app in $group.Group.App | Sort-Object -Unique) {
+            $override = Join-Path $root "src/Apps/$app/override.cfg"
+            Set-Content $override "[display]`nwindow/size/window_width_override=$width`nwindow/size/window_height_override=$height"
+            $overrides += $override
+        }
+    }
+
+    try { $group.Group | ForEach-Object -ThrottleLimit ([Math]::Max(1, $Jobs)) -Parallel $run }
+    finally { $overrides | Remove-Item -ErrorAction SilentlyContinue }
 }
 
 $failed = @($results | Where-Object { -not $_ }).Count
