@@ -60,6 +60,7 @@ The game design document, split by mechanic. Start at the overview.
 | Document | What it covers |
 |---|---|
 | [adventure-hud-plan.md](papers/adventure-hud-plan.md) | The adventure HUD redesign: the guide to every part as decided from the mockups, the open points, a six-step plan and the prompts for the next adventure and battle HUD mockups |
+| [battle-hud-plan.md](papers/battle-hud-plan.md) | The battle HUD restyle in the adventure HUD's look: the guide from the round-1 mockups' recommendations, pending the owner's decisions, and a five-step plan |
 | [code-review-2026-11.md](papers/code-review-2026-11.md) | The November 2026 code review and what became of each item (ADR-165 … ADR-175) |
 | [relief-plan.md](papers/relief-plan.md) | How the adventure map's relief was built in five steps (ADR-181, ADR-182) |
 | [town-screen-plan.md](papers/town-screen-plan.md) | The town screen overhaul: a study of today's screen, HoMM3 with HotA and HoMM5, the target, every screen, the technical and art plan, six steps and the open questions (ADR-246) |

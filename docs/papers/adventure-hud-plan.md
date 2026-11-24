@@ -175,7 +175,7 @@ pictures, the chat's place and the narrow-screen army strip.
 ## Plan
 
 The redesign lands in six steps: record it, build the engine-free models, rebuild the HUD on today's flat theme, check it at every size,
-then swap in the painted pieces. The battle HUD only gets mockup prompts for now. Each step ends with the build and tests green and its
+then swap in the painted pieces. The battle HUD is planned in [battle-hud-plan.md](battle-hud-plan.md). Each step ends with the build and tests green and its
 memory-bank entries updated.
 
 ### 1. Record the decisions
@@ -239,7 +239,11 @@ memory-bank entries updated.
   [presentation.md](../design/presentation.md) to state the new rules once.
 
 ### 6. Battle HUD
-- [ ] Generate mockups from the prompts below, decide them the same way as the adventure HUD, then plan the restyle.
+- [x] Mockups from the round-1 prompt below: five boards on the [Battle HUD mockups canvas](https://claude.ai/artifact/JJ89FYmLpmN7CvywfbGGQb)
+  (fight, deployment, result, Necromancy, 1280×720), drawn on the square grid.
+- [x] The decision table, as for the adventure HUD: [Battle HUD redesign: discrepancies and
+  decisions](https://claude.ai/artifact/HdAjCooerLirLXZX7ifxMd), each row with a recommendation; the owner fills the Decision column.
+- [x] The restyle planned on the recommendations: [battle-hud-plan.md](battle-hud-plan.md), whose step 1 records the decisions.
 
 ## Mockup prompts
 
@@ -277,12 +281,10 @@ Variant lines, one per picture:
 ### Battle HUD, round 1
 
 ```text
-A 16:9 screenshot at 2560x1440 of an original dark-fantasy turn-based strategy game's battle: a 3D battlefield on a grass plain seen from above at an angle, two armies of fantasy creatures facing each other on a hexagonal grid, hand-painted look. The interface uses the adventure map's style: dark slate-blue panels in worn bronze, icon-only buttons, accents in each side's player colour (crimson for the left side, blue for the right). No real game's logo or interface.
+A 16:9 screenshot at 2560x1440 of an original dark-fantasy turn-based strategy game's battle: a 3D battlefield on a grass plain seen from above at an angle, two armies of fantasy creatures facing each other on a square grid of 30 by 24 cells, hand-painted look. The interface uses the adventure map's style: dark slate-blue panels in worn bronze, icon-only buttons, accents in each side's player colour (crimson for the left side, blue for the right). No real game's logo or interface.
 Top left: the attacking hero's portrait in a crimson frame with name "Mara" and a small spell book button; top right: the defending side's portrait in blue, "Neutral wolves".
 Top centre: "Round 3" on a small plate.
-Along the bottom, above the status bar: an initiative timeline, a row of square creature portraits with stack counts, the active stack first and larger with a bright rim in its side's colour, then the queue, a thin divider, then the waiting stacks dimmed.
-Bottom left: a panel with the hovered stack's portrait, name "Swordsmen" and its numbers: attack, defence, damage, health, speed, initiative, with small icons.
-Bottom right: square icon-only buttons: hourglass (wait), shield (defend), running figure (retreat), white flag (surrender), crossed swords with a lightning bolt (quick combat), spell book.
+Along the bottom, above the status bar, one row of three panels of exactly the same height, their top and bottom edges in line. Left: the hovered stack's portrait, name "Swordsmen" and its numbers: attack, defence, damage, health, speed, initiative, with small icons. Middle: an initiative timeline, a row of square creature portraits with stack counts, the active stack first and larger with a bright rim in its side's colour, then the queue, a thin divider, then the waiting stacks dimmed. Right: square icon-only buttons in 2 rows of 3: hourglass (wait), shield (defend), crossed swords with a lightning bolt (quick combat), running figure (retreat), white flag (surrender, greyed), spell book.
 A small semi-transparent combat log in the lower right corner above the buttons, three short lines.
 A thin full-width status bar along the bottom: a sword icon, "Swordsmen", a divider, "Attack the wolves: 38-45 damage, 2 may die."
 Clean, legible, no text other than the quoted words.
@@ -290,8 +292,9 @@ Clean, legible, no text other than the quoted words.
 
 Variant lines:
 
-- *Deployment:* no timeline yet; a wide button "Start battle" at the bottom centre; your side's deployment hexes tinted crimson.
+- *Deployment:* no timeline yet; a wide button "Start battle" at the bottom centre; your side's deployment columns tinted crimson.
 - *Result:* the field dimmed, a centred window "Victory" with both sides' losses as creature portraits with counts, experience gained, and
   a button "Return to the map".
 - *Necromancy:* after the result, a window with raised skeletons as a portrait and a count, and a Continue button.
-- *Small screen:* 1280x720; the stats panel collapses to the portrait with three numbers.
+- *Small screen:* 1280x720; the stats panel collapses to the portrait with three numbers; the pointer on the greyed white flag, the status bar
+  reading "Surrender · Neutral creatures do not take surrenders."

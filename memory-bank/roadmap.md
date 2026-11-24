@@ -290,7 +290,15 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Step 4: checked at every target size, UI scale and mirror (the scale lowered on small windows; open: the army strip on under
       ~1,000 px of UI width)
 - [ ] Step 5: the painted pieces (icon sheets 30–32 already cut into `textures/ui/icons/`)
-- [ ] Step 6: the battle HUD's mockups decided and planned
+- [x] Step 6: the battle HUD's mockups drawn, a decision table with recommendations, the restyle planned
+      ([battle-hud-plan.md](../docs/papers/battle-hud-plan.md)); the owner's decisions are its step 1
+
+### Battle HUD restyle ([plan](../docs/papers/battle-hud-plan.md#plan); decisions pending)
+- [ ] Step 1: the owner's decisions recorded (ADR-310)
+- [ ] Step 2: Core: the attack estimate, the battle's hotkey table, the spell book's rows, the stack panel and the result's summary
+- [ ] Step 3: the HUD rebuilt on the flat theme
+- [ ] Step 4: checked at every target size and UI scale; battle smokes, a LAN battle, the budget
+- [ ] Step 5: the painted pieces
 
 ### Editor overhaul (ADR-247, ADR-250; [plan](../docs/papers/editor-plan.md#implementation-plan), EDIT-1 … EDIT-12 answered)
 - [x] Step 0a: answers to EDIT-1 … EDIT-12 (ADR-250: the proposals)
