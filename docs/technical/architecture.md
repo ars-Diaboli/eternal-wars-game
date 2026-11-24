@@ -427,6 +427,5 @@ src/Godot/EternalWars.Godot.*/  Tier 2
 src/Apps/EternalWars.*/         Tier 3: project.godot + Main.tscn/Main.cs
 tests/EternalWars.Core.Tests/   TestWorld, TestBattle, SessionCommands helpers
 tools/                          link-shared-assets.ps1, smoke-godot.ps1, smoke/ maps, EternalWars.Tools.Sim
-reference/ew/                   earlier prototype, kept for reading only (not built)
 .github/workflows/ci.yml        build + test + sim selftest; generated-maps job
 ```
