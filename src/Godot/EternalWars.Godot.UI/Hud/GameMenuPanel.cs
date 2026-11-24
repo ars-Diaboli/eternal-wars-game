@@ -42,6 +42,8 @@ public partial class GameMenuPanel : CenterContainer
     private LayoutSettings _layout = LayoutSettings.Default;
     private readonly OptionButton _uiScale = WithTooltip(
         Choices([.. InterfaceSettings.UiScales.Select(s => $"{s} %")]), "The size of the game's buttons, panels and text");
+    private readonly OptionButton _panelOpacity = WithTooltip(
+        Choices([.. InterfaceSettings.PanelOpacities.Select(o => $"{o} %")]), "How much of the map the adventure map's panels hide; their rims stay");
     private IReadOnlyList<SaveItem> _entries = [];
     private Func<IReadOnlyList<SaveItem>> _listSaves = null!;
     private Action<string> _deleteSave = null!;
@@ -162,6 +164,9 @@ public partial class GameMenuPanel : CenterContainer
         _mirrored.ItemSelected += index => ChangeLayout(_layout with { Mirrored = index == 1 });
         layout.AddRow("UI scale", _uiScale, 180);
         _uiScale.ItemSelected += index => ChangeInterface(_interface with { UiScalePercent = InterfaceSettings.UiScales[(int)index] });
+        layout.AddRow("Panel opacity", _panelOpacity, 180);
+        _panelOpacity.ItemSelected += index =>
+            ChangeInterface(_interface with { PanelOpacityPercent = InterfaceSettings.PanelOpacities[(int)index] });
         var reset = new Button { Text = "Default layout", SizeFlagsHorizontal = SizeFlags.ShrinkBegin };
         reset.Pressed += () =>
         {
@@ -262,6 +267,7 @@ public partial class GameMenuPanel : CenterContainer
         _grid.SetPressedNoSignal(settings.ShowGrid);
         _window.Selected = (int)settings.Window;
         _uiScale.Selected = Math.Max(0, InterfaceSettings.UiScales.ToList().IndexOf(settings.Normalized().UiScalePercent));
+        _panelOpacity.Selected = Math.Max(0, InterfaceSettings.PanelOpacities.ToList().IndexOf(settings.Normalized().PanelOpacityPercent));
     }
 
     private void ChangeInterface(InterfaceSettings settings)

@@ -47,6 +47,7 @@ public partial class Main
         _info.Detailed = settings.DetailedTooltips;
         WindowModes.Apply(settings.Window);
         ApplyUiScale();
+        EternalWars.Godot.UI.Widgets.BevelFrame.Opacity = settings.Normalized().PanelOpacityPercent / 100f; // the HUD's panels (ADR-310)
         if (_context is not null)
         {
             _context.FogLook = settings.Fog;
@@ -125,6 +126,7 @@ public partial class Main
         _interface = SettingsFile.LoadInterface(_settingsPath);
         WindowModes.Apply(_interface.Window); // the window mode (ADR-186), at start and whenever it changes
         ApplyUiScale();
+        EternalWars.Godot.UI.Widgets.BevelFrame.Opacity = _interface.PanelOpacityPercent / 100f; // the HUD's panels (ADR-310)
         // A smaller window may need a smaller scale. Setting the factor fires the signal once more; the size is the same, so is the factor.
         GetWindow().SizeChanged += ApplyUiScale;
         AddChild(_info);

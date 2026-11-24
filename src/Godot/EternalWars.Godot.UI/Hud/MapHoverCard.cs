@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Info;
 using EternalWars.Godot.Shared.Controls;
+using EternalWars.Godot.UI.Widgets;
 using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
@@ -30,14 +31,7 @@ public partial class MapHoverCard : PanelContainer
         TopLevel = true;
         Visible = false;
         MouseFilter = MouseFilterEnum.Ignore;
-        if (UiFrames.Tooltip(UiSpacing.Gap) is { } box)
-        {
-            AddThemeStyleboxOverride("panel", box); // a tooltip's frame (ADR-294)
-        }
-        else
-        {
-            this.UseOpaqueBackground(UiSpacing.Gap);
-        }
+        UiFrames.Bevel(this, BevelKind.Panel, UiFrames.Tooltip(UiSpacing.Gap), UiSpacing.Gap); // the HUD's panel, a tooltip's margins (ADR-310)
         _rows.AddThemeConstantOverride("separation", UiSpacing.Cell);
         AddChild(_rows);
     }

@@ -4,6 +4,7 @@ using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.Shared.Map;
+using EternalWars.Godot.UI.Widgets;
 using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
@@ -138,9 +139,7 @@ public partial class HeroListPanel : BoxContainer
         }.WithIcon(HeroIcons.PortraitOrPlaceholder(card.Portrait, hero.Name, PortraitSize), PortraitSize);
         button.IconAlignment = HorizontalAlignment.Left;
         button.CustomMinimumSize = new Vector2(PortraitSize + (2 * UiIcons.IconPadding) + (2 * BarWidth) + (3 * UiSpacing.Cell), PortraitSize + (2 * UiIcons.IconPadding));
-        var pressed = UiTheme.Box(UiTheme.ButtonFace, colour, UiIcons.IconPadding, borderWidth: 3);
-        button.AddThemeStyleboxOverride("pressed", pressed);
-        button.AddThemeStyleboxOverride("hover_pressed", pressed);
+        UiFrames.Bevel(button, BevelKind.Slot).SelectedTint = colour; // the selected hero's rim and glow in the player's colour (ADR-310)
 
         var bars = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
         bars.AddThemeConstantOverride("separation", UiSpacing.Cell);

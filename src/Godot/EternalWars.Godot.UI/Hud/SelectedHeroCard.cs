@@ -1,21 +1,23 @@
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Godot.UI.Widgets;
 using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
-/// The selected hero's card at the bottom (ADR-309): the portrait (a click opens the hero screen), three thin bars beside it (movement green,
-/// mana blue, experience to the next level gold), then the name and level, the four primary stats, and morale and luck as icons with a signed
-/// value. The HUD hides it while no own hero is selected.
+/// The selected hero's card at the bottom (ADR-309): the portrait as tall as the card, so its margin to the frame is the same all round (a
+/// click opens the hero screen), three thin bars beside it (movement green, mana blue, experience to the next level gold), then three rows:
+/// the name and level, the four primary stats, and morale and luck as icons with a signed value. The HUD hides it while no own hero is
+/// selected and stretches it to the bottom row's height.
 /// </summary>
 public partial class SelectedHeroCard : HBoxContainer
 {
-    /// <summary>The portrait's side.</summary>
-    public const int PortraitSize = 64;
+    /// <summary>The size the portrait's picture is loaded at; it is drawn as tall as the card.</summary>
+    public const int PortraitSize = 128;
 
     /// <summary>The card's width, whatever the hero's name and numbers, so the army strip beside it keeps its place.</summary>
-    public const int Width = 460;
+    public const int Width = 400;
 
     private const int BarWidth = 6;
 
@@ -25,6 +27,7 @@ public partial class SelectedHeroCard : HBoxContainer
     private readonly GaugeBar _experience = new() { Colour = GaugeBar.Experience, CustomMinimumSize = new Vector2(BarWidth, 0), MouseFilter = MouseFilterEnum.Pass };
     private readonly Label _name = new() { MouseFilter = MouseFilterEnum.Pass, ClipText = true };
     private readonly HBoxContainer _stats = new();
+    private readonly HBoxContainer _spirits = new();
     private HeroId? _hero;
 
     public SelectedHeroCard()
@@ -33,7 +36,11 @@ public partial class SelectedHeroCard : HBoxContainer
         CustomMinimumSize = new Vector2(Width, 0);
         AddThemeConstantOverride("separation", UiSpacing.Gap);
         _portrait.WithIcon(HeroIcons.PortraitOrPlaceholder(null, "?", PortraitSize), PortraitSize);
-        _portrait.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+        _portrait.ExpandIcon = true;
+        _portrait.CustomMinimumSize = Vector2.Zero; // a square as tall as the card (Resized)
+        _portrait.SizeFlagsVertical = SizeFlags.Fill;
+        UiFrames.Bevel(_portrait, BevelKind.Slot, padding: 2); // the portrait sunk into the card's panel (ADR-310)
+        Resized += () => _portrait.CustomMinimumSize = new Vector2(Size.Y, Size.Y);
         _portrait.Pressed += () =>
         {
             if (_hero is { } hero)
@@ -57,8 +64,12 @@ public partial class SelectedHeroCard : HBoxContainer
         lines.AddThemeConstantOverride("separation", UiSpacing.Cell);
         _name.AddThemeFontSizeOverride("font_size", 18);
         lines.AddChild(_name);
-        _stats.AddThemeConstantOverride("separation", UiSpacing.Gap);
-        lines.AddChild(_stats);
+        foreach (var row in new[] { _stats, _spirits })
+        {
+            row.AddThemeConstantOverride("separation", UiSpacing.Gap);
+            lines.AddChild(row);
+        }
+
         AddChild(lines);
     }
 
@@ -87,9 +98,9 @@ public partial class SelectedHeroCard : HBoxContainer
         _experience.TooltipText = "Experience to the next level";
         _name.Text = $"{card.Name}, level {card.Level}";
 
-        foreach (var child in _stats.GetChildren())
+        foreach (var child in _stats.GetChildren().Concat(_spirits.GetChildren()))
         {
-            _stats.RemoveChild(child);
+            child.GetParent().RemoveChild(child);
             child.QueueFree();
         }
 
@@ -97,9 +108,8 @@ public partial class SelectedHeroCard : HBoxContainer
         _stats.AddChild(HeroIcons.StatBadge(HeroStatIcon.Defense, "Defence", card.Defense.ToString()));
         _stats.AddChild(HeroIcons.StatBadge(HeroStatIcon.SpellPower, "Spell power", card.SpellPower.ToString()));
         _stats.AddChild(HeroIcons.StatBadge(HeroStatIcon.Knowledge, "Knowledge", card.Knowledge.ToString()));
-        _stats.AddChild(new VSeparator());
-        _stats.AddChild(HeroIcons.StatBadge(HeroStatIcon.Morale, "Morale", HeroCard.Signed(card.Morale)));
-        _stats.AddChild(HeroIcons.StatBadge(HeroStatIcon.Luck, "Luck", HeroCard.Signed(card.Luck)));
+        _spirits.AddChild(HeroIcons.StatBadge(HeroStatIcon.Morale, "Morale", HeroCard.Signed(card.Morale)));
+        _spirits.AddChild(HeroIcons.StatBadge(HeroStatIcon.Luck, "Luck", HeroCard.Signed(card.Luck)));
     }
 
     /// <summary>No hero: the card is hidden by the HUD.</summary>

@@ -183,6 +183,40 @@ public class SettingsFileTests
     }
 
     [Theory]
+    [InlineData(40, 40)]
+    [InlineData(60, 60)]
+    [InlineData(80, 80)]
+    [InlineData(100, 100)]
+    [InlineData(0, 40)]
+    [InlineData(150, 100)]
+    [InlineData(50, 40)] // between two: the smaller
+    [InlineData(55, 60)]
+    [InlineData(95, 100)]
+    public void ThePanelOpacity_IsKeptWithTheInterfaceSettings_OnAnOfferedOpacity(int written, int read)
+    {
+        Assert.Equal(read, SettingsFile.ReadInterface($"{{\"interface\": {{\"panelOpacityPercent\": {written}}}}}").PanelOpacityPercent);
+        Assert.Equal(read, new InterfaceSettings(PanelOpacityPercent: written).Normalized().PanelOpacityPercent);
+    }
+
+    [Fact]
+    public void ThePanelOpacity_RoundTripsThroughTheFile_AndIs100WhenTheFileHasNone()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"ew-settings-{Guid.NewGuid():N}", SettingsFile.FileName);
+        try
+        {
+            SettingsFile.Save(path, SpeedSettings.Default, new InterfaceSettings(PanelOpacityPercent: 60));
+
+            Assert.Equal(60, SettingsFile.LoadInterface(path).PanelOpacityPercent);
+            Assert.Equal(100, SettingsFile.ReadInterface("{\"interface\": {\"uiScalePercent\": 150}}").PanelOpacityPercent);
+            Assert.Equal([40, 60, 80, 100], InterfaceSettings.PanelOpacities);
+        }
+        finally
+        {
+            Directory.Delete(Path.GetDirectoryName(path)!, recursive: true);
+        }
+    }
+
+    [Theory]
     [InlineData("")]
     [InlineData("not json")]
     [InlineData("{\"speed\": {\"battle\": \"Warp\"}}")]

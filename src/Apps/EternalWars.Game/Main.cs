@@ -112,7 +112,13 @@ public partial class Main : Node3D
         _saveFolder = LaunchArguments.SavesPath
             ?? (LaunchArguments.PlayTest.Arguments is not null ? PlayTestSaves : ProjectSettings.GlobalizePath(SavesFolder));
         BuildMenu();
-        if (LaunchArguments.ReplayPath is { } replay)
+        if (LaunchArguments.UiSample)
+        {
+            var sample = new CanvasLayer { Name = "UiSample", Layer = 5 };
+            AddChild(sample);
+            sample.AddChild(new EternalWars.Godot.UI.Debugging.UiStyleSample { Fill = LaunchArguments.UiSampleFill }); // the procedural panel style on trial
+        }
+        else if (LaunchArguments.ReplayPath is { } replay)
         {
             ShowReplays();
             Watch(replay, null);

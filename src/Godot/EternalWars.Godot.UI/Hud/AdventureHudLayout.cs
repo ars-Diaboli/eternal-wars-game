@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Settings;
+using EternalWars.Godot.UI.Widgets;
 using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
@@ -6,7 +7,7 @@ namespace EternalWars.Godot.UI.Hud;
 /// <summary>
 /// Places the adventure map's HUD parts (ADR-309, <see cref="HudArrangement"/>): a framed column (ADR-191) down the minimap's side of the
 /// screen (the right, or the left when mirrored) holding the minimap and the town list, as wide as its widest part; the hero list
-/// (<see cref="SetOpposite"/>) at the other edge, under the top bar; and the bottom row above the status bar (<see cref="SetBottom"/>): the
+/// (<see cref="SetOpposite"/>) at the other edge, down on the bottom row and growing up to the top bar; and the bottom row above the status bar (<see cref="SetBottom"/>): the
 /// hero card and the army strip from the column's far edge, the action buttons and End turn from the column's edge, all as tall as the
 /// tallest. The LAN chat's place (<see cref="ChatRect"/>) is under the column's last part (the town list) when the column has room for it,
 /// else beside that part, towards the middle of the screen. A hidden part leaves its place empty and the others where they are. The layer covers the screen but lets the mouse through; each
@@ -56,18 +57,7 @@ public partial class AdventureHudLayout : Container
     {
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         MouseFilter = MouseFilterEnum.Ignore;
-        if (UiFrames.Column(0) is { } column)
-        {
-            _sidePanel.AddThemeStyleboxOverride("panel", column); // the painted column, its ornaments drawn over it (ADR-294)
-            _sidePanel.Draw += () => UiFrames.DrawColumnOrnaments(_sidePanel, new Rect2(Vector2.Zero, _sidePanel.Size));
-        }
-        else
-        {
-            var frame = UiTheme.Box(UiTheme.Background, UiTheme.Border, 0, borderWidth: 0);
-            frame.BorderWidthLeft = frame.BorderWidthRight = UiTheme.FrameWidth;
-            frame.BorderWidthBottom = UiTheme.FrameWidth;
-            _sidePanel.AddThemeStyleboxOverride("panel", frame);
-        }
+        UiFrames.Bevel(_sidePanel, BevelKind.Panel, padding: 0); // the HUD's bevelled panel (ADR-310)
         AddChild(_sidePanel); // first, so it is drawn behind the parts
     }
 
@@ -82,7 +72,7 @@ public partial class AdventureHudLayout : Container
     public float BottomRowHeight => _bottom.Values.Select(p => p.GetCombinedMinimumSize().Y).DefaultIfEmpty(0).Max();
 
     /// <summary>
-    /// The part at the edge away from the column, under the top bar (<see cref="ResourceTopBar"/>): the hero list's <paramref name="frame"/>,
+    /// The part at the edge away from the column, down on the bottom row, growing up to the top bar (<see cref="ResourceTopBar"/>): the hero list's <paramref name="frame"/>,
     /// as tall as its <paramref name="content"/> (which scrolls inside it) up to the room above the bottom.
     /// </summary>
     public void SetOpposite(Control frame, Control content)
@@ -150,7 +140,8 @@ public partial class AdventureHudLayout : Container
             size.Y += _oppositeContent?.GetCombinedMinimumSize().Y ?? 0;
             var top = ResourceTopBar.Height + Margin;
             size.Y = Math.Min(size.Y, Math.Max(0, bottom - Margin - top));
-            FitChildInRect(_opposite, new Rect2(left ? screen.X - size.X - Margin : Margin, top, size.X, size.Y));
+            // Down at the bottom, just above the bottom row (the hero card beside it), growing upwards to the top bar.
+            FitChildInRect(_opposite, new Rect2(left ? screen.X - size.X - Margin : Margin, bottom - Margin - size.Y, size.X, size.Y));
         }
 
         PlaceBottomRow(screen, rowTop, rowHeight);

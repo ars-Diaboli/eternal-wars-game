@@ -3,6 +3,7 @@ using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Turns;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.Shared.Map;
+using EternalWars.Godot.UI.Widgets;
 using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
@@ -86,12 +87,19 @@ public partial class TurnBannerPanel : PanelContainer
         _crest.Texture = Heraldry.Crest(banner.Crest, CrestSize);
         _crest.Visible = _crest.Texture is not null;
         var colour = banner.Player is { } player ? Palette.ForPlayer(_session.State, player) : UiTheme.Border;
-        var style = UiTheme.Box(colour.Darkened(0.55f), UiTheme.Border, UiSpacing.Cell, borderWidth: 2);
-        style.ContentMarginLeft = style.ContentMarginRight = UiSpacing.Section;
-        style.SetCornerRadiusAll(4);
-        AddThemeStyleboxOverride("panel", style);
+        if (_frame is null)
+        {
+            var margins = new StyleBoxEmpty();
+            margins.SetContentMarginAll(UiSpacing.Cell);
+            margins.ContentMarginLeft = margins.ContentMarginRight = UiSpacing.Section;
+            _frame = UiFrames.Bevel(this, BevelKind.Panel, margins); // the HUD's bevelled panel, its rim in the player's colour (ADR-310)
+        }
+
+        _frame.Tint(banner.Player is null ? null : colour, 0.8f);
         Visible = true;
     }
+
+    private BevelFrame? _frame;
 
     public override void _Process(double delta)
     {

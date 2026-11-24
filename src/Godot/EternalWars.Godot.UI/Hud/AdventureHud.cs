@@ -14,6 +14,7 @@ using EternalWars.Core.Domain.Turns;
 using EternalWars.Godot.Shared.Cameras;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.Shared.Map;
+using EternalWars.Godot.UI.Widgets;
 using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
@@ -162,11 +163,7 @@ public partial class AdventureHud : CanvasLayer
         // The minimap, the town list and the action panel down the right, or the left when mirrored; the hero list at the other edge (ADR-309).
         _layout.AddToColumn(BuildMinimap());
         var heroes = new PanelContainer { Name = "HeroListFrame" };
-        if (UiFrames.Column() is { } column)
-        {
-            heroes.AddThemeStyleboxOverride("panel", column);
-            heroes.Draw += () => UiFrames.DrawColumnOrnaments(heroes, new Rect2(Vector2.Zero, heroes.Size));
-        }
+        UiFrames.Bevel(heroes, BevelKind.Panel, UiFrames.Column(), UiSpacing.Padding); // the painted column's margins: the list keeps its place (ADR-310)
 
         var heroScroll = new ScrollContainer // more heroes than the edge holds scroll (the wheel), with no bar
         {
@@ -279,10 +276,12 @@ public partial class AdventureHud : CanvasLayer
         _playing = playing;
         HeroCard = new SelectedHeroCard();
         _cardFrame = Framed("HeroCardFrame", HeroCard);
+        HeroCard.SizeFlagsVertical = Control.SizeFlags.Fill; // the portrait as tall as the row: the same margin all round
         _layout.SetBottom(HudPart.HeroCard, _cardFrame);
         HeroCard.HeroScreenRequested += hero => ShowHero(hero);
         ArmyStrip = new ArmyStrip();
         _armyFrame = new CutPart("ArmyStripCut", Framed("ArmyStripFrame", ArmyStrip)); // cut with a fade on a narrow screen
+        ArmyStrip.SizeFlagsVertical = Control.SizeFlags.Fill; // the slots as tall as the row
         _layout.SetBottom(HudPart.ArmyStrip, _armyFrame);
         ArmyStrip.HeroScreenRequested += hero => ShowHero(hero);
         ArmyStrip.StackInfoRequested += (hero, slot, at) => StackInfoRequested?.Invoke(hero, slot, at);
@@ -376,10 +375,7 @@ public partial class AdventureHud : CanvasLayer
     private static PanelContainer Framed(string name, Control part)
     {
         var frame = new PanelContainer { Name = name };
-        if (UiFrames.Overlay() is { } overlay)
-        {
-            frame.AddThemeStyleboxOverride("panel", overlay); // opaque: the army strip shown whole hides the buttons under it
-        }
+        UiFrames.Bevel(frame, BevelKind.Panel, UiFrames.Overlay(), UiSpacing.Padding); // the painted overlay's margins (ADR-310)
 
         part.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
         frame.AddChild(part);
@@ -478,18 +474,11 @@ public partial class AdventureHud : CanvasLayer
         {
             CellPixels = Math.Max(2, 320f / Math.Max(map.Width, map.Height)), ClipContents = true, SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
         };
-        if (UiFrames.Minimap() is { } frame)
-        {
-            // In its painted bronze frame, as wide as the map with it (ADR-294).
-            var framed = new PanelContainer { Name = "MinimapFrame", SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter, MouseFilter = Control.MouseFilterEnum.Ignore };
-            framed.AddThemeStyleboxOverride("panel", frame);
-            framed.AddChild(minimap);
-            box.AddChild(framed);
-        }
-        else
-        {
-            box.AddChild(minimap);
-        }
+        // Sunk into the column, with the painted frame's margins, so the column keeps its width (ADR-310).
+        var framed = new PanelContainer { Name = "MinimapFrame", SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter, MouseFilter = Control.MouseFilterEnum.Ignore };
+        UiFrames.Bevel(framed, BevelKind.Slot, UiFrames.Minimap(), 0);
+        framed.AddChild(minimap);
+        box.AddChild(framed);
         minimap.Bind(_context);
         minimap.TileClicked += tile => _camera.FocusOn(MapSpace.ToWorld(tile));
         minimap.ViewFrame = ViewFrame;
@@ -524,10 +513,12 @@ public partial class AdventureHud : CanvasLayer
 
         var zoomIn = new Button { Text = "Zoom in", TooltipText = "As the mouse wheel does", FocusMode = Control.FocusModeEnum.None }
             .WithIcon(UiIcon.ZoomIn, UiIcons.StatusBarSize);
+        UiFrames.Bevel(zoomIn, BevelKind.Button);
         zoomIn.Pressed += () => _camera.Zoom(1);
         caption.AddChild(zoomIn);
         var zoomOut = new Button { Text = "Zoom out", TooltipText = "As the mouse wheel does", FocusMode = Control.FocusModeEnum.None }
             .WithIcon(UiIcon.ZoomOut, UiIcons.StatusBarSize);
+        UiFrames.Bevel(zoomOut, BevelKind.Button);
         zoomOut.Pressed += () => _camera.Zoom(-1);
         caption.AddChild(zoomOut);
         return box;
@@ -660,7 +651,7 @@ public partial class AdventureHud : CanvasLayer
         id is { } wanted ? _session.State.HeroesOf(_session.State.CurrentPlayer.Id).FirstOrDefault(h => h.Id == wanted) : null;
 
     /// <summary>
-    /// The action buttons (ADR-309): two rows of five icons, wider than tall, in <see cref="AdventureActionGrid.Order"/>: Move, spell book,
+    /// The action buttons (ADR-309): two rows of five square icon buttons, in <see cref="AdventureActionGrid.Order"/>: Move, spell book,
     /// kingdom, quests, puzzle map; dig, marketplace, level, hero screen, menu. Each one's name and key ("Dig [G]") go to the status bar on
     /// hover. A button whose action cannot be taken now is greyed, with the reason after its name. In the replay viewer the ones that would
     /// issue a command or open a hero's screens stay greyed.
@@ -729,14 +720,16 @@ public partial class AdventureHud : CanvasLayer
     /// <summary>An action's name and key from the hotkey table (ADR-309): "Dig [G]".</summary>
     private static string Hint(AdventureAction action) => AdventureHotkeys.Of(action).Hint;
 
-    /// <summary>An action button's icon side; the button is wider than tall.</summary>
+    /// <summary>An action button's icon side; the button is a square round it.</summary>
     private const int ActionIconSize = 36;
 
     private Button AddAction(AdventureAction action, UiIcon icon, Action pressed, string tooltip = "")
     {
         var button = new Button { Text = Hint(action), TooltipText = tooltip, FocusMode = Control.FocusModeEnum.None }.WithIcon(icon, ActionIconSize);
-        button.CustomMinimumSize = new Vector2(ActionIconSize + (6 * UiIcons.IconPadding), ActionIconSize + (2 * UiIcons.IconPadding));
+        var side = ActionIconSize + (2 * UiIcons.IconPadding);
+        button.CustomMinimumSize = new Vector2(side, side); // square (ADR-310)
         button.SizeFlagsHorizontal = Control.SizeFlags.Fill;
+        UiFrames.Bevel(button, BevelKind.Button, padding: UiIcons.IconPadding); // the theme's wider margins would stretch it
         button.Pressed += pressed;
         _actions.AddChild(button);
         return button;

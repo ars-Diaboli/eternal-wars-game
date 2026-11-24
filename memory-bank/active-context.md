@@ -9,9 +9,14 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- The adventure HUD's frames drawn by a shader (ADR-310; `shaders/ui_bevel.gdshader`, `Widgets/BevelFrame.cs`, `UiFrames.Bevel`): panels,
+  sunken slots and buttons in place of the painted HUD frames, each keeping its old margins; the panel opacity (40–100 %) on the Layout
+  tab (`InterfaceSettings.PanelOpacityPercent`). The trial screen is `--ui-sample[=black|clear]` (`UiStyleSample`, smokes
+  `ui-style-sample*`); `hud-1920x1080-100-opacity-60` shoots the opacity. Next: the battle HUD may take the same frames (its plan's
+  ADR is now ADR-311).
 - The battle HUD's round 1 (adventure HUD plan step 6, ADR-309): five mockups on a canvas, a decision table with a recommendation per row and the restyle
   planned on them ([battle-hud-plan.md](../docs/papers/battle-hud-plan.md)); the round-1 prompt now asks for the square grid. Next: the
-  owner's decisions, then the plan's step 1 (ADR-310).
+  owner's decisions, then the plan's step 1 (ADR-311).
 - Adventure HUD step 4 checked (ADR-309): the `hud-*` smokes shoot the map at five sizes, three scales and both mirrors (a scenario's
   `Resolution` runs its group with an `override.cfg`, Movie Maker ignoring `--resolution`); the UI scale is lowered on small windows
   (`InterfaceSettings.ScaleFor`, [presentation.md](../docs/design/presentation.md)); `game-town-build` scrolls the Hall; `game-map-budget` logs the map's budget; a LAN game

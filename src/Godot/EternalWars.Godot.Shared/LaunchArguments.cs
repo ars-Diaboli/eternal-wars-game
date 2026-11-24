@@ -85,6 +85,15 @@ public static class LaunchArguments
             ? (width, height)
             : null;
 
+    /// <summary>
+    /// <c>--ui-sample</c> or <c>--ui-sample=&lt;fill&gt;</c>: the game shows the procedural panel style on trial alone (<c>UiStyleSample</c>) instead
+    /// of the main menu; the fill is <c>black</c> (uniform black) or <c>clear</c> (uniform black, 60 % transparent), the dark gradient otherwise.
+    /// </summary>
+    public static bool UiSample => OS.GetCmdlineUserArgs().Any(a => a == "--ui-sample" || a.StartsWith("--ui-sample=", StringComparison.Ordinal));
+
+    /// <summary>The fill of <c>--ui-sample=&lt;fill&gt;</c>; null without one.</summary>
+    public static string? UiSampleFill => Value("--ui-sample=");
+
     /// <summary>Scripted input for smoke tests (<see cref="Controls.AutoInput"/>).</summary>
     public static string? AutoInput => Value("--autoinput=");
 

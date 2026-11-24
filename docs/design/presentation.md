@@ -44,17 +44,19 @@ creatures and buildings, heraldic player colours, iconic map objects).
   bottom row with the minimap and the town list, which takes the clicks on it; the hero list at the other edge; the bottom row above the
   status bar; the resources on the top bar and the calendar (date, week's event) on the status bar's right end (ADR-225, ADR-309);
   full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips, the
-  fog's look, the tile grid, the window mode) and "Layout" (the initiative bar, the adventure map's mirror, the UI scale).
+  fog's look, the tile grid, the window mode) and "Layout" (the initiative bar, the adventure map's mirror, the UI scale, the panel
+  opacity).
 - **Bottom row** (ADR-309): above the status bar, framed panels of one height: from the edge away from the minimap the selected hero's
   card and its army strip, from the minimap's edge End turn and the action buttons (mirrored with the layout). With no own hero selected
   the card and the strip are hidden and the others keep their places.
-- **Hero card** (ADR-309): the portrait (a click opens the hero screen), three thin bars beside it (movement green, mana blue, experience
-  to the next level gold; the numbers in their tooltips), the name and level, Attack, Defence, Spell power and Knowledge, and morale and
-  luck as icons with a signed value ("+2", "−1"). The army strip: always seven slots, empty ones dim; a stack shows the creature and the
-  count, its name on the status bar; a click opens the hero screen, a right click the creature's information window. A screen too
+- **Hero card** (ADR-309, ADR-310): the portrait as tall as the card, the same margin to its frame all round (a click opens the hero
+  screen), three thin bars beside it (movement green, mana blue, experience to the next level gold; the numbers in their tooltips), then
+  three rows: the name and level; Attack, Defence, Spell power and Knowledge; morale and luck as icons with a signed value ("+2",
+  "−1"). The army strip: always seven slots as tall as the row and two thirds as wide, empty ones dim; a stack shows the creature cut to
+  2:3 and the count, its name on the status bar; a click opens the hero screen, a right click the creature's information window. A screen too
   narrow for the whole row cuts the army strip at its end towards the middle, fading out over the map; the pointer on it shows it whole,
   over the action buttons.
-- **Action buttons** (ADR-210, ADR-309): two rows of five icon buttons, wider than tall: Move (Space), spell book (C), kingdom (K),
+- **Action buttons** (ADR-210, ADR-309): two rows of five square icon buttons: Move (Space), spell book (C), kingdom (K),
   quests (Q), puzzle map (P); dig (G), marketplace (M), switch level (L), hero screen (H), menu (F10). No labels: each one's name and key
   come from one hotkey table, which the keys also follow, and show on the status bar ("Dig [G]"); a greyed button adds why ("Move [Space]
   · Click a cell to plan a route first"). Move walks the selected hero along the route shown on the map; it is greyed with no hero, no
@@ -63,8 +65,9 @@ creatures and buildings, heraldic player colours, iconic map objects).
   none); the marketplace without a town marketplace; the level switch on a one-level map. In the replay viewer Move and the hero, spell
   book, dig and marketplace buttons are greyed. The spell book is a window over the map: the hero's mana, its adventure spells to cast,
   its battle spells by school with their costs.
-- **End turn** (ADR-204, ADR-309): an hourglass tile with no label ("End turn [Z]" on the status bar) and under it the week's seven
-  dots, today's lit in the colour of the player whose HUD it is; greyed while it is not this screen's player's turn, left out in the
+- **End turn** (ADR-204, ADR-309, ADR-310): an hourglass tile with no label ("End turn [Z]" on the status bar) and no button frame
+  inside the tile's own, ringed by the week's seven dots (the first at the top, then clockwise), today's lit in the colour of the player
+  whose HUD it is; the hourglass brightens under the pointer; greyed while it is not this screen's player's turn, left out in the
   replay viewer. Pressed (or Z) while a hero can still move, it asks first in the middle of the screen: "Mara and Aldric can still move.
   End the turn?", with End the turn and Cancel; Z or Enter answers it, and a new turn closes it.
 - **Top bar** (ADR-309): the six resources (short amounts past 6 digits for gold and 4 for the others, the full one in the tooltip) in the
@@ -80,7 +83,7 @@ creatures and buildings, heraldic player colours, iconic map objects).
   "Menu [F10]" button stands on the bar's right end, and before a game and in the replay viewer's battles in the bottom right corner. In
   the replay viewer the bar stands above the viewer's bar.
 - **Icon buttons** (ADR-204): a button with an icon shows the icon alone on a square button, 48 px in bars and panels (the battle
-  bar; End turn; the action buttons 36 px on buttons wider than tall), 32 px in rows, window headers and the replay viewer's bar (Play/Pause as one button showing what
+  bar; End turn; the action buttons 36 px on square buttons), 32 px in rows, window headers and the replay viewer's bar (Play/Pause as one button showing what
   pressing it does, Next turn, Next day, Skip to the result, Play from here; ADR-309) (a window's or screen's
   close "×" always in its top-right corner, ADR-225); hovering it puts its label and hotkey on the
   status bar, with no pop-up tooltip. A button whose icon is missing keeps its text. The buttons along a window's bottom (OK, Accept,
@@ -95,7 +98,7 @@ creatures and buildings, heraldic player colours, iconic map objects).
   as a little keep and heroes as a pennant in their owner's colour; the camera's frame drawn on it. Under it, on one line, the level
   caption ("Surface" or "Underground" with that level's icon; a click switches level; not on one-level maps), then Zoom in and Zoom out,
   which zoom the camera as the wheel does. A click on it centres the map there.
-- **Hero list** (ADR-309): at the edge away from the minimap, under the top bar, one entry per hero and growing with them, no heading:
+- **Hero list** (ADR-309): at the edge away from the minimap, down on the bottom row (above the hero card) and growing up to the top bar, one entry per hero and growing with them, no heading:
   the portrait (a lettered placeholder while a hero has none), then two thin upright bars, movement left (green) and mana (blue); the
   selected hero's entry framed in the player's colour. Hovering one puts the name on the status bar and a card beside the list, towards
   the middle: name and level, movement and mana as numbers, the four stats, the army's seven slots. A click selects the hero. More heroes than
@@ -142,12 +145,21 @@ creatures and buildings, heraldic player colours, iconic map objects).
   value outside the range is brought into it and onto the nearest of the three (the smaller of two as near). On a small window the scale
   is lowered, never below 100 %, so the UI keeps at least 960 by 540 of its own pixels (where the HUD fits whole): 1280×720 draws 200 %
   at 133 %.
+- **Adventure HUD frames** (ADR-310): the map's HUD (the column, the hero list, the bottom row, the top bar, the status bar, the turn
+  banner, the map's hover card) is drawn in code by one shader, not painted: a near-black face with a faint top-to-bottom shade, corners
+  of 6 px, a thin grey rim lit from the upper left (bright where it faces the light and near the lit corners, fading and a little worn
+  along the edges, near black on the far side), a dark line inside it and a soft drop shadow. Panels stand out with a slight bevel;
+  slots (army stacks, the hero and town entries, the portrait, the minimap) are sunk in; buttons bulge slightly, light up under the
+  pointer, sink while held and dim when disabled. The selected hero's entry takes the player's colour on its rim with a glow, a town's
+  entry its owner's colour on the rim, the turn banner its player's. Each part keeps the content margins of the painted frame it
+  replaced, so nothing moves.
+- **Panel opacity** (ADR-310): 40, 60, 80 or 100 % (the default), chosen on the "Layout" tab, applied at once and at start, kept in
+  `settings.json` with the interface settings; a value off the list goes to the nearest (the smaller of two as near). It is the
+  opacity of the HUD frames' faces; their rims and shadows stay whole, and a button's face is never under 55 %.
 - **Theme** (ADR-191, ADR-294): dark slate panels and buttons framed in bronze. The painted frames of
   [ui-element-prompts.md](../content/prompts/ui-element-prompts.md) are nine-slice boxes: screens, windows and the map's cards in the
   window frame with a line in the faction's accent on a town's windows; window titles on the title plate (in place of the divider under
-  them); the bottom row's parts in the overlay frame; tooltips and the map's hover card in the tooltip frame; the status bar and top bar
-  on the bar; the HUD's column and the hero list in the side column, its cast ornaments kept unstretched at its top and bottom middle; the
-  minimap in its frame; dividers as the bronze rod. A piece whose file is missing, and every piece in high contrast, falls back to the flat
+  them); tooltips in the tooltip frame; dividers as the bronze rod. A piece whose file is missing, and every piece in high contrast, falls back to the flat
   look (the window to a bevelled frame drawn in code). Every control the screens use (tabs, check boxes, fields, scroll
   bars, sliders, lists, menus, tooltips) has the look, so no default Godot control shows. Two faces: headings and titles in a carved
   capital face, the rest in a humanist sans, body text at least 16 px at 1080p; two pairings are proposed for the owner's pick (Cinzel with

@@ -221,6 +221,10 @@ $scenarios = @(
     # archer; Alt + click spreads the archers; a right click on a stack opens its information.
     @{ Name = 'game-hero-armies'; App = 'EternalWars.Game'; Frames = 70; Map = $townsMap
        Input = '3:key:Enter;8:key:Tab;12:key:H;20:drag:@20 | Pikeman>@—#1;30:hold:Ctrl,6;31:drag:@10 | Archer>@—#1;42:hold:Alt,4;43:click:@9 | Archer;54:rclick:@20 | Pikeman;64:key:Escape' },
+    # The procedural panel style on trial (BevelFrame): the sample screen alone, with the dark gradient, uniform black, and black 60 % transparent.
+    @{ Name = 'ui-style-sample'; App = 'EternalWars.Game'; Frames = 12; Args = @('--ui-sample'); Input = '' },
+    @{ Name = 'ui-style-sample-black'; App = 'EternalWars.Game'; Frames = 12; Args = @('--ui-sample=black'); Input = '' },
+    @{ Name = 'ui-style-sample-clear'; App = 'EternalWars.Game'; Frames = 12; Args = @('--ui-sample=clear'); Input = '' },
     # Haven's style frame (ADR-294, step 0): the greybox scene after key_haven-1 with its light, fog and grading, rendered alone.
     @{ Name = 'town-style-frame-haven'; App = 'EternalWars.Game'; Frames = 8; Scene = 'res://shared/scenes/towns/haven.tscn'; Input = '' },
     # Quests (ADR-127, ADR-128): the Seer's Hut, Quest Guard and Quest Gate shapes; the hero walks into the hut and completes its first stage, the next one shows; Q opens the
@@ -610,6 +614,10 @@ foreach ($size in '1280x720', '1280x800', '1920x1080', '2560x1440', '2560x1080')
         }
     }
 }
+
+# The HUD's panels at 60 % opacity (ADR-310): the map shows through their fill, the rims stay whole.
+$scenarios += @{ Name = 'hud-1920x1080-100-opacity-60'; App = 'EternalWars.Game'; Frames = 24; Map = $townsMap; Resolution = '1920x1080'
+    Settings = '{ "interface": { "panelOpacityPercent": 60 } }'; Input = '3:key:Enter;10:key:Tab' }
 
 # Every scenario has a seed of its own, so its games and battles are the same on every run (ADR-239): the entry's Seed, else one made from
 # its name (32-bit FNV-1a); -Seed overrides both. Scenarios without a new game (the main menu, a replay, the editor) pass it unused.

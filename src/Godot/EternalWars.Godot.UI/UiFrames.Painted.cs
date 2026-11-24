@@ -60,8 +60,7 @@ public static partial class UiFrames
     public static StyleBoxTexture? Minimap() => Painted("minimap") is { } art ? NineSlice(art, 20, 20, 18) : null;
 
     /// <summary>
-    /// A side column's frame (the HUD's column, the hero list): plain bronze sides around slate. Its cast ornaments, which must not stretch, are
-    /// drawn apart by <see cref="DrawColumnOrnaments"/>.
+    /// A side column's frame: plain bronze sides around slate, its cast ornaments covered. The adventure HUD keeps only its margins (ADR-310).
     /// </summary>
     public static StyleBoxTexture? Column(int padding = UiSpacing.Padding)
     {
@@ -72,20 +71,6 @@ public static partial class UiFrames
 
         var style = NineSlice(plain, ColumnSide, ColumnEnd, Math.Max(padding, ColumnEnd), horizontalPadding: Math.Max(padding, 10));
         return style;
-    }
-
-    /// <summary>Draws the column frame's ornaments at the top and bottom middle of <paramref name="rect"/> on <paramref name="item"/>, when it is wide enough.</summary>
-    public static void DrawColumnOrnaments(CanvasItem item, Rect2 rect)
-    {
-        if (Painted("side-panel") is not { } art || rect.Size.X < ColumnOrnament.Size.X + (2 * ColumnSide) || rect.Size.Y < 2 * ColumnEnd)
-        {
-            return;
-        }
-
-        var x = rect.Position.X + Mathf.Round((rect.Size.X - ColumnOrnament.Size.X) / 2);
-        item.DrawTextureRectRegion(art, new Rect2(x, rect.Position.Y, ColumnOrnament.Size), ColumnOrnament);
-        var bottom = ColumnOrnament with { Position = new Vector2(ColumnOrnament.Position.X, art.GetHeight() - ColumnEnd) };
-        item.DrawTextureRectRegion(art, new Rect2(x, rect.End.Y - ColumnEnd, bottom.Size), bottom);
     }
 
     /// <summary>The column's art with its ornaments covered by the plain rail beside them, so the rail can stretch.</summary>

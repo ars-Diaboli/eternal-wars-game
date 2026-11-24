@@ -8,7 +8,8 @@ namespace EternalWars.Core.Domain.Settings;
 /// <see cref="ShowGrid"/> draws the tile grid over its ground (ADR-183; off by default). <see cref="Window"/> is whether the game fills the
 /// screen (ADR-186; a window by default). <see cref="MapSort"/>, <see cref="MapSortReversed"/> and <see cref="MapSizeFilter"/> are how the
 /// new-game screen's map lists are sorted and filtered (ADR-204; by name, every size, by default). <see cref="UiScalePercent"/> is the size of
-/// the game's UI (ADR-309; 100 % by default; <see cref="ScaleFor"/> lowers it on a small window). Kept per computer in the settings file, like <see cref="SpeedSettings"/>; it changes no rule.
+/// the game's UI (ADR-309; 100 % by default; <see cref="ScaleFor"/> lowers it on a small window). <see cref="PanelOpacityPercent"/> is how
+/// opaque the adventure HUD's panels are (ADR-310; 100 % by default), their rims staying whole. Kept per computer in the settings file, like <see cref="SpeedSettings"/>; it changes no rule.
 /// </summary>
 public sealed record InterfaceSettings(
     bool DetailedTooltips = false,
@@ -18,13 +19,17 @@ public sealed record InterfaceSettings(
     MapSort MapSort = MapSort.Name,
     bool MapSortReversed = false,
     int MapSizeFilter = MapListView.AllSizes,
-    int UiScalePercent = 100)
+    int UiScalePercent = 100,
+    int PanelOpacityPercent = 100)
 {
     public const int MinUiScale = 100;
     public const int MaxUiScale = 200;
 
     /// <summary>The UI scales the game offers, in percent (ADR-309).</summary>
     public static IReadOnlyList<int> UiScales { get; } = [100, 150, 200];
+
+    /// <summary>The panel opacities the game offers, in percent (ADR-310).</summary>
+    public static IReadOnlyList<int> PanelOpacities { get; } = [40, 60, 80, 100];
 
     /// <summary>The smallest screen, in the UI's own pixels, the adventure HUD fits on whole (ADR-309): a UI scale never leaves less.</summary>
     public const int MinScaledWidth = 960, MinScaledHeight = 540;
@@ -44,12 +49,16 @@ public sealed record InterfaceSettings(
 
     /// <summary>
     /// The same settings with the UI scale inside its range, as the map editor's preferences are, then on the nearest scale offered (the
-    /// smaller of two as near).
+    /// smaller of two as near); the panel opacity on the nearest one offered (the smaller of two as near).
     /// </summary>
     public InterfaceSettings Normalized()
     {
         var scale = Math.Clamp(UiScalePercent, MinUiScale, MaxUiScale);
-        return this with { UiScalePercent = UiScales.MinBy(s => Math.Abs(s - scale)) };
+        return this with
+        {
+            UiScalePercent = UiScales.MinBy(s => Math.Abs(s - scale)),
+            PanelOpacityPercent = PanelOpacities.MinBy(o => Math.Abs(o - PanelOpacityPercent)),
+        };
     }
 
     /// <summary>These settings with the other window mode (Alt+Enter).</summary>

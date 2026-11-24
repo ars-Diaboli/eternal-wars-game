@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Godot.UI.Widgets;
 using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
@@ -86,8 +87,10 @@ public partial class ResourceTopBar : PanelContainer
         style.BorderWidthLeft = !_wide && _onRight ? 2 : 0;
         style.BorderWidthRight = !_wide && !_onRight ? 2 : 0;
         style.ContentMarginLeft = style.ContentMarginRight = UiSpacing.Gap;
-        AddThemeStyleboxOverride("panel", UiFrames.Bar(UiSpacing.Gap) ?? (StyleBox)style); // the painted bar where it exists (ADR-294)
+        _frame ??= UiFrames.Bevel(this, BevelKind.Panel, UiFrames.Bar(UiSpacing.Gap) ?? (StyleBox)style); // the HUD's bevelled panel (ADR-310), once
     }
+
+    private BevelFrame? _frame;
 
     private void Place()
     {

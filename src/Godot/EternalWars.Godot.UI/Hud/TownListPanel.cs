@@ -4,6 +4,7 @@ using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.Shared.Map;
+using EternalWars.Godot.UI.Widgets;
 using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
@@ -129,8 +130,7 @@ public partial class TownListPanel : BoxContainer
 
         button.CustomMinimumSize = EntrySize;
         button.SizeFlagsHorizontal = SizeFlags.Fill;
-        var face = UiTheme.Box(UiTheme.ButtonFace, Palette.ForPlayer(state, town.Owner!.Value).Darkened(0.2f), 2, borderWidth: 2);
-        button.AddThemeStyleboxOverride("normal", face);
+        UiFrames.Bevel(button, BevelKind.Slot).Tint(Palette.ForPlayer(state, town.Owner!.Value), 0.6f); // the owner's colour on the rim (ADR-310)
 
         if (governor is not null)
         {

@@ -10,8 +10,9 @@ using Godot;
 namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
-/// End turn (ADR-204, ADR-309): an hourglass tile with no label (its name and key, "End turn [Z]", on the status bar), and under it seven dots
-/// for the days of the week, today's lit in the colour of the player whose HUD it is. Greyed while it is not this screen's player's turn.
+/// End turn (ADR-204, ADR-309, ADR-310): an hourglass with no label (its name and key, "End turn [Z]", on the status bar) and no frame of its
+/// own (the tile's frame is the button's), ringed by seven dots for the days of the week, the first at the top and on clockwise, today's lit
+/// in the colour of the player whose HUD it is. The hourglass brightens under the pointer and greys while it is not this screen's player's turn.
 /// The adventure HUD asks first when a hero can still move (<see cref="EndTurnPressed"/>); without a listener it ends the turn at once.
 /// The calendar is on the status bar (<see cref="CalendarLabel"/>, ADR-225).
 /// </summary>
@@ -50,6 +51,17 @@ public partial class TurnPanel : BoxContainer
             .WithIcon(UiIcon.EndTurn, UiIcons.BarSize);
         _endTurn.SizeFlagsHorizontal = SizeFlags.Fill;
         _endTurn.SizeFlagsVertical = SizeFlags.ExpandFill;
+        _endTurn.CustomMinimumSize = new Vector2(WeekDots.Side, WeekDots.Side); // room for the ring round the hourglass
+        foreach (var state in (string[])["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"])
+        {
+            _endTurn.AddThemeStyleboxOverride(state, new StyleBoxEmpty());
+        }
+
+        _endTurn.AddThemeColorOverride("icon_normal_color", new Color(0.88f, 0.88f, 0.88f));
+        _endTurn.AddThemeColorOverride("icon_hover_color", Colors.White);
+        _endTurn.AddThemeColorOverride("icon_pressed_color", new Color(0.7f, 0.7f, 0.7f));
+        _endTurn.AddThemeColorOverride("icon_hover_pressed_color", new Color(0.7f, 0.7f, 0.7f));
+        _endTurn.AddThemeColorOverride("icon_disabled_color", new Color(1, 1, 1, 0.4f));
         _endTurn.Pressed += () =>
         {
             if (EndTurnPressed is { } ask)
@@ -62,7 +74,8 @@ public partial class TurnPanel : BoxContainer
             }
         };
         AddChild(_endTurn);
-        AddChild(_dots);
+        _endTurn.AddChild(_dots); // over the button, round its hourglass
+        _dots.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         Refresh();
         this.SubscribeWhileInTree<TurnStarted>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<DayStarted>(session.Events, _ => Refresh());
@@ -83,23 +96,28 @@ public partial class TurnPanel : BoxContainer
         if (_endTurn is not null)
         {
             _endTurn.Disabled = !_mine();
-            _endTurn.TooltipText = _mine() ? "Ends the turn; asks first while a hero can still move" : "Not your turn";
+            _endTurn.TooltipText = (_mine() ? "Ends the turn; asks first while a hero can still move" : "Not your turn")
+                + $" (day {_session.State.Date.Day} of the week)";
         }
 
         _dots.Today = _session.State.Date.Day;
         _dots.Lit = Palette.ForPlayer(_session.State, _listed());
-        _dots.TooltipText = $"Day {_session.State.Date.Day} of the week";
     }
 
-    /// <summary>The week's seven dots, today's lit.</summary>
+    /// <summary>The week's seven dots on a ring round the hourglass, the first at the top and on clockwise, today's lit.</summary>
     private sealed partial class WeekDots : Control
     {
         private const float Radius = 3.5f;
 
+        /// <summary>How far in from the button's edge the dots' centres lie.</summary>
+        private const float Inset = Radius + 5;
+
+        /// <summary>The button's least side: the hourglass, a gap, and a dot on each side.</summary>
+        public const float Side = UiIcons.BarSize + (4 * Inset);
+
         public WeekDots()
         {
-            CustomMinimumSize = new Vector2(GameDate.DaysPerWeek * ((2 * Radius) + 4), (2 * Radius) + 4); // the dots apart
-            MouseFilter = MouseFilterEnum.Pass;
+            MouseFilter = MouseFilterEnum.Ignore; // the button under it takes the clicks
         }
 
         public int Today
@@ -124,10 +142,12 @@ public partial class TurnPanel : BoxContainer
 
         public override void _Draw()
         {
-            var step = Size.X / GameDate.DaysPerWeek;
+            var middle = Size / 2;
+            var ring = (Math.Min(Size.X, Size.Y) / 2) - Inset;
             for (var day = 1; day <= GameDate.DaysPerWeek; day++)
             {
-                var centre = new Vector2(step * (day - 0.5f), Size.Y / 2);
+                var angle = (-Mathf.Pi / 2) + (Mathf.Tau * (day - 1) / GameDate.DaysPerWeek);
+                var centre = middle + (ring * new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)));
                 DrawCircle(centre, Radius + 1, Colors.Black);
                 DrawCircle(centre, Radius, day == Today ? Lit : UiTheme.BorderDim);
             }

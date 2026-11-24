@@ -49,6 +49,7 @@
 | [306](#adr-306-town-screen-step-3-task-7-the-fade-through-black-into-the-hero-shot-and-the-layout-loaded-ahead-town-23-adr-090-adr-292-2026-11-23) | Town screen step 3, task 7: the fade through black into the hero shot and the layout loaded ahead (TOWN-23, ADR-090, ADR-292, 2026-11-23) | implemented |
 | [308](#adr-308-town-screen-step-3-task-8-the-budget-overlay-the-town-scenes-budget-set-and-a-layouts-resources-let-go-town-23-adr-294-adr-306-2026-11-23) | Town screen step 3, task 8: the budget overlay, the town scene's budget set and a layout's resources let go (TOWN-23, ADR-294, ADR-306, 2026-11-23) | implemented |
 | [309](#adr-309-the-adventure-hud-redesign-one-arrangement-mirrored-parts-along-the-edges-and-a-bottom-row-of-equal-panels-icon-only-buttons-in-a-2--5-grid-adr-156-adr-186-adr-191-adr-204-adr-210-owners-mockups-2026-11-24) | The adventure HUD redesign: one arrangement, mirrored; parts along the edges and a bottom row of equal panels; icon-only buttons in a 2 × 5 grid (ADR-156, ADR-186, ADR-191, ADR-204, ADR-210, owner's mockups, 2026-11-24) | accepted |
+| [310](#adr-310-the-adventure-huds-frames-drawn-by-a-shader-a-bevelled-dark-panel-with-a-lit-worn-grey-rim-slots-sunk-in-the-panel-opacity-a-setting-adr-191-adr-294-adr-309-owner-2026-11-24) | The adventure HUD's frames drawn by a shader: a bevelled dark panel with a lit, worn grey rim; slots sunk in; the panel opacity a setting (ADR-191, ADR-294, ADR-309, owner, 2026-11-24) | implemented |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -1023,3 +1024,23 @@ applied at start and when changed.
   UI's own pixels (not below 100 %).
 - **Open**: [HUD-1](../open-questions.md#hud-1) (which events stop play with a notice card) and [HUD-2](../open-questions.md#hud-2)
   (long answer lists).
+
+### ADR-310: The adventure HUD's frames drawn by a shader: a bevelled dark panel with a lit, worn grey rim; slots sunk in; the panel opacity a setting (ADR-191, ADR-294, ADR-309, owner, 2026-11-24)
+
+**Status**: implemented (2026-11-24); supersedes in part ADR-294 (the adventure HUD's painted frames) and ADR-309 (the HUD's frames).
+
+- **Decision**: the adventure map's HUD frames are drawn in code by one shader (`shaders/ui_bevel.gdshader`, `BevelFrame` behind the part,
+  `UiFrames.Bevel`) in place of the painted column, overlay, minimap, bar and tooltip frames and the flat slot and button boxes. The look
+  and its parts are stated once in [presentation.md](../../docs/design/presentation.md) (Adventure HUD frames, Panel opacity).
+- **Why**: the owner's reference screens frame the HUD in thin, unevenly lit grey rims on near-black faces, which no stretched or tiled
+  texture reproduces: the rim's light changes along each edge. The owner tried the shader on a sample screen (`--ui-sample`: a gradient
+  face, uniform black, black at 40 %) and chose the gradient face with the bevel lowered and corners of 6 px.
+- **Kept**: each part keeps the content margins of the painted frame it replaced, so the layout (ADR-309) does not move; the town and
+  hero screens, windows and tooltips elsewhere keep the painted frames (ADR-294). Two changes to the parts themselves, at the owner's
+  word: the action buttons are square (they were wider than tall), and End turn's hourglass has no frame of its own inside the tile's,
+  with the week's dots on a ring round it instead of a row under it. Then: the hero card's portrait as tall as the card (the same margin
+  to the frame all round) and its name, primary stats and morale and luck on three rows (the card 400 px wide); the army strip's slots as
+  tall as the row and two thirds as wide, the creature cut to 2:3; the hero list down on the bottom row, growing upwards.
+- **Panel opacity**: an interface setting of 40, 60, 80 or 100 % (`InterfaceSettings.PanelOpacityPercent`), on the Layout tab, applied at
+  once; the faces' opacity only, a button's never under 55 %.
+- **Cost**: one draw call per frame (each has its own material for its size), a few dozen on the map, far inside ADR-308's budget.
