@@ -269,26 +269,30 @@ bolts, their feathers fanned at the top; 4 a second take of cell 1
 Image models draw machines badly (wheels at odd angles, uneven bow arms). This sheet follows the **rules for mechanical subjects** below;
 generate it on its own and expect to roll it several times.
 
-**Prompt** · 1024 × 1024 · negative `NEG-PAINTED-MECH`
+**Prompt** · 1024 × 1024 · negative `NEG-PAINTED-MECH`, plus `flat side view, pure side profile, top-down view, seen from directly
+above, orthographic, blueprint, technical drawing, diagram`
 
 ```text
 Game UI icon sheet in a realistic painterly dark-fantasy style, like a detailed digital oil painting or a concept-art prop study:
 realistic proportions and believable construction, worn real materials (steel, wood, leather, stone, glass) with fine surface detail
 (scratches, dents, grime, patina, rust, frayed edges). Naturalistic light from the top left with soft shadows and subtle reflected
 light, a full range of values from deep shadow to one small sharp highlight, muted natural colours with one accent colour per icon.
-Each subject a clear silhouette set apart by value contrast, its edges made by light and shadow, not by drawn lines; three-quarter view
-slightly from above unless a cell says otherwise. Not a photograph, not a plastic CGI render, no pixel art. 4 separate icons arranged
-in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale
-and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers.
-Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a heavy siege crossbow seen from directly
-above: a long wooden stock running from the bottom of the cell to the top, the bow across it near the top as one wide arc,
-mirror-symmetric, both arms the same length and curve, the string a straight line from tip to tip pulled back into a V to the trigger,
-one thick bolt lying along the stock; iron bands on the wood; no wheels; 2 a wooden catapult in pure side profile, facing right: a low
-rectangular frame on two solid plank wheels, each a perfect circle, one throwing arm angled up at 45° with a cup holding a round stone,
-a crossbar where the arm stops; the far wheels are hidden exactly behind the near ones; 3 a small white canvas field tent in
-three-quarter view, its flap tied open, a pole at the front with a red flame-shaped pennant (no red cross: it is a protected emblem); 4
-a two-wheeled wooden handcart in pure side profile, facing right: one visible wheel, a perfect circle with six straight spokes, two
-long handles reaching to the left, the box full of bundled arrows standing upright; the far wheel hidden exactly behind the near one
+Each subject a clear silhouette set apart by value contrast, its edges made by light and shadow, not by drawn lines. Every machine is
+a solid object with depth, seen in the same camera: a three-quarter view from the front left and about 30° above, so its front, its
+left side and its top all show; never a flat side view, never from straight above. Not a photograph, not a plastic CGI render, no
+pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about
+10 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no
+frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a
+heavy siege crossbow on a low four-legged wooden trestle, aimed to the upper right: a long wooden stock running diagonally across the
+cell, the bow across its front end as one wide arc, mirror-symmetric, both arms the same length and curve, the string a straight line
+from tip to tip pulled back into a V to the trigger, one thick bolt lying along the stock; iron bands on the wood; no wheels; 2 a
+wooden catapult facing to the right: a low rectangular frame on four solid plank wheels with iron rims; the two near wheels fully in
+view, upright ellipses of exactly the same shape, both square to one straight axle; the two far wheels partly hidden behind the
+frame, the same ellipses; one throwing arm angled up at 45° with a cup holding a round stone, a crossbar where the arm stops; 3 a
+small white canvas field tent, its flap tied open, a pole at the front with a red flame-shaped pennant (no red cross: it is a
+protected emblem); 4 a two-wheeled wooden handcart, its two long handles reaching toward the viewer at the lower left: two solid
+plank wheels with iron rims on one straight axle under the box, the near wheel a full upright ellipse, the far wheel the same ellipse
+partly hidden behind the box; the box full of bundled arrows standing upright
 ```
 
 | # | File |
@@ -300,14 +304,16 @@ long handles reaching to the left, the box full of bundled arrows standing uprig
 
 **Rules for mechanical subjects** (machines, bows, scales, carts):
 
-- **Choose the view that removes perspective**: pure side profile for anything with wheels; straight above or straight front for a bow.
-  Three-quarter views are where wheels go oval and tilted.
+- **Show machines with depth, and pin the perspective**: a wheeled machine or a siege engine in a three-quarter view from the front left
+  and about 30° above (a flat side profile or a view from straight above reads as a diagram, not an object), and describe the wheels in
+  that view: "upright ellipses of exactly the same shape, square to one straight axle". A hand-held bow or scales may stay straight front.
 - **Say the counts and shapes**: "one visible wheel, a perfect circle, six spokes", "two wheels", "one throwing arm".
 - **Say the symmetry**: "mirror-symmetric, both arms the same length and curve, the string straight from tip to tip".
 - **Fewer parts**: no ropes, winches, gears or crew unless the subject needs them; solid plank wheels are safer than spoked ones.
 - **Use `NEG-PAINTED-MECH` as the negative** (the Prompt lines of sheets 3, 7 and 16 name it; use it for any new painted sheet with a wheel, a bow or scales).
 - **If it still fails**: generate the one icon alone (1 × 1 at 1024 px); or sketch it (a few boxes and cylinders in Blender or Godot, a
-  screenshot is enough) and give it to the model as the image input at medium strength; or fix the wheel by hand with a circle.
+  screenshot from the same three-quarter camera is enough) and give it to the model as the image input at medium strength; or fix the
+  wheel by hand with an ellipse.
 
 ### 29 · Difficulty (2 × 3) — the new-game screen's difficulty row, the victory screen, the leaderboard (ADR-225)
 
@@ -1002,7 +1008,7 @@ complete and unbroken
 1. Look at each sheet's icons side by side at 32 px: one clear shape each, the same scale and light across the sheet.
 2. Look for a cartoon look: thick outlines, flat colour fills, bubbly shapes, plastic shine. Regenerate such a sheet (with its
    `NEG-PAINTED` or `NEG-PAINTED-MECH` negative where the model takes one) rather than fixing it by hand.
-3. Check mechanical subjects for oval or tilted wheels and uneven bow arms; regenerate rather than fix by hand where possible.
+3. Check mechanical subjects for wheels of different shapes or tilted off their axle, flat side or top-down views, and uneven bow arms; regenerate rather than fix by hand where possible.
 4. The icons and crests already in `textures/ui/` (resources, stats, skills, machines, schools, actions, heraldry crests) are the
    earlier, more cartoon-like takes: regenerate tiers A and B and the crests with these prompts; tier C and the charges stay.
 5. Put the files in the folder of their group under `src/Godot/EternalWars.Godot.Assets/textures/ui/` and add a line to its
