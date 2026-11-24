@@ -160,23 +160,15 @@ public partial class AdventureHud : CanvasLayer
             Banner.Bind(session);
         }
 
-        // The minimap, the town list and the action panel down the right, or the left when mirrored; the hero list at the other edge (ADR-309).
+        // The minimap in the top right, or the top left when mirrored, the town list in its own panel below it; the hero list in its own
+        // panel at the other edge (ADR-309, ADR-313).
         _layout.AddToColumn(BuildMinimap());
-        var heroes = new PanelContainer { Name = "HeroListFrame" };
-        UiFrames.Bevel(heroes, BevelKind.Panel, UiFrames.Column(), UiSpacing.Padding); // the painted column's margins: the list keeps its place (ADR-310)
-
-        var heroScroll = new ScrollContainer // more heroes than the edge holds scroll (the wheel), with no bar
-        {
-            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, VerticalScrollMode = ScrollContainer.ScrollMode.ShowNever,
-        };
-        heroes.AddChild(heroScroll);
         HeroList = new HeroListPanel();
-        heroScroll.AddChild(HeroList);
-        _layout.SetOpposite(heroes, HeroList);
+        _layout.SetOpposite(ListFrame("HeroListFrame", HeroList), HeroList);
         HeroList.Bind(session, () => context.ListedPlayer);
         HeroList.HeroSelected += hero => HeroSelected?.Invoke(hero);
-        var townList = new TownListPanel { SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter };
-        _layout.AddToColumn(townList);
+        var townList = new TownListPanel();
+        _layout.SetTownList(ListFrame("TownListFrame", townList), townList);
         townList.Bind(session, () => context.ListedPlayer);
         townList.TownSelected += town =>
         {
@@ -584,6 +576,23 @@ public partial class AdventureHud : CanvasLayer
         {
             HoverCard.Follow(pointer);
         }
+    }
+
+    /// <summary>
+    /// A list's panel: the HUD's bevelled panel with the painted column's margins (ADR-310), the list inside scrolling with the wheel, with
+    /// no bar, when it is taller than the room.
+    /// </summary>
+    private static PanelContainer ListFrame(string name, Control list)
+    {
+        var frame = new PanelContainer { Name = name };
+        UiFrames.Bevel(frame, BevelKind.Panel, UiFrames.Column(), UiSpacing.Padding);
+        var scroll = new ScrollContainer
+        {
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, VerticalScrollMode = ScrollContainer.ScrollMode.ShowNever,
+        };
+        frame.AddChild(scroll);
+        scroll.AddChild(list);
+        return frame;
     }
 
     /// <summary>Places the parts as <paramref name="layout"/> says (the "Layout" tab changed): the default or its mirror (ADR-309).</summary>

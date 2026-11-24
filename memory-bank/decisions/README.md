@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-312.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-314.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -338,3 +338,5 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [309](presentation.md#adr-309-the-adventure-hud-redesign-one-arrangement-mirrored-parts-along-the-edges-and-a-bottom-row-of-equal-panels-icon-only-buttons-in-a-2--5-grid-adr-156-adr-186-adr-191-adr-204-adr-210-owners-mockups-2026-11-24) | presentation | The adventure HUD redesign: one arrangement, mirrored; parts along the edges and a bottom row of equal panels; icon-only buttons in a 2 × 5 grid (ADR-156, ADR-186, ADR-191, ADR-204, ADR-210, owner's mockups, 2026-11-24) | accepted |
 | [310](presentation.md#adr-310-the-adventure-huds-frames-drawn-by-a-shader-a-bevelled-dark-panel-with-a-lit-worn-grey-rim-slots-sunk-in-the-panel-opacity-a-setting-adr-191-adr-294-adr-309-owner-2026-11-24) | presentation | The adventure HUD's frames drawn by a shader: a bevelled dark panel with a lit, worn grey rim; slots sunk in; the panel opacity a setting (ADR-191, ADR-294, ADR-309, owner, 2026-11-24) | implemented |
 | [311](presentation.md#adr-311-every-frame-of-the-game-drawn-by-the-shader-windows-dialogs-tooltips-cards-buttons-the-rest-of-the-theme-in-its-grey-adr-191-adr-294-adr-310-owner-2026-11-24) | presentation | Every frame of the game drawn by the shader: windows, dialogs, tooltips, cards, buttons; the rest of the theme in its grey (ADR-191, ADR-294, ADR-310, owner, 2026-11-24) | implemented |
+| [312](presentation.md#adr-312-the-ui-icons-and-the-cursors-in-aluminium-ui-element-promptsmd-down-to-the-backgrounds-adr-116-adr-204-adr-311-owner-2026-11-24) | presentation | The UI icons and the cursors in aluminium; ui-element-prompts.md down to the backgrounds (ADR-116, ADR-204, ADR-311, owner, 2026-11-24) | accepted |
+| [313](presentation.md#adr-313-the-town-list-in-its-own-panel-the-hero-lists-twin-the-side-column-down-to-the-minimap-adr-309-owner-2026-11-25) | presentation | The town list in its own panel, the hero list's twin; the side column down to the minimap (ADR-309, owner, 2026-11-25) | implemented |

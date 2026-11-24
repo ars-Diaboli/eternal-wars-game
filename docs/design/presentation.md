@@ -40,8 +40,8 @@ creatures and buildings, heraldic player colours, iconic map objects).
 
 ## Camera and UI
 - **Camera** (ADR-022): tilted **15–30° from vertical** (more tilted zoomed in), **rotatable ±45°**, zoom, pan.
-- **UI**: a HoMM-style side panel on the right, or the left when mirrored (ADR-191, ADR-309): one framed column from the top down to the
-  bottom row with the minimap and the town list, which takes the clicks on it; the hero list at the other edge; the bottom row above the
+- **UI**: a HoMM-style side panel on the right, or the left when mirrored (ADR-191, ADR-309, ADR-313): the minimap in a framed panel in
+  the top corner, which takes the clicks on it, and the town list in its own panel below; the hero list at the other edge; the bottom row above the
   status bar; the resources on the top bar and the calendar (date, week's event) on the status bar's right end (ADR-225, ADR-309);
   full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips, the
   fog's look, the tile grid, the window mode) and "Layout" (the initiative bar, the adventure map's mirror, the UI scale, the panel
@@ -103,8 +103,9 @@ creatures and buildings, heraldic player colours, iconic map objects).
   selected hero's entry framed in the player's colour. Hovering one puts the name on the status bar and a card beside the list, towards
   the middle: name and level, movement and mana as numbers, the four stats, the army's seven slots. A click selects the hero. More heroes than
   the edge holds scroll with the wheel. In a computer's turn the lists and the resources stay the person's, never the computer's.
-- **Town list** (ADR-309): under the minimap, four narrow slots, with arrows above and below when there are more towns; no heading.
-  An entry is the town's picture (its faction's crest for now), the governor's portrait in the top corner and the build mark in the
+- **Town list** (ADR-309, ADR-313): its own panel on the minimap's side, the hero list's twin: down on the bottom row (above End turn
+  and the actions) and growing up to the minimap's panel, one entry per town and growing with them, no heading and no text; more towns
+  than the room holds scroll with the wheel. An entry is the town's picture (its faction's crest for now), the governor's portrait in the top corner and the build mark in the
   bottom one: a hammer on a stone, lit while the town can build today and dimmed once it has; a keep with a laurel wreath instead when
   nothing is left to build: every building at its last level and every dwelling line built out or closed by the 7-of-9 rule (ADR-030),
   the Grail building and a second Capitol not counted. The name and the build state go to the status bar on hover; a click centres the
@@ -133,8 +134,8 @@ creatures and buildings, heraldic player colours, iconic map objects).
 - **Hover card** (ADR-309): resting the pointer on a map object or a hero for a moment shows a small card beside it: the name, the owner
   ("you", a player's name, "none") and what it gives ("+2 ore a day"); no picture, none for the bare ground, none over a HUD control or
   while the map is dimmed. The name and its description are on the status bar at once.
-- **LAN chat** (ADR-194, ADR-309): over the map in the side column under the town list when the column has room for it, else beside the
-  town list towards the middle; over a battle at the bottom left above the battle's log.
+- **LAN chat** (ADR-194, ADR-309, ADR-313): over the map between the minimap's panel and the town list when there is room for it, else
+  beside the minimap's panel towards the middle; over a battle at the bottom left above the battle's log.
 - **Window mode** (ADR-186): Windowed or Fullscreen (borderless, the screen's own size), in the "Settings" tab; Alt+Enter switches it, in
   the game and in the map editor. Kept in `settings.json`, applied at once and at start.
 - **Layout** (ADR-118, ADR-156, ADR-309): the "Layout" tab sets the battle's initiative bar (top or bottom) and the adventure map's HUD:
@@ -162,7 +163,8 @@ creatures and buildings, heraldic player colours, iconic map objects).
 - **Theme** (ADR-191, ADR-294, ADR-311): the frames above, and the controls the shader does not frame drawn flat to match: a
   near-black face and a thin grey rim with 6 px corners on tabs, drop-down menus, scroll bars, sliders, progress bars, check boxes and
   radio buttons; dividers a quiet grey line; a window's title over a divider. Every control the screens use has the look, so no default
-  Godot control shows. High contrast keeps flat boxes in light frames. Two faces: headings and titles in a carved
+  Godot control shows. High contrast keeps flat boxes in light frames. Icons and cursors are aluminium (ADR-312): pale satin metal with a
+  fine grainy texture and worn edges, light grey to near-white in a thick dark outline, no other colour; only the faction crests keep their colours. Two faces: headings and titles in a carved
   capital face, the rest in a humanist sans, body text at least 16 px at 1080p; two pairings are proposed for the owner's pick (Cinzel with
   Alegreya Sans, the default, and Marcellus SC with Fira Sans), the licences beside them in `fonts/`. The map editor keeps the colours and
   Godot's font in its compact variant.

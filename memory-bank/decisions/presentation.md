@@ -51,6 +51,8 @@
 | [309](#adr-309-the-adventure-hud-redesign-one-arrangement-mirrored-parts-along-the-edges-and-a-bottom-row-of-equal-panels-icon-only-buttons-in-a-2--5-grid-adr-156-adr-186-adr-191-adr-204-adr-210-owners-mockups-2026-11-24) | The adventure HUD redesign: one arrangement, mirrored; parts along the edges and a bottom row of equal panels; icon-only buttons in a 2 × 5 grid (ADR-156, ADR-186, ADR-191, ADR-204, ADR-210, owner's mockups, 2026-11-24) | accepted |
 | [310](#adr-310-the-adventure-huds-frames-drawn-by-a-shader-a-bevelled-dark-panel-with-a-lit-worn-grey-rim-slots-sunk-in-the-panel-opacity-a-setting-adr-191-adr-294-adr-309-owner-2026-11-24) | The adventure HUD's frames drawn by a shader: a bevelled dark panel with a lit, worn grey rim; slots sunk in; the panel opacity a setting (ADR-191, ADR-294, ADR-309, owner, 2026-11-24) | implemented |
 | [311](#adr-311-every-frame-of-the-game-drawn-by-the-shader-windows-dialogs-tooltips-cards-buttons-the-rest-of-the-theme-in-its-grey-adr-191-adr-294-adr-310-owner-2026-11-24) | Every frame of the game drawn by the shader: windows, dialogs, tooltips, cards, buttons; the rest of the theme in its grey (ADR-191, ADR-294, ADR-310, owner, 2026-11-24) | implemented |
+| [312](#adr-312-the-ui-icons-and-the-cursors-in-aluminium-ui-element-promptsmd-down-to-the-backgrounds-adr-116-adr-204-adr-311-owner-2026-11-24) | The UI icons and the cursors in aluminium; ui-element-prompts.md down to the backgrounds (ADR-116, ADR-204, ADR-311, owner, 2026-11-24) | accepted |
+| [313](#adr-313-the-town-list-in-its-own-panel-the-hero-lists-twin-the-side-column-down-to-the-minimap-adr-309-owner-2026-11-25) | The town list in its own panel, the hero list's twin; the side column down to the minimap (ADR-309, owner, 2026-11-25) | implemented |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -1063,5 +1065,39 @@ and divider) and ADR-310 (the shader for the HUD only).
   frame's tint and opacity ride on the box: a faction's accent, a building's state, a spell's school; windows opaque, the HUD's panels
   the panel opacity setting.
 - **Kept**: the map editor's compact theme and high contrast keep their flat boxes (ADR-250, ADR-277); the painted pieces stay as high
-  contrast's window and as the content margins the frames keep. The battle HUD's own panels wait for its restyle (ADR-312).
+  contrast's window and as the content margins the frames keep. The battle HUD's own panels wait for its restyle (ADR-314).
 - **Cost**: one draw call per framed control; the town screen's windows and the menu stay far inside ADR-308's budget.
+
+### ADR-312: The UI icons and the cursors in aluminium; ui-element-prompts.md down to the backgrounds (ADR-116, ADR-204, ADR-311, owner, 2026-11-24)
+
+**Status**: accepted (2026-11-24); supersedes in part ADR-116 and ADR-204 (the icons painted in colour, the cursors in grey iron).
+
+- **Decision**: every UI icon but the heraldry, and every cursor, is **aluminium**: pale satin metal with a fine grainy bead-blasted
+  texture, faint brushed lines and worn edges, light silvery grey faces and near-white bevels, soft low-contrast reflections, never dark
+  and never mirror-bright, in a thick near-black outline with a thin white edge inside it; no gold, bronze or other colour but the dark
+  red of the blocked sign. Three tiers: small aluminium objects in three-quarter view (resources, war machines, difficulty), bold
+  aluminium glyphs seen from the front (stats, skills, magic schools, hero condition, the map's and the battle's actions, the HUD's
+  marks), and the simplest glyphs, which the theme tints (buttons, the replay bar). Subjects are told apart by shape alone; spells and
+  portals by a soft white glow. The crests keep their faction colours and the charges stay white masks. The prompts are in
+  [icon-prompts.md](../../docs/content/prompts/icon-prompts.md) and [cursor-prompts.md](../../docs/content/prompts/cursor-prompts.md).
+- **Why**: the owner asked for the icons, cursors and other elements in the style of their HUD mockup; of the test sheets (polished
+  silver, grainy dark iron, lighter iron, aluminium) they chose the aluminium one, which keeps the old iron cursors' grain and detail.
+- **Also**: [ui-element-prompts.md](../../docs/content/prompts/ui-element-prompts.md) keeps only the screen backgrounds: the frames,
+  buttons, slots, bars and HUD pieces it described are drawn by the shader (ADR-310, ADR-311) and need no art.
+- **Open**: resources and magic schools lose the colour that told them apart; if they read badly at 24 px, a faint wash of their own
+  colour is the fallback.
+
+### ADR-313: The town list in its own panel, the hero list's twin; the side column down to the minimap (ADR-309, owner, 2026-11-25)
+
+**Status**: implemented (2026-11-25); supersedes in part ADR-309 (the town list in the side column, four slots and arrows) and ADR-194
+(the chat's place under the town list).
+
+- **Decision**: the town list leaves the side column for a panel of its own on the minimap's side, made like the hero list's at the
+  other edge: down on the bottom row and growing up to the minimap's panel, one entry per town, no heading, no text, the wheel scrolling
+  what does not fit. The side column's panel ends under the minimap. The LAN chat goes between the two panels when there is room, else
+  beside the minimap's panel. The rules are in [presentation.md](../../docs/design/presentation.md) (UI, Town list, LAN chat).
+- **Why**: the owner saw the column mostly empty under a single town and asked for a separate panel like the hero list, without titles
+  or labels.
+- **How**: `TownListPanel` lists every town; `AdventureHud.ListFrame` frames both lists; `AdventureHudLayout.SetTownList` places it. A
+  list's panel hides while the list is empty.
+

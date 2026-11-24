@@ -5,12 +5,13 @@ using Godot;
 namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
-/// Places the adventure map's HUD parts (ADR-309, <see cref="HudArrangement"/>): a framed column (ADR-191) down the minimap's side of the
-/// screen (the right, or the left when mirrored) holding the minimap and the town list, as wide as its widest part; the hero list
-/// (<see cref="SetOpposite"/>) at the other edge, down on the bottom row and growing up to the top bar; and the bottom row above the status bar (<see cref="SetBottom"/>): the
-/// hero card and the army strip from the column's far edge, the action buttons and End turn from the column's edge, all as tall as the
-/// tallest. The LAN chat's place (<see cref="ChatRect"/>) is under the column's last part (the town list) when the column has room for it,
-/// else beside that part, towards the middle of the screen. A hidden part leaves its place empty and the others where they are. The layer covers the screen but lets the mouse through; each
+/// Places the adventure map's HUD parts (ADR-309, ADR-313, <see cref="HudArrangement"/>): a framed column (ADR-191) in the minimap's corner of
+/// the screen (the top right, or the top left when mirrored) holding the minimap, as wide as its widest part; the town list
+/// (<see cref="SetTownList"/>) in its own panel on that side, down on the bottom row and growing up to the column; the hero list
+/// (<see cref="SetOpposite"/>) the same at the other edge, growing up to the top bar; and the bottom row above the status bar
+/// (<see cref="SetBottom"/>): the hero card and the army strip from the column's far edge, the action buttons and End turn from the column's
+/// edge, all as tall as the tallest. The LAN chat's place (<see cref="ChatRect"/>) is between the column and the town list when there is room
+/// for it, else beside the column, towards the middle of the screen. A hidden part leaves its place empty and the others where they are. The layer covers the screen but lets the mouse through; each
 /// part is a child that is moved, never reparented (a part's event subscriptions last while it is in the tree). It re-places the parts
 /// whenever one's size changes.
 /// </summary>
@@ -24,6 +25,8 @@ public partial class AdventureHudLayout : Container
     private readonly Dictionary<HudPart, Control> _bottom = [];
     private Control? _opposite;
     private Control? _oppositeContent;
+    private Control? _towns;
+    private Control? _townsContent;
     private LayoutSettings _layout = LayoutSettings.Default;
 
     /// <summary>
@@ -83,6 +86,18 @@ public partial class AdventureHudLayout : Container
         content.MinimumSizeChanged += QueueSort; // the frame's own minimum leaves the scrolled content out
     }
 
+    /// <summary>
+    /// The town list's <paramref name="frame"/> on the column's side, down on the bottom row and growing up to the column, as tall as its
+    /// <paramref name="content"/> (which scrolls inside it) up to the room between them.
+    /// </summary>
+    public void SetTownList(Control frame, Control content)
+    {
+        _towns = frame;
+        _townsContent = content;
+        AddChild(frame);
+        content.MinimumSizeChanged += QueueSort;
+    }
+
     /// <summary>Adds <paramref name="control"/> to the column, under the parts added before it.</summary>
     public void AddToColumn(Control control)
     {
@@ -114,8 +129,7 @@ public partial class AdventureHudLayout : Container
         var panelX = left ? 0 : screen.X - panelWidth;
         var rowHeight = BottomRowHeight;
         var rowTop = screen.Y - _bottomReserve - Margin - rowHeight;
-        var bottom = _bottom.Count == 0 ? screen.Y - _bottomReserve : rowTop - Margin; // where the column and the hero list stop
-        FitChildInRect(_sidePanel, new Rect2(panelX, 0, panelWidth, bottom));
+        var bottom = _bottom.Count == 0 ? screen.Y - _bottomReserve : rowTop - Margin; // where the lists stop
 
         var x = panelX + Margin;
         var y = Margin;
@@ -128,24 +142,46 @@ public partial class AdventureHudLayout : Container
             y += height + Margin;
         }
 
-        // The chat: between the town list and the bottom row when the column has the room, else beside the town list towards the middle.
-        var room = bottom - Margin - y;
-        ChatRect = room >= ChatHeight
-            ? new Rect2(x, y, width, Math.Min(room, ChatMaxHeight))
-            : new Rect2(left ? panelX + panelWidth + Margin : panelX - Margin - UiTheme.MapChatSize.X, last.Position.Y, UiTheme.MapChatSize.X, ChatHeight);
+        var columnEnd = _column.Count == 0 ? 0 : y; // the column's panel ends a margin under its last part
+        FitChildInRect(_sidePanel, new Rect2(panelX, 0, panelWidth, columnEnd));
+
+        // The town list under the column, the hero list at the other edge, each down at the bottom just above the bottom row (the hero card
+        // beside the hero list) and growing upwards: the towns' up to the column, the heroes' up to the top bar.
+        var townsTop = bottom - Margin;
+        if (_towns is not null)
+        {
+            townsTop = Stack(_towns, _townsContent, columnEnd + Margin, bottom, !left, screen).Position.Y;
+        }
 
         if (_opposite is not null)
         {
-            var size = _opposite.GetCombinedMinimumSize();
-            size.Y += _oppositeContent?.GetCombinedMinimumSize().Y ?? 0;
-            var top = ResourceTopBar.Height + Margin;
-            size.Y = Math.Min(size.Y, Math.Max(0, bottom - Margin - top));
-            // Down at the bottom, just above the bottom row (the hero card beside it), growing upwards to the top bar.
-            FitChildInRect(_opposite, new Rect2(left ? screen.X - size.X - Margin : Margin, bottom - Margin - size.Y, size.X, size.Y));
+            Stack(_opposite, _oppositeContent, ResourceTopBar.Height + Margin, bottom, left, screen);
         }
+
+        // The chat: between the column and the town list when there is the room, else beside the column towards the middle.
+        var room = townsTop - Margin - columnEnd;
+        ChatRect = room >= ChatHeight
+            ? new Rect2(x, columnEnd, width, Math.Min(room, ChatMaxHeight))
+            : new Rect2(left ? panelX + panelWidth + Margin : panelX - Margin - UiTheme.MapChatSize.X, last.Position.Y, UiTheme.MapChatSize.X, ChatHeight);
 
         PlaceBottomRow(screen, rowTop, rowHeight);
         Placed?.Invoke();
+    }
+
+    /// <summary>
+    /// Places a list's <paramref name="frame"/> at the screen's right edge (<paramref name="right"/>) or its left, its foot a margin above
+    /// <paramref name="bottom"/>, as tall as the frame and its <paramref name="content"/> up to <paramref name="top"/>.
+    /// </summary>
+    private Rect2 Stack(Control frame, Control? content, float top, float bottom, bool right, Vector2 screen)
+    {
+        var size = frame.GetCombinedMinimumSize();
+        var listed = content?.GetCombinedMinimumSize().Y ?? 0;
+        frame.Visible = content is null || listed > 0; // no towns, no heroes: no empty panel
+        size.Y += listed;
+        size.Y = Math.Min(size.Y, Math.Max(0, bottom - Margin - top));
+        var rect = new Rect2(right ? screen.X - size.X - Margin : Margin, bottom - Margin - size.Y, size.X, size.Y);
+        FitChildInRect(frame, rect);
+        return rect;
     }
 
     /// <summary>

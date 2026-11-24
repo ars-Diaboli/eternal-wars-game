@@ -10,17 +10,14 @@ using Godot;
 namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
-/// The town list (ADR-309): the listed player's towns in <see cref="Slots"/> narrow slots, no heading, with scroll arrows above and below when
-/// there are more. An entry is the town's picture (its faction's crest until towns have pictures), the governor's portrait in the top
+/// The town list (ADR-309, ADR-313): one entry per town of the listed player, a column growing with the towns in its own panel like the hero
+/// list's, no heading and no text (more towns than the room holds scroll with the wheel). An entry is the town's picture (its faction's crest until towns have pictures), the governor's portrait in the top
 /// corner (none without one) and the build mark in the bottom one: the hammer lit while the town can build today and dimmed once it has, the
 /// keep with a laurel wreath when it is fully built. The name goes to the status bar on hover, the build state after it; no hover card.
 /// Clicking one centres the map on it and opens its town screen.
 /// </summary>
 public partial class TownListPanel : BoxContainer
 {
-    /// <summary>How many towns show at once.</summary>
-    public const int Slots = 4;
-
     /// <summary>An entry's size.</summary>
     public static readonly Vector2 EntrySize = new(130, 64);
 
@@ -28,15 +25,14 @@ public partial class TownListPanel : BoxContainer
     private const int CornerSize = 24;
     private const int Inset = 3;
 
-    private readonly VBoxContainer _entries = new() { MouseFilter = MouseFilterEnum.Ignore };
-    private Button _up = null!;
-    private Button _down = null!;
     private GameSession _session = null!;
     private Func<PlayerId> _listed = null!;
-    private int _first;
-    private PlayerId? _shownFor;
 
-    public TownListPanel() => Vertical = true;
+    public TownListPanel()
+    {
+        Vertical = true;
+        AddThemeConstantOverride("separation", UiSpacing.Cell);
+    }
 
     public event Action<MapObjectId>? TownSelected;
 
@@ -46,13 +42,6 @@ public partial class TownListPanel : BoxContainer
     {
         _session = session;
         _listed = listed ?? (() => session.State.CurrentPlayer.Id);
-        AddThemeConstantOverride("separation", UiSpacing.Cell);
-        _entries.AddThemeConstantOverride("separation", UiSpacing.Cell);
-        _up = Arrow("Earlier towns", UiIcon.ArrowUp, -1);
-        AddChild(_up);
-        AddChild(_entries);
-        _down = Arrow("Later towns", UiIcon.ArrowDown, 1);
-        AddChild(_down);
         Refresh();
         this.SubscribeWhileInTree<TurnStarted>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<TownOwnerChanged>(session.Events, _ => Refresh());
@@ -67,46 +56,18 @@ public partial class TownListPanel : BoxContainer
     public static IReadOnlyList<Town> TownsOf(GameState state, PlayerId player) =>
         state.ObjectsOf<Town>().Where(t => t.Owner == player).OrderBy(t => t.Id.Value).ToList();
 
-    /// <summary>The first town shown, of <paramref name="count"/>: within the list, so the last slots are never empty while towns are hidden above.</summary>
-    public static int FirstShown(int first, int count) => Math.Clamp(first, 0, Math.Max(0, count - Slots));
-
-    private Button Arrow(string label, UiIcon icon, int step)
-    {
-        var arrow = new Button { Text = label, FocusMode = FocusModeEnum.None, SizeFlagsHorizontal = SizeFlags.Fill }.WithIcon(icon, UiIcons.StatusBarSize);
-        arrow.SizeFlagsHorizontal = SizeFlags.Fill;
-        arrow.CustomMinimumSize = new Vector2(EntrySize.X, UiIcons.StatusBarSize + 4);
-        arrow.Pressed += () =>
-        {
-            _first += step;
-            Refresh();
-        };
-        return arrow;
-    }
-
     private void Refresh()
     {
-        foreach (var child in _entries.GetChildren())
+        foreach (var child in GetChildren())
         {
-            _entries.RemoveChild(child);
+            RemoveChild(child);
             child.QueueFree();
         }
 
         var state = _session.State;
-        var listed = _listed();
-        if (_shownFor != listed)
+        foreach (var town in TownsOf(state, _listed()))
         {
-            _first = 0; // another player's towns: from the top
-            _shownFor = listed;
-        }
-
-        var towns = TownsOf(state, listed);
-        _first = FirstShown(_first, towns.Count);
-        _up.Visible = _down.Visible = towns.Count > Slots;
-        _up.Disabled = _first == 0;
-        _down.Disabled = _first + Slots >= towns.Count;
-        foreach (var town in towns.Skip(_first).Take(Slots))
-        {
-            _entries.AddChild(Entry(state, town));
+            AddChild(Entry(state, town));
         }
     }
 

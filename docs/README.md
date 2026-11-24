@@ -33,13 +33,13 @@ The game design document, split by mechanic. Start at the overview.
 | [spells.md](content/spells.md) | Spell catalog: six schools, four levels, three ranks |
 | [artifacts.md](content/artifacts.md) | Artifact catalog: slots, tiers, sets and lore |
 | [faction-art.md](content/faction-art.md) | The owner's key paintings of every town and the look they set per faction: setting, light, landmark, buildings, colours, what to avoid |
-| [icon-prompts.md](content/prompts/icon-prompts.md) | Image-model prompts for the UI icons and the faction heraldry, as 2×2 and 2×3 sheets with shared style blocks and the shared anti-cartoon negative |
-| [cursor-prompts.md](content/prompts/cursor-prompts.md) | Image-model prompts for the mouse cursors (menus, adventure map, battle) in grey iron, and their hotspots |
+| [icon-prompts.md](content/prompts/icon-prompts.md) | Image-model prompts for the UI icons and the faction heraldry, as 2×2 and 2×3 sheets with shared style blocks; the icons in aluminium, the crests in colour |
+| [cursor-prompts.md](content/prompts/cursor-prompts.md) | Image-model prompts for the mouse cursors (menus, adventure map, battle) in aluminium, and their hotspots |
 | [spell-icon-prompts.md](content/prompts/spell-icon-prompts.md) | Image-model prompts for the icons of the 36 most common spells, one sheet a school |
 | [creature-icon-prompts.md](content/prompts/creature-icon-prompts.md) | Image-model prompts for the portraits of all creatures, one file a faction in `creature-icons/`, and their backdrops |
 | [editor-icon-prompts.md](content/prompts/editor-icon-prompts.md) | Image-model prompts for the map and template editor icons: tools, commands, panel tabs, tool options, template zones and connections |
 | [hero-town-icon-prompts.md](content/prompts/hero-town-icon-prompts.md) | Image-model prompts for the 128 hero portraits and the town icons |
-| [ui-element-prompts.md](content/prompts/ui-element-prompts.md) | Image-model prompts for frames, buttons, slots, bars and screen backgrounds |
+| [ui-element-prompts.md](content/prompts/ui-element-prompts.md) | Image-model prompts for the screen backgrounds; the frames, buttons, slots and bars are drawn in code |
 | [question-picture-prompts.md](content/prompts/question-picture-prompts.md) | Image-model prompts for the pictures on the adventure map's question cards, one for each kind of question |
 | [puzzle-map-prompts.md](content/prompts/puzzle-map-prompts.md) | Image-model prompts for the puzzle map's faction pictures |
 | [terrain-texture-prompts.md](content/prompts/terrain-texture-prompts.md) | Image-model prompts for the terrain textures of the adventure map and the battlefield |

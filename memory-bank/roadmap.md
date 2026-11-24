@@ -296,7 +296,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       ([battle-hud-plan.md](../docs/papers/battle-hud-plan.md)); the owner's decisions are its step 1
 
 ### Battle HUD restyle ([plan](../docs/papers/battle-hud-plan.md#plan); decisions pending)
-- [ ] Step 1: the owner's decisions recorded (ADR-312)
+- [ ] Step 1: the owner's decisions recorded (ADR-314)
 - [ ] Step 2: Core: the attack estimate, the battle's hotkey table, the spell book's rows, the stack panel and the result's summary
 - [ ] Step 3: the HUD rebuilt on the flat theme
 - [ ] Step 4: checked at every target size and UI scale; battle smokes, a LAN battle, the budget
