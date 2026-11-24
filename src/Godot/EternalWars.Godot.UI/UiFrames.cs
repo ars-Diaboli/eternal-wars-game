@@ -4,11 +4,11 @@ using Godot;
 namespace EternalWars.Godot.UI;
 
 /// <summary>
-/// The greybox frames of the UI (ADR-294), drawn in code until the art of ui-element-prompts.md exists: a window's nine-slice frame (a dark rim,
-/// a bevelled bronze band and an inner line in the faction's accent), a slot's sunken frame, and the check box and slider marks. Each texture is
-/// made once and cached. Swapping in painted frames later changes only this class.
+/// The frames of the UI (ADR-294). The painted pieces of ui-element-prompts.md are in UiFrames.Painted.cs; where one is missing, and in high
+/// contrast, the greybox drawn here stands in: a window's nine-slice frame (a dark rim, a bevelled bronze band and an inner line in the
+/// faction's accent). A slot's sunken frame and the check box and slider marks are always drawn in code. Each texture is made once and cached.
 /// </summary>
-public static class UiFrames
+public static partial class UiFrames
 {
     /// <summary>The size of a window frame's texture; its corners are <see cref="FrameMargin"/> pixels.</summary>
     private const int FrameSize = 48;
@@ -38,6 +38,11 @@ public static class UiFrames
     /// <summary>A window's frame as a nine-slice box with <paramref name="accent"/> on its inner line and <paramref name="padding"/> inside.</summary>
     public static StyleBoxTexture Window(Color accent, int padding = UiSpacing.ScreenPadding)
     {
+        if (PaintedWindow(accent) is { } painted)
+        {
+            return NineSlice(painted, WindowCorner, WindowCorner, Math.Max(padding, WindowBand + 1));
+        }
+
         var style = new StyleBoxTexture { Texture = FrameTexture(accent) };
         style.SetTextureMarginAll(FrameMargin);
         style.SetContentMarginAll(Math.Max(padding, FrameMargin)); // the frame lies in the padding: a panel's content stays where it was

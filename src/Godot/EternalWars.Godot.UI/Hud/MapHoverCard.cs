@@ -30,7 +30,14 @@ public partial class MapHoverCard : PanelContainer
         TopLevel = true;
         Visible = false;
         MouseFilter = MouseFilterEnum.Ignore;
-        this.UseOpaqueBackground(UiSpacing.Gap);
+        if (UiFrames.Tooltip(UiSpacing.Gap) is { } box)
+        {
+            AddThemeStyleboxOverride("panel", box); // a tooltip's frame (ADR-294)
+        }
+        else
+        {
+            this.UseOpaqueBackground(UiSpacing.Gap);
+        }
         _rows.AddThemeConstantOverride("separation", UiSpacing.Cell);
         AddChild(_rows);
     }

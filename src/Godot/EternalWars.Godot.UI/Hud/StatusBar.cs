@@ -95,7 +95,7 @@ public partial class StatusBar : PanelContainer
         var style = UiTheme.Box(UiTheme.Background, UiTheme.Border, 2, borderWidth: 0);
         style.BorderWidthTop = 2;
         style.ContentMarginLeft = style.ContentMarginRight = UiSpacing.Gap;
-        AddThemeStyleboxOverride("panel", style);
+        AddThemeStyleboxOverride("panel", UiFrames.Bar(UiSpacing.Gap) ?? (StyleBox)style); // the painted bar where it exists (ADR-294)
         var row = new HBoxContainer();
         row.AddThemeConstantOverride("separation", UiSpacing.Section);
         AddChild(row);

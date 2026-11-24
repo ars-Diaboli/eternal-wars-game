@@ -9,6 +9,9 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- The painted UI frames are in (ADR-294; `textures/ui/frames/`, `UiFrames.Painted.cs`): the eight pieces of ui-element-prompts.md's
+  "Frames and panels" on windows, title plates, the bottom row, tooltips and the hover card, the bars, the side column, the minimap and
+  dividers; high contrast and a missing file keep the flat look.
 - The adventure HUD redesign recorded (ADR-309; [plan](../docs/papers/adventure-hud-plan.md)): the owner's six mockups decided row by
   row into one arrangement, mirrored or not, with a bottom row of equal panels and a 2 × 5 icon grid; it supersedes in part ADR-156,
   ADR-186, ADR-191, ADR-204 and ADR-210. Open: HUD-1 (notice cards) and HUD-2 (long answer lists). Already in: the town list's build

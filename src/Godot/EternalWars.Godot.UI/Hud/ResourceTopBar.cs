@@ -86,7 +86,7 @@ public partial class ResourceTopBar : PanelContainer
         style.BorderWidthLeft = !_wide && _onRight ? 2 : 0;
         style.BorderWidthRight = !_wide && !_onRight ? 2 : 0;
         style.ContentMarginLeft = style.ContentMarginRight = UiSpacing.Gap;
-        AddThemeStyleboxOverride("panel", style);
+        AddThemeStyleboxOverride("panel", UiFrames.Bar(UiSpacing.Gap) ?? (StyleBox)style); // the painted bar where it exists (ADR-294)
     }
 
     private void Place()

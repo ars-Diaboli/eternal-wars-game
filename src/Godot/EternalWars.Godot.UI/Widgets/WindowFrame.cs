@@ -5,8 +5,9 @@ namespace EternalWars.Godot.UI.Widgets;
 
 /// <summary>
 /// A window's frame (ADR-294): the nine-slice bronze frame of <see cref="UiFrames.Window"/> with the faction's accent on its inner line, a title
-/// in the heading face, an optional "×" that raises <see cref="CloseRequested"/>, and the <see cref="Content"/> box below. The town screen's
-/// windows and the dialogs are built in it; the frame does not place itself.
+/// in the heading face on the painted title plate (<see cref="UiFrames.Header"/>; over a divider without it), an optional "×" that raises
+/// <see cref="CloseRequested"/>, and the <see cref="Content"/> box below. The town screen's windows and the dialogs are built in it; the frame
+/// does not place itself.
 /// </summary>
 public partial class WindowFrame : PanelContainer
 {
@@ -22,13 +23,29 @@ public partial class WindowFrame : PanelContainer
         AddChild(box);
         _title.Text = title;
         _header.AddChild(_title);
-        box.AddChild(_header);
+        if (UiFrames.Header() is { } plate)
+        {
+            // The title on the painted title plate, which takes the divider's place.
+            var plated = new PanelContainer { Name = "TitlePlate" };
+            plated.AddThemeStyleboxOverride("panel", plate);
+            plated.AddChild(_header);
+            box.AddChild(plated);
+        }
+        else
+        {
+            box.AddChild(_header);
+        }
+
         if (closable)
         {
             _close = _header.AddCloseButton(() => CloseRequested?.Invoke());
         }
 
-        box.AddChild(new HSeparator());
+        if (UiFrames.Header() is null)
+        {
+            box.AddChild(new HSeparator());
+        }
+
         Content.SizeFlagsVertical = SizeFlags.ExpandFill;
         box.AddChild(Content);
     }

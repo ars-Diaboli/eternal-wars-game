@@ -45,6 +45,9 @@ another game's interface
 
 **Use**: the file's prompt · negative `UI-NEG` · size in the table. The game sets the overlay's alpha.
 
+**In the game**: all eight exist in `textures/ui/frames/`, cropped to the element and scaled to their size on screen (a window's band
+about 15 px, the bars 32 px tall); `UiFrames` holds their nine-slice margins at that size.
+
 | File | Size | Margins |
 |---|---|---|
 | `ui_frame_window` | 1024 × 1024 | 48, 48, 48, 48 |

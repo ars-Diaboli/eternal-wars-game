@@ -162,6 +162,12 @@ public partial class AdventureHud : CanvasLayer
         // The minimap, the town list and the action panel down the right, or the left when mirrored; the hero list at the other edge (ADR-309).
         _layout.AddToColumn(BuildMinimap());
         var heroes = new PanelContainer { Name = "HeroListFrame" };
+        if (UiFrames.Column() is { } column)
+        {
+            heroes.AddThemeStyleboxOverride("panel", column);
+            heroes.Draw += () => UiFrames.DrawColumnOrnaments(heroes, new Rect2(Vector2.Zero, heroes.Size));
+        }
+
         var heroScroll = new ScrollContainer // more heroes than the edge holds scroll (the wheel), with no bar
         {
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, VerticalScrollMode = ScrollContainer.ScrollMode.ShowNever,
@@ -370,6 +376,11 @@ public partial class AdventureHud : CanvasLayer
     private static PanelContainer Framed(string name, Control part)
     {
         var frame = new PanelContainer { Name = name };
+        if (UiFrames.Overlay() is { } overlay)
+        {
+            frame.AddThemeStyleboxOverride("panel", overlay); // opaque: the army strip shown whole hides the buttons under it
+        }
+
         part.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
         frame.AddChild(part);
         return frame;
@@ -467,7 +478,18 @@ public partial class AdventureHud : CanvasLayer
         {
             CellPixels = Math.Max(2, 320f / Math.Max(map.Width, map.Height)), ClipContents = true, SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
         };
-        box.AddChild(minimap);
+        if (UiFrames.Minimap() is { } frame)
+        {
+            // In its painted bronze frame, as wide as the map with it (ADR-294).
+            var framed = new PanelContainer { Name = "MinimapFrame", SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter, MouseFilter = Control.MouseFilterEnum.Ignore };
+            framed.AddThemeStyleboxOverride("panel", frame);
+            framed.AddChild(minimap);
+            box.AddChild(framed);
+        }
+        else
+        {
+            box.AddChild(minimap);
+        }
         minimap.Bind(_context);
         minimap.TileClicked += tile => _camera.FocusOn(MapSpace.ToWorld(tile));
         minimap.ViewFrame = ViewFrame;

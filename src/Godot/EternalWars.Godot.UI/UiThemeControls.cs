@@ -5,7 +5,7 @@ namespace EternalWars.Godot.UI;
 /// <summary>
 /// The rest of the game's look (ADR-294; not the editor's compact variant): styles for the Godot controls the screens use beside panels and buttons (tabs, check boxes, text fields,
 /// scroll bars, sliders, lists, menus, tooltips, separators, progress bars, embedded windows), the heading and title labels in the heading face,
-/// and the slot buttons of armies. The textures are the greybox ones of <see cref="UiFrames"/>.
+/// and the slot buttons of armies. The frames are <see cref="UiFrames"/>' (the painted tooltip and divider where they exist).
 /// </summary>
 public static partial class UiTheme
 {
@@ -126,11 +126,11 @@ public static partial class UiTheme
         theme.SetStylebox("panel", "PopupMenu", Box(Background, Border, padding));
         theme.SetStylebox("hover", "PopupMenu", Box(ButtonFace.Lightened(0.08f), BorderBright, 2));
         theme.SetStylebox("panel", "PopupPanel", Box(Background, Border, padding));
-        theme.SetStylebox("panel", "TooltipPanel", Box(FieldBackground with { A = 0.97f }, Border, padding));
+        theme.SetStylebox("panel", "TooltipPanel", UiFrames.Tooltip(padding) ?? (StyleBox)Box(FieldBackground with { A = 0.97f }, Border, padding));
         theme.SetColor("font_color", "TooltipLabel", HighContrast ? Colors.White : new Color(0.92f, 0.9f, 0.85f));
 
         // Separators, progress bars and the windows Godot embeds (dialogs).
-        theme.SetStylebox("separator", "HSeparator", new StyleBoxLine { Color = BorderDim, Thickness = 1 });
+        theme.SetStylebox("separator", "HSeparator", UiFrames.Divider() ?? (StyleBox)new StyleBoxLine { Color = BorderDim, Thickness = 1 });
         theme.SetStylebox("separator", "VSeparator", new StyleBoxLine { Color = BorderDim, Thickness = 1, Vertical = true });
         theme.SetStylebox("background", "ProgressBar", Box(FieldBackground, BorderDim, 0));
         theme.SetStylebox("fill", "ProgressBar", Box(Border.Darkened(0.1f), Border, 0));

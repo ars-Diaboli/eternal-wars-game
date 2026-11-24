@@ -140,9 +140,13 @@ creatures and buildings, heraldic player colours, iconic map objects).
 - **UI scale** (ADR-309): 100, 150 or 200 % of the game's UI, chosen on the "Layout" tab and applied at once and at start like the map
   editor's (the 2D parts drawn larger, the 3D views at the window's own pixels); kept in `settings.json` with the interface settings; a
   value outside the range is brought into it and onto the nearest of the three (the smaller of two as near).
-- **Theme** (ADR-191, ADR-294): dark slate panels and buttons framed in bronze; screens and windows in a bevelled nine-slice frame whose
-  inner line takes the faction's accent on a town's windows (greybox frames until the art of
-  [ui-element-prompts.md](../content/prompts/ui-element-prompts.md)). Every control the screens use (tabs, check boxes, fields, scroll
+- **Theme** (ADR-191, ADR-294): dark slate panels and buttons framed in bronze. The painted frames of
+  [ui-element-prompts.md](../content/prompts/ui-element-prompts.md) are nine-slice boxes: screens, windows and the map's cards in the
+  window frame with a line in the faction's accent on a town's windows; window titles on the title plate (in place of the divider under
+  them); the bottom row's parts in the overlay frame; tooltips and the map's hover card in the tooltip frame; the status bar and top bar
+  on the bar; the HUD's column and the hero list in the side column, its cast ornaments kept unstretched at its top and bottom middle; the
+  minimap in its frame; dividers as the bronze rod. A piece whose file is missing, and every piece in high contrast, falls back to the flat
+  look (the window to a bevelled frame drawn in code). Every control the screens use (tabs, check boxes, fields, scroll
   bars, sliders, lists, menus, tooltips) has the look, so no default Godot control shows. Two faces: headings and titles in a carved
   capital face, the rest in a humanist sans, body text at least 16 px at 1080p; two pairings are proposed for the owner's pick (Cinzel with
   Alegreya Sans, the default, and Marcellus SC with Fira Sans), the licences beside them in `fonts/`. The map editor keeps the colours and

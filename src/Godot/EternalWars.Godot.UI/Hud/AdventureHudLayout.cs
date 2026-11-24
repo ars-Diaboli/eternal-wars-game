@@ -56,10 +56,18 @@ public partial class AdventureHudLayout : Container
     {
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         MouseFilter = MouseFilterEnum.Ignore;
-        var frame = UiTheme.Box(UiTheme.Background, UiTheme.Border, 0, borderWidth: 0);
-        frame.BorderWidthLeft = frame.BorderWidthRight = UiTheme.FrameWidth;
-        frame.BorderWidthBottom = UiTheme.FrameWidth;
-        _sidePanel.AddThemeStyleboxOverride("panel", frame);
+        if (UiFrames.Column(0) is { } column)
+        {
+            _sidePanel.AddThemeStyleboxOverride("panel", column); // the painted column, its ornaments drawn over it (ADR-294)
+            _sidePanel.Draw += () => UiFrames.DrawColumnOrnaments(_sidePanel, new Rect2(Vector2.Zero, _sidePanel.Size));
+        }
+        else
+        {
+            var frame = UiTheme.Box(UiTheme.Background, UiTheme.Border, 0, borderWidth: 0);
+            frame.BorderWidthLeft = frame.BorderWidthRight = UiTheme.FrameWidth;
+            frame.BorderWidthBottom = UiTheme.FrameWidth;
+            _sidePanel.AddThemeStyleboxOverride("panel", frame);
+        }
         AddChild(_sidePanel); // first, so it is drawn behind the parts
     }
 

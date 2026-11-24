@@ -244,7 +244,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [ ] The icons and crests already generated (tiers A and B, the heraldry crests) again, painted realistically instead of as
       cartoons (ADR-248)
 - [x] The puzzle map's pictures (the eight playable factions) and its frame, shown on the closed pieces (ADR-140, ADR-245)
-- [ ] The art from the new prompt files: spell, creature and hero portraits, town icons, UI frames and backgrounds, roads and rivers,
+- [ ] The art from the new prompt files: spell, creature and hero portraits, town icons, UI backgrounds (the frames are in), roads and rivers,
       scenery and obstacles (ADR-245); then the views that use them
 - [x] Melee direction in battle: the side to strike from by the pointer's place in the cell (8 sides), the stand cells highlighted (ADR-204)
 
