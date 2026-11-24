@@ -4,37 +4,25 @@ using Godot;
 namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
-/// Places the adventure map's HUD parts on the screen as <see cref="HudArrangement"/> says for the current <see cref="LayoutSettings"/>
-/// (the "Layout" tab, ADR-156). It covers the screen but lets the mouse through; each part is a child that is moved, never reparented
-/// (a part's event subscriptions last while it is in the tree). A stack in a corner is as wide as its widest part, and every part in it
-/// fills that width. The turn block stands at the top left, beside the top-left stack. Horizontal lists run along the bottom between the
-/// bottom stacks. The bottom parts stand above <see cref="BottomReserve"/> (the status bar, ADR-186); without one, the bottom right leaves room
-/// for the menu button. With the side panel on (ADR-191) a framed column runs down that side from the top to the status bar, behind the
-/// minimap, the lists and the action panel, and takes the clicks on it; the turn block stands at its bottom (ADR-204). It re-places
-/// the parts whenever one's size changes.
+/// Places the adventure map's HUD parts: a framed column (ADR-191) down the minimap's side of the screen (<see cref="HudArrangement"/>; the right,
+/// or the left in the mirrored layout, ADR-309), from the top to the status bar, holding the minimap, the hero and town lists and the action
+/// buttons from the top, and the turn block at its bottom (ADR-204). The column is as wide as its widest part, and every part fills that width;
+/// it takes the clicks on it. The layer covers the screen but lets the mouse through; each part is a child that is moved, never reparented (a
+/// part's event subscriptions last while it is in the tree). It re-places the parts whenever one's size changes. The arrangement of ADR-309
+/// replaces this column in the plan's step 3.
 /// </summary>
 public partial class AdventureHudLayout : Container
 {
     /// <summary>The gap to the screen edge and between parts.</summary>
     public const float Margin = UiSpacing.ScreenEdge;
 
-    /// <summary>Room left at the bottom right for the menu button (on its own layer).</summary>
-    public const float MenuButtonHeight = 44;
-
-    /// <summary>Width left at the bottom right for the menu button, for the bottom row.</summary>
-    public const float MenuButtonWidth = 148;
-
-    private readonly Dictionary<HudPart, Control> _parts = [];
-    private readonly Panel _sidePanel = new() { Name = "SidePanel", MouseFilter = MouseFilterEnum.Stop, Visible = false };
+    private readonly List<Control> _column = [];
+    private readonly Panel _sidePanel = new() { Name = "SidePanel", MouseFilter = MouseFilterEnum.Stop };
     private Control? _info;
     private LayoutSettings _layout = LayoutSettings.Default;
 
-    public HeroListPanel? HeroList { get; set; }
-
-    public TownListPanel? TownList { get; set; }
-
     /// <summary>
-    /// Room kept free along the bottom edge (the status bar, ADR-186, and the replay viewer's bar, ADR-164): the bottom parts stand above it.
+    /// Room kept free along the bottom edge (the status bar, ADR-186, and the replay viewer's bar, ADR-164): the column stops above it.
     /// </summary>
     public float BottomReserve
     {
@@ -59,35 +47,24 @@ public partial class AdventureHudLayout : Container
         AddChild(_sidePanel); // first, so it is drawn behind the parts
     }
 
-
-    /// <summary>The turn block (top left).</summary>
+    /// <summary>The turn block, at the column's bottom.</summary>
     public void SetInfo(Control info)
     {
         _info = info;
         AddChild(info);
     }
 
-    public void SetPart(HudPart part, Control control)
+    /// <summary>Adds <paramref name="control"/> to the column, under the parts added before it.</summary>
+    public void AddToColumn(Control control)
     {
-        _parts[part] = control;
+        _column.Add(control);
         AddChild(control);
     }
 
-    /// <summary>Moves the parts to where <paramref name="layout"/> puts them.</summary>
+    /// <summary>Moves the column to the side <paramref name="layout"/> puts it on.</summary>
     public void Apply(LayoutSettings layout)
     {
         _layout = layout;
-        var horizontal = HudArrangement.ListsInBottomRow(layout);
-        if (HeroList is not null && HeroList.Horizontal != horizontal)
-        {
-            HeroList.Horizontal = horizontal;
-        }
-
-        if (TownList is not null && TownList.Horizontal != horizontal)
-        {
-            TownList.Horizontal = horizontal;
-        }
-
         QueueSort();
     }
 
@@ -102,72 +79,26 @@ public partial class AdventureHudLayout : Container
     private void Place()
     {
         var screen = Size;
-        var stackWidths = new Dictionary<ScreenCorner, float>();
-        foreach (var corner in Enum.GetValues<ScreenCorner>())
+        var left = HudArrangement.SideOf(_layout, HudPart.Minimap) == ScreenSide.Left;
+        var width = _column.Select(p => p.GetCombinedMinimumSize().X).DefaultIfEmpty(0).Max();
+        var panelWidth = width + (2 * Margin);
+        var panelX = left ? 0 : screen.X - panelWidth;
+        FitChildInRect(_sidePanel, new Rect2(panelX, 0, panelWidth, screen.Y - _bottomReserve));
+
+        var x = panelX + Margin;
+        var y = Margin;
+        foreach (var part in _column)
         {
-            var parts = HudArrangement.Stack(_layout, corner).Where(_parts.ContainsKey).Select(p => _parts[p]).ToList();
-            var width = parts.Count == 0 ? 0 : parts.Max(p => p.GetCombinedMinimumSize().X);
-            stackWidths[corner] = width;
-            var left = HudArrangement.IsLeft(corner);
-            var x = left ? Margin : screen.X - Margin - width;
-            if (HudArrangement.IsTop(corner))
-            {
-                var y = Margin;
-                foreach (var part in parts)
-                {
-                    var height = part.GetCombinedMinimumSize().Y;
-                    FitChildInRect(part, new Rect2(x, y, width, height));
-                    y += height + Margin;
-                }
-            }
-            else
-            {
-                // Above the status and replay bars when there are any (they hold or clear the menu button), else clear of the menu button on the right.
-                var y = screen.Y - Margin - (_bottomReserve > 0 ? _bottomReserve : left ? 0 : MenuButtonHeight);
-                foreach (var part in parts)
-                {
-                    var height = part.GetCombinedMinimumSize().Y;
-                    y -= height;
-                    FitChildInRect(part, new Rect2(x, y, width, height));
-                    y -= Margin;
-                }
-            }
+            var height = part.GetCombinedMinimumSize().Y;
+            FitChildInRect(part, new Rect2(x, y, width, height));
+            y += height + Margin;
         }
 
-        // The side panel (ADR-191): the column behind its side's top stack, edge to edge with the screen, down to the status bar.
-        var panelSide = HudArrangement.PanelSide(_layout);
-        var panelWidth = 0f;
-        _sidePanel.Visible = panelSide is not null;
-        if (panelSide is { } side)
+        if (_info is not null)
         {
-            var corner = side == ScreenSide.Left ? ScreenCorner.TopLeft : ScreenCorner.TopRight;
-            panelWidth = stackWidths[corner] + (2 * Margin);
-            var x = side == ScreenSide.Left ? 0 : screen.X - panelWidth;
-            FitChildInRect(_sidePanel, new Rect2(x, 0, panelWidth, screen.Y - _bottomReserve));
-        }
-
-        if (_info is not null && panelSide is { } inPanel)
-        {
-            // At the bottom of the side panel (ADR-204), as wide as its column.
-            var width = stackWidths[inPanel == ScreenSide.Left ? ScreenCorner.TopLeft : ScreenCorner.TopRight];
-            var x = inPanel == ScreenSide.Left ? Margin : screen.X - panelWidth + Margin;
             _info.Size = new Vector2(width, 0); // the wrapping lines take their height at this width
             var height = _info.GetCombinedMinimumSize().Y;
             FitChildInRect(_info, new Rect2(x, screen.Y - _bottomReserve - Margin - height, width, height));
-        }
-        else if (_info is not null)
-        {
-            var x = panelSide == ScreenSide.Left ? panelWidth + Margin
-                : Margin + (stackWidths[ScreenCorner.TopLeft] > 0 ? stackWidths[ScreenCorner.TopLeft] + Margin : 0);
-            FitChildInRect(_info, new Rect2(new Vector2(x, Margin), _info.GetCombinedMinimumSize()));
-        }
-
-        if (HudArrangement.ListsInBottomRow(_layout) && _parts.TryGetValue(HudPart.Lists, out var lists))
-        {
-            var left = Margin + (stackWidths[ScreenCorner.BottomLeft] > 0 ? stackWidths[ScreenCorner.BottomLeft] + Margin : 0);
-            var right = screen.X - Margin - Math.Max(_bottomReserve > 0 ? 0 : MenuButtonWidth, stackWidths[ScreenCorner.BottomRight] + Margin);
-            var size = lists.GetCombinedMinimumSize();
-            FitChildInRect(lists, new Rect2(left, screen.Y - Margin - _bottomReserve - size.Y, Math.Max(size.X, right - left), size.Y));
         }
     }
 }

@@ -1,76 +1,51 @@
 namespace EternalWars.Core.Domain.Settings;
 
-/// <summary>A part of the adventure map's HUD that the layout settings move.</summary>
+/// <summary>A part of the adventure map's HUD that stands on a side of the screen (ADR-309).</summary>
 public enum HudPart
 {
-    /// <summary>The minimap.</summary>
+    /// <summary>The resource bar, along the top.</summary>
+    Resources,
+
+    /// <summary>The minimap with its level caption and zoom buttons, at the top.</summary>
     Minimap,
 
-    /// <summary>The hero and town lists.</summary>
-    Lists,
+    /// <summary>The hero list, down an edge.</summary>
+    HeroList,
 
-    /// <summary>The 3×3 action buttons: hero, spell book, kingdom, quests, puzzle map, dig, marketplace, level, menu (ADR-210).</summary>
+    /// <summary>The town list, down an edge.</summary>
+    TownList,
+
+    /// <summary>The selected hero's card, in the bottom row.</summary>
+    HeroCard,
+
+    /// <summary>The selected hero's army, in the bottom row.</summary>
+    ArmyStrip,
+
+    /// <summary>The 2 × 5 action buttons, in the bottom row.</summary>
     Actions,
+
+    /// <summary>The End turn hourglass, in the bottom row.</summary>
+    EndTurn,
 }
 
 /// <summary>
-/// Where the adventure map's HUD parts stand for some <see cref="LayoutSettings"/> (ADR-156). Each corner holds a stack of parts, listed
-/// from the corner outwards. The minimap is always nearest its corner. Vertical lists follow it in its stack. Horizontal lists go to the
-/// bottom row between the bottom corners. The action buttons go to their own corner, after the minimap and lists if they are there
-/// (ADR-210). The turn block is not moved: it stays at the top left, beside whatever the top-left stack holds. With the side panel on
-/// (ADR-191) the minimap, the vertical lists and the action buttons all stand in the top stack of the panel's side, whatever the other
-/// settings say; those keep their values for when the panel is off.
+/// Where the adventure map's HUD parts stand (ADR-309): one arrangement, or its mirror with left and right swapped. By default the resources
+/// stand at the top left and the minimap at the top right; the hero list runs down the left edge and the town list down the right; the bottom
+/// row holds, from the left, the hero card, the army strip, the action buttons and End turn. The turn banner stays at the top centre either way.
 /// </summary>
 public static class HudArrangement
 {
-    /// <summary>The parts in the stack at <paramref name="corner"/>, from the corner outwards; empty when the corner holds none.</summary>
-    public static IReadOnlyList<HudPart> Stack(LayoutSettings layout, ScreenCorner corner)
+    /// <summary>The side of the screen <paramref name="part"/> stands on.</summary>
+    public static ScreenSide SideOf(LayoutSettings layout, HudPart part)
     {
-        layout = Effective(layout);
-        var parts = new List<HudPart>();
-        if (layout.Minimap == corner)
-        {
-            parts.Add(HudPart.Minimap);
-            if (layout.Lists == ListOrientation.Vertical)
-            {
-                parts.Add(HudPart.Lists);
-            }
-        }
-
-        if (corner == layout.ActionButtons)
-        {
-            parts.Add(HudPart.Actions);
-        }
-
-        return parts;
+        var side = part is HudPart.Resources or HudPart.HeroList or HudPart.HeroCard or HudPart.ArmyStrip ? ScreenSide.Left : ScreenSide.Right;
+        return layout.Mirrored ? Opposite(side) : side;
     }
 
-    /// <summary>Whether the hero and town lists run as rows along the bottom of the screen.</summary>
-    public static bool ListsInBottomRow(LayoutSettings layout) => Effective(layout).Lists == ListOrientation.Horizontal;
+    /// <summary>The bottom row's parts, from the left.</summary>
+    public static IReadOnlyList<HudPart> BottomRow(LayoutSettings layout) => layout.Mirrored
+        ? [HudPart.EndTurn, HudPart.Actions, HudPart.ArmyStrip, HudPart.HeroCard]
+        : [HudPart.HeroCard, HudPart.ArmyStrip, HudPart.Actions, HudPart.EndTurn];
 
-    /// <summary>The side the HoMM-style panel stands on, or null when it is off (ADR-191).</summary>
-    public static ScreenSide? PanelSide(LayoutSettings layout) => layout.SidePanel switch
-    {
-        SidePanel.Right => ScreenSide.Right,
-        SidePanel.Left => ScreenSide.Left,
-        _ => null,
-    };
-
-    /// <summary>
-    /// The layout the parts follow: with the side panel on, the minimap at the top of its side, the lists beside it and the action buttons
-    /// in the same stack (ADR-191); with it off, <paramref name="layout"/> itself.
-    /// </summary>
-    public static LayoutSettings Effective(LayoutSettings layout) => PanelSide(layout) is { } side
-        ? layout with { Minimap = TopCorner(side), Lists = ListOrientation.Vertical, ActionButtons = TopCorner(side) }
-        : layout;
-
-    /// <summary>The corner whose stack holds <paramref name="part"/>, or null for lists in the bottom row.</summary>
-    public static ScreenCorner? CornerOf(LayoutSettings layout, HudPart part) =>
-        Enum.GetValues<ScreenCorner>().Where(c => Stack(layout, c).Contains(part)).Select(c => (ScreenCorner?)c).FirstOrDefault();
-
-    public static bool IsTop(ScreenCorner corner) => corner is ScreenCorner.TopLeft or ScreenCorner.TopRight;
-
-    public static bool IsLeft(ScreenCorner corner) => corner is ScreenCorner.TopLeft or ScreenCorner.BottomLeft;
-
-    private static ScreenCorner TopCorner(ScreenSide side) => side == ScreenSide.Left ? ScreenCorner.TopLeft : ScreenCorner.TopRight;
+    public static ScreenSide Opposite(ScreenSide side) => side == ScreenSide.Left ? ScreenSide.Right : ScreenSide.Left;
 }

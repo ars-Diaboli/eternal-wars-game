@@ -112,14 +112,13 @@ $scenarios = @(
     @{ Name = 'game-auto-combat'; App = 'EternalWars.Game'; Frames = 85; Map = $battleMap
        Input = '3:key:Enter;8:key:F10;10:click:@Settings;13:click:@Off;16:choose:Ask before each battle;19:key:Escape;24:key:Right;60:click:@Auto combat;68:click:@Accept' },
     # Speed settings (ADR-090): the menu sets "Your heroes" to Slow, then the hero walks a route (its steps take twice as long).
-    # The side panel (ADR-191): the framed column on the right by default, moved to the left in the "Layout" tab; the turn block stands beside it.
+    # The side panel (ADR-191): the framed column on the right by default, moved to the left by the "Layout" tab's mirror (ADR-309).
     @{ Name = 'game-speed-settings'; App = 'EternalWars.Game'; Frames = 100
-       Input = '3:key:Enter;8:key:F10;10:click:@Settings;13:click:@Normal;16:choose:Slow;19:key:Escape;24:click:960,520;30:click:960,520;70:key:F10;72:click:@Layout;75:click:@Right;78:choose:Left;82:key:Escape' },
-    # The "Layout" tab (ADR-156): the side panel off (ADR-191), then minimap bottom left, the lists along the bottom, the action buttons
-    # bottom right (ADR-210), the initiative bar at the bottom; the map's HUD moves at once, then the step into the monster opens the battle with
-    # its initiative bar at the bottom.
+       Input = '3:key:Enter;8:key:F10;10:click:@Settings;13:click:@Normal;16:choose:Slow;19:key:Escape;24:click:960,520;30:click:960,520;70:key:F10;72:click:@Layout;75:click:@Minimap on the right;78:choose:Mirrored: minimap on the left;82:key:Escape' },
+    # The "Layout" tab (ADR-156, ADR-309): the adventure map mirrored, the initiative bar at the bottom; the map's HUD moves at once, then the
+    # step into the monster opens the battle with its initiative bar at the bottom.
     @{ Name = 'game-layout'; App = 'EternalWars.Game'; Frames = 96; Map = $battleMap
-       Input = '3:key:Enter;8:key:F10;10:click:@Layout;13:click:@Right;16:choose:Off (the parts stand free);20:click:@Top right;24:choose:Bottom left;28:click:@Beside the minimap;32:choose:Along the bottom;36:click:@Top right;40:choose:Bottom right;44:click:@Top;48:choose:Bottom;52:key:Escape;60:key:Right' },
+       Input = '3:key:Enter;8:key:F10;10:click:@Layout;13:click:@Minimap on the right;16:choose:Mirrored: minimap on the left;20:click:@Top;24:choose:Bottom;28:key:Escape;36:key:Right' },
     # The action buttons (ADR-210), 3×3 in the side panel: Magus' spell book from its button (Escape closes it), then with C (C closes it);
     # the hero screen from its button; the game menu from its button. Bookless selected, the spell book button is disabled.
     @{ Name = 'game-action-buttons'; App = 'EternalWars.Game'; Frames = 62; Map = $magicMap

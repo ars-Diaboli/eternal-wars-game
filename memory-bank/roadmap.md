@@ -276,6 +276,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Step 1: the decisions recorded (ADR-309); the two open points moved to HUD-1 and HUD-2
 - [ ] Step 2: core models (layout mirrored flag, UI scale, hero card, town build state, descriptions by ownership, route days, hotkeys)
       - [x] The fully built rule (`BuildingTree.IsFullyBuilt`) and the route's end action (`AdventureCursors.RouteEndOf`)
+      - [x] The layout as a mirrored flag (`LayoutSettings.Mirrored`, `HudArrangement`; older layouts load as the default or its mirror;
+            the side panel follows it until step 3) and the UI scale (`InterfaceSettings.UiScalePercent`)
 - [ ] Step 3: the HUD rebuilt on the flat theme (the town list's build mark, the route end's mark, the replay bar's icons and the level
       icons on Switch level already in)
 - [ ] Step 4: checked at every target size, UI scale and mirror

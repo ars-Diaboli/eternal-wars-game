@@ -40,7 +40,7 @@ creatures and buildings, heraldic player colours, iconic map objects).
 
 ## Camera and UI
 - **Camera** (ADR-022): tilted **15–30° from vertical** (more tilted zoomed in), **rotatable ±45°**, zoom, pan.
-- **UI**: by default a HoMM-style side panel on the right (ADR-191): one framed column from the top to the status bar with the minimap,
+- **UI**: a HoMM-style side panel on the right, or the left when mirrored (ADR-191, ADR-309): one framed column from the top to the status bar with the minimap,
   the hero and town lists and the action buttons, which takes the clicks on it; End turn among the action
   buttons (ADR-204) and the calendar (date, week's event) on the status bar right of the resources (ADR-225); full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips, the
   fog's look, the tile grid, the window mode) and "Layout".
@@ -84,12 +84,11 @@ creatures and buildings, heraldic player colours, iconic map objects).
   panels. The information window (right click) opens at the pointer.
 - **Window mode** (ADR-186): Windowed or Fullscreen (borderless, the screen's own size), in the "Settings" tab; Alt+Enter switches it, in
   the game and in the map editor. Kept in `settings.json`, applied at once and at start.
-- **Layout** (ADR-118, ADR-156, ADR-191): the "Layout" tab sets the battle's initiative bar (top or bottom) and the side panel (right, left
-  or off). With the panel off it also sets the minimap's corner, the hero and town lists (beside the minimap, or as rows along the bottom)
-  and the action buttons' corner; with it on, those rows are greyed. The
-  change shows at once and is kept in `settings.json` with the speeds, not in saves. The minimap is nearest its corner; lists beside it follow
-  it; the action buttons stand in their corner, after the minimap and lists if they share it; End turn stays at the top left, beside anything there. The bottom parts stand
-  above the status bar.
+- **Layout** (ADR-118, ADR-156, ADR-309): the "Layout" tab sets the battle's initiative bar (top or bottom) and the adventure map's HUD:
+  the default arrangement or its mirror, left and right swapped. The change shows at once and is kept in `settings.json` with the speeds,
+  not in saves. An older saved layout loads as the default or its mirror, whichever side its HUD stood on.
+- **UI scale** (ADR-309): 100, 150 or 200 % of the game's UI, kept in `settings.json` with the interface settings; a value outside the
+  range is brought into it and onto the nearest of the three (the smaller of two as near).
 - **Theme** (ADR-191, ADR-294): dark slate panels and buttons framed in bronze; screens and windows in a bevelled nine-slice frame whose
   inner line takes the faction's accent on a town's windows (greybox frames until the art of
   [ui-element-prompts.md](../content/prompts/ui-element-prompts.md)). Every control the screens use (tabs, check boxes, fields, scroll

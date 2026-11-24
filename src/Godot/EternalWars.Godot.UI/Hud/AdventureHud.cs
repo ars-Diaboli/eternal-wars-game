@@ -14,8 +14,8 @@ using Godot;
 namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
-/// The adventure map's HUD (ADR-050, ADR-156, ADR-186): this layer holds the parts the "Layout" tab moves (the turn block, the minimap, the hero
-/// and town lists, the 3×3 action buttons of ADR-210), the <see cref="StatusBar"/> along the bottom (the status line and the resources), and
+/// The adventure map's HUD (ADR-050, ADR-186, ADR-309): this layer holds the side panel's parts, on the side the "Layout" tab's mirror picks
+/// (the turn block, the minimap, the hero and town lists, the 3×3 action buttons of ADR-210), the <see cref="StatusBar"/> along the bottom (the status line and the resources), and
 /// the questions and notices in the middle of the screen; a second layer above it, added beside it, holds the full-screen
 /// panels (town, hero, exchange, dwelling, marketplace, services, Thieves' Guild, tavern, kingdom, quest log, puzzle map, intel) and the
 /// spell book. A hero stepping into an own town, a dwelling, a marketplace or a service opens its screen. In the replay viewer (<c>playing</c>
@@ -83,12 +83,12 @@ public partial class AdventureHud : CanvasLayer
     {
         (_session, _context, _world, _camera) = (session, context, world, camera);
 
-        // The parts the "Layout" tab moves (ADR-156): the info block, the minimap, the lists and the action panel.
+        // The side panel's parts (ADR-191), on the side the "Layout" tab's mirror picks (ADR-309): the info block, the minimap, the lists and the action panel.
         _layout = new AdventureHudLayout();
         AddChild(_layout);
-        _turn = new TurnPanel();
-        _layout.SetInfo(_turn);
-        _turn.Bind(session, endTurn: playing);
+        var turn = new TurnPanel();
+        _layout.SetInfo(turn);
+        turn.Bind(session, endTurn: playing);
 
         // The status bar along the bottom (ADR-186): the hints line first, then the messages and what the pointer is over; the resources on
         // the right. In the replay viewer it stands above the viewer's bar.
@@ -123,15 +123,15 @@ public partial class AdventureHud : CanvasLayer
         notice.UseOpaqueBackground();
         popUps.AddChild(notice);
         notice.Bind(session);
-        // HoMM-style by default: the minimap, the hero and town lists and the action panel down the right.
+        // HoMM-style: the minimap, the hero and town lists and the action panel down the right, or the left when mirrored.
         var minimapBox = new VBoxContainer();
-        _layout.SetPart(HudPart.Minimap, minimapBox);
+        _layout.AddToColumn(minimapBox);
         var minimap = new MinimapWidget { CellPixels = Math.Max(2, 320f / Math.Max(session.State.Map.Width, session.State.Map.Height)) };
         minimapBox.AddChild(minimap);
         minimap.Bind(context);
         minimap.TileClicked += tile => _camera.FocusOn(MapSpace.ToWorld(tile));
         var lists = new VBoxContainer();
-        _layout.SetPart(HudPart.Lists, lists);
+        _layout.AddToColumn(lists);
         HeroList = new HeroListPanel();
         lists.AddChild(HeroList);
         HeroList.Bind(session, () => context.ListedPlayer);
@@ -151,15 +151,14 @@ public partial class AdventureHud : CanvasLayer
                 _camera.FocusOn(MapSpace.ToWorld(watched.VisitPosition));
             }
         };
-        (_layout.HeroList, _layout.TownList) = (HeroList, townList);
 
-        // The action buttons (ADR-210): a 3×3 grid of square icon buttons in the corner the "Layout" tab picks.
+        // The action buttons (ADR-210): a 3×3 grid of square icon buttons under the lists.
         _actions = new GridContainer { Columns = 3 };
         _actions.AddThemeConstantOverride("h_separation", UiSpacing.Gap);
         _actions.AddThemeConstantOverride("v_separation", UiSpacing.Gap);
         var actionsPart = new CenterContainer(); // centred in a stack made wider by the minimap or the lists
         actionsPart.AddChild(_actions);
-        _layout.SetPart(HudPart.Actions, actionsPart);
+        _layout.AddToColumn(actionsPart);
 
         BuildScreens(playing, screens);
         BuildActions(playing);
@@ -191,15 +190,8 @@ public partial class AdventureHud : CanvasLayer
     /// <summary>What the pointer is over on the map goes to the status line (null: nothing there).</summary>
     public void ShowHover(string? text) => StatusBar.ShowHover(text);
 
-    /// <summary>Places the parts as <paramref name="layout"/> says (the "Layout" tab changed).</summary>
-    public void ApplyLayout(LayoutSettings layout)
-    {
-        // With the side panel on, End turn stands with its actions (ADR-204); off, at the top of the map.
-        _turn.InPanel = HudArrangement.PanelSide(layout) is not null;
-        _layout.Apply(layout);
-    }
-
-    private TurnPanel _turn = null!;
+    /// <summary>Places the parts as <paramref name="layout"/> says (the "Layout" tab changed): the default or its mirror (ADR-309).</summary>
+    public void ApplyLayout(LayoutSettings layout) => _layout.Apply(layout);
 
     /// <summary>The 3×3 action buttons (ADR-210).</summary>
     private GridContainer _actions = null!;

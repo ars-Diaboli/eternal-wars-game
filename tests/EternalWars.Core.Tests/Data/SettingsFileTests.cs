@@ -4,7 +4,7 @@ using EternalWars.Core.Domain.Settings;
 
 namespace EternalWars.Core.Tests.Data;
 
-/// <summary>The speed, interface and layout settings and their file (ADR-090, UI-1; ADR-154; ADR-156).</summary>
+/// <summary>The speed, interface and layout settings and their file (ADR-090, UI-1; ADR-154; ADR-156; ADR-309).</summary>
 public class SettingsFileTests
 {
     [Fact]
@@ -88,23 +88,18 @@ public class SettingsFileTests
     public void TheLayout_IsKeptBesideTheOtherSettings_AndTheDefaultWhenTheFileHasNone()
     {
         var path = Path.Combine(Path.GetTempPath(), $"ew-settings-{Guid.NewGuid():N}", SettingsFile.FileName);
-        var layout = new LayoutSettings(ScreenEdge.Bottom, ScreenCorner.BottomLeft, ListOrientation.Horizontal, ScreenCorner.BottomRight, SidePanel.Off);
+        var layout = new LayoutSettings(ScreenEdge.Bottom, Mirrored: true);
         try
         {
             SettingsFile.Save(path, SpeedSettings.Default, new InterfaceSettings(DetailedTooltips: true), layout);
 
             Assert.Equal(layout, SettingsFile.LoadLayout(path));
             Assert.True(SettingsFile.LoadInterface(path).DetailedTooltips);
-            Assert.Contains("\"minimap\": \"BottomLeft\"", File.ReadAllText(path), StringComparison.Ordinal);
+            Assert.Contains("\"mirrored\": true", File.ReadAllText(path), StringComparison.Ordinal);
+            Assert.DoesNotContain("sidePanel", File.ReadAllText(path), StringComparison.Ordinal);
             Assert.Equal(LayoutSettings.Default, SettingsFile.ReadLayout("{\"speed\": {\"battle\": \"Slow\"}}"));
             Assert.Equal(LayoutSettings.Default with { InitiativeBar = ScreenEdge.Bottom }, SettingsFile.ReadLayout("{\"layout\": {\"initiativeBar\": \"Bottom\"}}"));
-            Assert.Contains("\"sidePanel\": \"Off\"", File.ReadAllText(path), StringComparison.Ordinal);
-            Assert.Equal(SidePanel.Right, SettingsFile.ReadLayout("{\"layout\": {\"minimap\": \"TopLeft\"}}").SidePanel);
-            Assert.Contains("\"actionButtons\": \"BottomRight\"", File.ReadAllText(path), StringComparison.Ordinal);
-
-            // An older file's action panel side is left out: the buttons take their default corner, the other settings stay.
-            Assert.Equal(LayoutSettings.Default with { Minimap = ScreenCorner.TopLeft },
-                SettingsFile.ReadLayout("{\"layout\": {\"minimap\": \"TopLeft\", \"actionPanel\": \"Left\"}}"));
+            Assert.False(LayoutSettings.Default.Mirrored);
         }
         finally
         {
@@ -112,65 +107,79 @@ public class SettingsFileTests
         }
     }
 
+    [Theory]
+    [InlineData("\"sidePanel\": \"Right\", \"minimap\": \"TopLeft\"", false)] // the panel held the minimap, whatever its corner said
+    [InlineData("\"sidePanel\": \"Left\"", true)]
+    [InlineData("\"sidePanel\": \"left\"", true)]
+    [InlineData("\"sidePanel\": 1", true)] // a hand-edited number: the old enum's Left
+    [InlineData("\"sidePanel\": 2, \"minimap\": 3", true)]
+    [InlineData("\"sidePanel\": [], \"minimap\": {}", false)] // nonsense: the default, and the rest of the file still loads
+    [InlineData("\"sidePanel\": \"Off\", \"minimap\": \"TopRight\", \"lists\": \"Horizontal\"", false)]
+    [InlineData("\"sidePanel\": \"Off\", \"minimap\": \"BottomLeft\", \"actionButtons\": \"BottomRight\"", true)]
+    [InlineData("\"minimap\": \"TopLeft\"", false)] // written before the side panel: it was on the right
+    [InlineData("\"minimap\": \"TopLeft\", \"actionPanel\": \"Left\"", false)]
+    [InlineData("\"sidePanel\": \"Left\", \"mirrored\": false", false)] // a file the game wrote says it itself
+    public void AnOlderLayout_LoadsAsTheDefaultOrItsMirror_AndKeepsItsInitiativeBar(string older, bool mirrored)
+    {
+        var layout = SettingsFile.ReadLayout($"{{\"layout\": {{\"initiativeBar\": \"Bottom\", {older}}}}}");
+
+        Assert.Equal(new LayoutSettings(ScreenEdge.Bottom, mirrored), layout);
+    }
+
     [Fact]
-    public void TheDefaultLayout_IsTheMinimapListsAndActionsInTheTopRightStack()
+    public void TheDefaultArrangement_HasTheHeroesOnTheLeft_AndTheMinimapTownsAndActionsOnTheRight()
     {
         var layout = LayoutSettings.Default;
 
-        Assert.Equal([HudPart.Minimap, HudPart.Lists, HudPart.Actions], HudArrangement.Stack(layout, ScreenCorner.TopRight));
-        Assert.Empty(HudArrangement.Stack(layout, ScreenCorner.TopLeft));
-        Assert.Empty(HudArrangement.Stack(layout, ScreenCorner.BottomRight));
-        Assert.False(HudArrangement.ListsInBottomRow(layout));
+        Assert.Equal(
+            [ScreenSide.Left, ScreenSide.Right, ScreenSide.Left, ScreenSide.Right, ScreenSide.Left, ScreenSide.Left, ScreenSide.Right, ScreenSide.Right],
+            Enum.GetValues<HudPart>().Select(p => HudArrangement.SideOf(layout, p)));
+        Assert.Equal([HudPart.HeroCard, HudPart.ArmyStrip, HudPart.Actions, HudPart.EndTurn], HudArrangement.BottomRow(layout));
     }
 
     [Fact]
-    public void VerticalLists_FollowTheMinimap_AndTheActionsGoToTheirCorner()
+    public void TheMirror_SwapsLeftAndRight_ForEveryPart()
     {
-        var layout = new LayoutSettings(Minimap: ScreenCorner.BottomLeft, ActionButtons: ScreenCorner.TopLeft, SidePanel: SidePanel.Off);
+        var layout = LayoutSettings.Default;
+        var mirror = layout with { Mirrored = true };
 
-        Assert.Equal([HudPart.Minimap, HudPart.Lists], HudArrangement.Stack(layout, ScreenCorner.BottomLeft));
-        Assert.Equal([HudPart.Actions], HudArrangement.Stack(layout, ScreenCorner.TopLeft));
-        Assert.Empty(HudArrangement.Stack(layout, ScreenCorner.TopRight));
-        Assert.Equal(ScreenCorner.BottomLeft, HudArrangement.CornerOf(layout, HudPart.Lists));
-    }
-
-    [Fact]
-    public void TheActionButtons_TakeAnyCorner_AfterTheMinimapAndListsInTheirs()
-    {
-        var bottom = new LayoutSettings(ActionButtons: ScreenCorner.BottomRight, SidePanel: SidePanel.Off);
-        var shared = new LayoutSettings(Minimap: ScreenCorner.BottomLeft, ActionButtons: ScreenCorner.BottomLeft, SidePanel: SidePanel.Off);
-
-        Assert.Equal([HudPart.Actions], HudArrangement.Stack(bottom, ScreenCorner.BottomRight));
-        Assert.Equal([HudPart.Minimap, HudPart.Lists], HudArrangement.Stack(bottom, ScreenCorner.TopRight));
-        Assert.Equal([HudPart.Minimap, HudPart.Lists, HudPart.Actions], HudArrangement.Stack(shared, ScreenCorner.BottomLeft));
-        Assert.Equal(ScreenCorner.TopRight, LayoutSettings.Default.ActionButtons);
-    }
-
-    [Fact]
-    public void HorizontalLists_GoToTheBottomRow()
-    {
-        var layout = new LayoutSettings(Minimap: ScreenCorner.TopLeft, Lists: ListOrientation.Horizontal, SidePanel: SidePanel.Off);
-
-        Assert.True(HudArrangement.ListsInBottomRow(layout));
-        Assert.Null(HudArrangement.CornerOf(layout, HudPart.Lists));
-        Assert.Equal([HudPart.Minimap], HudArrangement.Stack(layout, ScreenCorner.TopLeft));
-        Assert.Equal([HudPart.Actions], HudArrangement.Stack(layout, ScreenCorner.TopRight));
+        Assert.All(Enum.GetValues<HudPart>(), p => Assert.Equal(HudArrangement.Opposite(HudArrangement.SideOf(layout, p)), HudArrangement.SideOf(mirror, p)));
+        Assert.Equal(HudArrangement.BottomRow(layout).Reverse(), HudArrangement.BottomRow(mirror));
+        Assert.Equal(ScreenSide.Left, HudArrangement.SideOf(mirror, HudPart.Minimap));
+        Assert.Equal(ScreenSide.Right, HudArrangement.SideOf(mirror, HudPart.HeroList));
     }
 
     [Theory]
-    [InlineData(SidePanel.Right, ScreenCorner.TopRight)]
-    [InlineData(SidePanel.Left, ScreenCorner.TopLeft)]
-    public void TheSidePanel_HoldsTheMinimapListsAndActionsOnItsSide_WhateverTheOtherSettingsSay(SidePanel panel, ScreenCorner top)
+    [InlineData(150, 150)]
+    [InlineData(200, 200)]
+    [InlineData(50, 100)]
+    [InlineData(400, 200)]
+    [InlineData(125, 100)] // between two: the smaller
+    [InlineData(140, 150)]
+    [InlineData(175, 150)]
+    [InlineData(180, 200)]
+    public void TheUiScale_IsKeptWithTheInterfaceSettings_InItsRangeAndOnAnOfferedScale(int written, int read)
     {
-        var layout = new LayoutSettings(Minimap: ScreenCorner.BottomLeft, Lists: ListOrientation.Horizontal, ActionButtons: ScreenCorner.BottomRight, SidePanel: panel);
+        Assert.Equal(read, SettingsFile.ReadInterface($"{{\"interface\": {{\"uiScalePercent\": {written}}}}}").UiScalePercent);
+        Assert.Equal(read, new InterfaceSettings(UiScalePercent: written).Normalized().UiScalePercent);
+    }
 
-        Assert.Equal([HudPart.Minimap, HudPart.Lists, HudPart.Actions], HudArrangement.Stack(layout, top));
-        Assert.Equal(3, Enum.GetValues<ScreenCorner>().Sum(c => HudArrangement.Stack(layout, c).Count));
-        Assert.False(HudArrangement.ListsInBottomRow(layout));
-        Assert.Equal(panel == SidePanel.Left ? ScreenSide.Left : ScreenSide.Right, HudArrangement.PanelSide(layout));
-        Assert.Null(HudArrangement.PanelSide(layout with { SidePanel = SidePanel.Off }));
-        Assert.True(HudArrangement.ListsInBottomRow(layout with { SidePanel = SidePanel.Off })); // the other settings are kept for when it is off
-        Assert.Equal(SidePanel.Right, LayoutSettings.Default.SidePanel);
+    [Fact]
+    public void TheUiScale_RoundTripsThroughTheFile_AndIs100WhenTheFileHasNone()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"ew-settings-{Guid.NewGuid():N}", SettingsFile.FileName);
+        try
+        {
+            SettingsFile.Save(path, SpeedSettings.Default, new InterfaceSettings(ShowGrid: true, UiScalePercent: 150));
+
+            Assert.Equal(new InterfaceSettings(ShowGrid: true, UiScalePercent: 150), SettingsFile.LoadInterface(path));
+            Assert.Equal(100, SettingsFile.ReadInterface("{\"interface\": {\"showGrid\": true}}").UiScalePercent);
+            Assert.Equal([100, 150, 200], InterfaceSettings.UiScales);
+        }
+        finally
+        {
+            Directory.Delete(Path.GetDirectoryName(path)!, recursive: true);
+        }
     }
 
     [Theory]

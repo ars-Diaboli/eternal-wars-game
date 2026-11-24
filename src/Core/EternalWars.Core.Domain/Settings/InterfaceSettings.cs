@@ -7,8 +7,8 @@ namespace EternalWars.Core.Domain.Settings;
 /// numbers to the information windows; off by default. <see cref="Fog"/> is how the fog of war looks on the adventure map;
 /// <see cref="ShowGrid"/> draws the tile grid over its ground (ADR-183; off by default). <see cref="Window"/> is whether the game fills the
 /// screen (ADR-186; a window by default). <see cref="MapSort"/>, <see cref="MapSortReversed"/> and <see cref="MapSizeFilter"/> are how the
-/// new-game screen's map lists are sorted and filtered (ADR-204; by name, every size, by default). Kept per computer in the settings file, like
-/// <see cref="SpeedSettings"/>; it changes no rule.
+/// new-game screen's map lists are sorted and filtered (ADR-204; by name, every size, by default). <see cref="UiScalePercent"/> is the size of
+/// the game's UI (ADR-309; 100 % by default). Kept per computer in the settings file, like <see cref="SpeedSettings"/>; it changes no rule.
 /// </summary>
 public sealed record InterfaceSettings(
     bool DetailedTooltips = false,
@@ -17,9 +17,26 @@ public sealed record InterfaceSettings(
     WindowMode Window = WindowMode.Windowed,
     MapSort MapSort = MapSort.Name,
     bool MapSortReversed = false,
-    int MapSizeFilter = MapListView.AllSizes)
+    int MapSizeFilter = MapListView.AllSizes,
+    int UiScalePercent = 100)
 {
+    public const int MinUiScale = 100;
+    public const int MaxUiScale = 200;
+
+    /// <summary>The UI scales the game offers, in percent (ADR-309).</summary>
+    public static IReadOnlyList<int> UiScales { get; } = [100, 150, 200];
+
     public static InterfaceSettings Default { get; } = new();
+
+    /// <summary>
+    /// The same settings with the UI scale inside its range, as the map editor's preferences are, then on the nearest scale offered (the
+    /// smaller of two as near).
+    /// </summary>
+    public InterfaceSettings Normalized()
+    {
+        var scale = Math.Clamp(UiScalePercent, MinUiScale, MaxUiScale);
+        return this with { UiScalePercent = UiScales.MinBy(s => Math.Abs(s - scale)) };
+    }
 
     /// <summary>These settings with the other window mode (Alt+Enter).</summary>
     public InterfaceSettings WithWindowToggled() =>

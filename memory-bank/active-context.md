@@ -15,7 +15,10 @@ Detail: [roadmap.md](roadmap.md).
   mark with the fully built rule (`BuildingTree.IsFullyBuilt`), the mark over a route's end (`AdventureCursors.RouteEndOf`), the
   replay bar's icons and the level icons on Switch level (icon sheets 30–32). New prompt file
   [question-picture-prompts.md](../docs/content/prompts/question-picture-prompts.md); the UI element and question picture prompts are
-  one ready block each. Next is the plan's step 2 (the core models).
+  one ready block each. Step 2 begun: the layout is a mirrored flag (`LayoutSettings.Mirrored`; older layouts load as the default or
+  its mirror; the Layout tab offers the mirror, and today's side panel follows it until step 3) and the UI scale is a setting
+  (`InterfaceSettings.UiScalePercent`, 100/150/200, not yet in the menu). Next: the rest of step 2 (hero card, descriptions by
+  ownership, route days, hotkeys).
 - Necropolis heroes: three living humans, four liches, six vampires, a ghost, a wraith and five other dead; prompts
   rewritten, data unchanged (ADR-307).
 - Dungeon heroes: four minotaurs, three troglodytes, a medusa and two humans among the dark elves; prompts rewritten,

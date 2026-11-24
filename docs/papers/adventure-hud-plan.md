@@ -185,8 +185,8 @@ memory-bank entries updated.
 - [x] Answer the guide's Still open list, or move it to `open-questions.md` (HUD-1, HUD-2).
 
 ### 2. Core (engine-free, with tests)
-- [ ] `LayoutSettings`: only a mirrored flag; `HudArrangement` reduced to it; older saved layouts load as the default or its mirror.
-- [ ] `InterfaceSettings.UiScalePercent`: 100, 150 or 200, clamped like `EditorPreferences`.
+- [x] `LayoutSettings`: only a mirrored flag; `HudArrangement` reduced to it; older saved layouts load as the default or its mirror.
+- [x] `InterfaceSettings.UiScalePercent`: 100, 150 or 200, clamped like `EditorPreferences`.
 - [ ] A hero card model: movement, mana, experience progress (`TrainingRules.ExperienceToNextLevel`), total morale and luck
   (`Hero.TotalMorale`, `TotalLuck`), 7 slots.
 - [x] A town build state: can build, built today (`TownRules.HasBuiltToday`), fully built (a new rule: every faction

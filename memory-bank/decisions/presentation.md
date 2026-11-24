@@ -979,7 +979,8 @@ ADR-156, ADR-186, ADR-191, ADR-204 and ADR-210, as said below. No rule, save or 
 (the plan's step 2). The guide to every part is the [paper's guide](../../docs/papers/adventure-hud-plan.md#guide); the owner's decisions,
 row by row, are in the Claude doc it cites. Built so far: the town list's build mark and the "fully built" rule
 (`BuildingTree.IsFullyBuilt`), the mark over a route's end (`AdventureCursors.RouteEndOf`, `RouteEnd`), the replay bar's icons, and the
-level icons on Switch level (icon sheets 30–32).
+level icons on Switch level (icon sheets 30–32); the layout as a mirrored flag (`LayoutSettings.Mirrored`, `HudArrangement`; today's
+side panel stands on the mirrored side until the plan's step 3) and the UI scale setting (`InterfaceSettings.UiScalePercent`).
 
 - **Why**: the side panel (ADR-191) and the Layout tab's corners (ADR-156) grew part by part; the owner's six mockups set one HUD that
   leaves the map's middle free. The owner decided each of their 71 differences; the paper states the result once.

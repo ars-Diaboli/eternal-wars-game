@@ -134,6 +134,7 @@ public partial class Main
                 _battleHud.Layout = layout;
             }
 
+            PlaceCheats();
             KeepSettings();
         };
     }

@@ -1,5 +1,6 @@
 using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Settings;
 using EternalWars.Godot.Shared;
 using EternalWars.Godot.UI.Hud;
 using Godot;
@@ -64,16 +65,40 @@ public partial class Main
         _status.Text = $"Play-test of {state.Map.Name} as player {test.Player}{(test.Others == PlayTestOthers.Off ? ", the others off" : "")}; not ranked.";
     }
 
-    /// <summary>The cheat panel of a play-test with cheats, over the map's left edge.</summary>
+    /// <summary>The cheat panel of a play-test with cheats; null without one.</summary>
+    private CheatPanel? _cheats;
+
+    /// <summary>The cheat panel of a play-test with cheats, over the map's edge away from the HUD's column.</summary>
     private void BuildCheats()
     {
         var layer = new CanvasLayer { Name = "Cheats", Layer = 4 };
         _game!.AddChild(layer);
-        var panel = new CheatPanel();
-        layer.AddChild(panel);
-        panel.Bind(_session, () => _mapInput.SelectedHero, text => _status.Text = text);
-        panel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.CenterLeft); // the HUD's column is on the right
-        panel.GrowHorizontal = Control.GrowDirection.End;
-        panel.OffsetLeft = 12;
+        _cheats = new CheatPanel();
+        layer.AddChild(_cheats);
+        _cheats.Bind(_session, () => _mapInput.SelectedHero, text => _status.Text = text);
+        PlaceCheats();
+    }
+
+    /// <summary>Puts the cheat panel on the map's left edge, or its right when the HUD is mirrored (ADR-309).</summary>
+    private void PlaceCheats()
+    {
+        if (!IsInstanceValid(_cheats))
+        {
+            return;
+        }
+
+        var panel = _cheats!;
+        if (HudArrangement.SideOf(_layout, HudPart.Minimap) == ScreenSide.Left)
+        {
+            panel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.CenterRight);
+            panel.GrowHorizontal = Control.GrowDirection.Begin;
+            panel.OffsetRight = -12;
+        }
+        else
+        {
+            panel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.CenterLeft);
+            panel.GrowHorizontal = Control.GrowDirection.End;
+            panel.OffsetLeft = 12;
+        }
     }
 }
