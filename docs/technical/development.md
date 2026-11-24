@@ -6,7 +6,7 @@ Build, test and asset-link commands are in the root `CLAUDE.md`.
 - .NET SDK 10 (pinned in `global.json`, `rollForward: latestFeature`).
 - Godot 4.7.2 **.NET edition** (https://godotengine.org/download/windows/), needed only to run the apps.
 - Binary assets (`*.png`, `*.glb`, `*.wav`, fonts, ...) go through **Git LFS** (`.gitattributes`; `git lfs install`
-  once); `*.import` sidecars stay text. Exception: `textures/terrain/beach.png` is a plain blob (LFS quota).
+  once); `*.import` sidecars stay text.
 
 ## Running the apps
 Apps are standalone Godot projects: `src/Apps/EternalWars.Game`, `src/Apps/EternalWars.MapEditor`,
