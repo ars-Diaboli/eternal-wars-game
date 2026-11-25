@@ -8,7 +8,7 @@ namespace EternalWars.Core.Domain.MapEvents.Actions;
 
 /// <summary>
 /// The last step of a quest stage's completion (EVT-5): the quest object moves on, the other players' open entries for it go, and the completer's
-/// log shows the next stage (its proposal is shown at once) or the quest done; a Quest Guard whose last stage is done leaves the map.
+/// log shows the next stage (each of those players is told it lost the quest) (its proposal is shown at once) or the quest done; a Quest Guard whose last stage is done leaves the map.
 /// </summary>
 internal sealed class AdvanceQuestHandler : MapEventActionHandler<MapEventService.AdvanceQuestAction>
 {
@@ -37,6 +37,7 @@ internal sealed class AdvanceQuestHandler : MapEventActionHandler<MapEventServic
         foreach (var player in context.Data.DropOpenQuestEntries(site.Id, completer))
         {
             events.Publish(new QuestLogChanged(player));
+            events.Publish(new QuestLost(site.Id, run.Event.Name, player, completer));
         }
 
         if (site.Stage < run.Event.Stages.Count)

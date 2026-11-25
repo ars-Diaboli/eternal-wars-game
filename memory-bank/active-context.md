@@ -9,13 +9,20 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- The question pictures are in (`textures/ui/questions/`, 16 of the 17; `q_event-message` not generated yet): scaled to 1024 × 576,
+  their edges blended into the card's slate. The card's see-through background is darker than that slate over the map, so a faint box
+  shows round the picture.
+- HUD-1 and HUD-2 answered (ADR-317): notice cards for a map event's message, the new week, a player defeated, a quest done or lost
+  to another player (`QuestLost`, new) and an artifact picked up; a card for a human whose turn it is not waits for its next turn, and
+  several show one after another (`NoticePanel`); a lost town or hero is the status line's. The long answer list was already built.
+  Left on the adventure HUD plan: `q_event-message`, sheet 33, step 5's text.
 - The minimap fills its slot, its panel at most a third of the screen's height; the action grid 2 × 4 without Switch level and Hero
   screen (ADR-316; `AdventureHud.BuildMinimap`, `AdventureActionGrid`). icon-prompts.md grouped by where the icons are shown; the eight
   buttons on one new sheet, 33, in one style and detail (sheet 15 keeps the hero, End turn, level and thieves' guild; 16 is gone; 22's
   menu cell a spare). Move shows `move.png`. Next: the owner generates sheet 33.
 - On a narrow screen the action buttons move up above the bottom row and the army strip takes their place (ADR-315,
   `AdventureHudLayout.PlaceBottomRow`): where the cut would leave the strip under half its width; beside the minimap's panel where they
-  would cover it; a list stops above them. Left on the adventure HUD plan: the question pictures (art), HUD-1 and HUD-2, step 5's text.
+  would cover it; a list stops above them.
 - The town list in its own panel (ADR-313): `TownListPanel` a growing column with no arrows, framed like the hero list
   (`AdventureHud.ListFrame`) and placed by `AdventureHudLayout.SetTownList` on the minimap's side, down on the bottom row and growing up
   to the minimap's panel, which now ends under the minimap; the chat between them when there is room.
@@ -47,7 +54,7 @@ Detail: [roadmap.md](roadmap.md).
   dividers; high contrast and a missing file keep the flat look.
 - The adventure HUD redesign recorded (ADR-309; [plan](../docs/papers/adventure-hud-plan.md)): the owner's six mockups decided row by
   row into one arrangement, mirrored or not, with a bottom row of equal panels and a 2 × 5 icon grid; it supersedes in part ADR-156,
-  ADR-186, ADR-191, ADR-204 and ADR-210. Open: HUD-1 (notice cards) and HUD-2 (long answer lists). Already in: the town list's build
+  ADR-186, ADR-191, ADR-204 and ADR-210. HUD-1 and HUD-2 answered in ADR-317. Already in: the town list's build
   mark with the fully built rule (`BuildingTree.IsFullyBuilt`), the mark over a route's end (`AdventureCursors.RouteEndOf`), the
   replay bar's icons and the level icons on Switch level (icon sheets 30–32). New prompt file
   [question-picture-prompts.md](../docs/content/prompts/question-picture-prompts.md); the UI element and question picture prompts are

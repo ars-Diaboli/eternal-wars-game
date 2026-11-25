@@ -242,5 +242,5 @@ candlelight.
 
 1. Look at each picture at the card's size beside its question: the subject is the thing the question is about.
 2. Put the pictures side by side: the same light, the same faded edges, the same level of detail.
-3. Put the files in `src/Godot/EternalWars.Godot.Assets/textures/ui/questions/` *(proposal)* and add a line to the folder's `CREDITS.md`
-   with the tool and its licence terms.
+3. Scale to 1024 × 576, blend the outer 6 % into the card's slate (RGB 28, 31, 38), put the files in
+   `src/Godot/EternalWars.Godot.Assets/textures/ui/questions/` and update the folder's `CREDITS.md`.

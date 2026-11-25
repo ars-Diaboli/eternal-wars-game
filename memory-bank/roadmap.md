@@ -272,8 +272,9 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [ ] Step 5: Sylvan, Academy, Necropolis, Dungeon, Stronghold and Swamp Bestiary in full art
 - [ ] Step 6: controller pass, UI scale, the goal building; the plan's target list ticked
 
-### Adventure HUD redesign (ADR-309; [plan](../docs/papers/adventure-hud-plan.md#plan), HUD-1 and HUD-2 open)
-- [x] Step 1: the decisions recorded (ADR-309); the two open points moved to HUD-1 and HUD-2
+### Adventure HUD redesign (ADR-309; [plan](../docs/papers/adventure-hud-plan.md#plan), HUD-1 and HUD-2 answered in ADR-317)
+- [x] Step 1: the decisions recorded (ADR-309); the two open points moved to HUD-1 and HUD-2, answered (ADR-317: the notice cards,
+      a card waiting for its player's turn, a lost town or hero on the status line)
 - [x] Step 2: core models (layout mirrored flag, UI scale, hero card, town build state, descriptions by ownership, route days, hotkeys)
       - [x] The fully built rule (`BuildingTree.IsFullyBuilt`) and the route's end action (`AdventureCursors.RouteEndOf`)
       - [x] The layout as a mirrored flag (`LayoutSettings.Mirrored`, `HudArrangement`; older layouts load as the default or its mirror;
@@ -289,7 +290,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       - [x] The replay bar's day slider; the army strip cut with a fade on narrow screens; the UI scale on the Layout tab, applied
 - [x] Step 4: checked at every target size, UI scale and mirror (the scale lowered on small windows; under ~1,000 px of UI width the
       action buttons move up above the row and the army strip takes their place, ADR-315)
-- [ ] Step 5: the painted pieces (icon sheets 30–32 already cut into `textures/ui/icons/`)
+- [ ] Step 5: the painted pieces (icon sheets 30–32 already cut into `textures/ui/icons/`; the question pictures in
+      `textures/ui/questions/`, all but `q_event-message`)
       - [x] The HUD's frames drawn by a shader instead (ADR-310): panels, slots and buttons; the panel opacity on the Layout tab
       - [x] The same frames for every window, dialog, tooltip, card and button of the game; the rest of the theme in its grey (ADR-311)
 - [x] Step 6: the battle HUD's mockups drawn, a decision table with recommendations, the restyle planned

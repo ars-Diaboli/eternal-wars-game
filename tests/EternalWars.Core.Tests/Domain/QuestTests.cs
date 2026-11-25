@@ -109,7 +109,7 @@ public class QuestTests
     }
 
     [Fact]
-    public void TheLastStage_MarksTheQuestDone_LeavesTheHutEmpty_AndDropsTheOtherPlayersOpenEntries()
+    public void TheLastStage_MarksTheQuestDone_LeavesTheHutEmpty_AndDropsTheOtherPlayersOpenEntries_WhoLoseTheQuest()
     {
         var (session, site) = World(BuiltInMapObjects.SeerHut, 2, 0, Quest(PayGold("Bring me 100000 gold.")));
         session.MoveTo(A, site.VisitPosition); // Blue cannot pay: the quest goes into Blue's log
@@ -118,9 +118,13 @@ public class QuestTests
         session.EndTurn();
 
         Gold(session, Red, Asked);
+        var lost = new List<QuestLost>();
+        session.Events.Subscribe<QuestLost>(lost.Add);
         session.MoveTo(B, site.VisitPosition);
         Assert.True(Pending(session).IsQuestion);
         Answer(session, 0);
+
+        Assert.Equal(new QuestLost(site.Id, "quest", Blue, Red), Assert.Single(lost));
 
         Assert.Equal(new QuestLogEntry(site.Id, "quest", 0, Done: true), Assert.Single(session.State.MapEvents.QuestLog(Red)));
         Assert.Empty(session.State.MapEvents.QuestLog(Blue));

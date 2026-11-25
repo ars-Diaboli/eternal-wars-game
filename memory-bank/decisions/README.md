@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-317** (ADR-314 is kept for the battle HUD restyle). A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-318** (ADR-314 is kept for the battle HUD restyle). A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -342,3 +342,4 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [313](presentation.md#adr-313-the-town-list-in-its-own-panel-the-hero-lists-twin-the-side-column-down-to-the-minimap-adr-309-owner-2026-11-25) | presentation | The town list in its own panel, the hero list's twin; the side column down to the minimap (ADR-309, owner, 2026-11-25) | implemented |
 | [315](presentation.md#adr-315-on-a-narrow-screen-the-action-buttons-move-up-above-the-bottom-row-the-army-strip-takes-their-place-adr-309-owner-2026-11-25) | presentation | On a narrow screen the action buttons move up above the bottom row; the army strip takes their place (ADR-309, owner, 2026-11-25) | implemented |
 | [316](presentation.md#adr-316-the-minimap-fills-its-slot-and-its-panel-takes-at-most-a-third-of-the-screens-height-switch-level-and-hero-screen-leave-the-action-grid-2--4-adr-309-owner-2026-11-25) | presentation | The minimap fills its slot and its panel takes at most a third of the screen's height; Switch level and Hero screen leave the action grid (2 × 4) (ADR-309, owner, 2026-11-25) | implemented |
+| [317](presentation.md#adr-317-notice-cards-for-what-the-player-must-not-miss-the-rest-on-the-status-line-more-than-four-answers-as-a-scrolling-list-hud-1-hud-2-owner-2026-11-25) | presentation | Notice cards for what the player must not miss, the rest on the status line; more than four answers as a scrolling list (HUD-1, HUD-2, owner, 2026-11-25) | implemented |

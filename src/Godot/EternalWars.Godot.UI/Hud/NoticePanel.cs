@@ -8,11 +8,15 @@ namespace EternalWars.Godot.UI.Hud;
 /// <summary>
 /// A short message from the map for the player whose turn it is (ADR-068): a sign's text, why an object turned the hero away, an emptied
 /// object, a freed prisoner, what a Pandora's Box held, what an Astrologer's Tower foretells, what a town's unique building gave (ADR-138), a sphinx's verdict, and the week's event when a human's first turn of the week starts (ADR-073).
-/// It is the question card's look with one answer (ADR-309), hidden again by Continue, Escape or the hero's next step.
+/// The cards of ADR-317 too: an artifact picked up, a quest done or lost to another player, a player defeated. A card for a human whose
+/// turn it is not waits for that player's next turn. It is the question card's look with one answer (ADR-309); Continue shows the next
+/// waiting card, and Escape or the hero's next step hides them all.
 /// </summary>
 public partial class NoticePanel : PanelContainer
 {
     private readonly Label _text = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(360, 0) };
+    private readonly Queue<string> _next = new();
+    private readonly Dictionary<Core.Domain.Common.PlayerId, List<string>> _waiting = [];
     private GameSession _session = null!;
 
     public void Bind(GameSession session)
@@ -22,7 +26,7 @@ public partial class NoticePanel : PanelContainer
         AddChild(box);
         box.AddChild(_text);
         var ok = new Button { Text = "Continue" }.WithIcon(UiIcon.Confirm, keepText: true);
-        ok.Pressed += () => Visible = false;
+        ok.Pressed += ShowNext;
         box.AddChild(Screens.ButtonRow(ok));
         Visible = false;
 
@@ -55,27 +59,63 @@ public partial class NoticePanel : PanelContainer
             : e.Artifact is { } prize ? $"Right. The sphinx gives {_session.State.GetHero(e.Hero).Name} the {_session.State.Artifacts.Get(prize).Name}."
             : e.Experience > 0 ? $"Right. The sphinx's lesson gives {_session.State.GetHero(e.Hero).Name} {e.Experience} experience."
             : "Right, but there is no room left to carry the sphinx's prize."));
-        this.SubscribeWhileInTree<TurnStarted>(session.Events, _ => AnnounceWeek());
-        this.SubscribeWhileInTree<HeroMoved>(session.Events, _ => Visible = false);
+        this.SubscribeWhileInTree<ArtifactGained>(session.Events, e =>
+        {
+            if (e.Source == ArtifactSource.Pickup)
+            {
+                Show(e.Hero, $"{_session.State.GetHero(e.Hero).Name} picks up the {_session.State.Artifacts.Get(e.Artifact).Name}.");
+            }
+        });
+        this.SubscribeWhileInTree<QuestStageCompleted>(session.Events, e =>
+        {
+            if (e.Stage + 1 >= (_session.State.MapEvents.Set.Find(e.Quest)?.Stages.Count ?? 0))
+            {
+                Tell(e.Player, $"Quest done: {SiteName(e.Site)}.");
+            }
+        });
+        this.SubscribeWhileInTree<QuestLost>(session.Events, e =>
+            Tell(e.Player, $"{_session.State.GetPlayer(e.By).Name} completed the quest of the {SiteName(e.Site)} first: it is gone from your quest log."));
+        this.SubscribeWhileInTree<PlayerDefeated>(session.Events, e =>
+        {
+            foreach (var player in _session.State.Players.Where(p => p.Id != e.Player && p.IsHuman && !p.IsDefeated))
+            {
+                Tell(player.Id, $"{_session.State.GetPlayer(e.Player).Name} is defeated: {e.Reason}");
+            }
+        });
+        this.SubscribeWhileInTree<TurnStarted>(session.Events, _ => StartTurn());
+        this.SubscribeWhileInTree<HeroMoved>(session.Events, _ => Close());
     }
 
     public override void _UnhandledKeyInput(InputEvent @event)
     {
         if (Visible && @event is InputEventKey { Pressed: true, Keycode: Key.Escape })
         {
-            Visible = false;
+            Close();
             GetViewport().SetInputAsHandled();
         }
     }
 
-    /// <summary>Each human sees the week's event on its first turn of the week (hot-seat players each get it).</summary>
-    private void AnnounceWeek()
+    /// <summary>
+    /// A turn starts: the last turn's cards go; each human sees the week's event on its first turn of the week (hot-seat players each get
+    /// it), then the cards that waited for it.
+    /// </summary>
+    private void StartTurn()
     {
+        Close();
         var state = _session.State;
-        if (state.Date.IsFirstDayOfWeek && state.CurrentPlayer.IsHuman && state.WeekEvent.Kind != Core.Domain.Turns.WeekEventKind.None)
+        if (!state.CurrentPlayer.IsHuman)
         {
-            _text.Text = $"{(state.Date.Week == 1 ? "A new month" : "A new week")} begins. {state.WeekEvent.Describe(state.Creatures)}";
-            Visible = true;
+            return;
+        }
+
+        if (state.Date.IsFirstDayOfWeek && state.WeekEvent.Kind != Core.Domain.Turns.WeekEventKind.None)
+        {
+            Show($"{(state.Date.Week == 1 ? "A new month" : "A new week")} begins. {state.WeekEvent.Describe(state.Creatures)}");
+        }
+
+        if (_waiting.Remove(state.CurrentPlayer.Id, out var waiting))
+        {
+            waiting.ForEach(Show);
         }
     }
 
@@ -137,6 +177,8 @@ public partial class NoticePanel : PanelContainer
         return $"{hero.Name} visits the {name}: {gift}.";
     }
 
+    private string SiteName(Core.Domain.Common.MapObjectId id) => _session.State.FindObject(id)?.Definition.Name ?? "quest";
+
     private string NameOf(Core.Domain.Common.MapObjectId id) =>
         _session.State.FindObject(id)?.Definition.Name.ToLowerInvariant() ?? "place";
 
@@ -144,12 +186,59 @@ public partial class NoticePanel : PanelContainer
     private void Show(Core.Domain.Common.HeroId hero, string text)
     {
         var state = _session.State;
-        if (state.Heroes.FirstOrDefault(h => h.Id == hero) is not { } found || found.Owner != state.CurrentPlayer.Id || !state.CurrentPlayer.IsHuman)
+        if (state.Heroes.FirstOrDefault(h => h.Id == hero) is { } found && found.Owner == state.CurrentPlayer.Id && state.CurrentPlayer.IsHuman)
         {
+            Show(text);
+        }
+    }
+
+    /// <summary>A card for a human player: now when it is that player's turn, else at the start of its next turn.</summary>
+    private void Tell(Core.Domain.Common.PlayerId player, string text)
+    {
+        var state = _session.State;
+        if (!state.GetPlayer(player).IsHuman)
+        {
+            return;
+        }
+
+        if (state.CurrentPlayer.Id == player)
+        {
+            Show(text);
+        }
+        else
+        {
+            (_waiting.TryGetValue(player, out var list) ? list : _waiting[player] = []).Add(text);
+        }
+    }
+
+    /// <summary>Shows the card, or queues it behind the one showing.</summary>
+    private void Show(string text)
+    {
+        if (Visible)
+        {
+            _next.Enqueue(text);
             return;
         }
 
         _text.Text = text;
         Visible = true;
+    }
+
+    private void ShowNext()
+    {
+        if (_next.TryDequeue(out var text))
+        {
+            _text.Text = text;
+        }
+        else
+        {
+            Visible = false;
+        }
+    }
+
+    private void Close()
+    {
+        _next.Clear();
+        Visible = false;
     }
 }

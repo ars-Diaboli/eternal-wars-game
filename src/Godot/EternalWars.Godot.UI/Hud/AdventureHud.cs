@@ -759,7 +759,10 @@ public partial class AdventureHud : CanvasLayer
         button.TooltipText = refusal ?? tooltip;
     }
 
-    /// <summary>The status line tells of the game's flow: the arena battle's day (ADR-097), defeats and a lost last town's grace period.</summary>
+    /// <summary>
+/// The status line tells of the game's flow: the arena battle's day (ADR-097), defeats, a lost last town's grace period, and a human's lost
+/// town or hero (ADR-317).
+/// </summary>
     public void ReportGameFlow()
     {
         // An arena map's day 2 (ADR-097): the battle opens by itself; the status line says who meets whom.
@@ -772,6 +775,24 @@ public partial class AdventureHud : CanvasLayer
             Status.Text = $"{_session.State.GetPlayer(e.Player).Name} lost its last town and is defeated on {e.DefeatDay} unless it owns one again.");
         this.SubscribeWhileInTree<GracePeriodEnded>(_session.Events, e =>
             Status.Text = $"{_session.State.GetPlayer(e.Player).Name} owns a town again.");
+
+        // A human's lost town or hero is a status line, not a card (ADR-317).
+        this.SubscribeWhileInTree<TownOwnerChanged>(_session.Events, e =>
+        {
+            if (e.Previous is { } previous && _session.State.GetPlayer(previous).IsHuman && _session.State.FindObject(e.Town) is Town town)
+            {
+                Status.Text = $"{_session.State.GetPlayer(previous).Name} lost {town.Name}"
+                              + (e.Current is { } taker ? $" to {_session.State.GetPlayer(taker).Name}." : ".");
+            }
+        });
+        this.SubscribeWhileInTree<HeroDefeated>(_session.Events, e =>
+        {
+            if (_session.State.GetPlayer(e.Owner).IsHuman)
+            {
+                var name = _session.State.Heroes.FirstOrDefault(h => h.Id == e.Hero)?.Name ?? "A hero";
+                Status.Text = $"{_session.State.GetPlayer(e.Owner).Name}: {name} {(e.Retreated ? "retreated" : "was defeated")}.";
+            }
+        });
     }
 
     /// <summary>Closes the screens over the map (town, hero, dwelling, market, services, kingdom, quest log, Thieves' Guild, spell book).</summary>

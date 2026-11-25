@@ -55,6 +55,7 @@
 | [313](#adr-313-the-town-list-in-its-own-panel-the-hero-lists-twin-the-side-column-down-to-the-minimap-adr-309-owner-2026-11-25) | The town list in its own panel, the hero list's twin; the side column down to the minimap (ADR-309, owner, 2026-11-25) | implemented |
 | [315](#adr-315-on-a-narrow-screen-the-action-buttons-move-up-above-the-bottom-row-the-army-strip-takes-their-place-adr-309-owner-2026-11-25) | On a narrow screen the action buttons move up above the bottom row; the army strip takes their place (ADR-309, owner, 2026-11-25) | implemented |
 | [316](#adr-316-the-minimap-fills-its-slot-and-its-panel-takes-at-most-a-third-of-the-screens-height-switch-level-and-hero-screen-leave-the-action-grid-2--4-adr-309-owner-2026-11-25) | The minimap fills its slot and its panel takes at most a third of the screen's height; Switch level and Hero screen leave the action grid (2 × 4) (ADR-309, owner, 2026-11-25) | implemented |
+| [317](#adr-317-notice-cards-for-what-the-player-must-not-miss-the-rest-on-the-status-line-more-than-four-answers-as-a-scrolling-list-hud-1-hud-2-owner-2026-11-25) | Notice cards for what the player must not miss, the rest on the status line; more than four answers as a scrolling list (HUD-1, HUD-2, owner, 2026-11-25) | implemented |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -981,7 +982,7 @@ TOWN-15 is ADR-291. The plan's step-by-step implementation is in its [roadmap](.
 
 ### ADR-309: The adventure HUD redesign: one arrangement, mirrored; parts along the edges and a bottom row of equal panels; icon-only buttons in a 2 × 5 grid (ADR-156, ADR-186, ADR-191, ADR-204, ADR-210, owner's mockups, 2026-11-24)
 **Status**: accepted (2026-11-24); building by the [adventure HUD plan](../../docs/papers/adventure-hud-plan.md#plan); superseded in part
-by ADR-315 (the narrow screen's bottom row) and ADR-316 (the minimap's size, the grid's buttons). Supersedes in part ADR-156, ADR-186, ADR-191, ADR-204 and ADR-210, as said below. No rule, save or map format change; the settings file's layout shrinks
+by ADR-315 (the narrow screen's bottom row) and ADR-316 (the minimap's size, the grid's buttons); its open points 9.1 and 9.2 settled by ADR-317. Supersedes in part ADR-156, ADR-186, ADR-191, ADR-204 and ADR-210, as said below. No rule, save or map format change; the settings file's layout shrinks
 (the plan's step 2). The guide to every part is the [paper's guide](../../docs/papers/adventure-hud-plan.md#guide); the owner's decisions,
 row by row, are in the Claude doc it cites. Built so far: the town list's build mark and the "fully built" rule
 (`BuildingTree.IsFullyBuilt`), the mark over a route's end (`AdventureCursors.RouteEndOf`, `RouteEnd`), the replay bar's icons, and the
@@ -1130,3 +1131,18 @@ and divider) and ADR-310 (the shader for the HUD only).
   having another way in.
 - **How**: `AdventureHud.BuildMinimap` (the slot's padding the rim's 3 px; the cell size refitted when the layer resizes);
   `MinimapWidget.CellPixels` resizes the widget; `AdventureActionGrid` (`Columns` 4).
+
+### ADR-317: Notice cards for what the player must not miss, the rest on the status line; more than four answers as a scrolling list (HUD-1, HUD-2, owner, 2026-11-25)
+
+**Status**: implemented (2026-11-25); settles HUD-1 (decision 9.2) and HUD-2 (decision 9.1) of ADR-309.
+
+- **Decision**: a notice card (Continue) stops play for a map event's message, the new week's announcement, a player defeated, a quest
+  done or failed (another player completed it first), and an artifact picked up from the map; the objects' own messages stay cards
+  (ADR-068). Everything else is the status bar's line: resources picked up, a site's ordinary reward, a mine or dwelling flagged, a town
+  or hero lost. A card for a human whose turn it is not waits for that player's next turn; several cards show one after another. A
+  question card shows up to four answers as buttons and more as a scrolling list of rows (picture and name), the card's height capped.
+  The rules are in [presentation.md](../../docs/design/presentation.md) (Pop-ups).
+- **Why**: the owner's answers to HUD-1 (the proposal without a town or hero lost, with artifacts) and HUD-2 (the proposal).
+- **How**: `QuestLost` (Core, published with the dropped log entries); `NoticePanel` (a queue per player, the new cards);
+  `AdventureHud.ReportGameFlow` (a lost town or hero on the status line). The long answer list was built with the question card
+  (ADR-309's step 4). Not yet: the status line's own words for a pickup, a reward or a flag (after a move it shows the move's outcome).

@@ -47,6 +47,13 @@ public sealed record MapEventWarMachineGained(HeroId Hero, Battles.WarMachineSlo
 [SeenBy(Audience.Owner)]
 public sealed record QuestStageCompleted(MapObjectId Site, string Quest, int Stage, HeroId Hero, PlayerId Player) : IEvent;
 
+/// <summary>
+/// <paramref name="By"/> completed a quest's stage first, and <paramref name="Player"/>'s open entry for it went: the quest is lost to
+/// that player (HUD-1 shows it as a card).
+/// </summary>
+[SeenBy(Audience.Owner)]
+public sealed record QuestLost(MapObjectId Site, string Quest, PlayerId Player, PlayerId By) : IEvent;
+
 /// <summary>The player's quest log changed (<see cref="MapEventState.QuestLog"/>): an entry was added, moved on, done or dropped.</summary>
 [SeenBy(Audience.Owner)]
 public sealed record QuestLogChanged(PlayerId Player) : IEvent;

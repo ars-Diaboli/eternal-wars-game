@@ -7,7 +7,7 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-11-24**: HUD-1 and HUD-2 (the adventure HUD redesign, ADR-309) added.
+**Updated 2026-11-25**: HUD-1 and HUD-2 answered (ADR-317).
 
 ## 🚧 Blocking now
 
@@ -25,21 +25,6 @@ Nothing blocking.
 faction-specific buildings does each town get (HoMM3 has 2–4 a town)?
 
 **Proposal**: open; the owner adds them here.
-
-## Adventure HUD (ADR-309, [plan](../docs/papers/adventure-hud-plan.md))
-
-<a id="hud-1"></a>
-**HUD-1 Notice cards** (decision 9.2). Which events stop play with a card in the middle of the screen (with Continue), and which only
-write the status bar's line?
-
-**Proposal**: a card for what the player must not miss: a map event's message, the new week's announcement, a town or hero lost, a player
-defeated, a quest done or failed; the status line only for routine outcomes: resources and artifacts picked up, a site's ordinary reward,
-a mine or dwelling flagged.
-
-<a id="hud-2"></a>
-**HUD-2 Long answer lists** (decision 9.1). A question card shows one button per answer; how does it show many (a town gate's towns)?
-
-**Proposal**: up to four answers are buttons; more are a scrolling list of rows (picture and name), with the card's height capped.
 
 ## Game flow and content
 
@@ -84,7 +69,7 @@ One line per question; the ADR holds the detail.
 - **Magic**: MAG-13 (guild spell draw, spell elements, summons) ADR-106; MAG-1 (the spell list re-drafted) ADR-099; MAG-4 ADR-070/071; MAG-2, MAG-3 (mana refill, Spell Power role, potency), MAG-5 (levels), MAG-6 (resistance) ADR-071; MAG-1 (Spell Power formula), MAG-3, MAG-5, MAG-6 … MAG-12 ADR-072; MAG-5 (fixed 500 points) and MAG-10 (even stat odds) ADR-073.
 - **Random maps**: ADR-023, ADR-034, ADR-064; RMG-1 … RMG-7 ADR-064/065; RMG-9, RMG-10, teams ADR-070; RMG-8, RMG-12, RMG-13 ADR-071; RMG-11 ADR-070/072.
 - **Data**: DATA-1 ADR-071.
-- **Presentation**: UI-1 (speed settings) ADR-090, built ADR-095; UI-2 (replays, main menu) ADR-101; UI-3 (layout, information windows) ADR-118.
+- **Presentation**: UI-1 (speed settings) ADR-090, built ADR-095; UI-2 (replays, main menu) ADR-101; UI-3 (layout, information windows) ADR-118; HUD-1 (notice cards) and HUD-2 (long answer lists) ADR-317.
 - **LAN multiplayer**: MP-1 (before 1.0, host, clients that see only their view, lobby, saves) and MP-2 (simultaneous first week) ADR-098;
   MP-3 (clients' view, saves, smooth fog) and MP-4 (start zones) ADR-099.
 - **Content**: CONT-3 (artifacts re-drafted) ADR-099; CONT-6 (HoMM names, assembled relics) ADR-100; CONT-7 (assembled relic rules, six more relics) ADR-108.

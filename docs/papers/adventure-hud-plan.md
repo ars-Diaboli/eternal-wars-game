@@ -123,7 +123,8 @@ buttons need no labels.
 **Pop-ups**
 - Question card: a picture, the question, one button per choice (mockup E). One picture per kind of question
   ([question-picture-prompts.md](../content/prompts/question-picture-prompts.md)). Up to four answers are buttons; more (a town gate's
-  towns) are a scrolling list of rows (proposal). Notices in the same card with Continue.
+  towns) are a scrolling list of rows (ADR-317). Notices in the same card with Continue, for the events ADR-317 lists; the rest is the status
+  bar's line.
 - The map behind questions and the pause card is dimmed.
 - Pause card (LAN): "Game paused", the reason, and on the host the "Computer plays <colour>" buttons; no Resume.
 - LAN chat: today's `ChatPanel`, opened with Enter; on big screens in the right column between the town list and End turn, on smaller
@@ -166,9 +167,8 @@ Every hotkey shows on the status bar with its action's name; M, Space and Z are 
 
 ### Still open
 
-Two points are unsettled and are now open questions: [HUD-1](../../memory-bank/open-questions.md#hud-1), which events stop play with
-a notice card (decision 9.2), and [HUD-2](../../memory-bank/open-questions.md#hud-2), long answer lists (decision 9.1). Settled on
-2026-11-24: Move on Space, Marketplace on M, End turn on Z, Tab stays for the next hero, End turn asks when a hero can still move, the
+Nothing: HUD-1 (which events stop play with a notice card, decision 9.2) and HUD-2 (long answer lists, decision 9.1) were answered on
+2026-11-25 (ADR-317). Settled on 2026-11-24: Move on Space, Marketplace on M, End turn on Z, Tab stays for the next hero, End turn asks when a hero can still move, the
 hero card's clicks as recommended, Switch level both in the grid and on the caption, the hero list grows while the town list scrolls;
 then the timer under the banner, placeholder route colours, an action icon on the route's end, the fully built rule, the question
 pictures, the chat's place and the narrow-screen army strip.
@@ -233,9 +233,10 @@ memory-bank entries updated.
 ### 5. Painted pieces
 - [x] Icon sheets 30 (town marks, level icons), 31 (replay bar) and 32 (route end icons) in
   [icon-prompts.md](../content/prompts/icon-prompts.md), cut into `textures/ui/icons/`.
-- [ ] Generate the rest: icon sheet 33 (the action grid's eight buttons, ADR-316); the list-slot sheet L4, the movement fill
-  and the HUD pieces in [ui-element-prompts.md](../content/prompts/ui-element-prompts.md); the question pictures
-  ([question-picture-prompts.md](../content/prompts/question-picture-prompts.md)).
+- [x] The question pictures ([question-picture-prompts.md](../content/prompts/question-picture-prompts.md)) in
+  `textures/ui/questions/`, all but `q_event-message`.
+- [ ] Generate the rest: icon sheet 33 (the action grid's eight buttons, ADR-316); `q_event-message`; the list-slot sheet L4, the
+  movement fill and the HUD pieces in [ui-element-prompts.md](../content/prompts/ui-element-prompts.md).
 - [ ] Swap them in for the flat theme's boxes; player-colour pieces are tinted at run time. Rewrite the HUD part of
   [presentation.md](../design/presentation.md) to state the new rules once.
 
