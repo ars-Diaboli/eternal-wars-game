@@ -53,6 +53,7 @@
 | [311](#adr-311-every-frame-of-the-game-drawn-by-the-shader-windows-dialogs-tooltips-cards-buttons-the-rest-of-the-theme-in-its-grey-adr-191-adr-294-adr-310-owner-2026-11-24) | Every frame of the game drawn by the shader: windows, dialogs, tooltips, cards, buttons; the rest of the theme in its grey (ADR-191, ADR-294, ADR-310, owner, 2026-11-24) | implemented |
 | [312](#adr-312-the-ui-icons-and-the-cursors-in-aluminium-ui-element-promptsmd-down-to-the-backgrounds-adr-116-adr-204-adr-311-owner-2026-11-24) | The UI icons and the cursors in aluminium; ui-element-prompts.md down to the backgrounds (ADR-116, ADR-204, ADR-311, owner, 2026-11-24) | accepted |
 | [313](#adr-313-the-town-list-in-its-own-panel-the-hero-lists-twin-the-side-column-down-to-the-minimap-adr-309-owner-2026-11-25) | The town list in its own panel, the hero list's twin; the side column down to the minimap (ADR-309, owner, 2026-11-25) | implemented |
+| [314](#adr-314-the-battle-hud-restyle-side-plates-a-bottom-row-of-the-stack-panel-the-timeline-and-a-4--2-action-grid-spells-and-warcries-in-a-battle-spell-book-an-attack-estimate-with-kills-and-the-return-blow-adr-110-adr-156-adr-195-adr-309-owner-2026-11-26) | The battle HUD restyle: side plates, a bottom row of the stack panel, the timeline and a 4 × 2 action grid; spells and warcries in a battle spell book; an attack estimate with kills and the return blow (ADR-110, ADR-156, ADR-195, ADR-309, owner, 2026-11-26) | accepted |
 | [315](#adr-315-on-a-narrow-screen-the-action-buttons-move-up-above-the-bottom-row-the-army-strip-takes-their-place-adr-309-owner-2026-11-25) | On a narrow screen the action buttons move up above the bottom row; the army strip takes their place (ADR-309, owner, 2026-11-25) | implemented |
 | [316](#adr-316-the-minimap-fills-its-slot-and-its-panel-takes-at-most-a-third-of-the-screens-height-switch-level-and-hero-screen-leave-the-action-grid-2--4-adr-309-owner-2026-11-25) | The minimap fills its slot and its panel takes at most a third of the screen's height; Switch level and Hero screen leave the action grid (2 × 4) (ADR-309, owner, 2026-11-25) | implemented |
 | [317](#adr-317-notice-cards-for-what-the-player-must-not-miss-the-rest-on-the-status-line-more-than-four-answers-as-a-scrolling-list-hud-1-hud-2-owner-2026-11-25) | Notice cards for what the player must not miss, the rest on the status line; more than four answers as a scrolling list (HUD-1, HUD-2, owner, 2026-11-25) | implemented |
@@ -119,7 +120,7 @@ viewing direction; zoom and pan. Implemented in `StrategyCamera` (Godot.Shared),
 - **Not done**: a long press on touch; windows for the kingdom overview, the tavern's heroes and the decision prompts.
 
 ### ADR-156: The configurable layout and the "Layout" tab (ADR-118 UI-3, 2026-11-09)
-**Status**: implemented (2026-11-09); superseded in part by ADR-309 (one arrangement, mirrored or not). *(proposal)* marks the agent's choices, for play-testing.
+**Status**: implemented (2026-11-09); superseded in part by ADR-309 (one arrangement, mirrored or not) and ADR-314 (the initiative bar at the bottom by default). *(proposal)* marks the agent's choices, for play-testing.
 
 - **The tab**: the F10 menu now has three tabs, "Save and load", "Settings" (auto combat, the speeds, "Detailed tooltips") and "Layout".
   Close and "Main menu" stay below the tabs. The layout choices: the battle's initiative bar (top, under the title, or bottom), the
@@ -1146,3 +1147,26 @@ and divider) and ADR-310 (the shader for the HUD only).
 - **How**: `QuestLost` (Core, published with the dropped log entries); `NoticePanel` (a queue per player, the new cards);
   `AdventureHud.ReportGameFlow` (a lost town or hero on the status line). The long answer list was built with the question card
   (ADR-309's step 4). Not yet: the status line's own words for a pickup, a reward or a flag (after a move it shows the move's outcome).
+
+### ADR-314: The battle HUD restyle: side plates, a bottom row of the stack panel, the timeline and a 4 × 2 action grid; spells and warcries in a battle spell book; an attack estimate with kills and the return blow (ADR-110, ADR-156, ADR-195, ADR-309, owner, 2026-11-26)
+
+**Status**: accepted (2026-11-26); building by the [battle HUD plan](../../docs/papers/battle-hud-plan.md#plan). Supersedes in part
+ADR-156 (the initiative bar's default place: the bottom row), ADR-110 (battle spells as one button each: a spell book window) and
+ADR-195 (the chat over a battle: bottom left above the stack panel). No rule, save or map format change; the settings file gains the
+combat settings.
+
+- **Decision**: the battle's HUD in the adventure HUD's look (ADR-309's decision 11.5), the bevel frames of ADR-310 and ADR-311. The
+  attacker's and defender's plates top left and right (portrait in the side's colour, name, mana), the round plate top centre; a bottom
+  row of equal panels: the stack panel, the timeline (the Layout tab's "top" keeps it under the round plate) and a 4 × 2 action grid:
+  Wait, Defend, Quick combat, Combat settings / Retreat, Surrender, Spell book, Menu. The spell book (C) opens a window with the battle
+  spells by school and the known warcries as a category of their own; warcries have no buttons. Combat settings opens a window with the
+  battle's view settings: animation speed, the grid, the active stack's reach. A click on a side's portrait shows one's own hero in
+  full and the opponent's as the viewer's Scouting shows it (ADR-125). Hovering an enemy puts the attack estimate on the status bar:
+  the damage range, the fewest and most kills, and whether the target strikes back. During deployment the grid shows Quick combat,
+  Combat settings and Menu beside a wide Start battle. The guide to every part is the
+  [paper's guide](../../docs/papers/battle-hud-plan.md#guide); the owner's decisions, row by row, are in the Claude doc it cites.
+- **Why**: the owner's decisions on the round-1 mockups: the recommendations, with the opponent's hero by Scouting (2.2), warcries in
+  the spell book (2.6), a settings button and Menu in the grid (5.1, 5.5), the kills as a range and the return blow named (7.2, 7.3),
+  and settings and Menu during deployment (8.3).
+- **How**: the plan's steps 2–5: `AttackEstimate` on the damage formula and the engine's return-blow rule, a battle hotkey table, the
+  spell book's rows, the combat settings, `BattleHudLayout` and its parts; one new icon sheet for the stack panel's numbers.

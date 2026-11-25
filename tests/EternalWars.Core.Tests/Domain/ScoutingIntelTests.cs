@@ -1,8 +1,10 @@
 using EternalWars.Core.Domain.Armies;
+using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Info;
 using EternalWars.Core.Domain.Magic;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
@@ -83,6 +85,63 @@ public class ScoutingIntelTests
         var expert = AdventureIntel.ScoutHero(state, enemy, Blue);
         Assert.Equal(["chaos.firebolt"], expert.Details!.Spells!);
         Assert.NotNull(expert.Details.Skills);
+    }
+
+    [Fact]
+    public void InABattle_TheOpponentHeroIsShownByTheScoutingOfTheViewersHeroInIt_NotOfThoseOnTheMap()
+    {
+        var state = Create("A.B", "C..");
+        var session = Start(state);
+        Scout(state, SkillLevel.Basic); // A fights B
+        Scout(state, SkillLevel.Expert, C); // C sees B from the map, but does not fight
+        state.GetHero(B).Learn("chaos.firebolt");
+        session.MoveTo(A, new MapPosition(2, 0));
+        var battle = state.Battle!;
+
+        var opponent = AdventureIntel.ScoutBattleHero(state, battle, BattleSide.Defender, Blue)!;
+        Assert.Equal(SkillLevel.Basic, AdventureIntel.ScoutingInBattle(state, battle, Blue));
+        Assert.Equal(state.GetHero(B).Level, opponent.Details!.Level);
+        Assert.Null(opponent.Details.WarMachines); // Basic: level and primary stats only
+        Assert.Null(opponent.Details.Spells);
+        Assert.NotNull(AdventureIntel.ScoutHero(state, state.GetHero(B), Blue).Details!.Spells); // on the map C's Expert counts
+
+        Assert.Null(AdventureIntel.ScoutBattleHero(state, battle, BattleSide.Attacker, Red)!.Details); // B has no Scouting
+        Assert.NotNull(AdventureIntel.ScoutBattleHero(state, battle, BattleSide.Attacker, Blue)!.Details!.Skills); // its own hero in full
+
+        var sheet = InfoSheets.BattleHero(state, battle, BattleSide.Defender, Blue, detailed: false)!;
+        Assert.StartsWith("Attack ", sheet.Lines[0]);
+        Assert.DoesNotContain(sheet.Lines, l => l.StartsWith("Army:", StringComparison.Ordinal)); // the army stands on the field
+
+        var own = InfoSheets.BattleHero(state, battle, BattleSide.Attacker, Blue, detailed: false)!;
+        Assert.Contains(own.Lines, l => l.Contains($"Mana {battle.ManaOf(BattleSide.Attacker)}/", StringComparison.Ordinal) && !l.Contains("Movement", StringComparison.Ordinal));
+        Assert.DoesNotContain(own.Lines, l => l.StartsWith("Army:", StringComparison.Ordinal));
+        Assert.Contains(InfoSheets.Hero(state, state.GetHero(A), Blue, false).Lines, l => l.StartsWith("Army:", StringComparison.Ordinal)); // on the map it has one
+    }
+
+    [Fact]
+    public void InABattle_VeilStillShows_AndASideWithoutAHero_OrAHeroGone_HasNoWindow()
+    {
+        var state = Create("A.B", "...");
+        var session = Start(state);
+        Scout(state, SkillLevel.Advanced);
+        Veil(state.GetHero(B), 1);
+        session.MoveTo(A, new MapPosition(2, 0));
+        var battle = state.Battle!;
+
+        Assert.True(AdventureIntel.ScoutBattleHero(state, battle, BattleSide.Defender, Blue)!.Veiled);
+        Assert.Contains("Veiled.", InfoSheets.BattleHero(state, battle, BattleSide.Defender, Blue, detailed: false)!.Lines);
+
+        Assert.Equal(SkillLevel.None, AdventureIntel.ScoutingInBattle(state, battle, new PlayerId(7))); // a player only watching
+
+        var wild = Create("A..", "...");
+        wild.AddObject(new MonsterGuard(wild.NextObjectId(), MapObjectCatalog.Default.Get(BuiltInMapObjects.Monster), new MapPosition(2, 0), BuiltInCreatures.Wolf, 5));
+        Start(wild).MoveTo(A, new MapPosition(2, 0));
+        Assert.NotNull(wild.Battle);
+        Assert.Null(InfoSheets.BattleHero(wild, wild.Battle!, BattleSide.Defender, Blue, detailed: false)); // a guard has no hero
+
+        var gone = Create("...", "..."); // the battle's heroes are not in this game
+        Assert.Null(InfoSheets.BattleHero(gone, Tests.TestBattle.Create().State, BattleSide.Defender, Blue, detailed: false));
+        Assert.Equal(SkillLevel.None, AdventureIntel.ScoutingInBattle(gone, Tests.TestBattle.Create().State, Blue));
     }
 
     [Fact]

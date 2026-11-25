@@ -90,7 +90,7 @@ internal sealed class BattleEngine
 
         // First strike: the defender hits back before the blow lands, unless the attacker has first strike too.
         var retaliated = false;
-        if (target.Creature.Has(CapabilityKind.FirstStrike) && !unit.Creature.Has(CapabilityKind.FirstStrike) && CanRetaliate(target, unit))
+        if (Retaliation.AnswersFirst(target, unit) && CanRetaliate(target, unit))
         {
             Retaliate(target, unit);
             retaliated = true;
@@ -124,7 +124,7 @@ internal sealed class BattleEngine
         }
 
         Fire(unit, target, penalty);
-        if (CanShootBack(target, unit, out var returnPenalty))
+        if (Retaliation.ShootsBack(battle, target, unit, out var returnPenalty))
         {
             target.HasRetaliated = true;
             UseShot(target);
@@ -252,18 +252,6 @@ internal sealed class BattleEngine
         }
     }
 
-    /// <summary>Ranged retaliation: a shooter that was shot at fires back if it could shoot the attacker now.</summary>
-    private bool CanShootBack(BattleUnit defender, BattleUnit shooter, out int penalty)
-    {
-        penalty = 0;
-        return defender.IsAlive && shooter.IsAlive &&
-               defender.Creature.Has(CapabilityKind.RangedRetaliation) &&
-               !shooter.Creature.Has(CapabilityKind.NoEnemyRetaliation) &&
-               !defender.Has(Magic.SpellStatus.NoRetaliation | Magic.SpellStatus.Blind) &&
-               (!defender.HasRetaliated || defender.Creature.Has(CapabilityKind.UnlimitedRetaliation)) &&
-               BattleGrid.CanShoot(battle, defender, shooter, out penalty);
-    }
-
     private void Retaliate(BattleUnit defender, BattleUnit attacker)
     {
         defender.HasRetaliated = true;
@@ -309,13 +297,9 @@ internal sealed class BattleEngine
         wounds.Landed(unit, from, hits);
     }
 
-    /// <summary>Night Terrors and Stasis stop retaliation; Vigil makes it unlimited (ADR-123).</summary>
-    private bool CanRetaliate(BattleUnit defender, BattleUnit attacker) =>
-        defender.IsAlive && attacker.IsAlive && !defender.IsMachine &&
-        defender.Rect.IsAdjacentTo(attacker.Rect) &&
-        !attacker.Creature.Has(CapabilityKind.NoEnemyRetaliation) &&
-        !defender.Has(Magic.SpellStatus.NoRetaliation | Magic.SpellStatus.Stasis) &&
-        (!defender.HasRetaliated || defender.Creature.Has(CapabilityKind.UnlimitedRetaliation) || defender.Has(Magic.SpellStatus.Vigil));
+    /// <summary>The defender strikes back when it stands next to the attacker and <see cref="Retaliation.StrikesBack"/> allows it.</summary>
+    private static bool CanRetaliate(BattleUnit defender, BattleUnit attacker) =>
+        defender.Rect.IsAdjacentTo(attacker.Rect) && Retaliation.StrikesBack(defender, attacker);
 
     /// <summary>One hit plus, for a melee strike, the attacker's area ability with the same roll.</summary>
     private void Strike(BattleUnit attacker, BattleUnit target, BattleAttackKind kind, int penalty = 0)

@@ -57,10 +57,37 @@ public static partial class AdventureIntel
     /// Another player's hero as <paramref name="viewer"/> is shown it (its own heroes in full): seen from <paramref name="at"/>, the hero's cell
     /// unless it sits in a town's garrison.
     /// </summary>
-    public static ShownArmy ScoutHero(GameState state, Hero hero, PlayerId viewer, MapPosition? at = null)
+    public static ShownArmy ScoutHero(GameState state, Hero hero, PlayerId viewer, MapPosition? at = null) =>
+        Scouted(hero, hero.Owner == viewer ? SkillLevel.Expert : ScoutingAt(state, viewer, at ?? hero.Position), own: hero.Owner == viewer);
+
+    /// <summary>
+    /// The Scouting <paramref name="viewer"/> brings to a battle (ADR-314): that of its hero fighting in it, <see cref="SkillLevel.None"/> when it
+    /// has none there (a garrison without a hero, a player only watching).
+    /// </summary>
+    public static SkillLevel ScoutingInBattle(GameState state, BattleState battle, PlayerId viewer) =>
+        new[] { battle.Attacker, battle.Defender }.Where(p => p.Owner == viewer && p.Hero is not null)
+            .Select(p => state.FindHero(p.Hero!.Value)?.SkillLevelOf(BuiltInSkills.Scouting) ?? SkillLevel.None)
+            .DefaultIfEmpty(SkillLevel.None).Max();
+
+    /// <summary>
+    /// The hero on <paramref name="side"/> of the battle as <paramref name="viewer"/> is shown it (ADR-314): its own hero in full, another
+    /// player's by the Scouting of the viewer's hero in the battle (<see cref="ScoutingInBattle"/>), not by what its heroes on the map see;
+    /// null when the side has no hero (or its hero is gone from the game).
+    /// </summary>
+    public static ShownArmy? ScoutBattleHero(GameState state, BattleState battle, BattleSide side, PlayerId viewer)
     {
+        if (battle.Participant(side).Hero is not { } id || state.FindHero(id) is not { } hero)
+        {
+            return null;
+        }
+
         var own = hero.Owner == viewer;
-        var scouting = own ? SkillLevel.Expert : ScoutingAt(state, viewer, at ?? hero.Position);
+        return Scouted(hero, own ? SkillLevel.Expert : ScoutingInBattle(state, battle, viewer), own);
+    }
+
+    /// <summary>A hero as <paramref name="scouting"/> shows it (<paramref name="own"/>: its owner, whom Veil does not hide it from).</summary>
+    private static ShownArmy Scouted(Hero hero, SkillLevel scouting, bool own)
+    {
         var veil = own ? 0 : AdventureMagic.VeilRank(hero);
         var veiled = veil >= 1 && scouting is >= SkillLevel.Advanced and < SkillLevel.Expert;
         var countsShown = scouting >= SkillLevel.Advanced && !veiled;

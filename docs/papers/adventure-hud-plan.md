@@ -3,7 +3,7 @@
 The plan to rebuild the adventure map's HUD from the mockups decided on 2026-11-24 (the decision table is the Claude doc
 [Adventure HUD redesign: discrepancies and decisions](https://claude.ai/artifact/C6tLszBWFkrV3VsMh3dqeH); its row numbers, such as 3.7, are
 cited below). This file has three parts. The **guide** says what the new HUD is and how each part behaves. The **plan** has six steps from
-the ADR to the painted pieces. The **mockup prompts** produce the next round of pictures: the adventure HUD with every decision applied, and
+the ADR to the painted pieces, all built (2026-11-26). The **mockup prompts** produce the next round of pictures: the adventure HUD with every decision applied, and
 the battle HUD in the same style. ADR-309 records it; the roadmap tracks the steps, and the plan's ticks say what is built. When every step is built, this file stays in
 `papers/` as the report and the rules move into [presentation.md](../design/presentation.md).
 
@@ -231,14 +231,13 @@ memory-bank entries updated.
   Godot's count is the 3D scene's, the HUD's canvas is not in it.
 
 ### 5. Painted pieces
-- [x] Icon sheets 30 (town marks, level icons), 31 (replay bar) and 32 (route end icons) in
+- [x] Icon sheets 30 (town marks, level icons), 31 (replay bar), 32 (route end icons) and 33 (the action grid's eight buttons) in
   [icon-prompts.md](../content/prompts/icon-prompts.md), cut into `textures/ui/icons/`.
 - [x] The question pictures ([question-picture-prompts.md](../content/prompts/question-picture-prompts.md)) in
-  `textures/ui/questions/`, all but `q_event-message`.
-- [ ] Generate the rest: icon sheet 33 (the action grid's eight buttons, ADR-316); `q_event-message`; the list-slot sheet L4, the
-  movement fill and the HUD pieces in [ui-element-prompts.md](../content/prompts/ui-element-prompts.md).
-- [ ] Swap them in for the flat theme's boxes; player-colour pieces are tinted at run time. Rewrite the HUD part of
-  [presentation.md](../design/presentation.md) to state the new rules once.
+  `textures/ui/questions/`, all 17.
+- [x] The frames drawn by a shader instead of painted pieces (ADR-310, ADR-311): the HUD's panels, slots and buttons, then every
+  window, dialog, card and button of the game; the player's colour set in code. The rules are in
+  [presentation.md](../design/presentation.md) (Frames, Layout, Pop-ups).
 
 ### 6. Battle HUD
 - [x] Mockups from the round-1 prompt below: five boards on the [Battle HUD mockups canvas](https://claude.ai/artifact/JJ89FYmLpmN7CvywfbGGQb)

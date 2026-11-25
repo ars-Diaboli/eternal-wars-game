@@ -4,7 +4,9 @@ The plan to restyle the battle's HUD in the adventure HUD's look (ADR-309, the a
 [Battle HUD mockups canvas](https://claude.ai/artifact/JJ89FYmLpmN7CvywfbGGQb), drawn from the prompt in
 [adventure-hud-plan.md](adventure-hud-plan.md#battle-hud-round-1); the decision table is the Claude doc
 [Battle HUD redesign: discrepancies and decisions](https://claude.ai/artifact/HdAjCooerLirLXZX7ifxMd), whose row numbers (such as 2.4)
-are cited below. The guide states each row's recommendation; a row decided otherwise changes the guide before step 1 records it. When
+are cited below. The owner decided every row on 2026-11-26: the recommendation, except 2.2 (the opponent's hero by Scouting), 2.6
+(warcries in the spell book), 5.1 and 5.5 (a settings button and Menu in the action grid), 7.2 and 7.3 (the kills as a range, whether
+the target strikes back) and 8.3 (settings and Menu during deployment). The guide states the decisions; ADR-314 records them. When
 every step is built, this file stays in `papers/` as the report and the rules move into [presentation.md](../design/presentation.md).
 
 ## Guide
@@ -18,20 +20,20 @@ every step is built, this file stays in `papers/` as the report and the rules mo
 |                                                                                 |
 |                      3D battlefield, square grid 30 x 24 (36 in a siege)        |
 |                                                                                 |
-|                                                         +--------------------+ |
-|                                                         | log, 3 lines       | |
-| +-----------------+ +-------------------------------+ +--------------------+ |
-| | Stack panel     | | Timeline: active, queue | wait | | Wait  Defend Quick | |
-| | portrait, icons | |                               | | Retr. Surr.  Book  | |
-| +-----------------+ +-------------------------------+ +--------------------+ |
-| Status bar: subject . detail (action, estimate, reasons)                  Menu |
+|                                                   +--------------------------+ |
+|                                                   | log, 3 lines             | |
+| +-----------------+ +-------------------------+ +--------------------------+ |
+| | Stack panel     | | Timeline: active | wait | | Wait  Defend Quick Sett. | |
+| | portrait, icons | |                         | | Retr. Surr.  Book  Menu  | |
+| +-----------------+ +-------------------------+ +--------------------------+ |
+| Status bar: subject . detail (action, estimate, kills, strikes back, reasons)  |
 +---------------------------------------------------------------------------------+
 ```
 
 ### Rules for every part
 
-- **Colours.** Frames bronze on dark slate, the adventure HUD's painted pieces (ADR-294). Each side's portrait, timeline rims, stack
-  bases and stack-panel rim take its player's colour; neutrals take bone grey (1.2, 1.3).
+- **Colours.** The frames are the adventure HUD's, drawn by the bevel shader (ADR-310, ADR-311; 1.3). Each side's portrait, timeline
+  rims, stack bases and stack-panel rim take its player's colour; neutrals take bone grey (1.2).
 - **Icons, no labels.** Buttons show an icon; the name, hotkey and, when greyed, the reason go to the status bar on hover (5.3).
 - **One height along the bottom.** The stack panel, the timeline and the action grid are panels of the same height, edges in line.
 - **The status bar talks.** The prompt line ("Swordsmen to act"), refusals, the other LAN player's move and what a click on the field
@@ -41,13 +43,16 @@ every step is built, this file stays in `papers/` as the report and the rules mo
 
 **Side plates** (2.1–2.3): top left the attacker, top right the defender: the hero's portrait in the side's colour and the name; a side
 without a hero shows its strongest stack's portrait, a garrison its town's crest. A side with a caster shows its mana as a thin blue bar
-and "14 / 24". A click on the portrait opens the hero's information window.
+and "14 / 24". A click on the portrait opens the hero's information window: one's own hero in full, the opponent's as the Scouting of
+the viewer's hero in the battle shows it (ADR-125: level and primary stats from Basic, war machines from Advanced, skills and spells
+from Expert).
 
 **Round plate** (2.5, 8.4): top centre, "Round 3", "Deployment" during the deployment step; a timed game's pill stands under it.
 
-**Spell book** (2.4): a button beside the commanding side's plate and in the action grid, on C. It opens a window: the hero's battle
-spells by school with rank and cost, greyed with the reason (cast this round, not enough mana); picking one arms it as today. A creature
-caster's own spell is a button in the action grid.
+**Spell book** (2.4, 2.6): a button beside the commanding side's plate and in the action grid, on C. It opens a window: the hero's battle
+spells by school with rank and cost, and the warcries the hero knows as a category of their own (ADR-067), each greyed with the reason
+(cast this round, not enough mana); picking one arms or cries it as today. Warcries have no buttons of their own. A creature caster's own
+spell is a button in the action grid.
 
 **Timeline** (3.1–3.5): in the bottom row by default; the Layout tab's "top" puts it under the round plate. Square portraits with the
 count in the corner, rimmed in the side's colour; the active stack first and larger with a bright rim; a bronze divider, then the
@@ -58,17 +63,25 @@ information window.
 speed, initiative as icons with numbers, shots for a shooter, morale and luck; defending, native terrain and the spells on it as small
 marks named on the status bar. A war machine shows the numbers it has.
 
-**Action grid** (5.1, 5.2, 2.6): bottom right, 3 × 2: Wait (W), Defend (D), Quick combat (Q) / Retreat (R), Surrender, Spell book (C).
-The creature caster's spell and the warcries add a column when present. Menu (F10) stays on the status bar's right end.
+**Action grid** (5.1, 5.2, 5.5): bottom right, 4 × 2: Wait (W), Defend (D), Quick combat (Q), Combat settings / Retreat (R),
+Surrender, Spell book (C), Menu (F10). The creature caster's spell adds a column when present. Surrender has no key. Surrender's price
+and a greyed button's reason are on the status bar on hover (5.3, 5.4).
+
+**Combat settings** (5.1): a window over the battle with the battle's own view settings, kept per computer in the settings file and
+changing no rule: the battle's animation speed (today on the menu's Settings tab), the grid over the field, the active stack's reach
+highlighted. Further view settings of the battle join it.
 
 **Combat log** (6.1, 6.2): above the action grid, 3 lines, semi-transparent; hovering it grows it upwards to the battle's last 20
 lines. The LAN chat stands at the bottom left above the stack panel (6.3).
 
-**Attack estimate** (7.3): hovering an enemy puts "Attack the Wolves: 38–45 damage, 2 may die" on the status bar: the lowest and highest
-damage of the blow, shot or damage spell without luck, and the kills each would make; morale, luck and the return blow left out.
+**Attack estimate** (7.2, 7.3): hovering an enemy puts "Swordsmen · Attack the Wolves: 38–45 damage, 1–2 die; they strike back" on the
+status bar: the lowest and highest damage of the blow, shot or damage spell without luck, the fewest and most creatures those kill, and
+whether the target returns the blow ("they strike back", a shooter with ranged retaliation shooting back too, or "no return blow": a
+target with none left this round, an attacker that is not answered, a blow whose weakest roll kills the whole stack, a spell). Morale,
+luck, a second blow and the return blow's own damage are left out.
 
-**Deployment** (8.1–8.3): the deploying player's columns tinted in their colour; no timeline; a wide "Start battle" button in the middle
-of the bottom row and Quick combat in the grid.
+**Deployment** (8.1–8.4): the deploying player's columns tinted in their colour; no timeline; a wide "Start battle" button in the middle
+of the bottom row; the grid shows Quick combat, Combat settings and Menu.
 
 **Result and Necromancy** (9.1–9.5): the field dimmed; a framed window titled "Victory" or "Defeat" for the player at this screen ("<Name>
 wins" when both or neither side play here), the reason under it, each side's losses as portraits with counts, the experience gained,
@@ -76,37 +89,46 @@ Return to the map. Raised undead get their own window after it: the stack's port
 the same look: the expected losses as portraits, Fight and Accept.
 
 **Sizes and modes** (10.1–10.5): below about 1,400 px of UI width the stack panel keeps the portrait, count, attack, defence and health,
-the log 2 lines; the UI scale is lowered as on the map. No mirror: the attacker stays left. In the replay viewer the action grid is hidden
-and the spell book greyed. A siege adds nothing to the HUD.
+the log 2 lines; the UI scale is lowered as on the map. No mirror: the attacker stays left. In the replay viewer the action grid keeps
+only Combat settings and Menu, and the spell book is greyed. A siege adds nothing to the HUD.
 
 ## Plan
 
-Five steps, as for the adventure HUD: record, Core, the HUD on the flat theme, check, painted pieces. Each ends with the build and tests
+Five steps, as for the adventure HUD: record, Core, the HUD in the bevel frames, check, painted pieces. Each ends with the build and tests
 green and its memory-bank entries updated.
 
 ### 1. Record the decisions
-- [ ] The owner fills the Decision column; the guide above is brought in line with it.
-- [ ] ADR-314 (presentation): the battle HUD restyle, citing this paper; it supersedes in part ADR-156 (the initiative bar's default
-  place), ADR-110 (spells as buttons) and ADR-195 (the chat's place over a battle). Index row, next free number 315; roadmap; active
-  context.
+- [x] The owner fills the Decision column (2026-11-26); the guide above is brought in line with it.
+- [x] ADR-314 (presentation): the battle HUD restyle, citing this paper; it supersedes in part ADR-156 (the initiative bar's default
+  place), ADR-110 (spells as buttons) and ADR-195 (the chat's place over a battle). Index row; roadmap; active context.
 
 ### 2. Core (engine-free, with tests)
-- [ ] The attack estimate (7.3): `AttackEstimate` on `DamageCalculator.Damage` and `Expected`, the damage range and the kills of a blow, a shot and a damage
-  spell, without luck, morale or the return blow.
-- [ ] The battle's hotkey table as data the status bar and `BattleInputController` both read (W, D, Q, R, C, Enter, Escape), as
-  `AdventureHotkeys` does.
-- [ ] The spell book's rows (2.4): the commanding side's battle spells by school, rank, cost and the refusal (`BattleMagic`).
+- [x] The attack estimate (7.2, 7.3): `AttackEstimate.Melee`, `Shot` and `Spell` on `DamageCalculator.Damage` and
+  `BattleMagic.DamagePlan`, the damage range and the fewest and most kills, without luck or morale; whether the target strikes back by
+  the engine's own rule, now shared as `Retaliation.StrikesBack` and `ShootsBack`.
+- [x] The battle's hotkey table as data the status bar and `BattleInputController` both read (W, D, Q, R, C, F10, Enter, Escape):
+  `BattleHotkeys`, as `AdventureHotkeys` does; the battle's buttons take their hints from it ("Wait [W]"). C waits for the spell book
+  window (step 3); F10 stays the app's menu key.
+- [x] The spell book's rows (2.4, 2.6): `BattleSpellBook.Of`, the side's battle spells by school (the schools' order, then level), rank,
+  cost and the refusal (`BattleMagic.BookRefusal`, which `CastRefusal` checks first), and the known warcries as their own category with
+  `WarcryRefusal`'s; the battle's spell buttons read it until the window replaces them.
+- [x] The opponent hero's information window by the viewer's Scouting in the battle (2.2): `AdventureIntel.ScoutBattleHero` at
+  `ScoutingInBattle`, the Scouting of the viewer's hero in the battle, not of its heroes on the map (`ScoutHero`'s levels and Veil);
+  `InfoSheets.BattleHero` without the army, which stands on the field, one's own hero with the battle's mana.
+- [ ] The combat settings (5.1): the battle's grid and reach highlighting as settings beside the battle's animation speed, kept in the
+  settings file; the initiative bar's default at the bottom (`LayoutSettings.InitiativeBar`, 3.1).
 - [ ] The stack panel's numbers and marks (4.2) and the result's summary (9.1, 9.2): the title for a viewer, the reason, each side's
   losses.
 
-### 3. The HUD, on the flat theme
+### 3. The HUD, in the bevel frames
 - [ ] `BattleHudLayout`: the bottom row of equal panels, the side plates, the round plate and the timer pill; the Layout tab's top
   timeline.
-- [ ] Timeline entries, the stack panel, the action grid with names, keys and reasons on the status bar; the spell book window.
+- [ ] Timeline entries, the stack panel, the 4 × 2 action grid with names, keys and reasons on the status bar; the spell book window
+  with its warcries; the combat settings window.
 - [ ] The log above the grid, growing on hover; the chat's new place; the prompt line, refusals and the attack estimate on the status
   bar.
-- [ ] Deployment: the tinted zone, Start battle in the middle. The result, Necromancy and auto-combat windows; the field dimmed behind
-  them.
+- [ ] Deployment: the tinted zone, Start battle in the middle, Quick combat, Combat settings and Menu. The result, Necromancy and
+  auto-combat windows; the field dimmed behind them.
 - [ ] The narrow form below about 1,400 px of UI width; the replay viewer and the LAN wait.
 
 ### 4. Check
@@ -115,7 +137,8 @@ green and its memory-bank entries updated.
 - [ ] Budget overlay (F3) in a full battle: under the 2,000 draw calls (ADR-308).
 
 ### 5. Painted pieces
-- [ ] The stat icons, the spell book and warcry buttons and the waiting divider in
-  [icon-prompts.md](../content/prompts/icon-prompts.md) and [ui-element-prompts.md](../content/prompts/ui-element-prompts.md);
-  generated and cut.
-- [ ] Swapped in for the flat boxes; the battle part of [presentation.md](../design/presentation.md) rewritten to state the rules once.
+- [ ] The frames, the timeline's divider and the plates are the bevel shader's (ADR-310, ADR-311); the buttons take the icons already
+  cut (sheets 17 and 18, `spell_book`, `settings`, `menu`, `warcry` for the spell book's warcries). New: an icon sheet for the stack
+  panel's numbers (damage, health, speed, initiative, shots) in [icon-prompts.md](../content/prompts/icon-prompts.md), generated and
+  cut.
+- [ ] The battle part of [presentation.md](../design/presentation.md) rewritten to state the rules once.

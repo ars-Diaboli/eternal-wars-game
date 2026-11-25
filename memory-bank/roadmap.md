@@ -272,7 +272,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [ ] Step 5: Sylvan, Academy, Necropolis, Dungeon, Stronghold and Swamp Bestiary in full art
 - [ ] Step 6: controller pass, UI scale, the goal building; the plan's target list ticked
 
-### Adventure HUD redesign (ADR-309; [plan](../docs/papers/adventure-hud-plan.md#plan), HUD-1 and HUD-2 answered in ADR-317)
+### Adventure HUD redesign (ADR-309; [plan](../docs/papers/adventure-hud-plan.md#plan), HUD-1 and HUD-2 answered in ADR-317; closed)
 - [x] Step 1: the decisions recorded (ADR-309); the two open points moved to HUD-1 and HUD-2, answered (ADR-317: the notice cards,
       a card waiting for its player's turn, a lost town or hero on the status line)
 - [x] Step 2: core models (layout mirrored flag, UI scale, hero card, town build state, descriptions by ownership, route days, hotkeys)
@@ -290,19 +290,20 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       - [x] The replay bar's day slider; the army strip cut with a fade on narrow screens; the UI scale on the Layout tab, applied
 - [x] Step 4: checked at every target size, UI scale and mirror (the scale lowered on small windows; under ~1,000 px of UI width the
       action buttons move up above the row and the army strip takes their place, ADR-315)
-- [ ] Step 5: the painted pieces (icon sheets 30–32 already cut into `textures/ui/icons/`; the question pictures in
-      `textures/ui/questions/`, all but `q_event-message`)
+- [x] Step 5: the painted pieces (icon sheets 30–33 cut into `textures/ui/icons/`; the 17 question pictures in
+      `textures/ui/questions/`)
       - [x] The HUD's frames drawn by a shader instead (ADR-310): panels, slots and buttons; the panel opacity on the Layout tab
       - [x] The same frames for every window, dialog, tooltip, card and button of the game; the rest of the theme in its grey (ADR-311)
 - [x] Step 6: the battle HUD's mockups drawn, a decision table with recommendations, the restyle planned
       ([battle-hud-plan.md](../docs/papers/battle-hud-plan.md)); the owner's decisions are its step 1
 
-### Battle HUD restyle ([plan](../docs/papers/battle-hud-plan.md#plan); decisions pending)
-- [ ] Step 1: the owner's decisions recorded (ADR-314)
-- [ ] Step 2: Core: the attack estimate, the battle's hotkey table, the spell book's rows, the stack panel and the result's summary
-- [ ] Step 3: the HUD rebuilt on the flat theme
+### Battle HUD restyle (ADR-314; [plan](../docs/papers/battle-hud-plan.md#plan))
+- [x] Step 1: the owner's decisions recorded (ADR-314, 2026-11-26)
+- [ ] Step 2: Core: the attack estimate (kills as a range, the return blow named), the battle's hotkey table, the spell book's rows with
+      the warcries, the opponent hero by Scouting, the combat settings, the stack panel and the result's summary
+- [ ] Step 3: the HUD rebuilt in the bevel frames, the 4 × 2 action grid with Combat settings and Menu
 - [ ] Step 4: checked at every target size and UI scale; battle smokes, a LAN battle, the budget
-- [ ] Step 5: the painted pieces
+- [ ] Step 5: the icon sheet for the stack panel's numbers; the battle part of presentation.md
 
 ### Editor overhaul (ADR-247, ADR-250; [plan](../docs/papers/editor-plan.md#implementation-plan), EDIT-1 … EDIT-12 answered)
 - [x] Step 0a: answers to EDIT-1 … EDIT-12 (ADR-250: the proposals)

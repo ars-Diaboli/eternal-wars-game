@@ -45,7 +45,16 @@ public static class BattleMagic
             return $"The hero does not know '{spellId}'.";
         }
 
-        if (known.Effect is not { } effect)
+        return BookRefusal(battle, side, known) ?? TargetRefusal(battle, side, known, target, cell, second: second);
+    }
+
+    /// <summary>
+    /// Why the side's hero cannot cast a spell it knows now, whatever it is aimed at, or null: the spell book's greyed rows (ADR-314). It must
+    /// work in battle and within the battle's spell level cap, and the hero must not have cast this round and have the mana.
+    /// </summary>
+    public static string? BookRefusal(BattleState battle, BattleSide side, KnownSpell known)
+    {
+        if (known.Effect is null)
         {
             return $"{known.Spell.Name} cannot be cast in battle.";
         }
@@ -60,12 +69,7 @@ public static class BattleMagic
             return "The hero has already cast a spell this round.";
         }
 
-        if (battle.ManaOf(side) < Cost(battle, side, known))
-        {
-            return $"Not enough mana for {known.Spell.Name}.";
-        }
-
-        return TargetRefusal(battle, side, known, target, cell, second: second);
+        return battle.ManaOf(side) < Cost(battle, side, known) ? $"Not enough mana for {known.Spell.Name}." : null;
     }
 
     /// <summary>

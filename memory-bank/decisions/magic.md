@@ -8,7 +8,7 @@
 |---|---|---|
 | [047](#adr-047-magic-structure) | Magic structure | accepted; partly superseded |
 | [106](#adr-106-siege-rules-guild-spell-draw-spell-elements-and-summons-cmb-11-mag-13-2026-10-30) | Siege rules; guild spell draw, spell elements and summons (CMB-11, MAG-13, 2026-10-30) | accepted |
-| [110](#adr-110-magic-first-slice-spell-table-guilds-spell-books-casting-in-battle-adr-047-adr-071-adr-072-adr-106-2026-10-30) | Magic, first slice: spell table, guilds, spell books, casting in battle (ADR-047, ADR-071, ADR-072, ADR-106, 2026-10-30) | accepted |
+| [110](#adr-110-magic-first-slice-spell-table-guilds-spell-books-casting-in-battle-adr-047-adr-071-adr-072-adr-106-2026-10-30) | Magic, first slice: spell table, guilds, spell books, casting in battle (ADR-047, ADR-071, ADR-072, ADR-106, 2026-10-30) | accepted; partly superseded |
 | [120](#adr-120-phase-5-magic-and-sieges-summons-creature-casters-adventure-spells-shrines-spell-books-in-the-map-format-the-breakable-gate-the-keeps-shooter-earthquake-adr-071-adr-072-adr-073-adr-106-adr-109-adr-110-2026-11-03) | Phase 5 magic and sieges: summons, creature casters, adventure spells, shrines, spell books in the map format; the breakable gate, the keep's shooter, Earthquake (ADR-071, ADR-072, ADR-073, ADR-106, ADR-109, ADR-110, 2026-11-03) | implemented |
 | [122](#adr-122-spell-ranks-ii-and-iii-and-the-school-mastery-skill-adr-047-adr-072-adr-099-adr-110-mag-3-2026-11-03) | Spell ranks II and III and the school Mastery skill (ADR-047, ADR-072, ADR-099, ADR-110, MAG-3, 2026-11-03) | implemented |
 | [123](#adr-123-the-rest-of-phase-5-magic-control-revival-and-most-battle-spells-the-ais-buffs-elements-guild-spells-fixed-by-the-map-v30-the-show-only-adventure-spells-and-the-adventure-spells-ranks-adr-099-adr-106-adr-110-adr-120-adr-122-2026-11-04) | The rest of Phase 5 magic: control, revival and most battle spells, the AI's buffs, elements, guild spells fixed by the map (v30), the show-only adventure spells and the adventure spells' ranks (ADR-099, ADR-106, ADR-110, ADR-120, ADR-122, 2026-11-04) | implemented |
@@ -70,7 +70,7 @@ placeholders.
   III); Hellgate Inferno Imps (Familiars); Bind Elemental Conflux air, earth, fire and water elementals (was "ice").
 
 ### ADR-110: Magic, first slice: spell table, guilds, spell books, casting in battle (ADR-047, ADR-071, ADR-072, ADR-106, 2026-10-30)
-**Status**: accepted (2026-10-30), built. The first Phase 5 magic slice: rank I only, numbers placeholders. Points marked *(assumed)* are the
+**Status**: accepted (2026-10-30), built; superseded in part by ADR-314 (battle spells in a spell book window, not one button each). The first Phase 5 magic slice: rank I only, numbers placeholders. Points marked *(assumed)* are the
 agent's choices where the earlier ADRs say nothing.
 
 - **Spell table**: `data/spells.csv` (embedded, `SpellTable`, `SpellCatalog`, `GameState.Spells`) holds all 102 spells of the re-draft: id,

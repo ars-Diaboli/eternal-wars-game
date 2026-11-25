@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
+using EternalWars.Core.Domain.Cursors;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Settings;
@@ -28,18 +29,18 @@ public partial class BattleHud : Control
     private readonly Label _log = new() { VerticalAlignment = VerticalAlignment.Bottom };
     private readonly Label _info = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(420, 0) };
     private readonly Label _status = new();
-    private readonly Button _wait = new Button { Text = "Wait (W)" }.WithIcon(UiIcon.Hourglass, UiIcons.BarSize);
-    private readonly Button _defend = new Button { Text = "Defend (D)" }.WithIcon(UiIcon.Defend, UiIcons.BarSize);
-    private readonly Button _retreat = new Button { Text = "Retreat (R)" }.WithIcon(UiIcon.Retreat, UiIcons.BarSize);
+    private readonly Button _wait = new Button { Text = Hint(BattleHotkeyAction.Wait) }.WithIcon(UiIcon.Hourglass, UiIcons.BarSize);
+    private readonly Button _defend = new Button { Text = Hint(BattleHotkeyAction.Defend) }.WithIcon(UiIcon.Defend, UiIcons.BarSize);
+    private readonly Button _retreat = new Button { Text = Hint(BattleHotkeyAction.Retreat) }.WithIcon(UiIcon.Retreat, UiIcons.BarSize);
     private readonly Button _surrender = new Button { Text = "Surrender" }.WithIcon(UiIcon.Surrender, UiIcons.BarSize);
-    private readonly Button _quick = new Button { Text = "Quick combat (Q)" }.WithIcon(UiIcon.QuickCombat, UiIcons.BarSize);
-    private readonly Button _start = new() { Text = "Start battle (Enter)", Visible = false };
+    private readonly Button _quick = new Button { Text = Hint(BattleHotkeyAction.QuickCombat) }.WithIcon(UiIcon.QuickCombat, UiIcons.BarSize);
+    private readonly Button _start = new() { Text = BattleHotkeys.Of(BattleHotkeyAction.Confirm).HintAs("Start battle"), Visible = false };
     private readonly HFlowContainer _warcries = new();
     private readonly Dictionary<Warcry, Button> _warcryButtons = [];
     private readonly HFlowContainer _spells = new(); // wraps: a mage's spells do not fit in one row
     private readonly PanelContainer _result = new() { Visible = false };
     private readonly Label _resultText = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(460, 0) };
-    private readonly Button _close = new() { Text = "Return to the map (Enter)" };
+    private readonly Button _close = new() { Text = BattleHotkeys.Of(BattleHotkeyAction.Confirm).HintAs("Return to the map") };
     private readonly Queue<string> _lines = new();
     private readonly VBoxContainer _top = new() { AnchorLeft = 0, AnchorRight = 1, OffsetTop = UiSpacing.ScreenEdge, MouseFilter = MouseFilterEnum.Ignore };
 
@@ -268,6 +269,9 @@ public partial class BattleHud : Control
 
     private bool _armedArea;
 
+    /// <summary>A button's text with its key from the battle's hotkey table (ADR-314): "Wait [W]".</summary>
+    private static string Hint(BattleHotkeyAction action) => BattleHotkeys.Of(action).Hint;
+
     private static bool HitsArea(KnownSpell known) => known.Effect is { } effect && (effect.Reach == Core.Domain.Magic.SpellReach.Area || effect.Zone is not null);
 
     /// <summary>A two-click spell's first aim (ADR-151): the stack a move takes or a drain hits, once clicked; null before.</summary>
@@ -393,18 +397,15 @@ public partial class BattleHud : Control
             _spells.AddChild(cast);
         }
 
-        if (battle.Participant(active.Side).Caster is not { } caster)
+        if (battle.Participant(active.Side).Caster is null || BattleSpellBook.Of(battle, active.Side) is not { } book)
         {
             return;
         }
 
-        _spells.AddChild(UiIcons.IconLabel(UiIcon.SpellBook,$"Mana {battle.ManaOf(active.Side)}"));
-        foreach (var known in caster.Spells.Where(s => s.Effect is not null))
+        _spells.AddChild(UiIcons.IconLabel(UiIcon.SpellBook, $"Mana {book.Mana}"));
+        foreach (var (known, _, _, cost, refusal) in book.Spells)
         {
-            var cost = BattleMagic.Cost(battle, active.Side, known);
             var button = new Button { Text = $"{Core.Domain.Magic.MagicRules.NameAtRank(known.Spell, known.Rank)} ({cost})" };
-            var refusal = battle.HasCastThisRound(active.Side) ? "The hero has already cast a spell this round."
-                : battle.ManaOf(active.Side) < cost ? "Not enough mana." : null;
             button.Disabled = refusal is not null;
             button.TooltipText = refusal ?? known.Spell.Notes;
             button.Pressed += () => Arm(known);

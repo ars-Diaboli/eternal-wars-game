@@ -145,8 +145,11 @@ public static partial class InfoSheets
 
     // Heroes ------------------------------------------------------------------------------------------------------------------
 
-    /// <summary>A hero: one of the viewer's in full, another player's as the viewer's Scouting shows it (ADR-125).</summary>
-    public static InfoSheet Hero(GameState state, Hero hero, PlayerId viewer, bool detailed)
+    /// <summary>
+    /// A hero: one of the viewer's in full, another player's as the viewer's Scouting shows it (ADR-125). <paramref name="battleMana"/>: the hero
+    /// fights a battle (ADR-314), so its mana is the battle's, and its movement and army (on the field) are left out.
+    /// </summary>
+    public static InfoSheet Hero(GameState state, Hero hero, PlayerId viewer, bool detailed, int? battleMana = null)
     {
         var owner = state.GetPlayer(hero.Owner).Name;
         if (hero.Owner != viewer)
@@ -157,7 +160,9 @@ public static partial class InfoSheets
         var lines = new List<string>
         {
             $"Attack {N(hero.TotalAttack)}   Defense {N(hero.TotalDefense)}   Spell Power {N(hero.TotalSpellPower)}   Knowledge {N(hero.TotalKnowledge)}",
-            $"Morale {Signed(hero.TotalMorale)}   Luck {Signed(hero.TotalLuck)}   Mana {N(hero.Mana)}/{N(hero.MaxMana)}   Movement {N(hero.MovementPoints)}/{N(hero.MaxMovementPoints)}",
+            battleMana is { } mana
+                ? $"Morale {Signed(hero.TotalMorale)}   Luck {Signed(hero.TotalLuck)}   Mana {N(mana)}/{N(hero.MaxMana)}"
+                : $"Morale {Signed(hero.TotalMorale)}   Luck {Signed(hero.TotalLuck)}   Mana {N(hero.Mana)}/{N(hero.MaxMana)}   Movement {N(hero.MovementPoints)}/{N(hero.MaxMovementPoints)}",
         };
         if (hero.Specialty is { } specialty)
         {
@@ -171,7 +176,10 @@ public static partial class InfoSheets
 
         var skills = hero.Skills.Levels.Where(s => s.Value > SkillLevel.None).Select(s => $"{BuiltInSkills.Get(s.Key).Name} {s.Value}").ToList();
         lines.Add(skills.Count == 0 ? "No skills yet." : $"Skills: {string.Join(", ", skills)}");
-        lines.Add($"Army: {ArmyText(state, hero.Army.Stacks.Select(s => s.Stack))}");
+        if (battleMana is null)
+        {
+            lines.Add($"Army: {ArmyText(state, hero.Army.Stacks.Select(s => s.Stack))}");
+        }
         if (!hero.Artifacts.IsEmpty)
         {
             lines.Add($"Artifacts: {string.Join(", ", hero.Artifacts.AllWorn.Select(w => state.Artifacts.Get(w.Id).Name))}"
@@ -189,8 +197,28 @@ public static partial class InfoSheets
         return new InfoSheet(hero.Name, $"Level {N(hero.Level)} {hero.Class}, {owner}", lines);
     }
 
-    /// <summary>A hero as an information spell or Scouting shows it (<see cref="AdventureIntel.ScoutHero"/>).</summary>
-    public static InfoSheet ScoutedHero(GameState state, ShownArmy shown, string owner)
+    /// <summary>
+    /// The hero on a side of the battle (ADR-314): one of the viewer's in full, another player's as the Scouting of the viewer's hero in the battle
+    /// shows it (<see cref="AdventureIntel.ScoutBattleHero"/>); without its army, which stands on the field, and with the battle's mana. Null when
+    /// the side has no hero (or its hero is gone from the game).
+    /// </summary>
+    public static InfoSheet? BattleHero(GameState state, Battles.BattleState battle, Battles.BattleSide side, PlayerId viewer, bool detailed)
+    {
+        if (battle.Participant(side).Hero is not { } id || state.FindHero(id) is not { } hero)
+        {
+            return null;
+        }
+
+        return hero.Owner == viewer
+            ? Hero(state, hero, viewer, detailed, battle.ManaOf(side))
+            : ScoutedHero(state, AdventureIntel.ScoutBattleHero(state, battle, side, viewer)!, state.GetPlayer(hero.Owner).Name, army: false);
+    }
+
+    /// <summary>
+    /// A hero as an information spell or Scouting shows it (<see cref="AdventureIntel.ScoutHero"/>); <paramref name="army"/> false leaves its army
+    /// out.
+    /// </summary>
+    public static InfoSheet ScoutedHero(GameState state, ShownArmy shown, string owner, bool army = true)
     {
         var lines = new List<string>();
         if (shown.Details is { } d)
@@ -217,7 +245,15 @@ public static partial class InfoSheets
             lines.Add("Scouting shows nothing more of this hero.");
         }
 
-        lines.Add($"Army: {ShownArmyText(state, shown.Stacks)}" + (shown.Veiled ? " (veiled)" : ""));
+        if (army)
+        {
+            lines.Add($"Army: {ShownArmyText(state, shown.Stacks)}" + (shown.Veiled ? " (veiled)" : ""));
+        }
+        else if (shown.Veiled)
+        {
+            lines.Add("Veiled.");
+        }
+
         lines.Add(shown.ArtifactsHidden ? "Artifacts: not seen." : shown.Artifacts.Count == 0 ? "No artifacts." : $"Artifacts: {string.Join(", ", shown.Artifacts.Select(a => state.Artifacts.Get(a).Name))}");
         return new InfoSheet(shown.Name, shown.Details is { } level ? $"Level {N(level.Level)} hero, {owner}" : $"Hero, {owner}", lines);
     }

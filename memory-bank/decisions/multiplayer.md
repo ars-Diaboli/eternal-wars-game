@@ -10,7 +10,7 @@
 | [192](#adr-192-the-lan-network-layer-a-host-that-runs-the-game-clients-that-send-commands-adr-088-adr-098-mp-1-roadmap-2026-11-16) | The LAN network layer: a host that runs the game, clients that send commands (ADR-088, ADR-098, MP-1, roadmap, 2026-11-16) | implemented |
 | [193](#adr-193-each-lan-client-holds-only-its-players-view-mp-3-adr-099-roadmap-2026-11-16) | Each LAN client holds only its player's view (MP-3, ADR-099, roadmap, 2026-11-16) | implemented |
 | [194](#adr-194-the-lan-lobby-finding-games-setting-one-up-colours-chat-mp-1-adr-098-roadmap-2026-11-16) | The LAN lobby: finding games, setting one up, colours, chat (MP-1, ADR-098, roadmap, 2026-11-16) | implemented |
-| [195](#adr-195-lan-battles-fought-live-between-two-computers-a-player-who-drops-out-pauses-the-game-mp-1-adr-098-roadmap-2026-11-16) | LAN battles fought live between two computers; a player who drops out pauses the game (MP-1, ADR-098, roadmap, 2026-11-16) | implemented |
+| [195](#adr-195-lan-battles-fought-live-between-two-computers-a-player-who-drops-out-pauses-the-game-mp-1-adr-098-roadmap-2026-11-16) | LAN battles fought live between two computers; a player who drops out pauses the game (MP-1, ADR-098, roadmap, 2026-11-16) | implemented; partly superseded |
 | [196](#adr-196-saves-of-lan-games-the-hosts-save-goes-on-anywhere-a-client-saves-the-hosts-record-mp-3-adr-099-roadmap-2026-11-16) | Saves of LAN games: the host's save goes on anywhere, a client saves the host's record (MP-3, ADR-099, roadmap, 2026-11-16) | implemented |
 | [197](#adr-197-start-zones-in-the-map-and-the-simultaneous-first-week-mp-2-mp-4-adr-098-adr-099-roadmap-2026-11-16) | Start zones in the map and the simultaneous first week (MP-2, MP-4, ADR-098, ADR-099, roadmap, 2026-11-16) | implemented |
 | [198](#adr-198-one-turn-timer-in-a-lan-game-and-on-a-simultaneous-day-flow-3-mp-2-e-adr-091-adr-197-roadmap-2026-11-17) | One turn timer in a LAN game and on a simultaneous day (FLOW-3, MP-2 e, ADR-091, ADR-197, roadmap, 2026-11-17) | implemented |
@@ -161,7 +161,7 @@ cannot look under its fog). *(proposal)* marks the agent's choices.
   roadmap's next items (live battles between two remote humans, drop-outs, saves, the turn timer, arena maps in the lobby).
 
 ### ADR-195: LAN battles fought live between two computers; a player who drops out pauses the game (MP-1, ADR-098, roadmap, 2026-11-16)
-**Status**: implemented (2026-11-16), the roadmap's live battles and drop-outs. *(proposal)* marks the agent's choices.
+**Status**: implemented (2026-11-16), the roadmap's live battles and drop-outs; superseded in part by ADR-314 (the chat's place over a battle). *(proposal)* marks the agent's choices.
 
 - **Battles between two computers**: a battle opens only on the computers of its sides (a third player, the host's included, sees its
   result on the map); each player commands only their own side, and their screen says when the other side's player is to act ("Red plays on

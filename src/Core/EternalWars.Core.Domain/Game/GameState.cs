@@ -269,7 +269,10 @@ public sealed class GameState
     public bool HasPlayer(PlayerId id) => _players.Any(p => p.Id == id);
 
     /// <summary>A hero on the map or in a town's garrison (ADR-112); an unknown id refuses the command that names it.</summary>
-    public Hero GetHero(HeroId id) => _heroById.GetValueOrDefault(id) ?? GarrisonHero(id) ?? throw new CommandRefusedException($"Unknown hero {id}.");
+    public Hero GetHero(HeroId id) => FindHero(id) ?? throw new CommandRefusedException($"Unknown hero {id}.");
+
+    /// <summary>A hero on the map or in a town's garrison; null when there is none (a hero defeated and gone).</summary>
+    public Hero? FindHero(HeroId id) => _heroById.GetValueOrDefault(id) ?? GarrisonHero(id);
 
     private Hero? GarrisonHero(HeroId id)
     {

@@ -1,7 +1,7 @@
 # UI icons
 
-Button icons, 128 × 128 with transparency, generated for this project by the owner (2026-11-05, 2026-11-11, 2026-11-17; the action and battle icons of sets 15–18 and the buttons of sets 19–22 replaced 2026-11-21; sets 30–32 2026-11-24; every one of sets 15–22 and 29–32 redrawn in pale satin aluminium, ADR-312, 2026-11-25), cut from the
-sheets of [icon-prompts.md](../../../../../../docs/content/prompts/icon-prompts.md) (sets 15–22, 29–32). Loaded through
+Button icons, 128 × 128 with transparency, generated for this project by the owner (2026-11-05, 2026-11-11, 2026-11-17; the action and battle icons of sets 15–18 and the buttons of sets 19–22 replaced 2026-11-21; sets 30–32 2026-11-24; every one of sets 15–22 and 29–32 redrawn in pale satin aluminium, ADR-312, 2026-11-25; sets 17, 18, 30, 32 and the new 33 regenerated 2026-11-26), cut from the
+sheets of [icon-prompts.md](../../../../../../docs/content/prompts/icon-prompts.md) (sets 15–22, 29–33). Loaded through
 `EternalWars.Godot.UI.UiIcons`, which scales them to button size; a missing file leaves the button text-only.
 
 | File | Used for |
@@ -15,28 +15,29 @@ sheets of [icon-prompts.md](../../../../../../docs/content/prompts/icon-prompts.
 | plus.png / minus.png | add player; remove player, remove a condition |
 | ban.png | the editor's Bans tab; Cancel in the map events form |
 | settings.png (cogwheel) | the game menu's Settings tab |
-| menu.png (three bars) | the game's Menu (F10) button |
+| menu.png (three bars; sheet 33) | the game's Menu (F10) button |
 | save.png (closed book) / load.png (open book) | Save and Load in the game menu and the map editor, the "Save and load" tab, the template editor's Save, "Save replay" |
 | undo.png / redo.png | the map editor's Undo and Redo |
 | zoom_in.png / zoom_out.png, lock.png / unlock.png | not used yet |
-| hourglass.png (hourglass on its side) | Wait (W) in battle |
+| hourglass.png (hourglass on its side; sheet 17) | Wait (W) in battle |
 | end_turn.png (upright hourglass) | End turn |
 | switch_level.png (cave mouth, up and down arrows) | Switch level (L); the map editor's Level (L) |
-| spell_book.png (clasped book with a rune) | the map's "Spell book (C)" action button; the hero's mana in battle, before the spell buttons; the town's "Spell book (owned)" |
+| spell_book.png (clasped book with a rune; sheet 33) | the map's "Spell book (C)" action button; the hero's mana in battle, before the spell buttons; the town's "Spell book (owned)" |
 | spells.png (open) | the hero screen's spell list |
-| quests.png (sealed scroll) | Quests (Q) |
-| puzzle_map.png (open scroll) | Puzzle map (P) |
-| dig.png (shovel) | Dig (G) |
-| kingdom.png (castle) | Kingdom (K) |
-| marketplace.png (balance scales) | Marketplace |
+| quests.png (tied scroll with a seal; sheet 33) | Quests (Q) |
+| puzzle_map.png (map piece with a jigsaw tab; sheet 33) | Puzzle map (P) |
+| dig.png (shovel in a mound; sheet 33) | Dig (G) |
+| kingdom.png (crown; sheet 33) | Kingdom (K) |
+| marketplace.png (balance scales, a coin in one pan; sheet 33) | Marketplace |
 | thieves_guild.png (hooded mask, daggers) | Thieves' guild (town, tavern) |
-| defend.png (round shield with a cross) | Defend (D) in battle |
-| warcry.png (war horn) | the warcry buttons in battle |
-| retreat.png (tattered flag on a spear) | Retreat (R) |
+| defend.png (round shield with a spark; sheet 17) | Defend (D) in battle |
+| warcry.png (war horn; sheet 17) | the warcry buttons in battle |
+| retreat.png (tattered flag on a broken spear; sheet 18) | Retreat (R) |
 | surrender.png (sword offered on open hands) | Surrender |
 | quick_combat.png (crossed swords, lightning) | Quick combat (Q) |
 | auto_combat.png (crossed swords, cogwheel) | Auto combat (the offer before a battle) |
-| move.png (double chevron), next_hero.png (helmet, arrow), melee.png (sword with a slash), shoot.png (arrow in flight), cast.png (book over a hand) | not used yet |
+| move.png (double chevron; sheet 33) | Move in the action grid |
+| next_hero.png (helmet, arrow), melee.png (sword with a slash), shoot.png (arrow in flight), cast.png (book over a hand; sheet 17) | not used yet |
 | difficulty_easy.png (pawn), difficulty_normal.png (knight), difficulty_hard.png (bishop), difficulty_expert.png (rook), difficulty_master.png (queen) | the difficulty levels (ADR-225): the new-game screen's difficulty row, the victory screen, the leaderboard; cut from sheet 29, the sheet's spare unused |
 
 ## Map and template editor

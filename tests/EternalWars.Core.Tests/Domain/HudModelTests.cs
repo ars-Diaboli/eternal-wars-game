@@ -79,6 +79,19 @@ public class HudModelTests
     }
 
     [Fact]
+    public void TheBattleHotkeyTable_HasOneKeyPerAction_SurrenderAndSettingsNone()
+    {
+        Assert.Equal(Enum.GetValues<BattleHotkeyAction>(), BattleHotkeys.All.Select(h => h.Action).Order());
+        Assert.Equal(BattleHotkeys.All.Count, BattleHotkeys.All.Select(h => h.Key.ToUpperInvariant()).Distinct().Count());
+        Assert.Equal(["W", "D", "Q", "R", "C", "F10", "Enter", "Escape"], BattleHotkeys.All.Select(h => h.Key));
+        Assert.Equal("Wait [W]", BattleHotkeys.Of(BattleHotkeyAction.Wait).Hint);
+        Assert.Equal("Start battle [Enter]", BattleHotkeys.Of(BattleHotkeyAction.Confirm).HintAs("Start battle"));
+        Assert.Equal(BattleHotkeyAction.Confirm, BattleHotkeys.ActionOf("KpEnter"));
+        Assert.Equal(BattleHotkeyAction.Menu, BattleHotkeys.ActionOf("f10"));
+        Assert.Null(BattleHotkeys.ActionOf("S")); // Surrender has no key
+    }
+
+    [Fact]
     public void EndTurn_AsksAboutTheHeroesThatCanStillMove()
     {
         var state = Create("A.C.................", "...................B");

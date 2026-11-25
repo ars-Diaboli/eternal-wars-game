@@ -11,9 +11,10 @@ namespace EternalWars.Godot.UI.Battle;
 
 /// <summary>
 /// The mouse and keys over an open <see cref="BattleView3D"/> with its <see cref="BattleHud"/>: point at a cell to preview, click to move, attack
-/// (from the side the pointer is on), shoot or cast the armed spell; W wait, D defend, R retreat for the active unit's commander, Q quick
-/// combat for either human side (not between two computers, ADR-195); right click opens a stack's information window; Enter or Escape leave the result screen, Escape disarms a
-/// spell. The deployment step (ADR-072, ADR-155) goes to a <see cref="DeploymentDragController"/>; Enter there starts the battle.
+/// (from the side the pointer is on), shoot or cast the armed spell; right click opens a stack's information window. The keys are
+/// <see cref="BattleHotkeys"/>' (ADR-314): W wait, D defend, R retreat for the active unit's commander, Q quick combat for either human side
+/// (not between two computers, ADR-195); Enter or Escape leave the result screen, Escape disarms a spell. The deployment step (ADR-072,
+/// ADR-155) goes to a <see cref="DeploymentDragController"/>; Enter there starts the battle, Escape cancels a drag. F10 is the app's menu key.
 /// </summary>
 public sealed class BattleInputController
 {
@@ -56,24 +57,11 @@ public sealed class BattleInputController
             case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } click:
                 Click(click.Position);
                 break;
-            case InputEventKey { Pressed: true, Keycode: Key.Escape } when _deployment.IsDragging:
-                _deployment.Cancel();
-                break;
+            case InputEventKey { Pressed: true } key:
+                return HandleKey(key.Keycode);
             case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right } rightClick
                 when _session.State.Battle is { } shown && _battle.PickPoint(rightClick.Position) is { } point && shown.UnitAt(BattleSpace.ToCell(point)) is { } unit:
                 _info.Open(InfoSheets.BattleStack(shown, unit, _info.Detailed), rightClick.Position);
-                break;
-            case InputEventKey { Pressed: true, Keycode: Key.Enter or Key.KpEnter or Key.Escape } when _battle.Result is not null:
-                _hud.Continue();
-                break;
-            case InputEventKey { Pressed: true, Keycode: Key.Escape } when _hud.ArmedSpell is not null:
-                _hud.Disarm();
-                break;
-            case InputEventKey { Pressed: true, Keycode: Key.Enter or Key.KpEnter } when _battle.Deployer is { } deployer:
-                _hud.Report(_session.Execute(new BattleStartCommand(deployer)));
-                break;
-            case InputEventKey { Pressed: true } key when KeyCommand(key.Keycode) is { } command:
-                _hud.Report(_session.Execute(command));
                 break;
             default:
                 return false;
@@ -112,24 +100,49 @@ public sealed class BattleInputController
         GameCursors.Show(_battle.Result is not null ? GameCursor.Pointer : BattleCursors.For(battle, acting, _hud.ArmedSpellIsArea, action));
     }
 
-    /// <summary>W wait, D defend, R retreat for the active unit's commander; Q quick combat for either human side, both played here.</summary>
-    private GameCommand? KeyCommand(Key key)
+    /// <summary>A pressed key, by the battle's hotkey table; true when the battle used it.</summary>
+    private bool HandleKey(Key keycode)
+    {
+        switch (BattleHotkeys.ActionOf(keycode.ToString()))
+        {
+            case BattleHotkeyAction.Cancel when _deployment.IsDragging:
+                _deployment.Cancel();
+                return true;
+            case BattleHotkeyAction.Confirm or BattleHotkeyAction.Cancel when _battle.Result is not null:
+                _hud.Continue();
+                return true;
+            case BattleHotkeyAction.Cancel when _hud.ArmedSpell is not null:
+                _hud.Disarm();
+                return true;
+            case BattleHotkeyAction.Confirm when _battle.Deployer is { } deployer:
+                _hud.Report(_session.Execute(new BattleStartCommand(deployer)));
+                return true;
+            case { } action when KeyCommand(action) is { } command:
+                _hud.Report(_session.Execute(command));
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>Wait, Defend and Retreat for the active unit's commander; Quick combat for either human side, both played here.</summary>
+    private GameCommand? KeyCommand(BattleHotkeyAction action)
     {
         if (_battle.Result is not null)
         {
             return null;
         }
 
-        if (key == Key.Q)
+        if (action == BattleHotkeyAction.QuickCombat)
         {
             return _battle.QuickCombatPlayer is { } any ? new AutoResolveBattleCommand(any) : null;
         }
 
-        return _battle.Commander is not { } player ? null : key switch
+        return _battle.Commander is not { } player ? null : action switch
         {
-            Key.W => new BattleWaitCommand(player),
-            Key.D => new BattleDefendCommand(player),
-            Key.R => new BattleRetreatCommand(player),
+            BattleHotkeyAction.Wait => new BattleWaitCommand(player),
+            BattleHotkeyAction.Defend => new BattleDefendCommand(player),
+            BattleHotkeyAction.Retreat => new BattleRetreatCommand(player),
             _ => null,
         };
     }
