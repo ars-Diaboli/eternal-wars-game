@@ -449,6 +449,12 @@ public partial class AdventureHud : CanvasLayer
     /// <summary>The turn banner at the top centre (ADR-309); null in the replay viewer.</summary>
     public TurnBannerPanel? Banner { get; private set; }
 
+    /// <summary>The minimap's longer side at most, and at least however low the screen.</summary>
+    private const float MinimapSide = 320, MinimapLeastSide = 140;
+
+    /// <summary>The gap between the minimap's slot and the map in it: the slot's rim.</summary>
+    private const int MinimapInset = 3;
+
     /// <summary>The minimap's level caption (two-level maps); null on a one-level map.</summary>
     public Button? LevelCaption { get; private set; }
 
@@ -464,13 +470,29 @@ public partial class AdventureHud : CanvasLayer
         var map = _session.State.Map;
         var minimap = new MinimapWidget
         {
-            CellPixels = Math.Max(2, 320f / Math.Max(map.Width, map.Height)), ClipContents = true, SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
+            CellPixels = MinimapSide / Math.Max(map.Width, map.Height), ClipContents = true, SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
         };
-        // Sunk into the column, with the painted frame's margins, so the column keeps its width (ADR-310).
+        // Sunk into the column (ADR-310), the map filling the slot up to its rim.
         var framed = new PanelContainer { Name = "MinimapFrame", SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter, MouseFilter = Control.MouseFilterEnum.Ignore };
-        UiFrames.Bevel(framed, BevelKind.Slot, UiFrames.Minimap(), 0);
+        UiFrames.Bevel(framed, BevelKind.Slot, padding: MinimapInset);
         framed.AddChild(minimap);
         box.AddChild(framed);
+
+        // At most a third of the screen's height for the minimap's panel (ADR-316): a lower screen shrinks the map, and the panel with it.
+        void Fit()
+        {
+            var overhead = box.GetCombinedMinimumSize().Y - minimap.CustomMinimumSize.Y + (2 * AdventureHudLayout.Margin);
+            var side = Math.Clamp((_layout.Size.Y / 3) - overhead, MinimapLeastSide, MinimapSide);
+            var cell = side / Math.Max(map.Width, map.Height);
+            if (Math.Abs(cell - minimap.CellPixels) > 0.01f)
+            {
+                minimap.CellPixels = cell;
+            }
+        }
+
+        _layout.Resized += Fit;
+        box.TreeExiting += () => _layout.Resized -= Fit;
+        box.Ready += Fit;
         minimap.Bind(_context);
         minimap.TileClicked += tile => _camera.FocusOn(MapSpace.ToWorld(tile));
         minimap.ViewFrame = ViewFrame;
@@ -585,7 +607,7 @@ public partial class AdventureHud : CanvasLayer
     private static PanelContainer ListFrame(string name, Control list)
     {
         var frame = new PanelContainer { Name = name };
-        UiFrames.Bevel(frame, BevelKind.Panel, UiFrames.Column(), UiSpacing.Padding);
+        UiFrames.Bevel(frame, BevelKind.Panel, padding: UiSpacing.Padding); // the same padding on every side
         var scroll = new ScrollContainer
         {
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, VerticalScrollMode = ScrollContainer.ScrollMode.ShowNever,
@@ -611,7 +633,6 @@ public partial class AdventureHud : CanvasLayer
     private GridContainer _actions = null!;
 
     private Button _moveButton = null!;
-    private Button _heroButton = null!;
     private Button _bookButton = null!;
     private Button _digButton = null!;
     private Button _marketButton = null!;
@@ -660,8 +681,8 @@ public partial class AdventureHud : CanvasLayer
         id is { } wanted ? _session.State.HeroesOf(_session.State.CurrentPlayer.Id).FirstOrDefault(h => h.Id == wanted) : null;
 
     /// <summary>
-    /// The action buttons (ADR-309): two rows of five square icon buttons, in <see cref="AdventureActionGrid.Order"/>: Move, spell book,
-    /// kingdom, quests, puzzle map; dig, marketplace, level, hero screen, menu. Each one's name and key ("Dig [G]") go to the status bar on
+    /// The action buttons (ADR-309, ADR-316): two rows of four square icon buttons, in <see cref="AdventureActionGrid.Order"/>: Move, spell
+    /// book, kingdom, quests; puzzle map, dig, marketplace, menu. Each one's name and key ("Dig [G]") go to the status bar on
     /// hover. A button whose action cannot be taken now is greyed, with the reason after its name. In the replay viewer the ones that would
     /// issue a command or open a hero's screens stay greyed.
     /// </summary>
@@ -673,7 +694,7 @@ public partial class AdventureHud : CanvasLayer
         {
             buttons[action] = action switch
             {
-                AdventureAction.Move => AddAction(action, UiIcon.ArrowRight, () => MoveRequested?.Invoke()),
+                AdventureAction.Move => AddAction(action, UiIcon.Move, () => MoveRequested?.Invoke()),
                 AdventureAction.SpellBook => AddAction(action, UiIcon.SpellBook, () => OpenSpellBook(_selected)),
                 AdventureAction.Kingdom => AddAction(action, UiIcon.Kingdom, () => KingdomScreen.Open(_session.State.CurrentPlayer.Id), "Every source of income and the totals"),
                 AdventureAction.Quests => AddAction(action, UiIcon.Quests, () => QuestScreen.Open(_session.State.CurrentPlayer.Id), "The quests your heroes were shown"),
@@ -683,41 +704,15 @@ public partial class AdventureHud : CanvasLayer
 
                 // Trading belongs to the player, not a hero: this button, or a hero visiting a map marketplace (ADR-067).
                 AdventureAction.Marketplace => AddAction(action, UiIcon.Marketplace, OpenMarketplace),
-                AdventureAction.SwitchLevel => AddAction(action, UiIcon.SwitchLevel, () => _context.SetLevel((_context.Level + 1) % _session.State.Map.Levels),
-                    "Between the surface and the underground"),
-                AdventureAction.HeroScreen => AddAction(action, UiIcon.Hero, () => ShowHero(_selected)),
                 AdventureAction.Menu => AddAction(action, UiIcon.Menu, () => MenuRequested?.Invoke(), "Save, load, settings"),
                 _ => throw new InvalidOperationException($"No button for {action}"),
             };
         }
 
         _moveButton = buttons[AdventureAction.Move];
-        _heroButton = buttons[AdventureAction.HeroScreen];
         _bookButton = buttons[AdventureAction.SpellBook];
         _digButton = buttons[AdventureAction.Dig];
         _marketButton = buttons[AdventureAction.Marketplace];
-        var level = buttons[AdventureAction.SwitchLevel];
-        if (_session.State.Map.Levels < 2)
-        {
-            level.Disabled = true;
-            level.TooltipText = "This map has one level";
-        }
-        else
-        {
-            // The button shows the level it goes to (ADR-309): the sunlit hill from the underground, the cave from the surface.
-            void ShowTarget()
-            {
-                if (UiIcons.Get(_context.Level == 0 ? UiIcon.LevelUnderground : UiIcon.LevelSurface, ActionIconSize) is { } target)
-                {
-                    level.Icon = target;
-                }
-            }
-
-            ShowTarget();
-            _context.LevelChanged += ShowTarget;
-            level.TreeExiting += () => _context.LevelChanged -= ShowTarget;
-        }
-
         RefreshActions();
         this.SubscribeWhileInTree<TownBuilt>(_session.Events, _ => RefreshActions());
         this.SubscribeWhileInTree<TownOwnerChanged>(_session.Events, _ => RefreshActions());
@@ -751,7 +746,6 @@ public partial class AdventureHud : CanvasLayer
         var noHero = hero is null ? "Select a hero first" : null;
         Enable(_moveButton, _playing ? AdventureActionGrid.MoveRefusal(hero, _world.PathPreview.Path) : "Not while watching a replay",
             "The selected hero walks the route shown on the map");
-        Enable(_heroButton, _playing ? noHero : "Not while watching a replay");
         Enable(_bookButton, !_playing ? "Not while watching a replay" : noHero ?? (hero!.HasSpellBook ? null : $"{hero.Name} has no spell book"));
         Enable(_digButton, _playing ? noHero : "Not while watching a replay", "The selected hero digs where it stands, with a whole day's movement");
         Enable(_marketButton,

@@ -51,19 +51,21 @@ creatures and buildings, heraldic player colours, iconic map objects).
   the card and the strip are hidden and the others keep their places.
 - **Hero card** (ADR-309, ADR-310): the portrait as tall as the card, the same margin to its frame all round (a click opens the hero
   screen), two thin bars beside it (movement green, experience to the next level gold; the numbers in their tooltips), then three rows:
-  the level and name ("LV 3 | Orrin"); Attack, Defence, Spell power and Knowledge; morale and luck as icons with a signed value ("+2",
+  the level and name ("Lv 3 | Orrin"); Attack, Defence, Spell power and Knowledge; morale and luck as icons with a signed value ("+2",
   "−1") and the mana left as an icon and a number (the maximum in its tooltip); the card 360 px wide. The army strip: always seven slots
   as tall as the row and two thirds as wide, empty ones dim; a stack shows the creature cut to 2:3 and the count in large type, its name on the status bar; a click opens the hero screen, a right click the creature's information window. A screen too
   narrow for the whole row cuts the army strip at its end towards the middle, fading out over the map; the pointer on it shows it whole,
-  over the action buttons.
-- **Action buttons** (ADR-210, ADR-309): two rows of five square icon buttons: Move (Space), spell book (C), kingdom (K),
-  quests (Q), puzzle map (P); dig (G), marketplace (M), switch level (L), hero screen (H), menu (F10). No labels: each one's name and key
+  over the action buttons. Where the cut would leave the strip under half its width (ADR-315), the action buttons move up, just above
+  the place they leave (beside the minimap's panel, towards the middle, where they would cover it), and the strip takes that place; a
+  list whose foot would stand under them stops above them.
+- **Action buttons** (ADR-210, ADR-309, ADR-316): two rows of four square icon buttons: Move (Space), spell book (C), kingdom (K),
+  quests (Q); puzzle map (P), dig (G), marketplace (M), menu (F10). The hero screen (H, the hero card) and the level switch (L, the
+  minimap's caption) have no button. No labels: each one's name and key
   come from one hotkey table, which the keys also follow, and show on the status bar ("Dig [G]"); a greyed button adds why ("Move [Space]
   · Click a cell to plan a route first"). Move walks the selected hero along the route shown on the map; it is greyed with no hero, no
-  route of its or no movement left today. Switch level shows the level it goes to: the sunlit hill from the underground, the cave from the
-  surface. The hero screen, spell book and dig act on the selected hero and are greyed without one (the spell book also when the hero has
-  none); the marketplace without a town marketplace; the level switch on a one-level map. In the replay viewer Move and the hero, spell
-  book, dig and marketplace buttons are greyed. The spell book is a window over the map: the hero's mana, its adventure spells to cast,
+  route of its or no movement left today. The spell book and dig act on the selected hero and are greyed without one (the spell book also
+  when the hero has none); the marketplace without a town marketplace. In the replay viewer Move and the spell book, dig and marketplace
+  buttons are greyed. The spell book is a window over the map: the hero's mana, its adventure spells to cast,
   its battle spells by school with their costs.
 - **End turn** (ADR-204, ADR-309, ADR-310): a square hourglass tile as tall as the bottom row, with no label ("End turn [Z]" on the status
   bar) and no button frame inside the tile's own, ringed near its edge by the week's seven dots (the first at the top, then clockwise):
@@ -97,7 +99,9 @@ creatures and buildings, heraldic player colours, iconic map objects).
 - **Minimap** (ADR-309): in the map's proportions, unexplored cells black, other owned objects as cells in their owner's colour, towns
   as a little keep and heroes as a pennant in their owner's colour; the camera's frame drawn on it. Under it, on one line, the level
   caption ("Surface" or "Underground" with that level's icon; a click switches level; not on one-level maps), then Zoom in and Zoom out,
-  which zoom the camera as the wheel does. A click on it centres the map there.
+  which zoom the camera as the wheel does. A click on it centres the map there. The map fills its sunk slot up to the slot's rim
+  (ADR-316); its longer side is 320 px, less on a low screen so that the minimap's panel takes at most a third of the screen's height
+  (never under 140 px).
 - **Hero list** (ADR-309): at the edge away from the minimap, down on the bottom row (above the hero card) and growing up to the top bar, one entry per hero and growing with them, no heading:
   the portrait (a lettered placeholder while a hero has none), then two thin upright bars, movement left (green) and mana (blue); the
   selected hero's entry framed in the player's colour. Hovering one puts the name on the status bar and a card beside the list, towards

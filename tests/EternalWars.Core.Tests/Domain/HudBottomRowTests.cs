@@ -9,13 +9,13 @@ namespace EternalWars.Core.Tests.Domain;
 public class HudBottomRowTests
 {
     [Fact]
-    public void TheGrid_IsTwoRowsOfFive_MoveFirst_EveryActionWithAHotkey_ButTheListsAndEndTurn()
+    public void TheGrid_IsTwoRowsOfFour_MoveFirst_EveryActionWithAHotkey_ButTheListsEndTurnHeroScreenAndLevel()
     {
         Assert.Equal(2 * AdventureActionGrid.Columns, AdventureActionGrid.Order.Count);
         Assert.Equal(AdventureAction.Move, AdventureActionGrid.Order[0]);
         Assert.Equal(AdventureActionGrid.Order.Count, AdventureActionGrid.Order.Distinct().Count());
         Assert.Equal(
-            Enum.GetValues<AdventureAction>().Except([AdventureAction.NextHero, AdventureAction.NextTown, AdventureAction.EndTurn]).Order(),
+            Enum.GetValues<AdventureAction>().Except([AdventureAction.NextHero, AdventureAction.NextTown, AdventureAction.EndTurn, AdventureAction.HeroScreen, AdventureAction.SwitchLevel]).Order(),
             AdventureActionGrid.Order.Order());
     }
 

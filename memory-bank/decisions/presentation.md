@@ -53,6 +53,8 @@
 | [311](#adr-311-every-frame-of-the-game-drawn-by-the-shader-windows-dialogs-tooltips-cards-buttons-the-rest-of-the-theme-in-its-grey-adr-191-adr-294-adr-310-owner-2026-11-24) | Every frame of the game drawn by the shader: windows, dialogs, tooltips, cards, buttons; the rest of the theme in its grey (ADR-191, ADR-294, ADR-310, owner, 2026-11-24) | implemented |
 | [312](#adr-312-the-ui-icons-and-the-cursors-in-aluminium-ui-element-promptsmd-down-to-the-backgrounds-adr-116-adr-204-adr-311-owner-2026-11-24) | The UI icons and the cursors in aluminium; ui-element-prompts.md down to the backgrounds (ADR-116, ADR-204, ADR-311, owner, 2026-11-24) | accepted |
 | [313](#adr-313-the-town-list-in-its-own-panel-the-hero-lists-twin-the-side-column-down-to-the-minimap-adr-309-owner-2026-11-25) | The town list in its own panel, the hero list's twin; the side column down to the minimap (ADR-309, owner, 2026-11-25) | implemented |
+| [315](#adr-315-on-a-narrow-screen-the-action-buttons-move-up-above-the-bottom-row-the-army-strip-takes-their-place-adr-309-owner-2026-11-25) | On a narrow screen the action buttons move up above the bottom row; the army strip takes their place (ADR-309, owner, 2026-11-25) | implemented |
+| [316](#adr-316-the-minimap-fills-its-slot-and-its-panel-takes-at-most-a-third-of-the-screens-height-switch-level-and-hero-screen-leave-the-action-grid-2--4-adr-309-owner-2026-11-25) | The minimap fills its slot and its panel takes at most a third of the screen's height; Switch level and Hero screen leave the action grid (2 × 4) (ADR-309, owner, 2026-11-25) | implemented |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -978,8 +980,8 @@ TOWN-15 is ADR-291. The plan's step-by-step implementation is in its [roadmap](.
 - Smokes `game-town-open` and `game-town-build` show the 3D scene (Haven's, since ADR-297); their descriptions say so.
 
 ### ADR-309: The adventure HUD redesign: one arrangement, mirrored; parts along the edges and a bottom row of equal panels; icon-only buttons in a 2 × 5 grid (ADR-156, ADR-186, ADR-191, ADR-204, ADR-210, owner's mockups, 2026-11-24)
-**Status**: accepted (2026-11-24); building by the [adventure HUD plan](../../docs/papers/adventure-hud-plan.md#plan). Supersedes in part
-ADR-156, ADR-186, ADR-191, ADR-204 and ADR-210, as said below. No rule, save or map format change; the settings file's layout shrinks
+**Status**: accepted (2026-11-24); building by the [adventure HUD plan](../../docs/papers/adventure-hud-plan.md#plan); superseded in part
+by ADR-315 (the narrow screen's bottom row) and ADR-316 (the minimap's size, the grid's buttons). Supersedes in part ADR-156, ADR-186, ADR-191, ADR-204 and ADR-210, as said below. No rule, save or map format change; the settings file's layout shrinks
 (the plan's step 2). The guide to every part is the [paper's guide](../../docs/papers/adventure-hud-plan.md#guide); the owner's decisions,
 row by row, are in the Claude doc it cites. Built so far: the town list's build mark and the "fully built" rule
 (`BuildingTree.IsFullyBuilt`), the mark over a route's end (`AdventureCursors.RouteEndOf`, `RouteEnd`), the replay bar's icons, and the
@@ -1101,3 +1103,30 @@ and divider) and ADR-310 (the shader for the HUD only).
 - **How**: `TownListPanel` lists every town; `AdventureHud.ListFrame` frames both lists; `AdventureHudLayout.SetTownList` places it. A
   list's panel hides while the list is empty.
 
+### ADR-315: On a narrow screen the action buttons move up above the bottom row; the army strip takes their place (ADR-309, owner, 2026-11-25)
+
+**Status**: implemented (2026-11-25); supersedes in part ADR-309 (on a narrow screen the army strip only cut, with a fade).
+
+- **Decision**: where the bottom row does not fit and cutting the army strip would leave it under half its width, the action buttons
+  move up, just above the place they leave (or beside the minimap's panel, towards the middle, where they would cover it), and the army
+  strip takes that place. A list whose foot would stand under them stops above them. A smaller overflow still cuts the strip with a
+  fade, shown whole on hover. The rule is in [presentation.md](../../docs/design/presentation.md) (Hero card and army strip).
+- **Why**: under about 1,000 px of the UI's own width (1920×1080 at 200 %, 1280 wide above 100 %) the cut left the strip no room to be
+  hovered; the owner chose to give it the actions' place and show the actions above it.
+- **How**: `AdventureHudLayout.PlaceBottomRow` (`LeastStripShare`, `ActionsLifted`); the lists' foot from `Above`. Checked by the
+  `hud-*` smokes at 1280×720, 1280×800 and 1920×1080.
+
+### ADR-316: The minimap fills its slot and its panel takes at most a third of the screen's height; Switch level and Hero screen leave the action grid (2 × 4) (ADR-309, owner, 2026-11-25)
+
+**Status**: implemented (2026-11-25); supersedes in part ADR-309 (the 2 × 5 grid with Switch level and Hero screen; the minimap's fixed
+320 px).
+
+- **Decision**: the minimap fills its sunk slot up to the slot's rim, with no dark band and second border inside it. Its longer side is
+  320 px at most, less on a low screen so that the minimap's panel takes at most a third of the screen's height, never under 140 px; the
+  panel narrows with it. The action grid drops Switch level and Hero screen and becomes two rows of four: Move, spell book, kingdom,
+  quests; puzzle map, dig, marketplace, menu. H and L stay as keys; the hero card opens the hero screen, the minimap's caption switches
+  level. The rules are in [presentation.md](../../docs/design/presentation.md) (Minimap, Action buttons).
+- **Why**: the owner saw two borders round the minimap and a panel too large on small screens, and wanted the two buttons gone, each
+  having another way in.
+- **How**: `AdventureHud.BuildMinimap` (the slot's padding the rim's 3 px; the cell size refitted when the layer resizes);
+  `MinimapWidget.CellPixels` resizes the widget; `AdventureActionGrid` (`Columns` 4).

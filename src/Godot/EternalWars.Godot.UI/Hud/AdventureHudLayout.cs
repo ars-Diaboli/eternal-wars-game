@@ -10,7 +10,7 @@ namespace EternalWars.Godot.UI.Hud;
 /// (<see cref="SetTownList"/>) in its own panel on that side, down on the bottom row and growing up to the column; the hero list
 /// (<see cref="SetOpposite"/>) the same at the other edge, growing up to the top bar; and the bottom row above the status bar
 /// (<see cref="SetBottom"/>): the hero card and the army strip from the column's far edge, the action buttons and End turn from the column's
-/// edge, all as tall as the tallest. The LAN chat's place (<see cref="ChatRect"/>) is between the column and the town list when there is room
+/// edge, all as tall as the tallest; on a narrow screen the action buttons move up above the row (ADR-315). The LAN chat's place (<see cref="ChatRect"/>) is between the column and the town list when there is room
 /// for it, else beside the column, towards the middle of the screen. A hidden part leaves its place empty and the others where they are. The layer covers the screen but lets the mouse through; each
 /// part is a child that is moved, never reparented (a part's event subscriptions last while it is in the tree). It re-places the parts
 /// whenever one's size changes.
@@ -43,6 +43,12 @@ public partial class AdventureHudLayout : Container
     }
 
     private float _bottomReserve;
+
+    /// <summary>The least share of the army strip's width a narrow screen's cut may leave before the action buttons move up above it.</summary>
+    public const float LeastStripShare = 0.5f;
+
+    /// <summary>Whether the action buttons stand above the bottom row (a narrow screen, ADR-315); set at each placing.</summary>
+    public bool ActionsLifted { get; private set; }
 
     /// <summary>The chat's height when it stands beside the town list, and the least room under the town list that takes it.</summary>
     public static float ChatHeight => UiTheme.MapChatSize.Y;
@@ -145,17 +151,20 @@ public partial class AdventureHudLayout : Container
         var columnEnd = _column.Count == 0 ? 0 : y; // the column's panel ends a margin under its last part
         FitChildInRect(_sidePanel, new Rect2(panelX, 0, panelWidth, columnEnd));
 
+        var lifted = PlaceBottomRow(screen, rowTop, rowHeight, new Rect2(panelX, 0, panelWidth, columnEnd));
+
         // The town list under the column, the hero list at the other edge, each down at the bottom just above the bottom row (the hero card
-        // beside the hero list) and growing upwards: the towns' up to the column, the heroes' up to the top bar.
+        // beside the hero list), or above the action buttons where they are lifted over its foot, and growing upwards: the towns' up to the
+        // column, the heroes' up to the top bar.
         var townsTop = bottom - Margin;
         if (_towns is not null)
         {
-            townsTop = Stack(_towns, _townsContent, columnEnd + Margin, bottom, !left, screen).Position.Y;
+            townsTop = Stack(_towns, _townsContent, columnEnd + Margin, Above(lifted, _towns, bottom, !left, screen), !left, screen).Position.Y;
         }
 
         if (_opposite is not null)
         {
-            Stack(_opposite, _oppositeContent, ResourceTopBar.Height + Margin, bottom, left, screen);
+            Stack(_opposite, _oppositeContent, ResourceTopBar.Height + Margin, Above(lifted, _opposite, bottom, left, screen), left, screen);
         }
 
         // The chat: between the column and the town list when there is the room, else beside the column towards the middle.
@@ -164,7 +173,6 @@ public partial class AdventureHudLayout : Container
             ? new Rect2(x, columnEnd, width, Math.Min(room, ChatMaxHeight))
             : new Rect2(left ? panelX + panelWidth + Margin : panelX - Margin - UiTheme.MapChatSize.X, last.Position.Y, UiTheme.MapChatSize.X, ChatHeight);
 
-        PlaceBottomRow(screen, rowTop, rowHeight);
         Placed?.Invoke();
     }
 
@@ -185,15 +193,38 @@ public partial class AdventureHudLayout : Container
     }
 
     /// <summary>
-    /// The bottom row: the parts on the left packed from the left edge, those on the right from the right edge, in the row's order. A screen
-    /// too narrow for the whole row cuts the army strip (<see cref="CutPart"/>) at its end towards the middle; one too narrow even then lets
-    /// the right group cover the left one's end.
+    /// Where a list at the right edge (<paramref name="right"/>) or the left one stops: <paramref name="bottom"/>, or above the
+    /// <paramref name="lifted"/> action buttons where its <paramref name="frame"/> would stand over them.
     /// </summary>
-    private void PlaceBottomRow(Vector2 screen, float top, float height)
+    private static float Above(Rect2? lifted, Control frame, float bottom, bool right, Vector2 screen)
+    {
+        var width = frame.GetCombinedMinimumSize().X;
+        var x = right ? screen.X - width - Margin : Margin;
+        return lifted is { } rect && x < rect.End.X && x + width > rect.Position.X ? Math.Min(bottom, rect.Position.Y - Margin) : bottom;
+    }
+
+    /// <summary>
+    /// The bottom row: the parts on the left packed from the left edge, those on the right from the right edge, in the row's order. A screen
+    /// too narrow for the whole row cuts the army strip (<see cref="CutPart"/>) at its end towards the middle. Where the cut would leave it
+    /// under <see cref="LeastStripShare"/> of its width, the action buttons move up, just above the place they leave (or beside the
+    /// <paramref name="column"/>'s panel towards the middle, where they would cover it), and the strip takes that place; the row is placed
+    /// without them (returned: where they stand, else null). One too narrow even then lets the right group cover the left one's end.
+    /// </summary>
+    private Rect2? PlaceBottomRow(Vector2 screen, float top, float height, Rect2 column)
     {
         var row = HudArrangement.BottomRow(_layout).Where(_bottom.ContainsKey).ToList();
         float Wanted(HudPart part) => _bottom[part] is CutPart cut ? cut.FullWidth : _bottom[part].GetCombinedMinimumSize().X;
-        var over = Math.Max(0, row.Sum(Wanted) + (Margin * (row.Count + 1)) - screen.X);
+        float Over() => Math.Max(0, row.Sum(Wanted) + (Margin * (row.Count + 1)) - screen.X);
+
+        var strip = row.Where(p => _bottom[p] is CutPart).Select(p => (HudPart?)p).FirstOrDefault();
+        var over = Over();
+        ActionsLifted = strip is { } cutPart && row.Contains(HudPart.Actions) && Wanted(cutPart) - over < Wanted(cutPart) * LeastStripShare;
+        if (ActionsLifted)
+        {
+            row.Remove(HudPart.Actions);
+            over = Over();
+        }
+
         float Width(HudPart part) => _bottom[part] is CutPart ? Math.Max(0, Wanted(part) - over) : Wanted(part);
 
         var x = Margin;
@@ -203,6 +234,7 @@ public partial class AdventureHudLayout : Container
             x += Width(part) + Margin;
         }
 
+        var leftEnd = x;
         x = screen.X - Margin;
         foreach (var part in Enumerable.Reverse(row.Where(p => HudArrangement.SideOf(_layout, p) == ScreenSide.Right).ToList()))
         {
@@ -210,6 +242,23 @@ public partial class AdventureHudLayout : Container
             Put(part, new Rect2(x, top, Width(part), height), cutAtRight: false, z: 1); // drawn over the left group where they meet
             x -= Margin;
         }
+
+        if (!ActionsLifted)
+        {
+            return null;
+        }
+
+        // Up a row, where they stood beside their neighbour towards the column's edge (End turn), over the strip's end that now fills it.
+        var size = _bottom[HudPart.Actions].GetCombinedMinimumSize();
+        var right = HudArrangement.SideOf(_layout, HudPart.Actions) == ScreenSide.Right;
+        var lifted = new Rect2(right ? x - size.X : leftEnd, top - Margin - size.Y, size.X, size.Y);
+        if (lifted.Intersects(column))
+        {
+            lifted.Position = new Vector2(right ? column.Position.X - Margin - size.X : column.End.X + Margin, lifted.Position.Y);
+        }
+
+        Put(HudPart.Actions, lifted, cutAtRight: false, z: 1);
+        return lifted;
     }
 
     private void Put(HudPart part, Rect2 rect, bool cutAtRight, int z)

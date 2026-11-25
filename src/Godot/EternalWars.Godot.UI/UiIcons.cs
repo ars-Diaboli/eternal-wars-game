@@ -17,6 +17,7 @@ public enum UiIcon
     Ban,
     Settings,
     Hourglass,
+    Move,
     SpellBook,
     Spells,
     Quests,

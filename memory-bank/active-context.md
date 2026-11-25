@@ -1,6 +1,6 @@
 # Active context
 
-**As of 2026-11-24.** Refresh this file at the end of every piece of work: replace, do not append.
+**As of 2026-11-25.** Refresh this file at the end of every piece of work: replace, do not append.
 
 ## Where the project is
 Phases 0–4 are done and closed out (ADR-114, ADR-117). Phase 5 (content and polish) is in progress: magic, sieges, relics, map events,
@@ -9,6 +9,13 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- The minimap fills its slot, its panel at most a third of the screen's height; the action grid 2 × 4 without Switch level and Hero
+  screen (ADR-316; `AdventureHud.BuildMinimap`, `AdventureActionGrid`). icon-prompts.md grouped by where the icons are shown; the eight
+  buttons on one new sheet, 33, in one style and detail (sheet 15 keeps the hero, End turn, level and thieves' guild; 16 is gone; 22's
+  menu cell a spare). Move shows `move.png`. Next: the owner generates sheet 33.
+- On a narrow screen the action buttons move up above the bottom row and the army strip takes their place (ADR-315,
+  `AdventureHudLayout.PlaceBottomRow`): where the cut would leave the strip under half its width; beside the minimap's panel where they
+  would cover it; a list stops above them. Left on the adventure HUD plan: the question pictures (art), HUD-1 and HUD-2, step 5's text.
 - The town list in its own panel (ADR-313): `TownListPanel` a growing column with no arrows, framed like the hero list
   (`AdventureHud.ListFrame`) and placed by `AdventureHudLayout.SetTownList` on the minimap's side, down on the bottom row and growing up
   to the minimap's panel, which now ends under the minimap; the chat between them when there is room.

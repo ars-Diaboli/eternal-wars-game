@@ -4,13 +4,13 @@ using EternalWars.Core.Domain.Pathfinding;
 namespace EternalWars.Core.Domain.Cursors;
 
 /// <summary>
-/// The adventure map's action buttons (ADR-309): a grid of two rows of five, Move first; Next hero (Tab), Next town (T) and End turn (its own
-/// tile) have no button here.
+/// The adventure map's action buttons (ADR-309, ADR-316): a grid of two rows of four, Move first; Next hero (Tab), Next town (T), End turn
+/// (its own tile), the hero screen (H, the hero card) and Switch level (L, the minimap's caption) have no button here.
 /// </summary>
 public static class AdventureActionGrid
 {
     /// <summary>How many buttons a row holds.</summary>
-    public const int Columns = 5;
+    public const int Columns = 4;
 
     /// <summary>The buttons, row by row.</summary>
     public static IReadOnlyList<AdventureAction> Order { get; } =
@@ -22,8 +22,6 @@ public static class AdventureActionGrid
         AdventureAction.PuzzleMap,
         AdventureAction.Dig,
         AdventureAction.Marketplace,
-        AdventureAction.SwitchLevel,
-        AdventureAction.HeroScreen,
         AdventureAction.Menu,
     ];
 

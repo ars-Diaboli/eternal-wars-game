@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-314.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-317** (ADR-314 is kept for the battle HUD restyle). A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -20,7 +20,7 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [game-modes.md](game-modes.md) | Victory and defeat, saves, the turn timer, score, ranking and difficulty, replays and the viewer, the main menu and new-game screen, the arena. | 23 |
 | [random-maps-and-editor.md](random-maps-and-editor.md) | Templates and the generator, scenery density, relief, the standalone editor and the template editor. | 48 |
 | [multiplayer.md](multiplayer.md) | The host and clients, each client's view, the lobby, live battles, LAN saves, start zones and the simultaneous first week. | 16 |
-| [presentation.md](presentation.md) | Art direction, the camera, terrain and fog drawing, the HUD, layout and theme, information windows, icons, cursors and heraldry. | 43 |
+| [presentation.md](presentation.md) | Art direction, the camera, terrain and fog drawing, the HUD, layout and theme, information windows, icons, cursors and heraldry. | 45 |
 | [project-and-scope.md](project-and-scope.md) | Scope and phases, the owner's batches of answers that touch several areas, phase close-outs and the Godot checks, closing reviews. | 21 |
 
 ## All decisions
@@ -340,3 +340,5 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [311](presentation.md#adr-311-every-frame-of-the-game-drawn-by-the-shader-windows-dialogs-tooltips-cards-buttons-the-rest-of-the-theme-in-its-grey-adr-191-adr-294-adr-310-owner-2026-11-24) | presentation | Every frame of the game drawn by the shader: windows, dialogs, tooltips, cards, buttons; the rest of the theme in its grey (ADR-191, ADR-294, ADR-310, owner, 2026-11-24) | implemented |
 | [312](presentation.md#adr-312-the-ui-icons-and-the-cursors-in-aluminium-ui-element-promptsmd-down-to-the-backgrounds-adr-116-adr-204-adr-311-owner-2026-11-24) | presentation | The UI icons and the cursors in aluminium; ui-element-prompts.md down to the backgrounds (ADR-116, ADR-204, ADR-311, owner, 2026-11-24) | accepted |
 | [313](presentation.md#adr-313-the-town-list-in-its-own-panel-the-hero-lists-twin-the-side-column-down-to-the-minimap-adr-309-owner-2026-11-25) | presentation | The town list in its own panel, the hero list's twin; the side column down to the minimap (ADR-309, owner, 2026-11-25) | implemented |
+| [315](presentation.md#adr-315-on-a-narrow-screen-the-action-buttons-move-up-above-the-bottom-row-the-army-strip-takes-their-place-adr-309-owner-2026-11-25) | presentation | On a narrow screen the action buttons move up above the bottom row; the army strip takes their place (ADR-309, owner, 2026-11-25) | implemented |
+| [316](presentation.md#adr-316-the-minimap-fills-its-slot-and-its-panel-takes-at-most-a-third-of-the-screens-height-switch-level-and-hero-screen-leave-the-action-grid-2--4-adr-309-owner-2026-11-25) | presentation | The minimap fills its slot and its panel takes at most a third of the screen's height; Switch level and Hero screen leave the action grid (2 × 4) (ADR-309, owner, 2026-11-25) | implemented |

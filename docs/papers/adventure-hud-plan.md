@@ -93,8 +93,8 @@ buttons need no labels.
 - Army strip: always 7 slots, empty ones dim; click a stack for the hero screen, right click for its information window.
 
 **Action buttons**
-- Bottom right, beside End turn: a 2×5 grid of buttons wider than tall: Move (»), Spell book, Kingdom, Quests, Puzzle map / Dig,
-  Marketplace, Switch level, Hero screen, Menu (amends ADR-210). No Next hero button: Tab stays.
+- Bottom right, beside End turn: a 2×4 grid of buttons wider than tall: Move (»), Spell book, Kingdom, Quests / Puzzle map, Dig,
+  Marketplace, Menu (amends ADR-210; ADR-316 took out Switch level and Hero screen). No Next hero button: Tab stays.
 - Move walks the selected hero along its route; disabled with no route or no movement left.
 
 **End turn**
@@ -159,7 +159,8 @@ Every hotkey shows on the status bar with its action's name; M, Space and Z are 
   bottom row and the side panel go (ADR-156, ADR-191, ADR-204 superseded in part). Saved layouts still load, as the default or its mirror.
 - **Target sizes:** 1280×720, 1280×800 (Steam Deck), 1920×1080, 2560×1440 and 21:9.
 - **Narrow screens:** the buttons are already in 2 rows; where the bottom row still does not fit, the army strip is cut off with a fade at
-  its end towards the middle, and hovering it shows it whole, over the action buttons.
+  its end towards the middle, and hovering it shows it whole, over the action buttons. Where that would leave the strip under half its
+  width, the action buttons move up above the row and the strip takes their place (ADR-315).
 - **UI scale:** a game setting, 100 %, 150 % or 200 %, applied like the map editor's (`ContentScaleFactor`); the editor offers 100–200 %
   in steps of 25.
 
@@ -222,8 +223,8 @@ memory-bank entries updated.
 - [x] Smoke screenshots of the map at 1280×720, 1280×800, 1920×1080, 2560×1440 and 21:9 (2560×1080), at 100, 150 and 200 %, both
   mirrors (smokes `hud-*`; a scenario's `Resolution` and `Settings`). Found: on 1280-wide screens above 100 % the column covered the turn
   banner and, at 200 %, ran into the bottom row, so the scale is lowered to keep 960 × 540 of the UI's own pixels
-  (`InterfaceSettings.ScaleFor`). Open: with under about 1,000 of them (1920×1080 at 200 %, 1280 wide above 100 %) the army strip has no
-  room left and cannot be hovered.
+  (`InterfaceSettings.ScaleFor`). With under about 1,000 of them (1920×1080 at 200 %, 1280 wide above 100 %) the army strip had no room
+  left; there the action buttons now move up above the row and the strip takes their place (ADR-315).
 - [x] Smokes `game-town-open` and `game-town-build` pass (the Hall scrolled to the Brotherhood's tile); the replay viewer's smokes pass;
   a LAN game on one machine (`--host`, `--join=127.0.0.1`): the client joins as Red, the turns pass, the chat stands under the town list.
 - [x] Budget overlay (F3): about 170 draw calls of 2,000 on Ember March at 2560×1440 with the HUD (smoke `game-map-budget`, ADR-308);
@@ -232,7 +233,7 @@ memory-bank entries updated.
 ### 5. Painted pieces
 - [x] Icon sheets 30 (town marks, level icons), 31 (replay bar) and 32 (route end icons) in
   [icon-prompts.md](../content/prompts/icon-prompts.md), cut into `textures/ui/icons/`.
-- [ ] Generate the rest: icon sheet 15 changed (Move as », Hero screen in place of Next hero); the list-slot sheet L4, the movement fill
+- [ ] Generate the rest: icon sheet 33 (the action grid's eight buttons, ADR-316); the list-slot sheet L4, the movement fill
   and the HUD pieces in [ui-element-prompts.md](../content/prompts/ui-element-prompts.md); the question pictures
   ([question-picture-prompts.md](../content/prompts/question-picture-prompts.md)).
 - [ ] Swap them in for the flat theme's boxes; player-colour pieces are tinted at run time. Rewrite the HUD part of

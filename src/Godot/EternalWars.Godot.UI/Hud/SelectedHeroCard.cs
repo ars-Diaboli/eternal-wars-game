@@ -8,7 +8,7 @@ namespace EternalWars.Godot.UI.Hud;
 /// <summary>
 /// The selected hero's card at the bottom (ADR-309): the portrait as tall as the card, so its margin to the frame is the same all round (a
 /// click opens the hero screen), two thin bars beside it (movement green, experience to the next level gold), then three rows: the level and
-/// name ("LV 3 | Orrin"), the four primary stats, and morale and luck as icons with a signed value and the mana left as an icon and a number. The HUD hides it while no own hero is
+/// name ("Lv 3 | Orrin"), the four primary stats, and morale and luck as icons with a signed value and the mana left as an icon and a number. The HUD hides it while no own hero is
 /// selected and stretches it to the bottom row's height.
 /// </summary>
 public partial class SelectedHeroCard : HBoxContainer
@@ -78,7 +78,7 @@ public partial class SelectedHeroCard : HBoxContainer
     /// <summary>The hero shown; null while hidden.</summary>
     public HeroId? Hero => _hero;
 
-    /// <summary>The name line ("LV 3 | Orrin"), for the smoke checks.</summary>
+    /// <summary>The name line ("Lv 3 | Orrin"), for the smoke checks.</summary>
     public string Title => _name.Text;
 
     /// <summary>Shows <paramref name="card"/>; a <paramref name="refusal"/> greys the portrait (the replay viewer) and says why.</summary>
@@ -93,7 +93,7 @@ public partial class SelectedHeroCard : HBoxContainer
         _experience.Gauge = card.Experience;
         _movement.TooltipText = $"Movement {card.Movement.Value} / {card.Movement.Max}";
         _experience.TooltipText = "Experience to the next level";
-        _name.Text = $"LV {card.Level} | {card.Name}";
+        _name.Text = $"Lv {card.Level} | {card.Name}";
 
         foreach (var child in _stats.GetChildren().Concat(_spirits.GetChildren()))
         {

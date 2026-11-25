@@ -4,8 +4,9 @@ Prompts for the **UI icons** (ADR-116, ADR-204, ADR-312): resources, primary sta
 and battle actions, plain icon buttons, the faction heraldry and the five difficulty levels. Every icon but the heraldry is **aluminium**:
 pale satin metal with a fine grainy texture and worn edges, light grey to near-white, in a thick dark outline, made to sit on the game's
 near-black panels with their grey rims (ADR-311).
-They are generated as **sheets of 4 (2 × 2) or 6 (2 × 3)**, the shapes the image model handles best, and cut into one file per icon. A
-sheet groups icons of the **same level of detail and the same use**, so they come out matching. Other icon sets have their own files: [cursor-prompts.md](cursor-prompts.md),
+They are generated as **sheets of 4 (2 × 2) or 6 (2 × 3)**, the shapes the image model handles best, or 8 (2 × 4) for the action grid,
+and cut into one file per icon. A sheet groups icons of the **same level of detail and the same use**, so they come out matching; the
+sheets below are grouped by where the game shows them. Other icon sets have their own files: [cursor-prompts.md](cursor-prompts.md),
 [spell-icon-prompts.md](spell-icon-prompts.md), [creature-icon-prompts.md](creature-icon-prompts.md), [editor-icon-prompts.md](editor-icon-prompts.md).
 
 ## Use a prompt
@@ -20,7 +21,7 @@ Do not paraphrase the prompts: the wording keeps the sheets consistent with each
 
 Each prompt repeats its style paragraph ("Game UI icon sheet of small aluminium objects…", "Game UI icon sheet of aluminium glyphs…",
 "Game UI button symbol sheet of aluminium glyphs…", "Fantasy heraldry crest sheet in a realistic…", "Heraldic charge sheet, each figure a
-single…") and the grid sentence ("4 separate icons arranged in a grid…" or "6 separate icons arranged in a grid…") verbatim, so
+single…") and the grid sentence ("4 separate icons arranged in a grid…", "6 separate…" or "8 separate…") verbatim, so
 each is ready to paste. A change to them must be made in every prompt of this file: search for those first words.
 
 ## Negative prompts
@@ -66,13 +67,14 @@ pixel art, blurry, cropped subject, subjects touching or overlapping, two subjec
 
 ## Output for every icon
 
-- **Sheet**: 2 × 2 at **1024 × 1024**, 2 × 3 (3 columns, 2 rows) at **1536 × 1024**; every cell is 512 × 512, listed in reading order
+- **Sheet**: 2 × 2 at **1024 × 1024**, 2 × 3 (3 columns, 2 rows) at **1536 × 1024**, 2 × 4 (4 columns, 2 rows) at **2048 × 1024**;
+  every cell is 512 × 512, listed in reading order
   (top row left to right, then the bottom row). Keep the sheets (`sheet_<name>.png`) as the masters.
 - **Icon**: one PNG a cell, 32-bit RGBA, sRGB, **512 × 512**, transparent background (crests and charges included), named as in the
   tables (`icon_resource_gold.png`). The game scales them to 64, 48 and 32 px, so every shape must read at 32 px: one clear silhouette, no
   line thinner than 6 % of the cell, no text, letters or numbers.
 - **Cutting**: split the sheet into equal tiles (ImageMagick: `magick sheet.png -crop 3x2@ +repage icon_%d.png`, `2x2@` for a 2 × 2
-  sheet); each tile keeps the sheet's transparency.
+  sheet, `4x2@` for a 2 × 4 one); each tile keeps the sheet's transparency.
 - **Spare cell**: where a sheet has fewer icons than cells, the free cell is a second take of the hardest icon on it. Keep the better one.
 - **Light**: from the top left; one soft highlight, no rim light, no cast shadow outside the subject.
 - **Aluminium** (tiers A, B and C): one metal, pale satin aluminium with a fine grainy bead-blasted texture, faint brushed lines, small
@@ -91,135 +93,243 @@ pixel art, blurry, cropped subject, subjects touching or overlapping, two subjec
 | Tier | What | Where it is shown | Sheets |
 |---|---|---|---|
 | **A · Objects** | small objects cast in aluminium, three-quarter view | the resource bar, trade and cost lists, the army row's machines, the difficulty row; 24–64 px | 1, 7, 29 |
-| **B · Glyphs** | bold symbols in aluminium relief, flat front view | the hero card's and hero screen's stats, skill and spell rows, the action panel, the battle bar, the adventure HUD's marks; 24–48 px | 2–6, 8–18, 30, 32 |
+| **B · Glyphs** | bold symbols in aluminium relief, flat front view | the hero card's and hero screen's stats, skill and spell rows, the action grid, the battle bar, the adventure HUD's marks; 24–48 px | 2–6, 8–15, 17, 18, 30, 32, 33 |
 | **C · Plain** | the simplest aluminium symbols, which the theme tints | buttons, the replay bar; 20–32 px | 19–22, 31 |
 | **Heraldry** | faction crests in colour, and their one-colour charges | town and player panels, flags and banners; 24–128 px | 23–28 |
 
-## Tier A · Objects
+## Adventure map HUD
 
-### 1 · Resources (2 × 3) — the resource bar, trade and cost lists
+### 33 · Adventure HUD: action buttons (2 × 4) — the action grid beside End turn
+
+**Prompt** · 2048 × 1024 · negative `NEG-ALU-MECH`
+
+```text
+Game UI icon sheet of aluminium glyphs in a realistic painterly dark-fantasy style: each icon one bold symbol seen flat from the front,
+a solid shape cast in aluminium, light satin metal with a fine grainy bead-blasted surface texture, faint brushed lines, fine scratches,
+small dents and worn edges catching the light, a soft bevel and a few fine engraved lines for detail. Pale aluminium palette: light
+silvery grey faces with a soft matte sheen, near-white on the bevels and raised edges, soft cool grey only in the recesses and engraved
+lines; reflections soft and diffuse, low contrast, the metal reads pale and light overall, never dark, never mirror-bright. One metal
+only, cool neutral greys, no other colour, no glow unless a cell names a soft white one. Light from the top left, a thick near-black
+outline around each subject and a thin white edge just inside it so it reads on dark and on light ground, no cast shadow, no background.
+Simple, solid forms with the same weight and amount of detail on every icon, no thin lines, readable at 24 px. Not a photograph, not a
+plastic CGI render, not a cartoon, no pixel art. 8 separate icons arranged in a grid of 4 columns and 2 rows, each alone in its own
+equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another
+cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. Every icon is one
+object with two or three clear features, all eight with the same amount of detail: no bare geometric shape, no scene of several objects.
+The icons, top row left to right, then bottom row: 1 two thick chevrons pointing right, one close behind the other, each a bevelled bar
+with one engraved line along its middle; 2 a closed thick spell book seen from the front, metal corner fittings and a clasp, one rune
+engraved on the cover; 3 a crown seen from the front, three points each tipped with a round boss, a plain band with a row of engraved
+squares; 4 a rolled scroll lying across, tied with a cord at its middle, a round seal hanging from the cord; 5 a square piece of map
+with one jigsaw tab on its right edge and one notch in its bottom edge, a deep engraved cross in its middle; 6 a shovel standing upright
+in a small mound of earth, two clods beside the mound; 7 balance scales seen from the front: an upright post, a level beam, two shallow
+pans on short straight cords, a single coin in the left pan; 8 three thick horizontal bars stacked with even gaps, rounded ends, each
+bar with one engraved line along it
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_action_move` |
+| 2 | `icon_action_spell-book` |
+| 3 | `icon_action_kingdom` |
+| 4 | `icon_action_quest-log` |
+| 5 | `icon_action_puzzle-map` |
+| 6 | `icon_action_dig` |
+| 7 | `icon_action_marketplace` |
+| 8 | `icon_action_menu` |
+
+The eight buttons of the action grid (ADR-316), on one sheet so they share one metal, one weight and one amount of detail: each a single
+object with two or three features, neither a bare shape nor a busy scene. Where the model makes nothing wider than 1536 × 1024, generate
+at 1536 × 768; the cells stay square.
+
+### 15 · Adventure map: other actions (2 × 2) — the hero, End turn's question, the editor's level switch, the thieves' guild
+
+**Prompt** · 1024 × 1024 · negative `NEG-ALU`
+
+```text
+Game UI icon sheet of aluminium glyphs in a realistic painterly dark-fantasy style: each icon one bold symbol seen flat from the front,
+a solid shape cast in aluminium, light satin metal with a fine grainy bead-blasted surface texture, faint brushed lines, fine scratches,
+small dents and worn edges catching the light, a soft bevel and a few fine engraved lines for detail. Pale aluminium palette: light
+silvery grey faces with a soft matte sheen, near-white on the bevels and raised edges, soft cool grey only in the recesses and engraved
+lines; reflections soft and diffuse, low contrast, the metal reads pale and light overall, never dark, never mirror-bright. One metal
+only, cool neutral greys, no other colour, no glow unless a cell names a soft white one. Light from the top left, a thick near-black
+outline around each subject and a thin white edge just inside it so it reads on dark and on light ground, no cast shadow, no background.
+Simple, solid forms with the same weight and amount of detail on every icon, no thin lines, readable at 24 px. Not a photograph, not a
+plastic CGI render, not a cartoon, no pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own
+equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another
+cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row
+left to right, then bottom row: 1 a hero's head and shoulders in profile facing right, a cloak over the shoulder, like a medal; 2 an
+upright hourglass in a frame, the top bulb almost empty, the last grains falling; 3 a cave mouth in a rock face, one small arrow above
+it pointing up and one beside it pointing down (surface and underground); 4 a hooded mask with empty eye holes, a curved dagger crossed
+behind it
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_action_hero` |
+| 2 | `icon_action_end-turn` |
+| 3 | `icon_action_level` |
+| 4 | `icon_action_thieves-guild` |
+
+None of these is in the action grid: the hero screen opens from the hero card (H), the level switches from the minimap's caption (L),
+End turn is its own tile.
+
+### 30 · Adventure HUD: town marks and levels (2 × 2) — the town list, the minimap's level caption
+
+**Prompt** · 1024 × 1024 · negative `NEG-ALU`
+
+```text
+Game UI icon sheet of aluminium glyphs in a realistic painterly dark-fantasy style: each icon one bold symbol seen flat from the front,
+a solid shape cast in aluminium, light satin metal with a fine grainy bead-blasted surface texture, faint brushed lines, fine scratches,
+small dents and worn edges catching the light, a soft bevel and a few fine engraved lines for detail. Pale aluminium palette: light
+silvery grey faces with a soft matte sheen, near-white on the bevels and raised edges, soft cool grey only in the recesses and engraved
+lines; reflections soft and diffuse, low contrast, the metal reads pale and light overall, never dark, never mirror-bright. One metal
+only, cool neutral greys, no other colour, no glow unless a cell names a soft white one. Light from the top left, a thick near-black
+outline around each subject and a thin white edge just inside it so it reads on dark and on light ground, no cast shadow, no background.
+Simple, solid forms with the same weight and amount of detail on every icon, no thin lines, readable at 24 px. Not a photograph, not a
+plastic CGI render, not a cartoon, no pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own
+equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another
+cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row
+left to right, then bottom row: 1 a mason's hammer laid diagonally over a squared building stone; 2 a small stone keep seen from the
+front, a laurel wreath hanging on its gate; 3 a low hill under a small sun with short rays; 4 a cave arch in rock with three stalactites
+hanging from its top, a small crystal inside
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_town_can-build` |
+| 2 | `icon_town_fully-built` |
+| 3 | `icon_level_surface` |
+| 4 | `icon_level_underground` |
+
+The town list shows `icon_town_can-build` lit when the town can build today and dimmed (the game darkens it) when it built today;
+`icon_town_fully-built` replaces it when nothing is left to build. The level caption under the minimap shows the level's icon beside its
+name.
+
+### 32 · Adventure map: route end markers (2 × 3) — the marker at the end of a hero's route
 
 **Prompt** · 1536 × 1024 · negative `NEG-ALU`
 
 ```text
-Game UI icon sheet of small aluminium objects in a realistic painterly dark-fantasy style: each icon one simple object made as a real
-cast and machined aluminium object, light satin metal with a fine grainy bead-blasted surface texture, faint brushed lines, fine
-scratches, small dents and worn edges catching the light, gently bevelled edges and a little engraved detail, true proportions and
-believable construction. Pale aluminium palette: light silvery grey faces with a soft matte sheen, near-white on the bevels and raised
-edges, soft cool grey only in the recesses and engraved lines; reflections soft and diffuse, low contrast, the metal reads pale and
-light overall, never dark, never mirror-bright. One metal only, cool neutral greys, no other colour, no glow. Light from the top left, a
-thick near-black outline around each subject and a thin white edge just inside it so it reads on dark and on light ground, no cast
-shadow, no background. Three-quarter view slightly from above unless a cell says otherwise; each subject a clear, compact silhouette
-that reads at 24 px. Not a photograph, not a plastic CGI render, not a cartoon, no pixel art. 6 separate icons arranged in a grid of 3
-columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the
-same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent
-background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a small heap of thick, worn coins stamped with a sun,
-one coin standing upright in front; 2 three cut logs stacked as a pyramid (two below, one on top), tied with a rope; ridged bark, the
-end grain with its rings facing the viewer; 3 three rough cubic lumps of ore stacked together, two below and one on top, faceted and
-pitted, a few bright metallic flecks; 4 a cluster of three crystals (one tall, two short) growing from a small rock base, sharp clean
-facets that catch the light; 5 a round-bellied flask with a short neck and a stopper, half full of liquid mercury that mirrors the
-light, one round droplet beside it; 6 a small pile of rough, powdery crystals, one thin curl of smoke rising from it
+Game UI icon sheet of aluminium glyphs in a realistic painterly dark-fantasy style: each icon one bold symbol seen flat from the front,
+a solid shape cast in aluminium, light satin metal with a fine grainy bead-blasted surface texture, faint brushed lines, fine scratches,
+small dents and worn edges catching the light, a soft bevel and a few fine engraved lines for detail. Pale aluminium palette: light
+silvery grey faces with a soft matte sheen, near-white on the bevels and raised edges, soft cool grey only in the recesses and engraved
+lines; reflections soft and diffuse, low contrast, the metal reads pale and light overall, never dark, never mirror-bright. One metal
+only, cool neutral greys, no other colour, no glow unless a cell names a soft white one. Light from the top left, a thick near-black
+outline around each subject and a thin white edge just inside it so it reads on dark and on light ground, no cast shadow, no background.
+Simple, solid forms with the same weight and amount of detail on every icon, no thin lines, readable at 24 px. Not a photograph, not a
+plastic CGI render, not a cartoon, no pixel art. 6 separate icons arranged in a grid of 3 columns and 2 rows, each alone in its own
+equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another
+cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row
+left to right, then bottom row: 1 two short swords crossed point up; 2 an open hand seen from the front, palm out in greeting; 3 an open
+hand seen from above reaching down toward a single coin; 4 a small town gate seen from the front, an open arch between two towers; 5 two
+gauntlets clasped in a handshake; 6 a second take of cell 3
 ```
 
 | # | File |
 |---|---|
-| 1 | `icon_resource_gold` |
-| 2 | `icon_resource_lumber` |
-| 3 | `icon_resource_ore` |
-| 4 | `icon_resource_crystal` |
-| 5 | `icon_resource_mercury` |
-| 6 | `icon_resource_sulfur` |
+| 1 | `icon_route_attack` |
+| 2 | `icon_route_visit` |
+| 3 | `icon_route_pick-up` |
+| 4 | `icon_route_enter-town` |
+| 5 | `icon_route_meet-hero` |
 
-### 7 · War machines (2 × 2) — the hero's army row, the blacksmith
+The marker at a route's end shows the icon of what the hero does there, as the adventure cursor decides it (`AdventureCursors`):
+attack, visit, enter a town, meet an own hero; picking up (a resource, an artifact, a chest) gets its own. A plain move shows no icon,
+only the bigger marker.
 
-Image models draw machines badly (wheels at odd angles, uneven bow arms). This sheet follows the **rules for mechanical subjects** below;
-generate it on its own and expect to roll it several times.
-
-**Prompt** · 1024 × 1024 · negative `NEG-ALU-MECH`, plus `flat side view, pure side profile, top-down view, seen from directly
-above, orthographic, blueprint, technical drawing, diagram`
-
-```text
-Game UI icon sheet of small aluminium objects in a realistic painterly dark-fantasy style: each icon one simple object made as a real
-cast and machined aluminium object, light satin metal with a fine grainy bead-blasted surface texture, faint brushed lines, fine
-scratches, small dents and worn edges catching the light, gently bevelled edges and a little engraved detail, true proportions and
-believable construction. Pale aluminium palette: light silvery grey faces with a soft matte sheen, near-white on the bevels and raised
-edges, soft cool grey only in the recesses and engraved lines; reflections soft and diffuse, low contrast, the metal reads pale and
-light overall, never dark, never mirror-bright. One metal only, cool neutral greys, no other colour, no glow. Light from the top left, a
-thick near-black outline around each subject and a thin white edge just inside it so it reads on dark and on light ground, no cast
-shadow, no background. Three-quarter view slightly from above unless a cell says otherwise; each subject a clear, compact silhouette
-that reads at 24 px. Not a photograph, not a plastic CGI render, not a cartoon, no pixel art. 4 separate icons arranged in a grid of 2
-columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the
-same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent
-background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a heavy siege crossbow on a low four-legged trestle,
-aimed to the upper right: a long stock running diagonally across the cell, the bow across its front end as one wide arc,
-mirror-symmetric, both arms the same length and curve, the string a straight line from tip to tip pulled back into a V to the trigger,
-one thick bolt lying along the stock; bands round the stock; the timber shows its grain in the aluminium; no wheels; 2 a catapult facing
-to the right: a low rectangular frame on four solid plank wheels with rims; the two near wheels fully in view, upright ellipses of
-exactly the same shape, both square to one straight axle; the two far wheels partly hidden behind the frame, the same ellipses; one
-throwing arm angled up at 45° with a cup holding a round stone, a crossbar where the arm stops; the timber shows its grain in the
-aluminium; 3 a small field tent, its flap tied open, a pole at the front with a flame-shaped pennant (no cross: it is a protected
-emblem); 4 a two-wheeled handcart, its two long handles reaching toward the viewer at the lower left: two solid plank wheels with rims
-on one straight axle under the box, the near wheel a full upright ellipse, the far wheel the same ellipse partly hidden behind the box;
-the box full of bundled arrows standing upright
-```
-
-| # | File |
-|---|---|
-| 1 | `icon_machine_ballista` |
-| 2 | `icon_machine_catapult` |
-| 3 | `icon_machine_healing-tent` |
-| 4 | `icon_machine_ammo-cart` |
-
-**Rules for mechanical subjects** (machines, bows, scales, carts):
-
-- **Show machines with depth, and pin the perspective**: a wheeled machine or a siege engine in a three-quarter view from the front left
-  and about 30° above (a flat side profile or a view from straight above reads as a diagram, not an object), and describe the wheels in
-  that view: "upright ellipses of exactly the same shape, square to one straight axle". A hand-held bow or scales may stay straight front.
-- **Say the counts and shapes**: "one visible wheel, a perfect circle, six spokes", "two wheels", "one throwing arm".
-- **Say the symmetry**: "mirror-symmetric, both arms the same length and curve, the string straight from tip to tip".
-- **Fewer parts**: no ropes, winches, gears or crew unless the subject needs them; solid plank wheels are safer than spoked ones.
-- **Use `NEG-ALU-MECH` as the negative** (the Prompt lines of sheets 3, 7 and 16 name it; use it for any new sheet with a wheel, a bow or scales).
-- **If it still fails**: generate the one icon alone (1 × 1 at 1024 px); or sketch it (a few boxes and cylinders in Blender or Godot, a
-  screenshot from the same three-quarter camera is enough) and give it to the model as the image input at medium strength; or fix the
-  wheel by hand with an ellipse.
-
-### 29 · Difficulty (2 × 3) — the new-game screen's difficulty row, the victory screen, the leaderboard (ADR-225)
-
-Five chess pieces, from humble to grand, so the row reads as a climb at a glance: **aluminium from rough and matte to bright and finely finished**, each piece
-standing upright on its own round base, **the same height and lighting** in every cell, three-quarter view facing left, each finer than
-the last.
-Generate the five on one sheet so they match.
+### 31 · Replay bar (2 × 3)
 
 **Prompt** · 1536 × 1024 · negative `NEG-ALU`
 
 ```text
-Game UI icon sheet of small aluminium objects in a realistic painterly dark-fantasy style: each icon one simple object made as a real
-cast and machined aluminium object, light satin metal with a fine grainy bead-blasted surface texture, faint brushed lines, fine
-scratches, small dents and worn edges catching the light, gently bevelled edges and a little engraved detail, true proportions and
-believable construction. Pale aluminium palette: light silvery grey faces with a soft matte sheen, near-white on the bevels and raised
-edges, soft cool grey only in the recesses and engraved lines; reflections soft and diffuse, low contrast, the metal reads pale and
-light overall, never dark, never mirror-bright. One metal only, cool neutral greys, no other colour, no glow. Light from the top left, a
-thick near-black outline around each subject and a thin white edge just inside it so it reads on dark and on light ground, no cast
-shadow, no background. Three-quarter view slightly from above unless a cell says otherwise; each subject a clear, compact silhouette
-that reads at 24 px. Not a photograph, not a plastic CGI render, not a cartoon, no pixel art. 6 separate icons arranged in a grid of 3
-columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the
-same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent
-background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a pawn of rough bead-blasted aluminium, a few nicks in
-the base; 2 a knight of brushed aluminium, a horse's head with a carved mane; 3 a bishop of satin aluminium, a thin engraved band round
-its waist; 4 a rook of fine satin aluminium, its battlements and the ring at its base finely engraved; 5 a queen of the brightest satin
-aluminium, a crown set with one clear faceted gem, engraved rings at the waist and base; 6 a second take of the queen
+Game UI button symbol sheet of aluminium glyphs in a realistic painterly dark-fantasy style: each symbol one bold, simple shape seen
+flat from the front, solid cast aluminium, light satin metal with a fine grainy bead-blasted texture and a soft bevel, light silvery
+grey faces, near-white on its upper left edges and soft cool grey on its lower right, soft low-contrast reflections, no other colour, no
+glow, a thick near-black outline and a thin white edge just inside it, no engraving, no ornament, the same stroke weight on every
+symbol, readable at 20 px. Not a photograph, not a plastic CGI render, no pixel art. 6 separate icons arranged in a grid of 3 columns
+and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same
+light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background,
+PNG with alpha. The icons, top row left to right, then bottom row: 1 two thick upright bars of equal height side by side; 2 a solid
+triangle pointing right against one thick upright bar; 3 two solid triangles pointing right, the second touching the first; 4 a solid
+triangle pointing right toward a small flag on a pole; 5 a gauntlet seen from the side gripping an upright pole; 6 a second take of cell
+5
 ```
 
 | # | File |
 |---|---|
-| 1 | `icon_difficulty_easy` |
-| 2 | `icon_difficulty_normal` |
-| 3 | `icon_difficulty_hard` |
-| 4 | `icon_difficulty_expert` |
-| 5 | `icon_difficulty_master` |
-| 6 | spare |
+| 1 | `icon_button_pause` |
+| 2 | `icon_button_next-turn` |
+| 3 | `icon_button_next-day` |
+| 4 | `icon_button_skip-to-result` |
+| 5 | `icon_button_take-over` |
 
-## Tier B · Glyphs
+The replay bar's one Play/Pause toggle shows `icon_button_pause` while playing and the play icon while paused; `icon_button_take-over` is
+"Play from here".
+
+## Battle
+
+### 17 · Battle: unit actions (2 × 3) — the battle bar, the cursor
+
+**Prompt** · 1536 × 1024 · negative `NEG-ALU`
+
+```text
+Game UI icon sheet of aluminium glyphs in a realistic painterly dark-fantasy style: each icon one bold symbol seen flat from the front,
+a solid shape cast in aluminium, light satin metal with a fine grainy bead-blasted surface texture, faint brushed lines, fine scratches,
+small dents and worn edges catching the light, a soft bevel and a few fine engraved lines for detail. Pale aluminium palette: light
+silvery grey faces with a soft matte sheen, near-white on the bevels and raised edges, soft cool grey only in the recesses and engraved
+lines; reflections soft and diffuse, low contrast, the metal reads pale and light overall, never dark, never mirror-bright. One metal
+only, cool neutral greys, no other colour, no glow unless a cell names a soft white one. Light from the top left, a thick near-black
+outline around each subject and a thin white edge just inside it so it reads on dark and on light ground, no cast shadow, no background.
+Simple, solid forms with the same weight and amount of detail on every icon, no thin lines, readable at 24 px. Not a photograph, not a
+plastic CGI render, not a cartoon, no pixel art. 6 separate icons arranged in a grid of 3 columns and 2 rows, each alone in its own
+equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another
+cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row
+left to right, then bottom row: 1 a sword striking down diagonally from the top right, a short motion arc behind the blade; 2 one arrow
+in flight from left to right, rising slightly, three speed lines behind its feathers; 3 an open hand palm up under a small floating open
+spell book, a four-rayed spark rising from the pages; 4 a raised round shield seen from the front, a small spark on its upper rim; 5 an
+hourglass lying on its side, sand resting in both bulbs; 6 a curved war horn with a strap, three curved sound waves coming from its
+mouth
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_battle_melee` |
+| 2 | `icon_battle_shoot` |
+| 3 | `icon_battle_cast` |
+| 4 | `icon_battle_defend` |
+| 5 | `icon_battle_wait` |
+| 6 | `icon_battle_warcry` |
+
+### 18 · Battle: commands (2 × 2)
+
+**Prompt** · 1024 × 1024 · negative `NEG-ALU`
+
+```text
+Game UI icon sheet of aluminium glyphs in a realistic painterly dark-fantasy style: each icon one bold symbol seen flat from the front,
+a solid shape cast in aluminium, light satin metal with a fine grainy bead-blasted surface texture, faint brushed lines, fine scratches,
+small dents and worn edges catching the light, a soft bevel and a few fine engraved lines for detail. Pale aluminium palette: light
+silvery grey faces with a soft matte sheen, near-white on the bevels and raised edges, soft cool grey only in the recesses and engraved
+lines; reflections soft and diffuse, low contrast, the metal reads pale and light overall, never dark, never mirror-bright. One metal
+only, cool neutral greys, no other colour, no glow unless a cell names a soft white one. Light from the top left, a thick near-black
+outline around each subject and a thin white edge just inside it so it reads on dark and on light ground, no cast shadow, no background.
+Simple, solid forms with the same weight and amount of detail on every icon, no thin lines, readable at 24 px. Not a photograph, not a
+plastic CGI render, not a cartoon, no pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own
+equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another
+cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row
+left to right, then bottom row: 1 a tattered flag on a broken spear shaft, leaning to the left; 2 a sword laid flat across two open,
+upturned hands, offered forward; 3 two swords crossed in an X, a lightning bolt running down between them; 4 two swords crossed in an X,
+a small cogwheel where they cross
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_battle_retreat` |
+| 2 | `icon_battle_surrender` |
+| 3 | `icon_battle_quick-combat` |
+| 4 | `icon_battle_auto-combat` |
+
+## Heroes
 
 ### 2 · Hero stats (2 × 3) — the hero screen's header, level-up
 
@@ -251,6 +361,34 @@ it; 6 a five-pointed star with bevelled faces
 | 4 | `icon_stat_knowledge` |
 | 5 | `icon_stat_mana` |
 | 6 | `icon_stat_experience` |
+
+### 8 · Hero condition (2 × 2) — the hero panel, creature windows
+
+**Prompt** · 1024 × 1024 · negative `NEG-ALU`
+
+```text
+Game UI icon sheet of aluminium glyphs in a realistic painterly dark-fantasy style: each icon one bold symbol seen flat from the front,
+a solid shape cast in aluminium, light satin metal with a fine grainy bead-blasted surface texture, faint brushed lines, fine scratches,
+small dents and worn edges catching the light, a soft bevel and a few fine engraved lines for detail. Pale aluminium palette: light
+silvery grey faces with a soft matte sheen, near-white on the bevels and raised edges, soft cool grey only in the recesses and engraved
+lines; reflections soft and diffuse, low contrast, the metal reads pale and light overall, never dark, never mirror-bright. One metal
+only, cool neutral greys, no other colour, no glow unless a cell names a soft white one. Light from the top left, a thick near-black
+outline around each subject and a thin white edge just inside it so it reads on dark and on light ground, no cast shadow, no background.
+Simple, solid forms with the same weight and amount of detail on every icon, no thin lines, readable at 24 px. Not a photograph, not a
+plastic CGI render, not a cartoon, no pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own
+equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another
+cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row
+left to right, then bottom row: 1 a tall banner on a short pole, the cloth streaming to the right; 2 a four-leaf clover seen from above,
+fine veins on the leaves; 3 a traveller's boot seen from the side, a small feathered wing at the heel; 4 a closed eye drawn as a curved
+lid with lashes, a small crescent moon above it
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_stat_morale` |
+| 2 | `icon_stat_luck` |
+| 3 | `icon_stat_movement` |
+| 4 | `icon_action_sleep` |
 
 ### 3 · Combat skills (2 × 3) — skill rows, level-up offers
 
@@ -381,33 +519,60 @@ packed with arrows and crossbow bolts, their feathers fanned at the top; 4 a sec
 | 3 | `icon_skill_machines.ammo` |
 | 4 | spare |
 
-### 8 · Hero condition (2 × 2) — the hero panel, creature windows
+### 7 · War machines (2 × 2) — the hero's army row, the blacksmith
 
-**Prompt** · 1024 × 1024 · negative `NEG-ALU`
+Image models draw machines badly (wheels at odd angles, uneven bow arms). This sheet follows the **rules for mechanical subjects** below;
+generate it on its own and expect to roll it several times.
+
+**Prompt** · 1024 × 1024 · negative `NEG-ALU-MECH`, plus `flat side view, pure side profile, top-down view, seen from directly
+above, orthographic, blueprint, technical drawing, diagram`
 
 ```text
-Game UI icon sheet of aluminium glyphs in a realistic painterly dark-fantasy style: each icon one bold symbol seen flat from the front,
-a solid shape cast in aluminium, light satin metal with a fine grainy bead-blasted surface texture, faint brushed lines, fine scratches,
-small dents and worn edges catching the light, a soft bevel and a few fine engraved lines for detail. Pale aluminium palette: light
-silvery grey faces with a soft matte sheen, near-white on the bevels and raised edges, soft cool grey only in the recesses and engraved
-lines; reflections soft and diffuse, low contrast, the metal reads pale and light overall, never dark, never mirror-bright. One metal
-only, cool neutral greys, no other colour, no glow unless a cell names a soft white one. Light from the top left, a thick near-black
-outline around each subject and a thin white edge just inside it so it reads on dark and on light ground, no cast shadow, no background.
-Simple, solid forms with the same weight and amount of detail on every icon, no thin lines, readable at 24 px. Not a photograph, not a
-plastic CGI render, not a cartoon, no pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own
-equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another
-cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row
-left to right, then bottom row: 1 a tall banner on a short pole, the cloth streaming to the right; 2 a four-leaf clover seen from above,
-fine veins on the leaves; 3 a traveller's boot seen from the side, a small feathered wing at the heel; 4 a closed eye drawn as a curved
-lid with lashes, a small crescent moon above it
+Game UI icon sheet of small aluminium objects in a realistic painterly dark-fantasy style: each icon one simple object made as a real
+cast and machined aluminium object, light satin metal with a fine grainy bead-blasted surface texture, faint brushed lines, fine
+scratches, small dents and worn edges catching the light, gently bevelled edges and a little engraved detail, true proportions and
+believable construction. Pale aluminium palette: light silvery grey faces with a soft matte sheen, near-white on the bevels and raised
+edges, soft cool grey only in the recesses and engraved lines; reflections soft and diffuse, low contrast, the metal reads pale and
+light overall, never dark, never mirror-bright. One metal only, cool neutral greys, no other colour, no glow. Light from the top left, a
+thick near-black outline around each subject and a thin white edge just inside it so it reads on dark and on light ground, no cast
+shadow, no background. Three-quarter view slightly from above unless a cell says otherwise; each subject a clear, compact silhouette
+that reads at 24 px. Not a photograph, not a plastic CGI render, not a cartoon, no pixel art. 4 separate icons arranged in a grid of 2
+columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the
+same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent
+background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a heavy siege crossbow on a low four-legged trestle,
+aimed to the upper right: a long stock running diagonally across the cell, the bow across its front end as one wide arc,
+mirror-symmetric, both arms the same length and curve, the string a straight line from tip to tip pulled back into a V to the trigger,
+one thick bolt lying along the stock; bands round the stock; the timber shows its grain in the aluminium; no wheels; 2 a catapult facing
+to the right: a low rectangular frame on four solid plank wheels with rims; the two near wheels fully in view, upright ellipses of
+exactly the same shape, both square to one straight axle; the two far wheels partly hidden behind the frame, the same ellipses; one
+throwing arm angled up at 45° with a cup holding a round stone, a crossbar where the arm stops; the timber shows its grain in the
+aluminium; 3 a small field tent, its flap tied open, a pole at the front with a flame-shaped pennant (no cross: it is a protected
+emblem); 4 a two-wheeled handcart, its two long handles reaching toward the viewer at the lower left: two solid plank wheels with rims
+on one straight axle under the box, the near wheel a full upright ellipse, the far wheel the same ellipse partly hidden behind the box;
+the box full of bundled arrows standing upright
 ```
 
 | # | File |
 |---|---|
-| 1 | `icon_stat_morale` |
-| 2 | `icon_stat_luck` |
-| 3 | `icon_stat_movement` |
-| 4 | `icon_action_sleep` |
+| 1 | `icon_machine_ballista` |
+| 2 | `icon_machine_catapult` |
+| 3 | `icon_machine_healing-tent` |
+| 4 | `icon_machine_ammo-cart` |
+
+**Rules for mechanical subjects** (machines, bows, scales, carts):
+
+- **Show machines with depth, and pin the perspective**: a wheeled machine or a siege engine in a three-quarter view from the front left
+  and about 30° above (a flat side profile or a view from straight above reads as a diagram, not an object), and describe the wheels in
+  that view: "upright ellipses of exactly the same shape, square to one straight axle". A hand-held bow or scales may stay straight front.
+- **Say the counts and shapes**: "one visible wheel, a perfect circle, six spokes", "two wheels", "one throwing arm".
+- **Say the symmetry**: "mirror-symmetric, both arms the same length and curve, the string straight from tip to tip".
+- **Fewer parts**: no ropes, winches, gears or crew unless the subject needs them; solid plank wheels are safer than spoked ones.
+- **Use `NEG-ALU-MECH` as the negative** (the Prompt lines of sheets 3, 7 and 16 name it; use it for any new sheet with a wheel, a bow or scales).
+- **If it still fails**: generate the one icon alone (1 × 1 at 1024 px); or sketch it (a few boxes and cylinders in Blender or Godot, a
+  screenshot from the same three-quarter camera is enough) and give it to the model as the image input at medium strength; or fix the
+  wheel by hand with an ellipse.
+
+## Magic schools
 
 ### 9–14 · Magic schools (2 × 2 each, one sheet per school)
 
@@ -588,197 +753,44 @@ inside a thin ring of small engraved runes; 4 a crescent moon half covered by cu
 | 3 | `icon_skill_magic.dungeon.attunement` |
 | 4 | `icon_skill_magic.dungeon.mastery` |
 
-### 15 · Adventure map: hero actions (2 × 3) — the action panel
+## Resources
+
+### 1 · Resources (2 × 3) — the resource bar, trade and cost lists
 
 **Prompt** · 1536 × 1024 · negative `NEG-ALU`
 
 ```text
-Game UI icon sheet of aluminium glyphs in a realistic painterly dark-fantasy style: each icon one bold symbol seen flat from the front,
-a solid shape cast in aluminium, light satin metal with a fine grainy bead-blasted surface texture, faint brushed lines, fine scratches,
-small dents and worn edges catching the light, a soft bevel and a few fine engraved lines for detail. Pale aluminium palette: light
-silvery grey faces with a soft matte sheen, near-white on the bevels and raised edges, soft cool grey only in the recesses and engraved
-lines; reflections soft and diffuse, low contrast, the metal reads pale and light overall, never dark, never mirror-bright. One metal
-only, cool neutral greys, no other colour, no glow unless a cell names a soft white one. Light from the top left, a thick near-black
-outline around each subject and a thin white edge just inside it so it reads on dark and on light ground, no cast shadow, no background.
-Simple, solid forms with the same weight and amount of detail on every icon, no thin lines, readable at 24 px. Not a photograph, not a
-plastic CGI render, not a cartoon, no pixel art. 6 separate icons arranged in a grid of 3 columns and 2 rows, each alone in its own
-equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another
-cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row
-left to right, then bottom row: 1 two bold chevrons pointing right side by side; 2 a hero's head and shoulders in profile facing right,
-a cloak over the shoulder, like a medal; 3 an upright hourglass in a frame, the top bulb almost empty, the last grains falling; 4 a
-closed thick spell book, corner fittings and a clasp, a rune on the cover; 5 a shovel stuck upright in a small mound of earth, a few
-clods around it; 6 a cave mouth in a rock face, one small arrow above it pointing up and one beside it pointing down (surface and
-underground)
+Game UI icon sheet of small aluminium objects in a realistic painterly dark-fantasy style: each icon one simple object made as a real
+cast and machined aluminium object, light satin metal with a fine grainy bead-blasted surface texture, faint brushed lines, fine
+scratches, small dents and worn edges catching the light, gently bevelled edges and a little engraved detail, true proportions and
+believable construction. Pale aluminium palette: light silvery grey faces with a soft matte sheen, near-white on the bevels and raised
+edges, soft cool grey only in the recesses and engraved lines; reflections soft and diffuse, low contrast, the metal reads pale and
+light overall, never dark, never mirror-bright. One metal only, cool neutral greys, no other colour, no glow. Light from the top left, a
+thick near-black outline around each subject and a thin white edge just inside it so it reads on dark and on light ground, no cast
+shadow, no background. Three-quarter view slightly from above unless a cell says otherwise; each subject a clear, compact silhouette
+that reads at 24 px. Not a photograph, not a plastic CGI render, not a cartoon, no pixel art. 6 separate icons arranged in a grid of 3
+columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the
+same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent
+background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a small heap of thick, worn coins stamped with a sun,
+one coin standing upright in front; 2 three cut logs stacked as a pyramid (two below, one on top), tied with a rope; ridged bark, the
+end grain with its rings facing the viewer; 3 three rough cubic lumps of ore stacked together, two below and one on top, faceted and
+pitted, a few bright metallic flecks; 4 a cluster of three crystals (one tall, two short) growing from a small rock base, sharp clean
+facets that catch the light; 5 a round-bellied flask with a short neck and a stopper, half full of liquid mercury that mirrors the
+light, one round droplet beside it; 6 a small pile of rough, powdery crystals, one thin curl of smoke rising from it
 ```
 
 | # | File |
 |---|---|
-| 1 | `icon_action_move` |
-| 2 | `icon_action_hero` |
-| 3 | `icon_action_end-turn` |
-| 4 | `icon_action_spell-book` |
-| 5 | `icon_action_dig` |
-| 6 | `icon_action_level` |
+| 1 | `icon_resource_gold` |
+| 2 | `icon_resource_lumber` |
+| 3 | `icon_resource_ore` |
+| 4 | `icon_resource_crystal` |
+| 5 | `icon_resource_mercury` |
+| 6 | `icon_resource_sulfur` |
 
-Move walks the selected hero along its route; there is no Next hero button (Tab), and the hero screen opens from the grid and the hero
-card's portrait.
+## Buttons
 
-### 16 · Adventure map: kingdom (2 × 2) — the action panel, kingdom overview
-
-**Prompt** · 1024 × 1024 · negative `NEG-ALU-MECH`
-
-```text
-Game UI icon sheet of aluminium glyphs in a realistic painterly dark-fantasy style: each icon one bold symbol seen flat from the front,
-a solid shape cast in aluminium, light satin metal with a fine grainy bead-blasted surface texture, faint brushed lines, fine scratches,
-small dents and worn edges catching the light, a soft bevel and a few fine engraved lines for detail. Pale aluminium palette: light
-silvery grey faces with a soft matte sheen, near-white on the bevels and raised edges, soft cool grey only in the recesses and engraved
-lines; reflections soft and diffuse, low contrast, the metal reads pale and light overall, never dark, never mirror-bright. One metal
-only, cool neutral greys, no other colour, no glow unless a cell names a soft white one. Light from the top left, a thick near-black
-outline around each subject and a thin white edge just inside it so it reads on dark and on light ground, no cast shadow, no background.
-Simple, solid forms with the same weight and amount of detail on every icon, no thin lines, readable at 24 px. Not a photograph, not a
-plastic CGI render, not a cartoon, no pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own
-equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another
-cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row
-left to right, then bottom row: 1 a small castle seen from the front: three towers with conical roofs, a tiny flag on the middle one; 2
-balance scales seen from the front, mirror-symmetric frame, the beam level, coins in the left pan and a crystal in the right; 3 a hooded
-mask with empty eye holes, a curved dagger crossed behind it; 4 a rolled scroll tied with a cord, a round wax seal hanging from the cord
-```
-
-| # | File |
-|---|---|
-| 1 | `icon_action_kingdom` |
-| 2 | `icon_action_marketplace` |
-| 3 | `icon_action_thieves-guild` |
-| 4 | `icon_action_quest-log` |
-
-### 30 · Adventure HUD: town marks and levels (2 × 2) — the town list, the minimap's level caption
-
-**Prompt** · 1024 × 1024 · negative `NEG-ALU`
-
-```text
-Game UI icon sheet of aluminium glyphs in a realistic painterly dark-fantasy style: each icon one bold symbol seen flat from the front,
-a solid shape cast in aluminium, light satin metal with a fine grainy bead-blasted surface texture, faint brushed lines, fine scratches,
-small dents and worn edges catching the light, a soft bevel and a few fine engraved lines for detail. Pale aluminium palette: light
-silvery grey faces with a soft matte sheen, near-white on the bevels and raised edges, soft cool grey only in the recesses and engraved
-lines; reflections soft and diffuse, low contrast, the metal reads pale and light overall, never dark, never mirror-bright. One metal
-only, cool neutral greys, no other colour, no glow unless a cell names a soft white one. Light from the top left, a thick near-black
-outline around each subject and a thin white edge just inside it so it reads on dark and on light ground, no cast shadow, no background.
-Simple, solid forms with the same weight and amount of detail on every icon, no thin lines, readable at 24 px. Not a photograph, not a
-plastic CGI render, not a cartoon, no pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own
-equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another
-cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row
-left to right, then bottom row: 1 a mason's hammer laid diagonally over a squared building stone; 2 a small stone keep seen from the
-front, a laurel wreath hanging on its gate; 3 a low hill under a small sun with short rays; 4 a cave arch in rock with three stalactites
-hanging from its top, a small crystal inside
-```
-
-| # | File |
-|---|---|
-| 1 | `icon_town_can-build` |
-| 2 | `icon_town_fully-built` |
-| 3 | `icon_level_surface` |
-| 4 | `icon_level_underground` |
-
-The town list shows `icon_town_can-build` lit when the town can build today and dimmed (the game darkens it) when it built today;
-`icon_town_fully-built` replaces it when nothing is left to build. The level caption under the minimap shows the level's icon beside its
-name.
-
-### 32 · Adventure map: route end markers (2 × 3) — the marker at the end of a hero's route
-
-**Prompt** · 1536 × 1024 · negative `NEG-ALU`
-
-```text
-Game UI icon sheet of aluminium glyphs in a realistic painterly dark-fantasy style: each icon one bold symbol seen flat from the front,
-a solid shape cast in aluminium, light satin metal with a fine grainy bead-blasted surface texture, faint brushed lines, fine scratches,
-small dents and worn edges catching the light, a soft bevel and a few fine engraved lines for detail. Pale aluminium palette: light
-silvery grey faces with a soft matte sheen, near-white on the bevels and raised edges, soft cool grey only in the recesses and engraved
-lines; reflections soft and diffuse, low contrast, the metal reads pale and light overall, never dark, never mirror-bright. One metal
-only, cool neutral greys, no other colour, no glow unless a cell names a soft white one. Light from the top left, a thick near-black
-outline around each subject and a thin white edge just inside it so it reads on dark and on light ground, no cast shadow, no background.
-Simple, solid forms with the same weight and amount of detail on every icon, no thin lines, readable at 24 px. Not a photograph, not a
-plastic CGI render, not a cartoon, no pixel art. 6 separate icons arranged in a grid of 3 columns and 2 rows, each alone in its own
-equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another
-cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row
-left to right, then bottom row: 1 two short swords crossed point up; 2 an open hand seen from the front, palm out in greeting; 3 an open
-hand seen from above reaching down toward a single coin; 4 a small town gate seen from the front, an open arch between two towers; 5 two
-gauntlets clasped in a handshake; 6 a second take of cell 3
-```
-
-| # | File |
-|---|---|
-| 1 | `icon_route_attack` |
-| 2 | `icon_route_visit` |
-| 3 | `icon_route_pick-up` |
-| 4 | `icon_route_enter-town` |
-| 5 | `icon_route_meet-hero` |
-
-The marker at a route's end shows the icon of what the hero does there, as the adventure cursor decides it (`AdventureCursors`):
-attack, visit, enter a town, meet an own hero; picking up (a resource, an artifact, a chest) gets its own. A plain move shows no icon,
-only the bigger marker.
-
-### 17 · Battle: unit actions (2 × 3) — the battle bar, the cursor
-
-**Prompt** · 1536 × 1024 · negative `NEG-ALU`
-
-```text
-Game UI icon sheet of aluminium glyphs in a realistic painterly dark-fantasy style: each icon one bold symbol seen flat from the front,
-a solid shape cast in aluminium, light satin metal with a fine grainy bead-blasted surface texture, faint brushed lines, fine scratches,
-small dents and worn edges catching the light, a soft bevel and a few fine engraved lines for detail. Pale aluminium palette: light
-silvery grey faces with a soft matte sheen, near-white on the bevels and raised edges, soft cool grey only in the recesses and engraved
-lines; reflections soft and diffuse, low contrast, the metal reads pale and light overall, never dark, never mirror-bright. One metal
-only, cool neutral greys, no other colour, no glow unless a cell names a soft white one. Light from the top left, a thick near-black
-outline around each subject and a thin white edge just inside it so it reads on dark and on light ground, no cast shadow, no background.
-Simple, solid forms with the same weight and amount of detail on every icon, no thin lines, readable at 24 px. Not a photograph, not a
-plastic CGI render, not a cartoon, no pixel art. 6 separate icons arranged in a grid of 3 columns and 2 rows, each alone in its own
-equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another
-cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row
-left to right, then bottom row: 1 a sword striking down diagonally from the top right, a short motion arc behind the blade; 2 one arrow
-in flight from left to right, rising slightly, three speed lines behind its feathers; 3 an open hand palm up under a small floating open
-spell book, a four-rayed spark rising from the pages; 4 a raised round shield seen from the front, a small spark on its upper rim; 5 an
-hourglass lying on its side, sand resting in both bulbs; 6 a curved war horn with a strap, three curved sound waves coming from its
-mouth
-```
-
-| # | File |
-|---|---|
-| 1 | `icon_battle_melee` |
-| 2 | `icon_battle_shoot` |
-| 3 | `icon_battle_cast` |
-| 4 | `icon_battle_defend` |
-| 5 | `icon_battle_wait` |
-| 6 | `icon_battle_warcry` |
-
-### 18 · Battle: commands (2 × 2)
-
-**Prompt** · 1024 × 1024 · negative `NEG-ALU`
-
-```text
-Game UI icon sheet of aluminium glyphs in a realistic painterly dark-fantasy style: each icon one bold symbol seen flat from the front,
-a solid shape cast in aluminium, light satin metal with a fine grainy bead-blasted surface texture, faint brushed lines, fine scratches,
-small dents and worn edges catching the light, a soft bevel and a few fine engraved lines for detail. Pale aluminium palette: light
-silvery grey faces with a soft matte sheen, near-white on the bevels and raised edges, soft cool grey only in the recesses and engraved
-lines; reflections soft and diffuse, low contrast, the metal reads pale and light overall, never dark, never mirror-bright. One metal
-only, cool neutral greys, no other colour, no glow unless a cell names a soft white one. Light from the top left, a thick near-black
-outline around each subject and a thin white edge just inside it so it reads on dark and on light ground, no cast shadow, no background.
-Simple, solid forms with the same weight and amount of detail on every icon, no thin lines, readable at 24 px. Not a photograph, not a
-plastic CGI render, not a cartoon, no pixel art. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own
-equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another
-cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row
-left to right, then bottom row: 1 a tattered flag on a broken spear shaft, leaning to the left; 2 a sword laid flat across two open,
-upturned hands, offered forward; 3 two swords crossed in an X, a lightning bolt running down between them; 4 two swords crossed in an X,
-a small cogwheel where they cross
-```
-
-| # | File |
-|---|---|
-| 1 | `icon_battle_retreat` |
-| 2 | `icon_battle_surrender` |
-| 3 | `icon_battle_quick-combat` |
-| 4 | `icon_battle_auto-combat` |
-
-## Tier C · Plain
-
-The symbols are tier B's aluminium, only simpler; the theme tints them for hover, pressed and disabled.
+The plain tier's symbols: tier B's aluminium, only simpler; the theme tints them for hover, pressed and disabled.
 
 ### 19 · Confirm (2 × 2)
 
@@ -868,8 +880,8 @@ and 2 rows, each alone in its own equal square cell, centred with about 10 % emp
 light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background,
 PNG with alpha. The icons, top row left to right, then bottom row: 1 a closed book seen from the front with a ribbon bookmark hanging
 below it; 2 an open book seen from the front, pages fanned; 3 a cogwheel with eight square teeth and a round hole in the middle; 4 a
-closed padlock, the shackle down in the body; 5 the same padlock open, the shackle raised and turned aside; 6 three thick horizontal
-bars of equal length, evenly spaced
+closed padlock, the shackle down in the body; 5 the same padlock open, the shackle raised and turned aside; 6 a second take of
+cell 3
 ```
 
 | # | File |
@@ -879,36 +891,44 @@ bars of equal length, evenly spaced
 | 3 | `icon_button_settings` |
 | 4 | `icon_button_lock` |
 | 5 | `icon_button_unlock` |
-| 6 | `icon_action_menu` |
 
-### 31 · Replay bar (2 × 3)
+## New game
+
+### 29 · Difficulty (2 × 3) — the new-game screen's difficulty row, the victory screen, the leaderboard (ADR-225)
+
+Five chess pieces, from humble to grand, so the row reads as a climb at a glance: **aluminium from rough and matte to bright and finely finished**, each piece
+standing upright on its own round base, **the same height and lighting** in every cell, three-quarter view facing left, each finer than
+the last.
+Generate the five on one sheet so they match.
 
 **Prompt** · 1536 × 1024 · negative `NEG-ALU`
 
 ```text
-Game UI button symbol sheet of aluminium glyphs in a realistic painterly dark-fantasy style: each symbol one bold, simple shape seen
-flat from the front, solid cast aluminium, light satin metal with a fine grainy bead-blasted texture and a soft bevel, light silvery
-grey faces, near-white on its upper left edges and soft cool grey on its lower right, soft low-contrast reflections, no other colour, no
-glow, a thick near-black outline and a thin white edge just inside it, no engraving, no ornament, the same stroke weight on every
-symbol, readable at 20 px. Not a photograph, not a plastic CGI render, no pixel art. 6 separate icons arranged in a grid of 3 columns
-and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same
-light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background,
-PNG with alpha. The icons, top row left to right, then bottom row: 1 two thick upright bars of equal height side by side; 2 a solid
-triangle pointing right against one thick upright bar; 3 two solid triangles pointing right, the second touching the first; 4 a solid
-triangle pointing right toward a small flag on a pole; 5 a gauntlet seen from the side gripping an upright pole; 6 a second take of cell
-5
+Game UI icon sheet of small aluminium objects in a realistic painterly dark-fantasy style: each icon one simple object made as a real
+cast and machined aluminium object, light satin metal with a fine grainy bead-blasted surface texture, faint brushed lines, fine
+scratches, small dents and worn edges catching the light, gently bevelled edges and a little engraved detail, true proportions and
+believable construction. Pale aluminium palette: light silvery grey faces with a soft matte sheen, near-white on the bevels and raised
+edges, soft cool grey only in the recesses and engraved lines; reflections soft and diffuse, low contrast, the metal reads pale and
+light overall, never dark, never mirror-bright. One metal only, cool neutral greys, no other colour, no glow. Light from the top left, a
+thick near-black outline around each subject and a thin white edge just inside it so it reads on dark and on light ground, no cast
+shadow, no background. Three-quarter view slightly from above unless a cell says otherwise; each subject a clear, compact silhouette
+that reads at 24 px. Not a photograph, not a plastic CGI render, not a cartoon, no pixel art. 6 separate icons arranged in a grid of 3
+columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the
+same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent
+background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a pawn of rough bead-blasted aluminium, a few nicks in
+the base; 2 a knight of brushed aluminium, a horse's head with a carved mane; 3 a bishop of satin aluminium, a thin engraved band round
+its waist; 4 a rook of fine satin aluminium, its battlements and the ring at its base finely engraved; 5 a queen of the brightest satin
+aluminium, a crown set with one clear faceted gem, engraved rings at the waist and base; 6 a second take of the queen
 ```
 
 | # | File |
 |---|---|
-| 1 | `icon_button_pause` |
-| 2 | `icon_button_next-turn` |
-| 3 | `icon_button_next-day` |
-| 4 | `icon_button_skip-to-result` |
-| 5 | `icon_button_take-over` |
-
-The replay bar's one Play/Pause toggle shows `icon_button_pause` while playing and the play icon while paused; `icon_button_take-over` is
-"Play from here".
+| 1 | `icon_difficulty_easy` |
+| 2 | `icon_difficulty_normal` |
+| 3 | `icon_difficulty_hard` |
+| 4 | `icon_difficulty_expert` |
+| 5 | `icon_difficulty_master` |
+| 6 | spare |
 
 ## Heraldry
 

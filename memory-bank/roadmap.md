@@ -287,8 +287,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       - [x] The bottom row (hero card, army strip, 2×5 action grid, End turn's hourglass and question), the route's day colours and tags
       - [x] The map's hover card, the question card with its picture, notices with Continue, the dim behind questions and the pause card, the chat by the town list
       - [x] The replay bar's day slider; the army strip cut with a fade on narrow screens; the UI scale on the Layout tab, applied
-- [x] Step 4: checked at every target size, UI scale and mirror (the scale lowered on small windows; open: the army strip on under
-      ~1,000 px of UI width)
+- [x] Step 4: checked at every target size, UI scale and mirror (the scale lowered on small windows; under ~1,000 px of UI width the
+      action buttons move up above the row and the army strip takes their place, ADR-315)
 - [ ] Step 5: the painted pieces (icon sheets 30–32 already cut into `textures/ui/icons/`)
       - [x] The HUD's frames drawn by a shader instead (ADR-310): panels, slots and buttons; the panel opacity on the Layout tab
       - [x] The same frames for every window, dialog, tooltip, card and button of the game; the rest of the theme in its grey (ADR-311)

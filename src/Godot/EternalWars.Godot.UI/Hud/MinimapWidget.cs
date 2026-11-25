@@ -34,8 +34,22 @@ public partial class MinimapWidget : Control
     /// <summary>How much of the other level's colour a cell shows with <see cref="GhostOtherLevel"/>.</summary>
     private const float GhostShare = AdventureMapView.GhostShare;
 
-    /// <summary>Size of one tile in pixels.</summary>
-    public float CellPixels { get; set; } = 6f;
+    /// <summary>Size of one tile in pixels; a change after <see cref="Bind"/> resizes the widget.</summary>
+    public float CellPixels
+    {
+        get => _cellPixels;
+        set
+        {
+            _cellPixels = value;
+            if (_context is not null)
+            {
+                CustomMinimumSize = new Vector2(_context.State.Map.Width, _context.State.Map.Height) * value;
+                QueueRedraw();
+            }
+        }
+    }
+
+    private float _cellPixels = 6f;
 
     public event Action<MapPosition>? TileClicked;
 
