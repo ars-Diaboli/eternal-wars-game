@@ -261,6 +261,16 @@ public static class UiIcons
         return button;
     }
 
+    /// <summary>
+    /// Makes <paramref name="button"/> label-less like an icon-only button, for one that draws its own picture (a town list entry): its text
+    /// becomes the label on the status bar.
+    /// </summary>
+    public static T WithoutText<T>(this T button) where T : Button
+    {
+        Label(button, button.Text);
+        return button;
+    }
+
     private static void Label(Button button, string label)
     {
         button.Text = "";

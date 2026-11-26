@@ -11,7 +11,8 @@ namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
 /// The town list (ADR-309, ADR-313): one entry per town of the listed player, a column growing with the towns in its own panel like the hero
-/// list's, no heading and no text (more towns than the room holds scroll with the wheel). An entry is the town's picture (its faction's crest until towns have pictures), the governor's portrait in the top
+/// list's, no heading and no text (more towns than the room holds scroll with the wheel). An entry is the town's picture filling the slot (<see cref="TownPictures"/>: a village's without a fort; the faction's crest while
+/// it has none), the governor's portrait in the top
 /// corner (none without one) and the build mark in the bottom one: the hammer lit while the town can build today and dimmed once it has, the
 /// keep with a laurel wreath when it is fully built. The name goes to the status bar on hover, the build state after it; no hover card.
 /// Clicking one centres the map on it and opens its town screen.
@@ -24,6 +25,9 @@ public partial class TownListPanel : BoxContainer
     private const int PictureSize = 52;
     private const int CornerSize = 24;
     private const int Inset = 3;
+
+    /// <summary>The town picture's margin inside the slot's rim.</summary>
+    private const int PictureInset = 2;
 
     private GameSession _session = null!;
     private Func<PlayerId> _listed = null!;
@@ -84,9 +88,26 @@ public partial class TownListPanel : BoxContainer
             TooltipText = governor is null ? buildState : $"{buildState} · governor {governor.Name}",
             FocusMode = FocusModeEnum.None,
         };
-        if (Heraldry.Crest(town.TownType, PictureSize) is { } picture)
+        if (TownPictures.Of(town.TownType, village: town.Level(BuiltInBuildings.Fort) == 0) is { } view)
         {
-            button.WithIcon(picture, PictureSize);
+            button.WithoutText();
+            button.AddChild(new TextureRect
+            {
+                Texture = view,
+                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+                StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered, // filling the slot, as the army strip's creatures
+                MouseFilter = MouseFilterEnum.Ignore,
+                AnchorRight = 1,
+                AnchorBottom = 1,
+                OffsetLeft = PictureInset,
+                OffsetTop = PictureInset,
+                OffsetRight = -PictureInset,
+                OffsetBottom = -PictureInset,
+            });
+        }
+        else if (Heraldry.Crest(town.TownType, PictureSize) is { } crest)
+        {
+            button.WithIcon(crest, PictureSize);
         }
 
         button.CustomMinimumSize = EntrySize;

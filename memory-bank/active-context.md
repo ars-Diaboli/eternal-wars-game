@@ -9,6 +9,10 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- The town pictures: the prompts moved to [town-picture-prompts.md](../docs/content/prompts/town-picture-prompts.md), reshaped for
+  the town list's 130 x 64 entry (wide, full-bleed, the landmark centred, the governor's and build mark's corners left to sky and
+  ground; `NEG-TOWNPIC`); the five sheets generated and cut into `textures/ui/towns/` (`town_<town>[_village].png`, 260 x 128). The
+  town list fills each entry with its picture (`TownPictures`; a town without a fort shows its village, the crest while one is missing).
 - The battle HUD plan is done ([battle-hud-plan.md](../docs/papers/battle-hud-plan.md), ADR-314 implemented): presentation.md has a
   battle screen section stating the battle HUD's rules once (plates, bottom row, stack panel, timeline, action grid, spell book, combat
   settings, log, status bar and estimate, deployment, result, narrow form, replay viewer); the map's parts link to it.

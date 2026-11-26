@@ -194,7 +194,7 @@ a second Escape leaves the town.
   - quick buttons for the main windows (icon only, labels and hotkeys on the status bar, ADR-204);
   - the close "×" (ADR-225).
 - **Bottom bar**: the HoMM layout, kept because it works.
-  - The town's portrait (the town icon from [hero-town-icon-prompts.md](../content/prompts/hero-town-icon-prompts.md)).
+  - The town's portrait (the town picture from [town-picture-prompts.md](../content/prompts/town-picture-prompts.md)).
   - Two army rows of seven slots, each led by a hero portrait (empty frame when there is no hero).
   - Next to the rows: Split, Upgrade all, Swap and Dismiss.
   - On the right: the daily income, the week's growth (hover for each line's breakdown: base, fort, growth building, week event,

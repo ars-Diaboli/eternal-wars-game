@@ -38,7 +38,8 @@ The game design document, split by mechanic. Start at the overview.
 | [spell-icon-prompts.md](content/prompts/spell-icon-prompts.md) | Image-model prompts for the icons of the 36 most common spells, one sheet a school |
 | [creature-icon-prompts.md](content/prompts/creature-icon-prompts.md) | Image-model prompts for the portraits of all creatures, one file a faction in `creature-icons/`, and their backdrops |
 | [editor-icon-prompts.md](content/prompts/editor-icon-prompts.md) | Image-model prompts for the map and template editor icons: tools, commands, panel tabs, tool options, template zones and connections |
-| [hero-town-icon-prompts.md](content/prompts/hero-town-icon-prompts.md) | Image-model prompts for the 128 hero portraits and the town icons |
+| [hero-town-icon-prompts.md](content/prompts/hero-town-icon-prompts.md) | Image-model prompts for the hero portraits |
+| [town-picture-prompts.md](content/prompts/town-picture-prompts.md) | Image-model prompts for the town pictures of the adventure map's town list, walled and as villages |
 | [ui-element-prompts.md](content/prompts/ui-element-prompts.md) | Image-model prompts for the screen backgrounds; the frames, buttons, slots and bars are drawn in code |
 | [question-picture-prompts.md](content/prompts/question-picture-prompts.md) | Image-model prompts for the pictures on the adventure map's question cards, one for each kind of question |
 | [puzzle-map-prompts.md](content/prompts/puzzle-map-prompts.md) | Image-model prompts for the puzzle map's faction pictures |

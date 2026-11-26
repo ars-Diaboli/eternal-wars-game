@@ -1,9 +1,8 @@
-# Hero and town icon prompts (for an image-generating model)
+# Hero portrait prompts (for an image-generating model)
 
-Prompts for the **hero portraits** (the hero list, the hero screen, the tavern's cards, the exchange screen, the information windows)
-and the **town icons** (the town list, the kingdom overview, the town screen's title). One portrait for each of the 176 heroes in
-`heroes.csv` ([hero-roster.md](../hero-roster.md)): the 128 standard heroes and the 48 campaign heroes; one icon for each of the ten
-town types. Generated as **sheets of 4 (2 × 2)** like the icons ([icon-prompts.md](icon-prompts.md)), so the four heroes of a sheet
+Prompts for the **hero portraits** (the hero list, the hero screen, the tavern's cards, the exchange screen, the information windows).
+One portrait for each of the 176 heroes in `heroes.csv` ([hero-roster.md](../hero-roster.md)): the 128 standard heroes and the 48
+campaign heroes. The town pictures are in [town-picture-prompts.md](town-picture-prompts.md). Generated as **sheets of 4 (2 × 2)** like the icons ([icon-prompts.md](icon-prompts.md)), so the four heroes of a sheet
 come out matching. The designs are original.
 
 ## Use a prompt
@@ -16,7 +15,7 @@ sheets consistent with each other.
 
 ## Shared wording
 
-The style paragraph ("Game hero portrait sheet in a realistic…" or "Game town icon sheet in a…"), the town look ("Haven heroes: …"),
+The style paragraph ("Game hero portrait sheet in a realistic…"), the town look ("Haven heroes: …"),
 and the grid sentence ("4 separate icons arranged in a grid…") are repeated word for word in each prompt so each is ready to paste. A
 change to one of them must be made in every prompt that has it: search for its first words.
 
@@ -37,24 +36,12 @@ censers, weapons in hand, half body, bust with wide shoulders, every head turned
 sky, face seen from below, short-haired women, women with shaved heads
 ```
 
-**`NEG-TOWNICON`** (every town sheet):
-
-```text
-text, letters, numbers, labels, frames, borders, grid lines, cell dividers, scenery, ground shadow, photograph, plastic CGI render,
-pixel art, blurry, cropped subject, subjects touching or overlapping, two subjects in one cell, cartoon, comic book, anime, manga,
-chibi, cute, toy-like, childish, cel shading, flat colours, flat shading, vector art, clip art, sticker, emoji, mobile game icon,
-casual game art, thick black outlines, ink line art, exaggerated proportions, oversized head, big eyes, rounded bubbly shapes, glossy
-plastic, smooth airbrushed gradients, oversaturated colours, candy colours, square ground tile, landscape, horizon, people, banners in
-colour, text, front view, toy houses, board-game piece, another game's town
-```
-
 ## Output for every icon
 
 - **Sheet**: 2 × 2 at 1024 × 1024, every cell 512 × 512, transparent background; cut as the icons.
-- **File**: hero portraits `icon_hero_<hero id>.png` with the id from `heroes.csv` (`icon_hero_haven.aldric.png`); town icons
-  `icon_town_<town>.png` and `icon_town_<town>_village.png` (a town without a fort, *proposal*). 32-bit RGBA, 512 × 512.
+- **File**: `icon_hero_<hero id>.png` with the id from `heroes.csv` (`icon_hero_haven.aldric.png`). 32-bit RGBA, 512 × 512.
 - **Shape**: a portrait reads at 48 px (the hero list): a close crop from the top of the head to the collarbones, the face the
-  largest shape and the shoulders only at the bottom edge; nothing held in the hands. A town icon reads at 32 px.
+  largest shape and the shoulders only at the bottom edge; nothing held in the hands.
 - **Facing**: each cell names its pose, one of each kind per sheet: towards the viewer, turned left, turned right, the chin
   lifted a little (never tipped back, the whole face seen); the light stays top left. The game does not mirror portraits.
 - **Backdrop**: a portrait is transparent; the game puts its town's creature backdrop behind it
@@ -1772,144 +1759,11 @@ eyes, ash-grey skin with black scales across the throat, long straight black hai
 | C7 | `icon_hero_dragon-utopia.ruvak` |
 | C8 | `icon_hero_dragon-utopia.morvayne` |
 
-## Towns
-
-Each sheet holds two towns: cells 1–2 the towns with their walls (`icon_town_<town>`), cells 3–4 the same towns as villages without
-walls (`icon_town_<town>_village`). The subjects follow the town models ([town-model-prompts.md](town-model-prompts.md)).
-
-### T1 · haven, sylvan
-
-**Prompt** · 1024 × 1024 · negative `NEG-TOWNICON`
-
-```text
-Game town icon sheet in a realistic painterly dark-fantasy style, like a small diorama painted in oils: each icon a whole small fantasy
-town seen from above at a steep angle like on a strategy map, standing on a small round patch of its own ground that fades out at the
-edge, one tall landmark toward the back. Believable architecture and scale (doors, windows, roof tiles, stonework, timber), weathered
-materials with grime and moss, naturalistic light from the top left with soft shadows, muted natural colours, a strong silhouette
-without drawn outlines. Not a photograph, not a plastic CGI render, no pixel art. 4 separate icons arranged in a grid of 2 columns and
-2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
-nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
-with alpha. The icons, top row left to right, then bottom row: 1 a grey stone castle on a rocky rise, round towers with dark conical
-slate roofs, a white banner with a gold sun on the keep; 2 a ring of colossal living trees forming the walls, halls in
-their crowns, one vast half-bare ancient tree at the back, faint blue-teal mist; 3 the same town as the one above it, as a small village: a few houses around
-the bare foundation of its landmark, no walls; 4 the same town as the one above it, as a small village: a few houses around the bare
-foundation of its landmark, no walls
-```
-
-| # | File |
-|---|---|
-| 1 | `icon_town_haven` |
-| 2 | `icon_town_sylvan` |
-| 3 | `icon_town_haven_village` |
-| 4 | `icon_town_sylvan_village` |
-
-### T2 · academy, necropolis
-
-**Prompt** · 1024 × 1024 · negative `NEG-TOWNICON`
-
-```text
-Game town icon sheet in a realistic painterly dark-fantasy style, like a small diorama painted in oils: each icon a whole small fantasy
-town seen from above at a steep angle like on a strategy map, standing on a small round patch of its own ground that fades out at the
-edge, one tall landmark toward the back. Believable architecture and scale (doors, windows, roof tiles, stonework, timber), weathered
-materials with grime and moss, naturalistic light from the top left with soft shadows, muted natural colours, a strong silhouette
-without drawn outlines. Not a photograph, not a plastic CGI render, no pixel art. 4 separate icons arranged in a grid of 2 columns and
-2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
-nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
-with alpha. The icons, top row left to right, then bottom row: 1 a frozen citadel of blue-grey granite with verdigris domes, a domed
-observatory holding a bronze orrery of rings; 2 a dark keep among black ruins on a grey plain, a tall straight black obelisk spire with
-a cold cyan light at its tip; 3 the same town as the one above it, as a small village: a few houses around the bare foundation of its landmark, no
-walls; 4 the same town as the one above it, as a small village: a few houses around the bare foundation of its landmark, no walls
-```
-
-| # | File |
-|---|---|
-| 1 | `icon_town_academy` |
-| 2 | `icon_town_necropolis` |
-| 3 | `icon_town_academy_village` |
-| 4 | `icon_town_necropolis_village` |
-
-### T3 · inferno, dungeon
-
-**Prompt** · 1024 × 1024 · negative `NEG-TOWNICON`
-
-```text
-Game town icon sheet in a realistic painterly dark-fantasy style, like a small diorama painted in oils: each icon a whole small fantasy
-town seen from above at a steep angle like on a strategy map, standing on a small round patch of its own ground that fades out at the
-edge, one tall landmark toward the back. Believable architecture and scale (doors, windows, roof tiles, stonework, timber), weathered
-materials with grime and moss, naturalistic light from the top left with soft shadows, muted natural colours, a strong silhouette
-without drawn outlines. Not a photograph, not a plastic CGI render, no pixel art. 4 separate icons arranged in a grid of 2 columns and
-2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
-nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
-with alpha. The icons, top row left to right, then bottom row: 1 a jagged fortress of black slag with glowing lava cracks,
-sickle-shaped spires, an altar-furnace venting smoke; 2 a gothic black citadel of many spires on a cavern ledge under hanging stalactites, a
-tall spire of glowing violet crystal; 3 the same town as the one above it, as a small village: a few houses around the bare foundation of
-its landmark, no walls; 4 the same town as the one above it, as a small village: a few houses around the bare foundation of its
-landmark, no walls
-```
-
-| # | File |
-|---|---|
-| 1 | `icon_town_inferno` |
-| 2 | `icon_town_dungeon` |
-| 3 | `icon_town_inferno_village` |
-| 4 | `icon_town_dungeon_village` |
-
-### T4 · stronghold, swamp-bestiary
-
-**Prompt** · 1024 × 1024 · negative `NEG-TOWNICON`
-
-```text
-Game town icon sheet in a realistic painterly dark-fantasy style, like a small diorama painted in oils: each icon a whole small fantasy
-town seen from above at a steep angle like on a strategy map, standing on a small round patch of its own ground that fades out at the
-edge, one tall landmark toward the back. Believable architecture and scale (doors, windows, roof tiles, stonework, timber), weathered
-materials with grime and moss, naturalistic light from the top left with soft shadows, muted natural colours, a strong silhouette
-without drawn outlines. Not a photograph, not a plastic CGI render, no pixel art. 4 separate icons arranged in a grid of 2 columns and
-2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
-nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
-with alpha. The icons, top row left to right, then bottom row: 1 a log palisade around hide yurts and tents, a great lodge under a huge
-horned beast skull; 2 half-sunken tilted stone ruins with stilt huts, a rampart of giant shells, a tall totem of coiled beasts; 3 the
-same town as the one above it, as a small village: a few houses around the bare foundation of its landmark, no walls; 4 the same town
-as the one above it, as a small village: a few houses around the bare foundation of its landmark, no walls
-```
-
-| # | File |
-|---|---|
-| 1 | `icon_town_stronghold` |
-| 2 | `icon_town_swamp-bestiary` |
-| 3 | `icon_town_stronghold_village` |
-| 4 | `icon_town_swamp-bestiary_village` |
-
-### T5 · conflux, dragon-utopia
-
-**Prompt** · 1024 × 1024 · negative `NEG-TOWNICON`
-
-```text
-Game town icon sheet in a realistic painterly dark-fantasy style, like a small diorama painted in oils: each icon a whole small fantasy
-town seen from above at a steep angle like on a strategy map, standing on a small round patch of its own ground that fades out at the
-edge, one tall landmark toward the back. Believable architecture and scale (doors, windows, roof tiles, stonework, timber), weathered
-materials with grime and moss, naturalistic light from the top left with soft shadows, muted natural colours, a strong silhouette
-without drawn outlines. Not a photograph, not a plastic CGI render, no pixel art. 4 separate icons arranged in a grid of 2 columns and
-2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light;
-nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG
-with alpha. The icons, top row left to right, then bottom row: 1 a stepped round altar of weathered stone ringed by pillars, a
-glowing violet orb with floating stones above it, four small domed elemental shrines; 2 a terraced eyrie cut into a dark granite crag,
-huge cave mouths, an outcrop at its top shaped like a dragon's head; 3 the same town as the one above it, as a small village: a few houses around the bare foundation of its landmark, no
-walls; 4 the same town as the one above it, as a small village: a few houses around the bare foundation of its landmark, no walls
-```
-
-| # | File |
-|---|---|
-| 1 | `icon_town_conflux` |
-| 2 | `icon_town_dragon-utopia` |
-| 3 | `icon_town_conflux_village` |
-| 4 | `icon_town_dragon-utopia_village` |
-
 ## After generating
 
 1. Put a town's sixteen portraits side by side at 48 px: each face is distinct, the town's look is shared.
 2. Check that each portrait faces right and that the face, not the gear, is the largest shape.
-3. Put the town icons side by side at 32 px: each town is named at a glance, walled and village apart.
-4. Check for a cartoon look (thick outlines, flat colour fills, bubbly shapes, plastic shine, doll-like faces) and regenerate such a
+3. Check for a cartoon look (thick outlines, flat colour fills, bubbly shapes, plastic shine, doll-like faces) and regenerate such a
    sheet.
-5. Put the files in `src/Godot/EternalWars.Godot.Assets/textures/ui/heroes/` and `textures/ui/towns/` *(proposal)* and add a line to each
-   folder's `CREDITS.md` with the tool and its licence terms.
+4. Put the files in `src/Godot/EternalWars.Godot.Assets/textures/ui/heroes/` and add a line to its `CREDITS.md` with the tool and its
+   licence terms.

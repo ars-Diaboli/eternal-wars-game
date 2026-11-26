@@ -108,7 +108,7 @@ creatures and buildings, heraldic player colours, iconic map objects).
   the edge holds scroll with the wheel. In a computer's turn the lists and the resources stay the person's, never the computer's.
 - **Town list** (ADR-309, ADR-313): its own panel on the minimap's side, the hero list's twin: down on the bottom row (above End turn
   and the actions) and growing up to the minimap's panel, one entry per town and growing with them, no heading and no text; more towns
-  than the room holds scroll with the wheel. An entry is the town's picture (its faction's crest for now), the governor's portrait in the top corner and the build mark in the
+  than the room holds scroll with the wheel. An entry is the town's picture filling it, a wide painted view of its town type, walled or, without a fort, a village (the faction's crest while a picture is missing), the governor's portrait in the top corner and the build mark in the
   bottom one: a hammer on a stone, lit while the town can build today and dimmed once it has; a keep with a laurel wreath instead when
   nothing is left to build: every building at its last level and every dwelling line built out or closed by the 7-of-9 rule (ADR-030),
   the Grail building and a second Capitol not counted. The name and the build state go to the status bar on hover; a click centres the
