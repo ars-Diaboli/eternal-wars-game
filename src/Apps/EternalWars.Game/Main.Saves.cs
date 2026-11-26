@@ -54,6 +54,12 @@ public partial class Main
             _context.ShowGrid = settings.ShowGrid;
         }
 
+        if (IsInstanceValid(_battle))
+        {
+            _battle.ShowGrid = settings.BattleGrid;
+            _battle.ShowReach = settings.BattleReach;
+        }
+
         KeepSettings();
     }
 

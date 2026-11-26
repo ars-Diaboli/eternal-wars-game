@@ -299,7 +299,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 
 ### Battle HUD restyle (ADR-314; [plan](../docs/papers/battle-hud-plan.md#plan))
 - [x] Step 1: the owner's decisions recorded (ADR-314, 2026-11-26)
-- [ ] Step 2: Core: the attack estimate (kills as a range, the return blow named), the battle's hotkey table, the spell book's rows with
+- [x] Step 2: Core: the attack estimate (kills as a range, the return blow named), the battle's hotkey table, the spell book's rows with
       the warcries, the opponent hero by Scouting, the combat settings, the stack panel and the result's summary
 - [ ] Step 3: the HUD rebuilt in the bevel frames, the 4 × 2 action grid with Combat settings and Menu
 - [ ] Step 4: checked at every target size and UI scale; battle smokes, a LAN battle, the budget

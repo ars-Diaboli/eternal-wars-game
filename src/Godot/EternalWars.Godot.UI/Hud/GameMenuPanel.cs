@@ -33,6 +33,8 @@ public partial class GameMenuPanel : CenterContainer
     private readonly CheckBox _detailed = new() { Text = "Detailed tooltips (formulas and numbers in the right-click windows)" };
     private readonly OptionButton _fog = Choices("Dark (starry void)", "Clouds");
     private readonly CheckBox _grid = new() { Text = "Show the tile grid on the map" };
+    private readonly CheckBox _battleGrid = new() { Text = "Show the grid in battle" };
+    private readonly CheckBox _battleReach = new() { Text = "Light the cells the active stack can reach in battle" };
     private readonly OptionButton _window = WithTooltip(Choices("Windowed", "Fullscreen"), "Alt+Enter switches it too");
     private InterfaceSettings _interface = InterfaceSettings.Default;
     private readonly TabContainer _tabs = new() { CustomMinimumSize = new Vector2(580, 340), UseHiddenTabsForMinSize = true }; // the same size on every tab
@@ -146,6 +148,10 @@ public partial class GameMenuPanel : CenterContainer
             : _speeds with { ComputerHeroes = (AnimationSpeed)index, ShowComputerHeroes = true });
         _battleSpeed.ItemSelected += index => ChangeSpeeds(_speeds with { Battle = (AnimationSpeed)index });
         ShowSpeeds(_speeds);
+        settings.AddChild(_battleGrid); // the combat settings (ADR-314), beside the battle's animation speed
+        _battleGrid.Toggled += on => ChangeInterface(_interface with { BattleGrid = on });
+        settings.AddChild(_battleReach);
+        _battleReach.Toggled += on => ChangeInterface(_interface with { BattleReach = on });
         settings.AddChild(new HSeparator());
         settings.AddChild(_detailed);
         _detailed.Toggled += on => ChangeInterface(_interface with { DetailedTooltips = on });
@@ -265,6 +271,8 @@ public partial class GameMenuPanel : CenterContainer
         _detailed.SetPressedNoSignal(settings.DetailedTooltips);
         _fog.Selected = (int)settings.Fog;
         _grid.SetPressedNoSignal(settings.ShowGrid);
+        _battleGrid.SetPressedNoSignal(settings.BattleGrid);
+        _battleReach.SetPressedNoSignal(settings.BattleReach);
         _window.Selected = (int)settings.Window;
         _uiScale.Selected = Math.Max(0, InterfaceSettings.UiScales.ToList().IndexOf(settings.Normalized().UiScalePercent));
         _panelOpacity.Selected = Math.Max(0, InterfaceSettings.PanelOpacities.ToList().IndexOf(settings.Normalized().PanelOpacityPercent));

@@ -220,20 +220,23 @@ public partial class BattleHud : Control
             return;
         }
 
-        var c = unit.Creature;
-        var shots = !c.IsRanged ? string.Empty : battle.HasUnlimitedShots(unit) ? "  shots unlimited" : $"  shots {unit.ShotsLeft}";
-        if (unit.IsMachine)
+        // The stack panel's numbers and marks (ADR-314), as text until step 3 draws them as icons.
+        var panel = StackPanel.Of(battle, unit, _session.State.Spells);
+        var shots = panel.UnlimitedShots ? "  shots unlimited" : panel.Shots is { } left ? $"  shots {left}" : string.Empty;
+        if (panel.IsMachine)
         {
-            _info.Text = $"{c.Name} ({_view.SideName(unit.Side)}): war machine, health {unit.TopHealth}/{c.Health}" +
-                         (c.IsRanged ? $"\nAttack {c.Attack}  Damage {c.MinDamage}–{c.MaxDamage}  Initiative {battle.InitiativeOf(unit)}{shots}" : string.Empty);
+            _info.Text = $"{panel.Name} ({_view.SideName(panel.Side)}): war machine, health {panel.Health}/{panel.MaxHealth}" +
+                         (panel.Attack is { } attack ? $"\nAttack {attack}  Damage {panel.MinDamage}–{panel.MaxDamage}  Initiative {panel.Initiative}{shots}" : string.Empty);
             return;
         }
 
+        var c = unit.Creature;
         var capabilities = c.Capabilities.Count > 0 ? $"\n{string.Join(", ", c.Capabilities.Select(k => k.Kind))}" : string.Empty;
-        _info.Text = $"{c.Name} ×{unit.Count} ({_view.SideName(unit.Side)})\n" +
-                     $"Attack {c.Attack}  Defense {c.Defense}  Damage {c.MinDamage}–{c.MaxDamage}  Health {unit.TopHealth}/{c.Health}\n" +
-                     $"Speed {battle.SpeedOf(unit)}  Initiative {battle.InitiativeOf(unit)}{shots}  Morale {Signed(battle.MoraleOf(unit))}  Luck {Signed(battle.LuckOf(unit))}" +
-                     $"{(unit.IsDefending ? "  defending" : string.Empty)}{(battle.IsNative(unit) ? "  native terrain (+1 Attack, Defense, Speed)" : string.Empty)}{capabilities}";
+        var marks = panel.Marks.Count > 0 ? $"\n{string.Join("; ", panel.Marks.Select(m => m.Name))}" : string.Empty;
+        _info.Text = $"{panel.Name} ×{panel.Count} ({_view.SideName(panel.Side)})\n" +
+                     $"Attack {panel.Attack}  Defense {panel.Defense}  Damage {panel.MinDamage}–{panel.MaxDamage}  Health {panel.Health}/{panel.MaxHealth}\n" +
+                     $"Speed {panel.Speed}  Initiative {panel.Initiative}{shots}  Morale {(panel.Morale is { } morale ? Signed(morale) : "–")}  Luck {Signed(panel.Luck ?? 0)}" +
+                     $"{marks}{capabilities}";
 
         static string Signed(int value) => value > 0 ? $"+{value}" : value.ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
@@ -560,33 +563,23 @@ public partial class BattleHud : Control
     private void ShowResult(BattleEnded ended)
     {
         Refresh();
-        var lines = new List<string>
+        var summary = BattleSummary.Of(ended, _view.PlayedHere, _view.SideName); // the title for this screen, the reason, the losses (ADR-314)
+        var lines = new List<string> { summary.Reason, string.Empty };
+        foreach (var losses in summary.Losses)
         {
-            ended.Reason switch
-            {
-                BattleEndReason.Retreated => $"{_view.SideName(ended.Winner.Opponent())} retreated: {_view.SideName(ended.Winner)} wins.",
-                BattleEndReason.Surrendered => $"{_view.SideName(ended.Winner.Opponent())} surrendered: {_view.SideName(ended.Winner)} wins.",
-                _ => $"{_view.SideName(ended.Winner)} wins the battle.",
-            },
-            string.Empty,
-        };
-        foreach (var side in new[] { BattleSide.Attacker, BattleSide.Defender })
-        {
-            var lost = ended.Casualties.Where(c => c.Side == side)
-                .Select(c => $"{c.Lost} {CreatureName(c.Creature.Value)}")
-                .ToList();
-            lines.Add($"{_view.SideName(side)} lost: {(lost.Count > 0 ? string.Join(", ", lost) : "nothing")}");
+            var lost = losses.Lost.Select(c => $"{c.Lost} {CreatureName(c.Creature.Value)}").ToList();
+            lines.Add($"{losses.Name} lost: {(lost.Count > 0 ? string.Join(", ", lost) : "nothing")}");
         }
 
-        if (ended.Experience > 0)
+        if (summary.Experience > 0)
         {
             lines.Add(string.Empty);
-            lines.Add($"{_view.SideName(ended.Winner)} gains {ended.Experience} experience.");
+            lines.Add($"{_view.SideName(ended.Winner)} gains {summary.Experience} experience.");
         }
 
         _resultText.Text = string.Join('\n', lines);
         _result.Visible = true;
-        _title.Text = "Battle over";
+        _title.Text = summary.Title;
         _status.Text = string.Empty;
         _info.Text = string.Empty;
     }

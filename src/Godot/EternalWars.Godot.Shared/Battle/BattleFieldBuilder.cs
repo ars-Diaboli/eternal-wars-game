@@ -63,7 +63,7 @@ public sealed class BattleFieldBuilder(Node3D field)
         });
     }
 
-    public void Grid(int width, int height)
+    public MeshInstance3D Grid(int width, int height)
     {
         var mesh = new ImmediateMesh();
         mesh.SurfaceBegin(Mesh.PrimitiveType.Lines, Material(Look.Glass, new Color(1, 1, 1, 0.12f)));
@@ -81,7 +81,9 @@ public sealed class BattleFieldBuilder(Node3D field)
         }
 
         mesh.SurfaceEnd();
-        field.AddChild(new MeshInstance3D { Name = "Grid", Mesh = mesh, CastShadow = GeometryInstance3D.ShadowCastingSetting.Off });
+        var grid = new MeshInstance3D { Name = "Grid", Mesh = mesh, CastShadow = GeometryInstance3D.ShadowCastingSetting.Off };
+        field.AddChild(grid);
+        return grid;
     }
 
     /// <summary>A field zone (ADR-149) as a translucent block over its cells, in its spell's placeholder look (<see cref="ZoneLook"/>).</summary>

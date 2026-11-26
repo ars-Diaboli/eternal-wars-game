@@ -115,10 +115,16 @@ green and its memory-bank entries updated.
 - [x] The opponent hero's information window by the viewer's Scouting in the battle (2.2): `AdventureIntel.ScoutBattleHero` at
   `ScoutingInBattle`, the Scouting of the viewer's hero in the battle, not of its heroes on the map (`ScoutHero`'s levels and Veil);
   `InfoSheets.BattleHero` without the army, which stands on the field, one's own hero with the battle's mana.
-- [ ] The combat settings (5.1): the battle's grid and reach highlighting as settings beside the battle's animation speed, kept in the
-  settings file; the initiative bar's default at the bottom (`LayoutSettings.InitiativeBar`, 3.1).
-- [ ] The stack panel's numbers and marks (4.2) and the result's summary (9.1, 9.2): the title for a viewer, the reason, each side's
-  losses.
+- [x] The combat settings (5.1): the battle's grid and reach highlighting, `InterfaceSettings.BattleGrid` and `BattleReach` (on by
+  default; a file without them reads them on), kept in the settings file and shown on the menu's Settings tab under the battle's
+  animation speed until the Combat settings window (step 3); `BattleView3D.ShowGrid` and `ShowReach` (the deployment zone shows either
+  way). The initiative bar's default at the bottom (`LayoutSettings.InitiativeBar`, 3.1); a file that names Top keeps it.
+- [x] The stack panel's numbers and marks (4.2) and the result's summary (9.1, 9.2): `StackPanel.Of`, the stack's Attack and Defense as
+  it strikes and is struck now (`DamageCalculator.AttackOf`, `DefenseOf`), damage, health, speed, initiative, shots, morale (none for a
+  creature without it) and luck, a war machine only the numbers it has, and its marks (defending, native terrain, each spell on it with
+  how long it lasts and whose it is); `BattleSummary.Of`, "Victory" or "Defeat" when one side plays at this screen
+  (`SidesPlayedHere`: a person's side, by the LAN's plays-here), "<Name> wins" otherwise, the reason (who retreated or surrendered, else who won: the round limit is no rout), each side's losses one
+  entry a creature, the experience. The HUD's text reads both until step 3 draws them.
 
 ### 3. The HUD, in the bevel frames
 - [ ] `BattleHudLayout`: the bottom row of equal panels, the side plates, the round plate and the timer pill; the Layout tab's top

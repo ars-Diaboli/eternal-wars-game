@@ -561,7 +561,11 @@ public partial class Main : Node3D
     private void BuildBattle(GameDirector director)
     {
         // A LAN game shows only the battles of this computer's players, each commanding its own side (ADR-195).
-        _battle = new BattleView3D { Watching = Watching, PlaysHere = _host is null && _client is null ? null : p => !director.PlaysElsewhere(p) };
+        _battle = new BattleView3D
+        {
+            Watching = Watching, PlaysHere = _host is null && _client is null ? null : p => !director.PlaysElsewhere(p),
+            ShowGrid = _interface.BattleGrid, ShowReach = _interface.BattleReach, // the combat settings (ADR-314)
+        };
         _game!.AddChild(_battle);
         _battle.Bind(_session);
 

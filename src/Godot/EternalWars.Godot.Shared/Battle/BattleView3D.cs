@@ -47,6 +47,8 @@ public partial class BattleView3D : Node3D
     private MultiMesh _reach = null!;
     private GameSession _session = null!;
     private bool _instant;
+    private bool _showGrid = true;
+    private bool _showReach = true;
     private int _width;
     private float _zoom = 1f;
 
@@ -81,6 +83,31 @@ public partial class BattleView3D : Node3D
         set => _queue.Speed = value;
     }
 
+    /// <summary>The cell grid over the field (ADR-314, a combat setting); on by default.</summary>
+    public bool ShowGrid
+    {
+        get => _showGrid;
+        set
+        {
+            _showGrid = value;
+            ApplyGrid();
+        }
+    }
+
+    /// <summary>The active stack's reach lit on the field (ADR-314, a combat setting); on by default. The deployment zone shows either way.</summary>
+    public bool ShowReach
+    {
+        get => _showReach;
+        set
+        {
+            _showReach = value;
+            if (_session is not null && !IsBusy)
+            {
+                RefreshReach();
+            }
+        }
+    }
+
     /// <summary>Animations are still playing; the shown battlefield is behind the core state.</summary>
     public bool IsBusy => _queue.IsBusy;
 
@@ -98,6 +125,9 @@ public partial class BattleView3D : Node3D
     }
 
     public BattleEnded? Result { get; private set; }
+
+    /// <summary>The sides of the open battle played at this screen, for the result's title (<see cref="BattleSummary.SidesPlayedHere"/>; none when watching).</summary>
+    public IReadOnlySet<BattleSide> PlayedHere { get; private set; } = new HashSet<BattleSide>();
 
     public Camera3D Camera => _camera;
 
@@ -393,6 +423,7 @@ public partial class BattleView3D : Node3D
         Clear();
         IsOpen = true;
         Result = null;
+        PlayedHere = Watching ? new HashSet<BattleSide>() : BattleSummary.SidesPlayedHere(state, battle, PlaysHere);
         _width = e.Width;
         _instant = !Watching && (battle.AutoResolve || (battle.IsComputerControlled(BattleSide.Attacker) && battle.IsComputerControlled(BattleSide.Defender)));
         var opening = _stage.Line(e);
@@ -402,6 +433,7 @@ public partial class BattleView3D : Node3D
         }
 
         _stage.Build(e, battle);
+        ApplyGrid();
         _zoom = 1f;
         Visible = true;
         UpdateCamera();
@@ -463,6 +495,16 @@ public partial class BattleView3D : Node3D
             }
         }
 
+        if (cells.Count == 0)
+        {
+            ShowIntent(null);
+        }
+
+        if (!ShowReach && color == ReachColor)
+        {
+            cells.Clear(); // the combat setting hides the reach; the deployment zone stays
+        }
+
         _reach.InstanceCount = cells.Count;
         var i = 0;
         foreach (var cell in cells)
@@ -471,10 +513,13 @@ public partial class BattleView3D : Node3D
             _reach.SetInstanceColor(i, color);
             i++;
         }
+    }
 
-        if (cells.Count == 0)
+    private void ApplyGrid()
+    {
+        if (_stage.Grid is { } grid)
         {
-            ShowIntent(null);
+            grid.Visible = _showGrid;
         }
     }
 

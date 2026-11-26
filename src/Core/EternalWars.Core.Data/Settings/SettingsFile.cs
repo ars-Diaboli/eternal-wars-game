@@ -77,7 +77,7 @@ public static class SettingsFile
     /// the panel on the right. Read as they come, so a value the older enums took (a name in any case, or a number) never fails the file.
     /// </summary>
     private sealed record LayoutJson(
-        ScreenEdge InitiativeBar = ScreenEdge.Top, bool? Mirrored = null, JsonElement? SidePanel = null, JsonElement? Minimap = null)
+        ScreenEdge InitiativeBar = ScreenEdge.Bottom, bool? Mirrored = null, JsonElement? SidePanel = null, JsonElement? Minimap = null)
     {
         public static LayoutJson Of(LayoutSettings layout) => new(layout.InitiativeBar, layout.Mirrored);
 

@@ -39,6 +39,9 @@ public sealed class BattleStage(
     /// <summary>The stacks' models by unit id; those destroyed stay, hidden.</summary>
     public IReadOnlyDictionary<int, BattleUnitView> Units => _units;
 
+    /// <summary>The field's cell grid; null before the field is built.</summary>
+    public MeshInstance3D? Grid { get; private set; }
+
     /// <summary>Where each unit will stand once the queue has played.</summary>
     public IReadOnlyDictionary<int, CellRect> Planned => _planned;
 
@@ -59,7 +62,7 @@ public sealed class BattleStage(
     public void Build(BattleStarted e, BattleState battle)
     {
         _builder.Ground(battle.Terrain, e.Width, e.Height);
-        _builder.Grid(e.Width, e.Height);
+        Grid = _builder.Grid(e.Width, e.Height);
         foreach (var obstacle in e.Obstacles)
         {
             _builder.Obstacle(obstacle);
@@ -89,6 +92,7 @@ public sealed class BattleStage(
     public void Clear()
     {
         field.ClearChildren();
+        Grid = null;
 
         _units.Clear();
         _structures.Clear();

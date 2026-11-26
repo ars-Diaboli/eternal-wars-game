@@ -290,6 +290,34 @@ public class SettingsFileTests
         Assert.Equal(SpeedSettings.Default with { Battle = AnimationSpeed.Slow }, settings);
     }
 
+    [Fact]
+    public void TheCombatSettings_GridAndReach_AreKeptBesideTheOthers_AndOnWhenTheFileHasNone()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"ew-settings-{Guid.NewGuid():N}", SettingsFile.FileName);
+        try
+        {
+            SettingsFile.Save(path, SpeedSettings.Default with { Battle = AnimationSpeed.Fast }, new InterfaceSettings(BattleGrid: false, BattleReach: false));
+
+            Assert.Equal((false, false), (SettingsFile.LoadInterface(path).BattleGrid, SettingsFile.LoadInterface(path).BattleReach));
+            Assert.Equal(AnimationSpeed.Fast, SettingsFile.Load(path).Battle);
+            Assert.True(InterfaceSettings.Default.BattleGrid && InterfaceSettings.Default.BattleReach);
+            var older = SettingsFile.ReadInterface("{\"interface\": {\"showGrid\": true}}"); // a file written before the combat settings
+            Assert.True(older.BattleGrid && older.BattleReach);
+        }
+        finally
+        {
+            Directory.Delete(Path.GetDirectoryName(path)!, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void TheInitiativeBar_StandsAtTheBottom_UnlessTheFileSaysTop()
+    {
+        Assert.Equal(ScreenEdge.Bottom, LayoutSettings.Default.InitiativeBar);
+        Assert.Equal(ScreenEdge.Bottom, SettingsFile.ReadLayout("{\"layout\": {\"mirrored\": true}}").InitiativeBar);
+        Assert.Equal(ScreenEdge.Top, SettingsFile.ReadLayout("{\"layout\": {\"initiativeBar\": \"Top\"}}").InitiativeBar);
+    }
+
     [Theory]
     [InlineData(AnimationSpeed.Slow, 0.3)]
     [InlineData(AnimationSpeed.Normal, 0.15)]

@@ -9,12 +9,15 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
-- The battle HUD plan's step 2 begun ([battle-hud-plan.md](../docs/papers/battle-hud-plan.md)): `AttackEstimate` (damage range, kills,
+- The battle HUD plan's step 2 done ([battle-hud-plan.md](../docs/papers/battle-hud-plan.md)): the combat settings
+  (`InterfaceSettings.BattleGrid`, `BattleReach`, on the menu's Settings tab for now; the initiative bar's default at the bottom),
+  `StackPanel` (the stack's numbers now and its marks) and `BattleSummary` (the result's title for this screen, the reason, each side's
+  losses), read by the HUD's text until step 3. Next: step 3, the HUD in the bevel frames.
+- The battle HUD plan's step 2 begun: `AttackEstimate` (damage range, kills,
   whether the target strikes back, for a blow, a shot and a damage spell) on the engine's return-blow rule, now shared as `Retaliation`;
   `BattleHotkeys`, the battle's key table, read by `BattleInputController` and the battle's button hints; `BattleSpellBook` (the battle
   spells by school with cost and `BattleMagic.BookRefusal`, the known warcries apart); `AdventureIntel.ScoutBattleHero` and
-  `InfoSheets.BattleHero` (the opponent's hero by the Scouting of the viewer's hero in the battle). Next: the step's other two items (the
-  combat settings, the stack panel and the result's summary).
+  `InfoSheets.BattleHero` (the opponent's hero by the Scouting of the viewer's hero in the battle).
 - The battle HUD's decisions recorded (ADR-314; [battle-hud-plan.md](../docs/papers/battle-hud-plan.md) step 1): the recommendations,
   with the opponent's hero shown by Scouting, warcries in the spell book, Combat settings and Menu in a 4 × 2 action grid (also during
   deployment), and the attack estimate naming the kills as a range and whether the target strikes back.

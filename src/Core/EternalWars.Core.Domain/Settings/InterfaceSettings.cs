@@ -9,7 +9,10 @@ namespace EternalWars.Core.Domain.Settings;
 /// screen (ADR-186; a window by default). <see cref="MapSort"/>, <see cref="MapSortReversed"/> and <see cref="MapSizeFilter"/> are how the
 /// new-game screen's map lists are sorted and filtered (ADR-204; by name, every size, by default). <see cref="UiScalePercent"/> is the size of
 /// the game's UI (ADR-309; 100 % by default; <see cref="ScaleFor"/> lowers it on a small window). <see cref="PanelOpacityPercent"/> is how
-/// opaque the adventure HUD's panels are (ADR-310; 100 % by default), their rims staying whole. Kept per computer in the settings file, like <see cref="SpeedSettings"/>; it changes no rule.
+/// opaque the adventure HUD's panels are (ADR-310; 100 % by default), their rims staying whole. <see cref="BattleGrid"/> draws the cell grid
+/// over the battlefield and <see cref="BattleReach"/> lights the cells the active stack can reach (ADR-314; both on by default): the combat
+/// settings, beside the battle's animation speed (<see cref="SpeedSettings.Battle"/>). Kept per computer in the settings file, like
+/// <see cref="SpeedSettings"/>; it changes no rule.
 /// </summary>
 public sealed record InterfaceSettings(
     bool DetailedTooltips = false,
@@ -20,7 +23,9 @@ public sealed record InterfaceSettings(
     bool MapSortReversed = false,
     int MapSizeFilter = MapListView.AllSizes,
     int UiScalePercent = 100,
-    int PanelOpacityPercent = 100)
+    int PanelOpacityPercent = 100,
+    bool BattleGrid = true,
+    bool BattleReach = true)
 {
     public const int MinUiScale = 100;
     public const int MaxUiScale = 200;

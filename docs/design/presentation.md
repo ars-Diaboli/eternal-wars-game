@@ -43,8 +43,8 @@ creatures and buildings, heraldic player colours, iconic map objects).
 - **UI**: a HoMM-style side panel on the right, or the left when mirrored (ADR-191, ADR-309, ADR-313): the minimap in a framed panel in
   the top corner, which takes the clicks on it, and the town list in its own panel below; the hero list at the other edge; the bottom row above the
   status bar; the resources on the top bar and the calendar (date, week's event) on the status bar's right end (ADR-225, ADR-309);
-  full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips, the
-  fog's look, the tile grid, the window mode) and "Layout" (the initiative bar, the adventure map's mirror, the UI scale, the panel
+  full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, the battle's grid and
+  reach highlighting (ADR-314; both on by default), detailed tooltips, the fog's look, the tile grid, the window mode) and "Layout" (the initiative bar, the adventure map's mirror, the UI scale, the panel
   opacity).
 - **Bottom row** (ADR-309): above the status bar, framed panels of one height: from the edge away from the minimap the selected hero's
   card and its army strip, from the minimap's edge End turn and the action buttons (mirrored with the layout). With no own hero selected
@@ -146,7 +146,7 @@ creatures and buildings, heraldic player colours, iconic map objects).
   beside the minimap's panel towards the middle; over a battle at the bottom left above the battle's log.
 - **Window mode** (ADR-186): Windowed or Fullscreen (borderless, the screen's own size), in the "Settings" tab; Alt+Enter switches it, in
   the game and in the map editor. Kept in `settings.json`, applied at once and at start.
-- **Layout** (ADR-118, ADR-156, ADR-309): the "Layout" tab sets the battle's initiative bar (top or bottom) and the adventure map's HUD:
+- **Layout** (ADR-118, ADR-156, ADR-309): the "Layout" tab sets the battle's initiative bar (bottom by default, ADR-314, or top) and the adventure map's HUD:
   the default arrangement or its mirror, left and right swapped. The change shows at once and is kept in `settings.json` with the speeds,
   not in saves. An older saved layout loads as the default or its mirror, whichever side its HUD stood on.
 - **UI scale** (ADR-309): 100, 150 or 200 % of the game's UI, chosen on the "Layout" tab and applied at once and at start like the map
