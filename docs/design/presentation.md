@@ -82,7 +82,9 @@ creatures and buildings, heraldic player colours, iconic map objects).
   ownership: "Yours: +2 ore a day" against "Produces 2 ore a day when captured"), else the latest message; the hotkey hints are the
   first. On the adventure map the calendar is on the right (ADR-225). On the adventure map the menu is one of the action buttons; in battle the
   "Menu [F10]" button stands on the bar's right end, and before a game and in the replay viewer's battles in the bottom right corner. In
-  the replay viewer the bar stands above the viewer's bar.
+  the replay viewer the bar stands above the viewer's bar. In battle the latest message is the prompt line ("Swordsmen to act"), a
+  refusal or, while the other computer plays, its last move; the pointer over the field names what a click would do with its estimate
+  ("Swordsmen · Attack the Wolves: 38–45 damage, 1–2 die; they strike back"; a spell's aim or why it cannot be cast there, ADR-314).
 - **Icon buttons** (ADR-204): a button with an icon shows the icon alone on a square button, 48 px in bars and panels (the battle
   bar; End turn; the action buttons 36 px on square buttons), 32 px in rows, window headers and the replay viewer's bar (Play/Pause as one button showing what
   pressing it does, Next turn, Next day, Skip to the result, Play from here; ADR-309) (a window's or screen's
@@ -142,7 +144,7 @@ creatures and buildings, heraldic player colours, iconic map objects).
   ("you", a player's name, "none") and what it gives ("+2 ore a day"); no picture, none for the bare ground, none over a HUD control or
   while the map is dimmed. The name and its description are on the status bar at once.
 - **LAN chat** (ADR-194, ADR-309, ADR-313): over the map between the minimap's panel and the town list when there is room for it, else
-  beside the minimap's panel towards the middle; over a battle at the bottom left above the battle's log.
+  beside the minimap's panel towards the middle; over a battle at the bottom left above the stack panel (ADR-314).
 - **Combat settings** (ADR-314): a window over the battle from its action grid, with the battle's own view settings, kept in `settings.json`
   and changing no rule: the battle's animation speed, the grid over the field and the active stack's reach lit (both on by default; the
   deployment zone shows either way). A change shows at once.

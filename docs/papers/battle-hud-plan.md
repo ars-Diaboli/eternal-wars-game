@@ -137,16 +137,29 @@ green and its memory-bank entries updated.
   (C, the grid, the plate; greyed with the reason when it is not the side's turn), `CombatSettingsWindow` (the grid and reach leave the
   menu's Settings tab; the battle speed stays there too). The smokes cast from the book (C, then the spell). A garrison's town crest on a
   heroless plate waits: the side shows its strongest stack.
-- [ ] The log above the grid, growing on hover; the chat's new place; the prompt line, refusals and the attack estimate on the status
-  bar.
-- [ ] Deployment: the tinted zone, Start battle in the middle, Quick combat, Combat settings and Menu. The result, Necromancy and
-  auto-combat windows; the field dimmed behind them.
-- [ ] The narrow form below about 1,400 px of UI width; the replay viewer and the LAN wait.
+- [x] The log above the grid, growing on hover; the chat's new place; the prompt line, refusals and the attack estimate on the status
+  bar. The log keeps the battle's last 20 lines and shows 3, see-through, the 20 while the pointer is over it; the chat stands above the
+  stack panel (`BattleHudLayout.ChatRect`). `BattleHoverLine` (Core) words what a click would do: "Attack the Wolves: 38–45 damage, 1–2
+  die; they strike back", a shot, a move, a siege structure, the armed spell's aim with a damage spell's estimate or its refusal. The
+  prompt line, the refusals and, while the other computer plays, its moves go to the status bar.
+- [x] Deployment: the tinted zone, Start battle in the middle, Quick combat, Combat settings and Menu. The result, Necromancy and
+  auto-combat windows; the field dimmed behind them. The losses and the raised undead are portraits with counts (`BattleLossRow`).
+- [x] The narrow form below about 1,400 px of UI width; the replay viewer and the LAN wait. The UI scale is the map's own setting; the
+  replay viewer keeps Combat settings and Menu, the spell book greyed, and Escape closes the combat settings there.
+- [x] From the step's review: the timeline hides the entries that do not fit instead of widening; the field takes no command while a
+  window is open (a click beside it closes it); the spell book is redrawn only when its rows change; the creature caster's button opens
+  its spell's window on a right click; C without a book says why. From the second review: the field's line gives way to a HUD control's
+  under the pointer (the log takes its clicks); a spell aimed at a fallen stack is aimed as the cast aims it
+  (`BattleState.SpellTargetAt`), the two-click spell's second aim named without an estimate; a taken command lets the next prompt replace
+  a refusal; the status bar stands over the dimmed field; Enter does not start the battle under a window.
 
 ### 4. Check
-- [ ] Smoke screenshots of a battle at the adventure HUD's sizes, UI scales and with the timeline on top and at the bottom (as `hud-*`).
-- [ ] The battle smokes (`game-battle-*`, `game-siege*`, `game-necromancy`, the replay viewer's battle) and a LAN battle pass.
-- [ ] Budget overlay (F3) in a full battle: under the 2,000 draw calls (ADR-308).
+- [x] Smoke screenshots of a battle at the adventure HUD's sizes, UI scales and with the timeline on top and at the bottom (as `hud-*`):
+  `battle-hud-<size>-<scale>-<bottom|top>`, the five sizes by 100, 150 and 200 %.
+- [x] The battle smokes (`game-battle-*`, `game-siege*`, `game-necromancy`, the replay viewer's battle) and a LAN battle pass. The LAN
+  battle: the arena map, a host and a client on one computer, both sides giving orders; the waiting side's status bar names the other.
+- [x] Budget overlay (F3) in a full battle: under the 2,000 draw calls (ADR-308). `game-battle-budget`, the siege at 2560 × 1440: at most
+  about 440 draw calls (240 of them shadows), 130,000 triangles, 355 MB of video memory.
 
 ### 5. Painted pieces
 - [ ] The frames, the timeline's divider and the plates are the bevel shader's (ADR-310, ADR-311); the buttons take the icons already

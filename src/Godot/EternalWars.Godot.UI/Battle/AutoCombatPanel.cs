@@ -7,6 +7,7 @@ using EternalWars.Godot.Shared.Battle;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.UI.Hud;
+using EternalWars.Godot.UI.Widgets;
 using Godot;
 
 namespace EternalWars.Godot.UI.Battle;
@@ -16,13 +17,15 @@ namespace EternalWars.Godot.UI.Battle;
 /// panel asks whether to fight by hand or see auto combat's outcome; with "always" it shows the outcome at once. The outcome is a preview
 /// (<see cref="BattleService.Preview"/>) that leaves the game untouched: Accept runs quick combat, which ends the battle exactly so, and
 /// returns to the map without a second result screen; Fight fights the battle by hand from where it stands. A battle loaded from a save is
-/// not asked about. The panel covers the screen while it is open, so nothing else takes the clicks; over the battle scene it waits until the
-/// scene has played what happened so far (a command given while it animates would be lost).
+/// not asked about. The panel covers the screen while it is open, the field dimmed behind its framed window (ADR-314), so nothing else takes
+/// the clicks; the expected losses and the raised undead show as portraits. Over the battle scene it waits until the scene has played what
+/// happened so far (a command given while it animates would be lost).
 /// </summary>
-public partial class AutoCombatPanel : CenterContainer
+public partial class AutoCombatPanel : DimmedCenter
 {
     private readonly Label _title = new() { HorizontalAlignment = HorizontalAlignment.Center };
     private readonly Label _text = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(460, 0) };
+    private readonly VBoxContainer _losses = new();
     private readonly HBoxContainer _buttons = new() { Alignment = BoxContainer.AlignmentMode.End }; // along the bottom, at the right (ADR-204)
     private GameSession _session = null!;
     private BattleState? _seen;
@@ -36,18 +39,19 @@ public partial class AutoCombatPanel : CenterContainer
         _view = view;
         Name = "AutoCombat";
         Visible = false;
-        AnchorRight = 1;
-        AnchorBottom = 1;
-        MouseFilter = MouseFilterEnum.Stop;
 
         var panel = new PanelContainer();
-        panel.UseOpaqueBackground();
+        UiFrames.Bevel(panel, BevelKind.Panel, padding: UiSpacing.Section).OwnOpacity = 1f;
         AddChild(panel);
         var rows = new VBoxContainer();
         rows.AddThemeConstantOverride("separation", UiSpacing.Gap);
         panel.AddChild(rows);
+        _title.AddThemeFontSizeOverride("font_size", 22);
         rows.AddChild(_title);
         rows.AddChild(_text);
+        _losses.AddThemeConstantOverride("separation", UiSpacing.Gap);
+        rows.AddChild(_losses);
+        _buttons.AddThemeConstantOverride("separation", UiSpacing.Gap);
         rows.AddChild(_buttons);
 
         // A battle under way when the game is loaded is not asked about.
@@ -120,6 +124,8 @@ public partial class AutoCombatPanel : CenterContainer
     {
         _title.Text = "Auto combat";
         _text.Text = $"{Names()}.\n\nFight by hand, or see how auto combat would end it?";
+        _losses.ClearChildren(detach: true);
+        _losses.Visible = false;
         SetButtons(("Auto combat", () => ShowPreview(player)), ("Fight", Hide));
         Visible = true;
     }
@@ -138,22 +144,24 @@ public partial class AutoCombatPanel : CenterContainer
                 BattleEndReason.Surrendered => $"{SideName(battle, preview.Winner.Opponent())} would surrender: {SideName(battle, preview.Winner)} wins.",
                 _ => $"{SideName(battle, preview.Winner)} would win the battle.",
             },
-            string.Empty,
         };
+        _losses.ClearChildren(detach: true);
+        _losses.Visible = true;
         foreach (var side in new[] { BattleSide.Attacker, BattleSide.Defender })
         {
-            var lost = preview.Casualties.Where(c => c.Side == side).Select(c => $"{c.Lost} {CreatureName(c.Creature.Value)}").ToList();
-            lines.Add($"{SideName(battle, side)} would lose: {(lost.Count > 0 ? string.Join(", ", lost) : "nothing")}");
+            _losses.AddChild(BattleLossRow.Of(
+                $"{SideName(battle, side)} would lose:",
+                preview.Casualties.Where(c => c.Side == side).Select(c => (c.Creature.Value, CreatureName(c.Creature.Value), c.Lost))));
+        }
+
+        if (preview.Raised.Count > 0)
+        {
+            _losses.AddChild(BattleLossRow.Of("Necromancy would raise:", preview.Raised.Select(r => (r.Creature.Value, CreatureName(r.Creature.Value), r.Count))));
         }
 
         if (preview.Experience > 0)
         {
             lines.Add($"{SideName(battle, preview.Winner)} would gain {preview.Experience} experience.");
-        }
-
-        if (preview.Raised.Count > 0)
-        {
-            lines.Add($"Necromancy would raise {string.Join(", ", preview.Raised.Select(r => $"{r.Count} {CreatureName(r.Creature.Value)}"))}.");
         }
 
         if (preview.Artifacts.Count > 0)
@@ -185,6 +193,7 @@ public partial class AutoCombatPanel : CenterContainer
         foreach (var (text, pressed) in buttons)
         {
             var button = new Button { Text = text };
+            UiFrames.Bevel(button, BevelKind.Button);
             if (text == "Accept")
             {
                 button.WithIcon(UiIcon.Confirm, keepText: true);

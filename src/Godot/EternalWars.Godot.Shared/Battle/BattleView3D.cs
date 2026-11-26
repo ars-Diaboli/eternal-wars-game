@@ -20,7 +20,7 @@ namespace EternalWars.Godot.Shared.Battle;
 /// once it catches up with the core state it shows where a human-commanded active unit can go and raises
 /// <see cref="Idle"/>. After <see cref="BattleEnded"/> has played, <see cref="Finished"/> is raised and the view stays
 /// open until <see cref="Close"/>. Input is mapped by the app: <see cref="PickPoint"/> and <see cref="ShowIntent"/>.
-/// During the deployment step (ADR-072) the zone is shaded, <see cref="Pick"/> marks the stack being placed, <see cref="Carry"/> holds it under the pointer while it is dragged and
+/// During the deployment step (ADR-072) the zone is shaded in the deploying side's colour, <see cref="Pick"/> marks the stack being placed, <see cref="Carry"/> holds it under the pointer while it is dragged and
 /// <see cref="ShowPlacement"/> previews where it would go. A siege (ADR-106) adds the wall sections, the gate and the moat on the field and the
 /// keep and towers beside it; destroyed structures fall to rubble.
 /// </summary>
@@ -34,7 +34,8 @@ public partial class BattleView3D : Node3D
     private static readonly Color MoveColor = new(0.30f, 0.90f, 0.30f, 0.45f);
     private static readonly Color AttackColor = new(0.95f, 0.25f, 0.20f, 0.50f);
     private static readonly Color ShootColor = new(0.95f, 0.60f, 0.15f, 0.50f);
-    private static readonly Color ZoneColor = new(0.35f, 0.65f, 1.0f, 0.18f);
+    /// <summary>How strongly the deployment zone takes the deploying side's colour.</summary>
+    private const float ZoneAlpha = 0.22f;
 
     private readonly Dictionary<BattleSide, Color> _sideColors = [];
     private readonly Node3D _field = new() { Name = "Field" };
@@ -498,11 +499,13 @@ public partial class BattleView3D : Node3D
     {
         var cells = new HashSet<CellPosition>();
         var color = ReachColor;
-        if (Deployer is not null && _session.State.Battle is { } deploying)
+        var zone = false;
+        if (Deployer is not null && _session.State.Battle is { Deployer: { } deployingSide } deploying)
         {
-            var from = deploying.Deployer == BattleSide.Attacker ? 0 : deploying.Width - deploying.DeploymentColumns;
+            var from = deployingSide == BattleSide.Attacker ? 0 : deploying.Width - deploying.DeploymentColumns;
             cells.UnionWith(new CellRect(from, 0, deploying.DeploymentColumns, BattleState.Height).Cells());
-            color = ZoneColor;
+            color = SideColor(deployingSide) with { A = ZoneAlpha }; // the deploying player's columns in their colour (ADR-314)
+            zone = true;
         }
         else if (Commander is not null && _session.State.Battle is { ActiveUnit: { } active } battle)
         {
@@ -517,7 +520,7 @@ public partial class BattleView3D : Node3D
             ShowIntent(null);
         }
 
-        if (!ShowReach && color == ReachColor)
+        if (!ShowReach && !zone)
         {
             cells.Clear(); // the combat setting hides the reach; the deployment zone stays
         }

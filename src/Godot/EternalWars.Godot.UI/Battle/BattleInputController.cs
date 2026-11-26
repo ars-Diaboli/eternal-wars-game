@@ -14,7 +14,8 @@ namespace EternalWars.Godot.UI.Battle;
 /// (from the side the pointer is on), shoot or cast the armed spell; right click opens a stack's information window. The keys are
 /// <see cref="BattleHotkeys"/>' (ADR-314): W wait, D defend, R retreat for the active unit's commander, Q quick combat for either human side
 /// (not between two computers, ADR-195), C the spell book; Enter or Escape leave the result screen, Escape closes the HUD's window over the
-/// battle (the spell book, the combat settings) or disarms a spell. The deployment step (ADR-072,
+/// battle (the spell book, the combat settings) or disarms a spell. While a window is open the field takes no commands: a click beside it
+/// closes it. The pointer over the field puts what a click would do, with its estimate, on the status bar (<see cref="BattleHud.ShowHover"/>). The deployment step (ADR-072,
 /// ADR-155) goes to a <see cref="DeploymentDragController"/>; Enter there starts the battle, Escape cancels a drag. F10 is the app's menu key.
 /// </summary>
 public sealed class BattleInputController
@@ -29,7 +30,20 @@ public sealed class BattleInputController
     {
         (_session, _battle, _hud, _info) = (session, battle, hud, info);
         _deployment = new DeploymentDragController(session, battle, hud);
+        battle.Idle += () =>
+        {
+            if (_pointer is { } still && _battle.IsOpen && !OverHud)
+            {
+                Hover(still); // the field settled under a still pointer: its preview and the status bar's line now (ADR-314)
+            }
+        };
     }
+
+    /// <summary>Where the pointer last stood over the field; null while it is over the HUD.</summary>
+    private Vector2? _pointer;
+
+    /// <summary>The pointer is over a HUD control (the log, a badge, a button): the field's preview and line give way to the control's.</summary>
+    private bool OverHud => _hud.GetViewport()?.GuiGetHoveredControl() is not null;
 
     /// <summary>
     /// Ends a deployment drag where the button is let go, even over the HUD (which would otherwise take the release): for the app's
@@ -51,10 +65,19 @@ public sealed class BattleInputController
     {
         switch (@event)
         {
+            case InputEventMouseMotion motion when OverHud:
+                _pointer = null; // the control under the pointer names itself on the status bar
+                _battle.ShowIntent(null);
+                GameCursors.Show(GameCursor.Pointer);
+                _deployment.Move(motion.Position);
+                return false;
             case InputEventMouseMotion motion:
                 Hover(motion.Position);
                 _deployment.Move(motion.Position);
                 return false;
+            case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } when _hud.WindowOpen:
+                _hud.CloseWindow(); // a click beside the window closes it and does nothing on the field
+                break;
             case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } click:
                 Click(click.Position);
                 break;
@@ -74,10 +97,12 @@ public sealed class BattleInputController
     /// <summary>The pointer at <paramref name="screen"/>: the hovered stack's numbers in the HUD, and the action or the deployment placement it would make.</summary>
     public void Hover(Vector2 screen)
     {
+        _pointer = screen;
         if (_session.State.Battle is not { } battle || _battle.PickPoint(screen) is not { } point)
         {
             _battle.ShowIntent(null);
             _hud.ShowUnit(null);
+            _hud.ShowHover(null, null, null);
             GameCursors.Show(GameCursor.Pointer);
             return;
         }
@@ -90,14 +115,16 @@ public sealed class BattleInputController
             var picked = _battle.Picked is { } id ? battle.FindUnit(id) : null;
             var at = picked is null ? (CellPosition?)null : BattleTargeting.DeploymentPlacement(battle, picked, point.X, point.Y);
             _battle.ShowPlacement(at is { } p ? picked!.RectAt(p) : null, at is { } q && BattleSetup.DeploymentRefusal(battle, picked!, q) is null);
+            _hud.ShowHover(battle, cell, null);
             GameCursors.Show(GameCursor.Pointer);
             return;
         }
 
         // The stand cells of a move or a blow are highlighted; the cursor says what a click does, a sword pointing from the side (ADR-204).
         var acting = _battle.Commander is not null;
-        var action = acting ? BattleTargeting.ActionAt(battle, cell, point.X, point.Y) : null;
+        var action = acting && _battle.Result is null ? BattleTargeting.ActionAt(battle, cell, point.X, point.Y) : null;
         _battle.ShowIntent(action);
+        _hud.ShowHover(battle, cell, action); // what a click would do, with its estimate, on the status bar (ADR-314)
         GameCursors.Show(_battle.Result is not null ? GameCursor.Pointer : BattleCursors.For(battle, acting, _hud.ArmedSpellIsArea, action));
     }
 
@@ -121,10 +148,10 @@ public sealed class BattleInputController
             case BattleHotkeyAction.Cancel when _hud.ArmedSpell is not null:
                 _hud.Disarm();
                 return true;
-            case BattleHotkeyAction.Confirm when _battle.Deployer is { } deployer:
+            case BattleHotkeyAction.Confirm when _battle.Deployer is { } deployer && !_hud.WindowOpen:
                 _hud.Report(_session.Execute(new BattleStartCommand(deployer)));
                 return true;
-            case { } action when KeyCommand(action) is { } command:
+            case { } action when !_hud.WindowOpen && KeyCommand(action) is { } command:
                 _hud.Report(_session.Execute(command));
                 return true;
             default:

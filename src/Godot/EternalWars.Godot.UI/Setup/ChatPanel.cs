@@ -81,7 +81,7 @@ public partial class ChatPanel : VBoxContainer
 
     /// <summary>
     /// The chat over the map: the lines on a see-through ground that lets the map's clicks through, and the line let go once sent, so the keys
-    /// go back to the map. The adventure HUD's layout gives its place (<see cref="PlaceAt"/>), a battle another (<see cref="PlaceOverBattle"/>).
+    /// go back to the map. The adventure HUD's layout gives its place (<see cref="PlaceAt"/>), over a battle the battle HUD's (above its stack panel, ADR-314).
     /// </summary>
     public void OverTheMap()
     {
@@ -97,14 +97,6 @@ public partial class ChatPanel : VBoxContainer
     {
         (AnchorLeft, AnchorRight, AnchorTop, AnchorBottom) = (0, 0, 0, 0);
         (OffsetLeft, OffsetTop, OffsetRight, OffsetBottom) = (rect.Position.X, rect.Position.Y, rect.End.X, rect.End.Y);
-    }
-
-    /// <summary>Over a battle: at the screen's bottom left, above the battle's log.</summary>
-    public void PlaceOverBattle()
-    {
-        (AnchorLeft, AnchorRight, AnchorTop, AnchorBottom) = (0, 0, 1, 1);
-        (OffsetLeft, OffsetRight) = (UiTheme.MapChatLeft, UiTheme.MapChatLeft + UiTheme.MapChatSize.X);
-        (OffsetTop, OffsetBottom) = (-430, -250);
     }
 
     /// <summary>Puts the keys in the line, to write.</summary>

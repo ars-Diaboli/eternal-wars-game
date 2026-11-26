@@ -89,6 +89,9 @@ public partial class Main : Node3D
     /// <summary>The rendering budget overlay (ADR-308), F3, for the whole run.</summary>
     private readonly BudgetOverlay _budget = new();
 
+    /// <summary>"battle" while the battle scene is open, for the budget log's lines (ADR-308); null otherwise.</summary>
+    private string? BattleShown() => IsInstanceValid(_battle) && _battle.IsOpen ? "battle" : null;
+
     public override void _ExitTree() => GameCursors.Release();
 
     public override void _Ready()
@@ -98,6 +101,7 @@ public partial class Main : Node3D
         TownScreenKeys.AddToInputMap(); // the town screen's keys (ADR-294)
         AddChild(new TouchInput()); // a touch screen as the mouse: a long press opens the information window (ADR-190)
         _budget.Visible = _budget.LogNumbers = LaunchArguments.Budget; // the rendering budget, F3 (ADR-308)
+        _budget.Showing = BattleShown; // the budget log names the battle scene
         AddChild(_budget);
         if (LaunchArguments.BudgetSize is var (width, _))
         {
@@ -599,7 +603,7 @@ public partial class Main : Node3D
             _autoCombat = null;
         }
 
-        _screens.ShowBattle(_battle, _autoCombat, _world, _camera, _chat); // in place of the map while it is open
+        _screens.ShowBattle(_battle, _autoCombat, _world, _camera, _chat, _battleHud); // in place of the map while it is open
     }
 
     /// <summary>
@@ -686,7 +690,7 @@ public partial class Main : Node3D
         var arrival = new TownArrival(); // the fade into the hero shot, the layout loaded ahead (TOWN-23, ADR-306)
         _game.AddChild(arrival);
         arrival.Bind(_session, _context, town, _world.PathPreview);
-        _budget.Showing = () => IsInstanceValid(town) && town.IsOpen ? town.LoadedType : null; // the budget log names the town scene (ADR-308)
+        _budget.Showing = () => IsInstanceValid(town) && town.IsOpen ? town.LoadedType : BattleShown(); // the budget log names the town scene (ADR-308)
         _budget.OpenTime = () => IsInstanceValid(town) && town.IsOpen ? town.LastOpenMilliseconds : null; // and its opening time (ADR-306)
     }
 

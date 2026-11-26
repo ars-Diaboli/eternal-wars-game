@@ -404,7 +404,7 @@ $scenarios = @(
     # Meteor Shower III's rubble: Pyro visits Emberkeep (the guild raises the spell to rank III), walks into the wolves and casts it on the
     # second wolf stack; stones lie on the free cells it hit.
     @{ Name = 'game-meteor-rubble'; App = 'EternalWars.Game'; Frames = 100; Map = $spellsMap; Seed = 1
-       Input = '3:key:Enter;8:press:Pyro;12:key:Up;24:key:Escape;28:key:Down;36:key:Down;61:key:C;63:press:Meteor Shower III (18);67:click:1205,300' },
+       Input = '3:key:Enter;8:press:Pyro;12:key:Up;24:key:Escape;28:key:Down;36:key:Down;62:key:C;64:press:Meteor Shower III (18);67:click:1205,300' },
     # Grave Whisper (its window), Ledger of Ages (next week, the Red heroes' armies), then Eavesdrop on Gloomhold (its buildings and garrison).
     @{ Name = 'game-adventure-intel'; App = 'EternalWars.Game'; Frames = 76; Map = $spellsMap; Seed = 1
        Input = '3:key:Enter;8:press:Seer;12:key:H;18:press:Grave Whisper (5 mana);28:press:Ledger of Ages (10 mana);38:press:Close;42:press:Eavesdrop (8 mana);50:click:800,330' },
@@ -423,7 +423,7 @@ $scenarios = @(
     @{ Name = 'game-siege-gate'; App = 'EternalWars.Game'; Frames = 104; Map = $siegeMagicMap
        Input = '3:key:Enter;10:key:Up;62:key:D;72:click:958,432' },
     @{ Name = 'game-siege-earthquake'; App = 'EternalWars.Game'; Frames = 150; Map = $siegeMagicMap
-       Input = '3:key:Enter;10:key:Up;61:key:C;63:press:Earthquake;100:key:D;110:key:D;120:key:D;135:key:D' },
+       Input = '3:key:Enter;10:key:Up;62:key:C;64:press:Earthquake;100:key:D;110:key:D;120:key:D;135:key:D' },
     # The editor's Grail tool, the map settings window's difficulty and hero limit rows (ADR-083, ADR-103) and the town inspector's faction
     # and guild spells (ADR-083, ADR-123).
     @{ Name = 'editor-grail-and-town'; App = 'EternalWars.MapEditor'; Frames = 42; Map = $grailMap
@@ -602,6 +602,11 @@ $scenarios = @(
 $scenarios += @{ Name = 'game-map-budget'; App = 'EternalWars.Game'; Frames = 90; Map = $emberMap; Resolution = '2560x1440'; Args = @('--budget=2560x1440')
     Input = '3:key:Enter;12:key:Tab;20:move:1100,600;30:move:1400,800;40:hold:D,15;60:hold:S,15;80:key:F3' }
 
+# The battle HUD's narrow form (ADR-314): at 1280x720 the stack panel keeps Attack, Defense and health, the log a line shorter; the
+# pointer over the field puts what a click would do on the status bar.
+$scenarios += @{ Name = 'game-battle-narrow'; App = 'EternalWars.Game'; Frames = 50; Map = $battleMap; Resolution = '1280x720'
+    Input = '3:key:Enter;10:key:Right;34:move:640,330;42:move:450,330' }
+
 # The adventure HUD's screenshot set (ADR-309): the towns map at each window size (21:9 as 2560x1080: a window must fit on the desktop to be recorded whole) and UI scale, as set and mirrored, with
 # Orrin selected (his card and army in the bottom row). Each starts from a settings file with the scale
 # and the mirror already chosen.
@@ -618,6 +623,23 @@ foreach ($size in '1280x720', '1280x800', '1920x1080', '2560x1440', '2560x1080')
 # The HUD's panels at 60 % opacity (ADR-310): the map shows through their fill, the rims stay whole.
 $scenarios += @{ Name = 'hud-1920x1080-100-opacity-60'; App = 'EternalWars.Game'; Frames = 24; Map = $townsMap; Resolution = '1920x1080'
     Settings = '{ "interface": { "panelOpacityPercent": 60 } }'; Input = '3:key:Enter;10:key:Tab' }
+
+# The battle HUD's screenshot set (ADR-314), as the adventure HUD's: the battle with the imps at each window size and UI scale, the
+# timeline at the bottom and on top (the Layout tab's initiative bar). Each starts from a settings file with the scale and the edge chosen.
+foreach ($size in '1280x720', '1280x800', '1920x1080', '2560x1440', '2560x1080') {
+    foreach ($scale in 100, 150, 200) {
+        foreach ($edge in 'Bottom', 'Top') {
+            $scenarios += @{ Name = "battle-hud-$size-$scale-$($edge.ToLower())"; App = 'EternalWars.Game'; Frames = 40; Map = $battleMap
+                Resolution = $size; Settings = "{ `"interface`": { `"uiScalePercent`": $scale }, `"layout`": { `"initiativeBar`": `"$edge`" } }"
+                Input = '3:key:Enter;10:key:Right' }
+        }
+    }
+}
+
+# The battle scene's budget (ADR-308) in a full battle: the siege at 2560x1440 with the overlay from the start (its numbers in the log every
+# ten frames): walls, towers, moat, both armies and the HUD; the footman defends, the ballista shoots the wall, quick combat.
+$scenarios += @{ Name = 'game-battle-budget'; App = 'EternalWars.Game'; Frames = 150; Map = $siegeMap; Resolution = '2560x1440'; Args = @('--budget=2560x1440')
+    Input = '3:key:Enter;10:key:Up;62:key:D;72:click:1528,448;90:key:D;100:key:D;125:key:Q;140:key:Enter' }
 
 # Every scenario has a seed of its own, so its games and battles are the same on every run (ADR-239): the entry's Seed, else one made from
 # its name (32-bit FNV-1a); -Seed overrides both. Scenarios without a new game (the main menu, a replay, the editor) pass it unused.

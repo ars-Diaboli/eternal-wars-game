@@ -36,7 +36,8 @@ public enum BattleHudPart
 /// the map's turn banner, so the turn timer's pill stands under it as it does there); a bottom row above the status bar of panels of one
 /// height, its tallest part's: the stack panel at the left, the action grid at the right and the timeline filling the room between them, or,
 /// with <see cref="TimelineOnTop"/> (the Layout tab), under the round plate and the timer, between the plates. "Start battle" stands in the
-/// middle of the bottom row, the log above the action grid, as wide as it or wider. The layer covers the screen and lets the mouse through;
+/// middle of the bottom row, the log above the action grid, as wide as it or wider, and the LAN chat's place
+/// (<see cref="ChatRect"/>) above the stack panel. The layer covers the screen and lets the mouse through;
 /// each part is a child moved, never reparented (a part's event subscriptions last while it is in the tree), placed again whenever one's size
 /// changes.
 /// </summary>
@@ -56,6 +57,9 @@ public partial class BattleHudLayout : Container
 
     /// <summary>"Start battle"'s widest.</summary>
     public const float StartWidth = 360;
+
+    /// <summary>The LAN chat's height over the battle, above the stack panel.</summary>
+    public const float ChatHeight = 160;
 
     private readonly Dictionary<BattleHudPart, Control> _parts = [];
     private bool _timelineOnTop;
@@ -94,6 +98,12 @@ public partial class BattleHudLayout : Container
     public IReadOnlyDictionary<BattleHudPart, Rect2> Placed => _placed;
 
     private readonly Dictionary<BattleHudPart, Rect2> _placed = [];
+
+    /// <summary>Where the LAN chat goes (ADR-314): at the bottom left above the stack panel, as wide as it.</summary>
+    public Rect2 ChatRect { get; private set; }
+
+    /// <summary>The parts were placed again.</summary>
+    public event Action? Arranged;
 
     /// <summary>Adds <paramref name="control"/> as <paramref name="part"/>.</summary>
     public void Set(BattleHudPart part, Control control)
@@ -169,5 +179,9 @@ public partial class BattleHudLayout : Container
         var log = Min(BattleHudPart.Log);
         var logWidth = Math.Max(actionsWidth, LogWidth);
         Put(BattleHudPart.Log, new Rect2(screen.X - Margin - logWidth, top - Margin - log.Y, logWidth, log.Y));
+
+        // The chat's place above the stack panel.
+        ChatRect = new Rect2(Margin, Math.Max(Margin, top - Margin - ChatHeight), stack.Size.X, ChatHeight);
+        Arranged?.Invoke();
     }
 }

@@ -13,7 +13,7 @@ namespace EternalWars.Godot.UI.Battle;
 /// battle spells by school with their rank and cost (<see cref="BattleSpellBook"/>), and the warcries it knows as a category of their own
 /// (ADR-067). A spell or warcry that cannot be used now is greyed and says why on the status bar. Picking a spell closes the book and arms it
 /// (<see cref="SpellPicked"/>); picking a warcry closes it and cries it (<see cref="WarcryPicked"/>). A right click on a spell opens its
-/// information window. Escape, C or the close button close it.
+/// information window. Escape, C or the close button close it. Redrawn only when what it shows changes.
 /// </summary>
 public partial class BattleSpellBookWindow : PanelContainer
 {
@@ -21,6 +21,7 @@ public partial class BattleSpellBookWindow : PanelContainer
     private readonly VBoxContainer _body = new();
     private readonly ScrollContainer _scroll = new() { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, CustomMinimumSize = new Vector2(620, 0) };
     private GameSession _session = null!;
+    private string? _shown;
 
     /// <summary>A spell was picked: the HUD arms it (or casts a spell for a side at once).</summary>
     public event Action<KnownSpell>? SpellPicked;
@@ -57,6 +58,13 @@ public partial class BattleSpellBookWindow : PanelContainer
     /// </summary>
     public void Open(BattleSpellBook book, string hero, string? notNow)
     {
+        var key = Key(book, hero, notNow);
+        if (Visible && key == _shown)
+        {
+            return; // nothing changed: the rows, the scroll and a press under way stay
+        }
+
+        _shown = key;
         _title.Text = $"{hero}: spell book · mana {book.Mana}";
         _body.ClearChildren(detach: true);
         foreach (var school in book.Spells.GroupBy(s => s.SchoolName))
@@ -131,4 +139,10 @@ public partial class BattleSpellBookWindow : PanelContainer
     }
 
     public void Close() => Visible = false;
+
+    /// <summary>What the book shows, to skip a redraw that would change nothing.</summary>
+    private static string Key(BattleSpellBook book, string hero, string? notNow) =>
+        string.Join('|', hero, notNow, book.Mana,
+            string.Join(';', book.Spells.Select(s => $"{s.Known.Spell.Id.Value}:{s.Known.Rank}:{s.Cost}:{s.Refusal}")),
+            string.Join(';', book.Warcries.Select(w => $"{w.Warcry}:{w.Refusal}")));
 }

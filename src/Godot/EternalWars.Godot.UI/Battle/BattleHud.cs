@@ -20,15 +20,28 @@ namespace EternalWars.Godot.UI.Battle;
 /// (<see cref="BattleStackPanel"/>: the hovered stack, else the active one), the timeline (<see cref="BattleTimeline"/>; under the round plate
 /// when the Layout tab says top) and the 4 × 2 action grid: Wait, Defend, Quick combat, Combat settings / Retreat, Surrender, Spell book,
 /// Menu, a fifth column for the active creature caster's own spell. The buttons show icons; their names, keys and the reasons they are
-/// greyed go to the status bar. The spell book (<see cref="BattleSpellBookWindow"/>) and the combat settings
-/// (<see cref="CombatSettingsWindow"/>) are windows over the battle. The combat log stands above the action grid, "Start battle" in the
-/// middle of the bottom row during the deployment step (ADR-072); the result window and, after it, the Necromancy window (ADR-072, MAG-7).
-/// Refreshes when <see cref="BattleView3D"/> is idle, so it matches what is shown. Buttons are commands; the root lets mouse input through to
-/// the battlefield.
+/// greyed go to the status bar, as do the prompt line, refusals, the other computer's moves and what a click on the field would do with its
+/// estimate (<see cref="ShowHover"/>). The spell book (<see cref="BattleSpellBookWindow"/>) and the combat settings
+/// (<see cref="CombatSettingsWindow"/>) are windows over the battle. The combat log stands above the action grid, its last 3 lines
+/// see-through, the last 20 while the pointer is over it; the LAN chat's place is above the stack panel (<see cref="ChatRect"/>). During the
+/// deployment step (ADR-072) the timeline gives way to "Start battle" and the grid keeps Quick combat, Combat settings and Menu. The result
+/// window and, after it, the Necromancy window (ADR-072, MAG-7) stand framed over the field dimmed, the losses and the raised undead as
+/// portraits. Below <see cref="NarrowWidth"/> of UI width the stack panel and the log take their short forms. Refreshes when
+/// <see cref="BattleView3D"/> is idle, so it matches what is shown. Buttons are commands; the root lets mouse input through to the battlefield.
 /// </summary>
 public partial class BattleHud : Control
 {
-    private const int LogLines = 8;
+    /// <summary>The log's lines kept: the battle's last 20, all shown while the pointer is over it (ADR-314).</summary>
+    private const int LogKept = 20;
+
+    /// <summary>The log's lines at rest; one fewer in the narrow form.</summary>
+    private const int LogLines = 3;
+
+    /// <summary>Below this UI width the HUD takes its narrow form (ADR-314): the stack panel's short form, the log a line shorter.</summary>
+    public const float NarrowWidth = 1400;
+
+    /// <summary>The log's frame at rest, see-through; opaque while the pointer is over it.</summary>
+    private const float LogOpacity = 0.6f;
 
     /// <summary>An action button's icon side; the button is a square round it, as on the adventure map.</summary>
     private const int ActionIconSize = 36;
@@ -41,9 +54,10 @@ public partial class BattleHud : Control
     private readonly BattleStackPanel _stackPanel = new();
     private readonly BattleTimeline _timeline = new();
     private readonly GridContainer _actions = new() { Name = "Actions", Columns = 4 };
-    private readonly PanelContainer _logPanel = new() { Name = "Log", MouseFilter = MouseFilterEnum.Ignore };
-    private readonly Label _log = new() { VerticalAlignment = VerticalAlignment.Bottom, AutowrapMode = TextServer.AutowrapMode.WordSmart };
-    private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+    private readonly PanelContainer _logPanel = new() { Name = "Log", MouseFilter = MouseFilterEnum.Stop, TooltipText = "Point at it to read the battle's last 20 lines" };
+    private readonly Label _log = new() { VerticalAlignment = VerticalAlignment.Bottom, AutowrapMode = TextServer.AutowrapMode.WordSmart, MouseFilter = MouseFilterEnum.Ignore };
+    private BevelFrame _logFrame = null!;
+    private bool _logOpen;
     private readonly Button _wait = ActionButton(UiIcon.Hourglass, Hint(BattleHotkeyAction.Wait));
     private readonly Button _defend = ActionButton(UiIcon.Defend, Hint(BattleHotkeyAction.Defend));
     private readonly Button _quick = ActionButton(UiIcon.QuickCombat, Hint(BattleHotkeyAction.QuickCombat));
@@ -56,14 +70,20 @@ public partial class BattleHud : Control
     private readonly Button _menu = ActionButton(UiIcon.Menu, Hint(BattleHotkeyAction.Menu));
     private readonly Button _start = new() { Text = BattleHotkeys.Of(BattleHotkeyAction.Confirm).HintAs("Start battle"), Visible = false };
     private readonly BattleSpellBookWindow _spellBook = new();
-    private readonly PanelContainer _result = new() { Visible = false };
+    private readonly DimmedCenter _resultLayer = new() { Name = "Result", Visible = false };
+    private readonly PanelContainer _result = new();
     private readonly Label _resultTitle = new() { HorizontalAlignment = HorizontalAlignment.Center };
     private readonly Label _resultText = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(460, 0) };
+    private readonly VBoxContainer _resultLosses = new();
     private readonly Button _close = new() { Text = BattleHotkeys.Of(BattleHotkeyAction.Confirm).HintAs("Return to the map") };
     private readonly Queue<string> _lines = new();
 
     private LayoutSettings _layout = LayoutSettings.Default;
-    private string? _raised;
+    private (string Hero, IReadOnlyList<RaisedUndead> Raised)? _raised;
+    /// <summary>The prompt line as last written; null when the next refresh must write it whatever it says (a command was taken, a battle opened).</summary>
+    private string? _prompt;
+    private string? _bookRefusal;
+    private bool _narrow;
     private int? _timelineHover;
     private KnownSpell? _creatureSpell;
     private GameSession _session = null!;
@@ -118,6 +138,12 @@ public partial class BattleHud : Control
     /// <summary>A window of the HUD is open over the battle (the spell book, the combat settings).</summary>
     public bool WindowOpen => _spellBook.IsOpen || CombatSettings.IsOpen;
 
+    /// <summary>Where the LAN chat goes over the battle (ADR-314): at the bottom left, above the stack panel.</summary>
+    public Rect2 ChatRect => _parts.ChatRect;
+
+    /// <summary>The HUD's parts were placed again: the chat's place may have moved.</summary>
+    public event Action? ChatPlaceChanged;
+
     public void Bind(GameSession session, BattleView3D view)
     {
         _session = session;
@@ -131,6 +157,8 @@ public partial class BattleHud : Control
         Bar.Bind(null);
         AddChild(_parts);
         Layout = _layout;
+        _parts.Arranged += () => ChatPlaceChanged?.Invoke();
+        Resized += FitWidth;
 
         // Along the top: the plates and the round.
         _parts.Set(BattleHudPart.AttackerPlate, _attackerPlate);
@@ -172,12 +200,13 @@ public partial class BattleHud : Control
         UiFrames.Bevel(_start, BevelKind.Button);
         _parts.Set(BattleHudPart.Start, _start);
 
-        // The log above the action grid, the prompt line first.
-        UiFrames.Bevel(_logPanel, BevelKind.Panel, padding: UiSpacing.Padding);
-        var logBox = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
-        logBox.AddChild(_status);
-        logBox.AddChild(_log);
-        _logPanel.AddChild(logBox);
+        // The log above the action grid: its last lines, see-through; the pointer over it grows it upwards to the last 20 (ADR-314).
+        _logFrame = UiFrames.Bevel(_logPanel, BevelKind.Panel, padding: UiSpacing.Padding);
+        _logFrame.OwnOpacity = LogOpacity;
+        _logPanel.SetMeta(UiIcons.StatusLabelMeta, "Combat log");
+        _logPanel.AddChild(_log);
+        _logPanel.MouseEntered += () => OpenLog(true);
+        _logPanel.MouseExited += () => OpenLog(false);
         _parts.Set(BattleHudPart.Log, _logPanel);
 
         _wait.Pressed += () => Act(player => new BattleWaitCommand(player));
@@ -195,6 +224,7 @@ public partial class BattleHud : Control
                 ArmCreature(own);
             }
         };
+        _creature.WithInfo(detailed => _creatureSpell is { } shown ? InfoSheets.Spell(_session.State, shown.Spell.Id, shown.Rank, detailed) : null);
         _start.Pressed += () =>
         {
             if (_view.Deployer is { } player)
@@ -211,28 +241,33 @@ public partial class BattleHud : Control
         AddChild(CombatSettings);
         CombatSettings.Bind();
 
-        var center = new CenterContainer { MouseFilter = MouseFilterEnum.Ignore };
-        center.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        AddChild(center);
-        center.AddChild(_result);
-        _result.UseOpaqueBackground();
+        // The result and, after it, the Necromancy window: framed, over the field dimmed (ADR-314).
+        AddChild(_resultLayer);
+        _resultLayer.AddChild(_result);
+        UiFrames.Bevel(_result, BevelKind.Panel, padding: UiSpacing.Section).OwnOpacity = 1f;
         var resultBox = new VBoxContainer();
         resultBox.AddThemeConstantOverride("separation", UiSpacing.Gap);
         _result.AddChild(resultBox);
-        _resultTitle.AddThemeFontSizeOverride("font_size", 24);
+        _resultTitle.AddThemeFontSizeOverride("font_size", 26);
         resultBox.AddChild(_resultTitle);
         resultBox.AddChild(_resultText);
+        _resultLosses.AddThemeConstantOverride("separation", UiSpacing.Gap);
+        resultBox.AddChild(_resultLosses);
         _close.Pressed += Continue;
+        _close.SizeFlagsHorizontal = SizeFlags.ShrinkEnd; // along the bottom, at the right (ADR-204)
+        UiFrames.Bevel(_close, BevelKind.Button);
         resultBox.AddChild(_close);
-        this.SubscribeWhileInTree<UndeadRaised>(session.Events, e => _raised =
-            $"{_session.State.GetHero(e.Hero).Name} raises {string.Join(", ", e.Raised.Select(r => $"{r.Count} {CreatureName(r.Creature.Value)}"))}.");
+        MoveChild(Bar, -1); // the status bar over the dimmed field: it names the portraits of the losses, and its menu button stays at hand
+        this.SubscribeWhileInTree<UndeadRaised>(session.Events, e => _raised = (_session.State.GetHero(e.Hero).Name, e.Raised));
 
         view.Opened += () =>
         {
             _raised = null;
+            _prompt = null;
             _lines.Clear();
             _log.Text = string.Empty;
-            _result.Visible = false;
+            _resultLayer.Visible = false;
+            Bar.ShowSubject(null);
             _spellBook.Close();
             CombatSettings.Close();
             _timelineHover = null;
@@ -240,15 +275,20 @@ public partial class BattleHud : Control
             Refresh();
         };
         view.Idle += Refresh;
+        FitWidth(); // already as wide as the screen: Resized comes only with a change
         view.Narrated += line =>
         {
             _lines.Enqueue(line);
-            while (_lines.Count > LogLines)
+            while (_lines.Count > LogKept)
             {
                 _lines.Dequeue();
             }
 
-            _log.Text = string.Join('\n', _lines);
+            ShowLog();
+            if (_view.WaitingFor is not null)
+            {
+                Bar.Message.Text = line; // the other computer's move, on the status bar while this one waits (ADR-314)
+            }
             if (Shared.LaunchArguments.AutoInput is not null)
             {
                 GD.Print($"battle log: {line}"); // a scripted run's log can be searched for what the battle did (ADR-235)
@@ -288,23 +328,53 @@ public partial class BattleHud : Control
     /// <summary>"Return to the map" on the result window: first the Necromancy window if undead were raised, then the map.</summary>
     public void Continue()
     {
-        if (_raised is { } text)
+        if (_raised is { } raised)
         {
             _raised = null;
             _resultTitle.Text = "Necromancy";
-            _resultText.Text = text;
+            _resultText.Text = $"{raised.Hero} raises undead from the fallen.";
+            _resultLosses.ClearChildren(detach: true);
+            _resultLosses.AddChild(BattleLossRow.Of("They join the army:", raised.Raised.Select(r => (r.Creature.Value, CreatureName(r.Creature.Value), r.Count))));
+            _close.Text = BattleHotkeys.Of(BattleHotkeyAction.Confirm).HintAs("Continue");
             return;
         }
 
         _view.Close();
     }
 
+    /// <summary>A command's outcome: a refusal goes to the status bar.</summary>
     public void Report(CommandResult result)
     {
-        _status.Text = result.IsAccepted ? string.Empty : $"Refused: {result.Error}";
         if (!result.IsAccepted)
         {
-            Bar.Message.Text = _status.Text;
+            Bar.Message.Text = $"Refused: {result.Error}";
+        }
+        else
+        {
+            _prompt = null; // taken: the next prompt replaces an earlier refusal, even when it reads the same
+        }
+    }
+
+    /// <summary>
+    /// The pointer over the field (ADR-314): what a click on <paramref name="cell"/> would do on the status bar, the armed spell's aim or the
+    /// active stack's <paramref name="action"/> with its estimate (<see cref="BattleHoverLine"/>); else the stack there; null: off the field.
+    /// </summary>
+    public void ShowHover(BattleState? battle, CellPosition? cell, BattleAction? action)
+    {
+        var line = battle is null || cell is not { } at ? null
+            : ArmedSpell is { } spell ? BattleHoverLine.OfSpell(battle, at, spell, _creatureArmed, secondAim: _firstAim is not null)
+            : BattleHoverLine.Of(battle, action);
+        if (line is not null)
+        {
+            Bar.ShowSubject(line.Subject, line.Detail);
+        }
+        else if (cell is { } c && battle?.UnitAt(c) is { IsAlive: true } unit)
+        {
+            Bar.ShowSubject($"{unit.Creature.Name} ×{unit.Count}", null, CreatureIcons.Of(unit, 24));
+        }
+        else
+        {
+            Bar.ShowSubject(null);
         }
     }
 
@@ -321,6 +391,10 @@ public partial class BattleHud : Control
         if (_session.State.Battle is { } battle && BookSide(battle) is { } side && BattleSpellBook.Of(battle, side) is { } book)
         {
             _spellBook.Open(book, _view.SideName(side), BookNotNow(battle, side));
+        }
+        else if (_bookRefusal is { } why)
+        {
+            Bar.Message.Text = why;
         }
     }
 
@@ -403,16 +477,16 @@ public partial class BattleHud : Control
         {
             if (battle.UnitAt(cell) is not { } unit)
             {
-                _status.Text = $"{known.Spell.Name}: click a stack first (Esc cancels).";
+                SetPrompt($"{known.Spell.Name}: click a stack first (Esc cancels).");
                 return true;
             }
 
             _firstAim = unit.Id;
-            _status.Text = move
+            SetPrompt(move
                 ? $"{known.Spell.Name}: click where {unit.Creature.Name} goes (Esc cancels)."
                 : known.Effect.DrainPercent > 0
                     ? $"{known.Spell.Name}: click the own stack that drinks the life (Esc cancels)."
-                    : $"{known.Spell.Name}: click the own stack that takes the blows meant for {unit.Creature.Name} (Esc cancels).";
+                    : $"{known.Spell.Name}: click the own stack that takes the blows meant for {unit.Creature.Name} (Esc cancels).");
             return true;
         }
 
@@ -423,9 +497,8 @@ public partial class BattleHud : Control
         return true;
     }
 
-    /// <summary>The stack at the cell, else a destroyed one lying there (a revive may bring it back, ADR-123).</summary>
-    private static int? TargetAt(BattleState battle, CellPosition cell) =>
-        battle.UnitAt(cell)?.Id ?? battle.Units.FirstOrDefault(u => !u.IsAlive && !u.IsMachine && u.Rect.Contains(cell))?.Id;
+    /// <summary>The stack the spell aimed at the cell targets, a fallen one included (<see cref="BattleState.SpellTargetAt"/>).</summary>
+    private static int? TargetAt(BattleState battle, CellPosition cell) => battle.SpellTargetAt(cell)?.Id;
 
     /// <summary>Whether the armed spell is the active creature caster's own (ADR-120), not the hero's.</summary>
     private bool _creatureArmed;
@@ -440,7 +513,7 @@ public partial class BattleHud : Control
         }
 
         (ArmedSpell, _creatureArmed, _armedArea) = (known.Spell.Id.Value, true, HitsArea(known));
-        _status.Text = $"{known.Spell.Name} (the stack's own spell): click a target (Esc cancels).";
+        SetPrompt($"{known.Spell.Name} (the stack's own spell): click a target (Esc cancels).");
     }
 
     /// <summary>Drops the armed spell (Escape).</summary>
@@ -461,9 +534,9 @@ public partial class BattleHud : Control
         }
 
         (ArmedSpell, _creatureArmed, _firstAim, _armedArea) = (known.Spell.Id.Value, false, null, HitsArea(known));
-        _status.Text = known.Effect.TwoClicks
+        SetPrompt(known.Effect.TwoClicks
             ? $"{known.Spell.Name}: click the stack, then {(!known.Effect.SecondIsStack ? "where it goes" : known.Effect.DrainPercent > 0 ? "the own stack it heals" : "the own stack that takes its blows")} (Esc cancels)."
-            : $"{known.Spell.Name}: click a target (Esc cancels).";
+            : $"{known.Spell.Name}: click a target (Esc cancels).");
     }
 
     /// <summary>A square icon button of the action grid (ADR-314): its <paramref name="label"/> ("Wait [W]") and reasons on the status bar.</summary>
@@ -559,10 +632,11 @@ public partial class BattleHud : Control
         RefreshCreature(battle, commander);
         RefreshBook(battle);
         var deployer = _view.Deployer;
+        var deploying = battle?.Phase == BattlePhase.Deploying; // Quick combat, Combat settings and Menu only (ADR-314)
         _start.Visible = deployer is not null;
-        _wait.Visible = _defend.Visible = _retreat.Visible = _surrender.Visible = deployer is null && !_view.Watching;
-        _book.Visible = deployer is null;
-        _quick.Visible = !_view.Watching; // the replay viewer only watches (ADR-164)
+        _wait.Visible = _defend.Visible = _retreat.Visible = _surrender.Visible = !deploying && !_view.Watching;
+        _book.Visible = !deploying;
+        _quick.Visible = !_view.Watching; // the replay viewer keeps Combat settings and Menu (ADR-164, ADR-314)
 
         if (battle is null || _view.IsBusy)
         {
@@ -572,7 +646,7 @@ public partial class BattleHud : Control
         _round.Text = battle.Phase == BattlePhase.Deploying ? "Deployment" : $"Round {battle.Round}";
         _attackerPlate.Show(_session.State, battle, _view.SideName(BattleSide.Attacker), _view.SideColor(BattleSide.Attacker));
         _defenderPlate.Show(_session.State, battle, _view.SideName(BattleSide.Defender), _view.SideColor(BattleSide.Defender));
-        _status.Text = deployer is { } placing
+        SetPrompt(deployer is { } placing
             ? $"{_session.State.GetPlayer(placing).Name}: place your stacks within the first {battle.DeploymentColumns} columns (drag a stack, or click it and then a cell), then start the battle."
             : ArmedSpell is { } armed && _session.State.Spells.TryGet(armed, out var spell)
                 ? $"{spell.Name}: click {(_firstAim is null ? "a target" : "its second aim")} (Esc cancels)."
@@ -580,9 +654,54 @@ public partial class BattleHud : Control
                 ? $"{_session.State.GetPlayer(commander.Value).Name}: {acting.Creature.Name} to act. Click to move, attack or shoot."
             : _view.WaitingFor is { } other
                 ? $"{_session.State.GetPlayer(other).Name} plays on another computer: waiting for their move."
-                : string.Empty;
+                : string.Empty);
 
         _timeline.Show(battle, _view.SideColor);
+        _timeline.Visible &= !deploying; // no order before the battle starts; Start battle has the middle
+        ShowUnit(null);
+    }
+
+    /// <summary>
+    /// The prompt line on the status bar (ADR-314): who acts and how, the armed spell's aim, the deployment, the other computer's turn. Written
+    /// only when it changes, so a refusal or the other computer's last move stays until the prompt has news.
+    /// </summary>
+    private void SetPrompt(string text)
+    {
+        if (text == _prompt)
+        {
+            return;
+        }
+
+        _prompt = text;
+        Bar.Message.Text = text;
+    }
+
+    /// <summary>The pointer over the log (or off it): the battle's last 20 lines, grown upwards and opaque; else its last few, see-through.</summary>
+    private void OpenLog(bool open)
+    {
+        _logOpen = open;
+        _logFrame.OwnOpacity = open ? 1f : LogOpacity;
+        ShowLog();
+    }
+
+    private void ShowLog()
+    {
+        var shown = _logOpen ? LogKept : _narrow ? LogLines - 1 : LogLines;
+        _log.Text = string.Join('\n', _lines.Skip(Math.Max(0, _lines.Count - shown)));
+    }
+
+    /// <summary>The narrow form below <see cref="NarrowWidth"/> of UI width (ADR-314): the stack panel's short form, the log a line shorter.</summary>
+    private void FitWidth()
+    {
+        var narrow = Size.X > 0 && Size.X < NarrowWidth;
+        if (narrow == _narrow)
+        {
+            return;
+        }
+
+        _narrow = narrow;
+        _stackPanel.Compact = narrow;
+        ShowLog();
         ShowUnit(null);
     }
 
@@ -628,6 +747,7 @@ public partial class BattleHud : Control
     {
         var side = battle is null ? null : BookSide(battle);
         var refusal = _view.Watching ? "Not while watching a replay" : side is null ? "No hero here has a spell book or a warcry" : null;
+        _bookRefusal = refusal;
         Enable(_book, refusal, "The battle spells and warcries");
         _attackerPlate.ShowBook(side == BattleSide.Attacker, null);
         _defenderPlate.ShowBook(side == BattleSide.Defender, null);
@@ -653,22 +773,19 @@ public partial class BattleHud : Control
         _spellBook.Close();
         CombatSettings.Close();
         var summary = BattleSummary.Of(ended, _view.PlayedHere, _view.SideName); // the title for this screen, the reason, the losses (ADR-314)
-        var lines = new List<string> { summary.Reason, string.Empty };
+        _resultTitle.Text = summary.Title;
+        _resultText.Text = summary.Experience > 0
+            ? $"{summary.Reason}\n{_view.SideName(ended.Winner)} gains {summary.Experience} experience."
+            : summary.Reason;
+        _resultLosses.ClearChildren(detach: true);
         foreach (var losses in summary.Losses)
         {
-            var lost = losses.Lost.Select(c => $"{c.Lost} {CreatureName(c.Creature.Value)}").ToList();
-            lines.Add($"{losses.Name} lost: {(lost.Count > 0 ? string.Join(", ", lost) : "nothing")}");
+            _resultLosses.AddChild(BattleLossRow.Of($"{losses.Name} lost:", losses.Lost.Select(c => (c.Creature.Value, CreatureName(c.Creature.Value), c.Lost))));
         }
 
-        if (summary.Experience > 0)
-        {
-            lines.Add(string.Empty);
-            lines.Add($"{_view.SideName(ended.Winner)} gains {summary.Experience} experience.");
-        }
-
-        _resultText.Text = string.Join('\n', lines);
-        _resultTitle.Text = summary.Title;
-        _result.Visible = true;
-        _status.Text = string.Empty;
+        _close.Text = BattleHotkeys.Of(BattleHotkeyAction.Confirm).HintAs("Return to the map");
+        _resultLayer.Visible = true;
+        SetPrompt(string.Empty);
+        Bar.ShowSubject(null);
     }
 }

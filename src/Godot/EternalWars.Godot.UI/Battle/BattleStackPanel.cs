@@ -12,12 +12,15 @@ namespace EternalWars.Godot.UI.Battle;
 /// and count, then its numbers as the battle uses them now (<see cref="StackPanel"/>): Attack, Defense, damage, the top creature's health,
 /// speed, initiative, shots for a shooter, morale and luck, each an icon (its name while the icon sheet is missing) with the number, named on
 /// the status bar; and its marks (defending, native terrain, the spells on it) as small icons, the enemy's spells tinted red, each named on
-/// the status bar. A war machine shows the numbers it has. Redrawn only when what it shows changes.
+/// the status bar. A war machine shows the numbers it has. The narrow form (<see cref="Compact"/>) keeps Attack, Defense and health. Redrawn only when what it shows changes.
 /// </summary>
 public partial class BattleStackPanel : PanelContainer
 {
     /// <summary>The panel's width.</summary>
     public const int Width = 340;
+
+    /// <summary>The panel's width in the narrow form (<see cref="Compact"/>).</summary>
+    public const int CompactWidth = 240;
 
     /// <summary>The portrait's side.</summary>
     public const int PortraitSize = 72;
@@ -67,6 +70,28 @@ public partial class BattleStackPanel : PanelContainer
         _content.AddChild(lines);
     }
 
+    /// <summary>
+    /// The narrow form (ADR-314): the portrait, the name and count, Attack, Defense and health only, without the marks, in a narrower panel.
+    /// </summary>
+    public bool Compact
+    {
+        get => _compact;
+        set
+        {
+            if (_compact == value)
+            {
+                return;
+            }
+
+            _compact = value;
+            _shown = null; // redrawn at the next show
+            CustomMinimumSize = new Vector2(value ? CompactWidth : Width, 0);
+            _numbers.Columns = value ? 3 : 4;
+        }
+    }
+
+    private bool _compact;
+
     /// <summary>The name line shown ("Swordsmen ×7"), empty while the panel is blank: for the smoke checks.</summary>
     public string Title => _content.Visible ? _name.Text : "";
 
@@ -74,7 +99,7 @@ public partial class BattleStackPanel : PanelContainer
     public void Show(StackPanel? panel, Texture2D? portrait, Color side)
     {
         var key = panel is null ? null : Key(panel);
-        if (key == _shown)
+        if (key is not null && key == _shown)
         {
             return;
         }
@@ -96,6 +121,13 @@ public partial class BattleStackPanel : PanelContainer
 
         Number(HeroStatIcon.Attack, "Att", "Attack", panel.Attack);
         Number(HeroStatIcon.Defense, "Def", "Defense", panel.Defense);
+        if (_compact)
+        {
+            Number(null, "HP", "Health of the top creature", $"{Text(panel.Health)}/{Text(panel.MaxHealth)}");
+            _marks.Visible = false;
+            return;
+        }
+
         if (panel.MinDamage is { } low)
         {
             Number(null, "Dmg", "Damage", low == panel.MaxDamage ? Text(low) : $"{Text(low)}–{Text(panel.MaxDamage ?? low)}");

@@ -264,6 +264,9 @@ public partial class Main
             case InputEventKey { Pressed: true, Echo: false, Keycode: Key.Space }:
                 _replay?.Toggle();
                 break;
+            case InputEventKey { Pressed: true, Keycode: Key.Escape } when _battle.IsOpen && _battleHud.WindowOpen:
+                _battleHud.CloseWindow(); // the combat settings over the replayed battle (ADR-314)
+                break;
             case InputEventKey { Pressed: true, Keycode: Key.Enter or Key.KpEnter or Key.Escape } when _battle.IsOpen && _battle.Result is not null:
                 _battleHud.Continue();
                 break;

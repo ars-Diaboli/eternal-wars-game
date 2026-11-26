@@ -29,6 +29,7 @@ public sealed class GameScreens(Node owner, Func<bool> playing)
     private BattleView3D? _battle;
     private AutoCombatPanel? _autoCombat;
     private ChatPanel? _chat;
+    private BattleHud? _battleHud;
 
     /// <summary>The F10 menu (save, load, settings), above every screen, the battle scene too, so saving works in battle.</summary>
     public GameMenuPanel Menu { get; private set; } = null!;
@@ -108,11 +109,21 @@ public sealed class GameScreens(Node owner, Func<bool> playing)
 
     /// <summary>
     /// The battle scene of the game being built: while it is open it replaces the adventure map, its HUD and its camera, and the chat of a LAN game
-    /// (<paramref name="chat"/>) moves above the battle's log; over the map it stands where the HUD's layout puts it, by the town list (ADR-309).
+    /// (<paramref name="chat"/>) moves above the battle HUD's stack panel (<paramref name="battleHud"/>, ADR-314); over the map it stands where the
+    /// HUD's layout puts it, by the town list (ADR-309).
     /// </summary>
-    public void ShowBattle(BattleView3D battle, AutoCombatPanel? autoCombat, AdventureWorldView world, StrategyCamera camera, ChatPanel? chat)
+    public void ShowBattle(
+        BattleView3D battle, AutoCombatPanel? autoCombat, AdventureWorldView world, StrategyCamera camera, ChatPanel? chat, BattleHud battleHud)
     {
-        (_battle, _autoCombat, _chat) = (battle, autoCombat, chat);
+        (_battle, _autoCombat, _chat, _battleHud) = (battle, autoCombat, chat, battleHud);
+        battleHud.ChatPlaceChanged += () =>
+        {
+            if (battle.IsOpen)
+            {
+                PlaceChat(battle: true);
+            }
+        };
+
         var hud = _hud!;
         hud.ChatPlaceChanged += () =>
         {
@@ -167,7 +178,7 @@ public sealed class GameScreens(Node owner, Func<bool> playing)
         };
     }
 
-    /// <summary>The chat by the map's town list, where the HUD's layout puts it; over a battle, above the battle's log.</summary>
+    /// <summary>The chat by the map's town list, where the HUD's layout puts it; over a battle, above the battle HUD's stack panel.</summary>
     private void PlaceChat(bool battle)
     {
         if (_chat is null || !GodotObject.IsInstanceValid(_chat))
@@ -177,7 +188,10 @@ public sealed class GameScreens(Node owner, Func<bool> playing)
 
         if (battle)
         {
-            _chat.PlaceOverBattle();
+            if (GodotObject.IsInstanceValid(_battleHud))
+            {
+                _chat.PlaceAt(_battleHud!.ChatRect);
+            }
         }
         else if (GodotObject.IsInstanceValid(_hud))
         {

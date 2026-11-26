@@ -9,12 +9,17 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
-- The battle HUD plan's step 3, first two items ([battle-hud-plan.md](../docs/papers/battle-hud-plan.md)): `BattleHudLayout` places the
-  side plates (`BattleSidePlate`), the round plate (the timer's pill under it), and a bottom row of one height: `BattleStackPanel`, the
-  `BattleTimeline` (or under the round plate) and the 4 × 2 action grid (Wait, Defend, Quick combat, Combat settings / Retreat,
-  Surrender, Spell book, Menu; the creature caster's spell a fifth column). `BattleSpellBookWindow` (C) holds the battle spells and
-  warcries, `CombatSettingsWindow` the battle speed, grid and reach (gone from the menu's Settings tab). Smokes cast from the book. Next:
-  step 3's remaining items (the log and status bar, deployment and the result windows, the narrow form).
+- The battle HUD plan's step 4 done ([battle-hud-plan.md](../docs/papers/battle-hud-plan.md)): `battle-hud-*` shoots a battle at the
+  adventure HUD's five sizes and three UI scales with the timeline at the bottom and on top; `game-battle-budget` logs the siege's budget
+  at 1440p (about 440 draw calls of 2,000; the log names the battle scene); the battle smokes and a LAN arena battle (host and client on
+  one computer) pass. Next: step 5, the painted pieces.
+- The battle HUD plan's step 3 done ([battle-hud-plan.md](../docs/papers/battle-hud-plan.md)): `BattleHudLayout` places the side
+  plates, the round plate (the timer's pill under it), a bottom row of one height (`BattleStackPanel`, `BattleTimeline` or the timeline
+  under the round plate, the 4 × 2 action grid), the log above the grid (3 lines, the last 20 on hover) and the LAN chat above the stack
+  panel. `BattleSpellBookWindow` (C) and `CombatSettingsWindow` stand over the field, which takes no command while one is open. The status
+  bar carries the prompt, the refusals, the other computer's moves and `BattleHoverLine` (Core: what a click would do, with the attack
+  estimate). Deployment tints the deployer's columns in its colour; the result, Necromancy and auto-combat windows are framed over the
+  field dimmed, losses as portraits (`BattleLossRow`). Below 1,400 px of UI width the stack panel and log take short forms.
 - The battle HUD plan's step 2 done ([battle-hud-plan.md](../docs/papers/battle-hud-plan.md)): the combat settings
   (`InterfaceSettings.BattleGrid`, `BattleReach`, on the menu's Settings tab for now; the initiative bar's default at the bottom),
   `StackPanel` (the stack's numbers now and its marks) and `BattleSummary` (the result's title for this screen, the reason, each side's

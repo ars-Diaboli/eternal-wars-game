@@ -573,6 +573,13 @@ public sealed class BattleState
     /// <summary>Living unit whose footprint covers <paramref name="cell"/>.</summary>
     public BattleUnit? UnitAt(CellPosition cell) => _units.FirstOrDefault(u => u.IsAlive && u.Rect.Contains(cell));
 
+    /// <summary>
+    /// What a spell aimed at the cell targets: the living stack there, else a destroyed one lying there (not a war machine), which a revive may
+    /// bring back (ADR-123).
+    /// </summary>
+    public BattleUnit? SpellTargetAt(CellPosition cell) =>
+        UnitAt(cell) ?? _units.FirstOrDefault(u => !u.IsAlive && !u.IsMachine && u.Rect.Contains(cell));
+
     public bool IsInside(CellRect rect) => rect.X >= 0 && rect.Y >= 0 && rect.Right <= Width && rect.Bottom <= Height;
 
     /// <summary>Whether the side is commanded by the battle AI right now.</summary>

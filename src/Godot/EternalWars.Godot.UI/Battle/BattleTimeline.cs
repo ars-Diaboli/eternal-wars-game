@@ -30,6 +30,12 @@ public partial class BattleTimeline : PanelContainer
     private int? _hovered;
     private readonly HBoxContainer _row = new() { MouseFilter = MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Begin };
 
+    /// <summary>
+    /// The row's holder: a plain control whose least width is none, so the entries never widen the panel past the room the layout gives it;
+    /// <see cref="Fit"/> hides those that do not fit.
+    /// </summary>
+    private readonly Control _clip = new() { ClipContents = true, MouseFilter = MouseFilterEnum.Ignore, CustomMinimumSize = new Vector2(0, ActiveSize) };
+
     public BattleTimeline()
     {
         Name = "Timeline";
@@ -37,9 +43,10 @@ public partial class BattleTimeline : PanelContainer
         MouseFilter = MouseFilterEnum.Ignore;
         AddThemeStyleboxOverride("panel", UiFrames.Themed(BevelKind.Panel, UiSpacing.Padding, opacity: null));
         _row.AddThemeConstantOverride("separation", UiSpacing.Cell);
-        AddChild(_row);
-        CustomMinimumSize = new Vector2(0, ActiveSize + (2 * UiSpacing.Padding));
-        Resized += Fit;
+        _clip.AddChild(_row);
+        _row.SetAnchorsAndOffsetsPreset(LayoutPreset.LeftWide);
+        AddChild(_clip);
+        _clip.Resized += Fit;
     }
 
     /// <summary>The pointer came over an entry (its stack's id), or left it (null).</summary>
@@ -92,7 +99,7 @@ public partial class BattleTimeline : PanelContainer
     /// <summary>Hides the entries that do not fit the panel's width, from the end.</summary>
     private void Fit()
     {
-        var room = Size.X - (2 * UiSpacing.Padding);
+        var room = _clip.Size.X;
         var used = 0f;
         foreach (var child in _row.GetChildren().OfType<Control>())
         {

@@ -79,7 +79,8 @@ the script under Movie Maker and saves frames to `.shots/<scenario>/`. **A pass 
 - `Settings = '<json>'` starts a game scenario from that settings file (a UI scale, the mirror). `Resolution = '<w>x<h>'` records it at
   that window size: Movie Maker ignores `--resolution`, so such scenarios run in groups of one size with an `override.cfg` beside the app's
   `project.godot`, removed after them; the window must fit on the desktop to be recorded whole. The `hud-*` scenarios shoot the adventure
-  HUD at each target size, UI scale and mirror.
+  HUD at each target size, UI scale and mirror; the `battle-hud-*` ones the battle HUD at each size and UI scale, the timeline at the
+  bottom and on top.
 - Script entries are `frame:kind:argument`: `click` / `rclick` (`x,y`), `key` (Godot key name, modifiers before it: `Ctrl+Shift+P`), `hold` (`Key,frames`),
   `wheel` (`up|down,count`), `drag` / `rdrag` (`x1,y1,x2,y2`, over three frames). Replayed by `AutoInput`.
 - Game scenarios start with `--new-game` and `key:Enter` (Start has focus), so they do not depend on the screen layout;
@@ -109,7 +110,7 @@ share beside them), the game's video memory and the frame time (CPU and GPU), ea
 scene's opening time (a second). `--budget` starts with it shown and logs a `Budget [<town type>]: …` line every ten frames;
 `--budget=2560x1440` also renders the 3D that wide whatever the window. `./tools/smoke-godot.ps1 -Only game-town-budget` goes round the
 eight fully built greybox towns twice that way: read the numbers in its `godot.log`. `game-map-budget` does the same for the adventure map with its HUD (Ember
-March at 2560×1440); Godot's draw call count is the 3D scene's, the 2D HUD's canvas is not in it. The times are the machine's own.
+March at 2560×1440), `game-battle-budget` for a siege battle (`Budget [battle]`); Godot's draw call count is the 3D scene's, the 2D HUD's canvas is not in it. The times are the machine's own.
 
 CI (`.github/workflows/ci.yml`) runs build + test + `sim selftest`, and a parallel `generated-maps` job; no Godot.
 

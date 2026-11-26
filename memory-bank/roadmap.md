@@ -301,12 +301,12 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Step 1: the owner's decisions recorded (ADR-314, 2026-11-26)
 - [x] Step 2: Core: the attack estimate (kills as a range, the return blow named), the battle's hotkey table, the spell book's rows with
       the warcries, the opponent hero by Scouting, the combat settings, the stack panel and the result's summary
-- [ ] Step 3: the HUD rebuilt in the bevel frames, the 4 × 2 action grid with Combat settings and Menu
+- [x] Step 3: the HUD rebuilt in the bevel frames, the 4 × 2 action grid with Combat settings and Menu
       - [x] `BattleHudLayout`, the side and round plates, the timeline, the stack panel, the action grid, the spell book and combat
             settings windows
-      - [ ] The log growing on hover, the chat's place, the status bar's prompt and estimate; deployment and the result windows; the
-            narrow form, the replay viewer and the LAN wait
-- [ ] Step 4: checked at every target size and UI scale; battle smokes, a LAN battle, the budget
+      - [x] The log growing on hover, the chat's place, the status bar's prompt and estimate (`BattleHoverLine`); deployment and the
+            result windows (`BattleLossRow`, the field dimmed); the narrow form, the replay viewer and the LAN wait
+- [x] Step 4: checked at every target size and UI scale; battle smokes, a LAN battle, the budget
 - [ ] Step 5: the icon sheet for the stack panel's numbers; the battle part of presentation.md
 
 ### Editor overhaul (ADR-247, ADR-250; [plan](../docs/papers/editor-plan.md#implementation-plan), EDIT-1 … EDIT-12 answered)
