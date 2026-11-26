@@ -9,6 +9,8 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Sylvan creature portraits redone (ADR-293 implemented): sheets S1–S5 and the backdrop cut into `textures/ui/creatures/`, the
+  timber wolf and the dire wolf (the first dire wolf portrait) among them; 37 creatures still lack one (Stronghold, Swamp Bestiary, banshee).
 - The town pictures: the prompts moved to [town-picture-prompts.md](../docs/content/prompts/town-picture-prompts.md), reshaped for
   the town list's 130 x 64 entry (wide, full-bleed, the landmark centred, the governor's and build mark's corners left to sky and
   ground; `NEG-TOWNPIC`); the five sheets generated and cut into `textures/ui/towns/` (`town_<town>[_village].png`, 260 x 128). The

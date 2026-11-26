@@ -671,7 +671,7 @@ TOWN-15 is ADR-291. The plan's step-by-step implementation is in its [roadmap](.
   cartoon (ADR-248). The style frame of step 0 is Haven's greybox lit after `key_haven-1`.
 
 ### ADR-293: Sylvan creatures redone to the owner's review (owner, ADR-289, 2026-11-22)
-**Status**: accepted. Asset prompts only; no rule or format change.
+**Status**: implemented (2026-11-26: sheets S1–S5 and the backdrop generated and cut). Asset prompts only; no rule or format change.
 
 - **Owner**, on the first Sylvan sheets: the pixie and sprite looked like goblins and carried weapons; the satyr smoked a pipe and its
   upgrade looked the same; the dancers should be men with sabers, closer to the classic elven blade dancers; the hunter a woman and

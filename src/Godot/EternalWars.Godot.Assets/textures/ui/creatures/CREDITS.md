@@ -1,7 +1,8 @@
 # Creature portraits
 
 Painted creature portraits with transparency (512 × 512, facing right) and one opaque painted backdrop a faction (1024 × 1024), generated
-for this project by the owner (2026-11-21: Academy, Conflux, Dragon Utopia, Dungeon, Haven, Inferno, Necropolis, neutral, Sylvan) as portrait sheets and cut into one file per creature (prompts in
+for this project by the owner (2026-11-21: Academy, Conflux, Dragon Utopia, Dungeon, Haven, Inferno, Necropolis, neutral; 2026-11-26: Sylvan, redone
+from the ADR-293 prompts) as portrait sheets and cut into one file per creature (prompts in
 `docs/content/prompts/creature-icon-prompts.md` and its faction files). Shown in the battle's initiative bar; the army slots and the creature
 windows still use the lettered placeholders.
 
@@ -21,10 +22,10 @@ windows still use the lettered placeholders.
 | creature_backdrop_inferno.png | the backdrop behind the Inferno portraits and Inferno heroes |
 | icon_creature_necropolis.<creature id>.png | the eighteen Necropolis creatures (sheets N1–N3) |
 | creature_backdrop_necropolis.png | the backdrop behind the Necropolis portraits and Necropolis heroes |
-| icon_creature_neutral.<creature id>.png | fourteen of the sixteen neutral creatures (sheets X1–X3) |
+| icon_creature_neutral.<creature id>.png | fifteen of the sixteen neutral creatures (sheets X1–X3; the timber wolf and the dire wolf from Sylvan sheet S5) |
 | creature_backdrop_neutral.png | the backdrop behind the neutral portraits |
-| icon_creature_sylvan.<creature id>.png | the eighteen Sylvan creatures (sheets S1–S3) |
+| icon_creature_sylvan.<creature id>.png | the eighteen Sylvan creatures (sheets S1–S5) |
 | creature_backdrop_sylvan.png | the backdrop behind the Sylvan portraits and Sylvan heroes |
 
-Not drawn yet: the other factions; of the neutral creatures, `icon_creature_neutral.dire-wolf.png` and `icon_creature_neutral.banshee.png`
-(sheet X1's bottom row drew two more giants in their cells).
+Not drawn yet: the other factions; of the neutral creatures, `icon_creature_neutral.banshee.png` (sheet X1's bottom row drew
+two more giants in its cells).
