@@ -74,6 +74,10 @@
 | [333](#adr-333-inferno-sheet-i4-to-the-owners-review-a-fleshed-pit-fiend-with-a-glaive-a-ravager-of-flesh-and-riveted-iron-owner-adr-289-2026-11-27) | Inferno sheet I4 to the owner's review: a fleshed pit fiend with a glaive, a ravager of flesh and riveted iron (owner, ADR-289, 2026-11-27) | accepted |
 | [334](#adr-334-inferno-sheet-i6-to-the-owners-review-breeders-as-half-woman-brood-queens-on-a-swollen-insect-abdomen-owner-adr-289-2026-11-27) | Inferno sheet I6 to the owner's review: breeders as half-woman brood-queens on a swollen insect abdomen (owner, ADR-289, 2026-11-27) | accepted |
 | [335](#adr-335-inferno-sheet-i5-to-the-owners-review-red-winged-devils-with-tridents-spike-crested-red-gogs-owner-adr-289-2026-11-27) | Inferno sheet I5 to the owner's review: red winged devils with tridents, spike-crested red gogs (owner, ADR-289, 2026-11-27) | accepted |
+| [336](#adr-336-the-plague-bearer-becomes-the-zombie-necropolis-sheet-n1-to-the-owners-review-faded-grey-skeletons-an-axe-and-no-shield-then-sword-and-shield-owner-adr-289-2026-11-27) | The Plague Bearer becomes the Zombie; Necropolis sheet N1 to the owner's review: faded grey skeletons, an axe and no shield, then sword and shield (owner, ADR-289, 2026-11-27) | accepted |
+| [337](#adr-337-necropolis-sheet-n2-to-the-owners-review-hairless-beast-like-ghouls-with-a-spined-alghoul-hooded-skull-faced-wights-owner-adr-289-2026-11-27) | Necropolis sheet N2 to the owner's review: hairless beast-like ghouls with a spined alghoul, hooded skull-faced wights (owner, ADR-289, 2026-11-27) | accepted |
+| [338](#adr-338-necropolis-sheet-n3-to-the-owners-review-weavers-without-webs-wingless-caped-vampires-owner-adr-289-2026-11-27) | Necropolis sheet N3 to the owner's review: weavers without webs, wingless caped vampires (owner, ADR-289, 2026-11-27) | accepted |
+| [339](#adr-339-necropolis-sheet-n4-to-the-owners-review-black-armoured-faceless-knights-violet--and-crimson-robed-liches-owner-adr-289-2026-11-27) | Necropolis sheet N4 to the owner's review: black-armoured faceless knights, violet- and crimson-robed liches (owner, ADR-289, 2026-11-27) | accepted |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -1396,3 +1400,53 @@ devils with sickles, the squat grey gogs).
   iron crown, the trident's prongs in fire; the gog a wiry hunched red-orange demon with big ears and a crest of spikes, a fireball;
   the magog deeper red, a taller crest, bronze bracers and collar, a fireball in both hands.
 - **Regenerate**: Inferno sheet I5.
+
+### ADR-336: The Plague Bearer becomes the Zombie; Necropolis sheet N1 to the owner's review: faded grey skeletons, an axe and no shield, then sword and shield (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Renames a creature (id, name, portrait file); no rule or stat change. Supersedes ADR-289's Necropolis sheet N1
+subjects (the bloated censer-bearing corpse, the skeleton's sword and round shield, the warrior's axe).
+
+- **Owner**, on Necropolis sheet N1: the plague bearer a regular zombie as in the series, in the prompt and in the creature data; the
+  skeletons' bone a faded grey; the skeleton an axe and no shield, the skeleton warrior a sword and a shield.
+- **Rules**: `necropolis.plague-bearer` (Plague Bearer) is now `necropolis.zombie` (Zombie): same tier, class B, stats, price, growth
+  and upgrade (Flesh Golem); the heroes who prefer it, the Undead Transformer and Necromancy (class B raises Zombies), the town's
+  dwelling plot and the portrait file follow the new id. The id sorts
+  after `necropolis.skeleton` now, which changes generated maps: `MapGenerator.Version` 15.
+- **Subjects**: the skeleton faded chalky grey bone, a rusted war axe, no shield; the zombie a plain shambling dead man, grey-green
+  rotting skin, torn shirt and breeches, empty reaching hands; the skeleton warrior the same grey bone, bolted plate, a straight sword
+  and a tall shield with a bony hand; the flesh golem unchanged.
+- **Regenerate**: Necropolis sheet N1.
+
+### ADR-337: Necropolis sheet N2 to the owner's review: hairless beast-like ghouls with a spined alghoul, hooded skull-faced wights (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's Necropolis sheet N2 subjects (the ragged
+gaunt ghouls, the pale woman-like shrouded wights).
+
+- **Owner**, on Necropolis sheet N2: the ghoul and alghoul closer to the later 3D game's and a well-known monster-hunting game's ghouls;
+  the wight and wraith closer to the classic ones.
+- **Subjects**: the ghoul a hairless corpse-eater on all fours, grey-white skin over spine and ribs, a bony crest, a wide toothed jaw,
+  hooked claws, no clothing; the alghoul darker, with a ridge of bone spines and quills along the back; the wight a floating hooded
+  spectre in a grey-violet robe, a pale skull-like face, clawed hands, wisps below the waist; the wraith a black smoke hood and
+  black-violet shroud, a cyan flame between its hands.
+- **Regenerate**: Necropolis sheet N2.
+
+### ADR-338: Necropolis sheet N3 to the owner's review: weavers without webs, wingless caped vampires (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's Necropolis sheet N3 subjects (the weavers'
+cyan threads and web, the vampires' bat-wing cloaks).
+
+- **Owner**, on Necropolis sheet N3: no spider web on the fate weaver; the vampires without wings and closer to the classic ones.
+- **Subjects**: the death weaver and fate weaver unchanged but with no web and no threads; the vampire a pale nobleman with slicked
+  black hair, a black cape with a tall red-lined collar, a ruffled doublet; the vampire lord silver hair, an iron crown, a black and deep
+  red coat, a red-lined cape; neither with wings.
+- **Regenerate**: Necropolis sheet N3.
+
+### ADR-339: Necropolis sheet N4 to the owner's review: black-armoured faceless knights, violet- and crimson-robed liches (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's Necropolis sheet N4 subjects (the skeletal
+knights in grey rusted plate on skeletal horses, the hooded grey-robed liches).
+
+- **Owner**, on Necropolis sheet N4: the dark knight and death knight in black armour, closer to the classic ones; the lich and arch
+  lich closer to the classic ones.
+- **Subjects**: the dark knight in full black lacquered plate, a closed helm with no face or skull showing, a black cape and lance, on a
+  black undead warhorse with rotting hide (no bare skeleton); the death knight heavier, spiked pauldrons, a horned helm, a blood-red
+  cape and trim, a black greatsword, the horse barded in black iron; the lich a bare skull in violet and dark blue robes with a high
+  collar and gold trim, an orb staff, death mist from one hand, no hood; the arch lich in crimson and black with rich gold, a jewelled
+  collar, a gold circlet, death mist in both hands.
+- **Regenerate**: Necropolis sheet N4.

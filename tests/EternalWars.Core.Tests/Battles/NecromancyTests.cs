@@ -16,7 +16,7 @@ namespace EternalWars.Core.Tests.Battles;
 public class NecromancyTests
 {
     private const string Skeleton = "necropolis.skeleton";
-    private const string PlagueBearer = "necropolis.plague-bearer";
+    private const string Zombie = "necropolis.zombie";
 
     [Theory]
     [InlineData(SkillLevel.None, false, 0)]
@@ -62,7 +62,7 @@ public class NecromancyTests
         var wolf = CreatureCatalog.Default.Get(BuiltInCreatures.Wolf); // neutral, tier 1, 14 hit points
         var raised = Raise(SkillLevel.Master, seed, (wolf, 100)); // 1400 × 20 % = 280
 
-        Assert.All(raised, r => Assert.Contains(r.Creature.Value, new[] { Skeleton, PlagueBearer }));
+        Assert.All(raised, r => Assert.Contains(r.Creature.Value, new[] { Skeleton, Zombie }));
         var health = raised.Sum(r => r.Count * CreatureCatalog.Default.Get(r.Creature).Health);
         Assert.InRange(health, 280 - 11 - 20 + 2, 280); // each part rounded down
     }
@@ -76,9 +76,9 @@ public class NecromancyTests
         var griffin = creatures.Get(BuiltInCreatures.Griffin); // class B, tier 3, 54 hit points
 
         Assert.Equal([new RaisedUndead(Skeleton, 260 / 11)], Raise((footman, 100))); // 1300 × 20 %
-        Assert.Equal([new RaisedUndead(PlagueBearer, 340 / 20)], Raise((pikeman, 100)));
+        Assert.Equal([new RaisedUndead(Zombie, 340 / 20)], Raise((pikeman, 100)));
         Assert.Equal(
-            [new RaisedUndead(PlagueBearer, 340 / 20), new RaisedUndead(Skeleton, 260 / 11), new RaisedUndead("necropolis.wight", 1080 / 24)],
+            [new RaisedUndead(Skeleton, 260 / 11), new RaisedUndead(Zombie, 340 / 20), new RaisedUndead("necropolis.wight", 1080 / 24)],
             Raise((footman, 100), (pikeman, 100), (griffin, 100))); // Master: tier 3 → 2, Ghoul (A) and Wight (B)
     }
 
@@ -160,9 +160,9 @@ public class NecromancyTests
         session.MoveTo(A, new MapPosition(2, 0));
         session.AutoResolve();
 
-        // Footmen (class A) raise Skeletons, which go to the Skeleton Warriors (3/4); no Plague Bearers rise.
+        // Footmen (class A) raise Skeletons, which go to the Skeleton Warriors (3/4); no Zombies rise.
         Assert.All(raised.SelectMany(r => r.Raised), r => Assert.Equal("necropolis.skeleton-warrior", r.Creature));
-        Assert.DoesNotContain(army.Stacks, s => s.Stack.Creature.Value is Skeleton or PlagueBearer);
+        Assert.DoesNotContain(army.Stacks, s => s.Stack.Creature.Value is Skeleton or Zombie);
     }
 
     [Fact]

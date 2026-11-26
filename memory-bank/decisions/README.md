@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-336**. A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-340**. A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -362,3 +362,7 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [333](presentation.md#adr-333-inferno-sheet-i4-to-the-owners-review-a-fleshed-pit-fiend-with-a-glaive-a-ravager-of-flesh-and-riveted-iron-owner-adr-289-2026-11-27) | presentation | Inferno sheet I4 to the owner's review: a fleshed pit fiend with a glaive, a ravager of flesh and riveted iron (owner, ADR-289, 2026-11-27) | accepted |
 | [334](presentation.md#adr-334-inferno-sheet-i6-to-the-owners-review-breeders-as-half-woman-brood-queens-on-a-swollen-insect-abdomen-owner-adr-289-2026-11-27) | presentation | Inferno sheet I6 to the owner's review: breeders as half-woman brood-queens on a swollen insect abdomen (owner, ADR-289, 2026-11-27) | accepted |
 | [335](presentation.md#adr-335-inferno-sheet-i5-to-the-owners-review-red-winged-devils-with-tridents-spike-crested-red-gogs-owner-adr-289-2026-11-27) | presentation | Inferno sheet I5 to the owner's review: red winged devils with tridents, spike-crested red gogs (owner, ADR-289, 2026-11-27) | accepted |
+| [336](presentation.md#adr-336-the-plague-bearer-becomes-the-zombie-necropolis-sheet-n1-to-the-owners-review-faded-grey-skeletons-an-axe-and-no-shield-then-sword-and-shield-owner-adr-289-2026-11-27) | presentation | The Plague Bearer becomes the Zombie; Necropolis sheet N1 to the owner's review: faded grey skeletons, an axe and no shield, then sword and shield (owner, ADR-289, 2026-11-27) | accepted |
+| [337](presentation.md#adr-337-necropolis-sheet-n2-to-the-owners-review-hairless-beast-like-ghouls-with-a-spined-alghoul-hooded-skull-faced-wights-owner-adr-289-2026-11-27) | presentation | Necropolis sheet N2 to the owner's review: hairless beast-like ghouls with a spined alghoul, hooded skull-faced wights (owner, ADR-289, 2026-11-27) | accepted |
+| [338](presentation.md#adr-338-necropolis-sheet-n3-to-the-owners-review-weavers-without-webs-wingless-caped-vampires-owner-adr-289-2026-11-27) | presentation | Necropolis sheet N3 to the owner's review: weavers without webs, wingless caped vampires (owner, ADR-289, 2026-11-27) | accepted |
+| [339](presentation.md#adr-339-necropolis-sheet-n4-to-the-owners-review-black-armoured-faceless-knights-violet--and-crimson-robed-liches-owner-adr-289-2026-11-27) | presentation | Necropolis sheet N4 to the owner's review: black-armoured faceless knights, violet- and crimson-robed liches (owner, ADR-289, 2026-11-27) | accepted |

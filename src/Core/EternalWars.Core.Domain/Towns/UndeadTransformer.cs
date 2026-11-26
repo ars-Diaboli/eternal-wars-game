@@ -8,7 +8,7 @@ public sealed record UndeadTransform(Common.CreatureId From, int Count, Common.C
 
 /// <summary>
 /// The Necropolis's Undead Transformer (ADR-137). A living creature of tier 1–2 becomes the tier-1 undead of its class (ADR-135: A to Skeletons,
-/// B to Plague Bearers), of tier 3–4 the tier-2 undead (Ghouls, Wights), one for one; constructs and elementals never. A Necropolis tier 1–2
+/// B to Zombies), of tier 3–4 the tier-2 undead (Ghouls, Wights), one for one; constructs and elementals never. A Necropolis tier 1–2
 /// undead swaps to the other class's line of its tier, × 0.75 rounded down (at least 1). An upgraded creature counts as its base; the result is
 /// the upgraded undead when the town has that line's upgraded dwelling. A creature without a class (neutrals, Conflux, Dragon Utopia) picks a
 /// line; tier 5 is refused. Free, for the garrison's and the visiting hero's stacks, several at a time and any number of times a day.

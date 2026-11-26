@@ -85,7 +85,7 @@ public sealed class CreatureBank(MapObjectId id, MapObjectDefinition definition,
     public override string ToString() => $"{base.ToString()} guard {string.Join(',', Guard)} plundered {PlunderedOn?.AbsoluteDay}";
 }
 
-/// <summary>The banks' tables (ADR-068); creature names follow the roster (Zombie → Ghoul, Power Lich → Arch Lich, …); the Dwarf and Battle Dwarf are neutrals.</summary>
+/// <summary>The banks' tables (ADR-068); HoMM3 names mapped to the roster (Power Lich → Arch Lich, …); the Dwarf and Battle Dwarf are neutrals.</summary>
 public static class CreatureBankRules
 {
     /// <summary>A plundered bank fills again this many days after (MAP-14).</summary>

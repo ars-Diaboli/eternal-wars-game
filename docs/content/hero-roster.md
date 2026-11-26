@@ -201,8 +201,8 @@ Drusus a death knight and Ravenna a skeleton.
 |---|---|---|---|---|---|
 | Morthal | Warrior | Skeleton / Skeleton Warrior (T1) | Melee | Melee Basic, Tactics Basic | 2 / 1 / 1 / 1 |
 | Necrys | Mage | Skeleton / Skeleton Warrior (T1) | spell: Raise Dead | Death magic Basic, Treasury Basic | 0 / 0 / 3 / 2 |
-| Vexa | Warrior | Plague Bearer / Flesh Golem (T1) | Armor | Armor Basic, Melee Basic | 1 / 2 / 1 / 1 |
-| Sepulka | Mage | Plague Bearer / Flesh Golem (T1) | Necromancy (+5 points) | Death magic Basic, Spell resistance Basic | 0 / 1 / 2 / 2 |
+| Vexa | Warrior | Zombie / Flesh Golem (T1) | Armor | Armor Basic, Melee Basic | 1 / 2 / 1 / 1 |
+| Sepulka | Mage | Zombie / Flesh Golem (T1) | Necromancy (+5 points) | Death magic Basic, Spell resistance Basic | 0 / 1 / 2 / 2 |
 | Grimwald | Warrior | Ghoul / Alghoul (T2) | Archery | Logistics Basic, Archery Basic | 2 / 1 / 1 / 1 |
 | Vorlath | Mage | Ghoul / Alghoul (T2) | spell: Curse | Death magic Basic, Logistics Basic | 0 / 0 / 3 / 2 |
 | Ulric Ashgrave | Warrior | Death Weaver / Fate Weaver (T3) | +350 gold a day | War Tempo Basic, Armor Basic | 1 / 2 / 1 / 1 |

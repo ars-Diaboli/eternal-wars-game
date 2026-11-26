@@ -23,19 +23,21 @@ Not a photograph, not a plastic CGI render, no pixel art. Necropolis creatures: 
 grey cloth, ash, near black to ash grey, a cold cyan glow in eyes and wounds only; ancient and patient. 4 separate icons arranged in a
 grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and
 with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers.
-Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a skeleton soldier with a rusted sword
-and a cracked round shield, cold cyan light in the eye sockets; 2 a hunched bloated corpse wrapped in rags, carrying a dripping censer
-of cyan fumes; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but
-larger, heavier armed, more ornate and richer in colour: rusted plate pieces bolted onto the bones, a tall shield with a bony hand
-emblem, a notched axe; 4 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build
-but larger, heavier armed, more ornate and richer in colour: a hulking golem of corpses stitched together with iron staples, one
-enormous fist
+Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a bare skeleton warrior of faded dull
+grey bone, chalky and weathered, not brown or yellowed, a few rags, cold cyan light in the eye sockets, a rusted one-handed war axe in
+its hand and no shield; 2 a plain shambling zombie, a dead man risen from the grave, slack grey-green rotting skin, sunken
+eyes with a faint cyan glint, torn shirt and breeches, bare feet, arms reaching forward with empty hands, no censer, no lantern, no
+robe, no weapon; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the same skull and build but
+larger, better armed, more ornate and richer in colour: the same faded grey bone, rusted plate pieces bolted onto the bones, a rusted
+straight sword and a tall shield with a bony hand emblem, no axe; 4 the same creature as the one above it, clearly upgraded and told
+apart at a glance: the same dead face but larger, heavier and more ornate: a hulking golem of corpses stitched together with iron
+staples, one enormous fist
 ```
 
 | # | File |
 |---|---|
 | 1 | `icon_creature_necropolis.skeleton` |
-| 2 | `icon_creature_necropolis.plague-bearer` |
+| 2 | `icon_creature_necropolis.zombie` |
 | 3 | `icon_creature_necropolis.skeleton-warrior` |
 | 4 | `icon_creature_necropolis.flesh-golem` |
 
@@ -53,12 +55,16 @@ Not a photograph, not a plastic CGI render, no pixel art. Necropolis creatures: 
 grey cloth, ash, near black to ash grey, a cold cyan glow in eyes and wounds only; ancient and patient. 4 separate icons arranged in a
 grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and
 with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers.
-Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a gaunt grey ghoul crouched low, long
-claws, a jaw of jagged teeth, sunken eyes; 2 a pale translucent figure in a tattered grey shroud, cold cyan eyes, reaching forward
-with long fingers; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but
-larger, heavier armed, more ornate and richer in colour: larger, skin peeled back to show bone, hooked bone spurs along the spine; 4
-the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed,
-more ornate and richer in colour: a hood of black smoke and torn shroud, a cold cyan flame held between both hands
+Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a ghoul shown whole, a hairless
+corpse-eater crouched on all fours like a beast, grey-white leathery skin stretched over a hunched spine and ribs, a low bony crest
+over the skull, small black eyes, a wide jaw of jagged teeth, long arms with hooked claws, no hair, no rags, no clothing; 2 a wight, a
+floating hooded spectre in a tattered grey-violet robe, a pale skull-like face with hollow cheeks and cold cyan eyes in the hood's
+shadow, long bony clawed hands reaching forward, the robe fading to wisps below the waist, no legs; 3 the same creature as the one
+above it, clearly upgraded and told apart at a glance: the same build but larger and more savage: an alghoul, darker grey-brown hide,
+a thick ridge of sharp bone spines and quills along the back and shoulders, longer claws, still hairless and unclothed; 4 the same
+creature as the one above it, clearly upgraded and told apart at a glance: the same build but larger, darker and more menacing: a
+wraith, a deep hood of black smoke and torn black-violet shroud, the skull face barely seen, a cold cyan flame held between both
+clawed hands
 ```
 
 | # | File |
@@ -83,12 +89,13 @@ grey cloth, ash, near black to ash grey, a cold cyan glow in eyes and wounds onl
 grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and
 with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers.
 Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a huge spider of black bone and grey
-chitin, a skull-like pattern on its back, cold cyan threads trailing; 2 a pale gaunt vampire in a black high-collared coat, red eyes,
-fangs bared, a bat-wing cloak; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and
-build but larger, heavier armed, more ornate and richer in colour: a pale bone-white body, legs ending in sickle points, a glowing
-cyan web spun behind it; 4 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build
-but larger, heavier armed, more ornate and richer in colour: silver hair, a tarnished iron crown, a coat embroidered in dark red, the
-cloak spread like wings
+chitin, a skull-like pattern on its back, no web, no threads; 2 a vampire nobleman, a pale gaunt man with slicked-back black hair,
+pointed ears, red eyes and bared fangs, a black cape with a tall stiff collar lined in red, a dark doublet with a ruffled collar, no
+wings, no bat-wing cloak; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the same build but
+larger, more ornate and richer in colour: a pale bone-white body, legs ending in sickle points, no web and no glowing threads anywhere;
+4 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but more ornate and
+richer in colour: a vampire lord, silver hair, a tarnished iron crown, a black and deep red coat embroidered in dark red, a red-lined
+cape hanging from the shoulders, no wings
 ```
 
 | # | File |
@@ -112,13 +119,18 @@ Not a photograph, not a plastic CGI render, no pixel art. Necropolis creatures: 
 grey cloth, ash, near black to ash grey, a cold cyan glow in eyes and wounds only; ancient and patient. 4 separate icons arranged in a
 grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and
 with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers.
-Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a skeletal knight in black rusted plate
-on a skeletal horse, a long black lance; 2 a skeletal sorcerer in rotting grey robes, a staff topped with a skull, cold cyan fire
-around one hand; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but
-larger, heavier armed, more ornate and richer in colour: the horse barded in black iron with cyan fire in its eyes, a tall spiked
-helm, a great curved glaive; 4 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and
-build but larger, heavier armed, more ornate and richer in colour: a black iron crown on the skull, robes hung with bone ornaments, a
-glowing cyan phylactery on a chain
+Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a dark knight, an undead rider in full
+black plate armour, deep black lacquered steel with dull highlights, not grey and not rusted, a closed black helm with a narrow visor
+and a faint cold glow in the slit, no face, no skull and no bone showing, a black cape, a long black lance, riding a black undead
+warhorse with dark rotting hide, a ragged black mane and glowing eyes, no exposed horse skeleton; 2 a lich, a skeletal sorcerer with a
+bare grinning skull, robes of deep violet and dark blue with a high stiff collar and tarnished gold trim, a tall staff topped with a
+dark orb, a small cloud of cold cyan-green death mist rising from one bony hand, no hood; 3 the same creature as the one above it,
+clearly upgraded and told apart at a glance: the same build but larger, heavier armed and more ornate: a death knight, the same black
+plate, heavier, with spiked black pauldrons and a horned black helm, a blood-red cape and red trim on the armour, a black greatsword,
+the horse barded in black iron with cold cyan fire in its eyes; still no face and no skull showing; 4 the same creature as the one
+above it, clearly upgraded and told apart at a glance: the same skull and build but more ornate and richer in colour: an arch lich,
+robes of deep crimson and black with rich gold trim, a high jewelled collar, a gold circlet on the skull, the staff topped with a
+glowing orb in a gold claw, death mist swirling in both hands
 ```
 
 | # | File |

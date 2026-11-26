@@ -9,6 +9,9 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- The Plague Bearer is now the Zombie (`necropolis.zombie`, ADR-336; same stats and upgrade; generated maps change, so
+  `MapGenerator.Version` 15). The owner's third review of the creature prompts: Dungeon D1–D4, Haven H1–H5, Inferno I1–I6 and
+  Necropolis N1–N4 rewritten (ADR-321 to ADR-339); those sheets wait to be regenerated.
 - Conflux roster redone (ADR-320): the wisp; the air, water, earth and fire spirits (tier 2) upgrading to the storm, ice, earth and fire
   elementals (tier 3), an upgrade one tier up now allowed in a non-playable town (`CreatureCatalog`); the psychic elemental to the magic
   elemental (4), the void to the energy elemental (5); placeholder stats; Bind Elemental calls the spirits. The Conflux prompts are

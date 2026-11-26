@@ -55,7 +55,7 @@ academy.colossus,Colossus,academy,5,Medium,academy.titan,,24,24,46,63,250,18,9,1
 academy.titan,Titan,academy,5,Medium,,,28,27,46,63,250,20,10,14,20,,,38319,1,4300,mercury 2,giant,SpellImmunity mind; RangedRetaliation,"sandbox: hp 300, dmg 40-50, 16 shots"
 necropolis.skeleton,Skeleton,necropolis,1,Small,necropolis.skeleton-warrior,A,5,4,2,6,11,10,4,10,,,,31,20,50,,undead,SpellImmunity mind,sandbox showed it as 'Devil' (copy-paste)
 necropolis.skeleton-warrior,Skeleton Warrior,necropolis,1,Small,,A,6,6,3,6,12,11,5,11,,,,43,20,65,,undead,SpellImmunity mind; UnlimitedRetaliation,
-necropolis.plague-bearer,Plague Bearer,necropolis,1,Small,necropolis.flesh-golem,B,4,6,2,4,20,8,3,7,,,,45,15,65,,undead,SpellImmunity mind; Relentless 10,
+necropolis.zombie,Zombie,necropolis,1,Small,necropolis.flesh-golem,B,4,6,2,4,20,8,3,7,,,,45,15,65,,undead,SpellImmunity mind; Relentless 10,
 necropolis.flesh-golem,Flesh Golem,necropolis,1,Small,,B,6,8,3,4,22,9,3,8,,,,65,15,85,,undead; construct,SpellImmunity mind; UnlimitedRetaliation,
 necropolis.ghoul,Ghoul,necropolis,2,Small,necropolis.alghoul,A,9,7,5,9,26,12,5,11,,,,163,9,185,,undead,SpellImmunity mind; Relentless 15,
 necropolis.alghoul,Alghoul,necropolis,2,Small,,A,10,8,6,10,30,13,6,12,,,,228,9,240,,undead,SpellImmunity mind; Relentless 20,

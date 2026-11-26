@@ -19,7 +19,7 @@ public class UndeadTransformerTests
 {
     private const string Skeleton = "necropolis.skeleton";
     private const string SkeletonWarrior = "necropolis.skeleton-warrior";
-    private const string PlagueBearer = "necropolis.plague-bearer";
+    private const string Zombie = "necropolis.zombie";
     private const string Ghoul = "necropolis.ghoul";
     private const string Wight = "necropolis.wight";
 
@@ -61,10 +61,10 @@ public class UndeadTransformerTests
         var (state, town) = Necropolis();
 
         Assert.Equal(new UndeadTransform("haven.footman", 30, Skeleton, 30), Of(state, town, "haven.footman", 30)); // tier 1, A
-        Assert.Equal(PlagueBearer, Of(state, town, "haven.pikeman", 5)!.To); // tier 1, B
+        Assert.Equal(Zombie, Of(state, town, "haven.pikeman", 5)!.To); // tier 1, B
         Assert.Equal(Skeleton, Of(state, town, "haven.zealot", 5)!.To); // tier 2, A
         Assert.Equal(Ghoul, Of(state, town, "haven.monk", 5)!.To); // tier 3, A
-        Assert.Equal(PlagueBearer, Of(state, town, "haven.archer", 5)!.To); // tier 2, B
+        Assert.Equal(Zombie, Of(state, town, "haven.archer", 5)!.To); // tier 2, B
         Assert.Equal(Wight, Of(state, town, "haven.lancer", 5)!.To); // tier 4, B
         Assert.Null(Of(state, town, "conflux.storm-elemental", 5));
     }
@@ -85,8 +85,8 @@ public class UndeadTransformerTests
     {
         var (state, town) = Necropolis();
 
-        Assert.Equal(new UndeadTransform(Skeleton, 10, PlagueBearer, 7), Of(state, town, Skeleton, 10));
-        Assert.Equal(new UndeadTransform(PlagueBearer, 1, Skeleton, 1), Of(state, town, PlagueBearer, 1));
+        Assert.Equal(new UndeadTransform(Skeleton, 10, Zombie, 7), Of(state, town, Skeleton, 10));
+        Assert.Equal(new UndeadTransform(Zombie, 1, Skeleton, 1), Of(state, town, Zombie, 1));
         Assert.Equal(Wight, Of(state, town, Ghoul, 4)!.To);
         Assert.Equal(Skeleton, Of(state, town, "necropolis.flesh-golem", 4)!.To); // an upgraded undead counts as its base too
     }
@@ -102,7 +102,7 @@ public class UndeadTransformerTests
 
         Assert.True(UndeadTransformer.NeedsLine(state, BuiltInCreatures.Wolf));
         Assert.NotNull(UndeadTransformer.Of(state, town, BuiltInCreatures.Wolf, 5).Refusal);
-        Assert.Equal(PlagueBearer, Of(state, town, BuiltInCreatures.Wolf, 5, CreatureCategory.B)!.To);
+        Assert.Equal(Zombie, Of(state, town, BuiltInCreatures.Wolf, 5, CreatureCategory.B)!.To);
         Assert.Equal(Skeleton, Of(state, town, BuiltInCreatures.DireWolf, 5, CreatureCategory.A)!.To);
         Assert.False(UndeadTransformer.NeedsLine(state, "haven.footman"));
     }
@@ -126,8 +126,8 @@ public class UndeadTransformerTests
             new(TownArmy.VisitingHero, 1), new(TownArmy.VisitingHero, 2, CreatureCategory.B), new(TownArmy.Garrison, 3),
         ])).ThrowIfRejected();
 
-        Assert.Equal([new CreatureStack(Skeleton, 14), null, new CreatureStack(PlagueBearer, 6)], hero.Army.Slots.Take(3));
-        Assert.Equal(new CreatureStack(PlagueBearer, 8), town.Garrison[3]);
+        Assert.Equal([new CreatureStack(Skeleton, 14), null, new CreatureStack(Zombie, 6)], hero.Army.Slots.Take(3));
+        Assert.Equal(new CreatureStack(Zombie, 8), town.Garrison[3]);
         Assert.Equal(3, transformed.Count);
         Assert.Equal(gold, state.GetPlayer(Blue).Resources); // free
     }

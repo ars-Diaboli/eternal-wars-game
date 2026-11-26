@@ -61,8 +61,8 @@ academy.edvard,Edvard Lunde,academy,Warrior,academy.iron-golem,skill tactics.war
 academy.nadia,Nadia,academy,Mage,academy.djinn,spell arcana.dispel,magic.academy.spells Basic; pathfinding.pathfinding Basic,0,0,3,2,yes,campaign hero (ADR-298); copies Layth
 necropolis.morthal,Morthal,necropolis,Warrior,necropolis.skeleton,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,1,1,,prefers Skeleton
 necropolis.necrys,Necrys,necropolis,Mage,necropolis.skeleton,spell death.raise-dead,magic.necropolis.spells Basic; estates.treasury Basic,0,0,3,2,,prefers Skeleton
-necropolis.vexa,Vexa,necropolis,Warrior,necropolis.plague-bearer,skill defense.armor,defense.armor Basic; offense.melee Basic,1,2,1,1,,prefers Plague Bearer
-necropolis.sepulka,Sepulka,necropolis,Mage,necropolis.plague-bearer,skill magic.necropolis.attunement 5,magic.necropolis.spells Basic; defense.resistance Basic,0,1,2,2,,prefers Plague Bearer
+necropolis.vexa,Vexa,necropolis,Warrior,necropolis.zombie,skill defense.armor,defense.armor Basic; offense.melee Basic,1,2,1,1,,prefers Zombie
+necropolis.sepulka,Sepulka,necropolis,Mage,necropolis.zombie,skill magic.necropolis.attunement 5,magic.necropolis.spells Basic; defense.resistance Basic,0,1,2,2,,prefers Zombie
 necropolis.grimwald,Grimwald,necropolis,Warrior,necropolis.ghoul,skill offense.archery,pathfinding.logistics Basic; offense.archery Basic,2,1,1,1,,prefers Ghoul
 necropolis.vorlath,Vorlath,necropolis,Mage,necropolis.ghoul,spell death.curse,magic.necropolis.spells Basic; pathfinding.logistics Basic,0,0,3,2,,prefers Ghoul
 necropolis.ulric,Ulric Ashgrave,necropolis,Warrior,necropolis.death-weaver,resource gold 350,tactics.wartempo Basic; defense.armor Basic,1,2,1,1,,prefers Death Weaver

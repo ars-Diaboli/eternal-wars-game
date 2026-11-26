@@ -212,7 +212,7 @@ Rules (ADR-072, MAG-7):
 - **Counted**: only the enemy's losses, enemy undead included; constructs and elementals (by the creature tags) and war machines are not. The
   hero's own losses never count.
 - **Count**: the slain hit points are summed per undead tier (by the table), times the share, divided by the undead creature's hit points,
-  rounded down. Each tier has two lines, class A and class B (ADR-135): tier 1 Skeleton (A) and Plague Bearer (B), tier 2 Ghoul (A) and
+  rounded down. Each tier has two lines, class A and class B (ADR-135): tier 1 Skeleton (A) and Zombie (B), tier 2 Ghoul (A) and
   Wight (B), tier 3 Vampire (A) and Death Weaver (B), tier 4 Dark Knight (A) and Lich (B). A slain creature's hit points go to the line of its
   own class; an unclassed one's (tier 5, Conflux, Dragon Utopia, neutrals) are split between the two lines in a random proportion (game RNG).
 - **Base or upgraded**: the base creature is raised; it joins a stack of the same creature or a free slot. Only when there is neither, and the

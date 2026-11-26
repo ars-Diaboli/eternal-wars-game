@@ -1049,10 +1049,10 @@ shape = SubResource("hover_dwelling_necropolis_bone_dragon_0")
 [node name="Focus" type="Marker3D" parent="Town/plot_dwelling-necropolis_bone-dragon"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15901, 1.33332, 1.14662)
 
-[node name="plot_dwelling-necropolis_plague-bearer" type="Marker3D" parent="Town"]
+[node name="plot_dwelling-necropolis_zombie" type="Marker3D" parent="Town"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 0, 4)
 
-[node name="Focus" type="Marker3D" parent="Town/plot_dwelling-necropolis_plague-bearer"]
+[node name="Focus" type="Marker3D" parent="Town/plot_dwelling-necropolis_zombie"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
 
 [node name="plot_dwelling-necropolis_wight" type="Marker3D" parent="Town"]
