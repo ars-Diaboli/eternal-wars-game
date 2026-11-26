@@ -32,8 +32,9 @@ larger, heavier armed, more ornate and richer in colour: a long old flintlock mu
 powder horn and a leather bandolier of paper cartridges, a battered leather cap with a gold star badge, a royal-blue tabard; hand-made
 old-world gunpowder gear, nothing sci-fi, no goggles, no tanks, no glowing devices; 4 the same creature as the one above it, clearly
 upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: full heavy
-plate of bright polished steel with gold trim, a closed steel helm with a gold crest, a large square steel shield with a gold star, a
-royal-blue surcoat, the beard braided with gold rings
+plate of bright polished steel with gold trim, an open-faced Norse helm of polished steel, rounded with a nasal bar and gold-trimmed
+brow guards, the whole face clearly visible, no visor, no horns; a large square steel shield with a gold star in one hand and a
+one-handed bearded axe of bright steel in the other, a royal-blue surcoat, the beard braided with gold rings
 ```
 
 | # | File |
@@ -61,14 +62,15 @@ no cloth. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alon
 frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a
 crouching gargoyle of cracked grey granite, bat wings folded, small horns, bare weathered stone with no cloth, no chain and no
 harness; 2 a hulking golem hammered from dark wrought-iron plates by a smith-mage, like a crude forged iron statue of a broad man, a
-heavy solemn face cast in iron, rivets, soot and scorch marks, huge bare iron fists and no weapon, two small ice-blue eyes; old-world
-forged metal, not a robot, no machinery, no cloth; 3 the same creature as the one above it, clearly upgraded and told apart at a
-glance: the same face and build but larger, heavier armed, more ornate and richer in colour: still a winged gargoyle: a body of glossy
-black obsidian with sharp facets, wide-spread bat wings, long curved horns, ice-blue runes glowing in the cracks, no cloth; 4 the same
-creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more
-ornate and richer in colour: an empty suit of knight's plate armour of real polished steel with gold trim, standing on its own,
-darkness behind the visor with two ice-blue sparks, a short broad gladius sword in its hand, a royal-blue surcoat; real forged armour,
-not a robot
+blank head of riveted iron plates with no face: no eyes, no nose, no mouth, only a narrow dark slit; rivets, soot and scorch marks,
+huge bare iron fists and no weapon; no human face; old-world forged metal, not a robot, no machinery, no cloth; 3 the same creature as
+the one above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and
+richer in colour: still a winged gargoyle: a body of glossy black obsidian with sharp facets, wide-spread bat wings, long curved
+horns, ice-blue runes glowing in the cracks, no cloth; 4 the same creature as the one above it, clearly upgraded and told apart at a
+glance: the same face and build but larger, heavier armed, more ornate and richer in colour: an empty suit of knight's plate armour of
+real polished steel with gold trim, standing on its own, only empty black darkness behind the visor with no eyes and no glow, thin
+dark gaps between the plates at the neck, shoulders, elbows and waist showing it is hollow inside with nothing in it, a short broad
+gladius sword in its hand; bare armour with no surcoat, no tabard and no cloth; real forged armour, not a robot
 ```
 
 | # | File |
@@ -94,14 +96,17 @@ a gold star, ice-blue rune light; no green, no teal, no verdigris anywhere; cold
 no cloth. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10
 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no
 frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a
-young woman of flesh and blood with pale skin and rosy cheeks, long white braids frosted with rime, a hooded white fur cloak over a
-deep royal-blue dress, a ball of swirling frost in her hand; solid and human, not a ghost, not made of mist or ice; 2 a human sorcerer
-in a plain dark-blue robe with a grey fur collar, a small ice-blue rune glowing in an open palm; 3 the same creature as the one above
-it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour:
-a tall crown of ice crystals, a white ermine mantle over a rich royal-blue gown embroidered in gold, a long staff of clear blue ice,
-frost spreading from her hand; 4 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and
-build but larger, heavier armed, more ornate and richer in colour: older with a grey beard, a gold circlet, a heavy royal-blue robe
-embroidered with gold stars, a staff topped with a brass orrery of rings, a bright orange flame in the other hand
+snow spirit of the high peaks, not human: a slender woman's shape with skin of frost-white packed snow and a faint ice-blue sheen,
+glowing pale-blue eyes with no pupils, long white hair streaming upward and breaking into falling snowflakes, thin fingers tipped with
+icicles, a gown of hoarfrost and drifting snow growing out of her body, no cloth, a ball of swirling frost in her hand; solid snow and
+ice, not a ghost, no mist, no smoke or cloud tail, white not blue like the djinn; 2 a human sorcerer in a plain dark-blue robe with a
+grey fur collar, a small ice-blue rune glowing in an open palm; 3 the same creature as the one above it, clearly upgraded and told
+apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: a tall crown of jagged ice
+crystals growing from her head, her skin turning to clear cracked blue ice at the shoulders and arms, hair of long hanging icicles, a
+mantle of sharp ice shards over her shoulders, a long glaive of clear blue ice with a curved blade, a whirling blizzard spreading from
+her hand; 4 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but larger,
+heavier armed, more ornate and richer in colour: older with a grey beard, a gold circlet, a heavy royal-blue robe embroidered with
+gold stars, a staff topped with a brass orrery of rings, a bright orange flame in the other hand
 ```
 
 | # | File |
@@ -129,12 +134,14 @@ no cloth. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alon
 frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a
 bound air spirit, a muscular bald man with smoky grey-blue skin, his body below the waist a swirl of dark storm cloud, a stern face,
 iron shackles with broken chains on his wrists; 2 a guardian with a woman's upper body in steel scale armour with gold trim and a
-coiled serpent tail of dark steel-blue scales, two curved swords; 3 the same creature as the one above it, clearly upgraded and told
-apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: now a woman: a regal female
-djinn with vivid saturated sapphire-blue skin, long black hair, a cloud tail of deep cobalt blue, a crown of floating gold rings, gold
-jewellery, the shackles turned to gold bracelets lit with runes, small lightning around her hands; 4 the same creature as the one
-above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in
-colour: four arms each holding a blade, a tall gold crown with an ice-blue gem, gold bands on the tail, a deep royal-blue silk sash
+coiled serpent tail of dark steel-blue scales, two very long, narrow, slightly curved swords, each slender blade longer than her arm;
+no cloth; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but larger,
+heavier armed, more ornate and richer in colour: now a woman: a regal female djinn with vivid saturated sapphire-blue skin, long black
+hair, a cloud tail of deep cobalt blue, a crown of floating gold rings, gold jewellery, the shackles turned to gold bracelets lit with
+runes, small lightning around her hands; 4 the same creature as the one above it, clearly upgraded and told apart at a glance: the
+same face and build but larger, heavier armed, more ornate and richer in colour: four arms each holding a very long, narrow, slightly
+curved sword longer than her arm, a tall gold crown with an ice-blue gem, gold bands on the tail; no sash, no cloth, only armour and
+scales
 ```
 
 | # | File |
@@ -163,9 +170,11 @@ frames, no text, no labels, no numbers. Transparent background, PNG with alpha. 
 the head and shoulders of a giant, an old bearded man of living flesh with weathered frost-grey skin, snow in his beard and hair, a
 plain gold circlet, a raised clenched bare fist, no weapon and no armour; a living giant, not a statue, not stone, not a golem; 2 a
 second take of the creature to its left; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the
-same face and build but larger, heavier armed, more ornate and richer in colour: the same giant made of polished steel, a stern
-bearded face of bright steel, gold trim and a gold crown, a spear of crackling lightning, storm clouds around the shoulders; 4 a
-second take of the creature to its left
+same face and build but larger, heavier armed, more ornate and richer in colour: the same living giant now clean-shaven with no beard
+and short cropped grey hair, a stern face of frost-grey skin, in heavy classical armour like an ancient hero's: a sculpted muscle
+cuirass of polished bright steel with gold trim, broad rounded layered pauldrons, steel bracers and a wide gold-buckled belt, a gold
+crown, a spear of crackling lightning, storm clouds around the shoulders; flesh in armour, not a statue, not made of steel; 4 a second
+take of the creature to its left
 ```
 
 | # | File |

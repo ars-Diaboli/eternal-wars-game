@@ -252,7 +252,7 @@ public class ControlSpellTests
 
         Assert.Equal(25, caster.ElementBonus(SpellCatalog.Default.Get("arcana.magic-arrow")));
         var bind = SpellCatalog.Default.Get("arcana.bind-elemental");
-        Assert.Equal((25, 0, 0), (caster.ElementBonus(bind, "conflux.fire-elemental"), caster.ElementBonus(bind, "conflux.water-elemental"), caster.ElementBonus(bind)));
+        Assert.Equal((25, 0, 0), (caster.ElementBonus(bind, "conflux.fire-spirit"), caster.ElementBonus(bind, "conflux.water-spirit"), caster.ElementBonus(bind)));
     }
 
     // The table ---------------------------------------------------------------------------------

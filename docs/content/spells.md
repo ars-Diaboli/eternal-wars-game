@@ -177,7 +177,7 @@ binds elementals and undoes other magic; it has the most mana (Arcana attunement
 | 2 | **Unravel** (`arcana.unravel`) | 8 | water | – | removes the own spells from an enemy stack | all enemy stacks | also −1 Spell Power for the enemy hero, the battle |
 | 2 | **Teleport** (`arcana.teleport`) | 9 | water | – | moves an own stack to a free cell within 10 | anywhere | the stack can still act this round |
 | 3 | **Frost Bolt** (`arcana.frost-bolt`) | 16 | water | ice | 90 damage to an enemy stack, −2 speed, 2 rounds | 2 stacks | 3 stacks; a frozen stack loses its next action |
-| 3 | **Bind Elemental** (`arcana.bind-elemental`) | 18 | the elemental's | summon | a stack of Conflux air, earth, fire or water elementals (the caster's choice) for the battle, 200 health worth | 280 | two kinds |
+| 3 | **Bind Elemental** (`arcana.bind-elemental`) | 18 | the elemental's | summon | a stack of Conflux air, earth, fire or water spirits (the caster's choice) for the battle, 200 health worth | 280 | two kinds |
 | 3 | **Anti-Magic** (`arcana.anti-magic`) | 15 | earth | – | an own stack is immune to every spell of level 1–3 (also the own), 3 rounds | level 1–4 | all own stacks, levels 1–2 |
 | 3 | **Clockwork Precision** (`arcana.clockwork`) | 14 | fire | – | own war machines +50 % damage and act twice, 2 rounds | 3 rounds | the offensive machine ignores cover |
 | 4 | **Dispel** (`arcana.dispel`) | 25 | water | – | removes every spell from one stack | every stack in a 5 × 5 area | every spell on the battlefield; half the mana if only enemy spells are removed |
@@ -333,7 +333,7 @@ Each school has two or three, at its levels:
 - Numbers: costs, base damage and durations, after the visuals (the owner's answer to MAG-1); the simulator checks damage per mana.
 - Summoned creatures (ADR-106, MAG-13): town creatures' rows, never neutrals; elementals are the exception (Conflux rows). Call the Herd
   calls Sylvan Pegasi (Silver Pegasi at rank III), Awaken the Grove Sylvan Treants (Ancient Treants), Bind Elemental the Conflux air, earth,
-  fire and water elementals, Hellgate Inferno Imps (Familiars), Summon Demons Inferno Horned Demons; the Breeder's imps are Inferno Imps.
+  fire and water spirits, Hellgate Inferno Imps (Familiars), Summon Demons Inferno Horned Demons; the Breeder's imps are Inferno Imps.
   The creatures for Call the Herd and Summon Demons are assumed; the owner may pick others. Built in ADR-120 (rank I): Bind Elemental calls
   the first element not yet summoned in the battle *(proposal: no choice screen yet)*; a second cast of a summon adds to its stack.
 - Elements: one per spell, drafted with HoMM3's spell elements as reference where a spell has a counterpart (ADR-106); the owner may move any.

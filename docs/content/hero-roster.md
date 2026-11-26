@@ -359,18 +359,19 @@ Campaign heroes (ADR-298), never drawn at random; each copies a standard hero's 
 ## Conflux
 
 The Firstborn's elemental wardens (non-playable town, [lore.md](lore.md)): only campaign heroes. Each copies a standard hero's specialty,
-starting skills and stats, magic school included; its preferred creature is its own element.
+starting skills and stats, magic school included; its preferred creature is its own element's line (the storm and frost wardens' are the air and
+water spirits, whose upgrades are the Storm and Ice Elementals).
 
 | Hero | Class | Preferred creature | Copies | Who |
 |---|---|---|---|---|
-| Orrath | Warrior | Earth Elemental (T3) | Stellan Frost (Academy) | The warden of the mountain roots |
-| Zephra | Warrior | Air Elemental (T3) | Corwin Ashby (Haven) | The wind warden who rides the high storms |
-| Ignar | Warrior | Fire Elemental (T3) | Azgaroth (Inferno) | The flame warden of the burning gate |
-| Maerin | Warrior | Water Elemental (T3) | Varis (Sylvan) | The tide warden of the drowned shore |
+| Orrath | Warrior | Earth Spirit (T2) | Stellan Frost (Academy) | The warden of the mountain roots |
+| Zephra | Warrior | Air Spirit (T2) | Corwin Ashby (Haven) | The wind warden who rides the high storms |
+| Ignar | Warrior | Fire Spirit (T2) | Azgaroth (Inferno) | The flame warden of the burning gate |
+| Maerin | Warrior | Water Spirit (T2) | Varis (Sylvan) | The tide warden of the drowned shore |
 | Ilumiel | Mage | Wisp (T1) | Ansel Wren (Haven) | The light warden, a voice of the Wheel itself |
-| Kalderon | Mage | Magma Elemental (T4) | Belzra (Inferno) | The forge warden, smith of the elemental lords |
-| Vaeyra | Mage | Storm Elemental (T4) | Theodric Wynn (Academy) | The storm warden of the high peaks |
-| Hrimnar | Mage | Ice Elemental (T4) | Cassius Thorne (Academy) | The frost warden of the world's northern edge |
+| Kalderon | Mage | Psychic Elemental (T4) | Belzra (Inferno) | The forge warden, smith of the elemental lords |
+| Vaeyra | Mage | Air Spirit (T2) | Theodric Wynn (Academy) | The storm warden of the high peaks |
+| Hrimnar | Mage | Water Spirit (T2) | Cassius Thorne (Academy) | The frost warden of the world's northern edge |
 
 ## Dragon Utopia
 

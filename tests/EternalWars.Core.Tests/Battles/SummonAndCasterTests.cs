@@ -72,7 +72,7 @@ public class SummonAndCasterTests
         Assert.Null(battle.Engine.Cast(Attacker, "nature.awaken-grove", null, null));
 
         var called = battle.State.Units.Where(u => u.IsSummoned).ToList();
-        Assert.Equal(["conflux.air-elemental", "conflux.earth-elemental", "sylvan.treant"], called.Select(u => u.Creature.Id));
+        Assert.Equal(["conflux.air-spirit", "conflux.earth-spirit", "sylvan.treant"], called.Select(u => u.Creature.Id));
         var treant = called[2];
         Assert.True(treant.IsRooted);
         Assert.Equal([treant.Position], BattleGrid.Reachable(battle.State, treant).Keys);

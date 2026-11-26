@@ -21,12 +21,16 @@ black skin, black and dark-violet armour with thin silver inlay, a faint violet 
 patient. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 %
 empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames,
 no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a pale
-eyeless cave dweller with grey skin and a lizard-like face, a crude stone-tipped spear; 2 a dark-elf scout with ash-grey skin and
-white hair under a black hood, two curved daggers; 3 the same creature as the one above it, clearly upgraded and told apart at a
-glance: the same face and build but larger, heavier armed, more ornate and richer in colour: violet painted scars, a bone helmet, a
-spear in each hand; 4 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but
-larger, heavier armed, more ornate and richer in colour: a black mask over the lower face, violet-edged blades, a cloak melting into
-shadow
+troglodyte, a small hunched reptile-like cave beast shown whole, crouching on bent clawed legs, not a man: a smooth eyeless head with
+no eyes at all, a long lizard snout and a huge wide jaw of needle teeth, a ridge of spines from the skull down the back, long thin
+arms with clawed hands, slick blue-grey hide, a scrap of hide at the waist, a crude stone-tipped spear; 2 a dark-elf scout with
+ash-grey skin and white hair under a black hood, the face covered below the eyes by a wrapped black scarf, two long slender curved
+blades of plain steel as long as his arms; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the
+same face and build but larger, heavier armed, more ornate and richer in colour: still the hunched eyeless beast, darker red-brown
+hide, a taller crest of spines, bone spikes tied to the forearms, a heavier barbed spear; 4 the same creature as the one above it,
+clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: a
+close black mask hiding the whole face but the eyes, two even longer curved sword-blades of dark steel with silver inlay, no glow on
+the blades, a cloak melting into black shadow
 ```
 
 | # | File |
@@ -51,12 +55,14 @@ black skin, black and dark-violet armour with thin silver inlay, a faint violet 
 patient. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 %
 empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames,
 no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a medusa
-with green scales, hair of small snakes and a long serpent tail, a curved silver dagger, eyes glowing faint violet; 2 a hulking
-bull-headed minotaur with dark fur, a double-bladed axe of black iron with silver inlay; 3 the same creature as the one above it,
-clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: pale
-diseased scales, the hair-snakes dripping venom, a ragged black veil; 4 the same creature as the one above it, clearly upgraded and
-told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: black plate on the
-shoulders, a horned helm, a larger axe glowing faint violet
+archer with green scales, hair of small snakes and a long serpent tail, bare-headed, drawing a short recurved bow of black horn with
+an arrow on the string, a quiver at her hip, no blade, eyes glowing faint violet; 2 a hulking bull-headed minotaur with dark fur, a
+double-bladed axe of black iron with silver inlay; 3 the same creature as the one above it, clearly upgraded and told apart at a
+glance: the same face and build but larger, heavier armed, more ornate and richer in colour: pale diseased scales, the hair-snakes
+dripping venom, a longer recurved bow of bone and silver drawn to the cheek, a full quiver, the snake hair bare with no hood, veil or
+cloth over the head; 4 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build
+but larger, heavier armed, more ornate and richer in colour: bare-headed with no helmet, the horns larger and capped with bronze, a
+bronze breastplate and a broad studded leather war harness, a heavier double-bladed axe of plain dark steel with no glow
 ```
 
 | # | File |
@@ -81,12 +87,15 @@ black skin, black and dark-violet armour with thin silver inlay, a faint violet 
 patient. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 %
 empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames,
 no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a
-dark-elf rider on a large black two-legged lizard, a long curved lance; 2 a dark-elf sorceress in black and violet robes, white hair,
-an orb of violet shadow held in both hands; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the
-same face and build but larger, heavier armed, more ornate and richer in colour: the lizard in spiked black plate, the rider in a
-violet-plumed helm with a barbed spear; 4 the same creature as the one above it, clearly upgraded and told apart at a glance: the same
-face and build but larger, heavier armed, more ornate and richer in colour: older, a tall silver headdress shaped like spider legs,
-violet glowing eyes
+dark-elf rider on a large black two-legged lizard, a long curved lance; 2 a young dark-elf witch, slender and severe, ash-grey skin
+and long straight white hair, a close-fitting black lacquered bodice with a high pointed collar and violet silk sashes, bare arms with
+silver bracers, one hand raised with a bolt of violet shadow coiling between her clawed fingers, no orb, no staff; 3 the same creature
+as the one above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and
+richer in colour: the lizard in spiked black plate, the rider in a violet-plumed helm with a barbed spear; 4 the same creature as the
+one above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer
+in colour: the same young face, never old, no wrinkles; a tall crown of black and silver spikes fanning up behind her head, spiked
+black pauldrons over a long layered gown of black and deep violet, both hands raised with violet shadow streaming from them, violet
+glowing eyes
 ```
 
 | # | File |
@@ -111,12 +120,14 @@ black skin, black and dark-violet armour with thin silver inlay, a faint violet 
 patient. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 %
 empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames,
 no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a
-manticore with a lion's body, dark leathery bat wings, a scorpion tail and a fierce face; 2 a floating sphere of black stone-like hide
-with one great violet eye, a fringe of pale tendrils hanging beneath it like a jellyfish; 3 the same creature as the one above it,
-clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: a
-black chitin carapace over the back, a huge stinger glowing violet; 4 the same creature as the one above it, clearly upgraded and told
-apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: larger, a second smaller eye
-above the great one, the tendrils tipped with violet lights
+manticore with a lion's body of red-brown fur, dark leathery bat wings, a segmented scorpion tail and a fierce face; 2 a floating
+round ball of thick mottled brown and dull purple hide, one great yellow eye in the middle of its front, a wide mouth of jagged teeth
+beneath the eye, a few short eyestalks on top each ending in a small eye, no tendrils or tentacles below; 3 the same creature as the
+one above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in
+colour: deep maroon fur over the whole lion body and mane, no armour, plates or carapace on the lion body, a larger dark wine-red
+scorpion tail with a huge barbed stinger, no glow anywhere; 4 the same creature as the one above it, clearly upgraded and told apart
+at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: larger and darker hide, a crown of
+many long writhing eyestalks on top each ending in a small glaring eye, a wider fanged mouth, no tendrils or tentacles below
 ```
 
 | # | File |

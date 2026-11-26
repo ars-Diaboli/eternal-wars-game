@@ -159,14 +159,14 @@ swamp-bestiary.ssethrak,Ssethrak,swamp-bestiary,Warrior,swamp-bestiary.gorgon,sk
 swamp-bestiary.nhalla,Nhalla,swamp-bestiary,Mage,swamp-bestiary.lizardman,skill rage.first,rage.first Basic; estates.treasury Basic,0,0,3,2,yes,campaign hero (ADR-298); copies Hissla
 swamp-bestiary.krusk,Krusk,swamp-bestiary,Warrior,swamp-bestiary.lizardman,skill offense.melee,offense.melee Basic; defense.armor Basic,2,1,1,1,yes,campaign hero (ADR-298); copies Ssarkh
 swamp-bestiary.ruuk,Ruuk,swamp-bestiary,Mage,swamp-bestiary.owlbear,skill rage.second,rage.first Basic; defense.armor Basic,0,1,2,2,yes,campaign hero (ADR-298); copies Gossk
-conflux.orrath,Orrath,conflux,Warrior,conflux.earth-elemental,skill defense.armor,defense.armor Basic; offense.melee Basic,1,2,1,1,yes,campaign hero (ADR-298); copies Stellan Frost
-conflux.zephra,Zephra,conflux,Warrior,conflux.air-elemental,skill offense.archery,pathfinding.logistics Basic; offense.archery Basic,2,1,1,1,yes,campaign hero (ADR-298); copies Corwin Ashby
-conflux.ignar,Ignar,conflux,Warrior,conflux.fire-elemental,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,1,1,yes,campaign hero (ADR-298); copies Azgaroth
-conflux.maerin,Maerin,conflux,Warrior,conflux.water-elemental,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,1,1,yes,campaign hero (ADR-298); copies Varis
+conflux.orrath,Orrath,conflux,Warrior,conflux.earth-spirit,skill defense.armor,defense.armor Basic; offense.melee Basic,1,2,1,1,yes,campaign hero (ADR-298); copies Stellan Frost
+conflux.zephra,Zephra,conflux,Warrior,conflux.air-spirit,skill offense.archery,pathfinding.logistics Basic; offense.archery Basic,2,1,1,1,yes,campaign hero (ADR-298); copies Corwin Ashby
+conflux.ignar,Ignar,conflux,Warrior,conflux.fire-spirit,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,1,1,yes,campaign hero (ADR-298); copies Azgaroth
+conflux.maerin,Maerin,conflux,Warrior,conflux.water-spirit,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,1,1,yes,campaign hero (ADR-298); copies Varis
 conflux.ilumiel,Ilumiel,conflux,Mage,conflux.wisp,spell light.bless,magic.haven.spells Basic; estates.treasury Basic,0,0,3,2,yes,campaign hero (ADR-298); copies Ansel Wren
-conflux.kalderon,Kalderon,conflux,Mage,conflux.magma-elemental,spell chaos.fireball,magic.inferno.spells Basic; estates.treasury Basic,0,0,3,2,yes,campaign hero (ADR-298); copies Belzra
-conflux.vaeyra,Vaeyra,conflux,Mage,conflux.storm-elemental,spell arcana.haste,magic.academy.spells Basic; pathfinding.logistics Basic,0,0,3,2,yes,campaign hero (ADR-298); copies Tariq
-conflux.hrimnar,Hrimnar,conflux,Mage,conflux.ice-elemental,spell arcana.frost-bolt,magic.academy.spells Basic; estates.prospecting Basic,0,0,3,2,yes,campaign hero (ADR-298); copies Qadir
+conflux.kalderon,Kalderon,conflux,Mage,conflux.psychic-elemental,spell chaos.fireball,magic.inferno.spells Basic; estates.treasury Basic,0,0,3,2,yes,campaign hero (ADR-298); copies Belzra
+conflux.vaeyra,Vaeyra,conflux,Mage,conflux.air-spirit,spell arcana.haste,magic.academy.spells Basic; pathfinding.logistics Basic,0,0,3,2,yes,campaign hero (ADR-298); copies Tariq
+conflux.hrimnar,Hrimnar,conflux,Mage,conflux.water-spirit,spell arcana.frost-bolt,magic.academy.spells Basic; estates.prospecting Basic,0,0,3,2,yes,campaign hero (ADR-298); copies Qadir
 dragon-utopia.vharos,Vharos,dragon-utopia,Warrior,dragon-utopia.dragonyte,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,1,1,yes,campaign hero (ADR-298); copies Aldric Vane
 dragon-utopia.seravyn,Seravyn,dragon-utopia,Warrior,dragon-utopia.haspid,skill offense.archery,pathfinding.logistics Basic; offense.archery Basic,2,1,1,1,yes,campaign hero (ADR-298); copies Ilvara
 dragon-utopia.garundar,Garundar,dragon-utopia,Warrior,dragon-utopia.haspid,skill defense.armor,defense.armor Basic; offense.melee Basic,1,2,1,1,yes,campaign hero (ADR-298); copies Faelar

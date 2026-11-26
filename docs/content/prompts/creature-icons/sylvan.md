@@ -129,13 +129,16 @@ bodies, fur or weapons. 4 separate icons arranged in a grid of 2 columns and 2 r
 with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no
 borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then
 bottom row: 1 the glowing ghost of a slender doe, a translucent pale silver-blue body lit from within, soft light streaming off it
-like mist, large dark eyes, a crescent of moonlight on the brow, the whole body shown; a spirit, no antlers, no moss; 2 a walking tree
-with a face of knotted bark, branch arms and a half-bare crown, grey rot creeping up from its roots; 3 the same creature as the one
-above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in
-colour: a unicorn: a solid white horse with one long spiral horn of pale gold, a short neat mane and a neat tail, a faint silvery
-glow, a bridle of gold leaves; no long flowing hair; 4 the same creature as the one above it, clearly upgraded and told apart at a
-glance: the same face and build but larger, heavier armed, more ornate and richer in colour: huge and older, its split bark braced
-with woven living branches, a thick bark beard, a broad crown of autumn-gold leaves; no lanterns, no hanging lights
+like mist, large dark eyes, a crescent of moonlight on the brow, a pair of slender graceful antlers of pale glowing silver curving up
+like a crescent moon, the whole body shown; a spirit, no moss; 2 a walking tree with branch arms and a half-bare crown, grey rot
+creeping up from its roots, only a faint hint of a face in the bark: two dark knot hollows and a crack, barely readable, no nose, no
+brow, no human features; mostly a tree; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the same
+face and build but larger, heavier armed, more ornate and richer in colour: a unicorn: a solid white horse with one long spiral horn
+of pale gold, a short neat mane and a neat tail, a faint silvery glow; bare, with no bridle, no halter, no collar, no saddle and no
+tack of any kind; no long flowing hair; 4 the same creature as the one above it, clearly upgraded and told apart at a glance: the same
+face and build but larger, heavier armed, more ornate and richer in colour: huge and older, its split bark braced with woven living
+branches, the face still only a faint hint of knot hollows in the bark, no beard, no nose, no human features, a broad crown of small
+green maple leaves; no lanterns, no hanging lights, no autumn colours
 ```
 
 | # | File |

@@ -221,7 +221,7 @@ public class RankThreeSpellTests
         Assert.Null(battle.Engine.Cast(Attacker, "arcana.bind-elemental", null, null));
 
         var called = battle.State.Units.Where(u => u.IsSummoned).Select(u => u.Creature.Id).ToList();
-        Assert.Equal(["conflux.air-elemental", "conflux.earth-elemental"], called);
+        Assert.Equal(["conflux.air-spirit", "conflux.earth-spirit"], called);
         Assert.Equal(2, battle.Events.OfType<BattleUnitSummoned>().Count());
     }
 

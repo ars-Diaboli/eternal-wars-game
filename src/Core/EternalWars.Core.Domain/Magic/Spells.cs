@@ -405,7 +405,7 @@ public sealed record SpellDefinition(
 
     /// <summary>
     /// The elements the spell counts as (ADR-106, ADR-123): its own; all four for Magic Arrow; for Bind Elemental the kind it binds (the element
-    /// in the creature's id, <c>conflux.fire-elemental</c>), none while that is not known.
+    /// in the creature's id, <c>conflux.fire-spirit</c>), none while that is not known.
     /// </summary>
     public IReadOnlyList<SpellElement> ElementsFor(Common.CreatureId? creature = null) => Element switch
     {

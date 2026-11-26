@@ -35,9 +35,9 @@
 | [249](#adr-249-prompts-ready-to-paste-one-block-a-sheet-at-most-a-lead-and-an-item-elsewhere-negatives-joined-in-advance-owner-adr-245-adr-248-2026-11-20) | Prompts ready to paste: one block a sheet, at most a lead and an item elsewhere, negatives joined in advance (owner, ADR-245, ADR-248, 2026-11-20) | accepted |
 | [284](#adr-284-faction-key-paintings-set-each-towns-look-owner-adr-008-adr-246-adr-248-2026-11-22) | Faction key paintings set each town's look (owner, ADR-008, ADR-246, ADR-248, 2026-11-22) | accepted |
 | [285](#adr-285-creature-portraits-in-2--2-sheets-creature-and-puzzle-prompts-redone-to-the-key-paintings-rocky-ground-is-dark-granite-owner-adr-284-2026-11-22) | Creature portraits in 2 × 2 sheets; creature and puzzle prompts redone to the key paintings; rocky ground is dark granite (owner, ADR-284, 2026-11-22) | accepted |
-| [289](#adr-289-creature-portraits-in-high-contrast-with-plain-bases-and-clearly-upgraded-upgrades-academy-creatures-redone-owner-adr-285-2026-11-22) | Creature portraits in high contrast with plain bases and clearly upgraded upgrades; Academy creatures redone (owner, ADR-285, 2026-11-22) | accepted |
+| [289](#adr-289-creature-portraits-in-high-contrast-with-plain-bases-and-clearly-upgraded-upgrades-academy-creatures-redone-owner-adr-285-2026-11-22) | Creature portraits in high contrast with plain bases and clearly upgraded upgrades; Academy creatures redone (owner, ADR-285, 2026-11-22) | accepted; partly superseded |
 | [292](#adr-292-town-screen-answers-the-proposals-no-creatures-or-hero-models-in-the-scene-art-after-the-key-paintings-town-14--town-23-owner-adr-246-2026-11-22) | Town screen answers: the proposals, no creatures or hero models in the scene, art after the key paintings (TOWN-14 … TOWN-23, owner, ADR-246, 2026-11-22) | accepted |
-| [293](#adr-293-sylvan-creatures-redone-to-the-owners-review-owner-adr-289-2026-11-22) | Sylvan creatures redone to the owner's review (owner, ADR-289, 2026-11-22) | accepted |
+| [293](#adr-293-sylvan-creatures-redone-to-the-owners-review-owner-adr-289-2026-11-22) | Sylvan creatures redone to the owner's review (owner, ADR-289, 2026-11-22) | implemented; partly superseded |
 | [294](#adr-294-town-screen-steps-0-and-1-the-shell-behind---town-screennew-havens-style-frame-two-font-pairings-nine-slice-frames-the-shared-widgets-the-heroes-swap-adr-246-adr-292-2026-11-22) | Town screen steps 0 and 1: the shell behind --town-screen=new, Haven's style frame, two font pairings, nine-slice frames, the shared widgets, the heroes' swap (ADR-246, ADR-292, 2026-11-22) | implemented |
 | [296](#adr-296-town-screen-step-2-the-windows-over-the-key-painting-the-overview-and-plans-in-core-recruit-all-upgrade-all-dismissing-renaming-the-rumour-table-resource-for-resource-sending-to-an-ally-town-17-adr-246-adr-292-2026-11-22) | Town screen step 2: the windows over the key painting, the overview and plans in core, Recruit all, Upgrade all, dismissing, renaming, the rumour table, resource for resource, sending to an ally (TOWN-17, ADR-246, ADR-292, 2026-11-22) | implemented |
 | [297](#adr-297-town-screen-step-3-task-1-the-3d-town-scene-behind-the-bars-plots-read-from-layout-scenes-greybox-blocks-hover-and-pick-adr-246-adr-292-2026-11-22) | Town screen step 3, task 1: the 3D town scene behind the bars, plots read from layout scenes, greybox blocks, hover and pick (ADR-246, ADR-292, 2026-11-22) | implemented |
@@ -57,6 +57,12 @@
 | [315](#adr-315-on-a-narrow-screen-the-action-buttons-move-up-above-the-bottom-row-the-army-strip-takes-their-place-adr-309-owner-2026-11-25) | On a narrow screen the action buttons move up above the bottom row; the army strip takes their place (ADR-309, owner, 2026-11-25) | implemented |
 | [316](#adr-316-the-minimap-fills-its-slot-and-its-panel-takes-at-most-a-third-of-the-screens-height-switch-level-and-hero-screen-leave-the-action-grid-2--4-adr-309-owner-2026-11-25) | The minimap fills its slot and its panel takes at most a third of the screen's height; Switch level and Hero screen leave the action grid (2 × 4) (ADR-309, owner, 2026-11-25) | implemented |
 | [317](#adr-317-notice-cards-for-what-the-player-must-not-miss-the-rest-on-the-status-line-more-than-four-answers-as-a-scrolling-list-hud-1-hud-2-owner-2026-11-25) | Notice cards for what the player must not miss, the rest on the status line; more than four answers as a scrolling list (HUD-1, HUD-2, owner, 2026-11-25) | implemented |
+| [318](#adr-318-academy-creatures-redone-to-the-owners-second-review-owner-adr-289-2026-11-26) | Academy creatures redone to the owner's second review (owner, ADR-289, 2026-11-26) | accepted |
+| [319](#adr-319-sylvan-sheet-s4-to-the-owners-second-review-an-antlered-moon-doe-a-bare-unicorn-faint-treant-faces-owner-adr-293-2026-11-26) | Sylvan sheet S4 to the owner's second review: an antlered moon doe, a bare unicorn, faint treant faces (owner, ADR-293, 2026-11-26) | accepted |
+| [321](#adr-321-dungeon-sheet-d2-to-the-owners-review-medusa-archers-a-bare-headed-minotaur-guard-owner-adr-289-2026-11-26) | Dungeon sheet D2 to the owner's review: medusa archers, a bare-headed minotaur guard (owner, ADR-289, 2026-11-26) | accepted |
+| [322](#adr-322-dungeon-sheet-d3-to-the-owners-review-young-shadow-witches-with-shadow-bolts-no-orb-owner-adr-289-2026-11-26) | Dungeon sheet D3 to the owner's review: young shadow witches with shadow bolts, no orb (owner, ADR-289, 2026-11-26) | accepted |
+| [323](#adr-323-dungeon-sheet-d4-to-the-owners-review-a-maroon-scorpicore-without-armour-or-glow-eye-and-mouth-spheres-with-eyestalks-owner-adr-289-2026-11-26) | Dungeon sheet D4 to the owner's review: a maroon scorpicore without armour or glow, eye-and-mouth spheres with eyestalks (owner, ADR-289, 2026-11-26) | accepted |
+| [324](#adr-324-dungeon-sheet-d1-to-the-owners-review-hunched-eyeless-troglodytes-masked-scouts-and-stalkers-with-long-blades-owner-adr-289-2026-11-26) | Dungeon sheet D1 to the owner's review: hunched eyeless troglodytes, masked scouts and stalkers with long blades (owner, ADR-289, 2026-11-26) | accepted |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -626,7 +632,7 @@ once step 3 of the plan lands. Plan, study and questions: [town-screen-plan.md](
 - **Regenerate**: every creature portrait and backdrop, every puzzle picture, and the rocky-ground texture when it is made.
 
 ### ADR-289: Creature portraits in high contrast with plain bases and clearly upgraded upgrades; Academy creatures redone (owner, ADR-285, 2026-11-22)
-**Status**: accepted. Asset prompts only; no rule or format change.
+**Status**: accepted; partly superseded by ADR-318 (Academy subjects). Asset prompts only; no rule or format change.
 
 - **Owner**, on the first Academy sheets: a base and its upgrade differ too little; the colours look faded; both apply to every
   faction. Academy: no green or teal; the master gremlin not sci-fi, a musket instead of a hand gun; the djinn sultan a woman in
@@ -671,7 +677,7 @@ TOWN-15 is ADR-291. The plan's step-by-step implementation is in its [roadmap](.
   cartoon (ADR-248). The style frame of step 0 is Haven's greybox lit after `key_haven-1`.
 
 ### ADR-293: Sylvan creatures redone to the owner's review (owner, ADR-289, 2026-11-22)
-**Status**: implemented (2026-11-26: sheets S1–S5 and the backdrop generated and cut). Asset prompts only; no rule or format change.
+**Status**: implemented (2026-11-26: sheets S1–S5 and the backdrop generated and cut); partly superseded by ADR-319 (sheet S4). Asset prompts only; no rule or format change.
 
 - **Owner**, on the first Sylvan sheets: the pixie and sprite looked like goblins and carried weapons; the satyr smoked a pipe and its
   upgrade looked the same; the dancers should be men with sabers, closer to the classic elven blade dancers; the hunter a woman and
@@ -1171,3 +1177,83 @@ combat settings.
   and settings and Menu during deployment (8.3).
 - **How**: the plan's steps 2–5: `AttackEstimate` on the damage formula and the engine's return-blow rule, a battle hotkey table, the
   spell book's rows, the combat settings, `BattleHudLayout` and its parts; one new icon sheet for the stack panel's numbers.
+
+### ADR-318: Academy creatures redone to the owner's second review (owner, ADR-289, 2026-11-26)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's "solid women in white fur and royal blue", "the titan the same giant in polished steel" and the golem's "solemn face", the animated armour's surcoat and the naga queen's sash.
+
+- **Owner**, on Academy sheets A1 … A5: the snow maiden and enchantress should not be human but snow spirits, like the equivalent
+  creature in HoMM6; the titan without a beard, in armour in the style of HoMM3's; the iron golem without a human face; the animated
+  armour without clothing or glowing eyes, small gaps between its plates showing it is hollow; the nagas' blades narrow and much
+  longer, no clothing; the shieldguard's face visible under a Scandinavian helmet, a one-handed axe.
+- **Subjects**: the snow maiden a snow spirit in a slender woman's shape: frost-white packed-snow skin, glowing pupilless eyes, white
+  hair breaking into snowflakes, icicle fingertips, a gown of hoarfrost grown from her body, no cloth; solid snow and ice with no mist
+  or cloud tail, white where the djinn is blue. The enchantress the same spirit with an ice-crystal crown, clear cracked ice on her
+  shoulders and arms, icicle hair, a mantle of ice shards, an ice glaive and a blizzard from her hand. The titan the colossus' living
+  giant, clean-shaven with short grey hair, in classical armour: a polished steel muscle cuirass with gold trim, rounded layered
+  pauldrons, bracers and a gold-buckled belt; the gold crown, lightning spear and storm clouds kept; not a steel statue. The iron
+  golem's head blank riveted plates with only a dark slit. The animated armour bare plate with no surcoat, black emptiness behind the
+  visor and thin dark gaps at the joints showing nothing inside. The naga and naga queen with very long, narrow, slightly curved
+  swords longer than their arms, in scale armour with no cloth (the queen's sash gone). The shieldguard (`dwarf-defender`) in an
+  open-faced Norse helm with a nasal bar and gold-trimmed brow guards, no visor or horns, the square star shield in one hand and a
+  one-handed bearded axe in the other.
+- **Regenerate**: Academy sheets A1 (the gremlins and dwarf unchanged), A2 (the gargoyles unchanged), A3 (the sorcerer and mage
+  unchanged) and A4 (the djinns unchanged), and the titan's cells of A5.
+
+### ADR-319: Sylvan sheet S4 to the owner's second review: an antlered moon doe, a bare unicorn, faint treant faces (owner, ADR-293, 2026-11-26)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-293's moon doe "no antlers", the unicorn's bridle of
+gold leaves and the ancient treant's bark beard and autumn crown.
+
+- **Owner**, on Sylvan sheet S4: fitting horns on the moon doe; no riding gear on the unicorn; both treants' faces much less
+  pronounced; the ancient treant's leaves small green maple.
+- **Subjects**: the moon doe with slender antlers of glowing silver curving like a crescent moon; the unicorn bare, with no bridle,
+  halter, collar, saddle or tack; the treant and ancient treant only a faint hint of a face (two knot hollows and a crack, no nose,
+  brow or beard); the ancient treant's crown small green maple leaves, no autumn colours.
+- **Regenerate**: Sylvan sheet S4.
+
+### ADR-321: Dungeon sheet D2 to the owner's review: medusa archers, a bare-headed minotaur guard (owner, ADR-289, 2026-11-26)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's Dungeon sheet D2 medusas' dagger, the
+putrid medusa's veil and the minotaur guard's helm and glowing axe.
+
+- **Owner**, on Dungeon sheet D2: the putrid medusa without a hood; both medusas archers, as in the classic games; the minotaur guard
+  without a helmet and without the violet glow on the axe, closer to the classic look.
+- **Subjects**: the medusa drawing a short recurved bow of black horn, a quiver at her hip, no blade; the putrid medusa a longer bow of
+  bone and silver, the snake hair bare (no hood, veil or cloth); the minotaur guard bare-headed, horns capped with bronze, a bronze
+  breastplate and studded leather war harness, a heavier axe of plain dark steel with no glow.
+- **Rules**: none changed. Both medusas already shoot (8 and 10 shots) at full strength in melee (no `MeleePenalty`), the putrid
+  medusa shooting back (`RangedRetaliation`).
+- **Regenerate**: Dungeon sheet D2.
+
+### ADR-322: Dungeon sheet D3 to the owner's review: young shadow witches with shadow bolts, no orb (owner, ADR-289, 2026-11-26)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's Dungeon sheet D3 shadow mistress's orb and
+robes and the shadow matriarch's old age and spider-leg headdress.
+
+- **Owner**, on Dungeon sheet D3: the shadow mistress and shadow matriarch a bit closer to the classic dark-elf witches; the matriarch
+  not old.
+- **Subjects**: the shadow mistress a young, slender witch in a close-fitting black lacquered bodice with a high pointed collar, violet
+  sashes and silver bracers, a bolt of violet shadow coiling between the fingers of a raised hand, no orb or staff; the shadow
+  matriarch the same young face (no wrinkles) under a tall crown of black and silver spikes, spiked pauldrons, a long layered gown of
+  black and deep violet, shadow streaming from both hands. The raiders are unchanged.
+- **Regenerate**: Dungeon sheet D3 (its raider cells may be kept from the last take).
+
+### ADR-323: Dungeon sheet D4 to the owner's review: a maroon scorpicore without armour or glow, eye-and-mouth spheres with eyestalks (owner, ADR-289, 2026-11-26)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's Dungeon sheet D4 scorpicore carapace and
+glowing stinger and the spectator's and beholder's jellyfish tendrils.
+
+- **Owner**, on Dungeon sheet D4: the scorpicore without the violet glow and without the carapace on its lion body, its fur more
+  maroon as in the classic games; the spectator and beholder closer to the classic look.
+- **Subjects**: the manticore's fur red-brown; the scorpicore deep maroon fur over the whole lion body and mane, no armour on it, a
+  larger wine-red scorpion tail with a huge barbed stinger, no glow; the spectator a floating ball of mottled brown and dull purple
+  hide with one great yellow eye, a wide toothy mouth beneath it and a few short eyestalks on top, no tendrils below; the beholder
+  larger and darker with a crown of many long eyestalks and a wider fanged mouth.
+- **Regenerate**: Dungeon sheet D4.
+
+### ADR-324: Dungeon sheet D1 to the owner's review: hunched eyeless troglodytes, masked scouts and stalkers with long blades (owner, ADR-289, 2026-11-26)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's Dungeon sheet D1 subjects.
+
+- **Owner**, on Dungeon sheet D1: the troglodytes too humanoid, much closer to the classic games' look; the scout and stalker with
+  much longer blades, no violet glow, both faces covered.
+- **Subjects**: the troglodyte a small hunched reptile-like beast shown whole, eyeless, a long snout with a huge jaw of needle teeth,
+  spines down the back, long clawed arms, blue-grey hide, a stone-tipped spear; the deep troglodyte the same beast with red-brown
+  hide, a taller crest, bone spikes on the forearms and a barbed spear. The scout's face wrapped below the eyes, two long curved
+  blades of plain steel; the stalker in a close black mask, longer sword-blades of dark steel, no glow, black shadow.
+- **Regenerate**: Dungeon sheet D1.

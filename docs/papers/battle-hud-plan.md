@@ -185,8 +185,8 @@ Art the battle HUD still lacks, outside this step:
   (36 spells, six a school, have both): Light 10, Nature 9, Arcana 10, Death 9, Chaos 10, Shadow 9. For them the spell book's buttons
   show the name alone, the stack panel's spell marks the generic `spells` icon and the creature's spell button `cast`. The 9
   adventure-only spells without one are not shown in battle.
-- **Creature portraits**: 37 creatures have none, their prompts written but not generated
-  ([creature-icon-prompts.md](../content/prompts/creature-icon-prompts.md)): the Stronghold and Swamp Bestiary lines (18 each) and the
-  banshee. Their timeline entries and losses show the name in place of the portrait, the stack panel an empty slot.
+- **Creature portraits**: 43 creatures have none, their prompts written but not generated
+  ([creature-icon-prompts.md](../content/prompts/creature-icon-prompts.md)): the Stronghold and Swamp Bestiary lines (18 each), the
+  banshee, and Conflux's four spirits and psychic and void elementals. Their timeline entries and losses show the name in place of the portrait, the stack panel an empty slot.
 - **Combat settings**: the battle speed and the cells-in-reach options have no icon (the editor's `grid` could serve the grid's).
 - **Round plate and result**: the round number, the timer, and the Victory, Defeat and Necromancy titles stand as text alone.

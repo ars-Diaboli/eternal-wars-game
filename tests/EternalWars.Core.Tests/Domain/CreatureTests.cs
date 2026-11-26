@@ -48,6 +48,48 @@ public class CreatureTests
     }
 
     [Fact]
+    public void Catalog_TakesAnUpgradeOneTierUp_OnlyInANonPlayableTown()
+    {
+        CreatureDefinition Line(string town) =>
+            new("x.base", "Base", 2, CreatureSize.Small)
+            {
+                Town = town, Health = 10, MinDamage = 1, MaxDamage = 2, Speed = 5, MapSpeed = 5, Initiative = 5, UpgradesTo = "x.up",
+            };
+        CreatureCatalog Of(string town, int upgradeTier) =>
+            new([Line(town), Line(town) with { Id = "x.up", Tier = upgradeTier, UpgradesTo = null }]);
+
+        Assert.True(Of(TownIds.Conflux, 3).IsUpgrade("x.up"));
+        Assert.Throws<FormatException>(() => Of(TownIds.Conflux, 4));
+        Assert.Throws<FormatException>(() => Of(TownIds.Conflux, 1));
+        Assert.Throws<FormatException>(() => Of(TownIds.Academy, 3));
+    }
+
+    [Fact]
+    public void Conflux_HasTheWisp_FourSpiritsBecomingElementals_AndTwoElementalLines()
+    {
+        var catalog = CreatureCatalog.Default;
+        var lines = catalog.BaseCreaturesOf(TownIds.Conflux).Select(c => (c.Id.Value, c.Tier, c.UpgradesTo?.Value)).ToList();
+
+        Assert.Equal(
+        [
+            ("conflux.wisp", 1, null),
+            ("conflux.air-spirit", 2, "conflux.storm-elemental"),
+            ("conflux.earth-spirit", 2, "conflux.earth-elemental"),
+            ("conflux.fire-spirit", 2, "conflux.fire-elemental"),
+            ("conflux.water-spirit", 2, "conflux.ice-elemental"),
+            ("conflux.psychic-elemental", 4, "conflux.magic-elemental"),
+            ("conflux.void-elemental", 5, "conflux.energy-elemental"),
+        ], lines);
+        Assert.All(lines.Where(l => l.Item3 is not null), l =>
+        {
+            var (line, upgrade) = (catalog.Get(l.Item1), catalog.Get(l.Item3!));
+            Assert.Equal(line.Tier == 2 ? 3 : line.Tier, upgrade.Tier);
+            Assert.True(upgrade.FightValue > line.FightValue, $"{upgrade.Id} should be stronger than {line.Id}");
+        });
+        Assert.Equal(13, catalog.All.Count(c => c.Town == TownIds.Conflux));
+    }
+
+    [Fact]
     public void Definitions_RoundTripThroughJson_AndOverrideTheBuiltIns()
     {
         var json = CreatureDefinitionSerializer.Serialize(BuiltInCreatures.All);

@@ -31,6 +31,7 @@
 | [143](#adr-143-the-academys-observatory-the-undead-transformer-built-adr-137-adr-138-2026-11-06) | The Academy's Observatory; the Undead Transformer built (ADR-137, ADR-138, 2026-11-06) | implemented |
 | [291](#adr-291-the-capitol-needs-six-dwellings-plots-show-unused-land-and-citizens-homes-town-15-2026-11-22) | The Capitol needs six dwellings; plots show unused land and citizens' homes (TOWN-15, 2026-11-22) | implemented |
 | [295](#adr-295-stronghold-the-wolf-rider-line-is-tier-2-the-centaur-line-tier-3-owner-2026-11-22) | Stronghold: the Wolf Rider line is tier 2, the Centaur line tier 3 (owner, 2026-11-22) | implemented |
+| [320](#adr-320-conflux-roster-the-wisp-four-spirits-becoming-elementals-one-tier-up-psychic-and-void-elementals-owner-adr-030-2026-11-26) | Conflux roster: the wisp, four spirits becoming elementals one tier up, psychic and void elementals (owner, ADR-030, 2026-11-26) | implemented |
 
 
 ### ADR-010: Town roster in four groups; two non-playable towns
@@ -537,3 +538,25 @@ owner's answer to TOWN-15 in the [town screen plan](../../docs/papers/town-scree
   5, 450 / 580 gold. Each keeps its own name, tags and capabilities (`creatures.csv`). The score title at 80 is now the Wolf Rider.
 - **Random maps**: guards and dwellings are drawn by tier, so `MapGenerator.Version` goes to 12 and the pinned maps are re-pinned.
 - Test: `CreatureTests.StrongholdWolfRidersAreTierTwo_AndCentaursTierThree`.
+
+### ADR-320: Conflux roster: the wisp, four spirits becoming elementals one tier up, psychic and void elementals (owner, ADR-030, 2026-11-26)
+**Status**: implemented. Placeholder stats; the portraits are prompts, not generated.
+
+- **Owner**: the Conflux units are the wisp (tier 1); air spirit (2) to storm elemental (3); water spirit (2) to ice elemental (3); earth
+  spirit (2) to earth elemental (3); fire spirit (2) to fire elemental (3); psychic elemental to magic elemental (4); void elemental to
+  energy elemental (5); placeholder stats. In the prompts the creatures have almost no human-like face, some a human-like body; the
+  air spirit and storm elemental after HoMM3's air and storm elementals, the water spirit and ice elemental after HoMM4's and Warcraft
+  III's water elementals, the earth and fire spirits after HoMM4's elementals and their elementals after HoMM3's, the psychic, magic,
+  void and energy elementals after HoMM3's.
+- **Upgrade tier** (owner's choice of four): an upgrade keeps its base's tier, except in a non-playable town, where it may be one tier
+  above (`CreatureCatalog`; ADR-030's same-tier upgrade otherwise holds). Playable towns are unchanged.
+- **Roster** (`creatures.csv`): the air, water, magma and flame elementals are gone; the storm and ice elementals move to tier 3, the
+  magic elemental to tier 4; the four spirits, the psychic and the void elemental are new. Every Conflux row but the wisp has
+  placeholder numbers, its fight value the formula's.
+- **Bind Elemental** calls the air, earth, fire and water spirits (its element is still read from the id's first word). The campaign
+  heroes prefer their element's line: Orrath earth, Zephra and Vaeyra air, Ignar fire, Maerin and Hrimnar water spirits, Kalderon the
+  psychic elemental, Ilumiel the wisp.
+- **Art**: the Conflux prompts are three sheets of two lines each (bases over upgrades) and a fourth with the wisp and second takes;
+  the four old portraits of removed creatures are deleted; the spirits, the psychic and the void elemental have none yet.
+- Tests: `CreatureTests.Catalog_TakesAnUpgradeOneTierUp_OnlyInANonPlayableTown`,
+  `CreatureTests.Conflux_HasTheWisp_FourSpiritsBecomingElementals_AndTwoElementalLines`; the Bind Elemental tests name the spirits.

@@ -30,11 +30,11 @@ public sealed class CreatureCatalog
                 throw new FormatException($"Creature '{definition.Id}' upgrades to unknown '{definition.UpgradesTo}'.");
             }
 
-            if (upgrade.Tier != definition.Tier || upgrade.Town != definition.Town || upgrade.Category != definition.Category
+            if (!UpgradeTierFits(definition, upgrade) || upgrade.Town != definition.Town || upgrade.Category != definition.Category
                 || upgrade.UpgradesTo is not null)
             {
                 throw new FormatException(
-                    $"Upgrade '{upgrade.Id}' of '{definition.Id}' must have the same tier, town and category and no further upgrade.");
+                    $"Upgrade '{upgrade.Id}' of '{definition.Id}' must have the same tier (one above in a non-playable town), town and category and no further upgrade.");
             }
 
             _baseOf.TryAdd(upgrade.Id, definition.Id);
@@ -42,6 +42,13 @@ public sealed class CreatureCatalog
     }
 
     public static CreatureCatalog Default { get; } = new(BuiltInCreatures.All);
+
+    /// <summary>
+    /// An upgrade keeps its base's tier; in a non-playable town (Conflux's spirits becoming elementals, ADR-320) it may be one tier above.
+    /// </summary>
+    private static bool UpgradeTierFits(CreatureDefinition line, CreatureDefinition upgrade) =>
+        upgrade.Tier == line.Tier
+        || (upgrade.Tier == line.Tier + 1 && line.Town is { } town && !Objects.BuiltInMapObjects.PlayableTowns.Contains(town));
 
     public IEnumerable<CreatureDefinition> All => _definitions.Values;
 
