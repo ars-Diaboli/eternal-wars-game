@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-340**. A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-342**. A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -366,3 +366,5 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [337](presentation.md#adr-337-necropolis-sheet-n2-to-the-owners-review-hairless-beast-like-ghouls-with-a-spined-alghoul-hooded-skull-faced-wights-owner-adr-289-2026-11-27) | presentation | Necropolis sheet N2 to the owner's review: hairless beast-like ghouls with a spined alghoul, hooded skull-faced wights (owner, ADR-289, 2026-11-27) | accepted |
 | [338](presentation.md#adr-338-necropolis-sheet-n3-to-the-owners-review-weavers-without-webs-wingless-caped-vampires-owner-adr-289-2026-11-27) | presentation | Necropolis sheet N3 to the owner's review: weavers without webs, wingless caped vampires (owner, ADR-289, 2026-11-27) | accepted |
 | [339](presentation.md#adr-339-necropolis-sheet-n4-to-the-owners-review-black-armoured-faceless-knights-violet--and-crimson-robed-liches-owner-adr-289-2026-11-27) | presentation | Necropolis sheet N4 to the owner's review: black-armoured faceless knights, violet- and crimson-robed liches (owner, ADR-289, 2026-11-27) | accepted |
+| [340](presentation.md#adr-340-haven-sheets-to-the-owners-second-review-full-height-figures-one-livery-for-the-upgrades-hidden-monk-faces-a-glory-and-an-archangel-owner-adr-289-2026-11-27) | presentation | Haven sheets to the owner's second review: full-height figures, one livery for the upgrades, hidden monk faces, a glory and an archangel (owner, ADR-289, 2026-11-27) | accepted |
+| [341](presentation.md#adr-341-every-creature-portrait-at-full-height-owner-adr-340-2026-11-27) | presentation | Every creature portrait at full height (owner, ADR-340, 2026-11-27) | accepted |

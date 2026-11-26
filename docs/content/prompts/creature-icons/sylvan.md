@@ -16,9 +16,10 @@ Game creature portrait sheet in a realistic painterly dark-fantasy style, like a
 illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
 scarred skin, matted fur, cracked scales, wet hide). Strong directional light from the top left with crisp highlights and a faint cool
 rim light, deep rich shadows and high contrast, a full range of values from near-black to bright highlights, rich deep natural
-colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
-facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
-dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
+colours, vivid but never garish, never faded or washed out. Each portrait shows the whole creature at full height, from the top of
+the head (or wings) down to the feet, a rider together with the whole mount down to its hooves, beasts, giant creatures and dragons
+whole as well, in three-quarter view facing right; never cropped at the chest, waist or knees, every figure on the sheet framed the
+same full-length way. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
 Not a photograph, not a plastic CGI render, no pixel art. Sylvan creatures: elves, fey and beasts of an ancient misty forest; elves in
 fitted leather and pale carved-wood armour with leaf-shaped steel and gold-leaf trim, deep forest green, grey-brown and silver, a
 faint pale-green glow; graceful and proud. Leaves, moss and vines appear only as patterns on clothing and armour, never growing on
@@ -51,9 +52,10 @@ Game creature portrait sheet in a realistic painterly dark-fantasy style, like a
 illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
 scarred skin, matted fur, cracked scales, wet hide). Strong directional light from the top left with crisp highlights and a faint cool
 rim light, deep rich shadows and high contrast, a full range of values from near-black to bright highlights, rich deep natural
-colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
-facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
-dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
+colours, vivid but never garish, never faded or washed out. Each portrait shows the whole creature at full height, from the top of
+the head (or wings) down to the feet, a rider together with the whole mount down to its hooves, beasts, giant creatures and dragons
+whole as well, in three-quarter view facing right; never cropped at the chest, waist or knees, every figure on the sheet framed the
+same full-length way. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
 Not a photograph, not a plastic CGI render, no pixel art. Sylvan creatures: elves, fey and beasts of an ancient misty forest; elves in
 fitted leather and pale carved-wood armour with leaf-shaped steel and gold-leaf trim, deep forest green, grey-brown and silver, a
 faint pale-green glow; graceful and proud. Leaves, moss and vines appear only as patterns on clothing and armour, never growing on
@@ -85,9 +87,10 @@ Game creature portrait sheet in a realistic painterly dark-fantasy style, like a
 illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
 scarred skin, matted fur, cracked scales, wet hide). Strong directional light from the top left with crisp highlights and a faint cool
 rim light, deep rich shadows and high contrast, a full range of values from near-black to bright highlights, rich deep natural
-colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
-facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
-dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
+colours, vivid but never garish, never faded or washed out. Each portrait shows the whole creature at full height, from the top of
+the head (or wings) down to the feet, a rider together with the whole mount down to its hooves, beasts, giant creatures and dragons
+whole as well, in three-quarter view facing right; never cropped at the chest, waist or knees, every figure on the sheet framed the
+same full-length way. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
 Not a photograph, not a plastic CGI render, no pixel art. Sylvan creatures: elves, fey and beasts of an ancient misty forest; elves in
 fitted leather and pale carved-wood armour with leaf-shaped steel and gold-leaf trim, deep forest green, grey-brown and silver, a
 faint pale-green glow; graceful and proud. Leaves, moss and vines appear only as patterns on clothing and armour, never growing on
@@ -119,9 +122,10 @@ Game creature portrait sheet in a realistic painterly dark-fantasy style, like a
 illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
 scarred skin, matted fur, cracked scales, wet hide). Strong directional light from the top left with crisp highlights and a faint cool
 rim light, deep rich shadows and high contrast, a full range of values from near-black to bright highlights, rich deep natural
-colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
-facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
-dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
+colours, vivid but never garish, never faded or washed out. Each portrait shows the whole creature at full height, from the top of
+the head (or wings) down to the feet, a rider together with the whole mount down to its hooves, beasts, giant creatures and dragons
+whole as well, in three-quarter view facing right; never cropped at the chest, waist or knees, every figure on the sheet framed the
+same full-length way. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
 Not a photograph, not a plastic CGI render, no pixel art. Sylvan creatures: elves, fey and beasts of an ancient misty forest; elves in
 fitted leather and pale carved-wood armour with leaf-shaped steel and gold-leaf trim, deep forest green, grey-brown and silver, a
 faint pale-green glow; graceful and proud. Leaves, moss and vines appear only as patterns on clothing and armour, never growing on
@@ -155,9 +159,10 @@ Game creature portrait sheet in a realistic painterly dark-fantasy style, like a
 illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
 scarred skin, matted fur, cracked scales, wet hide). Strong directional light from the top left with crisp highlights and a faint cool
 rim light, deep rich shadows and high contrast, a full range of values from near-black to bright highlights, rich deep natural
-colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
-facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
-dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
+colours, vivid but never garish, never faded or washed out. Each portrait shows the whole creature at full height, from the top of
+the head (or wings) down to the feet, a rider together with the whole mount down to its hooves, beasts, giant creatures and dragons
+whole as well, in three-quarter view facing right; never cropped at the chest, waist or knees, every figure on the sheet framed the
+same full-length way. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
 Not a photograph, not a plastic CGI render, no pixel art. Sylvan creatures: elves, fey and beasts of an ancient misty forest; elves in
 fitted leather and pale carved-wood armour with leaf-shaped steel and gold-leaf trim, deep forest green, grey-brown and silver, a
 faint pale-green glow; graceful and proud. Leaves, moss and vines appear only as patterns on clothing and armour, never growing on

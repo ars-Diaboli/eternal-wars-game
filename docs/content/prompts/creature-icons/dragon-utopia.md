@@ -13,9 +13,10 @@ Game creature portrait sheet in a realistic painterly dark-fantasy style, like a
 illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
 scarred skin, matted fur, cracked scales, wet hide). Strong directional light from the top left with crisp highlights and a faint cool
 rim light, deep rich shadows and high contrast, a full range of values from near-black to bright highlights, rich deep natural
-colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
-facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
-dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
+colours, vivid but never garish, never faded or washed out. Each portrait shows the whole creature at full height, from the top of
+the head (or wings) down to the feet, a rider together with the whole mount down to its hooves, beasts, giant creatures and dragons
+whole as well, in three-quarter view facing right; never cropped at the chest, waist or knees, every figure on the sheet framed the
+same full-length way. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
 Not a photograph, not a plastic CGI render, no pixel art. Dragon Utopia creatures: the last dragons and their kin, old and scarred,
 heavy scales, horns worn smooth, dark granite grey and old green bronze tones besides each dragon's own colour. 4 separate icons
 arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the
@@ -40,16 +41,17 @@ Game creature portrait sheet in a realistic painterly dark-fantasy style, like a
 illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
 scarred skin, matted fur, cracked scales, wet hide). Strong directional light from the top left with crisp highlights and a faint cool
 rim light, deep rich shadows and high contrast, a full range of values from near-black to bright highlights, rich deep natural
-colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
-facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
-dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
+colours, vivid but never garish, never faded or washed out. Each portrait shows the whole creature at full height, from the top of
+the head (or wings) down to the feet, a rider together with the whole mount down to its hooves, beasts, giant creatures and dragons
+whole as well, in three-quarter view facing right; never cropped at the chest, waist or knees, every figure on the sheet framed the
+same full-length way. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
 Not a photograph, not a plastic CGI render, no pixel art. Dragon Utopia creatures: the last dragons and their kin, old and scarred,
 heavy scales, horns worn smooth, dark granite grey and old green bronze tones besides each dragon's own colour. 4 separate icons
 arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the
 same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no
-numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 the head and neck of a red
-dragon, heavy swept horns, smoke from the nostrils, embers in the jaws; 2 the head and neck of a green dragon with a frill of spines,
-green vapour curling from its mouth; 3 the head and neck of a deep-blue dragon with frost-white horns, icy breath; 4 the head and neck
+numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 the whole body of a red
+dragon, heavy swept horns, smoke from the nostrils, embers in the jaws; 2 the whole body of a green dragon with a frill of spines,
+green vapour curling from its mouth; 3 the whole body of a deep-blue dragon with frost-white horns, icy breath; 4 the whole body
 of a gold dragon with a mane of fine tendrils, lightning crackling between its horns
 ```
 
@@ -67,14 +69,15 @@ Game creature portrait sheet in a realistic painterly dark-fantasy style, like a
 illustration: believable anatomy and proportions, real worn materials with fine texture (dented and rusted armour, stained cloth,
 scarred skin, matted fur, cracked scales, wet hide). Strong directional light from the top left with crisp highlights and a faint cool
 rim light, deep rich shadows and high contrast, a full range of values from near-black to bright highlights, rich deep natural
-colours, vivid but never garish, never faded or washed out. Each portrait shows the creature from the chest up in three-quarter view
-facing right, head and weapon inside the middle of the cell; small creatures and beasts show the whole body, giant creatures and
-dragons only the head and neck. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
+colours, vivid but never garish, never faded or washed out. Each portrait shows the whole creature at full height, from the top of
+the head (or wings) down to the feet, a rider together with the whole mount down to its hooves, beasts, giant creatures and dragons
+whole as well, in three-quarter view facing right; never cropped at the chest, waist or knees, every figure on the sheet framed the
+same full-length way. Grim, weathered and menacing, never cute; the figure set apart by value contrast, no drawn outline.
 Not a photograph, not a plastic CGI render, no pixel art. Dragon Utopia creatures: the last dragons and their kin, old and scarred,
 heavy scales, horns worn smooth, dark granite grey and old green bronze tones besides each dragon's own colour. 4 separate icons
 arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the
 same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no
-numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 the head and neck of a black
+numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 the whole body of a black
 dragon with dull obsidian scales and spines, a violet-black void in its open jaws; 2 a second take of the creature in cell 1; 3 a
 second take of the creature in cell 2; 4 a second take of the creature in cell 3
 ```

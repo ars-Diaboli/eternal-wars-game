@@ -78,6 +78,8 @@
 | [337](#adr-337-necropolis-sheet-n2-to-the-owners-review-hairless-beast-like-ghouls-with-a-spined-alghoul-hooded-skull-faced-wights-owner-adr-289-2026-11-27) | Necropolis sheet N2 to the owner's review: hairless beast-like ghouls with a spined alghoul, hooded skull-faced wights (owner, ADR-289, 2026-11-27) | accepted |
 | [338](#adr-338-necropolis-sheet-n3-to-the-owners-review-weavers-without-webs-wingless-caped-vampires-owner-adr-289-2026-11-27) | Necropolis sheet N3 to the owner's review: weavers without webs, wingless caped vampires (owner, ADR-289, 2026-11-27) | accepted |
 | [339](#adr-339-necropolis-sheet-n4-to-the-owners-review-black-armoured-faceless-knights-violet--and-crimson-robed-liches-owner-adr-289-2026-11-27) | Necropolis sheet N4 to the owner's review: black-armoured faceless knights, violet- and crimson-robed liches (owner, ADR-289, 2026-11-27) | accepted |
+| [340](#adr-340-haven-sheets-to-the-owners-second-review-full-height-figures-one-livery-for-the-upgrades-hidden-monk-faces-a-glory-and-an-archangel-owner-adr-289-2026-11-27) | Haven sheets to the owner's second review: full-height figures, one livery for the upgrades, hidden monk faces, a glory and an archangel (owner, ADR-289, 2026-11-27) | accepted |
+| [341](#adr-341-every-creature-portrait-at-full-height-owner-adr-340-2026-11-27) | Every creature portrait at full height (owner, ADR-340, 2026-11-27) | accepted |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -1450,3 +1452,33 @@ knights in grey rusted plate on skeletal horses, the hooded grey-robed liches).
   collar and gold trim, an orb staff, death mist from one hand, no hood; the arch lich in crimson and black with rich gold, a jewelled
   collar, a gold circlet, death mist in both hands.
 - **Regenerate**: Necropolis sheet N4.
+
+### ADR-340: Haven sheets to the owner's second review: full-height figures, one livery for the upgrades, hidden monk faces, a glory and an archangel (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-325 to ADR-329 where they differ, and the creature
+icon framing rule's wide band (the army slots are 2:3, taller than wide).
+
+- **Owner**, on the regenerated Haven sheets H1–H5: some came out full height, some as portraits, so all full height; the monk and
+  priest with the face hidden as in the classic game; the radiant spirit closer to the later 3D game's blazing glory; the seraph
+  closer to a recent game's archangel; the upgraded humanoids' clothing and armour aligned.
+- **Subjects**: every Haven sheet frames each figure whole from head to feet, a rider with the whole horse. Every upgraded human wears
+  its base's garments and armour, better made, in one livery (polished steel with brass edges, off-white cloth with a gold sun,
+  sky-blue trim): the guardian keeps the pikeman's sallet and adds a surcoat; the inquisitor is the same bare-faced shaved zealot in
+  mail, pauldrons and a sun tabard (no hood or mask); the marksman keeps the archer's quilted jacket under a brigandine and tabard, a
+  kettle helmet. The monk's and priest's hoods are pulled forward over a face lost in shadow. The radiant spirit is a glory: a winged
+  warrior woman in white and gold, a crested gold helm, a sun-headed spear, wings of blazing gold-white flame and light. The seraph
+  is an archangel: a towering male angel in ornate gold plate, a great sword with holy fire on the blade, one pair of huge real
+  white wings.
+- **Rules**: the creature icon framing rule now names the 2:3 crop through the middle; Haven's portraits are full length, the other
+  towns' chest up.
+- **Regenerate**: Haven sheets H1–H5.
+
+### ADR-341: Every creature portrait at full height (owner, ADR-340, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Extends ADR-340's full-height framing from Haven to every sheet;
+supersedes ADR-289's chest-up framing (giant creatures and dragons as the head and neck only).
+
+- **Owner**: some portraits come out full height and some chest up; all of them full height, on every remaining sheet.
+- **Subjects**: every sheet of every town, the neutrals, the dragons of Dragon Utopia and the swamp bestiary now asks for the whole
+  creature at full height, a rider with the whole mount, beasts, giant creatures and dragons whole, never cropped at the chest, waist
+  or knees, all figures on a sheet framed alike; Dragon Utopia's dragons are their whole bodies, not the head and neck. The creature
+  icon framing rule says the same.
+- **Regenerate**: every creature sheet whose portraits are chest up. A sheet already cut stays until it is regenerated.

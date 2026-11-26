@@ -40,8 +40,9 @@ first words.
 
 - **Sheet**: 2 × 2 at 1024 × 1024, every cell 512 × 512, transparent background; cut as the icons.
 - **File**: `icon_creature_<creature id>.png` with the id from `creatures.csv` (`icon_creature_haven.footman.png`), 32-bit RGBA, 512 × 512.
-- **Framing**: the army slots are wider than tall, so the game may show only the middle band of the cell: the **head (or face) and the
-  weapon stay in the middle 60 % of the cell's height**.
+- **Framing**: the army strip and the battle timeline show a portrait cut to 2:3 (taller than wide) through the middle, so the **head
+  (or face) and the weapon stay in the middle two thirds of the cell's width**. Every portrait shows the whole creature at full height
+  (a rider with the whole mount, a dragon or giant creature whole as well), never cropped at the chest.
 - **Facing**: always to the right, the attacker's side; the game mirrors a portrait where it needs the other way.
 - **Telling apart**: a base creature and its upgrade share the face and build; the upgrade is larger, heavier armed, more ornate and
   richer in colour, with at least one new feature that shows at 48 px (a weapon, a crown, a material, a colour). The base stays plain.
@@ -79,7 +80,7 @@ wolves, and the Inferno gogs and breeders. Hero portraits use the same backdrops
 
 1. Put each base and its upgrade side by side: the same creature, clearly upgraded.
 2. Put a town's eighteen portraits side by side at 48 px: each is named at a glance, no two share a silhouette.
-3. Crop a portrait to the army slot's wide band (about 16 : 9 through the middle): the face and the weapon still show.
+3. Crop a portrait to the army slot's 2:3 through the middle: the face and the weapon still show.
 4. Check for a cartoon look (thick outlines, flat fills, big eyes, a friendly face, toy-like proportions) and regenerate such a
    sheet.
 5. Put the files in `src/Godot/EternalWars.Godot.Assets/textures/ui/creatures/` *(proposal)* and add a line to its `CREDITS.md` with the
