@@ -9,6 +9,12 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- The battle HUD plan's step 3, first two items ([battle-hud-plan.md](../docs/papers/battle-hud-plan.md)): `BattleHudLayout` places the
+  side plates (`BattleSidePlate`), the round plate (the timer's pill under it), and a bottom row of one height: `BattleStackPanel`, the
+  `BattleTimeline` (or under the round plate) and the 4 × 2 action grid (Wait, Defend, Quick combat, Combat settings / Retreat,
+  Surrender, Spell book, Menu; the creature caster's spell a fifth column). `BattleSpellBookWindow` (C) holds the battle spells and
+  warcries, `CombatSettingsWindow` the battle speed, grid and reach (gone from the menu's Settings tab). Smokes cast from the book. Next:
+  step 3's remaining items (the log and status bar, deployment and the result windows, the narrow form).
 - The battle HUD plan's step 2 done ([battle-hud-plan.md](../docs/papers/battle-hud-plan.md)): the combat settings
   (`InterfaceSettings.BattleGrid`, `BattleReach`, on the menu's Settings tab for now; the initiative bar's default at the bottom),
   `StackPanel` (the stack's numbers now and its marks) and `BattleSummary` (the result's title for this screen, the reason, each side's

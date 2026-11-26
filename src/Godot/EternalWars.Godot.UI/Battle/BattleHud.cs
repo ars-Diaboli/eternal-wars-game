@@ -3,73 +3,74 @@ using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Cursors;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Info;
 using EternalWars.Core.Domain.Settings;
 using EternalWars.Godot.Shared.Battle;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.UI.Hud;
+using EternalWars.Godot.UI.Widgets;
 using Godot;
 
 namespace EternalWars.Godot.UI.Battle;
 
 /// <summary>
-/// Screen overlay of the 3D battle scene: the sides and round, an initiative timeline (active unit, then the queue,
-/// then waiting units; each stack's portrait and count, its name while it has no portrait), the combat log as the animation plays it, the hovered or active unit's stats, action buttons
-/// (wait, defend, retreat, surrender, quick combat), "Start battle" during the deployment step (ADR-072), the result screen and, after it, the
-/// Necromancy screen (ADR-072, MAG-7). Refreshes when <see cref="BattleView3D"/> is idle, so it
-/// matches what is shown. Buttons are commands; the root lets mouse input through to the battlefield.
+/// Screen overlay of the 3D battle scene, in the adventure HUD's bevelled frames (ADR-314), placed by <see cref="BattleHudLayout"/>: the
+/// attacker's and defender's plates (<see cref="BattleSidePlate"/>) and the round plate along the top; a bottom row of the stack panel
+/// (<see cref="BattleStackPanel"/>: the hovered stack, else the active one), the timeline (<see cref="BattleTimeline"/>; under the round plate
+/// when the Layout tab says top) and the 4 × 2 action grid: Wait, Defend, Quick combat, Combat settings / Retreat, Surrender, Spell book,
+/// Menu, a fifth column for the active creature caster's own spell. The buttons show icons; their names, keys and the reasons they are
+/// greyed go to the status bar. The spell book (<see cref="BattleSpellBookWindow"/>) and the combat settings
+/// (<see cref="CombatSettingsWindow"/>) are windows over the battle. The combat log stands above the action grid, "Start battle" in the
+/// middle of the bottom row during the deployment step (ADR-072); the result window and, after it, the Necromancy window (ADR-072, MAG-7).
+/// Refreshes when <see cref="BattleView3D"/> is idle, so it matches what is shown. Buttons are commands; the root lets mouse input through to
+/// the battlefield.
 /// </summary>
 public partial class BattleHud : Control
 {
     private const int LogLines = 8;
-    private const int TimelineEntries = 14;
 
-    private readonly Label _title = new() { HorizontalAlignment = HorizontalAlignment.Center };
-    private readonly HBoxContainer _timeline = new() { Alignment = BoxContainer.AlignmentMode.Center };
-    private readonly Label _log = new() { VerticalAlignment = VerticalAlignment.Bottom };
-    private readonly Label _info = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(420, 0) };
-    private readonly Label _status = new();
-    private readonly Button _wait = new Button { Text = Hint(BattleHotkeyAction.Wait) }.WithIcon(UiIcon.Hourglass, UiIcons.BarSize);
-    private readonly Button _defend = new Button { Text = Hint(BattleHotkeyAction.Defend) }.WithIcon(UiIcon.Defend, UiIcons.BarSize);
-    private readonly Button _retreat = new Button { Text = Hint(BattleHotkeyAction.Retreat) }.WithIcon(UiIcon.Retreat, UiIcons.BarSize);
-    private readonly Button _surrender = new Button { Text = "Surrender" }.WithIcon(UiIcon.Surrender, UiIcons.BarSize);
-    private readonly Button _quick = new Button { Text = Hint(BattleHotkeyAction.QuickCombat) }.WithIcon(UiIcon.QuickCombat, UiIcons.BarSize);
+    /// <summary>An action button's icon side; the button is a square round it, as on the adventure map.</summary>
+    private const int ActionIconSize = 36;
+
+    private readonly BattleHudLayout _parts = new();
+    private readonly BattleSidePlate _attackerPlate = new(BattleSide.Attacker);
+    private readonly BattleSidePlate _defenderPlate = new(BattleSide.Defender);
+    private readonly PanelContainer _roundPlate = new() { Name = "RoundPlate", MouseFilter = MouseFilterEnum.Ignore };
+    private readonly Label _round = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+    private readonly BattleStackPanel _stackPanel = new();
+    private readonly BattleTimeline _timeline = new();
+    private readonly GridContainer _actions = new() { Name = "Actions", Columns = 4 };
+    private readonly PanelContainer _logPanel = new() { Name = "Log", MouseFilter = MouseFilterEnum.Ignore };
+    private readonly Label _log = new() { VerticalAlignment = VerticalAlignment.Bottom, AutowrapMode = TextServer.AutowrapMode.WordSmart };
+    private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+    private readonly Button _wait = ActionButton(UiIcon.Hourglass, Hint(BattleHotkeyAction.Wait));
+    private readonly Button _defend = ActionButton(UiIcon.Defend, Hint(BattleHotkeyAction.Defend));
+    private readonly Button _quick = ActionButton(UiIcon.QuickCombat, Hint(BattleHotkeyAction.QuickCombat));
+    private readonly Button _settings = ActionButton(UiIcon.Settings, "Combat settings");
+    private readonly Button _creature = ActionButton(UiIcon.Spells, "The stack's own spell");
+    private readonly Control _creatureSpacer = new() { MouseFilter = MouseFilterEnum.Ignore };
+    private readonly Button _retreat = ActionButton(UiIcon.Retreat, Hint(BattleHotkeyAction.Retreat));
+    private readonly Button _surrender = ActionButton(UiIcon.Surrender, "Surrender");
+    private readonly Button _book = ActionButton(UiIcon.SpellBook, Hint(BattleHotkeyAction.SpellBook));
+    private readonly Button _menu = ActionButton(UiIcon.Menu, Hint(BattleHotkeyAction.Menu));
     private readonly Button _start = new() { Text = BattleHotkeys.Of(BattleHotkeyAction.Confirm).HintAs("Start battle"), Visible = false };
-    private readonly HFlowContainer _warcries = new();
-    private readonly Dictionary<Warcry, Button> _warcryButtons = [];
-    private readonly HFlowContainer _spells = new(); // wraps: a mage's spells do not fit in one row
+    private readonly BattleSpellBookWindow _spellBook = new();
     private readonly PanelContainer _result = new() { Visible = false };
+    private readonly Label _resultTitle = new() { HorizontalAlignment = HorizontalAlignment.Center };
     private readonly Label _resultText = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(460, 0) };
     private readonly Button _close = new() { Text = BattleHotkeys.Of(BattleHotkeyAction.Confirm).HintAs("Return to the map") };
     private readonly Queue<string> _lines = new();
-    private readonly VBoxContainer _top = new() { AnchorLeft = 0, AnchorRight = 1, OffsetTop = UiSpacing.ScreenEdge, MouseFilter = MouseFilterEnum.Ignore };
-
-    /// <summary>The initiative bar's place when the layout puts it at the bottom (ADR-156): the full width, under the log and the actions.</summary>
-    private readonly VBoxContainer _bottomBar = new()
-    {
-        AnchorLeft = 0, AnchorRight = 1, AnchorTop = 1, AnchorBottom = 1, OffsetLeft = 150, OffsetRight = -150, OffsetBottom = -UiSpacing.ScreenEdge, // clear of the menu button
-        GrowVertical = GrowDirection.Begin,
-        MouseFilter = MouseFilterEnum.Ignore,
-    };
-
-    private readonly PanelContainer _logPanel = new() { AnchorTop = 1, AnchorBottom = 1, OffsetLeft = UiSpacing.ScreenEdge, OffsetRight = 560, GrowVertical = GrowDirection.Begin }; // a full log grows up, never under the bar below it
-    private readonly VBoxContainer _actions = new()
-    {
-        AnchorLeft = 1, AnchorRight = 1, AnchorTop = 1, AnchorBottom = 1, OffsetLeft = -680, OffsetRight = -UiSpacing.ScreenEdge,
-        GrowHorizontal = GrowDirection.Begin, GrowVertical = GrowDirection.Begin, Alignment = BoxContainer.AlignmentMode.End,
-    };
 
     private LayoutSettings _layout = LayoutSettings.Default;
     private string? _raised;
+    private int? _timelineHover;
+    private KnownSpell? _creatureSpell;
     private GameSession _session = null!;
     private BattleView3D _view = null!;
 
-    /// <summary>Height the bottom initiative bar takes: the log and the actions stand above it.</summary>
-    private const float BottomBarHeight = 96; // a portrait and the count under it
-
     /// <summary>
-    /// The layout settings (the "Layout" tab, ADR-156): the initiative bar runs under the title at the top, or along the bottom with the log
-    /// and the actions moved up above it.
+    /// The layout settings (the "Layout" tab, ADR-156, ADR-314): the timeline in the bottom row, or under the round plate at the top.
     /// </summary>
     public LayoutSettings Layout
     {
@@ -77,30 +78,33 @@ public partial class BattleHud : Control
         set
         {
             _layout = value;
-            var bottom = value.InitiativeBar == ScreenEdge.Bottom;
-            var bar = bottom ? (Container)_bottomBar : _top;
-            if (_timeline.GetParent() != bar)
-            {
-                _timeline.Reparent(bar, keepGlobalTransform: false); // the timeline holds no subscriptions
-            }
-
-            var reserve = _bottomReserve + StatusBar.Height; // the status bar along the bottom (ADR-204)
-            var lift = (bottom ? BottomBarHeight : 0) + reserve;
-            (_bottomBar.OffsetTop, _bottomBar.OffsetBottom) = (-reserve, -UiSpacing.ScreenEdge - reserve);
+            _parts.TimelineOnTop = value.InitiativeBar == ScreenEdge.Top;
+            _parts.BottomReserve = _bottomReserve + StatusBar.Height; // the status bar along the bottom (ADR-204)
             Bar.BottomOffset = _bottomReserve;
-            (_logPanel.OffsetTop, _logPanel.OffsetBottom) = (-190 - lift, -8 - lift);
-            (_actions.OffsetTop, _actions.OffsetBottom) = (-230 - lift, -8 - lift);
         }
     }
 
     private float _bottomReserve;
 
     /// <summary>
-    /// The battle's status bar (ADR-204): the buttons' labels and the field's hints; the menu button sits on its right end. Without resources.
+    /// The battle's status bar (ADR-204): the buttons' names, keys and reasons, and the field's hints; the menu button sits on its right end.
+    /// Without resources.
     /// </summary>
     public StatusBar Bar { get; } = new() { RightReserve = StatusBar.MenuButtonWidth };
 
-    /// <summary>Room kept free along the bottom edge (the replay viewer's bar, ADR-164): the initiative bar, the log and the actions stand above it.</summary>
+    /// <summary>The combat settings window (ADR-314); the app shows the settings in it and keeps its changes.</summary>
+    public CombatSettingsWindow CombatSettings { get; } = new();
+
+    /// <summary>The action grid's Menu was pressed: the app's menu (F10).</summary>
+    public event Action? MenuRequested;
+
+    /// <summary>The timeline's entries, as shown (for the smoke checks).</summary>
+    public IEnumerable<string> Timeline => _timeline.Shown;
+
+    /// <summary>The stack panel's name line (for the smoke checks).</summary>
+    public string StackTitle => _stackPanel.Title;
+
+    /// <summary>Room kept free along the bottom edge (the replay viewer's bar, ADR-164): the bottom row stands above it.</summary>
     public float BottomReserve
     {
         get => _bottomReserve;
@@ -110,6 +114,9 @@ public partial class BattleHud : Control
             Layout = _layout;
         }
     }
+
+    /// <summary>A window of the HUD is open over the battle (the spell book, the combat settings).</summary>
+    public bool WindowOpen => _spellBook.IsOpen || CombatSettings.IsOpen;
 
     public void Bind(GameSession session, BattleView3D view)
     {
@@ -122,45 +129,72 @@ public partial class BattleHud : Control
 
         AddChild(Bar);
         Bar.Bind(null);
-        AddChild(_top);
-        _top.AddChild(_title);
-        _top.AddChild(_timeline);
-        AddChild(_bottomBar);
-
-        AddChild(_logPanel);
-        _logPanel.AddChild(_log);
-
-        // Bottom right; taller content (many spells) grows upwards, never off the screen.
-        var actions = _actions;
-        AddChild(actions);
+        AddChild(_parts);
         Layout = _layout;
-        actions.AddChild(_status);
-        actions.AddChild(_info);
-        var buttons = new HFlowContainer();
-        actions.AddChild(buttons);
-        foreach (var button in new[] { _start, _wait, _defend, _retreat, _surrender, _quick })
+
+        // Along the top: the plates and the round.
+        _parts.Set(BattleHudPart.AttackerPlate, _attackerPlate);
+        _parts.Set(BattleHudPart.DefenderPlate, _defenderPlate);
+        foreach (var plate in new[] { _attackerPlate, _defenderPlate })
         {
-            buttons.AddChild(button);
+            plate.PortraitPressed += () => ShowHero(plate.Side);
+            plate.BookPressed += ToggleSpellBook;
         }
 
-        // Stronghold heroes' warcries (ADR-067): one button each, shown while the commanding hero knows it.
-        actions.AddChild(_warcries);
-        foreach (var warcry in Enum.GetValues<Warcry>())
+        UiFrames.Bevel(_roundPlate, BevelKind.Panel, padding: UiSpacing.Gap);
+        _roundPlate.CustomMinimumSize = new Vector2(180, BattleHudLayout.RoundPlateHeight);
+        _round.AddThemeFontSizeOverride("font_size", 18);
+        _roundPlate.AddChild(_round);
+        _parts.Set(BattleHudPart.RoundPlate, _roundPlate);
+
+        // The bottom row: the stack panel, the timeline, the action grid; Start battle in the middle while deploying.
+        _parts.Set(BattleHudPart.StackPanel, _stackPanel);
+        _parts.Set(BattleHudPart.Timeline, _timeline);
+        _timeline.Hovered += id =>
         {
-            var button = new Button { Text = $"{warcry} (warcry)", Visible = false }.WithIcon(UiIcon.Warcry, UiIcons.BarSize);
-            button.Pressed += () => Act(player => new BattleWarcryCommand(player, warcry));
-            _warcryButtons[warcry] = button;
-            _warcries.AddChild(button);
+            _timelineHover = id;
+            _view.Light(id);
+            ShowUnit(null);
+        };
+
+        var actionsFrame = new PanelContainer { Name = "ActionsFrame", MouseFilter = MouseFilterEnum.Ignore };
+        UiFrames.Bevel(actionsFrame, BevelKind.Panel, padding: UiSpacing.Padding);
+        _actions.AddThemeConstantOverride("h_separation", UiSpacing.Cell);
+        _actions.AddThemeConstantOverride("v_separation", UiSpacing.Cell);
+        _actions.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+        actionsFrame.AddChild(_actions);
+        foreach (var control in new Control[] { _wait, _defend, _quick, _settings, _creature, _retreat, _surrender, _book, _menu, _creatureSpacer })
+        {
+            _actions.AddChild(control);
         }
 
-        // The acting side's hero's spells (ADR-110): a spell for a side or the field is cast at once, the others wait for a click on the field.
-        actions.AddChild(_spells);
+        _parts.Set(BattleHudPart.Actions, actionsFrame);
+        UiFrames.Bevel(_start, BevelKind.Button);
+        _parts.Set(BattleHudPart.Start, _start);
+
+        // The log above the action grid, the prompt line first.
+        UiFrames.Bevel(_logPanel, BevelKind.Panel, padding: UiSpacing.Padding);
+        var logBox = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
+        logBox.AddChild(_status);
+        logBox.AddChild(_log);
+        _logPanel.AddChild(logBox);
+        _parts.Set(BattleHudPart.Log, _logPanel);
 
         _wait.Pressed += () => Act(player => new BattleWaitCommand(player));
         _defend.Pressed += () => Act(player => new BattleDefendCommand(player));
         _retreat.Pressed += () => Act(player => new BattleRetreatCommand(player));
         _surrender.Pressed += () => Act(player => new BattleSurrenderCommand(player));
         _quick.Pressed += QuickCombat;
+        _settings.Pressed += ToggleCombatSettings;
+        _book.Pressed += ToggleSpellBook;
+        _menu.Pressed += () => MenuRequested?.Invoke();
+        _creature.Pressed += () =>
+        {
+            if (_creatureSpell is { } own)
+            {
+                ArmCreature(own);
+            }
+        };
         _start.Pressed += () =>
         {
             if (_view.Deployer is { } player)
@@ -169,17 +203,29 @@ public partial class BattleHud : Control
             }
         };
 
+        // The windows over the battle.
+        AddChild(_spellBook);
+        _spellBook.Bind(session);
+        _spellBook.SpellPicked += Arm;
+        _spellBook.WarcryPicked += warcry => Act(player => new BattleWarcryCommand(player, warcry));
+        AddChild(CombatSettings);
+        CombatSettings.Bind();
+
         var center = new CenterContainer { MouseFilter = MouseFilterEnum.Ignore };
         center.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         AddChild(center);
         center.AddChild(_result);
+        _result.UseOpaqueBackground();
         var resultBox = new VBoxContainer();
+        resultBox.AddThemeConstantOverride("separation", UiSpacing.Gap);
         _result.AddChild(resultBox);
+        _resultTitle.AddThemeFontSizeOverride("font_size", 24);
+        resultBox.AddChild(_resultTitle);
         resultBox.AddChild(_resultText);
         _close.Pressed += Continue;
         resultBox.AddChild(_close);
         this.SubscribeWhileInTree<UndeadRaised>(session.Events, e => _raised =
-            $"Necromancy\n\n{_session.State.GetHero(e.Hero).Name} raises {string.Join(", ", e.Raised.Select(r => $"{r.Count} {CreatureName(r.Creature.Value)}"))}.");
+            $"{_session.State.GetHero(e.Hero).Name} raises {string.Join(", ", e.Raised.Select(r => $"{r.Count} {CreatureName(r.Creature.Value)}"))}.");
 
         view.Opened += () =>
         {
@@ -187,6 +233,9 @@ public partial class BattleHud : Control
             _lines.Clear();
             _log.Text = string.Empty;
             _result.Visible = false;
+            _spellBook.Close();
+            CombatSettings.Close();
+            _timelineHover = null;
             Visible = true;
             Refresh();
         };
@@ -206,48 +255,43 @@ public partial class BattleHud : Control
             }
         };
         view.Finished += ShowResult;
-        view.Closed += () => Visible = false;
+        view.Closed += () =>
+        {
+            _view.Light(null);
+            Visible = false;
+        };
     }
 
-    /// <summary>Shows a unit's stats (the hovered one); null falls back to the active unit.</summary>
+    /// <summary>
+    /// Shows a stack in the stack panel: <paramref name="unit"/> (the stack under the pointer on the field), else the timeline's entry under the
+    /// pointer, else the active stack.
+    /// </summary>
     public void ShowUnit(BattleUnit? unit)
     {
         var battle = _session.State.Battle;
+        unit ??= _timelineHover is { } id ? battle?.FindUnit(id) : null;
         unit ??= battle?.ActiveUnit;
-        if (battle is null || unit is null || !_view.IsOpen || _view.IsBusy)
+        if (battle is null || unit is not { IsAlive: true } || !_view.IsOpen)
         {
-            _info.Text = string.Empty;
+            _stackPanel.Show(null, null, Colors.White);
             return;
         }
 
-        // The stack panel's numbers and marks (ADR-314), as text until step 3 draws them as icons.
-        var panel = StackPanel.Of(battle, unit, _session.State.Spells);
-        var shots = panel.UnlimitedShots ? "  shots unlimited" : panel.Shots is { } left ? $"  shots {left}" : string.Empty;
-        if (panel.IsMachine)
+        if (_view.IsBusy)
         {
-            _info.Text = $"{panel.Name} ({_view.SideName(panel.Side)}): war machine, health {panel.Health}/{panel.MaxHealth}" +
-                         (panel.Attack is { } attack ? $"\nAttack {attack}  Damage {panel.MinDamage}–{panel.MaxDamage}  Initiative {panel.Initiative}{shots}" : string.Empty);
-            return;
+            return; // the field is still playing what happened: the panel matches it once idle
         }
 
-        var c = unit.Creature;
-        var capabilities = c.Capabilities.Count > 0 ? $"\n{string.Join(", ", c.Capabilities.Select(k => k.Kind))}" : string.Empty;
-        var marks = panel.Marks.Count > 0 ? $"\n{string.Join("; ", panel.Marks.Select(m => m.Name))}" : string.Empty;
-        _info.Text = $"{panel.Name} ×{panel.Count} ({_view.SideName(panel.Side)})\n" +
-                     $"Attack {panel.Attack}  Defense {panel.Defense}  Damage {panel.MinDamage}–{panel.MaxDamage}  Health {panel.Health}/{panel.MaxHealth}\n" +
-                     $"Speed {panel.Speed}  Initiative {panel.Initiative}{shots}  Morale {(panel.Morale is { } morale ? Signed(morale) : "–")}  Luck {Signed(panel.Luck ?? 0)}" +
-                     $"{marks}{capabilities}";
-
-        static string Signed(int value) => value > 0 ? $"+{value}" : value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        _stackPanel.Show(StackPanel.Of(battle, unit, _session.State.Spells), CreatureIcons.Of(unit, BattleStackPanel.PortraitSize), _view.SideColor(unit.Side));
     }
 
-    /// <summary>"Return to the map" on the result screen: first the Necromancy screen if undead were raised, then the map.</summary>
+    /// <summary>"Return to the map" on the result window: first the Necromancy window if undead were raised, then the map.</summary>
     public void Continue()
     {
         if (_raised is { } text)
         {
             _raised = null;
-            _title.Text = "Necromancy";
+            _resultTitle.Text = "Necromancy";
             _resultText.Text = text;
             return;
         }
@@ -262,6 +306,49 @@ public partial class BattleHud : Control
         {
             Bar.Message.Text = _status.Text;
         }
+    }
+
+    /// <summary>Opens the spell book of the side it is for (C, the action grid, the plate's button), or closes it.</summary>
+    public void ToggleSpellBook()
+    {
+        if (_spellBook.IsOpen)
+        {
+            _spellBook.Close();
+            return;
+        }
+
+        CombatSettings.Close();
+        if (_session.State.Battle is { } battle && BookSide(battle) is { } side && BattleSpellBook.Of(battle, side) is { } book)
+        {
+            _spellBook.Open(book, _view.SideName(side), BookNotNow(battle, side));
+        }
+    }
+
+    /// <summary>Opens the combat settings window, or closes it.</summary>
+    public void ToggleCombatSettings()
+    {
+        _spellBook.Close();
+        if (CombatSettings.IsOpen)
+        {
+            CombatSettings.Close();
+        }
+        else
+        {
+            CombatSettings.Open();
+        }
+    }
+
+    /// <summary>Closes the window open over the battle (Escape); false when none was.</summary>
+    public bool CloseWindow()
+    {
+        if (!WindowOpen)
+        {
+            return false;
+        }
+
+        _spellBook.Close();
+        CombatSettings.Close();
+        return true;
     }
 
     /// <summary>The spell waiting for its target, if a spell button was pressed (ADR-110).</summary>
@@ -379,43 +466,65 @@ public partial class BattleHud : Control
             : $"{known.Spell.Name}: click a target (Esc cancels).";
     }
 
-    /// <summary>One button per battle spell of the acting side's hero, with its cost; disabled while it cannot be cast at all.</summary>
-    private void RefreshSpells(BattleState? battle, Core.Domain.Common.PlayerId? commander)
+    /// <summary>A square icon button of the action grid (ADR-314): its <paramref name="label"/> ("Wait [W]") and reasons on the status bar.</summary>
+    private static Button ActionButton(UiIcon icon, string label)
     {
-        _spells.ClearChildren();
+        var button = new Button { Text = label, FocusMode = FocusModeEnum.None }.WithIcon(icon, ActionIconSize);
+        var side = ActionIconSize + (2 * UiIcons.IconPadding);
+        button.CustomMinimumSize = new Vector2(side, side);
+        UiFrames.Bevel(button, BevelKind.Button, padding: UiIcons.IconPadding); // the theme's wider margins would stretch it
+        return button;
+    }
 
-        if (battle?.ActiveUnit is not { } active || commander is null)
+    /// <summary>
+    /// Whose spell book the HUD opens: the active stack's side while its commander plays here, else the first side played here with a book; null
+    /// in the replay viewer or when no side here has one.
+    /// </summary>
+    private BattleSide? BookSide(BattleState battle)
+    {
+        if (_view.Watching)
+        {
+            return null;
+        }
+
+        if (_view.Commander is not null && battle.ActiveUnit is { } active && BattleSpellBook.Of(battle, active.Side) is not null)
+        {
+            return active.Side;
+        }
+
+        foreach (var side in new[] { BattleSide.Attacker, BattleSide.Defender })
+        {
+            if (_view.PlayedHere.Contains(side) && BattleSpellBook.Of(battle, side) is not null)
+            {
+                return side;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Why nothing in <paramref name="side"/>'s book can be used now (another stack's turn, deployment, the result), or null.</summary>
+    private string? BookNotNow(BattleState battle, BattleSide side) =>
+        _view.Result is not null ? "The battle is over"
+        : battle.Phase == BattlePhase.Deploying ? "Not during the deployment"
+        : _view.Commander is null || battle.ActiveUnit?.Side != side ? "Wait for one of your stacks to act"
+        : null;
+
+    /// <summary>The hero of <paramref name="side"/> in its information window: one's own in full, the opponent's by the viewer's Scouting (ADR-314).</summary>
+    private void ShowHero(BattleSide side)
+    {
+        if (_session.State.Battle is not { } battle || InfoWindow.Current is not { } window)
         {
             return;
         }
 
-        // A creature caster's own spell (ADR-120): its action, no mana.
-        if (BattleMagic.CreatureSpell(battle, active) is { Effect: not null } own)
+        var other = side == BattleSide.Attacker ? BattleSide.Defender : BattleSide.Attacker;
+        var viewer = _view.PlayedHere.Contains(side) ? battle.Participant(side).Owner
+            : _view.PlayedHere.Contains(other) ? battle.Participant(other).Owner
+            : battle.Participant(side).Owner; // nobody here: the replay viewer sees it in full
+        if (viewer is { } player && InfoSheets.BattleHero(_session.State, battle, side, player, window.Detailed) is { } sheet)
         {
-            var casts = active.CastsLeft[own.Spell.Id.Value];
-            var cast = new Button { Text = $"{active.Creature.Name}: {own.Spell.Name} ({casts} left)", TooltipText = $"The stack casts it as its action. {own.Spell.Notes}" };
-            cast.Pressed += () => ArmCreature(own);
-            var ownId = own.Spell.Id;
-            cast.WithSpellIcon(ownId).WithInfo(detailed => Core.Domain.Info.InfoSheets.Spell(_session.State, ownId, 1, detailed));
-            _spells.AddChild(cast);
-        }
-
-        if (battle.Participant(active.Side).Caster is null || BattleSpellBook.Of(battle, active.Side) is not { } book)
-        {
-            return;
-        }
-
-        _spells.AddChild(UiIcons.IconLabel(UiIcon.SpellBook, $"Mana {book.Mana}"));
-        foreach (var (known, _, _, cost, refusal) in book.Spells)
-        {
-            var button = new Button { Text = $"{Core.Domain.Magic.MagicRules.NameAtRank(known.Spell, known.Rank)} ({cost})" };
-            button.Disabled = refusal is not null;
-            button.TooltipText = refusal ?? known.Spell.Notes;
-            button.Pressed += () => Arm(known);
-            var spellId = known.Spell.Id;
-            var rank = known.Rank;
-            button.WithSpellIcon(spellId).WithInfo(detailed => Core.Domain.Info.InfoSheets.Spell(_session.State, spellId, rank, detailed));
-            _spells.AddChild(button);
+            window.Open(sheet);
         }
     }
 
@@ -437,25 +546,22 @@ public partial class BattleHud : Control
 
     private void Refresh()
     {
-        _timeline.ClearChildren();
-
         var battle = _session.State.Battle;
         var commander = _view.Commander;
-        _wait.Disabled = commander is null;
-        _defend.Disabled = commander is null;
-        var retreatRefusal = commander is null || battle?.ActiveUnit is not { } active ? "" : SurrenderRules.CheckRetreat(battle, active.Side);
-        _retreat.Disabled = retreatRefusal is not null;
-        _retreat.TooltipText = retreatRefusal is { Length: > 0 } why ? why : "";
+        Enable(_wait, commander is null ? "Wait for one of your stacks to act" : null, "The stack acts later this round");
+        Enable(_defend, commander is null ? "Wait for one of your stacks to act" : null, "The stack skips its turn and defends until its next");
+        var retreatRefusal = commander is null || battle?.ActiveUnit is not { } active ? "Wait for one of your stacks to act" : SurrenderRules.CheckRetreat(battle, active.Side);
+        Enable(_retreat, retreatRefusal, "Flee the battle");
         RefreshSurrender(battle, commander);
-        _quick.Disabled = battle is null || _view.QuickCombatPlayer is null;
-        _quick.TooltipText = _view.PlaysHere is not null && _quick.Disabled && _view.Result is null
-            ? "A battle between players on two computers is fought by hand."
-            : "";
-        RefreshWarcries(battle, commander);
-        RefreshSpells(battle, commander);
+        Enable(_quick, battle is null || _view.QuickCombatPlayer is null
+            ? _view.PlaysHere is not null && _view.Result is null ? "A battle between players on two computers is fought by hand." : "Not now"
+            : null, "The computer fights the rest of the battle for both sides");
+        RefreshCreature(battle, commander);
+        RefreshBook(battle);
         var deployer = _view.Deployer;
         _start.Visible = deployer is not null;
         _wait.Visible = _defend.Visible = _retreat.Visible = _surrender.Visible = deployer is null && !_view.Watching;
+        _book.Visible = deployer is null;
         _quick.Visible = !_view.Watching; // the replay viewer only watches (ADR-164)
 
         if (battle is null || _view.IsBusy)
@@ -463,7 +569,9 @@ public partial class BattleHud : Control
             return;
         }
 
-        _title.Text = $"{_view.SideName(BattleSide.Attacker)}  vs  {_view.SideName(BattleSide.Defender)}   ·   round {battle.Round}";
+        _round.Text = battle.Phase == BattlePhase.Deploying ? "Deployment" : $"Round {battle.Round}";
+        _attackerPlate.Show(_session.State, battle, _view.SideName(BattleSide.Attacker), _view.SideColor(BattleSide.Attacker));
+        _defenderPlate.Show(_session.State, battle, _view.SideName(BattleSide.Defender), _view.SideColor(BattleSide.Defender));
         _status.Text = deployer is { } placing
             ? $"{_session.State.GetPlayer(placing).Name}: place your stacks within the first {battle.DeploymentColumns} columns (drag a stack, or click it and then a cell), then start the battle."
             : ArmedSpell is { } armed && _session.State.Spells.TryGet(armed, out var spell)
@@ -474,20 +582,14 @@ public partial class BattleHud : Control
                 ? $"{_session.State.GetPlayer(other).Name} plays on another computer: waiting for their move."
                 : string.Empty;
 
-        var order = new List<(BattleUnit Unit, bool Waiting)>();
-        if (battle.ActiveUnit is { } current)
-        {
-            order.Add((current, false));
-        }
-
-        order.AddRange(battle.Queue.Select(id => (battle.GetUnit(id), false)));
-        order.AddRange(battle.Waiting.Select(id => (battle.GetUnit(id), true)));
-        foreach (var (unit, waiting) in order.Where(o => o.Unit.IsAlive).Take(TimelineEntries))
-        {
-            _timeline.AddChild(Entry(unit, waiting, unit == battle.ActiveUnit));
-        }
-
+        _timeline.Show(battle, _view.SideColor);
         ShowUnit(null);
+    }
+
+    private static void Enable(Button button, string? refusal, string tooltip)
+    {
+        button.Disabled = refusal is not null;
+        button.TooltipText = refusal ?? tooltip;
     }
 
     /// <summary>Surrender (ADR-070, ADR-081): its price, or why the acting side's hero cannot surrender.</summary>
@@ -495,74 +597,61 @@ public partial class BattleHud : Control
     {
         if (battle?.ActiveUnit is not { } active || commander is null)
         {
-            _surrender.Disabled = true;
+            Enable(_surrender, "Wait for one of your stacks to act", "");
             return;
         }
 
         var refusal = SurrenderRules.Check(_session.State, battle, active.Side);
-        var price = SurrenderRules.Price(battle, active.Side);
-        _surrender.SetLabel($"Surrender ({price} gold)");
-        _surrender.Disabled = refusal is not null;
-        _surrender.TooltipText = refusal ?? "Pay the enemy and leave with your army; the hero waits in your taverns.";
+        _surrender.SetLabel($"Surrender ({SurrenderRules.Price(battle, active.Side)} gold)");
+        Enable(_surrender, refusal, "Pay the enemy and leave with your army; the hero waits in your taverns.");
     }
 
-    /// <summary>Shows the warcries the acting side's hero knows; those already used, or a second one in a round, are disabled.</summary>
-    private void RefreshWarcries(BattleState? battle, Core.Domain.Common.PlayerId? commander)
+    /// <summary>The active creature caster's own spell (ADR-120): a fifth column of the action grid while it acts.</summary>
+    private void RefreshCreature(BattleState? battle, Core.Domain.Common.PlayerId? commander)
     {
-        var side = battle?.ActiveUnit?.Side;
-        var level = battle is not null && side is { } s ? battle.Participant(s).Bonus.Warcry : Core.Domain.Heroes.SkillLevel.None;
-        foreach (var (warcry, button) in _warcryButtons)
+        _creatureSpell = commander is not null && battle?.ActiveUnit is { } active && BattleMagic.CreatureSpell(battle, active) is { Effect: not null } own ? own : null;
+        var shown = _creatureSpell is not null && _view.Deployer is null;
+        _creature.Visible = _creatureSpacer.Visible = shown;
+        _actions.Columns = shown ? 5 : 4;
+        if (_creatureSpell is not { } spell || battle?.ActiveUnit is not { } caster)
         {
-            button.Visible = battle is not null && PrimalFury.Knows(level, warcry);
-            var refusal = battle is not null && side is { } own ? battle.WarcryRefusal(own, warcry) : "No battle.";
-            button.Disabled = commander is null || refusal is not null;
-            button.TooltipText = refusal ?? string.Empty;
+            return;
+        }
+
+        _creature.Icon = SpellIcons.Get(spell.Spell.Id, ActionIconSize) ?? UiIcons.Get(UiIcon.Spells, ActionIconSize);
+        _creature.SetLabel($"{caster.Creature.Name}: {spell.Spell.Name} ({caster.CastsLeft[spell.Spell.Id.Value]} left)");
+        _creature.TooltipText = $"The stack casts it as its action. {spell.Spell.Notes}";
+    }
+
+    /// <summary>The spell book's buttons (the grid's, the plate's) and the open book, for the side it is for.</summary>
+    private void RefreshBook(BattleState? battle)
+    {
+        var side = battle is null ? null : BookSide(battle);
+        var refusal = _view.Watching ? "Not while watching a replay" : side is null ? "No hero here has a spell book or a warcry" : null;
+        Enable(_book, refusal, "The battle spells and warcries");
+        _attackerPlate.ShowBook(side == BattleSide.Attacker, null);
+        _defenderPlate.ShowBook(side == BattleSide.Defender, null);
+        if (_spellBook.IsOpen)
+        {
+            if (battle is not null && side is { } own && BattleSpellBook.Of(battle, own) is { } book)
+            {
+                _spellBook.Open(book, _view.SideName(own), BookNotNow(battle, own));
+            }
+            else
+            {
+                _spellBook.Close();
+            }
         }
     }
 
     private string CreatureName(string id) =>
         _session.State.Creatures.TryGet(id, out var creature) || WarMachines.TryGet(id, out creature) ? creature.Name : id;
 
-    private PanelContainer Entry(BattleUnit unit, bool waiting, bool active)
-    {
-        var style = new StyleBoxFlat
-        {
-            BgColor = _view.SideColor(unit.Side).Darkened(active ? 0.1f : 0.5f),
-            BorderColor = Colors.White,
-            ContentMarginLeft = 6,
-            ContentMarginRight = 6,
-            ContentMarginTop = 2,
-            ContentMarginBottom = 2,
-        };
-        style.SetBorderWidthAll(active ? 2 : 0);
-        var panel = new PanelContainer { MouseFilter = MouseFilterEnum.Ignore };
-        panel.AddThemeStyleboxOverride("panel", style);
-        var count = $"×{unit.Count}{(waiting ? "  (w)" : string.Empty)}";
-        if (CreatureIcons.Of(unit) is not { } portrait)
-        {
-            panel.AddChild(new Label { Text = $"{unit.Creature.Name}\n{count}", HorizontalAlignment = HorizontalAlignment.Center, MouseFilter = MouseFilterEnum.Ignore });
-            return panel;
-        }
-
-        // The portrait faces right, like the attacker; the defender's is mirrored to face its enemy.
-        var column = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
-        column.AddThemeConstantOverride("separation", 0);
-        panel.AddChild(column);
-        column.AddChild(new TextureRect
-        {
-            Texture = portrait,
-            FlipH = unit.Side == BattleSide.Defender,
-            StretchMode = TextureRect.StretchModeEnum.KeepCentered,
-            CustomMinimumSize = new Vector2(CreatureIcons.TimelineSize, CreatureIcons.TimelineSize),
-            MouseFilter = MouseFilterEnum.Ignore,
-        });
-        column.AddChild(new Label { Text = count, HorizontalAlignment = HorizontalAlignment.Center, MouseFilter = MouseFilterEnum.Ignore });
-        return panel;
-    }
-
     private void ShowResult(BattleEnded ended)
     {
         Refresh();
+        _spellBook.Close();
+        CombatSettings.Close();
         var summary = BattleSummary.Of(ended, _view.PlayedHere, _view.SideName); // the title for this screen, the reason, the losses (ADR-314)
         var lines = new List<string> { summary.Reason, string.Empty };
         foreach (var losses in summary.Losses)
@@ -578,9 +667,8 @@ public partial class BattleHud : Control
         }
 
         _resultText.Text = string.Join('\n', lines);
+        _resultTitle.Text = summary.Title;
         _result.Visible = true;
-        _title.Text = summary.Title;
         _status.Text = string.Empty;
-        _info.Text = string.Empty;
     }
 }

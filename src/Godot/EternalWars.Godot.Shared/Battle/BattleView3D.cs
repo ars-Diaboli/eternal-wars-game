@@ -41,6 +41,7 @@ public partial class BattleView3D : Node3D
     private readonly Camera3D _camera = new() { Name = "BattleCamera", Fov = 45 };
     private readonly MeshInstance3D _ghost = Overlay("Ghost");
     private readonly MeshInstance3D _target = Overlay("Target");
+    private readonly MeshInstance3D _lit = Overlay("Lit");
     private readonly BattleAnimationQueue _queue;
     private readonly BattleNarrator _narrator;
     private readonly BattleStage _stage;
@@ -218,6 +219,21 @@ public partial class BattleView3D : Node3D
         }
     }
 
+    /// <summary>
+    /// Lights the cells of the stack <paramref name="unit"/> in its side's colour (the battle HUD's timeline under the pointer, ADR-314); null, or a
+    /// stack no longer on the field, puts the light out.
+    /// </summary>
+    public void Light(int? unit)
+    {
+        if (unit is { } id && IsOpen && _session.State.Battle?.FindUnit(id) is { IsAlive: true } lit)
+        {
+            ShowOverlay(_lit, lit.Rect, SideColor(lit.Side) with { A = 0.45f });
+            return;
+        }
+
+        _lit.Visible = false;
+    }
+
     public string SideName(BattleSide side) => _narrator.SideName(side);
 
     public Color SideColor(BattleSide side) => _sideColors.GetValueOrDefault(side, Palette.Neutral);
@@ -238,6 +254,7 @@ public partial class BattleView3D : Node3D
         AddChild(new MultiMeshInstance3D { Multimesh = _reach, Name = "Reach" });
         AddChild(_ghost);
         AddChild(_target);
+        AddChild(_lit);
 
         var events = session.Events;
         this.SubscribeWhileInTree<BattleStarted>(events, Open);
@@ -529,6 +546,7 @@ public partial class BattleView3D : Node3D
         _reach.InstanceCount = 0;
         _ghost.Visible = false;
         _target.Visible = false;
+        _lit.Visible = false;
     }
 
     private void UpdateCamera()

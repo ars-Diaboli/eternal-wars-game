@@ -40,7 +40,26 @@ public partial class Main
         }
     }
 
-    /// <summary>The interface settings changed, in the menu or by Alt+Enter: applied at once and kept.</summary>
+    /// <summary>The speed settings changed, in the menu or the battle's combat settings: applied at once and kept.</summary>
+    private void ChangeSpeeds(SpeedSettings speeds)
+    {
+        _speeds = speeds;
+        ApplySpeeds();
+        _menu.ShowSpeeds(speeds);
+        ShowCombatSettings();
+        KeepSettings();
+    }
+
+    /// <summary>The battle's combat settings window (ADR-314) shows the battle's speed, grid and reach as they are now.</summary>
+    private void ShowCombatSettings()
+    {
+        if (IsInstanceValid(_battleHud))
+        {
+            _battleHud.CombatSettings.ShowSettings(_speeds.Battle, _interface.BattleGrid, _interface.BattleReach);
+        }
+    }
+
+    /// <summary>The interface settings changed, in the menu, the battle's combat settings or by Alt+Enter: applied at once and kept.</summary>
     private void ChangeInterface(InterfaceSettings settings)
     {
         _interface = settings;
@@ -60,6 +79,8 @@ public partial class Main
             _battle.ShowReach = settings.BattleReach;
         }
 
+        _menu.ShowInterface(settings);
+        ShowCombatSettings();
         KeepSettings();
     }
 
@@ -121,12 +142,7 @@ public partial class Main
         _settingsPath = LaunchArguments.SettingsPath ?? Path.Combine(ProjectSettings.GlobalizePath("user://"), SettingsFile.FileName);
         _speeds = SettingsFile.Load(_settingsPath);
         _menu.ShowSpeeds(_speeds);
-        _menu.SpeedsChanged += speeds =>
-        {
-            _speeds = speeds;
-            ApplySpeeds();
-            KeepSettings();
-        };
+        _menu.SpeedsChanged += ChangeSpeeds;
 
         // "Detailed tooltips" (ADR-154): the information windows' formulas and numbers, kept with the speeds.
         _interface = SettingsFile.LoadInterface(_settingsPath);

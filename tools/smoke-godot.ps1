@@ -115,10 +115,10 @@ $scenarios = @(
     # The side panel (ADR-191): the framed column on the right by default, moved to the left by the "Layout" tab's mirror (ADR-309).
     @{ Name = 'game-speed-settings'; App = 'EternalWars.Game'; Frames = 100
        Input = '3:key:Enter;8:key:F10;10:click:@Settings;13:click:@Normal;16:choose:Slow;19:key:Escape;24:click:960,520;30:click:960,520;70:key:F10;72:click:@Layout;75:click:@Minimap on the right;78:choose:Mirrored: minimap on the left;82:key:Escape' },
-    # The "Layout" tab (ADR-156, ADR-309): the adventure map mirrored, the initiative bar at the bottom; the map's HUD moves at once, then the
-    # step into the monster opens the battle with its initiative bar at the bottom.
+    # The "Layout" tab (ADR-156, ADR-309): the adventure map mirrored, the battle's timeline at the top (ADR-314); the map's HUD moves at once, then the
+    # step into the monster opens the battle with its timeline under the round plate.
     @{ Name = 'game-layout'; App = 'EternalWars.Game'; Frames = 96; Map = $battleMap
-       Input = '3:key:Enter;8:key:F10;10:click:@Layout;13:click:@Minimap on the right;16:choose:Mirrored: minimap on the left;20:click:@Top;24:choose:Bottom;28:key:Escape;36:key:Right' },
+       Input = '3:key:Enter;8:key:F10;10:click:@Layout;13:click:@Minimap on the right;16:choose:Mirrored: minimap on the left;20:click:@Bottom;24:choose:Top;28:key:Escape;36:key:Right' },
     # The action buttons (ADR-210), 3×3 in the side panel: Magus' spell book from its button (Escape closes it), then with C (C closes it);
     # the hero screen from its button; the game menu from its button. Bookless selected, the spell book button is disabled.
     @{ Name = 'game-action-buttons'; App = 'EternalWars.Game'; Frames = 62; Map = $magicMap
@@ -376,25 +376,25 @@ $scenarios = @(
     # button, Detect Magic's window; then Bookless buys a spell book in the second town's mage guild window (G).
     @{ Name = 'game-magic'; App = 'EternalWars.Game'; Frames = 86; Map = $magicMap
        Input = '3:key:Enter;8:press:Magus;12:key:Up;24:key:Escape;28:key:H;34:press:Detect Magic (4 mana);44:press:Close;50:press:Close;56:press:Bookless;60:key:Up;68:key:G;74:press:spell book' },
-    # Battle magic (ADR-122, ADR-123) and surrender (ADR-081): Distant Vision on the computer mage, then Magus attacks it, casts Blind, defends
+    # Battle magic (ADR-122, ADR-123) and surrender (ADR-081): Distant Vision on the computer mage, then Magus attacks it, casts Blind from the spell book (C, ADR-314), defends
     # until the AI has cast its spells, surrenders.
     @{ Name = 'game-battle-magic'; App = 'EternalWars.Game'; Frames = 196; Map = $magicMap
-       Input = '3:key:Enter;8:press:Magus;12:key:H;18:press:Distant Vision;24:click:800,500;36:press:Close;40:key:Up;50:press:Close;56:key:Down;72:click:800,552;78:click:800,552;108:press:Blind;114:click:1257,490;128:key:D;138:key:D;148:key:D;180:press:Surrender' },
+       Input = '3:key:Enter;8:press:Magus;12:key:H;18:press:Distant Vision;24:click:800,500;36:press:Close;40:key:Up;50:press:Close;56:key:Down;72:click:800,552;78:click:800,552;106:key:C;108:press:Blind;114:click:1257,490;128:key:D;138:key:D;148:key:D;180:press:Surrender' },
     # A field zone (ADR-149): the same battle, Darkness cast on the computer mage's stack and drawn over its cells, still there in round 2.
     @{ Name = 'game-battle-zone'; App = 'EternalWars.Game'; Frames = 210; Map = $magicMap
-       Input = '3:key:Enter;8:press:Magus;12:key:H;18:press:Distant Vision;24:click:800,500;36:press:Close;40:key:Up;50:press:Close;56:key:Down;72:click:800,552;78:click:800,552;108:press:Darkness;114:click:1257,490;128:key:D;138:key:D;148:key:D;158:key:D;168:key:D;178:key:D;200:press:Surrender' },
+       Input = '3:key:Enter;8:press:Magus;12:key:H;18:press:Distant Vision;24:click:800,500;36:press:Close;40:key:Up;50:press:Close;56:key:Down;72:click:800,552;78:click:800,552;106:key:C;108:press:Darkness;114:click:1257,490;128:key:D;138:key:D;148:key:D;158:key:D;168:key:D;178:key:D;200:press:Surrender' },
     # A control spell (ADR-150): the same battle, Hypnotize cast on the computer mage's stack, which turns to Magus' colour and side until its turn
     # is over.
     @{ Name = 'game-battle-control'; App = 'EternalWars.Game'; Frames = 200; Map = $magicMap
-       Input = '3:key:Enter;8:press:Magus;12:key:H;18:press:Distant Vision;24:click:800,500;36:press:Close;40:key:Up;50:press:Close;56:key:Down;72:click:800,552;78:click:800,552;108:press:Hypnotize;114:click:1257,490;128:key:D;138:key:D;148:key:D;158:key:D;168:key:D;184:press:Surrender' },
+       Input = '3:key:Enter;8:press:Magus;12:key:H;18:press:Distant Vision;24:click:800,500;36:press:Close;40:key:Up;50:press:Close;56:key:Down;72:click:800,552;78:click:800,552;106:key:C;108:press:Hypnotize;114:click:1257,490;128:key:D;138:key:D;148:key:D;158:key:D;168:key:D;184:press:Surrender' },
     # A two-click spell (ADR-151): the same battle, Teleport cast on Magus' footmen (first click), which land 8 cells on (second click); the Griffin then defends.
     @{ Name = 'game-battle-teleport'; App = 'EternalWars.Game'; Frames = 150; Map = $magicMap
-       Input = '3:key:Enter;8:press:Magus;12:key:H;18:press:Distant Vision;24:click:800,500;36:press:Close;40:key:Up;50:press:Close;56:key:Down;72:click:800,552;78:click:800,552;108:press:Teleport;114:click:410,262;120:click:650,290;132:key:D' },
+       Input = '3:key:Enter;8:press:Magus;12:key:H;18:press:Distant Vision;24:click:800,500;36:press:Close;40:key:Up;50:press:Close;56:key:Down;72:click:800,552;78:click:800,552;106:key:C;108:press:Teleport;114:click:410,262;120:click:650,290;132:key:D' },
     # A copy (ADR-152): the same battle, Mirror Image cast on Magus' footmen; the copy stands next to them; the Footman then defends.
     # Then the victory screen (ADR-103): quick combat beats the last enemy hero; the screen shows the score (nothing is pressed, so the
     # ranking and the replays folder stay as they are).
     @{ Name = 'game-battle-mirror'; App = 'EternalWars.Game'; Frames = 190; Map = $magicMap
-       Input = '3:key:Enter;8:press:Magus;12:key:H;18:press:Distant Vision;24:click:800,500;36:press:Close;40:key:Up;50:press:Close;56:key:Down;72:click:800,552;78:click:800,552;108:press:Mirror Image;114:click:410,262;132:key:D;150:key:Q;180:key:Enter' },
+       Input = '3:key:Enter;8:press:Magus;12:key:H;18:press:Distant Vision;24:click:800,500;36:press:Close;40:key:Up;50:press:Close;56:key:Down;72:click:800,552;78:click:800,552;106:key:C;108:press:Mirror Image;114:click:410,262;132:key:D;150:key:Q;180:key:Enter' },
     # A deployment step and war machines on the field (ADR-076): the battle width (Tactics); drag and drop in the deployment step (ADR-155):
     # the 60 stack is dragged down the zone (carried at frame 61, placed at 62), the 20 stack is dropped outside the zone (refused, back in
     # its place at 68); Start, quick combat, the result, then the Necromancy screen (ADR-078).
@@ -404,14 +404,14 @@ $scenarios = @(
     # Meteor Shower III's rubble: Pyro visits Emberkeep (the guild raises the spell to rank III), walks into the wolves and casts it on the
     # second wolf stack; stones lie on the free cells it hit.
     @{ Name = 'game-meteor-rubble'; App = 'EternalWars.Game'; Frames = 100; Map = $spellsMap; Seed = 1
-       Input = '3:key:Enter;8:press:Pyro;12:key:Up;24:key:Escape;28:key:Down;36:key:Down;62:press:Meteor Shower III (18);66:click:1205,300' },
+       Input = '3:key:Enter;8:press:Pyro;12:key:Up;24:key:Escape;28:key:Down;36:key:Down;61:key:C;63:press:Meteor Shower III (18);67:click:1205,300' },
     # Grave Whisper (its window), Ledger of Ages (next week, the Red heroes' armies), then Eavesdrop on Gloomhold (its buildings and garrison).
     @{ Name = 'game-adventure-intel'; App = 'EternalWars.Game'; Frames = 76; Map = $spellsMap; Seed = 1
        Input = '3:key:Enter;8:press:Seer;12:key:H;18:press:Grave Whisper (5 mana);28:press:Ledger of Ages (10 mana);38:press:Close;42:press:Eavesdrop (8 mana);50:click:800,330' },
     # The computer's battle magic: Medic attacks Warlock and defends; Warlock casts Bless, Slow, Resurrection and Haste (the godot.log's
     # "battle log:" lines); Medic casts Resurrection on the archers in round 3.
     @{ Name = 'game-ai-spells'; App = 'EternalWars.Game'; Frames = 310; Map = $spellsMap; Seed = 1
-       Input = '3:key:Enter;8:press:Medic;12:key:Right;36:key:D;46:key:D;56:key:D;66:key:D;76:key:D;86:key:D;96:key:D;106:key:D;116:key:D;120:press:Resurrection (25);124:click:335,490;136:key:D;146:key:D;156:key:D;166:key:D;176:key:D;186:key:D;196:key:D;206:key:D;216:key:D;226:key:D;236:key:D;246:key:D;256:key:D;266:key:D;276:key:D;286:key:D;296:key:D' },
+       Input = '3:key:Enter;8:press:Medic;12:key:Right;36:key:D;46:key:D;56:key:D;66:key:D;76:key:D;86:key:D;96:key:D;106:key:D;116:key:D;118:key:C;120:press:Resurrection (25);124:click:335,490;136:key:D;146:key:D;156:key:D;166:key:D;176:key:D;186:key:D;196:key:D;206:key:D;216:key:D;226:key:D;236:key:D;246:key:D;256:key:D;266:key:D;276:key:D;286:key:D;296:key:D' },
     # A dug hole on the map: Digger digs (G), the turn ends, and on day 2 Digger steps west off the hole.
     @{ Name = 'game-dug-hole'; App = 'EternalWars.Game'; Frames = 70; Map = $spellsMap; Seed = 1
        Input = '3:key:Enter;8:press:Digger;12:key:G;20:press:End turn;24:key:Enter;44:press:Digger;50:key:Left' },
@@ -423,7 +423,7 @@ $scenarios = @(
     @{ Name = 'game-siege-gate'; App = 'EternalWars.Game'; Frames = 104; Map = $siegeMagicMap
        Input = '3:key:Enter;10:key:Up;62:key:D;72:click:958,432' },
     @{ Name = 'game-siege-earthquake'; App = 'EternalWars.Game'; Frames = 150; Map = $siegeMagicMap
-       Input = '3:key:Enter;10:key:Up;62:press:Earthquake;100:key:D;110:key:D;120:key:D;135:key:D' },
+       Input = '3:key:Enter;10:key:Up;61:key:C;63:press:Earthquake;100:key:D;110:key:D;120:key:D;135:key:D' },
     # The editor's Grail tool, the map settings window's difficulty and hero limit rows (ADR-083, ADR-103) and the town inspector's faction
     # and guild spells (ADR-083, ADR-123).
     @{ Name = 'editor-grail-and-town'; App = 'EternalWars.MapEditor'; Frames = 42; Map = $grailMap

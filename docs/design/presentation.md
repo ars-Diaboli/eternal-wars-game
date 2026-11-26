@@ -43,8 +43,7 @@ creatures and buildings, heraldic player colours, iconic map objects).
 - **UI**: a HoMM-style side panel on the right, or the left when mirrored (ADR-191, ADR-309, ADR-313): the minimap in a framed panel in
   the top corner, which takes the clicks on it, and the town list in its own panel below; the hero list at the other edge; the bottom row above the
   status bar; the resources on the top bar and the calendar (date, week's event) on the status bar's right end (ADR-225, ADR-309);
-  full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, the battle's grid and
-  reach highlighting (ADR-314; both on by default), detailed tooltips, the fog's look, the tile grid, the window mode) and "Layout" (the initiative bar, the adventure map's mirror, the UI scale, the panel
+  full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips, the fog's look, the tile grid, the window mode) and "Layout" (the battle's timeline, the adventure map's mirror, the UI scale, the panel
   opacity).
 - **Bottom row** (ADR-309): above the status bar, framed panels of one height: from the edge away from the minimap the selected hero's
   card and its army strip, from the minimap's edge End turn and the action buttons (mirrored with the layout). With no own hero selected
@@ -144,9 +143,12 @@ creatures and buildings, heraldic player colours, iconic map objects).
   while the map is dimmed. The name and its description are on the status bar at once.
 - **LAN chat** (ADR-194, ADR-309, ADR-313): over the map between the minimap's panel and the town list when there is room for it, else
   beside the minimap's panel towards the middle; over a battle at the bottom left above the battle's log.
+- **Combat settings** (ADR-314): a window over the battle from its action grid, with the battle's own view settings, kept in `settings.json`
+  and changing no rule: the battle's animation speed, the grid over the field and the active stack's reach lit (both on by default; the
+  deployment zone shows either way). A change shows at once.
 - **Window mode** (ADR-186): Windowed or Fullscreen (borderless, the screen's own size), in the "Settings" tab; Alt+Enter switches it, in
   the game and in the map editor. Kept in `settings.json`, applied at once and at start.
-- **Layout** (ADR-118, ADR-156, ADR-309): the "Layout" tab sets the battle's initiative bar (bottom by default, ADR-314, or top) and the adventure map's HUD:
+- **Layout** (ADR-118, ADR-156, ADR-309): the "Layout" tab sets the battle's timeline (in the bottom row by default, or under the round plate at the top, ADR-314) and the adventure map's HUD:
   the default arrangement or its mirror, left and right swapped. The change shows at once and is kept in `settings.json` with the speeds,
   not in saves. An older saved layout loads as the default or its mirror, whichever side its HUD stood on.
 - **UI scale** (ADR-309): 100, 150 or 200 % of the game's UI, chosen on the "Layout" tab and applied at once and at start like the map
@@ -256,6 +258,6 @@ touch screen (ADR-190) a finger held still for half a second opens it and it sta
 
 ## Speed settings
 ADR-088, ADR-090, ADR-095. Player settings (`settings.json` in the user data folder, not in saves; they change nothing in the game) for own
-heroes (every human player's), computer heroes (with "don't show") and battle animations, in the F10 menu: slow (half), normal, fast
+heroes (every human player's), computer heroes (with "don't show") and battle animations, in the F10 menu (the battle's also in its combat settings window, ADR-314): slow (half), normal, fast
 (double), instant. Heroes walk with a small hop. A computer turn plays back hero by hero where the player can see, the camera following;
 the next turn waits for it.

@@ -576,6 +576,13 @@ public partial class Main : Node3D
         _battleHud.Bind(_session, _battle);
         _battleHud.Layout = _layout;
         _battleHud.BottomReserve = Playing ? 0 : ReplayControlBar.ReservedHeight;
+        _battleHud.MenuRequested += _menu.Toggle; // the action grid's Menu (ADR-314)
+        ShowCombatSettings();
+        _battleHud.CombatSettings.Changed += (speed, grid, reach) =>
+        {
+            ChangeSpeeds(_speeds with { Battle = speed });
+            ChangeInterface(_interface with { BattleGrid = grid, BattleReach = reach });
+        };
         _battleInput = new BattleInputController(_session, _battle, _battleHud, _info);
 
         // Auto combat (ADR-090) asks above the battle scene and above the map (a battle still choosing its width); not in the replay viewer.

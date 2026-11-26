@@ -13,7 +13,8 @@ namespace EternalWars.Godot.UI.Battle;
 /// The mouse and keys over an open <see cref="BattleView3D"/> with its <see cref="BattleHud"/>: point at a cell to preview, click to move, attack
 /// (from the side the pointer is on), shoot or cast the armed spell; right click opens a stack's information window. The keys are
 /// <see cref="BattleHotkeys"/>' (ADR-314): W wait, D defend, R retreat for the active unit's commander, Q quick combat for either human side
-/// (not between two computers, ADR-195); Enter or Escape leave the result screen, Escape disarms a spell. The deployment step (ADR-072,
+/// (not between two computers, ADR-195), C the spell book; Enter or Escape leave the result screen, Escape closes the HUD's window over the
+/// battle (the spell book, the combat settings) or disarms a spell. The deployment step (ADR-072,
 /// ADR-155) goes to a <see cref="DeploymentDragController"/>; Enter there starts the battle, Escape cancels a drag. F10 is the app's menu key.
 /// </summary>
 public sealed class BattleInputController
@@ -107,6 +108,12 @@ public sealed class BattleInputController
         {
             case BattleHotkeyAction.Cancel when _deployment.IsDragging:
                 _deployment.Cancel();
+                return true;
+            case BattleHotkeyAction.Cancel when _hud.WindowOpen:
+                _hud.CloseWindow();
+                return true;
+            case BattleHotkeyAction.SpellBook when _battle.IsOpen && _battle.Result is null:
+                _hud.ToggleSpellBook();
                 return true;
             case BattleHotkeyAction.Confirm or BattleHotkeyAction.Cancel when _battle.Result is not null:
                 _hud.Continue();

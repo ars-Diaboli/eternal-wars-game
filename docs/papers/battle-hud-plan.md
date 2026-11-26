@@ -127,10 +127,16 @@ green and its memory-bank entries updated.
   entry a creature, the experience. The HUD's text reads both until step 3 draws them.
 
 ### 3. The HUD, in the bevel frames
-- [ ] `BattleHudLayout`: the bottom row of equal panels, the side plates, the round plate and the timer pill; the Layout tab's top
-  timeline.
-- [ ] Timeline entries, the stack panel, the 4 × 2 action grid with names, keys and reasons on the status bar; the spell book window
-  with its warcries; the combat settings window.
+- [x] `BattleHudLayout`: the bottom row of equal panels, the side plates, the round plate and the timer pill; the Layout tab's top
+  timeline. The round plate is as tall as the map's turn banner, so the timer's pill stands under it unmoved; the timeline on top stands
+  under both, between the plates. "Start battle" in the middle of the bottom row, the log above the action grid.
+- [x] Timeline entries, the stack panel, the 4 × 2 action grid with names, keys and reasons on the status bar; the spell book window
+  with its warcries; the combat settings window. `BattleTimeline` (hover shows the stack in the panel and lights it on the field,
+  `BattleView3D.Light`; right click its window), `BattleStackPanel` (the numbers without their icon sheet show short names until step 5),
+  `BattleSidePlate` (the portrait opens `InfoSheets.BattleHero`; the book's button beside the side it is for), `BattleSpellBookWindow`
+  (C, the grid, the plate; greyed with the reason when it is not the side's turn), `CombatSettingsWindow` (the grid and reach leave the
+  menu's Settings tab; the battle speed stays there too). The smokes cast from the book (C, then the spell). A garrison's town crest on a
+  heroless plate waits: the side shows its strongest stack.
 - [ ] The log above the grid, growing on hover; the chat's new place; the prompt line, refusals and the attack estimate on the status
   bar.
 - [ ] Deployment: the tinted zone, Start battle in the middle, Quick combat, Combat settings and Menu. The result, Necromancy and
