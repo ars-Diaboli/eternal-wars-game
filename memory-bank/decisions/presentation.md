@@ -63,6 +63,17 @@
 | [322](#adr-322-dungeon-sheet-d3-to-the-owners-review-young-shadow-witches-with-shadow-bolts-no-orb-owner-adr-289-2026-11-26) | Dungeon sheet D3 to the owner's review: young shadow witches with shadow bolts, no orb (owner, ADR-289, 2026-11-26) | accepted |
 | [323](#adr-323-dungeon-sheet-d4-to-the-owners-review-a-maroon-scorpicore-without-armour-or-glow-eye-and-mouth-spheres-with-eyestalks-owner-adr-289-2026-11-26) | Dungeon sheet D4 to the owner's review: a maroon scorpicore without armour or glow, eye-and-mouth spheres with eyestalks (owner, ADR-289, 2026-11-26) | accepted |
 | [324](#adr-324-dungeon-sheet-d1-to-the-owners-review-hunched-eyeless-troglodytes-masked-scouts-and-stalkers-with-long-blades-owner-adr-289-2026-11-26) | Dungeon sheet D1 to the owner's review: hunched eyeless troglodytes, masked scouts and stalkers with long blades (owner, ADR-289, 2026-11-26) | accepted |
+| [325](#adr-325-haven-sheet-h1-to-the-owners-review-medieval-foot-soldiers-with-true-length-swords-a-long-spear-a-halberdier-guardian-owner-adr-289-2026-11-26) | Haven sheet H1 to the owner's review: medieval foot soldiers with true-length swords, a long spear, a halberdier guardian (owner, ADR-289, 2026-11-26) | accepted |
+| [326](#adr-326-haven-sheet-h2-to-the-owners-review-a-longbow-archer-a-bigger-crossbow-a-two-handed-mace-and-war-hammer-owner-adr-289-2026-11-26) | Haven sheet H2 to the owner's review: a longbow archer, a bigger crossbow, a two-handed mace and war hammer (owner, ADR-289, 2026-11-26) | accepted |
+| [327](#adr-327-haven-sheet-h4-to-the-owners-review-closed-helms-true-length-lances-zweihander-paladins-owner-adr-289-2026-11-27) | Haven sheet H4 to the owner's review: closed helms, true-length lances, zweihander paladins (owner, ADR-289, 2026-11-27) | accepted |
+| [328](#adr-328-haven-sheet-h3-to-the-owners-review-hooded-monks-the-priests-cross-headed-staff-owner-adr-289-2026-11-27) | Haven sheet H3 to the owner's review: hooded monks, the priest's cross-headed staff (owner, ADR-289, 2026-11-27) | accepted |
+| [329](#adr-329-haven-sheet-h5-to-the-owners-review-a-masked-celestial-maiden-a-seraph-with-one-pair-of-great-feathered-wings-owner-adr-289-2026-11-27) | Haven sheet H5 to the owner's review: a masked celestial maiden, a seraph with one pair of great feathered wings (owner, ADR-289, 2026-11-27) | accepted |
+| [330](#adr-330-inferno-sheet-i1-to-the-owners-review-pot-bellied-imps-a-trident-for-the-familiar-unarmed-horned-demons-owner-adr-289-2026-11-27) | Inferno sheet I1 to the owner's review: pot-bellied imps, a trident for the familiar, unarmed horned demons (owner, ADR-289, 2026-11-27) | accepted |
+| [331](#adr-331-inferno-sheet-i2-to-the-owners-review-rust-red-maned-hounds-flayer-tormentors-with-arm-blades-owner-adr-289-2026-11-27) | Inferno sheet I2 to the owner's review: rust-red maned hounds, flayer tormentors with arm blades (owner, ADR-289, 2026-11-27) | accepted |
+| [332](#adr-332-inferno-sheet-i3-to-the-owners-review-female-succubi-the-chargers-as-fiery-horses-owner-adr-289-2026-11-27) | Inferno sheet I3 to the owner's review: female succubi, the chargers as fiery horses (owner, ADR-289, 2026-11-27) | accepted |
+| [333](#adr-333-inferno-sheet-i4-to-the-owners-review-a-fleshed-pit-fiend-with-a-glaive-a-ravager-of-flesh-and-riveted-iron-owner-adr-289-2026-11-27) | Inferno sheet I4 to the owner's review: a fleshed pit fiend with a glaive, a ravager of flesh and riveted iron (owner, ADR-289, 2026-11-27) | accepted |
+| [334](#adr-334-inferno-sheet-i6-to-the-owners-review-breeders-as-half-woman-brood-queens-on-a-swollen-insect-abdomen-owner-adr-289-2026-11-27) | Inferno sheet I6 to the owner's review: breeders as half-woman brood-queens on a swollen insect abdomen (owner, ADR-289, 2026-11-27) | accepted |
+| [335](#adr-335-inferno-sheet-i5-to-the-owners-review-red-winged-devils-with-tridents-spike-crested-red-gogs-owner-adr-289-2026-11-27) | Inferno sheet I5 to the owner's review: red winged devils with tridents, spike-crested red gogs (owner, ADR-289, 2026-11-27) | accepted |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -1257,3 +1268,131 @@ glowing stinger and the spectator's and beholder's jellyfish tendrils.
   hide, a taller crest, bone spikes on the forearms and a barbed spear. The scout's face wrapped below the eyes, two long curved
   blades of plain steel; the stalker in a close black mask, longer sword-blades of dark steel, no glow, black shadow.
 - **Regenerate**: Dungeon sheet D1.
+
+### ADR-325: Haven sheet H1 to the owner's review: medieval foot soldiers with true-length swords, a long spear, a halberdier guardian (owner, ADR-289, 2026-11-26)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's Haven sheet H1 subjects (the crusader's
+second sword and tabard, the guardian's tower shield and lowered pike).
+
+- **Owner**, on Haven sheet H1: both footmen closer to a medieval foot soldier with swords of realistic length; the crusader still
+  one sword, more expensive armour and a shield that is not round; the pikeman's spear of realistic length; the guardian without a
+  shield, a halberd instead of the spear.
+- **Subjects**: the footman a man-at-arms in a kettle helmet, mail over a gambeson, a one-handed arming sword about as long as his
+  arm, a round wooden shield; the pikeman's spear at least twice his height, running out of the cell; the crusader the same sword,
+  a polished bascinet, breastplate and pauldrons over fine mail, an off-white surcoat with a gold sun and a kite shield; the
+  guardian in full plate with brass edges, no shield, a halberd held in both hands.
+- **Rules**: none changed; the crusader's `DoubleStrike` stays (two blows with one sword).
+- **Regenerate**: Haven sheet H1.
+
+### ADR-326: Haven sheet H2 to the owner's review: a longbow archer, a bigger crossbow, a two-handed mace and war hammer (owner, ADR-289, 2026-11-26)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's Haven sheet H2 weapons (the zealot's flail
+and torch, the archer's crossbow, the inquisitor's branding iron).
+
+- **Owner**, on Haven sheet H2: the archer with an English longbow; the marksman's crossbow bigger; the zealot with a two-handed
+  mace; the inquisitor with a two-handed hammer.
+- **Subjects**: the zealot a heavy two-handed flanged iron mace, no flail or torch; the archer a yew longbow as tall as he is, drawn,
+  a quiver of arrows; the inquisitor a great two-handed war hammer with a sun-stamped iron head; the marksman now a crossbowman with a
+  big crossbow, its steel bow far wider than his shoulders, a brass winch.
+- **Regenerate**: Haven sheet H2.
+
+### ADR-327: Haven sheet H4 to the owner's review: closed helms, true-length lances, zweihander paladins (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's Haven sheet H4 subjects (the open faces,
+the short lances, the sacred warrior's burning crest and glowing blade).
+
+- **Owner**, on Haven sheet H4: every face covered by a full helmet; both lances too short; the paladin and sacred warrior closer to
+  the early classic paladin, a fully armoured warrior with a zweihander, no fire on the helmet.
+- **Subjects**: all four in closed helmets, visor down, no face or hair showing; the lancer's and champion's lances about three
+  times the rider's height, running out of the cell; the paladin in polished full plate and a closed great helm, a zweihander as
+  tall as he is held in both hands; the sacred warrior the same with gilded edges, a white plume and a gilded guard, no fire or glow.
+- **Regenerate**: Haven sheet H4.
+
+### ADR-328: Haven sheet H3 to the owner's review: hooded monks, the priest's cross-headed staff (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's Haven sheet H3 monk (bare head, censer)
+and the priest's flame-cage staff.
+
+- **Owner**, on Haven sheet H3: the monk and priest closer to the classic look; the staff only on the upgrade, its head closer to a
+  cross. The griffins are unchanged.
+- **Subjects**: the monk in a brown wool habit with the hood up, a rope belt and a wooden cross, a spark of holy light in a raised
+  hand, no staff or censer; the priest the same with the hood up, off-white and gold vestments and a tall staff headed by a brass
+  cross with flared arms and a thin sun ring, no cage or flame.
+- **Regenerate**: Haven sheet H3 (its griffin cells may be kept from the last take).
+
+### ADR-329: Haven sheet H5 to the owner's review: a masked celestial maiden, a seraph with one pair of great feathered wings (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's Haven sheet H5 subjects (the robed spirit
+of light, the six-winged seraph with a ring of flames and a spear).
+
+- **Owner**, on Haven sheet H5: the radiant spirit visually like the later classic game's celestial; the seraph like the earlier
+  3D game's angel, one pair of wings, the wings bigger and more realistic.
+- **Subjects**: the radiant spirit a slender winged maiden in white and gold armour, a smooth featureless gold mask, a crown of sun
+  rays, wings fading into light at the tips, a sword of light; the seraph a tall angel warrior with a bare stern face, steel and gold
+  plate over a white tabard, a long sword, one pair of huge real feathered wings rooted at the shoulder blades, each longer than the
+  body, no glow or flames.
+- **Regenerate**: Haven sheet H5.
+
+### ADR-330: Inferno sheet I1 to the owner's review: pot-bellied imps, a trident for the familiar, unarmed horned demons (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's Inferno sheet I1 subjects (the imp's coal,
+the horned demon's cleaver, the overseer's chain whip).
+
+- **Owner**, on Inferno sheet I1: the imps closer to the classic games' imp, the familiar with a trident; the horned demons closer
+  to the classic look, no flail, no weapons.
+- **Subjects**: the imp a small pot-bellied red devil, big pointed ears, stubby horns, small bat wings, a barbed tail, empty-handed;
+  the familiar the same with a small bronze trident trailing blue mana; the horned demon a hunched red-brown brute, forward-curving
+  horns, great clawed hands, hooves, no weapon; the horned overseer deeper crimson, larger bronze-ringed horns, spiked shoulder plates
+  and bronze-capped claws, still unarmed.
+- **Regenerate**: Inferno sheet I1.
+
+### ADR-331: Inferno sheet I2 to the owner's review: rust-red maned hounds, flayer tormentors with arm blades (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's Inferno sheet I2 subjects (the lava-rock
+hounds, the thin grey tormentor with a mask of nails).
+
+- **Owner**, on Inferno sheet I2: the hell hound and cerberus closer to the classic look; the tormentor and lacerator closer to the
+  later classic game's flayers.
+- **Subjects**: the hell hound a big hound with short rust-red and dark brown fur, a black spiky mane along neck and spine, real
+  flames from the jaws; the cerberus the same with three fire-breathing heads and spiked collars; the tormentor a hunched demon of
+  raw sinew bound in straps and hooks, a riveted cage mask, serrated blades of bone and iron growing from the forearms; the lacerator
+  bigger and more flayed, longer scythe-like blades, bronze spine spikes, chains hooked into the back.
+- **Regenerate**: Inferno sheet I2.
+
+### ADR-332: Inferno sheet I3 to the owner's review: female succubi, the chargers as fiery horses (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's Inferno sheet I3 subjects.
+
+- **Owner**, on Inferno sheet I3: the succubus and succubus mistress female, closer to the later classic game's succubus; the hell
+  charger and nightmare closer to the classic games' hell horses.
+- **Subjects**: the succubus a lithe female demon, ash-violet skin, long black hair, swept-back horns, bat wings, fitted black leather
+  and bronze armour, fire in a raised hand; the mistress the same with gold-ringed horns, crimson wings, gold-edged armour and fire in
+  both hands; the hell charger a coal-black warhorse shown whole, a flaming mane and tail, burning hooves, short horns, bronze
+  barding; the nightmare bigger, long swept-back horns, spiked barding, a blue-white fiery mane, smoke from the nostrils.
+- **Regenerate**: Inferno sheet I3.
+
+### ADR-333: Inferno sheet I4 to the owner's review: a fleshed pit fiend with a glaive, a ravager of flesh and riveted iron (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's Inferno sheet I4 pit fiend (skull face)
+and ravager (burning horn, fire roaring from the maw).
+
+- **Owner**, on Inferno sheet I4: the pit fiend closer to the earlier 3D game's pit fiend; the ravager closer to the later classic
+  game's ravager. The juggernaut and the pit lord are not named in the review.
+- **Subjects**: the pit fiend a towering demon brute with a living heavy-jawed face (no skull), great forward-curving horns, crimson
+  and black lava-cracked hide, spiked bronze pauldrons, a huge two-handed bronze glaive; the ravager a siege beast of raw muscle and
+  riveted iron plates, a battering-ram head under an iron brow plate, tusks and forward horns, spikes, hooks and chains, embers in
+  its maw.
+- **Regenerate**: Inferno sheet I4, on a transparent background (the last take came back on grey).
+
+### ADR-334: Inferno sheet I6 to the owner's review: breeders as half-woman brood-queens on a swollen insect abdomen (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's Inferno sheet I6 subjects (the bloated
+brute brood-mother).
+
+- **Owner**, on Inferno sheet I6: the breeder and fel breeder closer to the later classic game's breeder.
+- **Subjects**: the breeder shown whole, a gaunt horned female upper body with long clawed arms rising from an enormous ribbed
+  abdomen like a termite queen's on jointed chitin legs, imps clinging to it; the fel breeder taller horns, crimson ember-cracked
+  skin, a larger translucent abdomen with glowing egg clutches, bronze rings through the chitin, imps hatching.
+- **Regenerate**: Inferno sheet I6.
+
+### ADR-335: Inferno sheet I5 to the owner's review: red winged devils with tridents, spike-crested red gogs (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's Inferno sheet I5 subjects (the gaunt grey
+devils with sickles, the squat grey gogs).
+
+- **Owner**, on Inferno sheet I5: the gog and magog closer to the classic look; the devil and arch devil between the classic and the
+  earlier 3D game's devils.
+- **Subjects**: the devil a tall muscular red lord of demons, a pointed beard, swept-back black horns, great bat wings, a tail, bronze
+  pauldrons, a long black trident; the arch devil darker crimson, gold-ringed horns, ember-edged wings, black and gold half-armour, an
+  iron crown, the trident's prongs in fire; the gog a wiry hunched red-orange demon with big ears and a crest of spikes, a fireball;
+  the magog deeper red, a taller crest, bronze bracers and collar, a fireball in both hands.
+- **Regenerate**: Inferno sheet I5.
