@@ -23,7 +23,7 @@ sheets of [icon-prompts.md](../../../../../../docs/content/prompts/icon-prompts.
 | end_turn.png (upright hourglass) | End turn |
 | switch_level.png (cave mouth, up and down arrows) | Switch level (L); the map editor's Level (L) |
 | spell_book.png (clasped book with a rune; sheet 33) | the map's "Spell book (C)" action button; the spell book's button beside the battle's side plate; the town's "Spell book (owned)" |
-| spells.png (open) | the hero screen's spell list |
+| spells.png (open) | the hero screen's spell list; in battle, a spell mark without an icon of its own |
 | quests.png (tied scroll with a seal; sheet 33) | Quests (Q) |
 | puzzle_map.png (map piece with a jigsaw tab; sheet 33) | Puzzle map (P) |
 | dig.png (shovel in a mound; sheet 33) | Dig (G) |

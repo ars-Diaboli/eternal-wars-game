@@ -35,7 +35,9 @@ every step is built, this file stays in `papers/` as the report and the rules mo
 - **Colours.** The frames are the adventure HUD's, drawn by the bevel shader (ADR-310, ADR-311; 1.3). Each side's portrait, timeline
   rims, stack bases and stack-panel rim take its player's colour; neutrals take bone grey (1.2).
 - **Icons, no labels.** Buttons show an icon; the name, hotkey and, when greyed, the reason go to the status bar on hover (5.3).
-- **One height along the bottom.** The stack panel, the timeline and the action grid are panels of the same height, edges in line.
+- **One height along the bottom.** The stack panel, the timeline and the action grid are panels of the same height, edges in line, and
+  of the adventure HUD's sizes: the stack panel as wide as the hero card with its portrait as tall as the panel, the timeline's entries
+  the army strip's slots.
 - **The status bar talks.** The prompt line ("Swordsmen to act"), refusals, the other LAN player's move and what a click on the field
   would do all go to the status bar (7.1, 7.2, 10.4).
 
@@ -54,14 +56,15 @@ spells by school with rank and cost, and the warcries the hero knows as a catego
 (cast this round, not enough mana); picking one arms or cries it as today. Warcries have no buttons of their own. A creature caster's own
 spell is a button in the action grid.
 
-**Timeline** (3.1–3.5): in the bottom row by default; the Layout tab's "top" puts it under the round plate. Square portraits with the
-count in the corner, rimmed in the side's colour; the active stack first and larger with a bright rim; a bronze divider, then the
-waiting stacks dimmed. As many as fit. Hover lights the stack on the field and shows it in the stack panel; right click opens its
+**Timeline** (3.1–3.5): in the bottom row by default; the Layout tab's "top" puts it under the round plate. Portraits in the army strip's
+2:3 slots, as tall as the panel, the count in the corner, rimmed in the side's colour; the active stack first with a bright rim; a bronze
+divider, then the waiting stacks dimmed. As many as fit. Hover lights the stack on the field and shows it in the stack panel; right click opens its
 information window.
 
-**Stack panel** (4.1–4.4): bottom left; the hovered stack, else the active one: portrait, name and count, attack, defence, damage, health,
-speed, initiative as icons with numbers, shots for a shooter, morale and luck; defending, native terrain and the spells on it as small
-marks named on the status bar. A war machine shows the numbers it has.
+**Stack panel** (4.1–4.4): bottom left; the hovered stack, else the active one: the portrait; the name and count with defending,
+native terrain and the spells on it as small marks at the line's right, named on the status bar; then icons with numbers in two rows of
+matching columns: damage, attack, speed, morale and, for a shooter, shots; health, defence, initiative, luck and, for a creature caster,
+its casts left. A war machine shows the numbers it has.
 
 **Action grid** (5.1, 5.2, 5.5): bottom right, 4 × 2: Wait (W), Defend (D), Quick combat (Q), Combat settings / Retreat (R),
 Surrender, Spell book (C), Menu (F10). The creature caster's spell adds a column when present. Surrender has no key. Surrender's price
@@ -88,7 +91,7 @@ wins" when both or neither side play here), the reason under it, each side's los
 Return to the map. Raised undead get their own window after it: the stack's portrait and count, Continue. The auto-combat question takes
 the same look: the expected losses as portraits, Fight and Accept.
 
-**Sizes and modes** (10.1–10.5): below about 1,400 px of UI width the stack panel keeps the portrait, count, attack, defence and health,
+**Sizes and modes** (10.1–10.5): below about 1,400 px of UI width the stack panel keeps the portrait, count, damage, attack, health and defence,
 the log 2 lines; the UI scale is lowered as on the map. No mirror: the attacker stays left. In the replay viewer the action grid keeps
 only Combat settings and Menu, and the spell book is greyed. A siege adds nothing to the HUD.
 
@@ -149,7 +152,8 @@ green and its memory-bank entries updated.
 - [x] The finer rules: the timeline hides the entries that do not fit instead of widening; the field takes no command while a window is
   open (a click beside it closes it, in the replay viewer too); the spell book is redrawn only when its rows change; the creature caster's
   button opens its spell's window on a right click; C without a book says why. Under the pointer a HUD control's line replaces the
-  field's; a carried stack still shows where it would stand. The log takes its clicks and, open, grows no higher than the top quarter of
+  field's, and under a window the field shows no preview; a carried stack still shows where it would stand. An armed spell is dropped
+  when another stack acts or a battle opens. The log takes its clicks and, open, grows no higher than the top quarter of
   the screen. A spell is aimed as the cast aims it (`BattleState.SpellTargetAt`): at the living stack on the cell, else, for a revive, at
   the own stack fallen there; a two-click spell's second aim is named without an estimate. A taken command lets the next prompt replace a
   refusal. The status bar stands over the dimmed field, the result window centred above it. Enter does not start the battle under a

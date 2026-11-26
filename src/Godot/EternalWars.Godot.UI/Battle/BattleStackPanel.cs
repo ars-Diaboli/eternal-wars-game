@@ -8,23 +8,25 @@ using Godot;
 namespace EternalWars.Godot.UI.Battle;
 
 /// <summary>
-/// The battle HUD's stack panel (ADR-314), bottom left in a bevelled panel rimmed in the stack's side's colour: the stack's portrait, its name
-/// and count, then its numbers as the battle uses them now (<see cref="StackPanel"/>): Attack, Defense, damage, the top creature's health,
-/// speed, initiative, shots for a shooter, morale and luck, each an icon (<see cref="HeroStatIcon"/>, <see cref="StackStatIcon"/>; its short
-/// name while the file is missing) with the number, named on
-/// the status bar; and its marks (defending, native terrain, the spells on it) as small icons, the enemy's spells tinted red, each named on
-/// the status bar. A war machine shows the numbers it has. The narrow form (<see cref="Compact"/>) keeps Attack, Defense and health. Redrawn only when what it shows changes.
+/// The battle HUD's stack panel (ADR-314), bottom left in a bevelled panel rimmed in the stack's side's colour, as wide as the adventure HUD's
+/// hero card (<see cref="SelectedHeroCard.Width"/>): the stack's portrait, a square as tall as the panel like the hero card's; the name and
+/// count, its marks at the right of that line (defending, native terrain, the spells on it, the enemy's tinted red); then its numbers as the
+/// battle uses them now (<see cref="StackPanel"/>) in two rows of matching columns: damage, Attack, speed, morale and, for a shooter, shots;
+/// the top creature's health, Defense, initiative, luck and, for a creature caster, its casts left. Each number is an icon
+/// (<see cref="HeroStatIcon"/>, <see cref="StackStatIcon"/>; its short name while the file is missing) with its value, each number and mark
+/// named on the status bar. A war machine shows the numbers it has. The narrow form (<see cref="Compact"/>) keeps damage, Attack, health and
+/// Defense, without the marks. Redrawn only when what it shows changes.
 /// </summary>
 public partial class BattleStackPanel : PanelContainer
 {
-    /// <summary>The panel's width.</summary>
-    public const int Width = 340;
+    /// <summary>The panel's width: the adventure HUD's hero card's.</summary>
+    public const int Width = SelectedHeroCard.Width;
 
     /// <summary>The panel's width in the narrow form (<see cref="Compact"/>).</summary>
     public const int CompactWidth = 240;
 
-    /// <summary>The portrait's side.</summary>
-    public const int PortraitSize = 72;
+    /// <summary>The size the portrait is loaded at (it is shown as tall as the panel).</summary>
+    public const int PortraitSize = SelectedHeroCard.PortraitSize;
 
     private const int MarkSize = 20;
 
@@ -34,13 +36,18 @@ public partial class BattleStackPanel : PanelContainer
     {
         ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
         StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-        CustomMinimumSize = new Vector2(PortraitSize, PortraitSize),
         MouseFilter = MouseFilterEnum.Ignore,
     };
 
-    private readonly Label _name = new() { ClipText = true, TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis, MouseFilter = MouseFilterEnum.Ignore };
-    private readonly GridContainer _numbers = new() { Columns = 4, MouseFilter = MouseFilterEnum.Ignore };
-    private readonly HFlowContainer _marks = new() { MouseFilter = MouseFilterEnum.Ignore };
+    private readonly PanelContainer _portraitSlot = new() { MouseFilter = MouseFilterEnum.Ignore, SizeFlagsVertical = SizeFlags.Fill };
+    private readonly Label _name = new()
+    {
+        ClipText = true, TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis, SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        MouseFilter = MouseFilterEnum.Ignore,
+    };
+
+    private readonly GridContainer _numbers = new() { MouseFilter = MouseFilterEnum.Ignore };
+    private readonly HBoxContainer _marks = new() { MouseFilter = MouseFilterEnum.Ignore, SizeFlagsVertical = SizeFlags.ShrinkCenter };
     private readonly HBoxContainer _content = new() { MouseFilter = MouseFilterEnum.Ignore };
     private readonly BevelFrame _frame;
     private string? _shown;
@@ -54,26 +61,27 @@ public partial class BattleStackPanel : PanelContainer
         _content.AddThemeConstantOverride("separation", UiSpacing.Gap);
         AddChild(_content);
 
-        var portrait = new PanelContainer { MouseFilter = MouseFilterEnum.Ignore, SizeFlagsVertical = SizeFlags.ShrinkBegin };
-        UiFrames.Bevel(portrait, BevelKind.Slot, padding: 2);
-        portrait.AddChild(_portrait);
-        _content.AddChild(portrait);
+        UiFrames.Bevel(_portraitSlot, BevelKind.Slot, padding: 2);
+        _portraitSlot.AddChild(_portrait);
+        _content.AddChild(_portraitSlot);
+        _content.Resized += () => _portraitSlot.CustomMinimumSize = new Vector2(_content.Size.Y, _content.Size.Y); // a square as tall as the panel
 
-        var lines = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, MouseFilter = MouseFilterEnum.Ignore };
+        var lines = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, Alignment = BoxContainer.AlignmentMode.Center, MouseFilter = MouseFilterEnum.Ignore };
         lines.AddThemeConstantOverride("separation", UiSpacing.Cell);
+        var header = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
+        header.AddThemeConstantOverride("separation", UiSpacing.Gap);
         _name.AddThemeFontSizeOverride("font_size", 17);
-        lines.AddChild(_name);
+        header.AddChild(_name);
+        _marks.AddThemeConstantOverride("separation", UiSpacing.Cell);
+        header.AddChild(_marks);
+        lines.AddChild(header);
         _numbers.AddThemeConstantOverride("h_separation", UiSpacing.Gap);
         _numbers.AddThemeConstantOverride("v_separation", 2);
         lines.AddChild(_numbers);
-        _marks.AddThemeConstantOverride("h_separation", UiSpacing.Cell);
-        lines.AddChild(_marks);
         _content.AddChild(lines);
     }
 
-    /// <summary>
-    /// The narrow form (ADR-314): the portrait, the name and count, Attack, Defense and health only, without the marks, in a narrower panel.
-    /// </summary>
+    /// <summary>The narrow form (ADR-314): the portrait, the name and count, damage, Attack, health and Defense, without the marks, in a narrower panel.</summary>
     public bool Compact
     {
         get => _compact;
@@ -87,7 +95,6 @@ public partial class BattleStackPanel : PanelContainer
             _compact = value;
             _shown = null; // redrawn at the next show
             CustomMinimumSize = new Vector2(value ? CompactWidth : Width, 0);
-            _numbers.Columns = value ? 3 : 4;
         }
     }
 
@@ -120,39 +127,29 @@ public partial class BattleStackPanel : PanelContainer
         _portrait.FlipH = panel.Side == BattleSide.Defender; // facing its enemy, as on the timeline
         _name.Text = panel.IsMachine ? panel.Name : $"{panel.Name} ×{panel.Count}";
 
-        Number(HeroIcons.Stat(HeroStatIcon.Attack, MarkSize), "Att", "Attack", panel.Attack);
-        Number(HeroIcons.Stat(HeroStatIcon.Defense, MarkSize), "Def", "Defense", panel.Defense);
-        var health = HeroIcons.Stat(StackStatIcon.Health, MarkSize);
+        var damage = panel.MinDamage is { } low
+            ? Badge(StackStatIcon.Damage, "Dmg", "Damage", low == panel.MaxDamage ? Text(low) : $"{Text(low)}–{Text(panel.MaxDamage ?? low)}")
+            : null;
+        var attack = Badge(HeroStatIcon.Attack, "Att", "Attack", panel.Attack);
+        var health = Badge(StackStatIcon.Health, "HP", "Health of the top creature", $"{Text(panel.Health)}/{Text(panel.MaxHealth)}");
+        var defense = Badge(HeroStatIcon.Defense, "Def", "Defense", panel.Defense);
         if (_compact)
         {
-            Number(health, "HP", "Health of the top creature", $"{Text(panel.Health)}/{Text(panel.MaxHealth)}");
+            Rows([damage, attack], [health, defense]);
             _marks.Visible = false;
             return;
         }
 
-        if (panel.MinDamage is { } low)
-        {
-            Number(HeroIcons.Stat(StackStatIcon.Damage, MarkSize), "Dmg", "Damage", low == panel.MaxDamage ? Text(low) : $"{Text(low)}–{Text(panel.MaxDamage ?? low)}");
-        }
-
-        Number(health, "HP", "Health of the top creature", $"{Text(panel.Health)}/{Text(panel.MaxHealth)}");
-        Number(HeroIcons.Stat(StackStatIcon.Speed, MarkSize), "Spd", "Speed", panel.Speed);
-        Number(HeroIcons.Stat(StackStatIcon.Initiative, MarkSize), "Ini", "Initiative", panel.Initiative);
-        var shots = HeroIcons.Stat(StackStatIcon.Shots, MarkSize);
-        if (panel.UnlimitedShots)
-        {
-            Number(shots, "Shots", "Shots: unlimited (an ammo cart)", "∞");
-        }
-        else
-        {
-            Number(shots, "Shots", "Shots left", panel.Shots);
-        }
-
-        if (!panel.IsMachine)
-        {
-            Number(HeroIcons.Stat(HeroStatIcon.Morale, MarkSize), "Mor", panel.Morale is null ? "Morale: none (the creature has none)" : "Morale", panel.Morale is { } morale ? Signed(morale) : "–");
-            Number(HeroIcons.Stat(HeroStatIcon.Luck, MarkSize), "Luck", "Luck", panel.Luck is { } luck ? Signed(luck) : null);
-        }
+        var shots = panel.UnlimitedShots
+            ? Badge(StackStatIcon.Shots, "Shots", "Shots: unlimited (an ammo cart)", "∞")
+            : Badge(StackStatIcon.Shots, "Shots", "Shots left", panel.Shots);
+        var morale = panel.IsMachine ? null
+            : Badge(HeroStatIcon.Morale, "Mor", panel.Morale is null ? "Morale: none (the creature has none)" : "Morale", panel.Morale is { } m ? Signed(m) : "–");
+        var luck = panel.IsMachine ? null : Badge(HeroStatIcon.Luck, "Luck", "Luck", panel.Luck is { } l ? Signed(l) : null);
+        Rows(
+            [damage, attack, Badge(StackStatIcon.Speed, "Spd", "Speed", panel.Speed), morale, shots],
+            [health, defense, Badge(StackStatIcon.Initiative, "Ini", "Initiative", panel.Initiative), luck,
+                Badge(HeroStatIcon.Mana, "Casts", "Spell casts left this battle", panel.Casts)]);
 
         foreach (var mark in panel.Marks)
         {
@@ -162,26 +159,41 @@ public partial class BattleStackPanel : PanelContainer
         _marks.Visible = panel.Marks.Count > 0;
     }
 
+    /// <summary>
+    /// The two rows of numbers in matching columns: a column empty in both rows is left out, one empty in one row keeps its place.
+    /// </summary>
+    private void Rows(Control?[] top, Control?[] bottom)
+    {
+        var columns = Enumerable.Range(0, top.Length).Where(i => top[i] is not null || bottom[i] is not null).ToList();
+        _numbers.Columns = Math.Max(1, columns.Count);
+        foreach (var row in new[] { top, bottom })
+        {
+            foreach (var i in columns)
+            {
+                _numbers.AddChild(row[i] ?? new Control { MouseFilter = MouseFilterEnum.Ignore });
+            }
+        }
+    }
+
     /// <summary>What the panel shows, to skip a redraw that would change nothing.</summary>
     private static string Key(StackPanel panel) =>
         string.Join('|', panel with { Marks = [] }, string.Join(';', panel.Marks.Select(m => $"{m.Kind}:{m.Name}:{m.Friendly}")));
 
-    private void Number(Texture2D? icon, string shortName, string name, int? value)
-    {
-        if (value is { } shown)
-        {
-            Number(icon, shortName, name, Text(shown));
-        }
-    }
+    private static Control? Badge(HeroStatIcon icon, string shortName, string name, int? value) =>
+        value is { } shown ? Badge(HeroIcons.Stat(icon, MarkSize), shortName, name, Text(shown)) : null;
+
+    private static Control? Badge(HeroStatIcon icon, string shortName, string name, string? value) =>
+        value is null ? null : Badge(HeroIcons.Stat(icon, MarkSize), shortName, name, value);
+
+    private static Control? Badge(StackStatIcon icon, string shortName, string name, int? value) =>
+        value is { } shown ? Badge(HeroIcons.Stat(icon, MarkSize), shortName, name, Text(shown)) : null;
+
+    private static Control? Badge(StackStatIcon icon, string shortName, string name, string? value) =>
+        value is null ? null : Badge(HeroIcons.Stat(icon, MarkSize), shortName, name, value);
 
     /// <summary>A number's badge: its icon (else its short name, quiet) and its value, named on the status bar.</summary>
-    private void Number(Texture2D? icon, string shortName, string name, string? value)
+    private static Control Badge(Texture2D? icon, string shortName, string name, string value)
     {
-        if (value is null)
-        {
-            return;
-        }
-
         var badge = new HBoxContainer { TooltipText = name, MouseFilter = MouseFilterEnum.Pass };
         badge.SetMeta(UiIcons.StatusLabelMeta, name);
         badge.AddThemeConstantOverride("separation", 2);
@@ -201,7 +213,7 @@ public partial class BattleStackPanel : PanelContainer
         }
 
         badge.AddChild(new Label { Text = value, VerticalAlignment = VerticalAlignment.Center, MouseFilter = MouseFilterEnum.Pass });
-        _numbers.AddChild(badge);
+        return badge;
     }
 
     private static Control Mark(StackMark mark)

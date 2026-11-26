@@ -29,6 +29,8 @@ public sealed record StackMark(StackMarkKind Kind, string Name, SpellId? Spell =
 /// initiative now, its shots, morale and luck; and its marks: defending, native terrain, the spells on it. A war machine has only the numbers
 /// it has: its health, and a shooting one its Attack, damage, initiative and shots; the others are null. Shots are null for a stack that does
 /// not shoot (unlimited ones are marked: an ammo cart's, ADR-056); morale is null for a creature without it (undead, constructs, elementals).
+/// <paramref name="Casts"/> is a creature caster's casts left this battle, all its spells together (ADR-120); null for a stack that casts
+/// none.
 /// </summary>
 public sealed record StackPanel(
     int Unit,
@@ -49,7 +51,8 @@ public sealed record StackPanel(
     bool UnlimitedShots,
     int? Morale,
     int? Luck,
-    IReadOnlyList<StackMark> Marks)
+    IReadOnlyList<StackMark> Marks,
+    int? Casts = null)
 {
     /// <summary>The panel of <paramref name="unit"/>; spells are named from <paramref name="spells"/> (the built-in catalog by default).</summary>
     public static StackPanel Of(BattleState battle, BattleUnit unit, SpellCatalog? spells = null)
@@ -69,7 +72,8 @@ public sealed record StackPanel(
         return new StackPanel(
             unit.Id, unit.Side, c.Id, c.Name, unit.Count, IsMachine: false, DamageCalculator.AttackOf(battle, unit), DamageCalculator.DefenseOf(battle, unit),
             c.MinDamage, c.MaxDamage, unit.TopHealth, c.Health, battle.SpeedOf(unit), battle.InitiativeOf(unit), shots, unlimited,
-            MoraleAndLuck.HasMorale(c) ? battle.MoraleOf(unit) : null, battle.LuckOf(unit), MarksOf(battle, unit, spells ?? SpellCatalog.Default));
+            MoraleAndLuck.HasMorale(c) ? battle.MoraleOf(unit) : null, battle.LuckOf(unit), MarksOf(battle, unit, spells ?? SpellCatalog.Default),
+            unit.CastsLeft.Count == 0 ? null : unit.CastsLeft.Values.Sum());
     }
 
     private static List<StackMark> MarksOf(BattleState battle, BattleUnit unit, SpellCatalog spells)

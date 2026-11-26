@@ -266,6 +266,7 @@ public partial class BattleHud : Control
         {
             _raised = null;
             _prompt = null;
+            (ArmedSpell, _creatureArmed, _firstAim) = (null, false, null);
             _lines.Clear();
             _log.Text = string.Empty;
             _resultLayer.Visible = false;
@@ -364,7 +365,7 @@ public partial class BattleHud : Control
     public void ShowHover(BattleState? battle, CellPosition? cell, BattleAction? action)
     {
         var line = battle is null || cell is not { } at ? null
-            : ArmedSpell is { } spell ? BattleHoverLine.OfSpell(battle, at, spell, _creatureArmed, secondAim: _firstAim is not null)
+            : ArmedSpell is { } spell ? BattleHoverLine.OfSpell(battle, at, spell, _creatureArmed, secondAim: SecondAim(battle))
             : BattleHoverLine.Of(battle, action);
         if (line is not null)
         {
@@ -443,6 +444,12 @@ public partial class BattleHud : Control
     /// <summary>A two-click spell's first aim (ADR-151): the stack a move takes or a drain hits, once clicked; null before.</summary>
     private int? _firstAim;
 
+    /// <summary>The stack whose turn the spell was armed in: the spell is dropped when another acts, a battle opens or the turn leaves this computer.</summary>
+    private int? _armedFor;
+
+    /// <summary>The next click is a two-click spell's second aim: its first-aimed stack still stands (else <see cref="AimTwice"/> aims afresh).</summary>
+    private bool SecondAim(BattleState battle) => _firstAim is { } first && battle.FindUnit(first) is { IsAlive: true };
+
     /// <summary>
     /// A click on the battlefield while a spell is armed: casts it at the stack on the cell (or at the cell, for an area) and returns true; false
     /// when no spell is armed, so the click is an ordinary action. A two-click spell (ADR-151) takes its stack first, then the cell a move goes
@@ -518,6 +525,7 @@ public partial class BattleHud : Control
         }
 
         (ArmedSpell, _creatureArmed, _firstAim, _armedArea) = (known.Spell.Id.Value, true, null, HitsArea(known));
+        _armedFor = _session.State.Battle?.ActiveUnit?.Id;
         SetPrompt($"{known.Spell.Name} (the stack's own spell): click a target (Esc cancels).");
     }
 
@@ -539,6 +547,7 @@ public partial class BattleHud : Control
         }
 
         (ArmedSpell, _creatureArmed, _firstAim, _armedArea) = (known.Spell.Id.Value, false, null, HitsArea(known));
+        _armedFor = _session.State.Battle?.ActiveUnit?.Id;
         SetPrompt(known.Effect.TwoClicks
             ? $"{known.Spell.Name}: click the stack, then {(!known.Effect.SecondIsStack ? "where it goes" : known.Effect.DrainPercent > 0 ? "the own stack it heals" : "the own stack that takes its blows")} (Esc cancels)."
             : $"{known.Spell.Name}: click a target (Esc cancels).");
@@ -626,6 +635,11 @@ public partial class BattleHud : Control
     {
         var battle = _session.State.Battle;
         var commander = _view.Commander;
+        if (ArmedSpell is not null && (commander is null || battle?.ActiveUnit?.Id != _armedFor))
+        {
+            (ArmedSpell, _creatureArmed, _firstAim) = (null, false, null); // the turn moved on: the spell was armed for another stack
+        }
+
         Enable(_wait, commander is null ? "Wait for one of your stacks to act" : null, "The stack acts later this round");
         Enable(_defend, commander is null ? "Wait for one of your stacks to act" : null, "The stack skips its turn and defends until its next");
         var retreatRefusal = commander is null || battle?.ActiveUnit is not { } active ? "Wait for one of your stacks to act" : SurrenderRules.CheckRetreat(battle, active.Side);
@@ -654,7 +668,7 @@ public partial class BattleHud : Control
         SetPrompt(deployer is { } placing
             ? $"{_session.State.GetPlayer(placing).Name}: place your stacks within the first {battle.DeploymentColumns} columns (drag a stack, or click it and then a cell), then start the battle."
             : ArmedSpell is { } armed && _session.State.Spells.TryGet(armed, out var spell)
-                ? $"{spell.Name}: click {(_firstAim is null ? "a target" : "its second aim")} (Esc cancels)."
+                ? $"{spell.Name}: click {(SecondAim(battle) ? "its second aim" : "a target")} (Esc cancels)."
             : commander is not null && battle.ActiveUnit is { } acting
                 ? $"{_session.State.GetPlayer(commander.Value).Name}: {acting.Creature.Name} to act. Click to move, attack or shoot."
             : _view.WaitingFor is { } other

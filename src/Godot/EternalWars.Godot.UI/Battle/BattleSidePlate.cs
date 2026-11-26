@@ -58,13 +58,23 @@ public partial class BattleSidePlate : PanelContainer
         _manaRow.AddThemeConstantOverride("separation", UiSpacing.Gap);
         _mana.SizeFlagsVertical = SizeFlags.ShrinkCenter;
         _manaRow.Alignment = side == BattleSide.Attacker ? BoxContainer.AlignmentMode.Begin : BoxContainer.AlignmentMode.End;
+        var manaParts = new List<Control>();
         if (HeroIcons.Stat(HeroStatIcon.Mana, ManaIconSize) is { } manaIcon)
         {
-            _manaRow.AddChild(new TextureRect { Texture = manaIcon, StretchMode = TextureRect.StretchModeEnum.KeepCentered, MouseFilter = MouseFilterEnum.Ignore });
+            manaParts.Add(new TextureRect { Texture = manaIcon, StretchMode = TextureRect.StretchModeEnum.KeepCentered, MouseFilter = MouseFilterEnum.Ignore });
         }
 
-        _manaRow.AddChild(_mana);
-        _manaRow.AddChild(_manaText);
+        manaParts.Add(_mana);
+        manaParts.Add(_manaText);
+        if (side == BattleSide.Defender)
+        {
+            manaParts.Reverse(); // mirrored, like the plate: the icon at the edge
+        }
+
+        foreach (var part in manaParts)
+        {
+            _manaRow.AddChild(part);
+        }
         lines.AddChild(_manaRow);
 
         var parts = side == BattleSide.Attacker ? new Control[] { _portrait, lines, _book } : [_book, lines, _portrait]; // mirrored: the portrait at the edge

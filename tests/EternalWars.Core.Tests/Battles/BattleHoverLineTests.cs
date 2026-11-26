@@ -130,7 +130,20 @@ public class BattleHoverLineTests
 
         Assert.True(teleport.Effect!.TwoClicks);
         Assert.Equal("Cast at the Swordsmen", BattleHoverLine.OfSpell(battle.State, own.Position, "arcana.teleport", false)!.Detail);
-        Assert.Equal("Second aim: the Wolves", BattleHoverLine.OfSpell(battle.State, wolves.Position, "arcana.teleport", false, secondAim: true)!.Detail);
+        Assert.Equal("Second aim here", BattleHoverLine.OfSpell(battle.State, wolves.Position, "arcana.teleport", false, secondAim: true)!.Detail); // a move goes to the cell
         Assert.Equal("Second aim here", BattleHoverLine.OfSpell(battle.State, new CellPosition(5, 5), "arcana.teleport", false, secondAim: true)!.Detail);
+    }
+
+    [Fact]
+    public void AMartyrSpells_SecondAim_NamesTheOwnStack()
+    {
+        var martyrdom = new KnownSpell(SpellCatalog.Default.Get("light.martyrdom"), 1, 5);
+        var battle = TestBattle.Create(attackerCaster: new BattleCaster(0, 1, [martyrdom], null, 100));
+        var own = battle.Add(Attacker, TestBattle.Fixed("Swordsmen", 1), 1, 0, 0);
+        battle.Add(Defender, TestBattle.Fixed("Wolves", 1, health: 15), 10, 20, 0);
+        battle.StartWith(own);
+
+        Assert.True(martyrdom.Effect!.TwoClicks && martyrdom.Effect.SecondIsStack);
+        Assert.Equal("Second aim: the Swordsmen", BattleHoverLine.OfSpell(battle.State, own.Position, "light.martyrdom", false, secondAim: true)!.Detail);
     }
 }

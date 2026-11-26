@@ -32,7 +32,7 @@ public sealed class BattleInputController
         _deployment = new DeploymentDragController(session, battle, hud);
         battle.Idle += () =>
         {
-            if (_pointed && _battle.IsOpen && !OverHud && _hud.GetViewport() is { } viewport)
+            if (_pointed && _battle.IsOpen && !OverHud && !_hud.WindowOpen && _hud.GetViewport() is { } viewport)
             {
                 // The field settled under a still pointer: its preview and the status bar's line now (ADR-314). Where the pointer is now, not
                 // where it last moved over the field: a button it pressed may have gone from under it.
@@ -48,11 +48,17 @@ public sealed class BattleInputController
     private bool OverHud => _hud.GetViewport()?.GuiGetHoveredControl() is not null;
 
     /// <summary>
-    /// Ends a deployment drag where the button is let go, even over the HUD (which would otherwise take the release): for the app's
-    /// <c>_Input</c>. True when the event was that release.
+    /// A deployment drag over the HUD, which would otherwise take its motion and its release: for the app's <c>_Input</c>. The carried stack
+    /// follows the pointer over a button or the log too, and is placed where the button is let go. True when the event was that release.
     /// </summary>
     public bool HandleRelease(InputEvent @event)
     {
+        if (_deployment.IsPressed && @event is InputEventMouseMotion motion)
+        {
+            Point(motion.Position);
+            return false; // the HUD still sees it (its hover)
+        }
+
         if (_deployment.IsPressed && @event is InputEventMouseButton { Pressed: false, ButtonIndex: MouseButton.Left } release)
         {
             _deployment.Release(release.Position);
@@ -91,12 +97,13 @@ public sealed class BattleInputController
 
     /// <summary>
     /// The pointer moved to <paramref name="screen"/>: over a HUD control (a badge, the action grid's gaps) the control names itself on the
-    /// status bar and the field shows no preview, but a carried stack still shows where it would stand; elsewhere <see cref="Hover"/>.
+    /// status bar, and while a window is open a click only closes it, so the field shows no preview; a carried stack still shows where it
+    /// would stand. Elsewhere <see cref="Hover"/>.
     /// </summary>
     public void Point(Vector2 screen)
     {
         _pointed = true;
-        if (OverHud && !_deployment.IsDragging)
+        if ((OverHud || _hud.WindowOpen) && !_deployment.IsDragging)
         {
             _battle.ShowIntent(null);
             GameCursors.Show(GameCursor.Pointer);

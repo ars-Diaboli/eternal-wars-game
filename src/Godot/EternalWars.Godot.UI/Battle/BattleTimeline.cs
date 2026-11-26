@@ -8,21 +8,27 @@ using Godot;
 namespace EternalWars.Godot.UI.Battle;
 
 /// <summary>
-/// The battle's timeline (ADR-314) in a bevelled panel: the active stack first and larger with a bright rim, then the stacks still to act, a
-/// bronze divider and the waiting stacks dimmed. Each entry is the stack's square portrait (the defender's mirrored to face its enemy, its name
-/// while it has none) with the count in the corner, rimmed in its side's colour. As many entries as fit the panel's width. The pointer over an
+/// The battle's timeline (ADR-314) in a bevelled panel: the active stack first with a bright rim, then the stacks still to act, a bronze
+/// divider and the waiting stacks dimmed. Each entry is a slot like the adventure HUD's army strip (<see cref="ArmyStrip"/>): 2:3, as tall as
+/// the panel, the stack's portrait filling it (the defender's mirrored to face its enemy, its name while it has none), the count in the corner,
+/// rimmed in its side's colour. As many entries as fit the panel's width. The pointer over an
 /// entry names the stack on the status bar and raises <see cref="Hovered"/> (the HUD shows it in the stack panel and lights it on the field); a
 /// right click opens its information window.
 /// </summary>
 public partial class BattleTimeline : PanelContainer
 {
-    /// <summary>An entry's side; the active stack's is larger.</summary>
-    public const int EntrySize = 56;
+    /// <summary>An entry's least height (the army strip's slot); it grows to the panel's height.</summary>
+    public const int EntrySize = ArmyStrip.SlotSize;
 
-    /// <summary>The active stack's entry side.</summary>
-    public const int ActiveSize = 72;
+    /// <summary>The size the portraits are loaded at.</summary>
+    private const int PictureSize = 128;
+
+    /// <summary>The entries' height now: the row's.</summary>
+    private float _slotHeight = EntrySize;
 
     private const int DividerWidth = 6;
+
+    private const string DividerName = "Divider";
 
     /// <summary>The divider's rim: bronze (the frames' accent where no faction gives one).</summary>
     private static readonly Color Bronze = UiFrames.Accent(null);
@@ -34,7 +40,7 @@ public partial class BattleTimeline : PanelContainer
     /// The row's holder: a plain control whose least width is none, so the entries never widen the panel past the room the layout gives it;
     /// <see cref="Fit"/> hides those that do not fit.
     /// </summary>
-    private readonly Control _clip = new() { ClipContents = true, MouseFilter = MouseFilterEnum.Ignore, CustomMinimumSize = new Vector2(0, ActiveSize) };
+    private readonly Control _clip = new() { ClipContents = true, MouseFilter = MouseFilterEnum.Ignore, CustomMinimumSize = new Vector2(0, EntrySize) };
 
     public BattleTimeline()
     {
@@ -46,7 +52,20 @@ public partial class BattleTimeline : PanelContainer
         _clip.AddChild(_row);
         _row.SetAnchorsAndOffsetsPreset(LayoutPreset.LeftWide);
         AddChild(_clip);
-        _clip.Resized += Fit;
+        _clip.Resized += () =>
+        {
+            var height = Math.Max(EntrySize, _clip.Size.Y);
+            if (Math.Abs(height - _slotHeight) > 0.5f)
+            {
+                _slotHeight = height; // as tall as the row, like the army strip's slots
+                foreach (var child in _row.GetChildren().OfType<Control>())
+                {
+                    child.CustomMinimumSize = child.Name == DividerName ? new Vector2(DividerWidth, height) : Slot(height);
+                }
+            }
+
+            Fit();
+        };
     }
 
     /// <summary>The pointer came over an entry (its stack's id), or left it (null).</summary>
@@ -85,7 +104,8 @@ public partial class BattleTimeline : PanelContainer
                 // A groove of the bevel shader's (ADR-310) with a bronze rim.
                 var divider = new PanelContainer
                 {
-                    CustomMinimumSize = new Vector2(DividerWidth, EntrySize), SizeFlagsVertical = SizeFlags.ShrinkCenter, MouseFilter = MouseFilterEnum.Ignore,
+                    Name = DividerName,
+                    CustomMinimumSize = new Vector2(DividerWidth, _slotHeight), SizeFlagsVertical = SizeFlags.ShrinkCenter, MouseFilter = MouseFilterEnum.Ignore,
                 };
                 UiFrames.Bevel(divider, BevelKind.Slot, padding: 0).Tint(Bronze, 0.8f);
                 _row.AddChild(divider);
@@ -98,25 +118,35 @@ public partial class BattleTimeline : PanelContainer
         Fit();
     }
 
-    /// <summary>Hides the entries that do not fit the panel's width, from the end.</summary>
+    /// <summary>Hides the entries that do not fit the panel's width, from the end, and the divider when no waiting stack is left after it.</summary>
     private void Fit()
     {
         var room = _clip.Size.X;
         var used = 0f;
+        Control? last = null;
         foreach (var child in _row.GetChildren().OfType<Control>())
         {
             var width = child.CustomMinimumSize.X + (used > 0 ? UiSpacing.Cell : 0);
             child.Visible = room <= 0 || used + width <= room; // not placed yet: all, until the first placing
             used += width;
+            last = child.Visible ? child : last;
+        }
+
+        if (last is { Name: var name } && name == DividerName)
+        {
+            last.Visible = false;
         }
     }
 
+    /// <summary>A slot <paramref name="height"/> tall: 2:3, the army strip's.</summary>
+    private static Vector2 Slot(float height) => new(MathF.Round(height * 2 / 3), height);
+
     private Control Entry(BattleState battle, BattleUnit unit, Color side, bool isActive, bool waiting)
     {
-        var size = isActive ? ActiveSize : EntrySize;
         var entry = new PanelContainer
         {
-            CustomMinimumSize = new Vector2(size, size),
+            CustomMinimumSize = Slot(_slotHeight),
+            ClipContents = true,
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
             MouseFilter = MouseFilterEnum.Stop,
             Modulate = waiting ? new Color(1, 1, 1, 0.55f) : Colors.White,
@@ -125,7 +155,7 @@ public partial class BattleTimeline : PanelContainer
         var label = $"{unit.Creature.Name} ×{unit.Count}{(waiting ? " (waiting)" : string.Empty)}";
         entry.SetMeta(UiIcons.StatusLabelMeta, label);
         entry.TooltipText = isActive ? "Acts now" : waiting ? "Waits: acts at the end of the round" : "Acts later this round";
-        var portrait = CreatureIcons.Of(unit, size);
+        var portrait = CreatureIcons.Of(unit, PictureSize);
         if (portrait is not null)
         {
             entry.AddChild(new TextureRect
@@ -133,7 +163,7 @@ public partial class BattleTimeline : PanelContainer
                 Texture = portrait,
                 FlipH = unit.Side == BattleSide.Defender, // the portrait faces right, like the attacker
                 ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+                StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered, // filling the slot, as on the army strip
                 MouseFilter = MouseFilterEnum.Ignore,
             });
         }
@@ -146,6 +176,11 @@ public partial class BattleTimeline : PanelContainer
             ClipText = true,
             MouseFilter = MouseFilterEnum.Ignore,
         };
+        if (portrait is not null)
+        {
+            count.AddThemeFontSizeOverride("font_size", 18); // the army strip's
+        }
+
         count.AddThemeConstantOverride("outline_size", 4);
         count.AddThemeColorOverride("font_outline_color", Colors.Black);
         entry.AddChild(count);

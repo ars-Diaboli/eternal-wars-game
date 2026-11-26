@@ -44,7 +44,7 @@ public sealed record BattleHoverLine(string Subject, string Detail)
     /// The armed spell <paramref name="spell"/> aimed at <paramref name="cell"/>: the hero's (<paramref name="creature"/> false) or the active
     /// creature caster's own (ADR-120). The detail is the refusal, else "Cast at the Wolves" with a damage spell's estimate, or "Cast here" at an
     /// empty cell. The target is <see cref="BattleState.SpellTargetAt"/>'s, a fallen stack for a revive. A two-click spell (ADR-151) names its aim
-    /// without checking it: its second click decides; on that <paramref name="secondAim"/> it names the second stack, with no estimate. Null
+    /// without checking it: its second click decides; on that <paramref name="secondAim"/> it names the second stack (a move: the cell), with no estimate. Null
     /// when no stack acts or the spell is not known.
     /// </summary>
     public static BattleHoverLine? OfSpell(BattleState battle, CellPosition cell, string spell, bool creature, bool secondAim = false)
@@ -63,7 +63,9 @@ public sealed record BattleHoverLine(string Subject, string Detail)
         var target = battle.SpellTargetAt(cell, active.Side, effect);
         if (secondAim)
         {
-            return new BattleHoverLine(known.Spell.Name, target is null ? "Second aim here" : $"Second aim: the {target.Creature.Name}");
+            // A move's second aim is the cell it goes to; a drain's or a martyr's, the own stack there.
+            return new BattleHoverLine(
+                known.Spell.Name, target is null || !effect.SecondIsStack ? "Second aim here" : $"Second aim: the {target.Creature.Name}");
         }
 
         var refusal = effect.TwoClicks ? null

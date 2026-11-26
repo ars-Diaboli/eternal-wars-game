@@ -9,6 +9,11 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- The battle HUD's bottom row in the adventure HUD's sizes: the stack panel as wide as the hero card, its portrait as tall as the panel,
+  the numbers in two rows (damage, Attack, speed, morale, shots / health, Defense, initiative, luck, a creature caster's casts left:
+  `StackPanel.Casts`), the marks at the right of the name; the timeline's entries the army strip's 2:3 slots, as tall as the row.
+  Review fixes: a drag follows the pointer over HUD buttons, an armed spell is dropped when another stack acts or a battle opens, no
+  field preview under a window, a move's second aim named as a cell, no trailing divider, the defender's mana row mirrored.
 - The battle HUD plan's step 5, first part ([battle-hud-plan.md](../docs/papers/battle-hud-plan.md)): the timeline's divider is a
   bevel groove with a bronze rim; Start battle and Return to the map carry `confirm`, a creature's spell without an icon `cast`, the side
   plate's mana its stat icon; the stack panel's numbers and native-terrain mark take sheet 34's icons (`StackStatIcon`; prompt in

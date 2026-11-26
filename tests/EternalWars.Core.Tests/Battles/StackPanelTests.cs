@@ -23,7 +23,19 @@ public class StackPanelTests
         Assert.Equal((11, battle.State.InitiativeOf(swordsmen)), (panel.Speed, panel.Initiative)); // 10 + 1 native
         Assert.Equal((battle.State.MoraleOf(swordsmen), battle.State.LuckOf(swordsmen)), (panel.Morale, panel.Luck));
         Assert.Null(panel.Shots); // it does not shoot
+        Assert.Null(panel.Casts); // nor cast
         Assert.Equal([new StackMark(StackMarkKind.NativeTerrain, "Native terrain: +1 Attack, +1 Defense, +1 Speed")], panel.Marks);
+    }
+
+    [Fact]
+    public void ACreatureCaster_HasItsCastsLeft()
+    {
+        var battle = TestBattle.Create();
+        var caster = battle.Add(Attacker, TestBattle.Fixed("caster", 1, capabilities: new CreatureCapability(CapabilityKind.Caster, 2, "light.heal")), 1, 0, 0);
+
+        Assert.Equal(2, StackPanel.Of(battle.State, caster).Casts);
+        caster.MutableCastsLeft["light.heal"] = 0;
+        Assert.Equal(0, StackPanel.Of(battle.State, caster).Casts); // cast out: still a caster
     }
 
     [Fact]
