@@ -6,8 +6,8 @@ The plan to restyle the battle's HUD in the adventure HUD's look (ADR-309, the a
 [Battle HUD redesign: discrepancies and decisions](https://claude.ai/artifact/HdAjCooerLirLXZX7ifxMd), whose row numbers (such as 2.4)
 are cited below. The owner decided every row on 2026-11-26: the recommendation, except 2.2 (the opponent's hero by Scouting), 2.6
 (warcries in the spell book), 5.1 and 5.5 (a settings button and Menu in the action grid), 7.2 and 7.3 (the kills as a range, whether
-the target strikes back) and 8.3 (settings and Menu during deployment). The guide states the decisions; ADR-314 records them. When
-every step is built, this file stays in `papers/` as the report and the rules move into [presentation.md](../design/presentation.md).
+the target strikes back) and 8.3 (settings and Menu during deployment). The guide states the decisions; ADR-314 records them. Every
+step is built: this file is the report, and the rules are in [presentation.md](../design/presentation.md#battle-screen).
 
 ## Guide
 
@@ -93,7 +93,7 @@ the same look: the expected losses as portraits, Fight and Accept.
 
 **Sizes and modes** (10.1–10.5): below about 1,400 px of UI width the stack panel keeps the portrait, count, damage, attack, health and defence,
 the log 2 lines; the UI scale is lowered as on the map. No mirror: the attacker stays left. In the replay viewer the action grid keeps
-only Combat settings and Menu, and the spell book is greyed. A siege adds nothing to the HUD.
+Combat settings, the spell book (greyed) and Menu. A siege adds nothing to the HUD.
 
 ## Plan
 
@@ -177,7 +177,8 @@ green and its memory-bank entries updated.
   mark.
 - [x] Sheet 34 generated and cut into `textures/ui/stats/` (`damage`, `health`, `speed`, `initiative`, `shots`, `native_terrain`), a line
   in its `CREDITS.md`.
-- [ ] The battle part of [presentation.md](../design/presentation.md) rewritten to state the rules once.
+- [x] The battle part of [presentation.md](../design/presentation.md) rewritten to state the rules once: its
+  [battle screen](../design/presentation.md#battle-screen) section; the map's parts no longer restate the battle's.
 
 Art the battle HUD still lacks, outside this step:
 - **Spell icons**: 57 battle spells have no icon and no prompt in [spell-icon-prompts.md](../content/prompts/spell-icon-prompts.md)

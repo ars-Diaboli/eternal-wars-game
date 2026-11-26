@@ -1150,7 +1150,8 @@ and divider) and ADR-310 (the shader for the HUD only).
 
 ### ADR-314: The battle HUD restyle: side plates, a bottom row of the stack panel, the timeline and a 4 × 2 action grid; spells and warcries in a battle spell book; an attack estimate with kills and the return blow (ADR-110, ADR-156, ADR-195, ADR-309, owner, 2026-11-26)
 
-**Status**: accepted (2026-11-26); building by the [battle HUD plan](../../docs/papers/battle-hud-plan.md#plan). Supersedes in part
+**Status**: implemented (2026-11-26), by the [battle HUD plan](../../docs/papers/battle-hud-plan.md#plan); the rules are in
+[presentation.md](../../docs/design/presentation.md#battle-screen). Supersedes in part
 ADR-156 (the initiative bar's default place: the bottom row), ADR-110 (battle spells as one button each: a spell book window) and
 ADR-195 (the chat over a battle: bottom left above the stack panel). No rule, save or map format change; the settings file gains the
 combat settings.

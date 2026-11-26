@@ -82,11 +82,9 @@ creatures and buildings, heraldic player colours, iconic map objects).
   ownership: "Yours: +2 ore a day" against "Produces 2 ore a day when captured"), else the latest message; the hotkey hints are the
   first. On the adventure map the calendar is on the right (ADR-225). On the adventure map the menu is one of the action buttons; in battle the
   "Menu [F10]" button stands on the bar's right end, and before a game and in the replay viewer's battles in the bottom right corner. In
-  the replay viewer the bar stands above the viewer's bar. In battle the latest message is the prompt line ("Swordsmen to act"), a
-  refusal or, while the other computer plays, its last move; the pointer over the field names what a click would do with its estimate
-  ("Swordsmen · Attack the Wolves: 38–45 damage, 1–2 die; they strike back"; a spell's aim or why it cannot be cast there, ADR-314).
-- **Icon buttons** (ADR-204): a button with an icon shows the icon alone on a square button, 48 px in bars and panels (the battle
-  bar; End turn; the action buttons 36 px on square buttons), 32 px in rows, window headers and the replay viewer's bar (Play/Pause as one button showing what
+  the replay viewer the bar stands above the viewer's bar. What it says in battle is in the [battle screen](#battle-screen).
+- **Icon buttons** (ADR-204): a button with an icon shows the icon alone on a square button, 48 px in bars and panels (End turn; the
+  action buttons and the battle's action grid 36 px on square buttons), 32 px in rows, window headers and the replay viewer's bar (Play/Pause as one button showing what
   pressing it does, Next turn, Next day, Skip to the result, Play from here; ADR-309) (a window's or screen's
   close "×" always in its top-right corner, ADR-225); hovering it puts its label and hotkey on the
   status bar, with no pop-up tooltip. A button whose icon is missing keeps its text. The buttons along a window's bottom (OK, Accept,
@@ -144,13 +142,10 @@ creatures and buildings, heraldic player colours, iconic map objects).
   ("you", a player's name, "none") and what it gives ("+2 ore a day"); no picture, none for the bare ground, none over a HUD control or
   while the map is dimmed. The name and its description are on the status bar at once.
 - **LAN chat** (ADR-194, ADR-309, ADR-313): over the map between the minimap's panel and the town list when there is room for it, else
-  beside the minimap's panel towards the middle; over a battle at the bottom left above the stack panel (ADR-314).
-- **Combat settings** (ADR-314): a window over the battle from its action grid, with the battle's own view settings, kept in `settings.json`
-  and changing no rule: the battle's animation speed, the grid over the field and the active stack's reach lit (both on by default; the
-  deployment zone shows either way). A change shows at once.
+  beside the minimap's panel towards the middle; over a battle, see the [battle screen](#battle-screen).
 - **Window mode** (ADR-186): Windowed or Fullscreen (borderless, the screen's own size), in the "Settings" tab; Alt+Enter switches it, in
   the game and in the map editor. Kept in `settings.json`, applied at once and at start.
-- **Layout** (ADR-118, ADR-156, ADR-309): the "Layout" tab sets the battle's timeline (in the bottom row by default, or under the round plate at the top, ADR-314) and the adventure map's HUD:
+- **Layout** (ADR-118, ADR-156, ADR-309): the "Layout" tab sets the battle's timeline (in the bottom row, the default, or at the top) and the adventure map's HUD:
   the default arrangement or its mirror, left and right swapped. The change shows at once and is kept in `settings.json` with the speeds,
   not in saves. An older saved layout loads as the default or its mirror, whichever side its HUD stood on.
 - **UI scale** (ADR-309): 100, 150 or 200 % of the game's UI, chosen on the "Layout" tab and applied at once and at start like the map
@@ -198,6 +193,68 @@ creatures and buildings, heraldic player colours, iconic map objects).
   stretched, a little darkened), in dark panels that let some of it through; the main menu is a column on its left. The game's "Menu [F10]"
   button shows only in a game (F10 still opens the menu). The F10 menu and the result screen are opaque, so the map does not show through.
 - **Audio**: per-terrain ambient music, faction town themes.
+
+<a id="battle-screen"></a>
+
+## Battle screen
+ADR-314, in the adventure HUD's look and frames (ADR-309, ADR-310, ADR-311); the report of its making:
+[battle-hud-plan.md](../papers/battle-hud-plan.md). The field is the 3D [battlefield](combat.md#battlefield); the HUD stands over it, the status bar along the bottom as on the map. Each side's portrait rim, timeline rims, stack bases and stack panel
+rim take its player's colour, neutrals bone grey. No mirror: the attacker stays on the left. A siege adds nothing to the HUD.
+- **Side plates**: top left the attacker, top right the defender, mirrored: the hero's portrait rimmed in the side's colour (a side
+  without a hero shows its strongest stack) and the side's name; a side with a caster adds its mana as the mana icon, a thin blue bar and
+  "14 / 24". A click on the portrait opens the hero's information window: one's own hero in full, the opponent's as the Scouting of the
+  viewer's hero in the battle shows it (ADR-125). The spell book's button stands beside the plate of the side the book is for.
+- **Round plate**: top centre, "Round 3", or "Deployment" during the deployment step, as tall as the map's turn banner; a timed game's
+  pill stands under it.
+- **Bottom row**: above the status bar, three framed panels of one height in the adventure HUD's sizes, edges in line: the stack panel,
+  the timeline and the action grid.
+- **Stack panel**: bottom left, as wide as the hero card; the stack under the pointer (on the field or the timeline), else the active one.
+  Its portrait as tall as the panel; the name and count, with defending, native terrain and the spells on the stack as small marks at the
+  line's right (each named on the status bar); then icons with numbers in two rows of matching columns: damage, Attack, speed, morale and,
+  for a shooter, shots; health, Defence, initiative, luck and, for a creature caster, its casts left. The numbers are the effective ones;
+  a creature without morale shows "–" there, a war machine only the numbers it has. A missing icon leaves the number's short name.
+- **Timeline**: in the middle of the bottom row, or under the round plate between the side plates when the Layout tab says top. Each
+  entry is a slot like the army strip's, 2:3 and as tall as the panel: the stack's portrait filling it (the defender's mirrored to face
+  its enemy, its name while it has no portrait), the count in the corner, rimmed in its side's colour. The active stack first with a
+  bright rim, the stacks still to act this round, a bronze groove, then the waiting stacks dimmed; as many as fit the panel, from the
+  front. The pointer on an entry lights the stack on the field and shows it in the stack panel; a right click opens its information
+  window.
+- **Action grid**: bottom right, 4 × 2 square icon buttons: Wait (W), Defend (D), Quick combat (Q), Combat settings; Retreat (R),
+  Surrender, Spell book (C), Menu (F10). A creature caster's own spell adds a fifth column while it acts (its spell's icon, else the cast
+  icon). No labels: the name, key and, when greyed, the reason go to the status bar on hover; Surrender has no key and shows its price
+  there. Quick combat is off between two computers (ADR-195).
+- **Spell book** (C): a window over the battle with the hero's battle spells by school, rank and cost, and the warcries it knows as a
+  category of their own (ADR-067), each greyed with its reason (cast this round, not enough mana). A spell aimed at a side or the whole
+  field is cast at once; any other is armed: the status bar asks for its target ("Teleport: click the stack, then where it goes (Esc
+  cancels).") and a two-click spell for its second aim; Escape or another stack's turn drops it. Picking a warcry cries it. Warcries have no buttons of their own.
+- **Combat settings**: a window over the battle with its view settings, kept in `settings.json` and changing no rule: the battle's
+  animation speed, the grid over the field and the active stack's reach lit (both on by default; the deployment zone shows either way).
+  A change shows at once.
+- **Log**: above the action grid, three see-through lines of the latest events; the pointer on it opens it upwards to the battle's last
+  20 lines, no higher than the screen's top quarter.
+- **LAN chat**: at the bottom left above the stack panel.
+- **Status bar**: the latest message is the prompt ("Swordsmen to act"), a refusal or, while the other computer plays, its last move.
+  The pointer over the field names what a click would do: a move, a blow or a shot with its estimate ("Swordsmen · Attack the Wolves:
+  38–45 damage, 1–2 die; they strike back"), a siege structure, an armed spell's aim with its estimate or why it cannot be cast there.
+  The estimate is the lowest and highest damage of the blow, shot or damage spell without luck and the fewest and most creatures those
+  kill; for a blow or a shot also whether the target answers: "they strike back", "they shoot back" (a shooter with ranged
+  retaliation), or "no return blow" (a target with none left this round, an attacker that is not answered, a blow whose weakest roll
+  kills the whole stack before it could answer). Morale, luck, a second blow and the return blow's own damage are left out.
+- **Windows over the field**: while one is open the field takes no command and shows no preview; a click beside it or Escape closes
+  it.
+- **Keys**: the action grid's keys above; Enter starts the battle; Enter or Escape leaves the result and Necromancy windows; Escape
+  also cancels a deployment drag.
+- **Deployment**: the deploying player's columns tinted in their colour; no timeline; a wide Start battle in the middle of the bottom row,
+  and the grid shows only Quick combat, Combat settings and Menu. A stack is placed by dragging it, or by a click on it and then on a
+  cell; while carried its place shows under the pointer, over the HUD too.
+- **Result and Necromancy**: the field dimmed above the status bar; a framed window titled "Victory" or "Defeat" for the player at this
+  screen ("<Name> wins" when both or neither side play here), the reason under it, each side's losses as portraits with counts, the
+  experience gained and Return to the map. Raised undead get their own window after it: the stack's portrait and count, Continue. Auto
+  combat's question (ADR-090) takes the same look: the expected losses as portraits, Fight and Accept.
+- **Narrow form**: below 1,400 px of UI width the stack panel keeps the portrait, name and count, damage, Attack, health and Defence in a
+  narrower panel, without the marks, and the log keeps two lines; the UI scale is lowered as on the map.
+- **Replay viewer**: the bottom row stands above the viewer's bar; the action grid keeps Combat settings, the spell book (greyed) and
+  Menu.
 
 <a id="town-screen"></a>
 ## Town screen

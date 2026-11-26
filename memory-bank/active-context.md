@@ -9,6 +9,9 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- The battle HUD plan is done ([battle-hud-plan.md](../docs/papers/battle-hud-plan.md), ADR-314 implemented): presentation.md has a
+  battle screen section stating the battle HUD's rules once (plates, bottom row, stack panel, timeline, action grid, spell book, combat
+  settings, log, status bar and estimate, deployment, result, narrow form, replay viewer); the map's parts link to it.
 - The battle HUD's bottom row in the adventure HUD's sizes: the stack panel as wide as the hero card, its portrait as tall as the panel,
   the numbers in two rows (damage, Attack, speed, morale, shots / health, Defense, initiative, luck, a creature caster's casts left:
   `StackPanel.Casts`), the marks at the right of the name; the timeline's entries the army strip's 2:3 slots, as tall as the row.
