@@ -7,7 +7,7 @@ sheets of [icon-prompts.md](../../../../../../docs/content/prompts/icon-prompts.
 | File | Used for |
 |---|---|
 | close.png | Close buttons, Delete (saves, map events) |
-| confirm.png | OK, Accept, Start, Apply |
+| confirm.png | OK, Accept, Start, Apply; Start battle and Return to the map in battle |
 | hero.png (a hero's bust) | the map's "Hero screen (H)" action button |
 | info.png (scroll) | not used |
 | arrow_left.png / arrow_right.png | previous / next hero, Back |
@@ -22,7 +22,7 @@ sheets of [icon-prompts.md](../../../../../../docs/content/prompts/icon-prompts.
 | hourglass.png (hourglass on its side; sheet 17) | Wait (W) in battle |
 | end_turn.png (upright hourglass) | End turn |
 | switch_level.png (cave mouth, up and down arrows) | Switch level (L); the map editor's Level (L) |
-| spell_book.png (clasped book with a rune; sheet 33) | the map's "Spell book (C)" action button; the hero's mana in battle, before the spell buttons; the town's "Spell book (owned)" |
+| spell_book.png (clasped book with a rune; sheet 33) | the map's "Spell book (C)" action button; the spell book's button beside the battle's side plate; the town's "Spell book (owned)" |
 | spells.png (open) | the hero screen's spell list |
 | quests.png (tied scroll with a seal; sheet 33) | Quests (Q) |
 | puzzle_map.png (map piece with a jigsaw tab; sheet 33) | Puzzle map (P) |
@@ -37,7 +37,8 @@ sheets of [icon-prompts.md](../../../../../../docs/content/prompts/icon-prompts.
 | quick_combat.png (crossed swords, lightning) | Quick combat (Q) |
 | auto_combat.png (crossed swords, cogwheel) | Auto combat (the offer before a battle) |
 | move.png (double chevron; sheet 33) | Move in the action grid |
-| next_hero.png (helmet, arrow), melee.png (sword with a slash), shoot.png (arrow in flight), cast.png (book over a hand; sheet 17) | not used yet |
+| cast.png (book over a hand; sheet 17) | the battle action grid's "The stack's own spell" while the spell has no icon of its own |
+| next_hero.png (helmet, arrow), melee.png (sword with a slash), shoot.png (arrow in flight) | not used yet |
 | difficulty_easy.png (pawn), difficulty_normal.png (knight), difficulty_hard.png (bishop), difficulty_expert.png (rook), difficulty_master.png (queen) | the difficulty levels (ADR-225): the new-game screen's difficulty row, the victory screen, the leaderboard; cut from sheet 29, the sheet's spare unused |
 
 ## Map and template editor

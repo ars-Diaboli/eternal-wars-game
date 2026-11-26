@@ -574,11 +574,11 @@ public sealed class BattleState
     public BattleUnit? UnitAt(CellPosition cell) => _units.FirstOrDefault(u => u.IsAlive && u.Rect.Contains(cell));
 
     /// <summary>
-    /// What a spell aimed at the cell targets: the living stack there, else a destroyed one lying there (not a war machine), which a revive may
-    /// bring back (ADR-123).
+    /// What <paramref name="side"/>'s spell of <paramref name="effect"/> aimed at the cell targets: the living stack there, else, for a
+    /// <c>fallen</c> revive, an own stack destroyed there that it may bring back (<see cref="BattleMagic.IsFallen"/>, ADR-123).
     /// </summary>
-    public BattleUnit? SpellTargetAt(CellPosition cell) =>
-        UnitAt(cell) ?? _units.FirstOrDefault(u => !u.IsAlive && !u.IsMachine && u.Rect.Contains(cell));
+    public BattleUnit? SpellTargetAt(CellPosition cell, BattleSide side, Magic.SpellEffect effect) =>
+        UnitAt(cell) ?? (effect.Fallen ? _units.FirstOrDefault(u => u.Rect.Contains(cell) && BattleMagic.IsFallen(this, side, effect, u)) : null);
 
     public bool IsInside(CellRect rect) => rect.X >= 0 && rect.Y >= 0 && rect.Right <= Width && rect.Bottom <= Height;
 

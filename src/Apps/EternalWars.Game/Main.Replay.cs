@@ -271,8 +271,11 @@ public partial class Main
                 _battleHud.Continue();
                 break;
             case InputEventMouseMotion motion when _battle.IsOpen:
-                _battleInput!.Hover(motion.Position); // the hovered stack's numbers in the battle HUD
+                _battleInput!.Point(motion.Position); // the hovered stack's numbers in the battle HUD
                 return true;
+            case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } when _battle.IsOpen && _battleHud.WindowOpen:
+                _battleHud.CloseWindow(); // a click beside the combat settings closes them, as in a game
+                break;
             case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right } click when _battle.IsOpen:
                 if (_session.State.Battle is { } shown && _battle.PickPoint(click.Position) is { } point && shown.UnitAt(BattleSpace.ToCell(point)) is { } unit)
                 {

@@ -307,7 +307,10 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       - [x] The log growing on hover, the chat's place, the status bar's prompt and estimate (`BattleHoverLine`); deployment and the
             result windows (`BattleLossRow`, the field dimmed); the narrow form, the replay viewer and the LAN wait
 - [x] Step 4: checked at every target size and UI scale; battle smokes, a LAN battle, the budget
-- [ ] Step 5: the icon sheet for the stack panel's numbers; the battle part of presentation.md
+- [ ] Step 5: the painted pieces and the battle part of presentation.md
+      - [x] The bevel shader's divider, the cut icons on the buttons, the stack panel's and mana's icons; sheet 34 written, generated
+            and cut
+      - [ ] The battle part of presentation.md
 
 ### Editor overhaul (ADR-247, ADR-250; [plan](../docs/papers/editor-plan.md#implementation-plan), EDIT-1 … EDIT-12 answered)
 - [x] Step 0a: answers to EDIT-1 … EDIT-12 (ADR-250: the proposals)

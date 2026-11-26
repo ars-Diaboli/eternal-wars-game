@@ -32,15 +32,17 @@ public sealed class BattleInputController
         _deployment = new DeploymentDragController(session, battle, hud);
         battle.Idle += () =>
         {
-            if (_pointer is { } still && _battle.IsOpen && !OverHud)
+            if (_pointed && _battle.IsOpen && !OverHud && _hud.GetViewport() is { } viewport)
             {
-                Hover(still); // the field settled under a still pointer: its preview and the status bar's line now (ADR-314)
+                // The field settled under a still pointer: its preview and the status bar's line now (ADR-314). Where the pointer is now, not
+                // where it last moved over the field: a button it pressed may have gone from under it.
+                Hover(viewport.GetMousePosition());
             }
         };
     }
 
-    /// <summary>Where the pointer last stood over the field; null while it is over the HUD.</summary>
-    private Vector2? _pointer;
+    /// <summary>The pointer has moved over the battle: the settled field may be hovered where it stands.</summary>
+    private bool _pointed;
 
     /// <summary>The pointer is over a HUD control (the log, a badge, a button): the field's preview and line give way to the control's.</summary>
     private bool OverHud => _hud.GetViewport()?.GuiGetHoveredControl() is not null;
@@ -65,15 +67,8 @@ public sealed class BattleInputController
     {
         switch (@event)
         {
-            case InputEventMouseMotion motion when OverHud:
-                _pointer = null; // the control under the pointer names itself on the status bar
-                _battle.ShowIntent(null);
-                GameCursors.Show(GameCursor.Pointer);
-                _deployment.Move(motion.Position);
-                return false;
             case InputEventMouseMotion motion:
-                Hover(motion.Position);
-                _deployment.Move(motion.Position);
+                Point(motion.Position);
                 return false;
             case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } when _hud.WindowOpen:
                 _hud.CloseWindow(); // a click beside the window closes it and does nothing on the field
@@ -94,10 +89,29 @@ public sealed class BattleInputController
         return true;
     }
 
-    /// <summary>The pointer at <paramref name="screen"/>: the hovered stack's numbers in the HUD, and the action or the deployment placement it would make.</summary>
-    public void Hover(Vector2 screen)
+    /// <summary>
+    /// The pointer moved to <paramref name="screen"/>: over a HUD control (a badge, the action grid's gaps) the control names itself on the
+    /// status bar and the field shows no preview, but a carried stack still shows where it would stand; elsewhere <see cref="Hover"/>.
+    /// </summary>
+    public void Point(Vector2 screen)
     {
-        _pointer = screen;
+        _pointed = true;
+        if (OverHud && !_deployment.IsDragging)
+        {
+            _battle.ShowIntent(null);
+            GameCursors.Show(GameCursor.Pointer);
+        }
+        else
+        {
+            Hover(screen);
+        }
+
+        _deployment.Move(screen);
+    }
+
+    /// <summary>The pointer at <paramref name="screen"/>: the hovered stack's numbers in the HUD, and the action or the deployment placement it would make.</summary>
+    private void Hover(Vector2 screen)
+    {
         if (_session.State.Battle is not { } battle || _battle.PickPoint(screen) is not { } point)
         {
             _battle.ShowIntent(null);

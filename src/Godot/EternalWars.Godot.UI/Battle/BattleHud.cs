@@ -54,7 +54,7 @@ public partial class BattleHud : Control
     private readonly BattleStackPanel _stackPanel = new();
     private readonly BattleTimeline _timeline = new();
     private readonly GridContainer _actions = new() { Name = "Actions", Columns = 4 };
-    private readonly PanelContainer _logPanel = new() { Name = "Log", MouseFilter = MouseFilterEnum.Stop, TooltipText = "Point at it to read the battle's last 20 lines" };
+    private readonly PanelContainer _logPanel = new() { Name = "Log", MouseFilter = MouseFilterEnum.Stop, TooltipText = "The battle's log" };
     private readonly Label _log = new() { VerticalAlignment = VerticalAlignment.Bottom, AutowrapMode = TextServer.AutowrapMode.WordSmart, MouseFilter = MouseFilterEnum.Ignore };
     private BevelFrame _logFrame = null!;
     private bool _logOpen;
@@ -62,20 +62,20 @@ public partial class BattleHud : Control
     private readonly Button _defend = ActionButton(UiIcon.Defend, Hint(BattleHotkeyAction.Defend));
     private readonly Button _quick = ActionButton(UiIcon.QuickCombat, Hint(BattleHotkeyAction.QuickCombat));
     private readonly Button _settings = ActionButton(UiIcon.Settings, "Combat settings");
-    private readonly Button _creature = ActionButton(UiIcon.Spells, "The stack's own spell");
+    private readonly Button _creature = ActionButton(UiIcon.Cast, "The stack's own spell");
     private readonly Control _creatureSpacer = new() { MouseFilter = MouseFilterEnum.Ignore };
     private readonly Button _retreat = ActionButton(UiIcon.Retreat, Hint(BattleHotkeyAction.Retreat));
     private readonly Button _surrender = ActionButton(UiIcon.Surrender, "Surrender");
     private readonly Button _book = ActionButton(UiIcon.SpellBook, Hint(BattleHotkeyAction.SpellBook));
     private readonly Button _menu = ActionButton(UiIcon.Menu, Hint(BattleHotkeyAction.Menu));
-    private readonly Button _start = new() { Text = BattleHotkeys.Of(BattleHotkeyAction.Confirm).HintAs("Start battle"), Visible = false };
+    private readonly Button _start = new Button { Text = BattleHotkeys.Of(BattleHotkeyAction.Confirm).HintAs("Start battle"), Visible = false }.WithIcon(UiIcon.Confirm, keepText: true);
     private readonly BattleSpellBookWindow _spellBook = new();
     private readonly DimmedCenter _resultLayer = new() { Name = "Result", Visible = false };
     private readonly PanelContainer _result = new();
     private readonly Label _resultTitle = new() { HorizontalAlignment = HorizontalAlignment.Center };
     private readonly Label _resultText = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(460, 0) };
     private readonly VBoxContainer _resultLosses = new();
-    private readonly Button _close = new() { Text = BattleHotkeys.Of(BattleHotkeyAction.Confirm).HintAs("Return to the map") };
+    private readonly Button _close = new Button { Text = BattleHotkeys.Of(BattleHotkeyAction.Confirm).HintAs("Return to the map") }.WithIcon(UiIcon.Confirm, keepText: true);
     private readonly Queue<string> _lines = new();
 
     private LayoutSettings _layout = LayoutSettings.Default;
@@ -101,6 +101,8 @@ public partial class BattleHud : Control
             _parts.TimelineOnTop = value.InitiativeBar == ScreenEdge.Top;
             _parts.BottomReserve = _bottomReserve + StatusBar.Height; // the status bar along the bottom (ADR-204)
             Bar.BottomOffset = _bottomReserve;
+            _resultLayer.OffsetBottom = -(_bottomReserve + StatusBar.Height); // the window centred above the status bar, its buttons clear of it
+            _resultLayer.Overhang = _bottomReserve + StatusBar.Height;
         }
     }
 
@@ -462,11 +464,13 @@ public partial class BattleHud : Control
         if (_creatureArmed)
         {
             _creatureArmed = false;
-            Act(player => new BattleCreatureCastCommand(player, TargetAt(battle, cell), cell));
+            var own = battle.ActiveUnit is { } caster ? BattleMagic.CreatureSpell(battle, caster) : null;
+            Act(player => new BattleCreatureCastCommand(player, TargetAt(battle, own, cell), cell));
             return true;
         }
 
-        Act(player => new BattleCastCommand(player, spell, TargetAt(battle, cell), cell));
+        var hero = battle.ActiveUnit is { } acting ? battle.Participant(acting.Side).Caster?.Find(spell) : null;
+        Act(player => new BattleCastCommand(player, spell, TargetAt(battle, hero, cell), cell));
         return true;
     }
 
@@ -497,8 +501,9 @@ public partial class BattleHud : Control
         return true;
     }
 
-    /// <summary>The stack the spell aimed at the cell targets, a fallen one included (<see cref="BattleState.SpellTargetAt"/>).</summary>
-    private static int? TargetAt(BattleState battle, CellPosition cell) => battle.SpellTargetAt(cell)?.Id;
+    /// <summary>The stack the spell aimed at the cell targets, a fallen one for a revive (<see cref="BattleState.SpellTargetAt"/>).</summary>
+    private static int? TargetAt(BattleState battle, KnownSpell? spell, CellPosition cell) =>
+        battle.ActiveUnit is { } active && spell?.Effect is { } effect ? battle.SpellTargetAt(cell, active.Side, effect)?.Id : battle.UnitAt(cell)?.Id;
 
     /// <summary>Whether the armed spell is the active creature caster's own (ADR-120), not the hero's.</summary>
     private bool _creatureArmed;
@@ -512,7 +517,7 @@ public partial class BattleHud : Control
             return;
         }
 
-        (ArmedSpell, _creatureArmed, _armedArea) = (known.Spell.Id.Value, true, HitsArea(known));
+        (ArmedSpell, _creatureArmed, _firstAim, _armedArea) = (known.Spell.Id.Value, true, null, HitsArea(known));
         SetPrompt($"{known.Spell.Name} (the stack's own spell): click a target (Esc cancels).");
     }
 
@@ -676,7 +681,10 @@ public partial class BattleHud : Control
         Bar.Message.Text = text;
     }
 
-    /// <summary>The pointer over the log (or off it): the battle's last 20 lines, grown upwards and opaque; else its last few, see-through.</summary>
+    /// <summary>
+    /// The pointer over the log (or off it): the battle's last 20 lines, grown upwards and opaque, as many as fit above it below the top quarter
+    /// of the screen; else its last few, see-through.
+    /// </summary>
     private void OpenLog(bool open)
     {
         _logOpen = open;
@@ -688,6 +696,11 @@ public partial class BattleHud : Control
     {
         var shown = _logOpen ? LogKept : _narrow ? LogLines - 1 : LogLines;
         _log.Text = string.Join('\n', _lines.Skip(Math.Max(0, _lines.Count - shown)));
+        var room = _logOpen
+            ? Math.Max(1, (int)((_logPanel.GetGlobalRect().End.Y - GetGlobalRect().Position.Y - (Size.Y / 4) - (2 * UiSpacing.Padding)) / (_log.GetLineHeight() + _log.GetThemeConstant("line_spacing"))))
+            : -1;
+        _log.MaxLinesVisible = room; // the wrapped lines that fit; the oldest skipped
+        _log.LinesSkipped = room > 0 ? Math.Max(0, _log.GetLineCount() - room) : 0;
     }
 
     /// <summary>The narrow form below <see cref="NarrowWidth"/> of UI width (ADR-314): the stack panel's short form, the log a line shorter.</summary>
@@ -737,7 +750,7 @@ public partial class BattleHud : Control
             return;
         }
 
-        _creature.Icon = SpellIcons.Get(spell.Spell.Id, ActionIconSize) ?? UiIcons.Get(UiIcon.Spells, ActionIconSize);
+        _creature.Icon = SpellIcons.Get(spell.Spell.Id, ActionIconSize) ?? UiIcons.Get(UiIcon.Cast, ActionIconSize);
         _creature.SetLabel($"{caster.Creature.Name}: {spell.Spell.Name} ({caster.CastsLeft[spell.Spell.Id.Value]} left)");
         _creature.TooltipText = $"The stack casts it as its action. {spell.Spell.Notes}";
     }

@@ -34,6 +34,7 @@ public enum UiIcon
     Surrender,
     QuickCombat,
     AutoCombat,
+    Cast,
     Hero,
     Undo,
     Redo,

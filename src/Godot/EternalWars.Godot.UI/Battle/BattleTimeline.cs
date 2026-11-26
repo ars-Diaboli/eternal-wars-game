@@ -22,9 +22,9 @@ public partial class BattleTimeline : PanelContainer
     /// <summary>The active stack's entry side.</summary>
     public const int ActiveSize = 72;
 
-    private const int DividerWidth = 3;
+    private const int DividerWidth = 6;
 
-    /// <summary>The divider's bronze (the frames' accent where no faction gives one).</summary>
+    /// <summary>The divider's rim: bronze (the frames' accent where no faction gives one).</summary>
     private static readonly Color Bronze = UiFrames.Accent(null);
 
     private int? _hovered;
@@ -82,11 +82,13 @@ public partial class BattleTimeline : PanelContainer
             if (!divided)
             {
                 divided = true;
-                _row.AddChild(new ColorRect
+                // A groove of the bevel shader's (ADR-310) with a bronze rim.
+                var divider = new PanelContainer
                 {
-                    Color = Bronze, CustomMinimumSize = new Vector2(DividerWidth, EntrySize), SizeFlagsVertical = SizeFlags.ShrinkCenter,
-                    MouseFilter = MouseFilterEnum.Ignore,
-                });
+                    CustomMinimumSize = new Vector2(DividerWidth, EntrySize), SizeFlagsVertical = SizeFlags.ShrinkCenter, MouseFilter = MouseFilterEnum.Ignore,
+                };
+                UiFrames.Bevel(divider, BevelKind.Slot, padding: 0).Tint(Bronze, 0.8f);
+                _row.AddChild(divider);
             }
 
             _row.AddChild(Entry(battle, unit, color(unit.Side), isActive: false, waiting: true));

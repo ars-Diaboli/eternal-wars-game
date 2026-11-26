@@ -9,10 +9,15 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- The battle HUD plan's step 5, first part ([battle-hud-plan.md](../docs/papers/battle-hud-plan.md)): the timeline's divider is a
+  bevel groove with a bronze rim; Start battle and Return to the map carry `confirm`, a creature's spell without an icon `cast`, the side
+  plate's mana its stat icon; the stack panel's numbers and native-terrain mark take sheet 34's icons (`StackStatIcon`; prompt in
+  icon-prompts.md, cut into `textures/ui/stats/`). The plan lists the art the battle HUD still lacks (57 battle spell icons without
+  prompts, 38 creature portraits). Next: the battle part of presentation.md.
 - The battle HUD plan's step 4 done ([battle-hud-plan.md](../docs/papers/battle-hud-plan.md)): `battle-hud-*` shoots a battle at the
   adventure HUD's five sizes and three UI scales with the timeline at the bottom and on top; `game-battle-budget` logs the siege's budget
   at 1440p (about 440 draw calls of 2,000; the log names the battle scene); the battle smokes and a LAN arena battle (host and client on
-  one computer) pass. Next: step 5, the painted pieces.
+  one computer) pass.
 - The battle HUD plan's step 3 done ([battle-hud-plan.md](../docs/papers/battle-hud-plan.md)): `BattleHudLayout` places the side
   plates, the round plate (the timer's pill under it), a bottom row of one height (`BattleStackPanel`, `BattleTimeline` or the timeline
   under the round plate, the 4 × 2 action grid), the log above the grid (3 lines, the last 20 on hover) and the LAN chat above the stack

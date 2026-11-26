@@ -146,12 +146,14 @@ green and its memory-bank entries updated.
   auto-combat windows; the field dimmed behind them. The losses and the raised undead are portraits with counts (`BattleLossRow`).
 - [x] The narrow form below about 1,400 px of UI width; the replay viewer and the LAN wait. The UI scale is the map's own setting; the
   replay viewer keeps Combat settings and Menu, the spell book greyed, and Escape closes the combat settings there.
-- [x] From the step's review: the timeline hides the entries that do not fit instead of widening; the field takes no command while a
-  window is open (a click beside it closes it); the spell book is redrawn only when its rows change; the creature caster's button opens
-  its spell's window on a right click; C without a book says why. From the second review: the field's line gives way to a HUD control's
-  under the pointer (the log takes its clicks); a spell aimed at a fallen stack is aimed as the cast aims it
-  (`BattleState.SpellTargetAt`), the two-click spell's second aim named without an estimate; a taken command lets the next prompt replace
-  a refusal; the status bar stands over the dimmed field; Enter does not start the battle under a window.
+- [x] The finer rules: the timeline hides the entries that do not fit instead of widening; the field takes no command while a window is
+  open (a click beside it closes it, in the replay viewer too); the spell book is redrawn only when its rows change; the creature caster's
+  button opens its spell's window on a right click; C without a book says why. Under the pointer a HUD control's line replaces the
+  field's; a carried stack still shows where it would stand. The log takes its clicks and, open, grows no higher than the top quarter of
+  the screen. A spell is aimed as the cast aims it (`BattleState.SpellTargetAt`): at the living stack on the cell, else, for a revive, at
+  the own stack fallen there; a two-click spell's second aim is named without an estimate. A taken command lets the next prompt replace a
+  refusal. The status bar stands over the dimmed field, the result window centred above it. Enter does not start the battle under a
+  window.
 
 ### 4. Check
 - [x] Smoke screenshots of a battle at the adventure HUD's sizes, UI scales and with the timeline on top and at the bottom (as `hud-*`):
@@ -162,8 +164,24 @@ green and its memory-bank entries updated.
   about 440 draw calls (240 of them shadows), 130,000 triangles, 355 MB of video memory.
 
 ### 5. Painted pieces
-- [ ] The frames, the timeline's divider and the plates are the bevel shader's (ADR-310, ADR-311); the buttons take the icons already
-  cut (sheets 17 and 18, `spell_book`, `settings`, `menu`, `warcry` for the spell book's warcries). New: an icon sheet for the stack
-  panel's numbers (damage, health, speed, initiative, shots) in [icon-prompts.md](../content/prompts/icon-prompts.md), generated and
-  cut.
+- [x] The frames, the timeline's divider and the plates are the bevel shader's (ADR-310, ADR-311): the divider is a groove with a bronze
+  rim. The buttons take the icons already cut: sheets 17 and 18, `spell_book`, `settings`, `menu`, `warcry` for the spell book's
+  warcries, `cast` for a creature's spell without an icon of its own, `confirm` on Start battle and Return to the map; the side plate's
+  mana its stat icon. The stack panel's numbers and its native-terrain mark take sheet 34's icons (`StackStatIcon`, in
+  `textures/ui/stats/`); a missing file leaves the number's short name, the mark the star.
+- [x] Sheet 34 in [icon-prompts.md](../content/prompts/icon-prompts.md): damage, health, speed, initiative, shots and the native-terrain
+  mark.
+- [x] Sheet 34 generated and cut into `textures/ui/stats/` (`damage`, `health`, `speed`, `initiative`, `shots`, `native_terrain`), a line
+  in its `CREDITS.md`.
 - [ ] The battle part of [presentation.md](../design/presentation.md) rewritten to state the rules once.
+
+Art the battle HUD still lacks, outside this step:
+- **Spell icons**: 57 battle spells have no icon and no prompt in [spell-icon-prompts.md](../content/prompts/spell-icon-prompts.md)
+  (36 spells, six a school, have both): Light 10, Nature 9, Arcana 10, Death 9, Chaos 10, Shadow 9. For them the spell book's buttons
+  show the name alone, the stack panel's spell marks the generic `spells` icon and the creature's spell button `cast`. The 9
+  adventure-only spells without one are not shown in battle.
+- **Creature portraits**: 38 creatures have none, their prompts written but not generated
+  ([creature-icon-prompts.md](../content/prompts/creature-icon-prompts.md)): the Stronghold and Swamp Bestiary lines (18 each), the dire
+  wolf and the banshee. Their timeline entries and losses show the name in place of the portrait, the stack panel an empty slot.
+- **Combat settings**: the battle speed and the cells-in-reach options have no icon (the editor's `grid` could serve the grid's).
+- **Round plate and result**: the round number, the timer, and the Victory, Defeat and Necromancy titles stand as text alone.

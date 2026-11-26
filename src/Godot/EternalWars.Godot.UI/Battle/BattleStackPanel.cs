@@ -10,7 +10,8 @@ namespace EternalWars.Godot.UI.Battle;
 /// <summary>
 /// The battle HUD's stack panel (ADR-314), bottom left in a bevelled panel rimmed in the stack's side's colour: the stack's portrait, its name
 /// and count, then its numbers as the battle uses them now (<see cref="StackPanel"/>): Attack, Defense, damage, the top creature's health,
-/// speed, initiative, shots for a shooter, morale and luck, each an icon (its name while the icon sheet is missing) with the number, named on
+/// speed, initiative, shots for a shooter, morale and luck, each an icon (<see cref="HeroStatIcon"/>, <see cref="StackStatIcon"/>; its short
+/// name while the file is missing) with the number, named on
 /// the status bar; and its marks (defending, native terrain, the spells on it) as small icons, the enemy's spells tinted red, each named on
 /// the status bar. A war machine shows the numbers it has. The narrow form (<see cref="Compact"/>) keeps Attack, Defense and health. Redrawn only when what it shows changes.
 /// </summary>
@@ -119,36 +120,38 @@ public partial class BattleStackPanel : PanelContainer
         _portrait.FlipH = panel.Side == BattleSide.Defender; // facing its enemy, as on the timeline
         _name.Text = panel.IsMachine ? panel.Name : $"{panel.Name} ×{panel.Count}";
 
-        Number(HeroStatIcon.Attack, "Att", "Attack", panel.Attack);
-        Number(HeroStatIcon.Defense, "Def", "Defense", panel.Defense);
+        Number(HeroIcons.Stat(HeroStatIcon.Attack, MarkSize), "Att", "Attack", panel.Attack);
+        Number(HeroIcons.Stat(HeroStatIcon.Defense, MarkSize), "Def", "Defense", panel.Defense);
+        var health = HeroIcons.Stat(StackStatIcon.Health, MarkSize);
         if (_compact)
         {
-            Number(null, "HP", "Health of the top creature", $"{Text(panel.Health)}/{Text(panel.MaxHealth)}");
+            Number(health, "HP", "Health of the top creature", $"{Text(panel.Health)}/{Text(panel.MaxHealth)}");
             _marks.Visible = false;
             return;
         }
 
         if (panel.MinDamage is { } low)
         {
-            Number(null, "Dmg", "Damage", low == panel.MaxDamage ? Text(low) : $"{Text(low)}–{Text(panel.MaxDamage ?? low)}");
+            Number(HeroIcons.Stat(StackStatIcon.Damage, MarkSize), "Dmg", "Damage", low == panel.MaxDamage ? Text(low) : $"{Text(low)}–{Text(panel.MaxDamage ?? low)}");
         }
 
-        Number(null, "HP", "Health of the top creature", $"{Text(panel.Health)}/{Text(panel.MaxHealth)}");
-        Number(null, "Spd", "Speed", panel.Speed);
-        Number(null, "Ini", "Initiative", panel.Initiative);
+        Number(health, "HP", "Health of the top creature", $"{Text(panel.Health)}/{Text(panel.MaxHealth)}");
+        Number(HeroIcons.Stat(StackStatIcon.Speed, MarkSize), "Spd", "Speed", panel.Speed);
+        Number(HeroIcons.Stat(StackStatIcon.Initiative, MarkSize), "Ini", "Initiative", panel.Initiative);
+        var shots = HeroIcons.Stat(StackStatIcon.Shots, MarkSize);
         if (panel.UnlimitedShots)
         {
-            Number(null, "Shots", "Shots: unlimited (an ammo cart)", "∞");
+            Number(shots, "Shots", "Shots: unlimited (an ammo cart)", "∞");
         }
         else
         {
-            Number(null, "Shots", "Shots left", panel.Shots);
+            Number(shots, "Shots", "Shots left", panel.Shots);
         }
 
         if (!panel.IsMachine)
         {
-            Number(HeroStatIcon.Morale, "Mor", panel.Morale is null ? "Morale: none (the creature has none)" : "Morale", panel.Morale is { } morale ? Signed(morale) : "–");
-            Number(HeroStatIcon.Luck, "Luck", "Luck", panel.Luck is { } luck ? Signed(luck) : null);
+            Number(HeroIcons.Stat(HeroStatIcon.Morale, MarkSize), "Mor", panel.Morale is null ? "Morale: none (the creature has none)" : "Morale", panel.Morale is { } morale ? Signed(morale) : "–");
+            Number(HeroIcons.Stat(HeroStatIcon.Luck, MarkSize), "Luck", "Luck", panel.Luck is { } luck ? Signed(luck) : null);
         }
 
         foreach (var mark in panel.Marks)
@@ -163,7 +166,7 @@ public partial class BattleStackPanel : PanelContainer
     private static string Key(StackPanel panel) =>
         string.Join('|', panel with { Marks = [] }, string.Join(';', panel.Marks.Select(m => $"{m.Kind}:{m.Name}:{m.Friendly}")));
 
-    private void Number(HeroStatIcon? icon, string shortName, string name, int? value)
+    private void Number(Texture2D? icon, string shortName, string name, int? value)
     {
         if (value is { } shown)
         {
@@ -171,7 +174,8 @@ public partial class BattleStackPanel : PanelContainer
         }
     }
 
-    private void Number(HeroStatIcon? icon, string shortName, string name, string? value)
+    /// <summary>A number's badge: its icon (else its short name, quiet) and its value, named on the status bar.</summary>
+    private void Number(Texture2D? icon, string shortName, string name, string? value)
     {
         if (value is null)
         {
@@ -181,7 +185,7 @@ public partial class BattleStackPanel : PanelContainer
         var badge = new HBoxContainer { TooltipText = name, MouseFilter = MouseFilterEnum.Pass };
         badge.SetMeta(UiIcons.StatusLabelMeta, name);
         badge.AddThemeConstantOverride("separation", 2);
-        if (icon is { } stat && HeroIcons.Stat(stat, MarkSize) is { } texture)
+        if (icon is { } texture)
         {
             badge.AddChild(new TextureRect
             {
@@ -205,7 +209,7 @@ public partial class BattleStackPanel : PanelContainer
         var texture = mark.Kind switch
         {
             StackMarkKind.Defending => UiIcons.Get(UiIcon.Defend, MarkSize),
-            StackMarkKind.NativeTerrain => UiIcons.Get(UiIcon.Favourite, MarkSize),
+            StackMarkKind.NativeTerrain => HeroIcons.Stat(StackStatIcon.NativeTerrain, MarkSize) ?? UiIcons.Get(UiIcon.Favourite, MarkSize),
             _ => (mark.Spell is { } spell ? SpellIcons.Get(spell, MarkSize) : null) ?? UiIcons.Get(UiIcon.Spells, MarkSize),
         };
         var name = mark.Friendly ? mark.Name : $"{mark.Name} (the enemy's spell)";

@@ -11,8 +11,8 @@ namespace EternalWars.Godot.UI.Battle;
 
 /// <summary>
 /// A side's plate in the battle HUD (ADR-314), the attacker's top left and the defender's top right, mirrored: the hero's portrait rimmed in the
-/// side's colour (a side without a hero shows its strongest stack), the side's name, and for a side with a caster its mana as a thin blue bar
-/// and "14 / 24". A click on the portrait opens the hero's information window (<see cref="PortraitPressed"/>). The spell book's button stands
+/// side's colour (a side without a hero shows its strongest stack), the side's name, and for a side with a caster its mana as the mana icon, a thin
+/// blue bar and "14 / 24". A click on the portrait opens the hero's information window (<see cref="PortraitPressed"/>). The spell book's button stands
 /// beside the plate of the side the book is for (<see cref="ShowBook"/>).
 /// </summary>
 public partial class BattleSidePlate : PanelContainer
@@ -21,6 +21,8 @@ public partial class BattleSidePlate : PanelContainer
     public const int PortraitSize = 56;
 
     private const int BookSize = 32;
+
+    private const int ManaIconSize = 18;
 
     private readonly Button _portrait = new() { Text = "Hero", FocusMode = FocusModeEnum.None, ExpandIcon = true };
     private readonly Label _name = new() { VerticalAlignment = VerticalAlignment.Center, MouseFilter = MouseFilterEnum.Ignore };
@@ -56,6 +58,11 @@ public partial class BattleSidePlate : PanelContainer
         _manaRow.AddThemeConstantOverride("separation", UiSpacing.Gap);
         _mana.SizeFlagsVertical = SizeFlags.ShrinkCenter;
         _manaRow.Alignment = side == BattleSide.Attacker ? BoxContainer.AlignmentMode.Begin : BoxContainer.AlignmentMode.End;
+        if (HeroIcons.Stat(HeroStatIcon.Mana, ManaIconSize) is { } manaIcon)
+        {
+            _manaRow.AddChild(new TextureRect { Texture = manaIcon, StretchMode = TextureRect.StretchModeEnum.KeepCentered, MouseFilter = MouseFilterEnum.Ignore });
+        }
+
         _manaRow.AddChild(_mana);
         _manaRow.AddChild(_manaText);
         lines.AddChild(_manaRow);

@@ -20,6 +20,17 @@ public enum HeroStatIcon
     Luck,
 }
 
+/// <summary>The battle stack panel's numbers and its native-terrain mark (ADR-314; icon-prompts.md sheet 34), beside the hero stats' icons.</summary>
+public enum StackStatIcon
+{
+    Damage,
+    Health,
+    Speed,
+    Initiative,
+    Shots,
+    NativeTerrain,
+}
+
 /// <summary>
 /// The hero's painted icons: one per skill in <c>res://shared/textures/ui/skills/</c> (named by the skill id, <c>offense.melee.png</c>), one
 /// per stat in <c>res://shared/textures/ui/stats/</c>, one per war machine in <c>res://shared/textures/ui/machines/</c> and the heroes' portraits in
@@ -55,6 +66,9 @@ public static class HeroIcons
 
     /// <summary>The icon of <paramref name="stat"/>, or null if its file is missing.</summary>
     public static Texture2D? Stat(HeroStatIcon stat, int size = StatSize) => Load($"{StatFolder}{FileName(stat)}.png", size);
+
+    /// <summary>The icon of the stack panel's <paramref name="stat"/>, or null if its file is missing (the panel shows the number's short name).</summary>
+    public static Texture2D? Stat(StackStatIcon stat, int size = StatSize) => Load($"{StatFolder}{FileName(stat)}.png", size);
 
     /// <summary>The icon of the war machine <paramref name="kind"/>, or null if it has none yet (the cannon, the glaivethrower).</summary>
     public static Texture2D? Machine(WarMachineKind kind, int size = SkillSize) => Load($"{MachineFolder}{MachineFile(kind)}.png", size);
@@ -184,6 +198,17 @@ public static class HeroIcons
         HeroStatIcon.Movement => "movement",
         HeroStatIcon.Morale => "morale",
         HeroStatIcon.Luck => "luck",
+        _ => "",
+    };
+
+    private static string FileName(StackStatIcon stat) => stat switch
+    {
+        StackStatIcon.Damage => "damage",
+        StackStatIcon.Health => "health",
+        StackStatIcon.Speed => "speed",
+        StackStatIcon.Initiative => "initiative",
+        StackStatIcon.Shots => "shots",
+        StackStatIcon.NativeTerrain => "native_terrain",
         _ => "",
     };
 }

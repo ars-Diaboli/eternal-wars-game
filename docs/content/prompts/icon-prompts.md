@@ -93,7 +93,7 @@ pixel art, blurry, cropped subject, subjects touching or overlapping, two subjec
 | Tier | What | Where it is shown | Sheets |
 |---|---|---|---|
 | **A · Objects** | small objects cast in aluminium, three-quarter view | the resource bar, trade and cost lists, the army row's machines, the difficulty row; 24–64 px | 1, 7, 29 |
-| **B · Glyphs** | bold symbols in aluminium relief, flat front view | the hero card's and hero screen's stats, skill and spell rows, the action grid, the battle bar, the adventure HUD's marks; 24–48 px | 2–6, 8–15, 17, 18, 30, 32, 33 |
+| **B · Glyphs** | bold symbols in aluminium relief, flat front view | the hero card's and hero screen's stats, the battle stack panel's numbers, skill and spell rows, the action grid, the battle bar, the adventure HUD's marks; 24–48 px | 2–6, 8–15, 17, 18, 30, 32–34 |
 | **C · Plain** | the simplest aluminium symbols, which the theme tints | buttons, the replay bar; 20–32 px | 19–22, 31 |
 | **Heraldry** | faction crests in colour, and their one-colour charges | town and player panels, flags and banners; 24–128 px | 23–28 |
 
@@ -328,6 +328,40 @@ a small cogwheel where they cross
 | 2 | `icon_battle_surrender` |
 | 3 | `icon_battle_quick-combat` |
 | 4 | `icon_battle_auto-combat` |
+
+### 34 · Battle: stack numbers (2 × 3) — the battle stack panel's numbers and its native-terrain mark
+
+Beside the hero stats of sheets 2 and 8 (Attack, Defense, morale, luck), the numbers only a stack in battle shows.
+
+**Prompt** · 1536 × 1024 · negative `NEG-ALU`
+
+```text
+Game UI icon sheet of aluminium glyphs in a realistic painterly dark-fantasy style: each icon one bold symbol seen flat from the front,
+a solid shape cast in aluminium, light satin metal with a fine grainy bead-blasted surface texture, faint brushed lines, fine scratches,
+small dents and worn edges catching the light, a soft bevel and a few fine engraved lines for detail. Pale aluminium palette: light
+silvery grey faces with a soft matte sheen, near-white on the bevels and raised edges, soft cool grey only in the recesses and engraved
+lines; reflections soft and diffuse, low contrast, the metal reads pale and light overall, never dark, never mirror-bright. One metal
+only, cool neutral greys, no other colour, no glow unless a cell names a soft white one. Light from the top left, a thick near-black
+outline around each subject and a thin white edge just inside it so it reads on dark and on light ground, no cast shadow, no background.
+Simple, solid forms with the same weight and amount of detail on every icon, no thin lines, readable at 24 px. Not a photograph, not a
+plastic CGI render, not a cartoon, no pixel art. 6 separate icons arranged in a grid of 3 columns and 2 rows, each alone in its own
+equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another
+cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row
+left to right, then bottom row: 1 a spiked mace head on a short haft, pointing up to the right, three short spikes on its
+rim; 2 a heart with bevelled faces, a small plain cross engraved at its centre; 3 a horseshoe, open end up, three speed lines
+behind it on the left; 4 a round pocket watch seen from the front, its single hand pointing up, a small lightning bolt across
+its face; 5 a quiver seen from the front, three arrows standing in it, their fletchings up; 6 a rounded hill seen from the front,
+a lone pine tree on its top
+```
+
+| # | File |
+|---|---|
+| 1 | `icon_stat_damage` |
+| 2 | `icon_stat_health` |
+| 3 | `icon_stat_speed` |
+| 4 | `icon_stat_initiative` |
+| 5 | `icon_stat_shots` |
+| 6 | `icon_stat_native-terrain` |
 
 ## Heroes
 

@@ -80,7 +80,7 @@ public class BattleHoverLineTests
         fallen.Count = 0;
         fallen.TopHealth = 0;
 
-        Assert.Same(fallen, battle.State.SpellTargetAt(fallen.Position));
+        Assert.Same(fallen, battle.State.SpellTargetAt(fallen.Position, Attacker, resurrection.Effect!));
         Assert.Null(battle.State.UnitAt(fallen.Position));
         Assert.Null(BattleMagic.CastRefusal(battle.State, Attacker, resurrection.Spell.Id, fallen.Id, fallen.Position));
         Assert.Equal(
@@ -89,15 +89,48 @@ public class BattleHoverLineTests
     }
 
     [Fact]
-    public void ATwoClickSpells_SecondAim_NamesTheStack_WithNoEstimate()
+    public void ARevive_TakesTheOwnFallenStack_UnderAnEnemyOne()
     {
-        var arrow = new KnownSpell(SpellCatalog.Default.Get("arcana.magic-arrow"), 1, 5);
-        var battle = TestBattle.Create(attackerCaster: new BattleCaster(0, 1, [arrow], null, 100));
+        var resurrection = new KnownSpell(SpellCatalog.Default.Get("light.resurrection"), 3, 5);
+        var battle = TestBattle.Create(attackerCaster: new BattleCaster(0, 1, [resurrection], null, 100));
+        var own = battle.Add(Attacker, TestBattle.Fixed("Swordsmen", 1), 1, 0, 0);
+        var enemy = battle.Add(Defender, TestBattle.Fixed("Wolves", 1), 5, 10, 5);
+        var fallen = battle.Add(Attacker, TestBattle.Fixed("Pikemen", 1, health: 10), 20, 10, 5);
+        battle.Add(Defender, TestBattle.Fixed("Bats", 1), 1, 20, 0);
+        battle.StartWith(own);
+        (enemy.Count, enemy.TopHealth, fallen.Count, fallen.TopHealth) = (0, 0, 0, 0);
+
+        Assert.Same(fallen, battle.State.SpellTargetAt(fallen.Position, Attacker, resurrection.Effect!));
+        Assert.Same(enemy, battle.State.SpellTargetAt(fallen.Position, Defender, resurrection.Effect!)); // for the defender, its own Wolves
+    }
+
+    [Fact]
+    public void AnAreaSpell_AtACorpse_IsCastAtTheCell()
+    {
+        var fireball = new KnownSpell(SpellCatalog.Default.Get("chaos.fireball"), 1, 5);
+        var battle = TestBattle.Create(attackerCaster: new BattleCaster(0, 1, [fireball], null, 100));
+        var own = battle.Add(Attacker, TestBattle.Fixed("Swordsmen", 1), 1, 0, 0);
+        var dead = battle.Add(Defender, TestBattle.Fixed("Wolves", 1), 5, 10, 5);
+        battle.Add(Defender, TestBattle.Fixed("Bats", 1), 1, 20, 0);
+        battle.StartWith(own);
+        (dead.Count, dead.TopHealth) = (0, 0);
+
+        Assert.Null(battle.State.SpellTargetAt(dead.Position, Attacker, fireball.Effect!));
+        Assert.Equal(new BattleHoverLine(fireball.Spell.Name, "Cast here"), BattleHoverLine.OfSpell(battle.State, dead.Position, "chaos.fireball", creature: false));
+    }
+
+    [Fact]
+    public void ATwoClickSpell_NamesItsFirstAim_ThenItsSecond_WithNoEstimate()
+    {
+        var teleport = new KnownSpell(SpellCatalog.Default.Get("arcana.teleport"), 1, 5);
+        var battle = TestBattle.Create(attackerCaster: new BattleCaster(0, 1, [teleport], null, 100));
         var own = battle.Add(Attacker, TestBattle.Fixed("Swordsmen", 1), 1, 0, 0);
         var wolves = battle.Add(Defender, TestBattle.Fixed("Wolves", 1, health: 15), 10, 20, 0);
         battle.StartWith(own);
 
-        Assert.Equal("Second aim: the Wolves", BattleHoverLine.OfSpell(battle.State, wolves.Position, "arcana.magic-arrow", false, secondAim: true)!.Detail);
-        Assert.Equal("Second aim here", BattleHoverLine.OfSpell(battle.State, new CellPosition(5, 5), "arcana.magic-arrow", false, secondAim: true)!.Detail);
+        Assert.True(teleport.Effect!.TwoClicks);
+        Assert.Equal("Cast at the Swordsmen", BattleHoverLine.OfSpell(battle.State, own.Position, "arcana.teleport", false)!.Detail);
+        Assert.Equal("Second aim: the Wolves", BattleHoverLine.OfSpell(battle.State, wolves.Position, "arcana.teleport", false, secondAim: true)!.Detail);
+        Assert.Equal("Second aim here", BattleHoverLine.OfSpell(battle.State, new CellPosition(5, 5), "arcana.teleport", false, secondAim: true)!.Detail);
     }
 }
