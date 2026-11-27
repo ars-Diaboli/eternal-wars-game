@@ -103,6 +103,8 @@
 | [367](#adr-367-the-naga-with-the-naga-heros-super-pale-skin-owner-adr-318-2026-11-27) | The Naga with the naga hero's super pale skin (owner, ADR-318, 2026-11-27) | accepted |
 | [368](#adr-368-the-efreet-as-a-fire-djinn-and-the-golden-golem-as-a-gold-iron-golem-owner-adr-318-2026-11-27) | The efreet as a fire djinn and the golden golem as a gold iron golem (owner, ADR-318, 2026-11-27) | accepted |
 | [369](#adr-369-the-giant-and-the-titan-closer-to-the-series-classic-look-owner-adr-318-2026-11-27) | The giant and the titan closer to the series' classic look (owner, ADR-318, 2026-11-27) | accepted |
+| [370](#adr-370-the-blade-dancer-and-war-dancer-masked-owner-2026-11-27) | The blade dancer and war dancer masked (owner, 2026-11-27) | accepted |
+| [371](#adr-371-the-pixie-and-sprite-with-bigger-wings-a-slim-sprite-gown-and-stronger-contrast-owner-2026-11-27) | The pixie and sprite with bigger wings, a slim sprite gown and stronger contrast (owner, 2026-11-27) | accepted |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -1751,3 +1753,24 @@ spear-armed titan.
   hurling a bolt of lightning from his bare hand, no spear, cape, crown or storm cloud. The colossus is drawn whole, not as head and
   shoulders.
 - **Regenerate**: Academy sheet A9.
+
+### ADR-370: The blade dancer and war dancer masked (owner, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change.
+
+- **Owner**, on Sylvan sheet S3: masks to hide the dancers' faces.
+- **Subjects**: the blade dancer in a close-fitting dark grey-green leather mask, the war dancer in a smooth carved pale-wood mask
+  with gold-leaf vine inlay; both cover the whole face from brow to chin with only two narrow eye slits.
+- **Regenerate**: Sylvan sheet S3.
+
+### ADR-371: The pixie and sprite with bigger wings, a slim sprite gown and stronger contrast (owner, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change.
+
+- **Owner**, on Sylvan sheet S1: wings larger against the body; the sprite's dress more slim-fit; more colour contrast, both looked
+  too pale. On the regenerated sheet: the wings' size right but spread too wide; the sprite's contrast dialled back a little and her
+  dress like the pixie's.
+- **Subjects**: each wing about as long as the body is tall (the sprite's longer), raised and swept up and back behind her, never
+  spread flat to the sides, so each figure is taller than wide; the pixie's gown of deep green and dusky rose petals, deep emerald
+  and gold wings; the sprite in a short fitted gown of silver and pale blue petals cut like the pixie's, her wings soft deep blue,
+  violet and gold, more muted than the pixie's and never neon; deep shadows and rich colour on both, the glow cut to a shimmer on
+  the wing edges with no halo or haze.
+- **Regenerate**: Sylvan sheet S1.

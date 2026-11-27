@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-370**. A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-372**. A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -20,7 +20,7 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [game-modes.md](game-modes.md) | Victory and defeat, saves, the turn timer, score, ranking and difficulty, replays and the viewer, the main menu and new-game screen, the arena, the tournament. | 24 |
 | [random-maps-and-editor.md](random-maps-and-editor.md) | Templates and the generator, scenery density, relief, the standalone editor and the template editor. | 48 |
 | [multiplayer.md](multiplayer.md) | The host and clients, each client's view, the lobby, live battles, LAN saves, start zones and the simultaneous first week. | 16 |
-| [presentation.md](presentation.md) | Art direction, the camera, terrain and fog drawing, the HUD, layout and theme, information windows, icons, cursors and heraldry. | 97 |
+| [presentation.md](presentation.md) | Art direction, the camera, terrain and fog drawing, the HUD, layout and theme, information windows, icons, cursors and heraldry. | 99 |
 | [project-and-scope.md](project-and-scope.md) | Scope and phases, the owner's batches of answers that touch several areas, phase close-outs and the Godot checks, closing reviews. | 21 |
 
 ## All decisions
@@ -396,3 +396,5 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [367](presentation.md#adr-367-the-naga-with-the-naga-heros-super-pale-skin-owner-adr-318-2026-11-27) | presentation | The Naga with the naga hero's super pale skin (owner, ADR-318, 2026-11-27) | accepted |
 | [368](presentation.md#adr-368-the-efreet-as-a-fire-djinn-and-the-golden-golem-as-a-gold-iron-golem-owner-adr-318-2026-11-27) | presentation | The efreet as a fire djinn and the golden golem as a gold iron golem (owner, ADR-318, 2026-11-27) | accepted |
 | [369](presentation.md#adr-369-the-giant-and-the-titan-closer-to-the-series-classic-look-owner-adr-318-2026-11-27) | presentation | The giant and the titan closer to the series' classic look (owner, ADR-318, 2026-11-27) | accepted |
+| [370](presentation.md#adr-370-the-blade-dancer-and-war-dancer-masked-owner-2026-11-27) | presentation | The blade dancer and war dancer masked (owner, 2026-11-27) | accepted |
+| [371](presentation.md#adr-371-the-pixie-and-sprite-with-bigger-wings-a-slim-sprite-gown-and-stronger-contrast-owner-2026-11-27) | presentation | The pixie and sprite with bigger wings, a slim sprite gown and stronger contrast (owner, 2026-11-27) | accepted |

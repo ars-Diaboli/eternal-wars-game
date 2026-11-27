@@ -2,7 +2,7 @@
 
 Painted creature portraits with transparency (512 × 512, facing right) and one opaque painted backdrop a faction (1024 × 1024), generated
 for this project by the owner (2026-11-21: Academy, Conflux, Dragon Utopia, Dungeon, Haven, Inferno, Necropolis, neutral; 2026-11-26: Sylvan, redone
-from the ADR-293 prompts, and neutral sheet X1 from the ADR-289 prompt; 2026-11-27: Academy and Haven redone from the paired sheets of ADR-360) as portrait sheets and cut into one file per creature (prompts in
+from the ADR-293 prompts, and neutral sheet X1 from the ADR-289 prompt; 2026-11-27: Academy, Haven and Sylvan redone from the paired sheets of ADR-360) as portrait sheets and cut into one file per creature (prompts in
 `docs/content/prompts/creature-icon-prompts.md` and its faction files). Shown in the battle's initiative bar; the army slots and the creature
 windows still use the lettered placeholders.
 
@@ -22,9 +22,9 @@ windows still use the lettered placeholders.
 | creature_backdrop_inferno.png | the backdrop behind the Inferno portraits and Inferno heroes |
 | icon_creature_necropolis.<creature id>.png | the eighteen Necropolis creatures (sheets N1–N3) |
 | creature_backdrop_necropolis.png | the backdrop behind the Necropolis portraits and Necropolis heroes |
-| icon_creature_neutral.<creature id>.png | fourteen neutral creatures (the earlier 2 × 2 sheets X1–X3, X1's mammoth, bandit and troll redone; the thanes, the efreet and the golden golem from Academy sheets A10–A11; the timber wolf and the dire wolf from Sylvan sheet S5) |
+| icon_creature_neutral.<creature id>.png | fourteen neutral creatures (the earlier 2 × 2 sheets X1–X3, X1's mammoth, bandit and troll redone; the thanes, the efreet and the golden golem from Academy sheets A10–A11; the timber wolf and the dire wolf from Sylvan sheet S10) |
 | creature_backdrop_neutral.png | the backdrop behind the neutral portraits |
-| icon_creature_sylvan.<creature id>.png | the eighteen Sylvan creatures (sheets S1–S5) |
+| icon_creature_sylvan.<creature id>.png | the eighteen Sylvan creatures (sheets S1–S9) |
 | creature_backdrop_sylvan.png | the backdrop behind the Sylvan portraits and Sylvan heroes |
 
 Not drawn yet: the other factions; of the neutral creatures, the banshee, the shaman, the witch doctor, the mummy, the lich dragon, the

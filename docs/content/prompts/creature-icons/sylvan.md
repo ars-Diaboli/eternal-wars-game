@@ -28,11 +28,16 @@ fitted inside its cell from the top of the head to the feet with about 8 % empty
 dragon) drawn smaller so that its whole length fits the cell's width, both at the same scale and with the same light; nothing crosses
 into the other cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The
 icons, left to right: 1 a tiny faerie, a slender elven woman with pointed ears and a delicate fine-featured face, long fair hair, a
-short gown of pale petals, large bright translucent dragonfly wings shimmering green and gold, a pale-green glow around her, open
-empty hands and no weapon, the whole body shown; not a goblin, not grotesque; 2 the same creature as the one to its left, clearly
-upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: large
-luminous butterfly wings of bright blue, violet and gold, a crown of tiny white flowers, a silver gown, a bright silver-green glow,
-still no weapon
+short fitted gown of deep green and dusky rose petals, huge translucent dragonfly wings far larger than her body, each wing about as
+long as she is tall, deep emerald and gold veined, open empty hands and no weapon, the whole body shown; not a goblin, not grotesque;
+2 the same creature as the one to its left, clearly upgraded and told apart at a glance: the same face and build but larger, heavier
+armed, more ornate and richer in colour: even larger butterfly wings, longer than she is tall, soft deep blue, violet and gold with
+dark veins, a crown of tiny white flowers, a short fitted gown of layered silver and pale blue petals cut like the faerie's, still no
+weapon. On both the wings are raised and swept up and back behind her, the upper wings rising high above her head and the lower wings
+trailing down beside her legs, held close and upright, never spread flat out to the sides: each figure with its wings is clearly
+taller than it is wide. Both drawn with deep shadows and rich natural colour, never pale or washed out; the butterfly wings softer and
+more muted than the faerie's, never neon; any glow only a faint shimmer on the wing edges, no haze, mist or halo of light around the
+figure
 ```
 
 | # | File |
@@ -88,11 +93,13 @@ weapons. 2 separate icons side by side in one row, each alone in its own equal u
 fitted inside its cell from the top of the head to the feet with about 8 % empty margin, a long or wide creature (a rider, a beast, a
 dragon) drawn smaller so that its whole length fits the cell's width, both at the same scale and with the same light; nothing crosses
 into the other cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The
-icons, left to right: 1 a lithe male elf warrior, a man with long silver hair tied back and leaf-pattern tattoos on his bare arms,
-fitted grey-green leather armour, two long slim curved sabers held low and ready; 2 the same creature as the one to its left, clearly
-upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: the same man
-caught mid-spin, longer curved sabers with gold-etched blades flashing, gold-leaf trimmed armour, a green sash trailing, the leaf
-tattoos glowing pale green
+icons, left to right: 1 a lithe male elf warrior, a man with long silver hair tied back and leaf-pattern tattoos on his bare arms, his
+face hidden behind a close-fitting mask of dark grey-green leather that covers the whole face from brow to chin, only two narrow eye
+slits, no skin of the face showing, fitted grey-green leather armour, two long slim curved sabers held low and ready; 2 the same
+creature as the one to its left, clearly upgraded and told apart at a glance: the same masked face and build but larger, heavier
+armed, more ornate and richer in colour: the same man caught mid-spin, his face hidden behind a smooth carved mask of pale wood with
+gold-leaf vine inlay that covers the whole face from brow to chin, only two narrow eye slits, no skin of the face showing, longer
+curved sabers with gold-etched blades flashing, gold-leaf trimmed armour, a green sash trailing, the leaf tattoos glowing pale green
 ```
 
 | # | File |

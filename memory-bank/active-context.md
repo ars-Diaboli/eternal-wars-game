@@ -9,6 +9,8 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Sylvan portraits regenerated from the paired sheets and cut (S1–S10 and the backdrop, 2026-11-27), the wolf and dire wolf
+  with them; the masked dancers (ADR-370) and the pixie and sprite (ADR-371) are in.
 - Haven portraits regenerated from the paired sheets and cut (H1–H9 and the backdrop, 2026-11-27).
 - Academy portraits regenerated from the paired sheets and cut (A1–A11 and the backdrop, 2026-11-27): the eighteen Academy
   creatures, the thanes, the efreet and the golden golem; each cell centred on a square so the whole figure sits in the middle 2:3.
