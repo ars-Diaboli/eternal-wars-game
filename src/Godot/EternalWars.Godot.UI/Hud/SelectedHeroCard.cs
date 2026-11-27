@@ -8,8 +8,9 @@ namespace EternalWars.Godot.UI.Hud;
 /// <summary>
 /// The selected hero's card at the bottom (ADR-309): the portrait as tall as the card, so its margin to the frame is the same all round (a
 /// click opens the hero screen), two thin bars beside it (movement green, experience to the next level gold), then three rows: the level and
-/// name ("Lv 3 | Orrin"), the four primary stats, and morale and luck as icons with a signed value and the mana left as an icon and a number. The HUD hides it while no own hero is
-/// selected and stretches it to the bottom row's height.
+/// name ("Lv 3 | Orrin"), the four primary stats, and morale and luck as icons with a signed value and the mana left as an icon and a number, with
+/// "Hero 1/1" after them when the player may have only one hero (a tournament's, ADR-366; why in its hover text). The HUD hides it while no own
+/// hero is selected and stretches it to the bottom row's height.
 /// </summary>
 public partial class SelectedHeroCard : HBoxContainer
 {
@@ -81,8 +82,11 @@ public partial class SelectedHeroCard : HBoxContainer
     /// <summary>The name line ("Lv 3 | Orrin"), for the smoke checks.</summary>
     public string Title => _name.Text;
 
-    /// <summary>Shows <paramref name="card"/>; a <paramref name="refusal"/> greys the portrait (the replay viewer) and says why.</summary>
-    public void Show(HeroCard card, string? refusal)
+    /// <summary>
+    /// Shows <paramref name="card"/>; a <paramref name="refusal"/> greys the portrait (the replay viewer) and says why; <paramref name="limit"/>
+    /// is the one-hero note (<see cref="HeroCard.Limit"/>).
+    /// </summary>
+    public void Show(HeroCard card, string? refusal, (string Text, string Why)? limit = null)
     {
         _hero = card.Hero;
         _portrait.Icon = HeroIcons.PortraitOrPlaceholder(card.Portrait, card.Name, PortraitSize);
@@ -110,6 +114,10 @@ public partial class SelectedHeroCard : HBoxContainer
         var mana = HeroIcons.StatBadge(HeroStatIcon.Mana, "Mana", card.Mana.Value.ToString());
         mana.TooltipText = $"Mana {card.Mana.Value} / {card.Mana.Max}";
         _spirits.AddChild(mana);
+        if (limit is var (text, why))
+        {
+            _spirits.AddChild(new Label { Text = text, TooltipText = why, MouseFilter = MouseFilterEnum.Pass, Modulate = new Color(1, 1, 1, 0.8f) });
+        }
     }
 
     /// <summary>No hero: the card is hidden by the HUD.</summary>

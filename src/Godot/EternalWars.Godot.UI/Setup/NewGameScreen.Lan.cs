@@ -90,9 +90,14 @@ public partial class NewGameScreen
             settings.Add($"Size: {_size.GetItemText(_size.Selected)}, hero limit {(int)_maxHeroes.Value}");
         }
 
-        if (_arena.Visible)
+        if (_arenaMap)
         {
             settings.Add("Arena: day 1 is preparation; the strongest heroes meet in one battle on day 2.");
+        }
+
+        if (IsTournament)
+        {
+            settings.Add($"Tournament: {TournamentRules.LengthText(_tournamentDays)} apart, then the two heroes meet in one battle.");
         }
 
         var fog = _fog.GetItemText(_fog.Selected);
@@ -135,7 +140,7 @@ public partial class NewGameScreen
             return "Every day is played turn by turn.";
         }
 
-        var days = _arena.Visible ? "The preparation day is played at once"
+        var days = _arenaMap ? "The preparation day is played at once"
             : IsTournament ? "Every day before the battle is played at once"
             : "The first week's days are played at once";
         var people = _seatNames.Where((s, i) => LanSeatKind.Computer != (SelectedTemplate is not null && i < _randomPlayers.Count

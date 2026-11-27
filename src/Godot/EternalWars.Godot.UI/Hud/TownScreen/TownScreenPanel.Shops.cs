@@ -188,7 +188,13 @@ public partial class TownScreenPanel
 
         var top = new HBoxContainer();
         top.AddChild(ResourceIcons.Balance(Treasury.Gold));
-        var guild = new Button { Text = "Thieves' guild", TooltipText = "How you rank against the other players; more taverns show more" }.WithIcon(UiIcon.ThievesGuild);
+        var closed = ThievesGuild.Closed(state);
+        var guild = new Button
+        {
+            Text = "Thieves' guild",
+            Disabled = closed is not null,
+            TooltipText = closed ?? "How you rank against the other players; more taverns show more",
+        }.WithIcon(UiIcon.ThievesGuild);
         guild.Pressed += () => ThievesGuildRequested?.Invoke();
         top.AddChild(guild);
         body.AddChild(top);
@@ -343,12 +349,12 @@ public partial class TownScreenPanel
             n => $"{N((int)MarketplaceRules.ExchangeCost(giveRate, getRate, n))} {_give} for {N(n)} {_get}", n => new ExchangeResourcesCommand(player, _give, _get, n));
     }
 
-    /// <summary>Sending resources to a teammate (ADR-296): shown only when the player has one still in the game.</summary>
+    /// <summary>Sending resources to a teammate (ADR-296): shown only when the player has one still in the game, never in a tournament (ADR-366).</summary>
     private void FillSendToAlly(VBoxContainer body)
     {
         var state = State;
         var allies = state.Players.Where(p => !p.IsDefeated && state.AreAllies(Player, p.Id)).ToList();
-        if (allies.Count == 0)
+        if (allies.Count == 0 || state.Rules.Tournament) // a tournament has no trading (ADR-366)
         {
             return;
         }

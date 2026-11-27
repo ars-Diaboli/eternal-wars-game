@@ -59,12 +59,14 @@ public sealed record RandomMapChoice(
     bool Tournament = false);
 
 /// <summary>
-/// New-game setup (ADR-201: four tabs, Scenarios, Random maps, Arenas and Campaign, each a list of its maps on the left, sorted and filtered by
+/// New-game setup (ADR-201: five tabs, Scenarios, Random maps, Arenas, Tournaments and Campaign, each a list of its maps on the left, sorted and filtered by
 /// size as the player chose (ADR-204), and the chosen one's details and players on the right, the game options under them (ADR-225): fog of war
 /// (Permanent reveal or Refog) with the hero limit beside it, the difficulty as five chess-piece buttons, the turn timer as a checkbox with its
 /// minutes, and the seed in debug builds only (a release build draws one for every game). Each player has a colour (a swatch: picking another
 /// player's colour swaps the two). For a map: its players, with teams unless the map locks them (ADR-032), the town as a crest where the map
-/// leaves it open; on an arena map a line on the mode and, per player, Human or Computer (ADR-159); the map's own difficulty is preselected. For a
+/// leaves it open; on an arena map a line on the mode and, per player, Human or Computer (ADR-159); the map's own difficulty is preselected. The
+/// Tournaments tab (ADR-366) lists the tournament maps and templates, each with its mode line, the length as a stepper (a day a step up to 14
+/// days, then a week a step up to 12 weeks) and the two players, Human or Computer (Here, LAN player or Computer in the lobby). For a
 /// template (ADR-086): the size, the hero limit (the template's by default, ADR-068) and the players, "+" adding one and each row's "−" removing it
 /// within the template's range, each human or computer, town (a crest), hero, the start town's tier-1 dwelling (a human player with a picked
 /// town, when the start zone gives none; RMG-7) and team (unless the template locks them); the map is generated on "Start" and, if it still has
@@ -107,7 +109,18 @@ public partial class NewGameScreen : PanelContainer
     private int _randomCount;
     private readonly Button _start = new Button { Text = "Start" }.WithIcon(UiIcon.Confirm, keepText: true);
     private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-    private readonly Label _arena = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, Visible = false };
+    /// <summary>The line on an arena's or a tournament's mode, under the map's name.</summary>
+    private readonly Label _modeLine = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, Visible = false };
+
+    /// <summary>A tournament's length row: the stepper's two buttons and the length in words between them (ADR-366).</summary>
+    private readonly HBoxContainer _lengthRow = new() { Visible = false };
+    private readonly Label _length = new() { HorizontalAlignment = HorizontalAlignment.Center, CustomMinimumSize = new Vector2(170, 0) };
+    private readonly Button _shorter = new Button { Text = "Shorter", FocusMode = FocusModeEnum.None }.WithIcon(UiIcon.ArrowLeft);
+    private readonly Button _longer = new Button { Text = "Longer", FocusMode = FocusModeEnum.None }.WithIcon(UiIcon.ArrowRight);
+    private int _tournamentDays = TournamentRules.DefaultDays;
+
+    /// <summary>The selected map is an arena map (ADR-097).</summary>
+    private bool _arenaMap;
     private readonly Dictionary<PlayerId, SpinBox> _teams = [];
     private readonly Dictionary<PlayerId, OptionButton> _controllers = [];
     private readonly Dictionary<int, CrestPicker> _startTowns = [];
@@ -130,6 +143,7 @@ public partial class NewGameScreen : PanelContainer
         Scenarios,
         RandomMaps,
         Arenas,
+        Tournaments,
         Campaign,
     }
 
@@ -166,7 +180,8 @@ public partial class NewGameScreen : PanelContainer
 
         foreach (var template in templates ?? [])
         {
-            _entries[MapTab.RandomMaps].Add(new MapEntry(template.Name, null, template, MapSizeClass.OfTemplate(template.Sizes)));
+            var tab = template.Tournament ? MapTab.Tournaments : MapTab.RandomMaps;
+            _entries[tab].Add(new MapEntry(template.Name, null, template, MapSizeClass.OfTemplate(template.Sizes)));
         }
 
         this.UseMenuPanel();
@@ -333,7 +348,7 @@ public partial class NewGameScreen : PanelContainer
         _title.AddThemeFontSizeOverride("font_size", 22);
         details.AddChild(_title);
         details.AddChild(_summary);
-        details.AddChild(_arena);
+        details.AddChild(_modeLine);
         details.AddChild(_description);
 
         var settings = new HBoxContainer();
@@ -342,6 +357,7 @@ public partial class NewGameScreen : PanelContainer
         _size.ItemSelected += _ => Changed();
         details.AddChild(settings);
         _randomRows.Add(settings);
+        details.AddChild(LengthRow());
 
         details.AddChild(_playersRule);
         details.AddChild(_playersHeading);
@@ -358,6 +374,36 @@ public partial class NewGameScreen : PanelContainer
         details.AddChild(playersScroll);
         area.AddChild(details);
         return area;
+    }
+
+    /// <summary>
+    /// A tournament's length (ADR-366): "Shorter", the length in words ("14 days (2 weeks)"), "Longer"; a day a step up to 14 days, then a week a
+    /// step up to 12 weeks (<see cref="TournamentRules.Step"/>). The length stays as set from one tournament map to the next.
+    /// </summary>
+    private HBoxContainer LengthRow()
+    {
+        _lengthRow.AddThemeConstantOverride("separation", UiSpacing.Gap);
+        var label = new Label { Text = "Length", CustomMinimumSize = new Vector2(LabelWidth, 0) };
+        _lengthRow.AddChild(label);
+        _shorter.TooltipText = "A day shorter; a week shorter from 3 weeks on.";
+        _longer.TooltipText = "A day longer up to 14 days, then a week longer, up to 12 weeks.";
+        _shorter.Pressed += () => SetLength(TournamentRules.Step(_tournamentDays, -1));
+        _longer.Pressed += () => SetLength(TournamentRules.Step(_tournamentDays, 1));
+        _length.TooltipText = "The building days; the battle is on the day after the last.";
+        _lengthRow.AddChild(_shorter);
+        _lengthRow.AddChild(_length);
+        _lengthRow.AddChild(_longer);
+        SetLength(_tournamentDays);
+        return _lengthRow;
+    }
+
+    private void SetLength(int days)
+    {
+        _tournamentDays = days;
+        _length.Text = TournamentRules.LengthText(days);
+        _shorter.Disabled = days == TournamentRules.Lengths[0];
+        _longer.Disabled = days == TournamentRules.Lengths[^1];
+        Changed();
     }
 
     /// <summary>
@@ -433,6 +479,7 @@ public partial class NewGameScreen : PanelContainer
     private static MapTab TabOf(MapKind kind) => kind switch
     {
         MapKind.Arena => MapTab.Arenas,
+        MapKind.Tournament => MapTab.Tournaments,
         MapKind.Campaign => MapTab.Campaign,
         _ => MapTab.Scenarios,
     };
@@ -444,6 +491,7 @@ public partial class NewGameScreen : PanelContainer
         MapTab.Scenarios => "Hand-made maps played to win: the shipped ones and those saved in the map editor.",
         MapTab.RandomMaps => "A map generated from a template for the players you set up.",
         MapTab.Arenas => "A day to prepare, then one battle decides the game. Not ranked.",
+        MapTab.Tournaments => "Two players build up apart, each in a zone of their own, for the length you set; then one battle decides the game. Not ranked.",
         _ => "Story maps: a person starts without a town, a map event favours people, or the map carries campaign variables. Not ranked.",
     };
 
@@ -454,6 +502,7 @@ public partial class NewGameScreen : PanelContainer
             "No campaign-like maps yet. A map saved in the map editor is listed here when a person starts without a town, a map event "
             + "gives something only to people, or the map keeps or takes campaign variables.",
         MapTab.Arenas => "No arena maps. Make one in the map editor (Conditions, Arena).",
+        MapTab.Tournaments => "No tournament maps or templates.",
         MapTab.RandomMaps => "No random map templates.",
         _ => "No maps. Maps saved in the map editor are listed here.",
     };
@@ -505,7 +554,8 @@ public partial class NewGameScreen : PanelContainer
             ? EmptyTab(tab)
             : $"No map on this tab is {_view.Size}×{_view.Size}. Choose another size, or All sizes.";
         _description.Visible = true;
-        _arena.Visible = false;
+        _modeLine.Visible = false;
+        _lengthRow.Visible = false;
         _playersHeading.Visible = _playersRule.Visible = _summary.Visible = false;
         _start.Disabled = true;
         foreach (var row in _randomRows)
@@ -534,6 +584,11 @@ public partial class NewGameScreen : PanelContainer
         "Arena: day 1 is preparation (heroes move nearly without limit, towns build as much as they can pay). At the start of day 2 each side's "
         + "strongest hero meets at the combat place, and the winner of that one battle wins the game. Not ranked.";
 
+    /// <summary>What a tournament is, under the map's name (ADR-366).</summary>
+    public const string TournamentLine =
+        "Tournament: each player builds up with one hero in a zone of their own, cut off from the other's, for the length set below. The day after "
+        + "the last, the two heroes meet in one battle with no retreat and no surrender, and its winner wins the game. Not ranked.";
+
     private FogMode SelectedFog => (FogMode)_fog.GetSelectedId();
 
     private ScenarioChoice? SelectedMap => _selected?.Map;
@@ -551,6 +606,7 @@ public partial class NewGameScreen : PanelContainer
         _lanPlayers.Clear();
         _zoneOwners = null;
         _tournamentMap = false;
+        _arenaMap = false;
         _startTowns.Clear();
         _randomPlayers.Clear();
         _colours.Clear();
@@ -561,19 +617,21 @@ public partial class NewGameScreen : PanelContainer
     private void ShowPlayers()
     {
         _status.Text = "";
-        _arena.Visible = false;
+        _modeLine.Visible = _lengthRow.Visible = false;
         var template = SelectedTemplate;
         foreach (var row in _randomRows)
         {
             row.Visible = template is not null;
         }
 
+        _heroLimit.Visible = template is { Tournament: false }; // a tournament's is 1 (ADR-366)
+
         if (template is not null)
         {
             _description.Text = template.Description;
             _description.Visible = template.Description.Length > 0;
             var players = template.MinPlayers == template.Slots.Count ? $"{template.MinPlayers}" : $"{template.MinPlayers} to {template.Slots.Count}";
-            _summary.Text = $"Random map · {players} players · sizes "
+            _summary.Text = $"{(template.Tournament ? "Random tournament map" : "Random map")} · {players} players · sizes "
                             + string.Join(", ", template.Sizes.Select(size => $"{size}×{size}")) + TeamCounts(template.MinTeams, template.MaxTeams);
             _size.Clear();
             foreach (var size in template.Sizes)
@@ -586,6 +644,7 @@ public partial class NewGameScreen : PanelContainer
             _maxHeroes.SetValueNoSignal(template.MaxHeroes);
             _difficulty.Show(Difficulty.Normal);
             ShowRandomPlayers([]);
+            ShowMode(arena: false, template.Tournament);
             return;
         }
 
@@ -617,11 +676,11 @@ public partial class NewGameScreen : PanelContainer
         _description.Visible = preview.Map.Description.Length > 0;
         _difficulty.Show(preview.Rules.Difficulty ?? Difficulty.Normal); // the map's own difficulty, preselected
 
-        // An arena map (ADR-097, ADR-159): its mode said in one line, and each player played by a person (hot-seat) or the computer.
+        // An arena or tournament map (ADR-097, ADR-159, ADR-366): its mode said in one line, and each player played by a person (hot-seat) or
+        // the computer.
         _zoneOwners = [.. preview.Map.StartZoneOwners];
-        _tournamentMap = preview.Rules.Tournament;
-        _arena.Visible = preview.Rules.Arena;
-        _arena.Text = ArenaLine;
+        ShowMode(preview.Rules.Arena, preview.Rules.Tournament);
+        var everyone = preview.Rules.Arena || preview.Rules.Tournament;
         _players.AddChild(new Label { Text = "Player" });
         _players.AddChild(new Label { Text = "Controlled by" });
         AddLanHeader();
@@ -632,14 +691,14 @@ public partial class NewGameScreen : PanelContainer
         {
             _players.AddChild(PlayerCell(player.Id, player.Name, player.Colour));
             _seatNames.Add((player.Id, player.Name));
-            if (Lan is not null && (player.IsHuman || preview.Rules.Arena))
+            if (Lan is not null && (player.IsHuman || everyone))
             {
-                // Every player of an arena map may be a person: its other colours wait for LAN players (ADR-199).
-                var controller = LanController(player.Id == firstHuman ? LanHere : player.IsHuman || preview.Rules.Arena ? LanRemote : Computer, humanAllowed: true);
+                // Every player of an arena or tournament map may be a person: its other colours wait for LAN players (ADR-199, ADR-366).
+                var controller = LanController(player.Id == firstHuman ? LanHere : player.IsHuman || everyone ? LanRemote : Computer, humanAllowed: true);
                 _players.AddChild(controller);
                 _controllers[player.Id] = controller;
             }
-            else if (preview.Rules.Arena)
+            else if (everyone)
             {
                 var controller = new OptionButton();
                 controller.AddItem("Human", 1);
@@ -661,6 +720,16 @@ public partial class NewGameScreen : PanelContainer
             _players.AddChild(town);
             _seatTowns[player.Id] = town;
         }
+    }
+
+    /// <summary>The mode line of an arena or a tournament, and a tournament's length row.</summary>
+    private void ShowMode(bool arena, bool tournament)
+    {
+        _arenaMap = arena;
+        _tournamentMap = tournament;
+        _modeLine.Visible = arena || tournament;
+        _modeLine.Text = tournament ? TournamentLine : ArenaLine;
+        _lengthRow.Visible = tournament;
     }
 
     /// <summary>
@@ -902,6 +971,7 @@ public partial class NewGameScreen : PanelContainer
             SelectedFog, GameOptions.Default.RefogMargin, seed, _difficulty.Selected, _timerOn.ButtonPressed ? (int)_timerMinutes.Value : null)
         {
             Colours = ChosenColours(),
+            TournamentDays = IsTournament ? _tournamentDays : null,
         });
         if (SelectedTemplate is { } template)
         {
@@ -926,6 +996,12 @@ public partial class NewGameScreen : PanelContainer
             if (_controllers.Count > 0)
             {
                 state.AssignControllers(_controllers.ToDictionary(c => c.Key, c => c.Value.GetSelectedId() != Computer));
+            }
+
+            if (TournamentRules.WhyNot(state) is { } notATournament)
+            {
+                _status.Text = notATournament; // the session would refuse it (ADR-366): two allies, a hero limit other than 1, ...
+                return;
             }
 
             Started?.Invoke(state);
@@ -958,6 +1034,12 @@ public partial class NewGameScreen : PanelContainer
             var request = new RandomMapRequest(
                 _size.GetSelectedId(), _randomPlayers.Select(p => p.Player).ToList(), options, maxHeroes == template.MaxHeroes ? null : maxHeroes);
             var result = template.Create(request);
+            if (TournamentRules.WhyNot(result.State) is { } notATournament)
+            {
+                _status.Text = notATournament;
+                return;
+            }
+
             if (result.Problems.Count == 0)
             {
                 Started?.Invoke(result.State);

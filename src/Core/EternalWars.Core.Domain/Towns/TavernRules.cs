@@ -162,6 +162,24 @@ public static class TavernRules
         return heroes.Select(h => h.Definition).OfType<string>().ToHashSet(StringComparer.Ordinal);
     }
 
+    /// <summary>
+    /// Why <paramref name="owner"/> may take no other hero now that it has all it may (<see cref="GameState.HeroLimitReached"/>), for a tavern, a map
+    /// tavern and a prison: in a tournament its one hero (ADR-366), who may be replaced only once fallen; elsewhere the map's limit.
+    /// </summary>
+    public static string LimitRefusal(GameState state, PlayerId owner)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        var name = state.GetPlayer(owner).Name;
+        var limit = state.HeroLimit(owner);
+        if (state.Rules.Tournament)
+        {
+            var hero = state.HeroesOf(owner).FirstOrDefault()?.Name ?? "a hero";
+            return $"A tournament allows one hero a player, and {name} has {hero}. Another may be hired only once it has fallen.";
+        }
+
+        return limit == 1 ? $"{name} may have only one hero on this map." : $"{name} may have at most {limit} heroes on this map.";
+    }
+
     /// <summary>Why <paramref name="hero"/> cannot be hired in the town now, or null when it can.</summary>
     public static string? CheckHire(GameState state, Town town, string hero)
     {
@@ -173,7 +191,7 @@ public static class TavernRules
         var owner = town.Owner ?? throw new InvalidOperationException("A town without an owner has no tavern customers.");
         if (state.HeroLimitReached(owner))
         {
-            return $"{state.GetPlayer(owner).Name} may have at most {state.HeroLimit(owner)} heroes on this map.";
+            return LimitRefusal(state, owner);
         }
 
         if (state.HeroAt(town.VisitPosition) is { } standing)

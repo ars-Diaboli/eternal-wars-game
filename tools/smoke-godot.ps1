@@ -248,6 +248,10 @@ $scenarios = @(
     # in green and is called Green.
     @{ Name = 'game-new-game-players'; App = 'EternalWars.Game'; Frames = 60
        Input = '4:press:Random maps;8:click:@Free for all;12:press:Remove Red;16:click:@Colour Blue;20:click:@Green;24:press:Add a player;28:click:@Hard;32:click:@Start' },
+    # A tournament (ADR-366): the Tournaments tab, Twin Vales Small, the length a week longer (21 days, 3 weeks), then a step shorter at a
+    # time down to 1 day, Start: the last day's notice, "Last day before the battle" by the date and "Hero 1/1" on the hero card.
+    @{ Name = 'game-tournament-setup'; App = 'EternalWars.Game'; Frames = 90; Seed = 1
+       Input = ((@('6:press:Tournaments', '10:click:@Twin Vales Small', '14:press:Longer') + (0..13 | ForEach-Object { "$(18 + 2 * $_):press:Shorter" }) + @('50:click:@Start')) -join ';') },
     # The main menu (ADR-101, ADR-163) over its picture: Leaderboard opens, Escape returns; "Watch a replay" (ADR-164) opens the Replays and
     # Saves tabs, Saves, Escape back to the main menu; New game, Enter on Start. Pressed by name: Continue has the focus when there is a
     # save, New game when not. The only game scenario without --new-game.

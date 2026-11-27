@@ -42,7 +42,8 @@ creatures and buildings, heraldic player colours, iconic map objects).
 - **Camera** (ADR-022): tilted **15–30° from vertical** (more tilted zoomed in), **rotatable ±45°**, zoom, pan.
 - **UI**: a HoMM-style side panel on the right, or the left when mirrored (ADR-191, ADR-309, ADR-313): the minimap in a framed panel in
   the top corner, which takes the clicks on it, and the town list in its own panel below; the hero list at the other edge; the bottom row above the
-  status bar; the resources on the top bar and the calendar (date, week's event) on the status bar's right end (ADR-225, ADR-309);
+  status bar; the resources on the top bar and the calendar (date, week's event; a tournament's countdown, "Battle in 5 days", ADR-366) on
+  the status bar's right end (ADR-225, ADR-309);
   full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips, the fog's look, the tile grid, the window mode) and "Layout" (the battle's timeline, the adventure map's mirror, the UI scale, the panel
   opacity).
 - **Bottom row** (ADR-309): above the status bar, framed panels of one height: from the edge away from the minimap the selected hero's
@@ -51,7 +52,8 @@ creatures and buildings, heraldic player colours, iconic map objects).
 - **Hero card** (ADR-309, ADR-310): the portrait as tall as the card, the same margin to its frame all round (a click opens the hero
   screen), two thin bars beside it (movement green, experience to the next level gold; the numbers in their tooltips), then three rows:
   the level and name ("Lv 3 | Orrin"); Attack, Defence, Spell power and Knowledge; morale and luck as icons with a signed value ("+2",
-  "−1") and the mana left as an icon and a number (the maximum in its tooltip); the card 360 px wide. The army strip: always seven slots
+  "−1") and the mana left as an icon and a number (the maximum in its tooltip), then "Hero 1/1" when the player may have only one hero (a
+  tournament's, ADR-366; why in its tooltip); the card 360 px wide. The army strip: always seven slots
   as tall as the row and two thirds as wide, empty ones dim; a stack shows the creature cut to 2:3 and the count in large type, its name on the status bar; a click opens the hero screen, a right click the creature's information window. A screen too
   narrow for the whole row cuts the army strip at its end towards the middle, fading out over the map; the pointer on it shows it whole,
   over the action buttons. Where the cut would leave the strip under half its width (ADR-315), the action buttons move up, just above

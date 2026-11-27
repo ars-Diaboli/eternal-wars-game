@@ -254,15 +254,26 @@ tournaments before any screen exists.
     games against the computer are the check.
 
 ### 5. The game app
-- **New-game screen:**
-  - A **Tournaments** tab (ADR-201's tabs) lists the tournament templates and maps, with the length row and the two players
-    (Human / Computer here, and Here / LAN player / Computer in the lobby). The length is a stepper: a day a step up to 14 days, then a
-    week a step up to 12 weeks.
-  - The LAN lobby notes that every day is played at once (done in step 3).
-- **Adventure HUD:**
-  - The calendar's countdown and the last day's notice.
-  - The hero card shows the limit of 1 (the tavern refuses with the reason).
-  - No trading or other-player panels.
+- **New-game screen** (done):
+  - A **Tournaments** tab (ADR-201's tabs) lists the tournament templates and the hand-made tournament maps (`MapKind.Tournament`).
+  - Under the map's name, a line says what a tournament is. The template's hero limit row is hidden: it is 1.
+  - The **length row** is a stepper, "Shorter", "14 days (2 weeks)", "Longer". It moves a day a step up to 14 days, then a week a step up
+    to 12 weeks (`TournamentRules.Step`, `LengthText`), and sets `GameOptions.TournamentDays`.
+  - **The two players:** Human or Computer here, and Here, LAN player or Computer in the lobby. Every player of a hand-made tournament
+    map may be a person, as on an arena map.
+  - A setup `TournamentRules.WhyNot` refuses, such as two allies, is named on the status line instead of starting.
+  - The LAN lobby's settings name the length, and it notes that every day is played at once (done in step 3).
+- **Adventure HUD** (done):
+  - **The calendar** follows the date with the countdown: "M1 W2 D3 · Battle in 5 days", and "Last day before the battle" on the last
+    day (`TournamentRules.Countdown`).
+  - **The last day's notice:** each person's turn on the last day opens with it. It says that tomorrow the hero fights with its own army
+    only, so the troops must be gathered into it today.
+  - **The hero card** shows "Hero 1/1", and its hover text says why (`HeroCard.Limit`). A town's tavern, a map tavern and a prison
+    refuse a second hero with the tournament's reason (`TavernRules.LimitRefusal`).
+  - **No trading or other-player panels:** the town's "Send to an ally" is never shown. The Thieves' Guild and the Den of Thieves say only
+    that the thieves have nothing to tell (`ThievesGuild.Closed`), and the tavern's guild button is greyed out with that reason.
+  - **Checks:** `TournamentScreenTests`, and the smoke `game-tournament-setup` (the Tournaments tab, the stepper, a one-day tournament
+    started on the last day's notice).
 - **Hot-seat:** the hand-over screen between turns, so one person does not see the other's zone.
 - **Battle:**
   - The final battle opens by itself, both armies shown.

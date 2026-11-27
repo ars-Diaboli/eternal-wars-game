@@ -7,7 +7,7 @@ namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
 /// A short message from the map for the player whose turn it is (ADR-068): a sign's text, why an object turned the hero away, an emptied
-/// object, a freed prisoner, what a Pandora's Box held, what an Astrologer's Tower foretells, what a town's unique building gave (ADR-138), a sphinx's verdict, and the week's event when a human's first turn of the week starts (ADR-073).
+/// object, a freed prisoner, what a Pandora's Box held, what an Astrologer's Tower foretells, what a town's unique building gave (ADR-138), a sphinx's verdict, the week's event when a human's first turn of the week starts (ADR-073), and a tournament's last day (ADR-366).
 /// The cards of ADR-317 too: an artifact picked up, a quest done or lost to another player, a player defeated. A card for a human whose
 /// turn it is not waits for that player's next turn. It is the question card's look with one answer (ADR-309); Continue shows the next
 /// waiting card, and Escape or the hero's next step hides them all.
@@ -98,7 +98,7 @@ public partial class NoticePanel : PanelContainer
 
     /// <summary>
     /// A turn starts: the last turn's cards go; each human sees the week's event on its first turn of the week (hot-seat players each get
-    /// it), then the cards that waited for it.
+    /// it) and a tournament's last day, then the cards that waited for it.
     /// </summary>
     private void StartTurn()
     {
@@ -112,6 +112,11 @@ public partial class NoticePanel : PanelContainer
         if (state.Date.IsFirstDayOfWeek && state.WeekEvent.Kind != Core.Domain.Turns.WeekEventKind.None)
         {
             Show($"{(state.Date.Week == 1 ? "A new month" : "A new week")} begins. {state.WeekEvent.Describe(state.Creatures)}");
+        }
+
+        if (TournamentRules.IsLastDay(state))
+        {
+            Show(TournamentRules.LastDayNotice);
         }
 
         if (_waiting.Remove(state.CurrentPlayer.Id, out var waiting))

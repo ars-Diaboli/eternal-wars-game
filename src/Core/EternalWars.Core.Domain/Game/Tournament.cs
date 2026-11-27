@@ -47,6 +47,58 @@ public static class TournamentRules
     public static int BattleDay(GameOptions options) => Days(options) + 1;
 
     /// <summary>
+    /// The length <paramref name="steps"/> steps from <paramref name="days"/> on the new-game screen's stepper (<see cref="Lengths"/>): a day a
+    /// step up to 14 days, then a week a step; it stops at the shortest and the longest. From a length not offered, the first step goes to the
+    /// offered one beside it in that direction.
+    /// </summary>
+    public static int Step(int days, int steps)
+    {
+        var above = Lengths.Count(l => l < days); // the index of the first offered length not shorter than days
+        var from = Lengths.Contains(days) || steps < 0 ? above : above - 1;
+        return Lengths[Math.Clamp(from + steps, 0, Lengths.Count - 1)];
+    }
+
+    /// <summary>A length in words, as the new-game screen shows it: "1 day", "9 days", "14 days (2 weeks)", "21 days (3 weeks)".</summary>
+    public static string LengthText(int days)
+    {
+        var text = days == 1 ? "1 day" : $"{days} days";
+        var weeks = days / GameDate.DaysPerWeek;
+        return days % GameDate.DaysPerWeek != 0 || weeks == 0 ? text : $"{text} ({weeks} {(weeks == 1 ? "week" : "weeks")})";
+    }
+
+    /// <summary>What the last building day's notice says to each person when its turn starts.</summary>
+    public const string LastDayNotice =
+        "The last day before the battle. Tomorrow your hero fights with its own army only, not the garrison it stands by: gather your troops "
+        + "into it today.";
+
+    /// <summary>
+    /// The calendar's countdown in a tournament (ADR-366): "Battle in 5 days", "Last day before the battle" on the last building day; null on a
+    /// map that is no tournament, and from the battle's day on.
+    /// </summary>
+    public static string? Countdown(GameState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        if (!state.Rules.Tournament)
+        {
+            return null;
+        }
+
+        return (BattleDay(state.Options) - state.Date.AbsoluteDay) switch
+        {
+            1 => "Last day before the battle",
+            > 1 and var left => $"Battle in {left} days",
+            _ => null,
+        };
+    }
+
+    /// <summary>Whether today is a tournament's last building day, when each person's turn opens with <see cref="LastDayNotice"/>.</summary>
+    public static bool IsLastDay(GameState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        return state.Rules.Tournament && state.Date.AbsoluteDay == Days(state.Options);
+    }
+
+    /// <summary>
     /// Whether <paramref name="player"/> may see, reveal or reach <paramref name="position"/> (ADR-366): anywhere on a map that is no tournament; in a
     /// tournament never inside the other player's start zone, so sight, scouting, revealing objects, the puzzle map and the adventure spells stop at
     /// its edge. Tiles in no zone (the walls between them) stay in reach, so a map painted only in part is not blind.

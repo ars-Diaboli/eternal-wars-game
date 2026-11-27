@@ -254,7 +254,7 @@ public sealed class MapObjectInteractionService
     {
         if (State.HeroLimitReached(hero.Owner))
         {
-            Events.Publish(new MapObjectRefused(hero.Id, prison.Id, $"You may have at most {State.HeroLimit(hero.Owner)} heroes; the prisoner stays."));
+            Events.Publish(new MapObjectRefused(hero.Id, prison.Id, $"{TavernRules.LimitRefusal(State, hero.Owner)} The prisoner stays."));
             return;
         }
 

@@ -734,7 +734,7 @@ public class TournamentTests
         var session = Start(state);
         string Offer() => TavernRules.Offers(state, Blue, town)[0].Id;
 
-        Assert.Contains("at most 1 heroes", session.Execute(new HireHeroCommand(Blue, town.Id, Offer())).Error!, StringComparison.Ordinal);
+        Assert.Contains("A tournament allows one hero a player", session.Execute(new HireHeroCommand(Blue, town.Id, Offer())).Error!, StringComparison.Ordinal);
 
         // Alpha attacks fifty trolls with ten footmen and falls.
         session.Execute(new StepHeroCommand(Blue, A, Direction.East)).ThrowIfRejected();
@@ -744,7 +744,7 @@ public class TournamentTests
 
         Assert.True(session.Execute(new HireHeroCommand(Blue, town.Id, Offer())).IsAccepted);
         Assert.Single(state.HeroesOf(Blue));
-        Assert.Contains("at most 1 heroes", session.Execute(new HireHeroCommand(Blue, town.Id, Offer())).Error!, StringComparison.Ordinal);
+        Assert.Contains("A tournament allows one hero a player", session.Execute(new HireHeroCommand(Blue, town.Id, Offer())).Error!, StringComparison.Ordinal);
     }
 
     [Fact]

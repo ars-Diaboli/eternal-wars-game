@@ -391,7 +391,7 @@ public partial class AdventureHud : CanvasLayer
         var card = Core.Domain.Heroes.HeroCard.Of(hero);
         var refusal = !_playing ? "Not while watching a replay"
             : hero.Owner != _session.State.CurrentPlayer.Id ? "Not in another player's turn" : null;
-        HeroCard.Show(card, refusal);
+        HeroCard.Show(card, refusal, Core.Domain.Heroes.HeroCard.Limit(_session.State, hero.Owner));
         ArmyStrip.Show(_session.State, card, refusal);
     }
 

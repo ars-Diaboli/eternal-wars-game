@@ -10,7 +10,8 @@ namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
 /// The Thieves' Guild (ADR-079, TOWN-11): every player's place in each row. From a tavern the rows grow with the player's taverns; a hero's
-/// visit to a Den of Thieves opens the whole table. Closes with Escape or "Close".
+/// visit to a Den of Thieves opens the whole table. In a tournament it says only that the thieves have nothing to tell (ADR-366). Closes with
+/// Escape or "Close".
 /// </summary>
 public partial class ThievesGuildPanel : PanelContainer
 {
@@ -60,6 +61,14 @@ public partial class ThievesGuildPanel : PanelContainer
         var state = _session.State;
         _title.Text = taverns is { } count ? $"Thieves' guild ({count} tavern(s))" : "Den of thieves: the whole picture";
         _table.ClearChildren(detach: true);
+        if (ThievesGuild.Closed(state) is { } closed)
+        {
+            _table.Columns = 1;
+            _table.AddChild(new Label { Text = closed, AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(420, 0) });
+            Visible = true;
+            return;
+        }
+
 
         var players = state.Players.Where(p => !p.IsDefeated).OrderBy(p => p.Id.Value).ToList();
         _table.Columns = players.Count + 1;

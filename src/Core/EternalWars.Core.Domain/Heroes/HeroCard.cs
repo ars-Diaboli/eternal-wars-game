@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Objects;
 
 namespace EternalWars.Core.Domain.Heroes;
@@ -44,6 +45,23 @@ public sealed record HeroCard(
             hero.TotalMorale,
             hero.TotalLuck,
             [.. hero.Army.Slots]);
+    }
+
+    /// <summary>
+    /// The card's note when <paramref name="owner"/> may have only one hero: "Hero 1/1", and why in its hover text (a tournament's one hero,
+    /// ADR-366, which a tavern replaces only once it has fallen; else the map's limit, ADR-068). Null when the player may have more.
+    /// </summary>
+    public static (string Text, string Why)? Limit(GameState state, PlayerId owner)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        if (state.HeroLimit(owner) != 1)
+        {
+            return null;
+        }
+
+        return ("Hero 1/1", state.Rules.Tournament
+            ? "A tournament allows one hero a player: this one fights the battle. If it falls, hire another in a town's tavern."
+            : "This map allows one hero a player.");
     }
 
     /// <summary>Morale or luck as the card shows it beside its icon: "+2", "0", "−1" (a minus sign, not a hyphen).</summary>

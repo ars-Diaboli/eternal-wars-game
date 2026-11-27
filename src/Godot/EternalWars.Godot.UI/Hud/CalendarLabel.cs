@@ -9,7 +9,8 @@ namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
 /// The calendar on the adventure map's status bar, right of the resources (ADR-225): the date short ("Month 1, Week 2, Day 3" as
-/// <c>M1 W2 D3</c>), the date in full and the week's event (ADR-073) in its hover text, which the status line shows.
+/// <c>M1 W2 D3</c>), the date in full and the week's event (ADR-073) in its hover text, which the status line shows. In a tournament the
+/// countdown follows the date: "M1 W2 D3 · Battle in 5 days", and "Last day before the battle" on its last day (ADR-366).
 /// </summary>
 public partial class CalendarLabel : Label
 {
@@ -29,7 +30,7 @@ public partial class CalendarLabel : Label
         this.SubscribeWhileInTree<CommandExecuted>(session.Events, _ => Refresh(session));
     }
 
-    /// <summary>"Month 1, Week 2, Day 3: week of the Griffin" (or without the event in an ordinary week).</summary>
+    /// <summary>"Month 1, Week 2, Day 3: week of the Griffin" (or without the event in an ordinary week), with a tournament's countdown after it.</summary>
     public static string Describe(GameState state)
     {
         var week = state.WeekEvent.Kind switch
@@ -40,13 +41,14 @@ public partial class CalendarLabel : Label
             WeekEventKind.Starvation => "starvation",
             _ => null,
         };
-        return week is null ? state.Date.ToString() : $"{state.Date}: {week}";
+        var date = week is null ? state.Date.ToString() : $"{state.Date}: {week}";
+        return TournamentRules.Countdown(state) is { } countdown ? $"{date}. {countdown}." : date;
     }
 
     private void Refresh(GameSession session)
     {
         var date = session.State.Date;
-        Text = $"M{date.Month} W{date.Week} D{date.Day}";
+        Text = $"M{date.Month} W{date.Week} D{date.Day}" + (TournamentRules.Countdown(session.State) is { } countdown ? $" · {countdown}" : "");
         TooltipText = Describe(session.State);
     }
 }

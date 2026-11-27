@@ -139,7 +139,8 @@ ADR-060, ADR-070, ADR-081.
 ## Thieves' Guild
 ADR-077, TOWN-11. The tavern ranks the player against every other player still in the game (computers and teammates too); equal values share
 a place. Rows grow with the player's **taverns**: 1 — towns, heroes; 2 — + gold, lumber and ore, rare resources; 3 — + artifacts, income;
-4+ — + army strength, best hero (highest level), best creature (most valuable). The Den of Thieves shows the whole table.
+4+ — + army strength, best hero (highest level), best creature (most valuable). The Den of Thieves shows the whole table. In a tournament
+neither tells anything: the players learn nothing of each other before the battle (ADR-366).
 
 ## Kingdom overview
 ADR-077, ADR-084. One screen listing every income source (towns, mines, providers, artifacts, skills, specialties) with its daily or weekly

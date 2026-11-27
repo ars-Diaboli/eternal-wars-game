@@ -266,7 +266,7 @@ public partial class ObjectServicePanel : PanelContainer
         {
             _rows.AddChild(new Label { Text = $"Rumour has it: {rumour}", AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(UiTheme.ScreenTextWidth, 0) });
         }
-        var refusal = state.HeroLimitReached(player.Id) ? $"You have all {state.HeroLimit(player.Id)} heroes you may."
+        var refusal = state.HeroLimitReached(player.Id) ? TavernRules.LimitRefusal(state, player.Id)
             : MapTavernRules.Arrival(state, tavern) is null ? "There is no free cell next to the tavern." : null;
         foreach (var offer in MapTavernRules.Offers(state, tavern))
         {

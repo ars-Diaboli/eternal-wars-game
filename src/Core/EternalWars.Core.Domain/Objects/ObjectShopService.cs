@@ -134,7 +134,7 @@ public sealed class ObjectShopService(ObjectInteractionContext context, Progress
 
         if (State.HeroLimitReached(player))
         {
-            throw new CommandRefusedException($"You may have at most {State.HeroLimit(player)} heroes.");
+            throw new CommandRefusedException(TavernRules.LimitRefusal(State, player));
         }
 
         var arrival = MapTavernRules.Arrival(State, tavern) ?? throw new CommandRefusedException("There is no free cell next to the tavern.");

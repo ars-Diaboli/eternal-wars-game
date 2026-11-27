@@ -36,12 +36,23 @@ public sealed record ThievesGuildEntry(PlayerId Player, int Place, long Value, s
 
 /// <summary>
 /// The Thieves' Guild (ADR-079, TOWN-11): how every player still in the game, computers and teammates included, ranks by the rows the
-/// viewer can see. Like HoMM3 the rows grow with the viewer's taverns; the Den of Thieves map object shows the whole table.
+/// viewer can see. Like HoMM3 the rows grow with the viewer's taverns; the Den of Thieves map object shows the whole table. A tournament has
+/// none (<see cref="Closed"/>).
 /// </summary>
 public static class ThievesGuild
 {
     /// <summary>Taverns that show every row.</summary>
     public const int FullTable = 4;
+
+    /// <summary>Why the guild and the Den of Thieves tell nothing in a tournament (ADR-366): the players learn nothing of each other before the battle.</summary>
+    public const string TournamentRefusal = "The players of a tournament learn nothing of each other before the battle: the thieves have nothing to tell.";
+
+    /// <summary>Why the table is closed in <paramref name="state"/>'s game (<see cref="TournamentRefusal"/>); null when it is open.</summary>
+    public static string? Closed(GameState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        return state.Rules.Tournament ? TournamentRefusal : null;
+    }
 
     /// <summary>The rows <paramref name="taverns"/> taverns show: none without a tavern, 2 rows with one, 5 with two, 7 with three, all with four.</summary>
     public static IReadOnlyList<ThievesGuildRow> RowsFor(int taverns) => taverns switch
@@ -57,9 +68,9 @@ public static class ThievesGuild
     public static int Taverns(GameState state, PlayerId player) =>
         state.ObjectsOf<Town>().Count(t => t.Owner == player && t.Level(BuiltInBuildings.Tavern) > 0);
 
-    /// <summary>The table for <paramref name="taverns"/> taverns; null = the whole table (the Den of Thieves).</summary>
+    /// <summary>The table for <paramref name="taverns"/> taverns; null = the whole table (the Den of Thieves). Empty while <see cref="Closed"/>.</summary>
     public static IReadOnlyList<(ThievesGuildRow Row, IReadOnlyList<ThievesGuildEntry> Entries)> Table(GameState state, int? taverns = null) =>
-        RowsFor(taverns ?? FullTable).Select(row => (row, Rank(state, row))).ToList();
+        Closed(state) is not null ? [] : RowsFor(taverns ?? FullTable).Select(row => (row, Rank(state, row))).ToList();
 
     /// <summary>Every player still in the game, best first, ties by slot.</summary>
     public static IReadOnlyList<ThievesGuildEntry> Rank(GameState state, ThievesGuildRow row)

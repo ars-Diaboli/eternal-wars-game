@@ -420,8 +420,10 @@ battle with no retreat or surrender, and its winner wins. Lengths: 1–14 days, 
         days, mines and buildings weighed by the days left, the last days' gold on the army, the last day's army gathered into the hero
         (Town Portal home when out of reach) (done);
       - `sim game --length` and the champions' armies at the battle; the median army at the battle 3–22× the old AI's (done).
-- [ ] Step 5: The game app: the Tournaments tab and the length row, the calendar's countdown, the hot-seat hand-over, the battle without
-      retreat or surrender, the result screen; smoke `game-tournament`
+- [ ] Step 5: The game app:
+      - the Tournaments tab with the length stepper and the two players; the calendar's countdown and the last day's notice; "Hero 1/1"
+        and the taverns' reason; no Thieves' Guild or sending; smoke `game-tournament-setup` (done);
+      - the hot-seat hand-over, the battle without retreat or surrender, the result screen; smoke `game-tournament`
 - [ ] Step 6: The editor: the Tournament switch, the validator's problems and fix-its, the template inspector's flag
 - [ ] Step 7: Seen in Godot against the computer, hot-seat and on the LAN; AI runs; the rules moved into victory-and-modes.md
 
