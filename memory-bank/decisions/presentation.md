@@ -89,6 +89,12 @@
 | [348](#adr-348-stronghold-sheet-t3-to-the-owners-review-a-long-scimitar-for-the-wolf-raider-owner-adr-289-2026-11-27) | Stronghold sheet T3 to the owner's review: a long scimitar for the wolf raider (owner, ADR-289, 2026-11-27) | accepted |
 | [349](#adr-349-stronghold-sheet-t4-to-the-owners-review-bald-one-eyed-olive-green-cyclopes-owner-adr-289-2026-11-27) | Stronghold sheet T4 to the owner's review: bald one-eyed olive-green cyclopes (owner, ADR-289, 2026-11-27) | accepted |
 | [350](#adr-350-stronghold-sheet-t2-to-the-owners-review-centaurs-without-a-shield-owner-adr-289-2026-11-27) | Stronghold sheet T2 to the owner's review: centaurs without a shield (owner, ADR-289, 2026-11-27) | accepted |
+| [351](#adr-351-academy-sheet-a1-to-the-owners-review-a-stubby-bell-mouthed-brass-gun-for-the-master-gremlin-owner-adr-289-2026-11-27) | Academy sheet A1 to the owner's review: a stubby bell-mouthed brass gun for the master gremlin (owner, ADR-289, 2026-11-27) | accepted |
+| [352](#adr-352-swamp-sheet-w1-to-the-owners-review-lean-lizardmen-a-spear-alone-and-then-a-spear-and-shell-shield-owner-adr-289-2026-11-27) | Swamp sheet W1 to the owner's review: lean lizardmen, a spear alone and then a spear and shell shield (owner, ADR-289, 2026-11-27) | accepted |
+| [353](#adr-353-swamp-sheet-w4-to-the-owners-review-chitin-scaled-gorgons-without-steam-a-snake-like-wyvern-owner-adr-289-2026-11-27) | Swamp sheet W4 to the owner's review: chitin-scaled gorgons without steam, a snake-like wyvern (owner, ADR-289, 2026-11-27) | accepted |
+| [354](#adr-354-swamp-sheet-w5-to-the-owners-review-a-three-headed-hydra-and-a-five-headed-chaos-hydra-with-maroon-accents-owner-adr-289-2026-11-27) | Swamp sheet W5 to the owner's review: a three-headed hydra and a five-headed chaos hydra with maroon accents (owner, ADR-289, 2026-11-27) | accepted |
+| [355](#adr-355-swamp-sheet-w2-to-the-owners-review-a-four-winged-serpent-fly-with-a-true-snakes-tail-owner-adr-289-2026-11-27) | Swamp sheet W2 to the owner's review: a four-winged serpent fly with a true snake's tail (owner, ADR-289, 2026-11-27) | accepted |
+| [356](#adr-356-swamp-sheet-w3-to-the-owners-review-six-legged-basilisks-a-cobra-hooded-greater-basilisk-owner-adr-289-2026-11-27) | Swamp sheet W3 to the owner's review: six-legged basilisks, a cobra-hooded greater basilisk (owner, ADR-289, 2026-11-27) | accepted |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -1583,3 +1589,61 @@ two-eyed apes).
 - **Subjects**: the centaur holds its spear in both hands, no shield; the upgrade keeps its feathered long spear, still no shield. The
   orcs unchanged.
 - **Regenerate**: Stronghold sheet T2.
+
+### ADR-351: Academy sheet A1 to the owner's review: a stubby bell-mouthed brass gun for the master gremlin (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's master gremlin flintlock musket.
+
+- **Owner**, on Academy sheet A1: the gremlin's rifle closer to the earlier 3D game's.
+- **Subjects**: the master gremlin holds at the hip a crude oversized hand-made gun: a short thick barrel of riveted brass and copper
+  bands with a wide flared bell-shaped muzzle, a bulbous powder chamber, a stubby wooden stock; not a long musket. Still old-world
+  gunpowder gear, nothing sci-fi. The rest of the sheet unchanged.
+- **Regenerate**: Academy sheet A1.
+
+### ADR-352: Swamp sheet W1 to the owner's review: lean lizardmen, a spear alone and then a spear and shell shield (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's lizardman shell shield and the lizard
+warrior's toothed sword, and the river creatures' water-filled head hollow.
+
+- **Owner**, on swamp sheet W1: the lizardmen skinnier; the base with a spear and no shield, the upgrade with a spear and a shield;
+  no water pool on the turtle-like creature's head.
+- **Subjects**: the lizardman lean and wiry with thin limbs, a long spear in both hands, no shield; the lizard warrior still lean, fish
+  scale armour, the same long spear with a barbed bone head and a giant shell shield, no sword. Both turtle-like river creatures have
+  a plain rounded head, no hollow or pool of water on it.
+- **Regenerate**: swamp sheet W1.
+
+### ADR-353: Swamp sheet W4 to the owner's review: chitin-scaled gorgons without steam, a snake-like wyvern (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's gorgons (metal plates, steam and green
+vapour) and the plain wyvern.
+
+- **Owner**, on swamp sheet W4: no steam on the gorgon, its skin chitin scales; the base wyvern more snake-like.
+- **Subjects**: the gorgon a heavy bull whose hide is overlapping dark chitin scales like an insect's carapace, grown, not metal, no
+  steam or vapour; the mighty gorgon larger, spikier scales with a dark green sheen, no vapour; the wyvern a long sinuous serpent's
+  neck and body, a narrow snake head with slit eyes, smooth serpent scales, a long barbed snake tail, small legs and leathery wings.
+  The wyvern monarch unchanged.
+- **Regenerate**: swamp sheet W4.
+
+### ADR-354: Swamp sheet W5 to the owner's review: a three-headed hydra and a five-headed chaos hydra with maroon accents (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's five- and seven-headed hydras.
+
+- **Owner**, on swamp sheet W5: the hydra with 3 heads, the upgrade with 5; maroon accents added.
+- **Subjects**: the hydra exactly three heads, dark green scales with a maroon-red belly, maroon frills, crests and spine tips; the
+  chaos hydra exactly five heads, black and green scales with stronger maroon accents, venom, broken shell plates. The head count is
+  a look only; the hydras' attack rules do not depend on it.
+- **Regenerate**: swamp sheet W5.
+
+### ADR-355: Swamp sheet W2 to the owner's review: a four-winged serpent fly with a true snake's tail (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Narrows ADR-289's serpent fly.
+
+- **Owner**, on swamp sheet W2: the serpent fly with 4 wings, its lower part more like a snake's tail.
+- **Subjects**: the serpent fly keeps the mantis head and scythe forelegs on a short thorax, exactly four dragonfly wings all visible,
+  and below the thorax a long smooth sinuous snake's tail in fine scales with a paler belly, no segments, plates or insect legs, ending
+  in a thin stinger. The sabre cats and the mantis unchanged.
+- **Regenerate**: swamp sheet W2.
+
+### ADR-356: Swamp sheet W3 to the owner's review: six-legged basilisks, a cobra-hooded greater basilisk (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's greater basilisk bone crest.
+
+- **Owner**, on swamp sheet W3: both basilisks with 6 legs in total; the upgrade with a cobra-like head.
+- **Subjects**: the basilisk and greater basilisk have exactly six legs, three on each side, all visible, never eight; the greater
+  basilisk has a cobra's flared hood behind a flat broad snake head with slit eyes and long fangs, no bone crest. The owlbears
+  unchanged.
+- **Regenerate**: swamp sheet W3.

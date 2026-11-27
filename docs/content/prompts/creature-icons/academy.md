@@ -29,7 +29,9 @@ frames, no text, no labels, no numbers. Transparent background, PNG with alpha. 
 small big-eared gremlin with grey-green skin and a toothy grin, ragged plain sackcloth, dragging an iron ball on a chain, the whole
 body shown; 2 a stocky dwarf in a plain dented iron helmet, a padded leather coat and a grey fur cloak, a braided red beard, a plain
 iron war hammer; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but
-larger, heavier armed, more ornate and richer in colour: a long old flintlock musket nearly as long as its body held ready to fire, a
+larger, heavier armed, more ornate and richer in colour: a crude oversized hand-made gun held at the hip, ready to fire: a short
+thick barrel of riveted brass and copper bands ending in a wide flared bell-shaped muzzle like a blunderbuss, a bulbous round
+powder chamber behind it, a stubby wooden stock, too big for the gremlin and patched together, not a long musket or rifle, a
 powder horn and a leather bandolier of paper cartridges, a battered leather cap with a gold star badge, a royal-blue tabard; hand-made
 old-world gunpowder gear, nothing sci-fi, no goggles, no tanks, no glowing devices; 4 the same creature as the one above it, clearly
 upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: full heavy

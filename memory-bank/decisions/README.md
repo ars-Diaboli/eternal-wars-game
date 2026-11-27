@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-351**. A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-357**. A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -377,3 +377,9 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [348](presentation.md#adr-348-stronghold-sheet-t3-to-the-owners-review-a-long-scimitar-for-the-wolf-raider-owner-adr-289-2026-11-27) | presentation | Stronghold sheet T3 to the owner's review: a long scimitar for the wolf raider (owner, ADR-289, 2026-11-27) | accepted |
 | [349](presentation.md#adr-349-stronghold-sheet-t4-to-the-owners-review-bald-one-eyed-olive-green-cyclopes-owner-adr-289-2026-11-27) | presentation | Stronghold sheet T4 to the owner's review: bald one-eyed olive-green cyclopes (owner, ADR-289, 2026-11-27) | accepted |
 | [350](presentation.md#adr-350-stronghold-sheet-t2-to-the-owners-review-centaurs-without-a-shield-owner-adr-289-2026-11-27) | presentation | Stronghold sheet T2 to the owner's review: centaurs without a shield (owner, ADR-289, 2026-11-27) | accepted |
+| [351](presentation.md#adr-351-academy-sheet-a1-to-the-owners-review-a-stubby-bell-mouthed-brass-gun-for-the-master-gremlin-owner-adr-289-2026-11-27) | presentation | Academy sheet A1 to the owner's review: a stubby bell-mouthed brass gun for the master gremlin (owner, ADR-289, 2026-11-27) | accepted |
+| [352](presentation.md#adr-352-swamp-sheet-w1-to-the-owners-review-lean-lizardmen-a-spear-alone-and-then-a-spear-and-shell-shield-owner-adr-289-2026-11-27) | presentation | Swamp sheet W1 to the owner's review: lean lizardmen, a spear alone and then a spear and shell shield (owner, ADR-289, 2026-11-27) | accepted |
+| [353](presentation.md#adr-353-swamp-sheet-w4-to-the-owners-review-chitin-scaled-gorgons-without-steam-a-snake-like-wyvern-owner-adr-289-2026-11-27) | presentation | Swamp sheet W4 to the owner's review: chitin-scaled gorgons without steam, a snake-like wyvern (owner, ADR-289, 2026-11-27) | accepted |
+| [354](presentation.md#adr-354-swamp-sheet-w5-to-the-owners-review-a-three-headed-hydra-and-a-five-headed-chaos-hydra-with-maroon-accents-owner-adr-289-2026-11-27) | presentation | Swamp sheet W5 to the owner's review: a three-headed hydra and a five-headed chaos hydra with maroon accents (owner, ADR-289, 2026-11-27) | accepted |
+| [355](presentation.md#adr-355-swamp-sheet-w2-to-the-owners-review-a-four-winged-serpent-fly-with-a-true-snakes-tail-owner-adr-289-2026-11-27) | presentation | Swamp sheet W2 to the owner's review: a four-winged serpent fly with a true snake's tail (owner, ADR-289, 2026-11-27) | accepted |
+| [356](presentation.md#adr-356-swamp-sheet-w3-to-the-owners-review-six-legged-basilisks-a-cobra-hooded-greater-basilisk-owner-adr-289-2026-11-27) | presentation | Swamp sheet W3 to the owner's review: six-legged basilisks, a cobra-hooded greater basilisk (owner, ADR-289, 2026-11-27) | accepted |

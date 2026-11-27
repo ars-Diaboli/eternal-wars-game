@@ -22,12 +22,15 @@ wet scales, spiral shells, reeds, driftwood and bone, dark pine green and near-b
 glow in eyes and markings only; feral and ancient. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own
 equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another
 cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row
-left to right, then bottom row: 1 a green-scaled lizardman with a short spear and a shield made of a giant shell; 2 a small
-turtle-like river creature with a shell on its back, a beak and a water-filled hollow on its head, the whole body shown; 3 the same
+left to right, then bottom row: 1 a green-scaled lizardman, lean and
+wiry, a skinny narrow-chested body with thin limbs and a long thin tail, not bulky or muscular, a long spear held in both hands, no
+shield; 2 a small
+turtle-like river creature with a shell on its back, a beak and a plain rounded scaly head with no hollow, no dish and no pool of water on it, the whole body shown; 3 the same
 creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more
-ornate and richer in colour: armour of large fish scales, a sword edged with teeth; 4 the same creature as the one above it, clearly
-upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: a necklace
-of shells, glowing teal markings, a jet of water spat from its beak
+ornate and richer in colour: still lean and wiry, not bulky, armour of large fish scales, the same long spear with a barbed head of
+bone in one hand and a shield made of a giant shell in the other, no sword; 4 the same creature as the one above it, clearly
+upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: still no
+water pool on the head, a necklace of shells, glowing teal markings, a jet of water spat from its beak
 ```
 
 | # | File |
@@ -57,8 +60,10 @@ left to right, then bottom row: 1 a lean big cat with moss-green striped fur, lo
 green mantis with raised scythe forelegs, the whole body shown; 3 the same creature as the one above it, clearly upgraded and told
 apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: black stripes, bony ridges
 along the spine, glowing yellow eyes; 4 the same creature as the one above it, clearly upgraded and told apart at a glance: the same
-face and build but larger, heavier armed, more ornate and richer in colour: a serpent's body with four translucent dragonfly wings and
-a long stinger
+face and build but larger, heavier armed, more ornate and richer in colour: a serpent fly: the mantis head and raised scythe forelegs on a
+short insect thorax, exactly four translucent dragonfly wings, two on each side, all four clearly visible and spread; below the
+thorax the body becomes a real snake's tail: long, smooth, round and sinuous, coiling in an S-curve, covered in fine overlapping
+snake scales with a paler belly, no segments, no plates and no insect legs on it, ending in a thin sharp stinger
 ```
 
 | # | File |
@@ -84,10 +89,13 @@ wet scales, spiral shells, reeds, driftwood and bone, dark pine green and near-b
 glow in eyes and markings only; feral and ancient. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own
 equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another
 cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row
-left to right, then bottom row: 1 a heavy six-legged lizard with grey-green scales and a crest of spines, eyes glowing faint green; 2
+left to right, then bottom row: 1 a heavy six-legged lizard with grey-green scales and a crest of spines, eyes glowing faint green; exactly six legs in total, three
+on each side, all six clearly visible and evenly spaced along the body, never eight; 2
 a bear-bodied beast with an owl's face and beak, grey and brown feathers on its shoulders; 3 the same creature as the one above it,
-clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: a
-larger bone crest, patches of scales turned to grey stone, piercing yellow-green eyes; 4 the same creature as the one above it,
+clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: still
+exactly six legs in total, three on each side, all visible, never eight; a cobra-like head: a wide flared hood of scaled skin spread
+behind the head like a cobra's, a flat broad snake head with slit eyes and long fangs, no bone crest; patches of scales turned to
+grey stone, piercing yellow-green eyes; 4 the same creature as the one above it,
 clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: a
 white feathered ruff, huge claws, moss growing on its back
 ```
@@ -115,10 +123,13 @@ wet scales, spiral shells, reeds, driftwood and bone, dark pine green and near-b
 glow in eyes and markings only; feral and ancient. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own
 equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another
 cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row
-left to right, then bottom row: 1 a heavy bull covered in dark iron-grey metallic plates, steam from its nostrils; 2 a two-legged
-winged wyvern with moss-green scales and a barbed tail; 3 the same creature as the one above it, clearly upgraded and told apart at a
-glance: the same face and build but larger, heavier armed, more ornate and richer in colour: green corroded plates, a curl of green
-vapour from its mouth; 4 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build
+left to right, then bottom row: 1 a heavy bull whose hide is a living armour of
+overlapping dark grey-brown chitin scales, hard and glossy like an insect's carapace, grown from the skin, not metal and not strapped
+on, no steam, no breath and no vapour from its nostrils or mouth; 2 a two-legged winged wyvern, snake-like: a long sinuous serpent's
+neck and body, a narrow flat snake head with slit eyes and fangs, smooth moss-green serpent scales, a long whipping snake tail ending
+in a barb, small clawed legs and leathery wings; 3 the same creature as the one above it, clearly upgraded and told apart at a
+glance: the same face and build but larger, heavier armed, more ornate and richer in colour: the same chitin-scale hide, larger and
+spikier scales with a dark green sheen, no steam, no vapour and no breath; 4 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build
 but larger, heavier armed, more ornate and richer in colour: a crest of horns like a crown, darker teal scales, a stinger dripping
 venom
 ```
@@ -146,9 +157,12 @@ wet scales, spiral shells, reeds, driftwood and bone, dark pine green and near-b
 glow in eyes and markings only; feral and ancient. 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own
 equal square cell, centred with about 10 % empty margin, all at the same scale and with the same light; nothing crosses into another
 cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row
-left to right, then bottom row: 1 a serpent hydra with five heads on long necks, dark green scales; 2 a second take of the creature to
+left to right, then bottom row: 1 a serpent hydra with exactly three heads on long
+necks, no more and no fewer, dark green scales with maroon accents: deep maroon-red belly scales, maroon frills and crests on the
+heads, maroon tips on the spines; 2 a second take of the creature to
 its left; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but larger,
-heavier armed, more ornate and richer in colour: seven heads, black and green scales, venom dripping, broken shell plates on its back;
+heavier armed, more ornate and richer in colour: exactly five heads, no more and no fewer, black and green scales with stronger maroon accents, maroon-red
+belly, crests and spines, venom dripping, broken shell plates on its back;
 4 a second take of the creature to its left
 ```
 
