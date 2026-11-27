@@ -108,6 +108,21 @@
 | [372](#adr-372-the-shadow-mistress-and-matriarch-as-lean-dark-elf-battle-sorceresses-owner-2026-11-27) | The shadow mistress and matriarch as lean dark-elf battle sorceresses (owner, 2026-11-27) | accepted |
 | [373](#adr-373-the-spectator-and-beholder-with-the-classic-beholders-shape-and-anatomy-owner-adr-323-2026-11-27) | The spectator and beholder with the classic beholder's shape and anatomy (owner, ADR-323, 2026-11-27) | accepted |
 | [374](#adr-374-the-shadow-horror-and-reaper-as-faceless-beings-of-living-darkness-owner-2026-11-27) | The shadow horror and reaper as faceless beings of living darkness (owner, 2026-11-27) | accepted |
+| [375](#adr-375-the-wight-in-a-black-robe-and-the-wraith-without-its-flame-owner-2026-11-27) | The wight in a black robe and the wraith without its flame (owner, 2026-11-27) | accepted |
+| [376](#adr-376-the-zombie-and-flesh-golem-with-faces-of-their-own-the-golem-sewn-from-many-bodies-owner-2026-11-27) | The zombie and flesh golem with faces of their own, the golem sewn from many bodies (owner, 2026-11-27) | accepted |
+| [377](#adr-377-the-mummys-arm-held-close-and-the-lich-dragon-two-headed-owner-adr-363-2026-11-27) | The mummy's arm held close and the lich dragon two-headed (owner, ADR-363, 2026-11-27) | accepted |
+| [378](#adr-378-the-specter-faceless-under-its-veil-and-the-banshee-without-sound-waves-owner-2026-11-27) | The specter faceless under its veil and the banshee without sound waves (owner, 2026-11-27) | accepted |
+| [379](#adr-379-the-lich-and-arch-lich-in-tattered-sorcerers-robes-drawn-from-the-series-liches-owner-2026-11-27) | The lich and arch lich in tattered sorcerer's robes drawn from the series' liches (owner, 2026-11-27) | accepted |
+| [380](#adr-380-a-feral-clawed-vampire-and-a-vampire-lord-with-a-greatsword-owner-2026-11-27) | A feral clawed vampire and a vampire lord with a greatsword (owner, 2026-11-27) | accepted |
+| [381](#adr-381-the-hell-hound-and-cerberus-as-lava-cracked-demon-hounds-after-the-owners-reference-owner-2026-11-27) | The hell hound and cerberus as lava-cracked demon hounds after the owner's reference (owner, 2026-11-27) | accepted |
+| [382](#adr-382-the-imp-and-familiar-in-natural-proportions-not-cartoonish-owner-2026-11-27) | The imp and familiar in natural proportions, not cartoonish (owner, 2026-11-27) | accepted |
+| [383](#adr-383-the-horned-demons-as-knuckle-walking-ram-horned-brutes-in-iron-shackles-after-the-owners-reference-owner-adr-342-2026-11-27) | The horned demons as knuckle-walking ram-horned brutes in iron shackles after the owner's reference (owner, ADR-342, 2026-11-27) | accepted |
+| [384](#adr-384-the-tormentor-and-lacerator-as-eyeless-skinless-spiked-demons-with-hooked-claws-after-the-owners-reference-owner-adr-343-2026-11-27) | The tormentor and lacerator as eyeless, skinless, spiked demons with hooked claws after the owner's reference (owner, ADR-343, 2026-11-27) | accepted |
+| [385](#adr-385-the-gog-and-magog-with-demons-faces-not-goblins-owner-2026-11-27) | The gog and magog with demons' faces, not goblins' (owner, 2026-11-27) | accepted |
+| [386](#adr-386-the-nightmare-with-smaller-flames-on-a-black-mane-and-tail-owner-2026-11-27) | The nightmare with smaller flames on a black mane and tail (owner, 2026-11-27) | accepted |
+| [387](#adr-387-the-succubi-after-the-owners-reference-art-flame-red-hair-black-chitin-armour-bat-wings-and-a-whip-tail-owner-adr-344-2026-11-27) | The succubi after the owner's reference art: flame-red hair, black chitin armour, bat wings and a whip tail (owner, ADR-344, 2026-11-27) | accepted |
+| [388](#adr-388-the-juggernaut-and-ravager-as-hunched-horned-brutes-with-lava-cracked-black-rock-after-the-owners-reference-owner-adr-345-2026-11-27) | The juggernaut and ravager as hunched horned brutes with lava-cracked black rock after the owner's reference (owner, ADR-345, 2026-11-27) | accepted |
+| [389](#adr-389-the-pit-fiend-and-pit-lord-crouched-with-skeletal-wings-and-a-chained-sword-after-the-owners-reference-owner-adr-345-2026-11-27) | The pit fiend and pit lord crouched with skeletal wings and a chained sword after the owner's reference (owner, ADR-345, 2026-11-27) | accepted |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -1375,7 +1390,7 @@ the horned demon's cleaver, the overseer's chain whip).
 - **Regenerate**: Inferno sheet I1.
 
 ### ADR-331: Inferno sheet I2 to the owner's review: rust-red maned hounds, flayer tormentors with arm blades (owner, ADR-289, 2026-11-27)
-**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's Inferno sheet I2 subjects (the lava-rock
+**Status**: accepted; partly superseded by ADR-381 (the hounds) and ADR-384 (the tormentor and lacerator). Asset prompts only; no rule or format change. Supersedes ADR-289's Inferno sheet I2 subjects (the lava-rock
 hounds, the thin grey tormentor with a mask of nails).
 
 - **Owner**, on Inferno sheet I2: the hell hound and cerberus closer to the classic look; the tormentor and lacerator closer to the
@@ -1512,7 +1527,7 @@ supersedes ADR-289's chest-up framing (giant creatures and dragons as the head a
 - **Regenerate**: every creature sheet whose portraits are chest up. A sheet already cut stays until it is regenerated.
 
 ### ADR-342: Inferno sheet I1 to the owner's second review: a long plain trident for the familiar, rhinoceros horns for the horned demons (owner, ADR-330, 2026-11-27)
-**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-330's familiar trident (small, with blue mana)
+**Status**: accepted; partly superseded by ADR-383 (the horned demons' horns). Asset prompts only; no rule or format change. Supersedes ADR-330's familiar trident (small, with blue mana)
 and the horned demons' forward-curving horns.
 
 - **Owner**, on the regenerated Inferno sheet I1: the imp's (familiar's) trident longer, no haze around it; the horned demon's horns
@@ -1523,7 +1538,7 @@ and the horned demons' forward-curving horns.
 - **Regenerate**: Inferno sheet I1.
 
 ### ADR-343: Inferno sheet I2 to the owner's second review: hounds without fire, an upright charred lacerator unlike the tormentor (owner, ADR-331, 2026-11-27)
-**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-331's flames from the hounds' mouths and the
+**Status**: accepted; partly superseded by ADR-381 (the hounds) and ADR-384 (the tormentor and lacerator). Asset prompts only; no rule or format change. Supersedes ADR-331's flames from the hounds' mouths and the
 lacerator as a bigger copy of the tormentor.
 
 - **Owner**, on the regenerated Inferno sheet I2: no flames from the hounds' mouths; the tormentor and lacerator more different from
@@ -1535,7 +1550,7 @@ lacerator as a bigger copy of the tormentor.
 - **Regenerate**: Inferno sheet I2.
 
 ### ADR-344: Inferno sheet I3 to the owner's second review: a plain succubus and a regal crimson mistress, a bare jet-black charger, a nightmare in orange fire (owner, ADR-332, 2026-11-27)
-**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-332's succubus pair (one woman with more gold), the
+**Status**: accepted; partly superseded by ADR-386 (the nightmare's fire) and ADR-387 (the succubus pair). Asset prompts only; no rule or format change. Supersedes ADR-332's succubus pair (one woman with more gold), the
 hell charger's flaming mane and bronze barding and the nightmare's blue-white fire.
 
 - **Owner**, on the regenerated Inferno sheet I3: the succubus and her upgrade more different from each other; the hell charger with
@@ -1548,7 +1563,7 @@ hell charger's flaming mane and bronze barding and the nightmare's blue-white fi
 - **Regenerate**: Inferno sheet I3.
 
 ### ADR-345: Inferno sheet I4 to the owner's second review: the pit fiends, juggernaut and ravager after the later 3D game's creatures of those names (owner, ADR-333, 2026-11-27)
-**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-333's pit fiend and pit lord (forward horns, a
+**Status**: accepted; partly superseded by ADR-388 (the juggernaut and ravager) and ADR-389 (the pit fiend and pit lord). Asset prompts only; no rule or format change. Supersedes ADR-333's pit fiend and pit lord (forward horns, a
 bronze glaive, a two-headed pit lord) and ADR-289's slag-plated juggernaut.
 
 - **Owner**, on the regenerated Inferno sheet I4: all four like the creatures of the same names in the later 3D game.
@@ -1813,3 +1828,179 @@ with no tendrils below).
   with a crown of tendrils, plates of shadow over shoulders and chest, forearms ending in curved blades of darkness instead of a
   scythe, a blazing violet core and a mantle of smoke. Never a hooded ghost, never a dragon, no wings.
 - **Regenerate**: Dungeon sheet D9.
+
+### ADR-375: The wight in a black robe and the wraith without its flame (owner, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change.
+
+- **Owner**, on Necropolis sheet N4: the base creature's clothing black; the upgrade without the cyan fire.
+- **Subjects**: the wight's robe pitch-black from hood to hem, no grey or violet in the cloth (its cold cyan eyes kept); the
+  wraith's shroud black, both clawed hands empty and reaching, no flame, orb or glow.
+- **Regenerate**: Necropolis sheet N4.
+
+### ADR-376: The zombie and flesh golem with faces of their own, the golem sewn from many bodies (owner, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change.
+
+- **Owner**, on Necropolis sheet N2: both faces different; the upgrade's hands the same size, and it should look made of body parts
+  from different people.
+- **Subjects**: the zombie a thin gaunt face with a long slack jaw and lank hair; the flesh golem its own face, a brutish bald head
+  patched from two faces down a stitched seam, mismatched eyes and a lipless jaw; each limb from another body (a dark hairy arm, a
+  pale tattooed one, legs of different tones, a chest of patches from sallow to dark brown) sewn with black thread and staples,
+  both arms and fists the same size (the one enormous fist dropped).
+- **Regenerate**: Necropolis sheet N2.
+
+### ADR-377: The mummy's arm held close and the lich dragon two-headed (owner, ADR-363, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change.
+
+- **Owner**, on Necropolis sheet N11: the mummy's hand not stretched so far forward; the lich dragon two-headed.
+- **Subjects**: the mummy one arm raised a little, bent with the hand just before the chest, the other at its side, the figure
+  compact and upright; the lich dragon two long necks from the shoulders, each with its own horned and crowned skull, cyan fire in
+  both skulls' eyes and cold mist from both jaws. The two heads are art only; the creature's rules are unchanged.
+- **Regenerate**: Necropolis sheet N11.
+
+### ADR-378: The specter faceless under its veil and the banshee without sound waves (owner, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change.
+
+- **Owner**, on Necropolis sheet N10: the specter without the female face; the banshee without the scream's sound waves.
+- **Subjects**: the specter shows no face, only black shadow under the veil with two cold cyan points for eyes; the banshee keeps
+  her wailing face, white hair and circlet, with nothing drawn in the air around her head (no rings, waves or glow).
+- **Regenerate**: Necropolis sheet N10.
+
+### ADR-379: The lich and arch lich in tattered sorcerer's robes drawn from the series' liches (owner, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change.
+
+- **Owner**, on Necropolis sheet N8: the base lich without the glowing hand; glowing eyes, not too bright; a coronet on the lich
+  and a crown on the arch lich; the clothing reworked from how liches look across HoMM3, HoMM5 and HoMM6; then the arch lich's
+  clothes darker, maroon, and about 30 % less of them; then, as that made it too skinny, the same amount of clothes on both.
+- **Subjects** (described from memory, no game named in the prompt), the series' common traits: a skeleton under a long tattered
+  sorcerer's robe torn into strips at the hem and open at the chest to show the ribcage, a stiff mantle with a tall collar behind
+  the skull, a bone-and-chain belt, a staff, bony feet. The lich in black and faded slate blue with a silver coronet and a
+  skull-topped staff, the free hand empty; the arch lich in the lich's same robe and mantle, as broad and full, in dark
+  maroon and black with thin tarnished gold, a gold crown with a fan of
+  iron spikes behind it like a dark halo, bone spurs on the mantle, a faint cyan glow in the ribcage, a staff whose claw grips a
+  glowing gem and death mist in one hand. Both with a dim cyan glow in the eye sockets, ancient and sinister rather than regal, no
+  green-and-purple and no halo of light around them.
+- **Regenerate**: Necropolis sheet N8.
+
+### ADR-380: A feral clawed vampire and a vampire lord with a greatsword (owner, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change.
+
+- **Owner**, on Necropolis sheet N6: a two-handed sword for the vampire lord; the vampire more feral, with claws or long nails;
+  on the regenerated sheet, the vampire's pose straight like the lord's.
+- **Subjects**: the vampire with loose wild hair, a snarl of long fangs, standing upright like the lord (no crouch or lunge),
+  hands low at his sides curled like claws with long curved black nails; the vampire lord standing tall with a dark-steel
+  greatsword held upright before him, point on the ground and both hands on the hilt.
+- **Regenerate**: Necropolis sheet N6.
+
+### ADR-381: The hell hound and cerberus as lava-cracked demon hounds after the owner's reference (owner, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-331's and ADR-343's hell hound and
+cerberus (rust-red fur with a black mane).
+
+- **Owner**, on Inferno sheet I3: first the hell hound closer to a pit bull and the cerberus darker, then the pit bull's body
+  undone as disproportionate; then reference images of the later classic game's cerberus and hell hound concept art: the
+  cerberus like it with three heads, the hell hound like it with one head.
+- **Subjects** (from the owner's reference, no game named in the prompt): the hell hound one-headed, low and stalking, lean bare
+  hairless flesh of scorched tan and brown, not fur, patches of cracked black lava crust with glowing seams, a jagged black ridge
+  along the neck and spine, a broad wolf-like snarling head with a glowing mouth but no fire from it, long black claws, a short
+  spiked black tail; the cerberus a bigger three-headed hound, crouched to pounce, molten red-orange flesh, a carapace of jagged
+  black spiked plates over the back, shoulders and the tops of the heads, no fire from the mouths, chains from rings at the jaws
+  and necks, a tail burning at the tip.
+- **Regenerate**: Inferno sheet I3.
+
+### ADR-382: The imp and familiar in natural proportions, not cartoonish (owner, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change.
+
+- **Owner**, on Inferno sheet I1: the imps look disproportionate and cartoonish; on the regenerated sheet, the body a bit
+  smaller and the wings a bit bigger.
+- **Subjects**: the imp and familiar with believable anatomy: the head in proportion to the body, a small compact lean body
+  about three quarters of the cell's height with a flat stomach and no pot belly, limbs of believable length, a narrow gaunt
+  face with a cold sneer instead of a wide grin, in a tense crouch; large bat wings raised above the shoulders, each as long as
+  the torso and legs together, tips above the head; the familiar keeps its ember cracks, longer horns, collar and trident.
+- **Regenerate**: Inferno sheet I1.
+
+### ADR-383: The horned demons as knuckle-walking ram-horned brutes in iron shackles after the owner's reference (owner, ADR-342, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-342's rhinoceros horns for both
+horned demons.
+
+- **Owner**, on Inferno sheet I2: the horned demons look too much like rhinoceroses; then two reference images (the classic 3D
+  game's horned demon and a flaming-headed overseer): both like that, without too much fire; on the regenerated sheet, the faces
+  too humanoid.
+- **Subjects** (from the owner's reference, no game named in the prompt): the horned demon hunched like a great ape on its
+  knuckles, bare orange-red muscle with arms far bigger than the legs, a small forward head with a bestial face (no human nose,
+  lips or chin; a flat slit-nostrilled snout, bony ridges, a huge lipless maw of jagged fangs), ridged ram horns curling down
+  around the face, short spikes on the head and back, an iron shackle band on each wrist, goat legs on cloven hooves, no weapon,
+  armour or fire; the overseer the same, bigger, deeper crimson, huge ram horns plus a second shorter pair beside the jaw, glowing
+  eyes, a goat-like tuft under the jaw, a few ember spots, only a small low flame from the split top of the skull, iron shackle
+  cuffs with rings, shaggy grey-brown fur on the legs.
+- **Regenerate**: Inferno sheet I2.
+
+### ADR-384: The tormentor and lacerator as eyeless, skinless, spiked demons with hooked claws after the owner's reference (owner, ADR-343, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-331's and ADR-343's tormentor and lacerator
+(the flayer with arm blades and the upright charred executioner).
+
+- **Owner**, on Inferno sheet I4: the tormentor and lacerator much closer to the later classic game's versions; then two reference
+  images of that game's tormentor and lacerator concept art: both like that.
+- **Subjects** (from the owner's reference, no game named in the prompt): the tormentor a lean, wiry, hunched demon of glossy
+  skinless red muscle, arms spread low, a broad eyeless head that is almost all maw with long jagged teeth, very long hooked
+  claws on the hands and feet, curved pale bone spikes from the head, shoulders, spine, elbows and knees, no clothing, mask or
+  weapon; the lacerator the same, taller, in deep crimson and blood-black muscle, with many more and longer spikes and claws
+  glowing orange-yellow at the tips like forge-heated metal.
+- **Regenerate**: Inferno sheet I4.
+
+### ADR-385: The gog and magog with demons' faces, not goblins' (owner, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change.
+
+- **Owner**, on Inferno sheet I10: the gogs' faces look like goblins'; make them more demon-like or like the classic game's.
+- **Subjects** (described from memory, no game named in the prompt): no big pointed ears, long hooked nose or pointed chin; a broad
+  flat skull-like face with a heavy brow ridge, deep-set ember eyes, a short flat snout with slit nostrils, cheekbone spurs, a wide
+  lipless mouth of jagged fangs, two short thick horns curving back from the brow and the spike crest running from between them;
+  the magog with the same face and longer horns. The body, loincloth and fireballs are unchanged.
+- **Regenerate**: Inferno sheet I10.
+
+### ADR-386: The nightmare with smaller flames on a black mane and tail (owner, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-344's nightmare mane and tail of fire.
+
+- **Owner**, on Inferno sheet I6: fewer flames on the upgraded creature.
+- **Subjects**: the nightmare's mane and tail of long black hair with short orange and red flames along the top of the mane and
+  at the tail's end, the hair showing through, not a mane or tail made of fire; small low flames around the hooves, below the
+  fetlocks; a thin wisp of smoke from the nostrils. The hell charger is unchanged.
+- **Regenerate**: Inferno sheet I6.
+
+### ADR-387: The succubi after the owner's reference art: flame-red hair, black chitin armour, bat wings and a whip tail (owner, ADR-344, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-344's succubus pair (the plain
+succubus in a leather harness and the regal crimson mistress).
+
+- **Owner**, on Inferno sheet I5: the succubus and her upgrade closer to the later classic game's succubi; then two reference images
+  of that game's succubus and lilim concept art.
+- **Subjects** (from the owner's reference, no game named in the prompt): the succubus slender and poised, tan skin with thin dark
+  sigil tattoos, long flame-red hair, ridged bronze-brown horns curving back then forward, large dark-red bat wings, glossy black
+  chitin-like armour with curved spikes (bodice, shoulder plate, hip guard, one long taloned gauntlet, thigh-high spiked boots on
+  clawed feet), a long curved black horn-like blade, a very long thin bright-red whip tail; the mistress the same with hair turning
+  to flame, darker horns, red-black wings and armour cracked with glowing lava-red, more spikes and two tails of trailing fire.
+- **Regenerate**: Inferno sheet I5.
+
+### ADR-388: The juggernaut and ravager as hunched horned brutes with lava-cracked black rock after the owner's reference (owner, ADR-345, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-345's juggernaut and ravager (the
+four-legged bull-and-rhinoceros beast and its iron-plated upgrade).
+
+- **Owner**, on Inferno sheet I8: the ravager closer to the later classic game's ravager; then two reference images of that game's
+  juggernaut and ravager concept art: both like that.
+- **Subjects** (from the owner's reference, no game named in the prompt): the juggernaut a huge two-legged brute hunched like a
+  great ape, a small low head between enormous shoulders, long arms to the ground, short bowed legs, tan-brown bare muscle, a
+  bull-like face with glowing eyes and downward tusks, great ram horns curling back, the forearms, fists, lower legs and hooves in
+  a crust of jagged black volcanic rock with lava-red seams, no weapon or armour; the ravager the same brute bigger and molten
+  red-orange throughout, longer glowing tusks, a crown of ember-tipped horns beside the ram horns, far more jagged black rock with
+  lava cracks over the shoulders, back, arms and legs, faint red smoke.
+- **Regenerate**: Inferno sheet I8.
+
+### ADR-389: The pit fiend and pit lord crouched with skeletal wings and a chained sword after the owner's reference (owner, ADR-345, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-345's pit fiend and pit lord (the
+upright brute with a cleaver-blade and the bat-winged lord).
+
+- **Owner**, on Inferno sheet I7: two reference images of the later classic game's pit fiend and pit lord concept art: both like
+  that.
+- **Subjects** (from the owner's reference, no game named in the prompt): the pit fiend crouched low with its head thrust forward,
+  burnt orange-brown lava-like skin, a long almost dragon-like head with a chain at the chin and a crest of jagged black horn
+  plates, two skeletal wings of black thorny bone spars with no membrane, a long spiked tail on the ground, a huge black iron sword
+  held point down with a ring in the guard and chains around the blade; the pit lord (one head) the same, bigger, molten red-orange,
+  with real flames from the head, the wing spars and the back, the sword glowing red through its cracks.
+- **Regenerate**: Inferno sheet I7.

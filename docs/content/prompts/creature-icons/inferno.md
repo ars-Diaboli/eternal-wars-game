@@ -26,12 +26,18 @@ side by side in one row, each alone in its own equal upright cell 2 wide by 3 ta
 top of the head to the feet with about 8 % empty margin, a long or wide creature (a rider, a beast, a dragon) drawn smaller so that
 its whole length fits the cell's width, both at the same scale and with the same light; nothing crosses into the other cell. No grid
 lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, left to right: 1 a
-small red-skinned imp, a little devil shown whole: a round pot belly on thin wiry limbs, a big bald head with long pointed ears, two
-short stubby horns, a wide sly grin of small sharp teeth, small leathery bat wings, a long thin tail ending in an arrowhead barb,
-clawed hands and feet, empty-handed; 2 the same creature as the one to its left, clearly upgraded and told apart at a glance: the same
-face and build but larger, heavier armed, more ornate and richer in colour: darker skin with ember cracks, longer horns, a blackened
-bronze collar, a long three-pronged trident of blackened bronze, its shaft taller than the imp itself, held upright in its claws; no
-glow, no haze, no mist and no mana around the trident
+small red-skinned imp, a lesser demon shown whole, drawn with believable anatomy and natural proportions like a small lean
+human-shaped creature, never a cartoon or caricature: the head in proportion to the body, not oversized, a small slight compact body,
+short in the torso, standing only about three quarters of the cell's height, lean and sinewy with a flat hard stomach and visible
+ribs, no pot belly, wiry but properly muscled arms and legs of believable length, a narrow gaunt face with high cheekbones, a hooked
+nose and narrowed cruel eyes, long pointed ears swept back, two short sharp horns, lips drawn back over small sharp teeth in a cold
+sneer, not a wide grin, large leathery bat wings, big for its small body, raised and half spread above its shoulders, each wing as
+long as the imp's torso and legs together, the wing tips rising above its head, a long thin tail ending in an arrowhead barb, clawed
+hands and feet, empty-handed, standing in a tense crouch; 2 the same creature as the one to its left, clearly upgraded and told apart
+at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour, with the same natural proportions,
+the same small compact body and the same large wings, no pot belly: darker skin with ember cracks, longer horns, a blackened bronze
+collar, a long three-pronged trident of blackened bronze, its shaft taller than the imp itself, held upright in its claws; no glow, no
+haze, no mist and no mana around the trident
 ```
 
 | # | File |
@@ -56,13 +62,20 @@ side by side in one row, each alone in its own equal upright cell 2 wide by 3 ta
 top of the head to the feet with about 8 % empty margin, a long or wide creature (a rider, a beast, a dragon) drawn smaller so that
 its whole length fits the cell's width, both at the same scale and with the same light; nothing crosses into the other cell. No grid
 lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, left to right: 1 a
-hulking horned demon shown whole, hunched forward like a beast: dark red-brown leathery hide with ember-red cracks, a small brutish
-head with a heavy jaw and fangs, horns like a rhinoceros's: one great thick conical horn rising from the snout and a smaller one
-behind it on the brow, both pointing up, rough grey-brown horn, not ram or bull horns curving to the sides, huge muscled shoulders and
-long arms ending in great clawed hands, digitigrade legs on cloven hooves, a thick tail; no weapon of any kind, it fights with its
-claws; 2 the same creature as the one to its left, clearly upgraded and told apart at a glance: the same face and build but larger,
-heavier armed, more ornate and richer in colour: deeper crimson hide, the same rhinoceros horns much larger and ringed with bronze,
-bronze spiked plates on the shoulders and bronze-capped claws, still no weapon, no whip, no chain and no flail
+hulking horned demon shown whole, hunched far forward like a great ape and leaning on its huge fists, knuckles on the ground: bare
+orange-red skin over enormous bulging muscle, massive shoulders and arms far bigger than its legs, a small head thrust forward and
+low; a bestial demon face, not human-like at all: no human nose, lips, cheeks or chin, instead a short flat beast's snout with two
+slit nostrils, thick bony ridges running from the snout up over the brow, small deep-set fierce eyes under a jutting bony brow, and a
+huge lipless mouth splitting the face almost from horn to horn, filled with rows of jagged sharp teeth and long fangs; a pair of thick
+ridged ram horns of pale tan horn curling down and forward around the sides of the face, a few short horn spikes on the top of the
+head and along the shoulders and back; a thick band of plain dull iron like a broken shackle around each wrist; goat-like back-bending
+legs ending in cloven hooves; no weapon, no armour and no fire; 2 the same creature as the one to its left, clearly upgraded and told
+apart at a glance: a horned overseer, the same hunched knuckle-walking brute but bigger and heavier: deeper glossy crimson-red skin,
+huge ridged ram horns curling down and around the face and a second pair of shorter horns curving down beside the jaw, the same
+bestial face, not human-like, with heavier bony ridges, glowing yellow-orange eyes and the same huge lipless maw of jagged fangs, a
+ragged tuft of coarse goat-like hair under the jaw, a few small glowing ember spots on the shoulders and back, the top of the skull
+split open with only a small low flame, not a blaze; thick grey iron shackle cuffs with iron rings on both wrists; shaggy grey-brown
+fur on the goat-like legs above dark cloven hooves; still no weapon and no other fire
 ```
 
 | # | File |
@@ -87,12 +100,19 @@ side by side in one row, each alone in its own equal upright cell 2 wide by 3 ta
 top of the head to the feet with about 8 % empty margin, a long or wide creature (a rider, a beast, a dragon) drawn smaller so that
 its whole length fits the cell's width, both at the same scale and with the same light; nothing crosses into the other cell. No grid
 lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, left to right: 1 a
-hell hound, a big powerful hound shown whole: short coarse rust-red and dark brown fur, not stone or lava rock, a ridge of black spiky
-mane along the neck and spine, a broad heavy head with glowing yellow eyes, open snarling jaws of long fangs, no fire, no flames and
-no smoke from the mouth, long pointed ears, a thin whip-like tail; 2 the same creature as the one to its left, clearly upgraded and
-told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: the same rust-red furred
-hound with three heads on one body, each head snarling with bared fangs, no fire and no flames from any mouth, a spiked iron collar on
-each neck
+hell hound with one head only, a powerful demon hound shown whole, low and crouched like a predator stalking forward, its head held
+low and its forelegs braced wide: a lean, hard-muscled body of bare hairless flesh, dark tan and brown like scorched skin with every
+muscle showing, not fur; patches of cracked black crust like cooling lava on the legs, flanks and shoulders, split by glowing
+orange-red seams; a ridge of jagged black spiky crust running from the back of the head along the neck and spine; a broad wolf-like
+head with a snarling muzzle, long white fangs, a glowing red-orange mouth inside and small burning eyes, no fire, no flames and no
+smoke from the mouth; big paws with long black claws, the legs blackened and lava-cracked toward the feet; a short jagged black tail
+like a spiked whip; 2 the same creature as the one to its left, clearly upgraded and told apart at a glance: a cerberus, a bigger,
+heavier hound with three heads on one body, low and crouched like a predator about to pounce, its forelegs braced wide; its body of
+molten red-orange flesh glowing like lava, veined with brighter orange and darker red, not fur; a heavy carapace of jagged black
+armour plates with long curved spikes, like blackened iron or obsidian, covering its back, shoulders and the top of all three heads
+and necks; each head long-jawed and fanged, half hidden under its spiked black plating, with small glowing red eyes, its jaws open in
+a snarl, no fire and no flames from any mouth; heavy black chains hanging from iron rings at each jaw and neck; big clawed paws of the
+same molten red flesh with dark claws; a long tail of glowing flesh, its tip burning orange
 ```
 
 | # | File |
@@ -117,14 +137,16 @@ side by side in one row, each alone in its own equal upright cell 2 wide by 3 ta
 top of the head to the feet with about 8 % empty margin, a long or wide creature (a rider, a beast, a dragon) drawn smaller so that
 its whole length fits the cell's width, both at the same scale and with the same light; nothing crosses into the other cell. No grid
 lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, left to right: 1 a
-hunched, crouching demon flayer shown whole, a predator about to spring: raw dark-red sinewy flesh bound with blackened leather
-straps, iron hooks and rivets driven through the skin, a riveted iron cage mask hiding the eyes, a lipless jaw of jagged teeth below
-it, long forearms that end in long serrated blades of bone and rusted iron growing out of the flesh; 2 the same creature as the one to
-its left, clearly upgraded and told apart at a glance, a very different silhouette: no longer crouching but standing tall and upright,
-a head taller than the tormentor, charred black skin split by glowing ember-red cracks instead of raw red flesh, a closed horned iron
-executioner's helm with one narrow slit instead of the cage mask, a ribcage flayed open showing bone, each forearm ending in three
-long hooked blades spread like a rake instead of one blade, bronze plates nailed into the shoulders, chains with flesh hooks hanging
-from its back
+tormentor, a lean wiry demon shown whole, standing hunched forward on two long legs with its long arms spread wide and low, ready to
+rake: a skinless body of glossy raw red muscle and sinew, every strand of muscle showing, wet and shining, thin and stringy, not
+bulky; a broad flat head with no visible eyes, almost all mouth, a huge wide maw of many long jagged teeth; long thin arms ending in
+big hands with very long curved claws like hooks, as long as its forearms; long thin legs with clawed feet of long curved talons;
+curved spikes of pale bone growing out through the flesh from the top of the head, the shoulders, the spine, the elbows and the knees;
+no clothing, no straps, no mask, no armour and no weapon; 2 the same creature as the one to its left, clearly upgraded and told apart
+at a glance: a lacerator, the same eyeless wiry demon in the same pose but taller, darker and more savage: deep crimson and
+blood-black glossy muscle instead of bright red, many more and much longer spikes, a crown of tall spikes on the head and rows of long
+spikes along the back, shoulders, arms and legs, every spike and every claw longer and glowing orange-yellow at its tip like metal
+heated in a forge, the claws even longer, a wider maw with a faint orange glow inside; still no weapon
 ```
 
 | # | File |
@@ -149,13 +171,17 @@ side by side in one row, each alone in its own equal upright cell 2 wide by 3 ta
 top of the head to the feet with about 8 % empty margin, a long or wide creature (a rider, a beast, a dragon) drawn smaller so that
 its whole length fits the cell's width, both at the same scale and with the same light; nothing crosses into the other cell. No grid
 lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, left to right: 1 a
-succubus, a young female demon, lithe and plain: a cruel beautiful woman's face, pale ash-violet skin, black hair in a tight braid,
-two small short horns at the brow, small dark bat wings half folded behind her, a simple harness of black leather straps and a short
-leather skirt, no metal plates, bare arms with long clawed fingers, a small ball of red fire in one raised hand; 2 the same creature
-as the one to its left, clearly upgraded and told apart at a glance, a very different look: a mistress of succubi, taller and regal,
-deep crimson skin instead of ash-violet, long flowing silver-white hair, huge ram horns ringed with gold and a crown of black spikes
-between them, vast crimson wings spread wide, ornate armour of black and gold plates, a long crimson cape, a large blaze of fire in
-both hands
+succubus, a slender, elegant female demon shown whole, standing tall in a graceful poised stance: a cruel beautiful woman's face, warm
+tan skin marked with thin dark tattoo-like demonic sigils on the arms, belly and thighs, long wild flowing flame-red hair, a pair of
+ridged horns of pale bronze-brown curving back from the brow and then forward at the tips, large dark-red bat wings with black claws
+on their joints, spread and raised behind her; sleek armour of glossy black chitin-like plates with curved spikes: a black armoured
+bodice, a spiked shoulder plate, a plated belt and hip guard, a long black armoured gauntlet on one arm ending in long black talons,
+thigh-high black spiked armoured boots ending in clawed feet; a long curved black blade like a horn or a sickle held low in one hand;
+a very long thin whip-like tail of bright red curling through the air around her legs; 2 the same creature as the one to its left,
+clearly upgraded and told apart at a glance: the same face, build, horns and pose but wreathed in fire: her red hair turning into real
+orange flames at the ends, darker larger horns, dark red-black wings veined with glowing lava-red cracks, the black armour and the
+curved blade split by glowing ember-red cracks, more and longer spikes, two long thin tails of glowing red-orange fire trailing in
+curling ribbons around her legs
 ```
 
 | # | File |
@@ -184,8 +210,11 @@ hell charger, unmistakably a horse shown whole: a lean muscular warhorse with a 
 a long horse's head and neck, glowing red eyes, a black mane and tail with only a few embers glowing at their tips, hooves glowing
 ember-red with only a thin wisp of flame, two short curved horns on the brow, no armour, no barding, no saddle and no chamfron, the
 bare muscled black body; 2 the same creature as the one to its left, clearly upgraded and told apart at a glance: still clearly a
-horse, bigger and wilder, the same jet-black coat, long black horns sweeping back, spiked blackened bronze barding, a full mane and
-tail of real orange and red fire, not blue, not white, hooves in orange flame, a fanged mouth, smoke pouring from its nostrils
+horse, bigger and wilder, the same jet-black coat, long black horns sweeping back, spiked blackened bronze barding, a long black mane
+and tail of real hair burning with small flames: short tongues of orange and red fire licking along the top of the mane and at the end
+of the tail, kept close to the hair, not a huge blaze, not a mane or tail made of fire, not blue, not white, the black hair showing
+through; small low orange flames around the hooves, not reaching above the fetlocks, a fanged mouth, a thin wisp of smoke from its
+nostrils
 ```
 
 | # | File |
@@ -210,14 +239,17 @@ side by side in one row, each alone in its own equal upright cell 2 wide by 3 ta
 top of the head to the feet with about 8 % empty margin, a long or wide creature (a rider, a beast, a dragon) drawn smaller so that
 its whole length fits the cell's width, both at the same scale and with the same light; nothing crosses into the other cell. No grid
 lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, left to right: 1 a
-pit fiend, a towering hunched demon brute shown whole: a small head sunk between enormous shoulders, a long heavy underbite jaw with
-tusks jutting up, burning eyes under a heavy brow, thick ridged horns curling back and down around the head, dark red-brown hide with
-a few ember-red cracks, slabs of blackened iron armour bolted onto the shoulders, forearms and shins, a ragged loincloth on a chain
-belt, digitigrade legs on hooves, a huge two-handed blackened iron cleaver-blade on a long haft held low across the body; 2 the same
-creature as the one to its left, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more
-ornate and richer in colour: a pit lord, one head only, never two heads, great dark-red bat wings spread behind it, the horns larger
-and ringed with bronze, darker crimson hide with brighter ember cracks, heavier black iron armour edged in bronze, the cleaver-blade
-wreathed in fire
+pit fiend, a huge demon shown whole, crouched low and hunched forward, its head thrust out ahead of its shoulders: a powerful bare
+torso of hard muscle, its skin dark burnt orange-brown like cooling lava, darker and charred at the edges, with a few glowing orange
+cracks; a long, low, almost dragon-like demon head with a heavy jaw, small burning eyes and a short iron chain hanging from its chin;
+a crest of jagged black horn plates sweeping back from the brow and the sides of the head; two great skeletal wings rising from its
+back like dead branches, black jagged bone spars with thorny spikes and no membrane; a long thick tail edged with black spikes curling
+along the ground; thick crouched legs with black claws; one arm gripping a huge heavy black iron sword held point down beside it, a
+broad notched blade with a round open ring in the guard, chains wrapped around the blade; the other hand clawed; 2 the same creature
+as the one to its left, clearly upgraded and told apart at a glance: a pit lord, one head only, never two heads, the same crouched
+demon, wings, tail and sword but bigger and burning: its skin bright molten red-orange glowing from within, real orange flames rising
+from the top of its head and horns, along the bone spars of its wings and down its back, the horn crest and wing spars charred black
+under the fire, the black sword glowing red through its cracks and runes, its fist on the hilt wreathed in flame
 ```
 
 | # | File |
@@ -242,13 +274,18 @@ side by side in one row, each alone in its own equal upright cell 2 wide by 3 ta
 top of the head to the feet with about 8 % empty margin, a long or wide creature (a rider, a beast, a dragon) drawn smaller so that
 its whole length fits the cell's width, both at the same scale and with the same light; nothing crosses into the other cell. No grid
 lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, left to right: 1 a
-juggernaut, a massive four-legged charging demon beast shown whole, like a monstrous bull and rhinoceros in one: a huge low head
-armoured with a thick bony plate, two great horns sweeping forward from it and a fanged maw beneath, a hump of muscle over the
-shoulders, rows of black bony spikes along the spine, dark red-brown leathery hide with ember-red cracks, not stone and not lava rock,
-thick legs on cloven hooves; 2 the same creature as the one to its left, clearly upgraded and told apart at a glance: the same face
-and build but larger, heavier armed, more ornate and richer in colour: a ravager, bigger and wilder, plates of blackened iron riveted
-into its hide over the head, back and flanks, the horns capped in iron and longer, iron spikes and hooks along the spine, chains
-hanging from its flanks, embers glowing in its open fanged maw
+juggernaut, a huge hulking demon brute shown whole, standing on two legs but hunched forward like a great ape about to charge, not a
+four-legged beast: enormous bulging shoulders and chest of bare muscle, a small head set low and forward between the shoulders,
+massive long arms hanging almost to the ground, short thick bowed legs; smooth tan-brown and bronze skin over hard muscle; a bull-like
+demon face with glowing orange eyes, a heavy brow and long fangs curving down from the upper jaw like tusks; a pair of great ridged
+ram horns of pale horn curling back and around from the top of the head; the forearms and huge fists, the lower legs and the hooves
+encased in a thick crust of jagged black volcanic rock, like obsidian, cracked with glowing lava-red seams, rock shards jutting from
+the elbows and fists; no weapon, no armour; 2 the same creature as the one to its left, clearly upgraded and told apart at a glance: a
+ravager, the same hunched horned brute and pose but bigger and burning from within: its whole body of molten red-orange flesh glowing
+like lava, veined with bright orange and dark red, instead of tan skin, glowing eyes and longer glowing tusks; more and larger horns,
+the great ram horns joined by a crown of short horns whose tips glow like embers; much more black volcanic rock: jagged black spiked
+shards growing from the shoulders, back, forearms and legs, all cracked with glowing lava-red, the fists and lower legs huge clubs of
+black rock; faint red smoke rising from its shoulders; still no weapon
 ```
 
 | # | File |
@@ -304,10 +341,13 @@ side by side in one row, each alone in its own equal upright cell 2 wide by 3 ta
 top of the head to the feet with about 8 % empty margin, a long or wide creature (a rider, a beast, a dragon) drawn smaller so that
 its whole length fits the cell's width, both at the same scale and with the same light; nothing crosses into the other cell. No grid
 lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, left to right: 1 a
-gog, a wiry hunched demon shown whole: red-orange skin, a long pointed face with a wide mouth of small fangs, big pointed ears, a
-crest of short spikes from the brow over the head and down the spine, long thin arms and clawed hands, bent clawed legs, a ragged
-loincloth, a ball of orange fire held up ready to throw, no wings; 2 the same creature as the one to its left, clearly upgraded and
-told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: deeper red skin, a taller
+gog, a wiry hunched demon shown whole: red-orange skin, a demon's face and never a goblin's or an elf's: no big pointed ears, no long
+hooked nose and no pointed chin, instead a broad flat skull-like face with a heavy bony brow ridge, deep-set glowing ember-orange
+eyes, a short flat snout with slit nostrils, bony spurs on the cheekbones, a wide lipless mouth of jagged fangs, two short thick horns
+curving back from the brow, small ears flat against the skull, a crest of short spikes from between the horns over the head and down
+the spine, long thin arms and clawed hands, bent clawed legs, a ragged loincloth, a ball of orange fire held up ready to throw, no
+wings; 2 the same creature as the one to its left, clearly upgraded and told apart at a glance: the same face and build but larger,
+heavier armed, more ornate and richer in colour: deeper red skin, the same demon's face, longer horns curving back and up, a taller
 crest of spikes, blackened bronze bracers and collar, a large fireball blazing in both hands
 ```
 

@@ -9,6 +9,12 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Inferno portraits regenerated from the paired sheets and cut (I1–I11 and the backdrop, 2026-11-27), with the reviewed I1–I8 and
+  I10 (ADR-381 to ADR-389): the hounds, tormentors, succubi, pit fiends, juggernauts and horned demons follow the owner's reference
+  art; the gog, magog and breeders are the neutral portraits from I10–I11.
+- Necropolis portraits regenerated from the paired sheets and cut (N1–N9, N11 and the backdrop, 2026-11-27), with the reviewed
+  N2, N4, N6, N8 and N11 (ADR-375 to ADR-380); the mummy and lich dragon portraits are new. Sheet N10 (specter, banshee; ADR-378)
+  was not in the batch, so those two keep the earlier portraits.
 - Dungeon portraits regenerated from the paired sheets and cut (D1–D9 and the backdrop, 2026-11-27), with the reviewed
   shadow mistress and matriarch (ADR-372), spectator and beholder (ADR-373) and shadow horror and reaper (ADR-374).
 - Sylvan portraits regenerated from the paired sheets and cut (S1–S10 and the backdrop, 2026-11-27), the wolf and dire wolf

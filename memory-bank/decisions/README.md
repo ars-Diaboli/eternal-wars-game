@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-375**. A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-390**. A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -20,7 +20,7 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [game-modes.md](game-modes.md) | Victory and defeat, saves, the turn timer, score, ranking and difficulty, replays and the viewer, the main menu and new-game screen, the arena, the tournament. | 24 |
 | [random-maps-and-editor.md](random-maps-and-editor.md) | Templates and the generator, scenery density, relief, the standalone editor and the template editor. | 48 |
 | [multiplayer.md](multiplayer.md) | The host and clients, each client's view, the lobby, live battles, LAN saves, start zones and the simultaneous first week. | 16 |
-| [presentation.md](presentation.md) | Art direction, the camera, terrain and fog drawing, the HUD, layout and theme, information windows, icons, cursors and heraldry. | 102 |
+| [presentation.md](presentation.md) | Art direction, the camera, terrain and fog drawing, the HUD, layout and theme, information windows, icons, cursors and heraldry. | 117 |
 | [project-and-scope.md](project-and-scope.md) | Scope and phases, the owner's batches of answers that touch several areas, phase close-outs and the Godot checks, closing reviews. | 21 |
 
 ## All decisions
@@ -401,3 +401,18 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [372](presentation.md#adr-372-the-shadow-mistress-and-matriarch-as-lean-dark-elf-battle-sorceresses-owner-2026-11-27) | presentation | The shadow mistress and matriarch as lean dark-elf battle sorceresses (owner, 2026-11-27) | accepted |
 | [373](presentation.md#adr-373-the-spectator-and-beholder-with-the-classic-beholders-shape-and-anatomy-owner-adr-323-2026-11-27) | presentation | The spectator and beholder with the classic beholder's shape and anatomy (owner, ADR-323, 2026-11-27) | accepted |
 | [374](presentation.md#adr-374-the-shadow-horror-and-reaper-as-faceless-beings-of-living-darkness-owner-2026-11-27) | presentation | The shadow horror and reaper as faceless beings of living darkness (owner, 2026-11-27) | accepted |
+| [375](presentation.md#adr-375-the-wight-in-a-black-robe-and-the-wraith-without-its-flame-owner-2026-11-27) | presentation | The wight in a black robe and the wraith without its flame (owner, 2026-11-27) | accepted |
+| [376](presentation.md#adr-376-the-zombie-and-flesh-golem-with-faces-of-their-own-the-golem-sewn-from-many-bodies-owner-2026-11-27) | presentation | The zombie and flesh golem with faces of their own, the golem sewn from many bodies (owner, 2026-11-27) | accepted |
+| [377](presentation.md#adr-377-the-mummys-arm-held-close-and-the-lich-dragon-two-headed-owner-adr-363-2026-11-27) | presentation | The mummy's arm held close and the lich dragon two-headed (owner, ADR-363, 2026-11-27) | accepted |
+| [378](presentation.md#adr-378-the-specter-faceless-under-its-veil-and-the-banshee-without-sound-waves-owner-2026-11-27) | presentation | The specter faceless under its veil and the banshee without sound waves (owner, 2026-11-27) | accepted |
+| [379](presentation.md#adr-379-the-lich-and-arch-lich-in-tattered-sorcerers-robes-drawn-from-the-series-liches-owner-2026-11-27) | presentation | The lich and arch lich in tattered sorcerer's robes drawn from the series' liches (owner, 2026-11-27) | accepted |
+| [380](presentation.md#adr-380-a-feral-clawed-vampire-and-a-vampire-lord-with-a-greatsword-owner-2026-11-27) | presentation | A feral clawed vampire and a vampire lord with a greatsword (owner, 2026-11-27) | accepted |
+| [381](presentation.md#adr-381-the-hell-hound-and-cerberus-as-lava-cracked-demon-hounds-after-the-owners-reference-owner-2026-11-27) | presentation | The hell hound and cerberus as lava-cracked demon hounds after the owner's reference (owner, 2026-11-27) | accepted |
+| [382](presentation.md#adr-382-the-imp-and-familiar-in-natural-proportions-not-cartoonish-owner-2026-11-27) | presentation | The imp and familiar in natural proportions, not cartoonish (owner, 2026-11-27) | accepted |
+| [383](presentation.md#adr-383-the-horned-demons-as-knuckle-walking-ram-horned-brutes-in-iron-shackles-after-the-owners-reference-owner-adr-342-2026-11-27) | presentation | The horned demons as knuckle-walking ram-horned brutes in iron shackles after the owner's reference (owner, ADR-342, 2026-11-27) | accepted |
+| [384](presentation.md#adr-384-the-tormentor-and-lacerator-as-eyeless-skinless-spiked-demons-with-hooked-claws-after-the-owners-reference-owner-adr-343-2026-11-27) | presentation | The tormentor and lacerator as eyeless, skinless, spiked demons with hooked claws after the owner's reference (owner, ADR-343, 2026-11-27) | accepted |
+| [385](presentation.md#adr-385-the-gog-and-magog-with-demons-faces-not-goblins-owner-2026-11-27) | presentation | The gog and magog with demons' faces, not goblins' (owner, 2026-11-27) | accepted |
+| [386](presentation.md#adr-386-the-nightmare-with-smaller-flames-on-a-black-mane-and-tail-owner-2026-11-27) | presentation | The nightmare with smaller flames on a black mane and tail (owner, 2026-11-27) | accepted |
+| [387](presentation.md#adr-387-the-succubi-after-the-owners-reference-art-flame-red-hair-black-chitin-armour-bat-wings-and-a-whip-tail-owner-adr-344-2026-11-27) | presentation | The succubi after the owner's reference art: flame-red hair, black chitin armour, bat wings and a whip tail (owner, ADR-344, 2026-11-27) | accepted |
+| [388](presentation.md#adr-388-the-juggernaut-and-ravager-as-hunched-horned-brutes-with-lava-cracked-black-rock-after-the-owners-reference-owner-adr-345-2026-11-27) | presentation | The juggernaut and ravager as hunched horned brutes with lava-cracked black rock after the owner's reference (owner, ADR-345, 2026-11-27) | accepted |
+| [389](presentation.md#adr-389-the-pit-fiend-and-pit-lord-crouched-with-skeletal-wings-and-a-chained-sword-after-the-owners-reference-owner-adr-345-2026-11-27) | presentation | The pit fiend and pit lord crouched with skeletal wings and a chained sword after the owner's reference (owner, ADR-345, 2026-11-27) | accepted |
