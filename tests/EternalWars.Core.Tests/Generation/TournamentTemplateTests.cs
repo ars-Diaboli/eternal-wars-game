@@ -224,7 +224,7 @@ public class TournamentTemplateTests
 
         Assert.Empty(generation.Problems);
         Assert.True(state.Rules.Tournament);
-        Assert.Empty(MapValidator.Validate(state).Where(i => i.Severity == IssueSeverity.Error));
+        Assert.DoesNotContain(MapValidator.Validate(state), i => i.Severity == IssueSeverity.Error);
         Assert.DoesNotContain(MapValidator.Validate(state), i => i.Message.Contains("much richer", StringComparison.Ordinal));
         var (first, second) = (generation.Map.Fairness!.Starts[0], generation.Map.Fairness.Starts[1]);
         Assert.Equal(first.TreasureValue, second.TreasureValue);

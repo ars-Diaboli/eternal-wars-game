@@ -81,6 +81,26 @@ public class TournamentTests
     }
 
     [Fact]
+    public void AMapOfTheVersionBeforeTheSwitch_StillLoads_AndIsNoTournament()
+    {
+        const string old = """
+            {
+              "formatVersion": 44, "name": "Old", "width": 8, "height": 4, "terrain": [ [ "gggggggg", "gggggggg", "gggggggg", "gggggggg" ] ],
+              "players": [ { "name": "Blue", "isHuman": true }, { "name": "Red", "isHuman": true } ],
+              "rules": { "elimination": false, "maxHeroes": 1 },
+              "objects": []
+            }
+            """;
+
+        var state = TestFormat.Load(old);
+
+        Assert.True(MapDocument.CurrentFormatVersion >= 45);
+        Assert.Equal(MapDocument.CurrentFormatVersion, MapSerializer.Deserialize(old).FormatVersion); // upgraded as it was read
+        Assert.False(state.Rules.Tournament);
+        Assert.Equal(1, state.Rules.MaxHeroes);
+    }
+
+    [Fact]
     public void AFitTournament_HasNoErrors_AndStarts()
     {
         var state = Tournament(GameOptions.Default with { TournamentDays = 21 });
@@ -551,13 +571,22 @@ public class TournamentTests
     }
 
     [Fact]
-    public void ASideWithoutAnArmy_LosesWithoutABattle()
+    public void ASideWithoutAHeroOrAnArmy_LosesWithoutABattle_WhicheverSideTheCoinTossGaveIt()
     {
-        var state = AtTheBattle(setUp: s => s.GetHero(B).Army.Set(0, null));
+        var noHero = Enumerable.Range(1, 12).Select(seed => AtTheBattle((ulong)seed, started: s => s.RemoveHero(s.GetHero(B)))).ToList();
+        var noArmy = Enumerable.Range(1, 12).Select(seed => AtTheBattle((ulong)seed, setUp: s => s.GetHero(B).Army.Set(0, null))).ToList();
 
-        Assert.Null(state.Battle);
-        Assert.Equal([Blue], state.Outcome!.Winners);
-        Assert.Equal("Blue won the tournament battle. Bravo had no army.", state.Outcome.Reason);
+        foreach (var (games, reason) in new[] { (noHero, "Red had no hero."), (noArmy, "Bravo had no army.") })
+        {
+            Assert.Contains(games, s => s.DecidingBattle!.Attacker == Red);
+            Assert.Contains(games, s => s.DecidingBattle!.Defender == Red);
+            Assert.All(games, s =>
+            {
+                Assert.Null(s.Battle);
+                Assert.Equal([Blue], s.Outcome!.Winners);
+                Assert.Equal($"Blue won the tournament battle. {reason}", s.Outcome.Reason);
+            });
+        }
     }
 
     [Fact]
@@ -597,18 +626,22 @@ public class TournamentTests
             Zone(state, Blue, 0, 4);
             Zone(state, Red, 6, 12);
             state.GetHero(A).Skills.Set(BuiltInSkills.Scouting, SkillLevel.Expert);
+            state.GetHero(B).Skills.Set(BuiltInSkills.Scouting, SkillLevel.Expert);
             Start(state, revealAll: false);
             return state;
         }
 
+        // On an ordinary map Expert Scouting sees the other hero eight tiles away, and Bravo's sees nine tiles into Blue's side.
         var ordinary = Played(tournament: false);
-        Assert.True(ordinary.GetHero(A).ScoutingRadius >= 6);
+        Assert.True(ordinary.GetHero(A).ScoutingRadius >= 8);
         Assert.True(ordinary.Fog.IsExplored(Blue, new MapPosition(8, 1)));
+        Assert.True(ordinary.CanSee(Blue, ordinary.GetHero(B)));
+        Assert.True(ordinary.Fog.IsExplored(Red, new MapPosition(3, 1)));
 
         var state = Played(tournament: true);
         Assert.True(state.Fog.IsExplored(Blue, new MapPosition(0, 1)));
         Assert.True(state.Fog.IsInSight(Blue, new MapPosition(0, 1)));
-        Assert.True(state.Fog.IsExplored(Blue, new MapPosition(5, 1))); // the wall, in no zone, stays in sight
+        Assert.True(state.Fog.IsInSight(Blue, new MapPosition(5, 1))); // the wall, in no zone, stays in reach
         Assert.False(state.Fog.IsExplored(Blue, new MapPosition(8, 1)));
         Assert.False(state.Fog.IsInSight(Blue, new MapPosition(8, 1)));
         Assert.False(state.Fog.IsExplored(Red, new MapPosition(3, 1)));
@@ -618,26 +651,59 @@ public class TournamentTests
     [Fact]
     public void DimensionDoorAndTownPortal_GoNowhereOutsideTheZone()
     {
-        string[] rows = [.. Enumerable.Range(0, 8).Select(y => y == 7 ? "....A....#.........B" : ".........#..........")];
+        var (state, home, away) = Casting(tournament: true);
+        var hero = state.GetHero(A);
+        var session = Start(state);
+        CommandResult Cast(string spell, MapPosition? target = null) => session.Execute(new CastAdventureSpellCommand(Blue, A, spell, target));
+
+        Assert.Equal(AdventureMagic.OutsideZoneRefusal, Cast(AdventureMagic.DimensionDoor, new MapPosition(19, 7)).Error);
+        Assert.Equal(new MapPosition(13, 7), hero.Position);
+        Assert.True(Cast(AdventureMagic.DimensionDoor, new MapPosition(15, 7)).IsAccepted); // inside the zone it works
+        Assert.Equal(new MapPosition(15, 7), hero.Position);
+
+        // The own town in Red's zone is six tiles away, the one at home twelve: Town Portal goes home.
+        Assert.True(Cast(AdventureMagic.TownPortal).IsAccepted);
+        Assert.Equal(home.VisitPosition, hero.Position);
+        Assert.NotEqual(away.VisitPosition, hero.Position);
+    }
+
+    [Fact]
+    public void OnAnOrdinaryMap_TheSameSpellsGoIntoTheOtherZone()
+    {
+        var (state, _, away) = Casting(tournament: false);
+        var hero = state.GetHero(A);
+        var session = Start(state);
+        CommandResult Cast(string spell, MapPosition? target = null) => session.Execute(new CastAdventureSpellCommand(Blue, A, spell, target));
+
+        Assert.True(Cast(AdventureMagic.DimensionDoor, new MapPosition(19, 7)).IsAccepted);
+        Assert.Equal(new MapPosition(19, 7), hero.Position);
+        Assert.True(Cast(AdventureMagic.TownPortal).IsAccepted); // the nearest own town
+        Assert.Equal(away.VisitPosition, hero.Position);
+    }
+
+    /// <summary>
+    /// Alpha at (13, 7) with Dimension Door and Town Portal; Blue's zone is the columns 0 to 16, Red's 18 to 25, and Blue owns a town in each:
+    /// <c>home</c> with its entrance at (3, 6), <c>away</c> at (21, 6).
+    /// </summary>
+    private static (GameState State, Town Home, Town Away) Casting(bool tournament)
+    {
+        string[] rows = [.. Enumerable.Range(0, 8).Select(y => y == 7 ? ".............A...#.......B" : ".................#........")];
         var state = Create(rows);
-        state.SetRules(Rules);
-        Zone(state, Blue, 0, 8);
-        Zone(state, Red, 10, 19);
-        AddTown(state, TownIds.Haven, 12, 0, Blue); // an own town in Red's zone, entrance (15, 6)
+        if (tournament)
+        {
+            state.SetRules(Rules);
+        }
+
+        Zone(state, Blue, 0, 16);
+        Zone(state, Red, 18, 25);
+        var home = AddTown(state, TownIds.Haven, 0, 0, Blue);
+        var away = AddTown(state, TownIds.Haven, 18, 0, Blue);
         var hero = state.GetHero(A);
         hero.HasSpellBook = true;
         hero.Knowledge = 10;
         hero.Learn(AdventureMagic.DimensionDoor);
         hero.Learn(AdventureMagic.TownPortal);
-        var session = Start(state);
-        CommandResult Cast(string spell, MapPosition? target = null) => session.Execute(new CastAdventureSpellCommand(Blue, A, spell, target));
-
-        Assert.Equal("There is no own town to return to.", Cast(AdventureMagic.TownPortal).Error);
-        Assert.Equal(AdventureMagic.OutsideZoneRefusal, Cast(AdventureMagic.DimensionDoor, new MapPosition(10, 7)).Error);
-        Assert.Equal(new MapPosition(4, 7), hero.Position);
-
-        Assert.True(Cast(AdventureMagic.DimensionDoor, new MapPosition(8, 7)).IsAccepted); // inside the zone it works
-        Assert.Equal(new MapPosition(8, 7), hero.Position);
+        return (state, home, away);
     }
 
     [Fact]
@@ -663,14 +729,22 @@ public class TournamentTests
         var town = AddTown(state, TownIds.Haven, 0, 0, Blue);
         town.SetLevel(BuiltInBuildings.Tavern, 1);
         state.GetPlayer(Blue).Resources = new ResourceSet(Gold: 20_000);
+        var monster = Add<MonsterGuard>(state, BuiltInMapObjects.Monster, 1, 8);
+        (monster.Creature, monster.Count, monster.Disposition) = (BuiltInCreatures.Troll, 50, GuardDisposition.Savage);
         var session = Start(state);
         string Offer() => TavernRules.Offers(state, Blue, town)[0].Id;
 
         Assert.Contains("at most 1 heroes", session.Execute(new HireHeroCommand(Blue, town.Id, Offer())).Error!, StringComparison.Ordinal);
 
-        state.RemoveHero(state.GetHero(A)); // Alpha fell
+        // Alpha attacks fifty trolls with ten footmen and falls.
+        session.Execute(new StepHeroCommand(Blue, A, Direction.East)).ThrowIfRejected();
+        session.Execute(new AutoResolveBattleCommand(Blue)).ThrowIfRejected();
+        Assert.Null(state.Battle);
+        Assert.Empty(state.HeroesOf(Blue));
+
         Assert.True(session.Execute(new HireHeroCommand(Blue, town.Id, Offer())).IsAccepted);
         Assert.Single(state.HeroesOf(Blue));
+        Assert.Contains("at most 1 heroes", session.Execute(new HireHeroCommand(Blue, town.Id, Offer())).Error!, StringComparison.Ordinal);
     }
 
     [Fact]
