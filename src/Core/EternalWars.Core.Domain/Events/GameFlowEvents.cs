@@ -42,13 +42,13 @@ public sealed record SimultaneousDayConflicted(string Reason) : IEvent;
 public sealed record SimultaneousDaysEnded(GameDate Date, string Reason) : IEvent;
 
 /// <summary>
-/// Day 2 of an arena map began (ADR-097, ADR-100): each side's champion was chosen and moved to <see cref="CombatPlace"/> (null on a map without
-/// one: the heroes stay where they are). Published after <see cref="DayStarted"/> and the heroes' <c>HeroTeleported</c> or
-/// <c>HeroLeftGarrison</c>, before the battle's <c>DecisionRequested</c> and <c>BattleStarted</c>; no turn starts that day. A side without an
-/// army loses without a battle, and when nobody can fight no event comes: the game just ends (<see cref="GameEnded"/>).
+/// The deciding battle's day began (an arena's day 2, a tournament's day after the last; ADR-097, ADR-100, ADR-366): each side's champion was
+/// chosen and moved to <see cref="CombatPlace"/> (null on a map without one: the heroes stay where they are). Published after
+/// <see cref="DayStarted"/> and the heroes' <c>HeroTeleported</c> or <c>HeroLeftGarrison</c>, before the battle's <c>DecisionRequested</c> and
+/// <c>BattleStarted</c>; no turn starts that day. A side without an army loses without a battle, and when nobody can fight no event comes: the game just ends (<see cref="GameEnded"/>).
 /// </summary>
 [SeenBy(Audience.Witnesses)]
-public sealed record ArenaChampionsChosen(MapObjectId? CombatPlace, PlayerId Attacker, HeroId AttackerHero, PlayerId Defender, HeroId DefenderHero) : IEvent;
+public sealed record ChampionsChosen(MapObjectId? CombatPlace, PlayerId Attacker, HeroId AttackerHero, PlayerId Defender, HeroId DefenderHero) : IEvent;
 
 /// <summary>The game is over; no command is accepted any more. <see cref="Winners"/> is empty when nobody won.</summary>
 [SeenBy(Audience.Everyone)]

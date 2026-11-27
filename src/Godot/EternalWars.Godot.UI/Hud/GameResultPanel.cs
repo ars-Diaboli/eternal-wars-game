@@ -155,7 +155,7 @@ public partial class GameResultPanel : CenterContainer
     public void ShowOutcome(GameState state, GameOutcome outcome)
     {
         var lines = new List<string> { outcome.Reason };
-        if (state.Arena?.Summary is { } arena)
+        if (state.DecidingBattle?.Summary is { } arena)
         {
             lines.Add(arena);
         }

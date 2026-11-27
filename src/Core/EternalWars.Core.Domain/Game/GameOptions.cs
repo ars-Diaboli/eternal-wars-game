@@ -102,6 +102,13 @@ public sealed record GameOptions(
     /// </summary>
     public Common.PlayerId? HostPlayer { get; init; }
 
+    /// <summary>
+    /// A tournament's length in days (ADR-366): the heroes fight at the start of the day after it. 1 to 14 days, or 3 to 12 whole weeks
+    /// (<see cref="TournamentRules.IsLength"/>); null is <see cref="TournamentRules.DefaultDays"/>. Only a tournament map takes one
+    /// (<see cref="TournamentRules.WhyNot"/>). Kept in the record, so saves and replays play the same length.
+    /// </summary>
+    public int? TournamentDays { get; init; }
+
     /// <summary>A play-test's rules (EDIT-5, ADR-267): set by the game started from the editor's Test; null for every other game.</summary>
     public PlayTestRules? PlayTest { get; init; }
 }

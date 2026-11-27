@@ -120,7 +120,7 @@ public class ArenaMapsTests
 
         Assert.Null(state.SimultaneousConflict); // the zones keep the enemies apart, and allies may meet
         Assert.False(state.SimultaneousEnded);
-        Assert.NotEqual(ArenaResult.NoBattle, state.Arena!.Result);
+        Assert.NotEqual(DecidingBattleResult.NoBattle, state.DecidingBattle!.Result);
     }
 
     [Theory]
@@ -131,11 +131,11 @@ public class ArenaMapsTests
         var session = new GameSession(state);
         var ai = new AdventureAi(session, controlHumanSlots: true);
         session.Start();
-        long Best(TeamId team) => state.Players.Where(p => p.Team == team).SelectMany(p => state.HeroesOf(p.Id)).Max(h => ArenaRules.ArmyValue(state, h));
+        long Best(TeamId team) => state.Players.Where(p => p.Team == team).SelectMany(p => state.HeroesOf(p.Id)).Max(h => DecidingBattles.ArmyValue(state, h));
         var teams = state.Players.Select(p => p.Team).Distinct().ToList();
         var start = teams.ToDictionary(t => t, Best);
         var grown = new List<bool>();
-        session.Events.Subscribe<ArenaChampionsChosen>(_ => grown.AddRange(teams.Select(t => Best(t) > start[t])));
+        session.Events.Subscribe<ChampionsChosen>(_ => grown.AddRange(teams.Select(t => Best(t) > start[t])));
 
         while (!state.IsOver && state.Date.AbsoluteDay <= 2)
         {
@@ -143,7 +143,7 @@ public class ArenaMapsTests
         }
 
         Assert.True(state.IsOver);
-        Assert.NotEqual(ArenaResult.NoBattle, state.Arena!.Result);
+        Assert.NotEqual(DecidingBattleResult.NoBattle, state.DecidingBattle!.Result);
         Assert.Equal(0, ai.Refused);
         Assert.Equal([true, true], grown); // each side's best hero is stronger than any of its heroes was at the start
     }

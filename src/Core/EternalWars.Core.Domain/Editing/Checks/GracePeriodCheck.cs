@@ -5,7 +5,8 @@ using EternalWars.Core.Domain.Towns;
 namespace EternalWars.Core.Domain.Editing.Checks;
 
 /// <summary>
-/// Campaign-like maps may start a player without a town (ADR-075): then the grace period should be off. An arena eliminates nobody (ADR-158).
+/// Campaign-like maps may start a player without a town (ADR-075): then the grace period should be off. An arena or a tournament eliminates
+/// nobody (ADR-158, ADR-366).
 /// </summary>
 internal sealed class GracePeriodCheck : IMapCheck
 {
@@ -13,7 +14,7 @@ internal sealed class GracePeriodCheck : IMapCheck
 
     public IEnumerable<MapIssue> Check(GameState scenario)
     {
-        if (!scenario.Rules.Elimination || scenario.Rules.GraceDays <= 0 || scenario.Rules.Arena)
+        if (!scenario.Rules.Elimination || scenario.Rules.GraceDays <= 0 || DecidingBattles.Decides(scenario.Rules))
         {
             yield break;
         }

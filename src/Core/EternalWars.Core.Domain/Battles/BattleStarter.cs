@@ -45,11 +45,12 @@ internal sealed class BattleStarter(GameState state, IEventPublisher events, Art
     }
 
     /// <summary>
-    /// The arena map's battle (ADR-097, ADR-100): the two champions, already on the combat place, fight on its terrain; never a siege or an ambush.
-    /// Both sides have an army (<see cref="ArenaService"/> settles the others). It gives no experience and the AI never leaves it; its result is
-    /// recorded in <see cref="GameState.Arena"/> (<see cref="BattleAftermath.Finish"/>).
+    /// The deciding battle of an arena or a tournament (ADR-097, ADR-100, ADR-366): the two champions, already on the battlefield, fight on its terrain;
+    /// never a siege or an ambush.
+    /// Both sides have an army (<see cref="DecidingBattleService"/> settles the others). It gives no experience and the AI never leaves it; its result is
+    /// recorded in <see cref="GameState.DecidingBattle"/> (<see cref="BattleAftermath.Finish"/>).
     /// </summary>
-    public void BeginArenaBattle(Hero attacker, Hero defender, MapPosition location)
+    public void BeginDecidingBattle(Hero attacker, Hero defender, MapPosition location)
     {
         var battle = Create(Participant(BattleSide.Attacker, attacker), Participant(BattleSide.Defender, defender), location, isAmbush: false);
         Begin(attacker, battle, Stacks(attacker), Stacks(defender));

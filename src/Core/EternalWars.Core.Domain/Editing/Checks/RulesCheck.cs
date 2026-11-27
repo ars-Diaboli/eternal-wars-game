@@ -61,7 +61,7 @@ internal sealed class RulesCheck : IMapCheck
         {
             yield return new(IssueSeverity.Warning, "Nobody can win this scenario: the standard victory is off and there is no victory condition.");
         }
-        else if (!rules.Arena && rules.StandardVictory && rules.Victory.Count == 0
+        else if (!DecidingBattles.Decides(rules) && rules.StandardVictory && rules.Victory.Count == 0
                  && scenario.Players.Where(p => scenario.HeroesOf(p.Id).Any() || scenario.ObjectsOf<Town>().Any(t => t.Owner == p.Id)).Select(p => p.Team).Distinct().Count() < 2)
         {
             yield return new(IssueSeverity.Warning, "Fewer than two teams start with a hero or a town, so the game cannot end by defeating enemies.");

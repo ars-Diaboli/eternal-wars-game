@@ -230,8 +230,8 @@ public class SmokeMapTests
 
         Assert.Equal(2, state.Date.AbsoluteDay);
         Assert.NotNull(state.Battle);
-        Assert.Equal(place.Id, state.Arena!.CombatPlace);
-        Assert.Matches(@"^Orrin \(Blue\) attacked \w+ \(Red\)\.$", state.Arena.Summary); // the AI may have hired a stronger hero on day 1
+        Assert.Equal(place.Id, state.DecidingBattle!.CombatPlace);
+        Assert.Matches(@"^Orrin \(Blue\) attacked \w+ \(Red\)\.$", state.DecidingBattle.Summary); // the AI may have hired a stronger hero on day 1
         Assert.Equal(place.AttackCell, state.GetHero(new HeroId(1)).Position);
         Assert.NotNull(session.Battles.Commander(BattleSide.Attacker)); // the human fights it by hand
 

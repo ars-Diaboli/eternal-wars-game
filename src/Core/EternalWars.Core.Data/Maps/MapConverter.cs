@@ -171,7 +171,8 @@ public static partial class MapConverter
             rules.Bans.Spells.Count == 0 ? null : rules.Bans.Spells,
             rules.Bans.Skills.Count == 0 ? null : rules.Bans.Skills),
         rules.Arena ? true : null,
-        rules.Rumours.Count == 0 ? null : rules.Rumours.ToList());
+        rules.Rumours.Count == 0 ? null : rules.Rumours.ToList(),
+        rules.Tournament ? true : null);
 
     private static WeekEventsDocument ToDocument(WeekEventSettings events) => new(
         events.Enabled,
@@ -206,6 +207,7 @@ public static partial class MapConverter
             Bans = ToBans(document.Bans),
             Arena = document.Arena == true,
             Rumours = document.Rumours?.ToList() ?? [],
+            Tournament = document.Tournament == true,
         };
 
     /// <summary>The map's bans (v35); skill ids are resolved like everywhere else, and each list is sorted without repeats.</summary>

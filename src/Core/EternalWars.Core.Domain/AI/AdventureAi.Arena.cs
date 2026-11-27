@@ -9,7 +9,7 @@ namespace EternalWars.Core.Domain.AI;
 /// The arena's preparation day (ADR-097, ADR-160): there is no tomorrow, so the AI spends everything on the army that fights at the start of day 2.
 /// Towns spend everything on troops (<see cref="TownManager.PrepareTown"/>). Heroes skip what pays only later (mines, providers, flags), fight only for small
 /// losses, and see no danger (the map keeps the players apart). At the end of the day the strongest hero collects the towns' troops and every
-/// other hero brings it its army: that hero is the one <see cref="ArenaRules.Champion"/> sends.
+/// other hero brings it its army: that hero is the one <see cref="DecidingBattles.Champion"/> sends.
 /// </summary>
 public sealed partial class AdventureAi
 {
@@ -22,7 +22,7 @@ public sealed partial class AdventureAi
     /// </summary>
     private bool GatherForBattle(PlayerId player)
     {
-        if (_state.HeroesOf(player).OrderByDescending(h => ArenaRules.ArmyValue(_state, h)).ThenBy(h => h.Id.Value).FirstOrDefault() is not { } champion)
+        if (_state.HeroesOf(player).OrderByDescending(h => DecidingBattles.ArmyValue(_state, h)).ThenBy(h => h.Id.Value).FirstOrDefault() is not { } champion)
         {
             return true;
         }

@@ -12,7 +12,7 @@ using EternalWars.Core.Events;
 namespace EternalWars.Core.Domain.Battles;
 
 /// <summary>
-/// The end of a battle on the adventure map: the arena's result, the heroes' mana, the survivors back into their slots, Necromancy and Raise Dead,
+/// The end of a battle on the adventure map: the deciding battle's result, the heroes' mana, the survivors back into their slots, Necromancy and Raise Dead,
 /// experience, the loser's artifacts, a beaten hero leaving the map and what a won or lost battle does to a guard (described by <see cref="IBattleGuard"/>, applied by
 /// <see cref="BattleGuardService"/>).
 /// </summary>
@@ -26,8 +26,8 @@ internal sealed class BattleAftermath(
     /// <summary>Experience for defeating (not merely routing) an enemy hero.</summary>
     public const int HeroDefeatExperience = 500;
 
-    /// <summary>Whether the battle being fought is an arena map's battle (ADR-097).</summary>
-    public bool IsArenaBattle => state.Arena is { Result: ArenaResult.Fighting };
+    /// <summary>Whether the battle being fought is the deciding battle of an arena or a tournament (ADR-097, ADR-366).</summary>
+    public bool IsDecidingBattle => state.DecidingBattle is { Result: DecidingBattleResult.Fighting };
 
     public void Finish(BattleState battle)
     {
@@ -37,12 +37,13 @@ internal sealed class BattleAftermath(
         var winning = battle.Participant(winner);
         var losing = battle.Participant(loser);
 
-        // The arena's battle gives no experience (BattleOutcome) and decides the game (ADR-097): both armies fallen is a draw, a retreat or surrender loses.
-        var arena = IsArenaBattle ? state.Arena : null;
-        if (arena is not null)
+        // The deciding battle gives no experience (BattleOutcome) and decides the game (ADR-097, ADR-366): both armies fallen is a draw, a
+        // retreat or surrender loses.
+        var deciding = IsDecidingBattle ? state.DecidingBattle : null;
+        if (deciding is not null)
         {
             var draw = reason == BattleEndReason.Defeated && !battle.OwnedArmyOf(BattleSide.Attacker).Any() && !battle.OwnedArmyOf(BattleSide.Defender).Any();
-            state.Arena = draw ? arena with { Result = ArenaResult.Draw } : arena with { Result = ArenaResult.Won, Winner = winning.Owner };
+            state.DecidingBattle = draw ? deciding with { Result = DecidingBattleResult.Draw } : deciding with { Result = DecidingBattleResult.Won, Winner = winning.Owner };
         }
 
         // The mana the heroes spent is gone (ADR-110); mana lent for a siege (ADR-138) is spent first and does not outlast the battle.

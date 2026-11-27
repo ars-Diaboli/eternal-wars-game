@@ -87,7 +87,7 @@ public class ArenaAiTests
 
         Assert.True(ai.PlayTurn());
 
-        var champion = ArenaRules.Champion(state, state.GetPlayer(Blue).Team)!;
+        var champion = DecidingBattles.Champion(state, state.GetPlayer(Blue).Team)!;
         Assert.True(town.Garrison.IsEmpty);
         Assert.All(state.HeroesOf(Blue).Where(h => h != champion), h => Assert.True(h.Army.Stacks.Sum(s => s.Stack.Count) <= 1));
         Assert.Equal(0, ai.Refused);

@@ -760,14 +760,15 @@ public partial class AdventureHud : CanvasLayer
     }
 
     /// <summary>
-/// The status line tells of the game's flow: the arena battle's day (ADR-097), defeats, a lost last town's grace period, and a human's lost
+/// The status line tells of the game's flow: the deciding battle's day (ADR-097, ADR-366), defeats, a lost last town's grace period, and a human's lost
 /// town or hero (ADR-317).
 /// </summary>
     public void ReportGameFlow()
     {
-        // An arena map's day 2 (ADR-097): the battle opens by itself; the status line says who meets whom.
-        this.SubscribeWhileInTree<ArenaChampionsChosen>(_session.Events, _ =>
-            Status.Text = $"Day 2: the arena battle. {_session.State.Arena?.Summary}");
+        // The deciding battle's day (an arena's day 2, a tournament's day after the last; ADR-097, ADR-366): the battle opens by itself; the
+        // status line says who meets whom.
+        this.SubscribeWhileInTree<ChampionsChosen>(_session.Events, _ =>
+            Status.Text = $"Day {_session.State.Date.AbsoluteDay}: the {DecidingBattles.Name(_session.State.Rules)}. {_session.State.DecidingBattle?.Summary}");
 
         this.SubscribeWhileInTree<PlayerDefeated>(_session.Events, e =>
             Status.Text = $"{_session.State.GetPlayer(e.Player).Name} is defeated: {e.Reason}");

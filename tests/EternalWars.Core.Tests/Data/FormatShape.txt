@@ -1,4 +1,4 @@
-# Map files (*.ewmap.json), format v44
+# Map files (*.ewmap.json), format v45
 object AllCondition
   conditions: IReadOnlyList<EventCondition>
 object AllyCondition
@@ -617,6 +617,7 @@ object ScenarioRulesDocument
   maxHeroes: Int32?
   rumours: IReadOnlyList<String>
   standardVictory: Boolean
+  tournament: Boolean?
   victory: IReadOnlyList<ConditionDocument>
   weekEvents: WeekEventsDocument
 object SceneryDocument
@@ -1258,6 +1259,7 @@ object GameOptions
   seed: UInt64
   simultaneousFirstWeek: Boolean
   startTowns: IReadOnlyDictionary<Int32, String>
+  tournamentDays: Int32?
   turnTimerMinutes: Int32?
 object GameRecordDocument
   campaign: CampaignRecord
@@ -1803,6 +1805,7 @@ object ScenarioRulesDocument
   maxHeroes: Int32?
   rumours: IReadOnlyList<String>
   standardVictory: Boolean
+  tournament: Boolean?
   victory: IReadOnlyList<ConditionDocument>
   weekEvents: WeekEventsDocument
 object SceneryDocument

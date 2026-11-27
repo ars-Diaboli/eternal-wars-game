@@ -1,5 +1,5 @@
 {
-  "formatVersion": 44,
+  "formatVersion": 45,
   "name": "Format sample",
   "description": "One object of every kind, for the format tests.",
   "width": 64,
@@ -302,7 +302,8 @@
     "rumours": [
       "They say the old bridge is guarded.",
       "Gold flows east this season."
-    ]
+    ],
+    "tournament": true
   },
   "heroes": [
     {

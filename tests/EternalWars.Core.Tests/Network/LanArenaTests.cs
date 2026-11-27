@@ -77,7 +77,7 @@ public class LanArenaTests
 
         Assert.Equal([Blue], state.Outcome!.Winners);
         Assert.Equal([Blue], red.Session.State.Outcome!.Winners);
-        Assert.Equal(ArenaResult.Won, red.Session.State.Arena!.Result);
+        Assert.Equal(DecidingBattleResult.Won, red.Session.State.DecidingBattle!.Result);
     }
 
     [Fact]

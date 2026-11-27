@@ -24,8 +24,8 @@ internal sealed record BattleOutcome(
         var reason = battle.EndReason!.Value;
         var winning = battle.Participant(winner);
         var losing = battle.Participant(winner.Opponent());
-        var arena = state.Arena is { Result: ArenaResult.Fighting };
-        var experience = winning.Hero is null || arena ? 0 : ExperienceOf(battle);
+        var deciding = state.DecidingBattle is { Result: DecidingBattleResult.Fighting };
+        var experience = winning.Hero is null || deciding ? 0 : ExperienceOf(battle);
         IReadOnlyList<Common.ArtifactId> loot = reason == BattleEndReason.Defeated && winning.Hero is not null && losing.Hero is { } loserId
             ? ArtifactValue.BestFirst(state.Artifacts, state.GetHero(loserId).Artifacts.AllWorn.Select(w => w.Id).Concat(state.GetHero(loserId).Artifacts.Backpack)).ToList()
             : [];

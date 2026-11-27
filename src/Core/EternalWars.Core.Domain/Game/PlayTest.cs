@@ -170,7 +170,7 @@ public sealed record PlayTestArguments(int Player, PlayTestOthers Others = PlayT
     /// <summary>
     /// Why <paramref name="state"/> cannot be play-tested so (the editor's Test window asks before it starts the game); null when it can: the
     /// map has no such player, the start tile is off the map, not walkable or taken (by anything but a hero of the play-tester), or an arena
-    /// map would not start on day 1 (its battle is on day 2).
+    /// map would not start on day 1 (its battle is on day 2), or a tournament could not start (<see cref="TournamentRules.WhyNot"/>).
     /// </summary>
     public string? WhyNot(GameState state)
     {
@@ -185,7 +185,19 @@ public sealed record PlayTestArguments(int Player, PlayTestOthers Others = PlayT
             return $"The start {start} cannot be used: {why}.";
         }
 
-        return state.Rules.Arena && Day != 1 ? "An arena map starts on day 1: its battle is on day 2." : null;
+        if (TournamentRules.WhyNot(state) is { } notATournament)
+        {
+            return notATournament;
+        }
+
+        if (state.Rules.Arena && Day != 1)
+        {
+            return "An arena map starts on day 1: its battle is on day 2.";
+        }
+
+        return state.Rules.Tournament && Day >= TournamentRules.BattleDay(state.Options)
+            ? $"A tournament's battle is on day {TournamentRules.BattleDay(state.Options)}: the play-test starts before it."
+            : null;
     }
 }
 

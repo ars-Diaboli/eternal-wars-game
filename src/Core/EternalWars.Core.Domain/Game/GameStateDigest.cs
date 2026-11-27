@@ -100,8 +100,9 @@ public static class GameStateDigest
             Line($"events {mapEvents}");
         }
 
-        // The arena battle (ADR-097) only once it is chosen, so older replays keep their digests.
-        if (state.Arena is { } arena)
+        // The deciding battle of an arena or a tournament (ADR-097, ADR-366) only once it is chosen, so older replays keep their digests; the
+        // line keeps its "arena" label for both, so arena replays keep theirs.
+        if (state.DecidingBattle is { } arena)
         {
             Line($"arena {arena.CombatPlace?.Value} {arena.Attacker?.Value}:{arena.AttackerHero?.Value} {arena.Defender?.Value}:{arena.DefenderHero?.Value} {arena.Result} {arena.Winner?.Value}");
         }

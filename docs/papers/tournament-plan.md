@@ -25,7 +25,7 @@ battle that decides the game. The tournament stretches that phase from one day t
 
 | Existing piece | ADR | What the tournament takes from it |
 |---|---|---|
-| Arena battle | ADR-158 | The battle that starts by itself, the champion, no experience, draw handling, the result in `GameState.Arena` and the end of the game |
+| Arena battle | ADR-158 | The battle that starts by itself, the champion, no experience, draw handling, the result in `GameState.DecidingBattle` and the end of the game |
 | Arena in the game app | ADR-159 | The result screen with "Play again" and "Save replay", not ranked |
 | Arena AI | ADR-160 | The last day's spending on the battle's army (`TownManager.Arena`) |
 | Arena over the LAN | ADR-199 | The battle fought live, and the host's rematch |
@@ -122,17 +122,21 @@ tournaments before any screen exists.
 - The owner answered TRN-1 to TRN-9 on 2026-11-27; ADR-366 holds the answers.
 
 ### 1. Core rules (engine-free, with tests)
-- **Switch and option:**
+- **Switch and option** (done):
   - `ScenarioRules.Tournament` (`rules.tournament`), and the map format bumped with a sample in `FormatSamples`.
   - `GameOptions.TournamentDays`, carried in saves and replays.
   - The checks:
     - a tournament map has exactly two players, no teams and `MaxHeroes` = 1;
     - an arena and a tournament exclude each other;
     - the length must be 1 to 14 days, or 3 to 12 whole weeks.
-- **Game flow:**
+- **Game flow** (done):
   - `TournamentRules.BattleDay`, and `GameFlowService` ignoring the conditions.
-  - `TurnService` starting the battle instead of a turn on day N + 1. This shares `ArenaService` (the champion, the battle, the result),
-    generalised to "a deciding battle" with the arena and the tournament as its two triggers.
+  - `RulesCheck` (fewer than two teams, nobody can win), `GracePeriodCheck`, `MapKinds`, `ScoreRules` (never ranked) and the editor's
+    `ConditionsPanel` treat the tournament as the arena. A map event's end of the game counts for nothing in either.
+  - `TurnService` starting the battle instead of a turn on day N + 1. This shares the arena's battle (the champion, the battle, the result),
+    generalised to "a deciding battle" (`DecidingBattles`, `DecidingBattleService`, `GameState.DecidingBattle`) with the arena and the
+    tournament as its two triggers. Until the battle's own rules below, the tournament's battle is chosen as the arena's and a side without a
+    hero is a loss for both.
 - **The battle:**
   - No retreat or surrender for either side (the commands are refused).
   - The neutral battlefield (terrain and obstacles from the seed) and the coin toss.

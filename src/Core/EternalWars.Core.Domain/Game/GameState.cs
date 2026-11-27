@@ -202,8 +202,8 @@ public sealed class GameState
 
     public bool IsOver => Outcome is not null;
 
-    /// <summary>The arena map's battle (ADR-097), chosen at the start of day 2; null before, and on every other map.</summary>
-    public ArenaBattle? Arena { get; internal set; }
+    /// <summary>The deciding battle of an arena or a tournament (ADR-097, ADR-366), chosen at the start of its day (<see cref="DecidingBattles.Day"/>); null before, and on every other map.</summary>
+    public DecidingBattle? DecidingBattle { get; internal set; }
 
     public PendingDecision? PendingDecision
     {
@@ -370,8 +370,8 @@ public sealed class GameState
     public bool AreEnemies(PlayerId a, PlayerId b) => GetPlayer(a).Team != GetPlayer(b).Team;
 
     /// <summary>
-    /// Game setup: overrides the map's default teams. Refused once the game started or when the map locks
-    /// its teams (story/scenario maps).
+    /// Game setup: overrides the map's default teams. Refused once the game started, when the map locks
+    /// its teams (story/scenario maps), and when a tournament's two players would be allies (ADR-366).
     /// </summary>
     public void AssignTeams(IReadOnlyDictionary<PlayerId, TeamId> teams)
     {
@@ -389,6 +389,11 @@ public sealed class GameState
         if (TeamCountProblem(after) is { } problem)
         {
             throw new InvalidOperationException(problem);
+        }
+
+        if (Rules.Tournament && after < 2)
+        {
+            throw new InvalidOperationException("The two players of a tournament cannot be allies.");
         }
 
         foreach (var (player, team) in teams)

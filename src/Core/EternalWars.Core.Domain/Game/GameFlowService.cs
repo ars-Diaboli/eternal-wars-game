@@ -112,10 +112,12 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
             return;
         }
 
-        // An arena map ends with its battle alone (ADR-097): no conditions, no eliminations before it.
-        if (state.Rules.Arena)
+        // An arena or a tournament ends with its deciding battle alone (ADR-097, ADR-366): no conditions, no eliminations before it. A map
+        // event's end of the game counts for nothing either, and is dropped so the map's events go on (ADR-242).
+        if (DecidingBattles.Decides(state.Rules))
         {
-            EvaluateArena();
+            state.ScriptedEnd = null;
+            EvaluateDecidingBattle();
             return;
         }
 
@@ -174,20 +176,24 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
 
     private IEnumerable<Player> InGame() => state.Players.Where(p => p.TookPart && !p.IsDefeated);
 
-    /// <summary>The arena battle's winner's team wins the game; a draw, or no battle at all, is a loss for everyone (ADR-097, ADR-100).</summary>
-    private void EvaluateArena()
+    /// <summary>
+    /// The deciding battle's winner's team wins the game; a draw, or no battle at all, is a loss for everyone (ADR-097, ADR-100, ADR-366). The
+    /// reasons name the battle (<see cref="DecidingBattles.Name"/>).
+    /// </summary>
+    private void EvaluateDecidingBattle()
     {
-        switch (state.Arena)
+        var name = DecidingBattles.Name(state.Rules);
+        switch (state.DecidingBattle)
         {
-            case { Result: ArenaResult.Won, Winner: { } winner }:
+            case { Result: DecidingBattleResult.Won, Winner: { } winner }:
                 var player = state.GetPlayer(winner);
-                End(player.Team, $"{player.Name} won the arena battle.");
+                End(player.Team, $"{player.Name} won the {name}.");
                 break;
-            case { Result: ArenaResult.Draw }:
-                End(null, "The arena battle ended in a draw: both armies fell.");
+            case { Result: DecidingBattleResult.Draw }:
+                End(null, $"The {name} ended in a draw: both armies fell.");
                 break;
-            case { Result: ArenaResult.NoBattle, Reason: var reason }:
-                End(null, reason ?? "No arena battle was fought.");
+            case { Result: DecidingBattleResult.NoBattle, Reason: var reason }:
+                End(null, reason ?? $"No {name} was fought.");
                 break;
         }
     }

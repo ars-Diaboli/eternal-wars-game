@@ -55,8 +55,8 @@ public sealed class BattleService
 
     internal void BeginHeroBattle(Hero attacker, Hero defender, bool isAmbush) => _starter.BeginHeroBattle(attacker, defender, isAmbush);
 
-    /// <inheritdoc cref="BattleStarter.BeginArenaBattle"/>
-    internal void BeginArenaBattle(Hero attacker, Hero defender, MapPosition location) => _starter.BeginArenaBattle(attacker, defender, location);
+    /// <inheritdoc cref="BattleStarter.BeginDecidingBattle"/>
+    internal void BeginDecidingBattle(Hero attacker, Hero defender, MapPosition location) => _starter.BeginDecidingBattle(attacker, defender, location);
 
     internal void BeginGuardBattle(Hero attacker, MapObject guard, Common.CreatureId creature, int count) => _starter.BeginGuardBattle(attacker, guard, creature, count);
 

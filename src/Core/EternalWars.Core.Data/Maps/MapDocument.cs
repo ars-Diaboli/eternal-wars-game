@@ -54,12 +54,12 @@ namespace EternalWars.Core.Data.Maps;
 /// the end of the game (<c>dialogue</c>, <c>endGame</c>; ADR-242). 43 = + how scenery lies (<c>turns</c>: quarter turns clockwise, 1 to 3, and
 /// <c>mirrored</c> on a <c>scenery</c> object; omitted = as its definition draws it; ADR-252). 44 = + the map's rumours (<c>rules.rumours</c>),
 /// the factions a player may take (<c>factions</c> on a player slot), a name on any object (<c>name</c>, which towns had already) and a hero's
-/// <c>biography</c> and <c>portrait</c> (ADR-257). Older versions still
+/// <c>biography</c> and <c>portrait</c> (ADR-257). 45 = + the tournament switch (<c>rules.tournament</c>; omitted = off; ADR-366). Older versions still
 /// load: <see cref="MapSerializer"/> upgrades their JSON first (<see cref="MapMigrations"/>, ADR-174), so this record is the current format only.
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 44;
+    public const int CurrentFormatVersion = 45;
 
     /// <summary>The format the document is in; a file read through <see cref="MapSerializer"/> has been upgraded to the current one.</summary>
     public int FormatVersion { get; init; } = CurrentFormatVersion;
@@ -129,7 +129,8 @@ public sealed record CellDocument(int X, int Y, int Level = 0);
 /// (the most heroes a player may have at once). <see cref="WeekEvents"/> (v24) omitted = the default week and month events.
 /// <see cref="Difficulty"/> (v26) omitted = none (counts as Normal; names before v41 were one step lower, ADR-225). <see cref="Arena"/> (v38, ADR-097) true makes the map an
 /// arena (a day of preparation, then one battle decides the game; the conditions do not count); omitted = off. <see cref="Rumours"/> (v44,
-/// ADR-257) the taverns tell one a week; omitted = none.
+/// ADR-257) the taverns tell one a week; omitted = none. <see cref="Tournament"/> (v45, ADR-366) true makes the map a tournament (two players build
+/// up apart, then their heroes fight one battle); omitted = off.
 /// </summary>
 public sealed record ScenarioRulesDocument(
     IReadOnlyList<ConditionDocument>? Victory = null,
@@ -142,7 +143,8 @@ public sealed record ScenarioRulesDocument(
     Difficulty? Difficulty = null,
     BansDocument? Bans = null,
     bool? Arena = null,
-    IReadOnlyList<string>? Rumours = null);
+    IReadOnlyList<string>? Rumours = null,
+    bool? Tournament = null);
 
 /// <summary>The map's bans (v35, ADR-126): roster hero, artifact, spell and skill ids; each list omitted when empty, the whole omitted when nothing is banned.</summary>
 public sealed record BansDocument(

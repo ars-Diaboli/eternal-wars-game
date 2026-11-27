@@ -9,9 +9,17 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Academy portraits regenerated from the paired sheets and cut (A1–A11 and the backdrop, 2026-11-27): the eighteen Academy
+  creatures, the thanes, the efreet and the golden golem; each cell centred on a square so the whole figure sits in the middle 2:3.
+  Prompt follow-ups not yet regenerated: the pale naga (ADR-366), the efreet and golden golem (ADR-367), metal-skinned titans in
+  Greek helmets (ADR-368).
 - Tournament mode planned (ADR-366, owner): [tournament-plan.md](../docs/papers/tournament-plan.md) and the roadmap's section; TRN-1 …
-  TRN-9 answered (the proposals; lengths 1–14 days then whole weeks up to 12; battles at the same time on every simultaneous day). Next:
-  step 1, the core rules. Nothing built yet.
+  TRN-9 answered (the proposals; lengths 1–14 days then whole weeks up to 12; battles at the same time on every simultaneous day).
+  Step 1 begun: `ScenarioRules.Tournament` (map format v45), `GameOptions.TournamentDays`, `TournamentRules` (lengths, `MapProblems`,
+  `WhyNot`), the validator's `TournamentCheck` and `GameSession.Start` refusing an unfit tournament; the game flow: the arena's battle
+  generalised to the deciding battle (`DecidingBattles`, `DecidingBattleService`, `GameState.DecidingBattle`), started on day N + 1 before
+  any turn, the map's conditions ignored, never ranked, `MapKind.Tournament`; `TournamentTests`. Next: the battle's own rules (no retreat
+  or surrender, neutral ground, coin toss, the hero's army only, the no-hero endings), then isolation.
 - Creature prompts as sheets of two (ADR-360): the base and its upgrade side by side, each creature whole in a 2:3 cell, files still
   512 × 512 (the cell centred on a square); every faction's sheets renumbered (Haven H1–H9 … neutral X1–X3); the owner's later
   reviews folded in (Bestiary W1–W5, Academy A1, Conflux ADR-357 to ADR-359, the toad-like kappa ADR-365). New creatures, all

@@ -110,12 +110,12 @@ public class ArenaTests
         ToBattleDay(session);
 
         // Nobody stood on the combat place: the first player in turn order attacks, the next enemy defends.
-        Assert.Equal(new ArenaBattle(place.Id, Blue, A, Red, B), state.Arena! with { Summary = null });
+        Assert.Equal(new DecidingBattle(place.Id, Blue, A, Red, B), state.DecidingBattle! with { Summary = null });
         Assert.Equal((place.AttackCell, place.VisitPosition), (state.GetHero(A).Position, state.GetHero(B).Position));
         Assert.IsType<BattleDecision>(state.PendingDecision);
         Assert.Equal((A, B), (state.Battle!.Attacker.Hero, state.Battle.Defender.Hero));
         Assert.Equal(2, state.Date.AbsoluteDay);
-        var chosen = events.FindIndex(e => e is ArenaChampionsChosen);
+        var chosen = events.FindIndex(e => e is ChampionsChosen);
         Assert.True(events.FindIndex(e => e is DayStarted { Date.AbsoluteDay: 2 }) < chosen);
         Assert.True(chosen < events.FindIndex(e => e is BattleStarted));
         Assert.DoesNotContain(events, e => e is TurnStarted { Date.AbsoluteDay: 2 });
@@ -131,7 +131,7 @@ public class ArenaTests
 
         session.AutoResolve();
 
-        Assert.Equal((ArenaResult.Won, Blue), (state.Arena!.Result, state.Arena.Winner));
+        Assert.Equal((DecidingBattleResult.Won, Blue), (state.DecidingBattle!.Result, state.DecidingBattle.Winner));
         Assert.True(state.IsOver);
         Assert.Equal([Blue], state.Outcome!.Winners);
         Assert.Equal("Blue won the arena battle.", state.Outcome.Reason);
@@ -150,8 +150,8 @@ public class ArenaTests
         session.MoveTo(B, second!.VisitPosition);
         session.EndTurn(); // Red
 
-        Assert.Equal(new ArenaBattle(second.Id, Blue, A, Red, B), state.Arena! with { Summary = null });
-        Assert.NotEqual(first.Id, state.Arena!.CombatPlace);
+        Assert.Equal(new DecidingBattle(second.Id, Blue, A, Red, B), state.DecidingBattle! with { Summary = null });
+        Assert.NotEqual(first.Id, state.DecidingBattle!.CombatPlace);
         Assert.Equal((second.AttackCell, second.VisitPosition), (state.GetHero(A).Position, state.GetHero(B).Position));
     }
 
@@ -164,7 +164,7 @@ public class ArenaTests
         session.MoveTo(B, place.VisitPosition);
         session.EndTurn(); // Red
 
-        Assert.Equal((Blue, Red), (state.Arena!.Attacker, state.Arena.Defender));
+        Assert.Equal((Blue, Red), (state.DecidingBattle!.Attacker, state.DecidingBattle.Defender));
         Assert.Equal((Blue, Red), (state.Battle!.Attacker.Owner, state.Battle.Defender.Owner));
     }
 
@@ -179,7 +179,7 @@ public class ArenaTests
         session.MoveTo(A, place.VisitPosition); // the weaker hero claims the place for Blue
         ToBattleDay(session);
 
-        Assert.Equal(new ArenaBattle(place.Id, Red, B, Blue, C), state.Arena! with { Summary = null });
+        Assert.Equal(new DecidingBattle(place.Id, Red, B, Blue, C), state.DecidingBattle! with { Summary = null });
         Assert.Equal(place.VisitPosition, state.GetHero(C).Position);
         Assert.Equal(new MapPosition(0, 2), state.GetHero(A).Position);
         Assert.Equal(place.AttackCell, state.GetHero(B).Position);
@@ -216,7 +216,7 @@ public class ArenaTests
         session.Execute(new BattleRetreatCommand(Red)).ThrowIfRejected();
 
         Assert.Equal([Blue], state.Outcome!.Winners);
-        Assert.Equal(ArenaResult.Won, state.Arena!.Result);
+        Assert.Equal(DecidingBattleResult.Won, state.DecidingBattle!.Result);
     }
 
     [Fact]
@@ -226,7 +226,7 @@ public class ArenaTests
         var session = Start(state);
         ToBattleDay(session);
 
-        Assert.Equal(ArenaResult.NoBattle, state.Arena!.Result);
+        Assert.Equal(DecidingBattleResult.NoBattle, state.DecidingBattle!.Result);
         Assert.Null(state.Battle);
         Assert.True(state.IsOver);
         Assert.Empty(state.Outcome!.Winners);
@@ -244,7 +244,7 @@ public class ArenaTests
         var session = Start(state);
         ToBattleDay(session);
 
-        Assert.Equal(ArenaResult.Draw, state.Arena!.Result);
+        Assert.Equal(DecidingBattleResult.Draw, state.DecidingBattle!.Result);
         Assert.Empty(state.Outcome!.Winners);
     }
 

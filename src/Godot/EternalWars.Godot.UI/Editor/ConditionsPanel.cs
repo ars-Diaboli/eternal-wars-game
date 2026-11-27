@@ -15,8 +15,8 @@ namespace EternalWars.Godot.UI.Editor;
 /// <summary>
 /// The map settings window's Victory and loss tab (ADR-057): the default rules (the last team standing wins, no towns and no heroes means
 /// defeat) can be switched off, and special victory and defeat conditions added or removed. Every change goes through the session's rules
-/// edit, so it is undoable. On an arena map (ADR-097, the General tab's switch) the conditions stay stored but count for nothing, so their
-/// controls are off.
+/// edit, so it is undoable. On an arena or a tournament map (ADR-097, ADR-366, the General tab's switches) the conditions stay stored but count
+/// for nothing, so their controls are off.
 /// </summary>
 public partial class ConditionsPanel : VBoxContainer
 {
@@ -38,7 +38,7 @@ public partial class ConditionsPanel : VBoxContainer
     /// <summary>The "Any player" item's id: not -1, which <see cref="OptionButton.AddItem"/> takes as "number it by its index" (player 0's id).</summary>
     private const int AnyPlayer = int.MaxValue;
 
-    private readonly Label _arenaNote = new() { Text = "This map is an arena (General tab): it ignores the victory and defeat conditions below." };
+    private readonly Label _decidingNote = new();
     private readonly Button _add = new() { Text = "Add condition" };
     private readonly CheckBox _standard = new() { Text = "Last team standing wins (defeat every enemy)" };
     private readonly CheckBox _elimination = new() { Text = "No towns and no heroes means defeat" };
@@ -63,7 +63,7 @@ public partial class ConditionsPanel : VBoxContainer
     public void Bind(MapEditorSession editor)
     {
         _editor = editor;
-        AddChild(_arenaNote);
+        AddChild(_decidingNote);
         _standard.Toggled += on => Change(r => r with { StandardVictory = on });
         AddChild(_standard);
         _elimination.Toggled += on => Change(r => r with { Elimination = on });
@@ -130,14 +130,16 @@ public partial class ConditionsPanel : VBoxContainer
     private void Refresh()
     {
         var rules = Scenario.Rules;
-        _arenaNote.Visible = rules.Arena;
-        _standard.Disabled = rules.Arena;
-        _elimination.Disabled = rules.Arena;
-        _add.Disabled = rules.Arena;
+        var deciding = DecidingBattles.Decides(rules);
+        _decidingNote.Visible = deciding;
+        _decidingNote.Text = $"This map is {(rules.Tournament ? "a tournament" : "an arena")} (General tab): it ignores the victory and defeat conditions below.";
+        _standard.Disabled = deciding;
+        _elimination.Disabled = deciding;
+        _add.Disabled = deciding;
         _standard.SetPressedNoSignal(rules.StandardVictory);
         _elimination.SetPressedNoSignal(rules.Elimination);
         _grace.SetValueNoSignal(rules.GraceDays);
-        _grace.Editable = rules.Elimination && !rules.Arena;
+        _grace.Editable = rules.Elimination && !deciding;
         _list.ClearChildren();
 
         AddRows("Victory", rules.Victory, (r, c) => r with { Victory = r.Victory.Where(x => x != c).ToList() });

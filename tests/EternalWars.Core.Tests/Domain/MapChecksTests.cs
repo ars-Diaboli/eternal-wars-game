@@ -25,7 +25,7 @@ public sealed class MapChecksTests
                 typeof(HeroCheck), typeof(ObjectCheck), typeof(NameCheck), typeof(GroundCheck), typeof(ColourCheck), typeof(StartCheck), typeof(FactionsCheck),
                 typeof(GracePeriodCheck),
                 typeof(HeroLimitCheck), typeof(RulesCheck), typeof(BansCheck), typeof(PlaceholderCheck), typeof(EventCheck), typeof(GrailCheck),
-                typeof(ArenaCheck), typeof(StartZoneCheck),
+                typeof(ArenaCheck), typeof(TournamentCheck), typeof(StartZoneCheck),
             ],
             MapChecks.All.Select(c => c.GetType()));
 

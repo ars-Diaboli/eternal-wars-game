@@ -648,7 +648,7 @@ the agent's and stand unless the owner changes them.
 - **Not done**: a campaign editor, cutscenes, per-map starting bonuses, the prologue map (CAMP-1, its own roadmap item).
 
 ### ADR-366: Tournament mode: two players build up apart, then one battle decides (owner, ADR-097, ADR-158, ADR-197, 2026-11-27)
-**Status**: accepted (2026-11-27), not built. [tournament-plan.md](../../docs/papers/tournament-plan.md) holds the guide and the plan; the
+**Status**: accepted (2026-11-27), being built: the switch, the length and their checks; the game flow to the deciding battle. [tournament-plan.md](../../docs/papers/tournament-plan.md) holds the guide and the plan; the
 roadmap's "Tournament mode" section tracks it. The owner answered TRN-1 to TRN-9 the same day (below).
 
 - **The owner's request**:

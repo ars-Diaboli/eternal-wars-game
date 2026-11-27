@@ -49,11 +49,11 @@ public static class ScoreRules
 
     /// <summary>
     /// Whether the game may be ranked: a map is campaign-like (not ranked) when a human player started without a town (ADR-075), or when a map
-    /// event favours people over computer players (<see cref="MapEvents.MapEventChecks.FavoursPeople"/>); an arena map is never ranked (ADR-100),
-    /// nor is a campaign's map (ADR-241) or a play-test (ADR-267).
+    /// event favours people over computer players (<see cref="MapEvents.MapEventChecks.FavoursPeople"/>); an arena or a tournament is never ranked
+    /// (ADR-100, ADR-366), nor is a campaign's map (ADR-241) or a play-test (ADR-267).
     /// </summary>
     public static bool IsRanked(GameState state) =>
-        state.IsStarted && !state.Rules.Arena && !Campaigns.CampaignRules.InCampaign(state.Options) && state.Options.PlayTest is null
+        state.IsStarted && !DecidingBattles.Decides(state.Rules) && !Campaigns.CampaignRules.InCampaign(state.Options) && state.Options.PlayTest is null
         && state.Players.Where(p => p.TookPart && p.IsHuman).All(p => p.StartTown is not null)
         && MapEvents.MapEventChecks.FavoursPeople(state.MapEvents.Set) is null;
 

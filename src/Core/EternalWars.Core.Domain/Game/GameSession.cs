@@ -94,7 +94,7 @@ public sealed class GameSession
             AdventureMagic.SubscribeTo(Bus);
         }
 
-        Arena = new ArenaService(State, Bus, Battles);
+        DecidingBattles = new DecidingBattleService(State, Bus, Battles);
 
         // The list's order is the rules' order at every step of the calendar (ITurnPhaseParticipant): it fixes the events and the random draws.
         Days = new SimultaneousDayCoordinator(State, Bus);
@@ -103,7 +103,7 @@ public sealed class GameSession
             Days.SubscribeTo(Bus);
         }
 
-        Turns = new TurnService(State, Bus, Arena, Days,
+        Turns = new TurnService(State, Bus, DecidingBattles, Days,
             [MapEvents, Progression, Movement, new ManaRestoration(State, Bus), Towns, Caravans, Economy, Guards, ObjectLifecycle]);
 
         AdventureCommandHandlers.Register(_handlers, Movement, Turns, Guards, Progression, Armies, AdventureMagic, Grail);
@@ -227,7 +227,7 @@ public sealed class GameSession
 
     internal TurnService Turns { get; }
 
-    internal ArenaService Arena { get; }
+    internal DecidingBattleService DecidingBattles { get; }
 
     internal TownService Towns { get; }
 
@@ -252,10 +252,16 @@ public sealed class GameSession
     }
 
     /// <summary>
-    /// Starts the game: day 1 (a play-test's day, ADR-267), the first player's turn. Part of every game, so it is not a command.
+    /// Starts the game: day 1 (a play-test's day, ADR-267), the first player's turn. Part of every game, so it is not a command. A tournament that
+    /// <see cref="TournamentRules.WhyNot"/> refuses does not start.
     /// </summary>
     public void Start()
     {
+        if (TournamentRules.WhyNot(State) is { } notATournament)
+        {
+            throw new InvalidOperationException(notATournament); // the new-game screen asks first (ADR-366)
+        }
+
         new Campaigns.CarriedHeroService(State, Bus).Place(); // before the placeholders: a carried hero takes one of its person's (ADR-241)
         new PlaceholderService(State, Bus).Resolve();
         Grail.Bury();

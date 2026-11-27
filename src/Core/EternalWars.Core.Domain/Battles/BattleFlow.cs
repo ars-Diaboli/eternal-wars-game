@@ -84,7 +84,7 @@ internal sealed class BattleFlow(GameState state, IEventPublisher events, Battle
     public void Continue(BattleState battle, IEventPublisher? bus = null)
     {
         // A computer player's hero gives up a lost battle (ADR-070), but never the arena's (ADR-097).
-        PlayComputer(battle, bus ?? events, AiLevels, mayRetreat: !aftermath.IsArenaBattle);
+        PlayComputer(battle, bus ?? events, AiLevels, mayRetreat: !aftermath.IsDecidingBattle);
         if (battle.Phase == BattlePhase.Finished && ReferenceEquals(battle, state.Battle))
         {
             aftermath.Finish(battle);

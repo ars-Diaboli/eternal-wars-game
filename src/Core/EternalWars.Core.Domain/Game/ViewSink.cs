@@ -72,7 +72,7 @@ internal sealed class ViewSink(GameState state) : IViewSink
         state.CurrentPlayerIndex = game.CurrentPlayerIndex;
         state.IsStarted = game.IsStarted;
         state.Outcome = game.Outcome;
-        state.Arena = game.Arena;
+        state.DecidingBattle = game.DecidingBattle;
         state.PendingDecision = game.Decision;
         state.Battle = game.Battle;
     }
@@ -169,7 +169,7 @@ internal sealed class ViewSink(GameState state) : IViewSink
 
 /// <summary>The game as a whole, as one player may see it (ADR-193).</summary>
 public sealed record GameView(
-    GameDate Date, WeekEvent WeekEvent, int CurrentPlayerIndex, bool IsStarted, GameOutcome? Outcome, ArenaBattle? Arena,
+    GameDate Date, WeekEvent WeekEvent, int CurrentPlayerIndex, bool IsStarted, GameOutcome? Outcome, DecidingBattle? DecidingBattle,
     PendingDecision? Decision, BattleState? Battle)
 {
     /// <summary>
@@ -183,7 +183,7 @@ public sealed record GameView(
         var decision = state.PendingDecision is BattleDecision ? (fights ? state.PendingDecision : null)
             : state.DecisionPlayer == viewer ? state.PendingDecision : null;
         var current = state.OpenTurns.Contains(viewer) ? state.IndexOf(viewer) : state.CurrentPlayerIndex;
-        return new(state.Date, state.WeekEvent, current, state.IsStarted, state.Outcome, state.Arena, decision, fights ? state.Battle : null);
+        return new(state.Date, state.WeekEvent, current, state.IsStarted, state.Outcome, state.DecidingBattle, decision, fights ? state.Battle : null);
     }
 
     /// <summary>Whom a question asks: its hero's owner, else the current player (whose turn asked it).</summary>

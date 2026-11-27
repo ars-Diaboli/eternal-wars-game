@@ -146,6 +146,13 @@ public sealed record ScenarioRules(
     /// </summary>
     public bool Arena { get; init; }
 
+    /// <summary>
+    /// A tournament map (ADR-366; <see cref="TournamentRules"/>): two players build up apart, each in a cut-off zone, for the length chosen when the
+    /// game is created (<see cref="GameOptions.TournamentDays"/>); then their heroes fight one battle that decides the game. Exactly two players, no
+    /// teams, one hero each, never an arena too (<see cref="TournamentRules.WhyNot"/>). Off by default.
+    /// </summary>
+    public bool Tournament { get; init; }
+
     /// <summary>The map's rumours (ADR-257): the taverns tell one a week, in turn (<see cref="Towns.TavernRules.Rumour"/>); none by default.</summary>
     public IReadOnlyList<string> Rumours { get; init; } = [];
 
@@ -160,10 +167,10 @@ public sealed record ScenarioRules(
         !string.IsNullOrWhiteSpace(rumour) && rumour.Length <= RumourLength && rumour.IndexOfAny(['\n', '\r']) < 0;
 
     public bool IsDefault => Victory.Count == 0 && Defeat.Count == 0 && StandardVictory && Elimination && GraceDays == DefaultGraceDays
-        && MaxHeroes == HeroLimit && WeekEvents.IsDefault && Difficulty is null && Bans.IsEmpty && !Arena && Rumours.Count == 0;
+        && MaxHeroes == HeroLimit && WeekEvents.IsDefault && Difficulty is null && Bans.IsEmpty && !Arena && !Tournament && Rumours.Count == 0;
 
     /// <summary>Whether a scenario with these rules can be won at all.</summary>
-    public bool CanBeWon => Arena || StandardVictory || Victory.Count > 0;
+    public bool CanBeWon => Arena || Tournament || StandardVictory || Victory.Count > 0;
 
     /// <summary>A short sentence for a condition, for the editor and the game's result screen.</summary>
     public static string Describe(GameState state, ScenarioCondition condition)

@@ -10,7 +10,7 @@ namespace EternalWars.Core.Domain.Turns;
 /// HoMM-style sequential turns: every player acts once per day, in slot order.
 /// When the last player ends the turn the calendar advances; a new week brings the towns' creature growth. What happens at each step is up to
 /// the session's participants, in their order (<see cref="ITurnPhaseParticipant"/>); the service itself moves the calendar, publishes it
-/// and rolls the week's events. An arena map's battle day (ADR-097) replaces the day, so the arena is not a participant.
+/// and rolls the week's events. The deciding battle's day of an arena or a tournament (ADR-097, ADR-366) replaces the day, so the battle is not a participant.
 /// <para>
 /// A simultaneous day (MP-2, ADR-197; <see cref="GameOptions.SimultaneousFirstWeek"/>): every person's turn begins at once when the day opens
 /// (<see cref="GameState.OpenTurns"/>), each ends its own, and once all have, the computer players play theirs one by one. A turn begins once a
@@ -22,16 +22,16 @@ public sealed class TurnService
 {
     private readonly GameState _state;
     private readonly IEventPublisher _events;
-    private readonly ArenaService _arena;
+    private readonly DecidingBattleService _decidingBattle;
     private readonly SimultaneousDayCoordinator _days;
     private readonly IReadOnlyList<ITurnPhaseParticipant> _participants;
 
     internal TurnService(
-        GameState state, IEventPublisher events, ArenaService arena, SimultaneousDayCoordinator days, IReadOnlyList<ITurnPhaseParticipant> participants)
+        GameState state, IEventPublisher events, DecidingBattleService decidingBattle, SimultaneousDayCoordinator days, IReadOnlyList<ITurnPhaseParticipant> participants)
     {
         _state = state;
         _events = events;
-        _arena = arena;
+        _decidingBattle = decidingBattle;
         _days = days;
         _participants = participants;
     }
@@ -133,10 +133,10 @@ public sealed class TurnService
                 return; // a simultaneous day opened everyone's turns
             }
         }
-        while (_state.Arena is null && (_state.CurrentPlayer.IsDefeated || _days.HasEnded(_state.CurrentPlayer.Id)) && ++tries <= 2 * _state.Players.Count);
+        while (_state.DecidingBattle is null && (_state.CurrentPlayer.IsDefeated || _days.HasEnded(_state.CurrentPlayer.Id)) && ++tries <= 2 * _state.Players.Count);
 
-        // An arena map's day 2 is its battle, which ends the game: nobody's turn starts (ADR-097).
-        if (_state.Arena is null)
+        // The deciding battle's day (an arena's day 2, a tournament's day after the last) ends the game: nobody's turn starts (ADR-097, ADR-366).
+        if (_state.DecidingBattle is null)
         {
             BeginTurn();
         }
@@ -153,9 +153,9 @@ public sealed class TurnService
             _days.NewDay();
             _state.BegunToday.Clear();
             _events.Publish(new DayStarted(_state.Date));
-            if (_state.Rules.Arena && _state.Date.AbsoluteDay == ArenaRules.BattleDay)
+            if (DecidingBattles.IsDue(_state))
             {
-                _arena.StartBattle();
+                _decidingBattle.StartBattle();
                 return false;
             }
 
