@@ -28,13 +28,16 @@ text, no labels, no numbers. Transparent background, PNG with alpha. The icons, 
 red-skinned imp, a little devil shown whole: a round pot belly on thin wiry limbs, a big bald head with long pointed ears, two short
 stubby horns, a wide sly grin of small sharp teeth, small leathery bat wings, a long thin tail ending in an arrowhead barb, clawed
 hands and feet, empty-handed; 2 a hulking horned demon shown whole, hunched forward like a beast: dark red-brown leathery hide with
-ember-red cracks, a small brutish head with a heavy jaw and fangs, two big thick horns curving forward from the brow, huge muscled
+ember-red cracks, a small brutish head with a heavy jaw and fangs, horns like a rhinoceros's: one great thick conical horn rising
+from the snout and a smaller one behind it on the brow, both pointing up, rough grey-brown horn, not ram or bull horns curving to the
+sides, huge muscled
 shoulders and long arms ending in great clawed hands, digitigrade legs on cloven hooves, a thick tail; no weapon of any kind, it
 fights with its claws; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build
 but larger, heavier armed, more ornate and richer in colour: darker skin with ember cracks, longer horns, a blackened bronze collar,
-a small three-pronged trident of blackened bronze held in its claws, a wisp of blue mana curling off the prongs; 4 the same creature
+a long three-pronged trident of blackened bronze, its shaft taller than the imp itself, held upright in its claws; no glow, no
+haze, no mist and no mana around the trident; 4 the same creature
 as the one above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and
-richer in colour: deeper crimson hide, much larger horns ringed with bronze, bronze spiked plates on the shoulders and bronze-capped
+richer in colour: deeper crimson hide, the same rhinoceros horns much larger and ringed with bronze, bronze spiked plates on the shoulders and bronze-capped
 claws, still no weapon, no whip, no chain and no flail
 ```
 
@@ -62,15 +65,17 @@ and ash-grey skin cracked with seams glowing red like lava, natural orange fire,
 margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no
 text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a hell hound,
 a big powerful hound shown whole: short coarse rust-red and dark brown fur, not stone or lava rock, a ridge of black spiky mane along
-the neck and spine, a broad heavy head with glowing yellow eyes, open jaws of long fangs with real orange flames licking out of the
-mouth, long pointed ears, a thin whip-like tail; 2 a hunched, crouching demon flayer shown to the waist, a predator about to spring:
+the neck and spine, a broad heavy head with glowing yellow eyes, open snarling jaws of long fangs, no fire, no flames and no
+smoke from the mouth, long pointed ears, a thin whip-like tail; 2 a hunched, crouching demon flayer shown whole, a predator about to spring:
 raw dark-red sinewy flesh bound with blackened leather straps, iron hooks and rivets driven through the skin, a riveted iron cage
 mask hiding the eyes, a lipless jaw of jagged teeth below it, long forearms that end in long serrated blades of bone and rusted iron
 growing out of the flesh; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and
 build but larger, heavier armed, more ornate and richer in colour: the same rust-red furred hound with three heads on one body, each
-head breathing fire, a spiked iron collar on each neck; 4 the same creature as the one above it, clearly upgraded and told apart at a
-glance: the same face and build but larger, heavier armed, more ornate and richer in colour: bigger and more flayed, ember-red cracks
-in the raw flesh, longer curved scythe-like arm blades, bronze spikes jutting from the spine, chains hooked into its back
+head snarling with bared fangs, no fire and no flames from any mouth, a spiked iron collar on each neck; 4 the same creature as the one above it, clearly upgraded and told apart at a
+glance, a very different silhouette: no longer crouching but standing tall and upright, a head taller than the tormentor, charred
+black skin split by glowing ember-red cracks instead of raw red flesh, a closed horned iron executioner's helm with one narrow slit
+instead of the cage mask, a ribcage flayed open showing bone, each forearm ending in three long hooked blades spread like a rake
+instead of one blade, bronze plates nailed into the shoulders, chains with flesh hooks hanging from its back
 ```
 
 | # | File |
@@ -96,16 +101,18 @@ and ash-grey skin cracked with seams glowing red like lava, natural orange fire,
 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty
 margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no
 text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a succubus,
-a female demon, lithe and dangerous: a cruel beautiful woman's face, pale ash-violet skin, long black hair, two curved horns
-sweeping back from the brow, leathery bat wings, fitted armour of black leather and blackened bronze plates with small spikes at the
-shoulders and hips, long clawed fingers, a ball of red fire gathered in one raised hand; 2 a hell charger, unmistakably a horse
-shown whole: a lean muscular coal-black warhorse with a long horse's head and neck, glowing red eyes, a mane and tail of real orange
-flame, hooves wreathed in fire, two short curved horns on the brow, a chamfron and barding of blackened bronze plates bolted over
-the chest and flanks; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build
-but larger, heavier armed, more ornate and richer in colour: the same woman, long swept-back horns ringed with gold, crimson wings,
-darker ornate armour with gold edges, fire gathered in both hands; 4 the same creature as the one above it, clearly upgraded and
-told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: still clearly a horse,
-bigger and wilder, long black horns sweeping back, spiked bronze barding, a mane and tail of blue-white fire, a fanged mouth, smoke
+a young female demon, lithe and plain: a cruel beautiful woman's face, pale ash-violet skin, black hair in a tight braid, two
+small short horns at the brow, small dark bat wings half folded behind her, a simple harness of black leather straps and a short
+leather skirt, no metal plates, bare arms with long clawed fingers, a small ball of red fire in one raised hand; 2 a hell charger,
+unmistakably a horse shown whole: a lean muscular warhorse with a jet-black coat, near black with only faint highlights, a long
+horse's head and neck, glowing red eyes, a black mane and tail with only a few embers glowing at their tips, hooves glowing ember-red
+with only a thin wisp of flame, two short curved horns on the brow, no armour, no barding, no saddle and no chamfron, the bare
+muscled black body; 3 the same creature as the one above it, clearly upgraded and told apart at a glance, a very different look: a
+mistress of succubi, taller and regal, deep crimson skin instead of ash-violet, long flowing silver-white hair, huge ram horns ringed
+with gold and a crown of black spikes between them, vast crimson wings spread wide, ornate armour of black and gold plates, a long
+crimson cape, a large blaze of fire in both hands; 4 the same creature as the one above it, clearly upgraded and told apart at a
+glance: still clearly a horse, bigger and wilder, the same jet-black coat, long black horns sweeping back, spiked blackened bronze
+barding, a full mane and tail of real orange and red fire, not blue, not white, hooves in orange flame, a fanged mouth, smoke
 pouring from its nostrils
 ```
 

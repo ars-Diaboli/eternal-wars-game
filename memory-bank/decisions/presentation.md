@@ -80,6 +80,9 @@
 | [339](#adr-339-necropolis-sheet-n4-to-the-owners-review-black-armoured-faceless-knights-violet--and-crimson-robed-liches-owner-adr-289-2026-11-27) | Necropolis sheet N4 to the owner's review: black-armoured faceless knights, violet- and crimson-robed liches (owner, ADR-289, 2026-11-27) | accepted |
 | [340](#adr-340-haven-sheets-to-the-owners-second-review-full-height-figures-one-livery-for-the-upgrades-hidden-monk-faces-a-glory-and-an-archangel-owner-adr-289-2026-11-27) | Haven sheets to the owner's second review: full-height figures, one livery for the upgrades, hidden monk faces, a glory and an archangel (owner, ADR-289, 2026-11-27) | accepted |
 | [341](#adr-341-every-creature-portrait-at-full-height-owner-adr-340-2026-11-27) | Every creature portrait at full height (owner, ADR-340, 2026-11-27) | accepted |
+| [342](#adr-342-inferno-sheet-i1-to-the-owners-second-review-a-long-plain-trident-for-the-familiar-rhinoceros-horns-for-the-horned-demons-owner-adr-330-2026-11-27) | Inferno sheet I1 to the owner's second review: a long plain trident for the familiar, rhinoceros horns for the horned demons (owner, ADR-330, 2026-11-27) | accepted |
+| [343](#adr-343-inferno-sheet-i2-to-the-owners-second-review-hounds-without-fire-an-upright-charred-lacerator-unlike-the-tormentor-owner-adr-331-2026-11-27) | Inferno sheet I2 to the owner's second review: hounds without fire, an upright charred lacerator unlike the tormentor (owner, ADR-331, 2026-11-27) | accepted |
+| [344](#adr-344-inferno-sheet-i3-to-the-owners-second-review-a-plain-succubus-and-a-regal-crimson-mistress-a-bare-jet-black-charger-a-nightmare-in-orange-fire-owner-adr-332-2026-11-27) | Inferno sheet I3 to the owner's second review: a plain succubus and a regal crimson mistress, a bare jet-black charger, a nightmare in orange fire (owner, ADR-332, 2026-11-27) | accepted |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -1482,3 +1485,39 @@ supersedes ADR-289's chest-up framing (giant creatures and dragons as the head a
   or knees, all figures on a sheet framed alike; Dragon Utopia's dragons are their whole bodies, not the head and neck. The creature
   icon framing rule says the same.
 - **Regenerate**: every creature sheet whose portraits are chest up. A sheet already cut stays until it is regenerated.
+
+### ADR-342: Inferno sheet I1 to the owner's second review: a long plain trident for the familiar, rhinoceros horns for the horned demons (owner, ADR-330, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-330's familiar trident (small, with blue mana)
+and the horned demons' forward-curving horns.
+
+- **Owner**, on the regenerated Inferno sheet I1: the imp's (familiar's) trident longer, no haze around it; the horned demon's horns
+  closer to a rhinoceros's.
+- **Subjects**: the familiar's blackened bronze trident taller than the imp, held upright, no glow, haze or mana; the horned demon one
+  great conical horn on the snout and a smaller one on the brow, both pointing up, rough grey-brown horn, not ram or bull horns; the
+  overseer the same horns larger and ringed with bronze.
+- **Regenerate**: Inferno sheet I1.
+
+### ADR-343: Inferno sheet I2 to the owner's second review: hounds without fire, an upright charred lacerator unlike the tormentor (owner, ADR-331, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-331's flames from the hounds' mouths and the
+lacerator as a bigger copy of the tormentor.
+
+- **Owner**, on the regenerated Inferno sheet I2: no flames from the hounds' mouths; the tormentor and lacerator more different from
+  each other.
+- **Subjects**: the hell hound and cerberus snarl with bared fangs, no fire, flames or smoke from any mouth; the tormentor unchanged
+  but shown whole; the lacerator standing tall and upright, charred black skin with ember cracks, a closed horned executioner's helm
+  instead of the cage mask, a flayed-open ribcage, three rake-like hooked blades on each forearm, bronze plates nailed into the
+  shoulders, hooked chains from the back.
+- **Regenerate**: Inferno sheet I2.
+
+### ADR-344: Inferno sheet I3 to the owner's second review: a plain succubus and a regal crimson mistress, a bare jet-black charger, a nightmare in orange fire (owner, ADR-332, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-332's succubus pair (one woman with more gold), the
+hell charger's flaming mane and bronze barding and the nightmare's blue-white fire.
+
+- **Owner**, on the regenerated Inferno sheet I3: the succubus and her upgrade more different from each other; the hell charger with
+  fewer flames, no armour and a darker coat; the nightmare in ordinary, not blue, flame and a darker coat.
+- **Subjects**: the succubus young and plain, ash-violet skin, a black braid, small horns, small folded wings, a black leather harness,
+  a small fireball; the mistress regal and taller, deep crimson skin, silver-white hair, huge gold-ringed ram horns and a spiked crown,
+  vast crimson wings, black and gold armour, a crimson cape, fire in both hands; the hell charger jet-black and bare, no barding,
+  embers only at the mane and tail tips, faintly burning hooves; the nightmare jet-black, spiked barding, a mane and tail of orange
+  and red fire.
+- **Regenerate**: Inferno sheet I3.
