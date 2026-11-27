@@ -217,13 +217,41 @@ tournaments before any screen exists.
   `LanSimultaneousBattleTests` (two battles on two computers, each sent its own; a conflict during a battle); `LanTournamentTests` (a
   tournament day past the first week with both fighting neutrals, the record replayed, the final battle live).
 
-### 4. The computer
-- **Building phase:** the ordinary adventure AI plays its zone. It never looks for an enemy, since there is none it can reach.
-- **Planning for the deadline:**
-  - It keeps its one hero alive (no risky fights in the last days).
-  - It weighs growth (dwellings, mines) against army power by the days left.
-  - On the last day it spends everything on the battle's army and gathers it into the hero, as on an arena's day 1 (ADR-160).
-- **Tuning:** `sim game --runs` on the tournament templates checks that the computer arrives with an army in the range a person would.
+### 4. The computer (done)
+- **Building phase** (done): the ordinary adventure AI plays its zone. It never looks for an enemy:
+  - a strong hero puts no share of its army on exploring, as it does elsewhere while it knows no enemy town (`TargetValuer.ExploreWorth`);
+  - ground in the other zone, which it never sees, is no frontier to explore and opens no way (`AiContext.Unknown`).
+- **Planning for the deadline** (done): `AiContext.DaysLeft` counts the building days left, and three weights tune the rest
+  (`CarefulDays` 3, `LeashShare` 0.75, `ArmingDays` 5).
+  - **Its one hero:**
+    - In the last 3 days it fights only for the arena's small losses (`ArenaLoss`, 15 % of its army).
+    - Before the last day it ends each day no farther from its home town than three quarters of what the days left can walk back. The
+      home town is the own town with the most dwellings. A hero that is farther walks straight home (`TargetValuer.Homecoming`).
+  - **Growth against army:**
+    - A mine or a deposit is worth the days of income left before the battle, at most eight as elsewhere.
+    - A provider's coming week counts only when a week still begins before the battle, and so does a map dwelling's flag.
+    - A town builds a level that only adds income when the days left pay its price back. It builds a growth building or a caravan only
+      while a week is still to come, and saves only for what the income left can reach.
+    - In the last 5 days, once no week begins before the battle, the towns spend as on an arena's day 1. They buy what waits, then the
+      dwellings and upgrades with the most army per gold, counting the income still to come, still one building a day.
+  - **The last day** is the arena's day 1 (ADR-160), with the day's own movement:
+    - Before anything else the hero walks to every own town it reaches today, buys what waits and takes the whole garrison. When no town
+      is within walking reach, it casts Town Portal home.
+    - Then it takes only what helps today.
+    - At the day's end it visits any town it can still reach.
+- **Tuning** (done): `sim game --length L` sets a tournament's length. Each run prints the champions' levels and army values at the
+  battle, and the runs together their spread. In six AI-against-AI runs a template, the median champion's army value (Σ count × creature
+  value) at the battle:
+
+  | Template | 7 days | 14 days | 28 days |
+  |---|---|---|---|
+  | Twin Vales Small | 6 103 | 17 181 | 42 235 |
+  | Twin Vales | 6 417 | 17 045 | 35 376 |
+  | Twin Vales Large | 4 351 | 16 535 | 38 764 |
+
+  - **What it brings:** the towns' weeks of growth, with no refused command.
+  - **Not yet measured:** whether that is in the range a person reaches. No person's tournament is recorded to compare with; step 7's
+    games against the computer are the check.
 
 ### 5. The game app
 - **New-game screen:**

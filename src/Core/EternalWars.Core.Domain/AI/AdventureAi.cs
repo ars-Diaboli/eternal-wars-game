@@ -132,6 +132,12 @@ public sealed partial class AdventureAi
         _towns.ManageTowns(player);
         _ai.Main = _state.HeroesOf(player).OrderByDescending(h => _ai.ArmyPower(h.Army)).ThenBy(h => h.Id.Value).FirstOrDefault()?.Id;
 
+        // A tournament's last day (ADR-366) begins with the army taken from the towns the hero reaches today, while it still has the movement.
+        if (_ai.Preparing && _state.Rules.Tournament && !GatherForBattle(player))
+        {
+            return false;
+        }
+
         // The main hero moves first, so the carriers head for where it ends up.
         foreach (var hero in _state.HeroesOf(player).OrderBy(h => h.Id != _ai.Main).ThenBy(h => h.Id.Value).Select(h => h.Id).ToList())
         {
@@ -146,7 +152,7 @@ public sealed partial class AdventureAi
             }
         }
 
-        // The arena's preparation day ends with every army in the hero that fights at the start of day 2 (ADR-160).
+        // The preparation day ends with every army in the hero that fights at the start of the battle's day (ADR-160, ADR-366).
         if (_ai.Preparing && !GatherForBattle(player))
         {
             return false;

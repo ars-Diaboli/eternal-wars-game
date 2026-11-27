@@ -24,8 +24,12 @@ internal sealed record SimGame(MapDocument Map, GameState State, GenerationInfo?
 /// <summary>Games the adventure AI plays on every slot: on a built-in or file map, or on a map generated from a template.</summary>
 internal static class SimGames
 {
-    /// <summary>A built-in map (<c>towns</c>, <c>demo</c>, <c>ember</c>) or a map file, as a game with <paramref name="seed"/>.</summary>
-    public static SimGame HandMadeGame(SimContext sim, string map, ulong seed, Difficulty? difficulty = null, FogMode fog = FogMode.PermanentReveal)
+    /// <summary>
+    /// A built-in map (<c>towns</c>, <c>demo</c>, <c>ember</c>) or a map file, as a game with <paramref name="seed"/>; a tournament map lasts
+    /// <paramref name="tournamentDays"/> (ADR-366), its default when null.
+    /// </summary>
+    public static SimGame HandMadeGame(
+        SimContext sim, string map, ulong seed, Difficulty? difficulty = null, FogMode fog = FogMode.PermanentReveal, int? tournamentDays = null)
     {
         var document = map switch
         {
@@ -34,14 +38,18 @@ internal static class SimGames
             "ember" => MapConverter.ToDocument(EmberMarchScenario.Create(sim.Content)),
             _ => MapSerializer.Load(map),
         };
-        return new SimGame(document, MapConverter.ToGameState(document, sim.Content, new GameOptions(FogMode: fog, Seed: seed, Difficulty: difficulty)));
+        var options = new GameOptions(FogMode: fog, Seed: seed, Difficulty: difficulty) { TournamentDays = tournamentDays };
+        return new SimGame(document, MapConverter.ToGameState(document, sim.Content, options));
     }
 
     /// <summary>
     /// A map generated from the template for computer players in the first <paramref name="players"/> start slots, each with a random town,
-    /// assembled like the new-game screen does (<see cref="MapGenerator.Build"/>); the map seed is the game seed.
+    /// assembled like the new-game screen does (<see cref="MapGenerator.Build"/>); the map seed is the game seed. A tournament lasts
+    /// <paramref name="tournamentDays"/> (ADR-366), its default when null.
     /// </summary>
-    public static SimGame GeneratedGame(SimContext sim, MapTemplate template, int size, int players, ulong seed, Difficulty? difficulty = null, FogMode fog = FogMode.PermanentReveal)
+    public static SimGame GeneratedGame(
+        SimContext sim, MapTemplate template, int size, int players, ulong seed, Difficulty? difficulty = null, FogMode fog = FogMode.PermanentReveal,
+        int? tournamentDays = null)
     {
         if (players < 1 || players > template.MaxPlayers)
         {
@@ -49,7 +57,8 @@ internal static class SimGames
         }
 
         var setups = Enumerable.Range(0, players).Select(slot => new PlayerSetup(slot, $"Player {slot + 1}", IsHuman: false, PlayerSetup.RandomTown)).ToList();
-        var (state, generation) = MapGenerator.Build(template, size, seed, setups, new GameOptions(FogMode: fog, Seed: seed, Difficulty: difficulty), sim.Content);
+        var options = new GameOptions(FogMode: fog, Seed: seed, Difficulty: difficulty) { TournamentDays = tournamentDays };
+        var (state, generation) = MapGenerator.Build(template, size, seed, setups, options, sim.Content);
         return new SimGame(MapConverter.ToDocument(state), state, GenerationInfo.Of(template.Name, size, seed, generation.Attempt), generation.Problems);
     }
 

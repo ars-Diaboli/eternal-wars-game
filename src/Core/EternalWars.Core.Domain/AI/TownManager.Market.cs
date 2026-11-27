@@ -45,7 +45,7 @@ internal sealed partial class TownManager
             return false;
         }
 
-        var treasury = (long)have.Gold + (income.Gold * _weights.SavingDays);
+        var treasury = (long)have.Gold + (income.Gold * SavingDays(_weights.SavingDays));
         return cost.Gold + gold <= treasury && gold * 100 <= treasury * _weights.TradeTreasuryPercent;
     }
 

@@ -648,7 +648,7 @@ the agent's and stand unless the owner changes them.
 - **Not done**: a campaign editor, cutscenes, per-map starting bonuses, the prologue map (CAMP-1, its own roadmap item).
 
 ### ADR-366: Tournament mode: two players build up apart, then one battle decides (owner, ADR-097, ADR-158, ADR-197, 2026-11-27)
-**Status**: accepted (2026-11-27), being built: the switch, the length and their checks; the game flow to the deciding battle; the battle's rules; isolation; tournament templates, the generator's tournament, the shipped Twin Vales and the map validator's checks; every tournament day at once on the LAN; battles and questions per player on every simultaneous day (each open turn's own, replacing ADR-197's one at a time). [tournament-plan.md](../../docs/papers/tournament-plan.md) holds the guide and the plan; the
+**Status**: accepted (2026-11-27), being built: the switch, the length and their checks; the game flow to the deciding battle; the battle's rules; isolation; tournament templates, the generator's tournament, the shipped Twin Vales and the map validator's checks; every tournament day at once on the LAN; battles and questions per player on every simultaneous day (each open turn's own, replacing ADR-197's one at a time); the computer's play for the deadline. [tournament-plan.md](../../docs/papers/tournament-plan.md) holds the guide and the plan; the
 roadmap's "Tournament mode" section tracks it. The owner answered TRN-1 to TRN-9 the same day (below).
 
 - **The owner's request**:
@@ -687,3 +687,11 @@ roadmap's "Tournament mode" section tracks it. The owner answered TRN-1 to TRN-9
   - **Shared map content** (TRN-8): a tavern pool per player; one Grail per zone (none without obelisks); artifact rolls mirrored per zone;
     the week's events and rumours shared.
   - **Score** (TRN-9): not ranked; "Play again" and "Save replay".
+- **The computer** (plan step 4; the numbers are the agent's, tuned with `sim game --length`):
+  - It never looks for the enemy: no share of its army goes on exploring, and the other zone is no frontier.
+  - Its one hero risks only small losses (the arena's) in the last 3 days. Before the last day it stays within three quarters of a walk
+    back to its home town (the own town with most dwellings) by the last day.
+  - Mines, providers and flags are worth only the income and weeks left. An income building must pay its price back before the battle,
+    and a growth building needs a week to come.
+  - In the last 5 days, once no week begins before the battle, its towns spend as on the arena's day 1 (ADR-160).
+  - On the last day the hero first gathers the army from the towns it reaches today, by Town Portal when it cannot walk to one.

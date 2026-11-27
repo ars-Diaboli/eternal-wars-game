@@ -7,7 +7,8 @@ using EternalWars.Core.Domain.Towns;
 namespace EternalWars.Core.Domain.AI;
 
 /// <summary>
-/// A town on the arena's preparation day (ADR-097, ADR-160): there is no tomorrow, so it recruits what waits, then builds, by army gained per
+/// A town on the arena's preparation day (ADR-097, ADR-160), or in a tournament's last days once no week begins before its battle (ADR-366,
+/// <see cref="AiContext.Arming"/>): there is no growth to come, so it recruits what waits, then builds, by army gained per
 /// gold, the dwellings (with what they need) whose first creatures it can still buy, and upgrades worth their price, then hires with what is
 /// left; the hero in the town takes the whole garrison.
 /// </summary>
@@ -19,7 +20,7 @@ internal sealed partial class TownManager
     /// <summary>The armies are being gathered into the champion (<see cref="AdventureAi"/> at the day's end): no more heroes are hired.</summary>
     public bool Gathering { get; set; }
 
-    /// <summary>A town on the preparation day: everything for the army, nothing saved.</summary>
+    /// <summary>A town on the preparation day or in a tournament's last days (<see cref="AiContext.Arming"/>): everything for the army, nothing saved.</summary>
     public void PrepareTown(PlayerId player, Town town)
     {
         Recruit(player, town, reserve: 0);
@@ -39,9 +40,17 @@ internal sealed partial class TownManager
         TakeWholeGarrison(player, town);
     }
 
-    /// <summary>One building step of a town on the preparation day (<see cref="ArenaPlans"/>); false when nothing is worth building.</summary>
+    /// <summary>
+    /// One building step of a town on the preparation day (<see cref="ArenaPlans"/>); false when nothing is worth building, or the town has built
+    /// today (a tournament's last day builds once, as every day, ADR-366).
+    /// </summary>
     private bool ArenaBuild(PlayerId player, Town town)
     {
+        if (TownRules.HasBuiltToday(_state, town))
+        {
+            return false;
+        }
+
         var best = ArenaPlans(player, town).OrderByDescending(p => p.Ratio).ThenBy(p => p.Steps[^1].Id, StringComparer.Ordinal).FirstOrDefault();
         if (best.Steps is not { Count: > 0 } steps)
         {
@@ -55,18 +64,21 @@ internal sealed partial class TownManager
 
     /// <summary>
     /// What a town could build today for the battle, with the army each plan gains per gold: every dwelling it lacks, with the buildings it needs
-    /// first, whose first week of creatures the town can then still buy at least half of; and every dwelling upgrade, for the creatures waiting or
-    /// in the town's armies. Income, growth and the like are worth nothing on the last day.
+    /// first, whose first week of creatures the town can then still buy at least half of (with the income still to come before a tournament's
+    /// battle, ADR-366); and every dwelling upgrade, for the creatures waiting or in the town's armies. In a tournament, which builds once a
+    /// day, only what is finished by the last day. Income, growth and the like are worth nothing now.
     /// </summary>
     private IEnumerable<(double Ratio, List<ArenaStep> Steps)> ArenaPlans(PlayerId player, Town town)
     {
         var have = _state.GetPlayer(player).Resources;
+        var coming = _ai.DaysLeft is null ? ResourceSet.Empty : _session.Economy.DailyIncome(player) * _ai.IncomeDays;
         foreach (var line in TownRules.Lines(_state, town))
         {
             if (TownRules.NextDwellingLevel(_state, town, line) is not { } next
                 || (next.Level == 1 && TownRules.CheckDwellingChoice(_state, town, line.Id, 1) is not null)
                 || Steps(town, new ArenaStep(true, line.Id.Value, line.Tier, next)) is not { } steps
-                || steps.Any(s => s.Dwelling ? TownRules.CheckDwellingChoice(_state, town, s.Id, s.Level.Level) is not null : TownRules.CheckCapitol(_state, town, s.Level) is not null))
+                || steps.Any(s => s.Dwelling ? TownRules.CheckDwellingChoice(_state, town, s.Id, s.Level.Level) is not null : TownRules.CheckCapitol(_state, town, s.Level) is not null)
+                || (_ai.DaysLeft is { } left && steps.Count > left)) // a tournament builds once a day: what cannot be finished before the battle
             {
                 continue;
             }
@@ -83,7 +95,7 @@ internal sealed partial class TownManager
             {
                 var growth = TownRules.WeeklyGrowth(_state, town, line);
                 var each = TownRules.CreatureCost(_state, town, line);
-                var count = TownRules.MaxAffordable(have - build, each, growth);
+                var count = TownRules.MaxAffordable(have - build + coming, each, growth);
                 if (count == 0 || count * 2 < growth)
                 {
                     continue; // the dwelling would stand there with nothing bought from it

@@ -39,11 +39,31 @@ public sealed record AiWeights
 
     // Fights and danger --------------------------------------------------------------------------------
 
+    /// <summary>The days of output a mine or a deposit is worth when weighed as a target.</summary>
+    public int MineDays { get; init; } = 8;
+
     /// <summary>The share of its army power a hero accepts to lose clearing a monster stack.</summary>
     public double MonsterLoss { get; init; } = 0.4;
 
-    /// <summary>The share of its army power a hero accepts to lose in a fight on an arena's preparation day (ADR-160).</summary>
+    /// <summary>
+    /// The share of its army power a hero accepts to lose in a fight when the deciding battle is near: on an arena's preparation day (ADR-160),
+    /// in a tournament's last <see cref="CarefulDays"/> days (ADR-366).
+    /// </summary>
     public double ArenaLoss { get; init; } = 0.15;
+
+    /// <summary>The last days of a tournament in which its one hero fights only for small losses (<see cref="ArenaLoss"/>, ADR-366).</summary>
+    public int CarefulDays { get; init; } = 3;
+
+    /// <summary>
+    /// The last days of a tournament in which its towns spend everything on the battle's army, once no week begins before the battle (ADR-366).
+    /// </summary>
+    public int ArmingDays { get; init; } = 5;
+
+    /// <summary>
+    /// The share of a full day's movement per day left that a tournament's hero may end a day away from its home town, so it is back there on
+    /// the last day with room for detours (ADR-366).
+    /// </summary>
+    public double LeashShare { get; init; } = 0.75;
 
     /// <summary>A place is safe from an enemy hero when the army there has at least this share of the enemy's power.</summary>
     public double SafeShare { get; init; } = 0.8;

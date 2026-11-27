@@ -30,6 +30,8 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
     private PathFinder.CostMap? _costs;
     private (HeroId Hero, long Stamp) _costsFor;
     private PathFinder.ReverseCostMap? _costsTo;
+    private PathFinder.CostMap? _homeCosts;
+    private (HeroId Hero, long Stamp, MapPosition Home) _homeCostsFor;
 
     private PathFinder Paths => _paths ??= new PathFinder(_state);
 
@@ -67,10 +69,17 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
 
     /// <summary>
     /// What a visit to a resource provider is worth: what waits at an own one; for another's, a week's output on average (what flagging a
-    /// neutral one brings at once), doubled for the weeks to come (ADR-079).
+    /// neutral one brings at once), doubled for the weeks to come (ADR-079), unless no week begins before a tournament's battle (ADR-366).
     /// </summary>
     private double ProviderValue(Hero hero, ResourceProvider provider) =>
-        provider.Owner == hero.Owner ? AiContext.Value(provider.Stored) : 2 * Math.Max(AiContext.Value(provider.Stored), WeeklyValue(provider));
+        provider.Owner == hero.Owner ? AiContext.Value(provider.Stored)
+        : (1 + Math.Min(1, _ai.WeeksToCome)) * Math.Max(AiContext.Value(provider.Stored), WeeklyValue(provider));
+
+    /// <summary>
+    /// The days of a mine's output its capture is worth: <see cref="AiWeights.MineDays"/>, or the days of income a tournament has left before
+    /// its battle (ADR-366), so a mine taken in its last days is worth little against the army.
+    /// </summary>
+    private int IncomeDays => Math.Min(_weights.MineDays, _ai.IncomeDays);
 
     /// <summary>A provider's average week, without rolling.</summary>
     private double WeeklyValue(ResourceProvider provider) => provider.Rule switch
@@ -264,12 +273,23 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
         };
     }
 
-    /// <summary>The target tile of the best move, or null when there is nothing worth doing.</summary>
+    /// <summary>
+    /// The target tile of the best move, or null when there is nothing worth doing. In a tournament the main hero goes no farther from its home
+    /// town than it can walk back by the last day (<see cref="Homecoming"/>), and heads straight home when it is farther.
+    /// </summary>
     public MapPosition? ChooseTarget(Hero hero, HashSet<MapPosition> failed)
     {
+        var home = Homecoming(hero);
+        bool Leashed(MapPosition position) => home is not { } h || BackCost(hero, h.Town, position) is { } back && back <= h.Leash;
+        if (home is { } far && !Leashed(hero.Position))
+        {
+            return failed.Contains(far.Town.VisitPosition) ? null : far.Town.VisitPosition;
+        }
+
         // Stay out of reach of enemy heroes too strong for the hero (with the garrison, at an own town).
         var candidates = Targets(hero)
             .Where(t => !(_ai.Preparing && t.Later) && !failed.Contains(t.Position) && !_ai.Claimed.Contains(t.Position) && t.Position != hero.Position)
+            .Where(t => Leashed(t.Position))
             .Where(t => _threats.Holds(_threats.DefenceAt(hero, t.Position), _threats.Danger(hero.Owner, t.Position, except: t.Position)))
             .OrderByDescending(t => t.Value / (1 + (_weights.DistancePenalty * Distance(hero.Position, t.Position))))
             .ThenBy(t => t.Position.Level).ThenBy(t => t.Position.Y).ThenBy(t => t.Position.X);
@@ -289,7 +309,7 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
             if (candidate.Opponent is { } opponent)
             {
                 fights++;
-                if (!_ai.Estimator.Fight(hero, opponent, candidate.OpponentAttack, candidate.OpponentDefense, candidate.Siege).IsSafe(_ai.Preparing ? Math.Min(candidate.MaxLoss, _weights.ArenaLoss) : candidate.MaxLoss))
+                if (!_ai.Estimator.Fight(hero, opponent, candidate.OpponentAttack, candidate.OpponentDefense, candidate.Siege).IsSafe(_ai.Careful ? Math.Min(candidate.MaxLoss, _weights.ArenaLoss) : candidate.MaxLoss))
                 {
                     continue;
                 }
@@ -309,12 +329,53 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
         }
 
         // Unexplored ground is worth a trip of its own (it hides what the targets are made of), not only when nothing else is left.
-        if (Explore(hero, failed) is { } explore && ExploreWorth(hero) / (0.5 + Days(hero, explore.Cost)) > bestScore)
+        if (Explore(hero, failed) is { } explore && Leashed(explore.Position) && ExploreWorth(hero) / (0.5 + Days(hero, explore.Cost)) > bestScore)
         {
             return explore.Position;
         }
 
         return best;
+    }
+
+    /// <summary>
+    /// In a tournament's building days before the last (ADR-366): the main hero's home town (<see cref="HomeTown"/>), where it takes the army on
+    /// the last day, and the most route cost from it the hero may end today at: <see cref="AiWeights.LeashShare"/> of what the days before the
+    /// last can walk back. Null on any other day or map, for another hero, or with no own town to walk to.
+    /// </summary>
+    public (Town Town, int Leash)? Homecoming(Hero hero) =>
+        _ai.DaysLeft is { } left && left >= 2 && hero.Id == _ai.Main && HomeTown(hero) is { } town
+            ? (town, (int)((left - 1) * hero.MaxMovementPoints * _weights.LeashShare))
+            : null;
+
+    /// <summary>The own town the hero gathers its army in: the one with the most dwellings it can walk to (or stands at), the nearest first; null when none.</summary>
+    public Town? HomeTown(Hero hero) =>
+        _state.ObjectsOf<Town>().Where(t => t.Owner == hero.Owner)
+            .Select(t => (Town: t, Cost: t.VisitPosition == hero.Position ? 0 : WalkCost(hero, t.VisitPosition)))
+            .Where(t => t.Cost is not null)
+            .OrderByDescending(t => t.Town.Dwellings.Count).ThenBy(t => t.Cost).ThenBy(t => t.Town.Id.Value)
+            .Select(t => t.Town).FirstOrDefault();
+
+    /// <summary>The route cost from <paramref name="from"/> back to <paramref name="home"/>: the hero's own route from where it stands, else the route out from the town (near enough).</summary>
+    private int? BackCost(Hero hero, Town home, MapPosition from)
+    {
+        if (from == home.VisitPosition)
+        {
+            return 0;
+        }
+
+        if (from == hero.Position)
+        {
+            return WalkCost(hero, home.VisitPosition);
+        }
+
+        var key = (hero.Id, _session.ChangeStamp, home.VisitPosition);
+        if (_homeCosts is null || _homeCostsFor != key)
+        {
+            _homeCosts = Paths.CostsFrom(hero.Id, home.VisitPosition, reuse: _homeCosts);
+            _homeCostsFor = key;
+        }
+
+        return _homeCosts.CostTo(from);
     }
 
     /// <summary>A guard or garrison next to unexplored ground is also worth the exploring it opens (passage guards stand between zones).</summary>
@@ -325,7 +386,7 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
             for (var dx = -_weights.WayRadius; dx <= _weights.WayRadius; dx++)
             {
                 var near = new MapPosition(position.X + dx, position.Y + dy, position.Level);
-                if (_state.Map.Contains(near) && !_state.Fog.IsExplored(owner, near))
+                if (_ai.Unknown(owner, near))
                 {
                     return _weights.ExploreValue;
                 }
@@ -337,9 +398,12 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
 
     private static double Days(Hero hero, int cost) => cost / (double)Math.Max(1, hero.MaxMovementPoints);
 
-    /// <summary>What exploring is worth to the hero now: <see cref="AiWeights.ExploreValue"/>, more for the main hero while no enemy town is known.</summary>
+    /// <summary>
+    /// What exploring is worth to the hero now: <see cref="AiWeights.ExploreValue"/>, more for the main hero while no enemy town is known; not in
+    /// a tournament, whose enemy is out of reach until the battle (ADR-366).
+    /// </summary>
     private double ExploreWorth(Hero hero) =>
-        _weights.ExploreValue + (hero.Id == _ai.Main && !_ai.Preparing && !_state.ObjectsOf<Town>().Any(t => t.Owner is { } o && _state.AreEnemies(hero.Owner, o) && _state.Fog.IsExplored(hero.Owner, t.VisitPosition))
+        _weights.ExploreValue + (hero.Id == _ai.Main && !_ai.Preparing && !_state.Rules.Tournament && !_state.ObjectsOf<Town>().Any(t => t.Owner is { } o && _state.AreEnemies(hero.Owner, o) && _state.Fog.IsExplored(hero.Owner, t.VisitPosition))
             ? _weights.HuntShare * _ai.ArmyPower(hero.Army) : 0);
 
     /// <summary>The hero's best candidate targets and the exploring tile as text (<see cref="AdventureAi.Explain"/>).</summary>
@@ -360,6 +424,11 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
         }
 
         lines.Add($"  explore: {(Explore(hero, []) is { } e ? $"{e.Position} cost {e.Cost}" : "nothing")}");
+        if (_ai.DaysLeft is { } left && HomeTown(hero) is { } home)
+        {
+            lines.Add($"  home: {home.VisitPosition}, back {BackCost(hero, home, hero.Position) ?? -1}, {left} days left");
+        }
+
         return lines;
     }
 
@@ -451,7 +520,7 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
                     break;
                 case Deposit deposit when _ai.Spare(owner).CanAfford(deposit.Price) && Plausible(GuardPower(visit)) && visit != hero.Position:
                     var mineYield = _state.ObjectCatalog.Get(deposit.Definition.Becomes!);
-                    yield return new(visit, (8 * mineYield.DailyYield * AiContext.GoldValue(mineYield.Resource!.Value, 1)) - (0.5 * AiContext.Value(deposit.Price)), GuardArmy(visit), MaxLoss: _weights.MonsterLoss, Later: true);
+                    yield return new(visit, (IncomeDays * mineYield.DailyYield * AiContext.GoldValue(mineYield.Resource!.Value, 1)) - (0.5 * AiContext.Value(deposit.Price)), GuardArmy(visit), MaxLoss: _weights.MonsterLoss, Later: true);
                     break;
                 case Shrine { Spell: { } taught } shrine when !hero.Spells.ContainsKey(taught) && _state.Spells.TryGet(taught, out var shrineSpell)
                                                           && Magic.MagicRules.CanLearn(hero, shrineSpell) && Plausible(GuardPower(visit)) && visit != hero.Position:
@@ -471,7 +540,7 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
                     var mineGuard = mine.Guard is { } g ? _ai.Seen([new CreatureStack(g.Creature, Math.Max(1, g.Count ?? 1))], visit, null)[0] : null;
                     if (mineGuard is null || Plausible(_ai.Power(mineGuard)))
                     {
-                        yield return new(visit, 8 * mine.DailyYield * AiContext.GoldValue(mine.Resource, 1), mineGuard is null ? null : Army.Of(mineGuard), Later: true);
+                        yield return new(visit, IncomeDays * mine.DailyYield * AiContext.GoldValue(mine.Resource, 1), mineGuard is null ? null : Army.Of(mineGuard), Later: true);
                     }
 
                     break;
@@ -503,7 +572,7 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
                     var dwelt = _state.Creatures.Get(dwelling.Creature);
                     var buyable = hero.Army.CanAccept(dwelt.Id)
                         ? TownRules.MaxAffordable(_state.GetPlayer(owner).Resources, dwelt.Cost, dwelling.Available ?? 0) : 0;
-                    var worth = (_ai.OwnTeam(owner, dwelling.Owner) || _ai.Preparing ? 0 : 1200) + (0.4 * buyable * dwelt.FightValue);
+                    var worth = (_ai.OwnTeam(owner, dwelling.Owner) || _ai.Preparing || _ai.WeeksToCome == 0 ? 0 : 1200) + (0.4 * buyable * dwelt.FightValue);
                     if (worth > 0)
                     {
                         yield return new(visit, worth, GuardArmy(visit), MaxLoss: _weights.MonsterLoss);
@@ -646,7 +715,7 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
 
                 queue.Enqueue(next);
                 if (!failed.Contains(next) && !_ai.Claimed.Contains(next) && _threats.Holds(power, _threats.Danger(owner, next))
-                    && DirectionExtensions.All.Any(d => map.Contains(next.Step(d)) && !_state.Fog.IsExplored(owner, next.Step(d))))
+                    && DirectionExtensions.All.Any(d => _ai.Unknown(owner, next.Step(d))))
                 {
                     frontier.Add(next);
                 }

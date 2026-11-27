@@ -9,14 +9,32 @@ using EternalWars.Core.Events;
 
 namespace EternalWars.Tools.Sim;
 
-/// <summary>The fights of a `sim game` run per player and kind (neutral monsters, garrisons, towns, heroes), won and lost.</summary>
+/// <summary>
+/// The fights of a `sim game` run per player and kind (neutral monsters, garrisons, towns, heroes), won and lost; and the champions of an arena's
+/// or tournament's deciding battle as they came to it (ADR-160, ADR-366).
+/// </summary>
 internal sealed class FightLog
 {
     private readonly Dictionary<(PlayerId Player, string Kind), (int Won, int Lost)> _counts = [];
+    private readonly List<Champion> _champions = [];
     private (PlayerId Attacker, PlayerId? Defender, string Kind)? _current;
+
+    /// <summary>A champion of the deciding battle when it was chosen: its hero's level and army value (Σ count × creature value).</summary>
+    public sealed record Champion(PlayerId Player, string Hero, int Level, long Army);
+
+    /// <summary>The deciding battle's champions, attacker first; empty when none was fought.</summary>
+    public IReadOnlyList<Champion> Champions => _champions;
 
     public void Attach(GameSession session)
     {
+        session.Events.Subscribe<ChampionsChosen>(e =>
+        {
+            foreach (var id in new[] { e.AttackerHero, e.DefenderHero })
+            {
+                var hero = session.State.GetHero(id);
+                _champions.Add(new Champion(hero.Owner, hero.Name, hero.Level, DecidingBattles.ArmyValue(session.State, hero)));
+            }
+        });
         session.Events.Subscribe<BattleStarted>(e =>
         {
             var state = session.State;

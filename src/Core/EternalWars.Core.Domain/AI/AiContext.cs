@@ -43,8 +43,44 @@ internal sealed class AiContext(GameSession session, AiWeights weights, bool con
     /// <summary>The refused commands with the game's reasons.</summary>
     public IReadOnlyList<string> Refusals => _refusals;
 
-    /// <summary>Whether today is an arena map's preparation day (ADR-160).</summary>
-    public bool Preparing => ArenaRules.IsPreparationDay(State);
+    /// <summary>
+    /// Whether there is no tomorrow before the deciding battle, so everything goes into the army that fights it: an arena map's preparation day
+    /// (ADR-160) or a tournament's last building day (ADR-366).
+    /// </summary>
+    public bool Preparing => ArenaRules.IsPreparationDay(State) || DaysLeft == 1;
+
+    /// <summary>
+    /// The building days a tournament has left, today included (ADR-366): 1 on its last day, 0 on the battle's; null on any other map.
+    /// </summary>
+    public int? DaysLeft => State.Rules.Tournament ? Math.Max(0, TournamentRules.BattleDay(State.Options) - State.Date.AbsoluteDay) : null;
+
+    /// <summary>
+    /// Whether the deciding battle is so near that the hero risks only small losses (<see cref="AiWeights.ArenaLoss"/>): the preparation day, or a
+    /// tournament's last <see cref="AiWeights.CarefulDays"/> days, when a fallen hero's army could not be rebuilt (ADR-366).
+    /// </summary>
+    public bool Careful => Preparing || DaysLeft <= weights.CarefulDays;
+
+    /// <summary>
+    /// Whether the towns spend everything on the army that fights the deciding battle (<see cref="TownManager.PrepareTown"/>): on the
+    /// preparation day, and in a tournament's last <see cref="AiWeights.ArmingDays"/> days once no week begins before its battle, so no growth is
+    /// left to build for (ADR-366).
+    /// </summary>
+    public bool Arming => Preparing || (DaysLeft > 0 && DaysLeft <= weights.ArmingDays && WeeksToCome == 0);
+
+    /// <summary>The days after today whose income still comes before a tournament's battle; unlimited on any other map.</summary>
+    public int IncomeDays => DaysLeft is { } left ? Math.Max(0, left - 1) : int.MaxValue;
+
+    /// <summary>The weeks that still begin before a tournament's battle, after today (each brings the towns' and dwellings' growth); unlimited on any other map.</summary>
+    public int WeeksToCome => DaysLeft is { } left
+        ? Enumerable.Range(State.Date.AbsoluteDay + 1, Math.Max(0, left - 1)).Count(day => (day - 1) % GameDate.DaysPerWeek == 0)
+        : int.MaxValue;
+
+    /// <summary>
+    /// Whether <paramref name="position"/> is ground the player has yet to explore: on the map, unexplored, and not in the other player's
+    /// tournament zone, which it never sees (<see cref="TournamentRules.Reaches"/>).
+    /// </summary>
+    public bool Unknown(PlayerId owner, MapPosition position) =>
+        State.Map.Contains(position) && !State.Fog.IsExplored(owner, position) && TournamentRules.Reaches(State, owner, position);
 
     /// <summary>Whether the player is still the one to move and the game goes on.</summary>
     public bool Active(PlayerId player) => !State.IsOver && State.CurrentPlayer.Id == player;

@@ -30,8 +30,12 @@ public class AdventureAiPartsTests
         Assert.Equal(8, weights.FrontierChecked);
         Assert.Equal(0.08, weights.DistancePenalty);
         Assert.Equal(70, weights.PlausiblePercent);
+        Assert.Equal(8, weights.MineDays);
         Assert.Equal(0.4, weights.MonsterLoss);
         Assert.Equal(0.15, weights.ArenaLoss);
+        Assert.Equal(3, weights.CarefulDays);
+        Assert.Equal(5, weights.ArmingDays);
+        Assert.Equal(0.75, weights.LeashShare);
         Assert.Equal(0.8, weights.SafeShare);
         Assert.Equal(1000, weights.CarryThreshold);
         Assert.Equal(4000, weights.TownValue);
@@ -72,7 +76,7 @@ public class AdventureAiPartsTests
         Assert.Equal(3, weights.DoorChecksPerHero);
         Assert.Equal(0.3, weights.ViewTerrainShare);
         Assert.Equal(100, weights.NativeWalkSaving);
-        Assert.Equal(47, AiWeights.Names.Count);
+        Assert.Equal(51, AiWeights.Names.Count);
     }
 
     [Fact]

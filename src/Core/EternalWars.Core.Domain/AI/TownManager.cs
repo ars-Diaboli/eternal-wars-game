@@ -13,8 +13,8 @@ namespace EternalWars.Core.Domain.AI;
 /// <summary>
 /// The AI's towns (ADR-059): it builds by a fixed order of wants (saving for the next building, trading at the marketplace for it, ADR-189),
 /// hires heroes, transforms, upgrades and recruits creatures, buys war machines and spell books, hires caravans, appoints governors, and moves
-/// troops between the garrisons and the heroes. A garrison hero comes out once the town is safe without it. On an arena's preparation day
-/// it spends everything on the army that fights (ADR-160).
+/// troops between the garrisons and the heroes. A garrison hero comes out once the town is safe without it. On an arena's preparation day,
+/// and in a tournament's last days once no week begins before its battle, it spends everything on the army that fights (ADR-160, ADR-366).
 /// </summary>
 internal sealed partial class TownManager(AiContext ai, ThreatMap threats)
 {
@@ -42,8 +42,8 @@ internal sealed partial class TownManager(AiContext ai, ThreatMap threats)
                 Hire(player, town, reserve: 0);
             }
 
-            // The arena's preparation day (ADR-160): no tomorrow to save for.
-            if (_ai.Preparing)
+            // The arena's preparation day (ADR-160), a tournament's last days with no week to come (ADR-366): nothing left to save for.
+            if (_ai.Arming)
             {
                 PrepareTown(player, town);
                 continue;
@@ -108,6 +108,7 @@ internal sealed partial class TownManager(AiContext ai, ThreatMap threats)
                 || next.Requires.Any(r => TownRules.Level(_state, town, r.Building) < r.Level)
                 || TownRules.CheckCapitol(_state, town, next) is not null
                 || TownRules.CheckCapitolDwellings(_state, town, next) is not null
+                || !PaysInTime(town, dwelling, id, next)
                 || !(Reachable(TownRules.BuildCost(_state, town, next), have, income)
                     || Buyable(player, TownRules.BuildCost(_state, town, next), have, income)))
             {
@@ -122,10 +123,35 @@ internal sealed partial class TownManager(AiContext ai, ThreatMap threats)
 
     /// <summary>
     /// Whether the cost can be met within a few days of the income, so saving for it is not hopeless (<see cref="AiWeights.BuildGoldDays"/>,
-    /// <see cref="AiWeights.BuildResourceDays"/>).
+    /// <see cref="AiWeights.BuildResourceDays"/>; in a tournament no more days than its income has left before the battle, ADR-366).
     /// </summary>
     private bool Reachable(ResourceSet cost, ResourceSet have, ResourceSet income) =>
-        Enum.GetValues<ResourceType>().All(r => cost[r] <= have[r] + (income[r] * (r == ResourceType.Gold ? _weights.BuildGoldDays : _weights.BuildResourceDays)));
+        Enum.GetValues<ResourceType>().All(r => cost[r] <= have[r] + (income[r] * SavingDays(r == ResourceType.Gold ? _weights.BuildGoldDays : _weights.BuildResourceDays)));
+
+    /// <summary>The days of income a town may save for a building: <paramref name="days"/>, or fewer when a tournament's battle comes first (ADR-366).</summary>
+    private int SavingDays(int days) => Math.Min(days, _ai.IncomeDays);
+
+    /// <summary>
+    /// Whether a building pays before a tournament's battle (ADR-366), so it is worth more than the troops its price would buy: a level that adds
+    /// income must earn its price back in the days of income left, a growth building or caravan needs a week still to begin. Dwellings pay at
+    /// once (a new one opens with its first week), and so does every building on another map.
+    /// </summary>
+    private bool PaysInTime(Town town, bool dwelling, string id, BuildingLevel next)
+    {
+        if (dwelling || _ai.DaysLeft is null)
+        {
+            return true;
+        }
+
+        if (next.Growth is not null || id == BuiltInBuildings.Caravan)
+        {
+            return _ai.WeeksToCome > 0;
+        }
+
+        var before = next.Level > 1 ? TownRules.Buildings(_state, town).Get(id, next.Level - 1).Income : ResourceSet.Empty;
+        var gain = AiContext.Value(next.Income) - AiContext.Value(before);
+        return gain <= 0 || gain * _ai.IncomeDays >= AiContext.Value(TownRules.BuildCost(_state, town, next));
+    }
 
     /// <summary>What a town wants built, best first (the order is the strategy): the fort the dwellings need, units, then income, then the rest.</summary>
     private IEnumerable<(bool Dwelling, string Id)> BuildOrder(Town town)

@@ -7,8 +7,10 @@ using EternalWars.Core.Domain.Towns;
 namespace EternalWars.Tools.Sim.Commands;
 
 /// <summary>
-/// <c>sim game [--map M | --template T [--size N] [--players N]] [--days D] [--seed S] [--runs N] [--record F] [--difficulty C] [--fog reveal|refog]
-/// [--profile]</c>: the adventure AI plays every slot of a map to the end or the day limit; prints how each game went.
+/// <c>sim game [--map M | --template T [--size N] [--players N]] [--days D] [--length L] [--seed S] [--runs N] [--record F] [--difficulty C]
+/// [--fog reveal|refog] [--profile]</c>: the adventure AI plays every slot of a map to the end or the day limit; prints how each game went. A
+/// tournament (ADR-366) lasts <c>--length</c> days (its default when left out); each run prints the champions as they came to its battle, and
+/// the runs together the spread of their armies: the check that the computer arrives with an army worth the battle.
 /// </summary>
 internal sealed class PlayGameCommand : SimCommand
 {
@@ -19,17 +21,18 @@ internal sealed class PlayGameCommand : SimCommand
         OptionSpec.Text("--map"), OptionSpec.Text("--template"), OptionSpec.Number("--size", min: 1), OptionSpec.Number("--players", min: 1),
         OptionSpec.Number("--days", min: 0), OptionSpec.Seed("--seed"), OptionSpec.Number("--runs", min: 1), OptionSpec.Text("--record"),
         OptionSpec.Choice("--difficulty", [.. Enum.GetNames<Difficulty>().Select(n => n.ToLowerInvariant())]), OptionSpec.Choice("--fog", "reveal", "refog"),
-        OptionSpec.Flag("--profile"),
+        OptionSpec.Flag("--profile"), OptionSpec.Number("--length", min: 1),
     ];
 
     public override bool TakesWeights => true;
 
     public override int Run(CommandLine line, SimContext sim) =>
-        Game(sim, GameMaker(sim, line), line.Number("--days", 40), line.Seed("--seed", 1), line.Number("--runs", 1), line.Text("--record"), line.Has("--profile"));
+        Game(sim, GameMaker(sim, line), line.Number("--days", Math.Max(40, line.Number("--length", 0) + 1)), line.Seed("--seed", 1), line.Number("--runs", 1), line.Text("--record"), line.Has("--profile"));
 
     private static int Game(SimContext sim, Func<ulong, SimGame> make, int days, ulong seed, int runs, string? recordPath, bool profile)
     {
         var wins = new Dictionary<string, int>();
+        var champions = new List<long>();
         var refusedTotal = 0;
         if (sim.WeightOptions.Count > 0)
         {
@@ -39,6 +42,11 @@ internal sealed class PlayGameCommand : SimCommand
         for (var run = 0; run < runs; run++)
         {
             var game = make(seed + (ulong)run);
+            if (game.State.Options.TournamentDays is not null && !game.State.Rules.Tournament)
+            {
+                throw new UsageException($"game: --length is for a tournament map; {game.State.Map.Name} is none.");
+            }
+
             if (game.Generated is { } generated)
             {
                 Console.WriteLine($"map {game.State.Map.Name}: attempt {generated.Attempt}{string.Concat(game.Problems.Select(p => $"; problem: {p}"))}");
@@ -53,6 +61,12 @@ internal sealed class PlayGameCommand : SimCommand
             refusedTotal += ai.Refused;
             ai.Refusals.Take(10).ToList().ForEach(r => Console.WriteLine($"  refused: {r}"));
             Console.WriteLine($"run {run + 1}: {state.Date} (day {state.Date.AbsoluteDay}), {winner}{(state.Outcome is { } o ? ": " + o.Reason : string.Empty)}");
+            if (fights.Champions.Count > 0)
+            {
+                champions.AddRange(fights.Champions.Select(c => c.Army));
+                Console.WriteLine($"  champions: {string.Join(" vs ", fights.Champions.Select(c => $"{c.Hero} ({state.GetPlayer(c.Player).Name}) level {c.Level}, army {c.Army}"))}");
+            }
+
             Console.WriteLine($"  {session.CommandLog.Count} commands, AI refused {ai.Refused}, digest {GameStateDigest.Compute(state)}; garrison heroes in {session.CommandLog.Count(c => c is EnterGarrisonCommand)}, out {session.CommandLog.Count(c => c is LeaveGarrisonCommand)}");
             foreach (var player in state.Players)
             {
@@ -78,6 +92,11 @@ internal sealed class PlayGameCommand : SimCommand
         if (runs > 1)
         {
             Console.WriteLine($"{runs} games: {string.Join(", ", wins.OrderBy(w => w.Key).Select(w => $"{w.Key} {w.Value}"))}; AI refused {refusedTotal} commands");
+            if (champions.Count > 0)
+            {
+                champions.Sort();
+                Console.WriteLine($"champions' armies: least {champions[0]}, median {champions[champions.Count / 2]}, most {champions[^1]}");
+            }
         }
 
         return refusedTotal == 0 ? 0 : 1;
@@ -88,6 +107,7 @@ internal sealed class PlayGameCommand : SimCommand
     {
         Difficulty? difficulty = line.Text("--difficulty") is { } level ? Enum.Parse<Difficulty>(level, ignoreCase: true) : null;
         var fog = line.Text("--fog") == "refog" ? FogMode.ShroudWithRefog : FogMode.PermanentReveal;
+        int? length = line.Has("--length") ? line.Number("--length", TournamentRules.DefaultDays) : null;
         if (line.Text("--template") is not { } name)
         {
             if (line.Has("--size") || line.Has("--players"))
@@ -96,7 +116,7 @@ internal sealed class PlayGameCommand : SimCommand
             }
 
             var map = line.Text("--map") ?? "towns";
-            return seed => SimGames.HandMadeGame(sim, map, seed, difficulty, fog);
+            return seed => SimGames.HandMadeGame(sim, map, seed, difficulty, fog, length);
         }
 
         if (line.Has("--map"))
@@ -107,6 +127,6 @@ internal sealed class PlayGameCommand : SimCommand
         var template = SimContext.LoadTemplate(name);
         var size = line.Number("--size", template.Sizes[0]);
         var players = line.Number("--players", template.MaxPlayers);
-        return seed => SimGames.GeneratedGame(sim, template, size, players, seed, difficulty, fog);
+        return seed => SimGames.GeneratedGame(sim, template, size, players, seed, difficulty, fog, length);
     }
 }

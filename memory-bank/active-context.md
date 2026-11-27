@@ -42,7 +42,9 @@ Detail: [roadmap.md](roadmap.md).
   `DecisionFor` / `SlotPlayer`), nobody waits for another's, a battle between two people or against what another person fights is a
   conflict, a slot left open waits for its person's turn; digest version 3; the replay viewer follows one battle at a time
   (`GameSession.Watch`), views hear only their turn's (`InShownTurn`); `SimultaneousBattleTests`, `LanSimultaneousBattleTests`,
-  `LanTournamentTests`. Next: step 4, the computer.
+  `LanTournamentTests`. Step 4 done: the AI plays its zone for the deadline (`AiContext.DaysLeft`, `TargetValuer.Homecoming`, towns
+  spending army-first in the last days, the last day's army gathered first, the weights `CarefulDays`, `LeashShare`, `ArmingDays`);
+  `sim game --length` prints the champions' armies at the battle; `TournamentAiTests`. Next: step 5, the game app.
 - Creature prompts as sheets of two (ADR-360): the base and its upgrade side by side, each creature whole in a 2:3 cell, files still
   512 × 512 (the cell centred on a square); every faction's sheets renumbered (Haven H1–H9 … neutral X1–X3); the owner's later
   reviews folded in (Bestiary W1–W5, Academy A1, Conflux ADR-357 to ADR-359, the toad-like kappa ADR-365). New creatures, all

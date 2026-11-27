@@ -415,7 +415,11 @@ battle with no retreat or surrender, and its winner wins. Lengths: 1–14 days, 
       - every tournament day before the battle at once on the LAN, always: the lobby has no switch for a tournament (done);
       - per-player battle and question slots on every simultaneous day (any LAN game's first week and an arena's day 1 too, TRN-7);
         a LAN week replayed exactly (done).
-- [ ] Step 4: The computer: its zone played for the deadline, its hero kept alive, the last day spent on the battle's army; `sim game --runs`
+- [x] Step 4: The computer:
+      - its zone played for the deadline: no enemy looked for, the hero kept within a walk of home and out of costly fights in the last
+        days, mines and buildings weighed by the days left, the last days' gold on the army, the last day's army gathered into the hero
+        (Town Portal home when out of reach) (done);
+      - `sim game --length` and the champions' armies at the battle; the median army at the battle 3–22× the old AI's (done).
 - [ ] Step 5: The game app: the Tournaments tab and the length row, the calendar's countdown, the hot-seat hand-over, the battle without
       retreat or surrender, the result screen; smoke `game-tournament`
 - [ ] Step 6: The editor: the Tournament switch, the validator's problems and fix-its, the template inspector's flag
