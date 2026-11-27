@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-357**. A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-366**. A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -11,7 +11,7 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [architecture.md](architecture.md) | The engine, the three tiers, events, commands and replays, the map and save formats, code structure, code reviews and refactors. | 35 |
 | [adventure-map.md](adventure-map.md) | The grid, terrain classes and movement, roads, map objects and catalogues, neutral guards, fog-of-war rules, scouting, week events, the Grail. | 30 |
 | [map-events.md](map-events.md) | Pandora's Box, the event tree (triggers, conditions, actions), quests and quest objects, loops, campaign variables. | 10 |
-| [towns-and-economy.md](towns-and-economy.md) | Resources and income, town groups and rosters, creatures, buildings and the tech tree, dwellings and caravans, unique buildings. | 26 |
+| [towns-and-economy.md](towns-and-economy.md) | Resources and income, town groups and rosters, creatures, buildings and the tech tree, dwellings and caravans, unique buildings. | 30 |
 | [heroes.md](heroes.md) | Primary stats, skills and levels, specialties, Necromancy, governors, the tavern. | 13 |
 | [artifacts.md](artifacts.md) | Artifact slots, tiers and effects, assembled relics, the exchange screen. | 7 |
 | [magic.md](magic.md) | Schools, spell levels and ranks, guilds and spell books, scrolls, every battle and adventure spell. | 12 |
@@ -20,7 +20,7 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [game-modes.md](game-modes.md) | Victory and defeat, saves, the turn timer, score, ranking and difficulty, replays and the viewer, the main menu and new-game screen, the arena. | 23 |
 | [random-maps-and-editor.md](random-maps-and-editor.md) | Templates and the generator, scenery density, relief, the standalone editor and the template editor. | 48 |
 | [multiplayer.md](multiplayer.md) | The host and clients, each client's view, the lobby, live battles, LAN saves, start zones and the simultaneous first week. | 16 |
-| [presentation.md](presentation.md) | Art direction, the camera, terrain and fog drawing, the HUD, layout and theme, information windows, icons, cursors and heraldry. | 47 |
+| [presentation.md](presentation.md) | Art direction, the camera, terrain and fog drawing, the HUD, layout and theme, information windows, icons, cursors and heraldry. | 94 |
 | [project-and-scope.md](project-and-scope.md) | Scope and phases, the owner's batches of answers that touch several areas, phase close-outs and the Godot checks, closing reviews. | 21 |
 
 ## All decisions
@@ -383,3 +383,12 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [354](presentation.md#adr-354-swamp-sheet-w5-to-the-owners-review-a-three-headed-hydra-and-a-five-headed-chaos-hydra-with-maroon-accents-owner-adr-289-2026-11-27) | presentation | Swamp sheet W5 to the owner's review: a three-headed hydra and a five-headed chaos hydra with maroon accents (owner, ADR-289, 2026-11-27) | accepted |
 | [355](presentation.md#adr-355-swamp-sheet-w2-to-the-owners-review-a-four-winged-serpent-fly-with-a-true-snakes-tail-owner-adr-289-2026-11-27) | presentation | Swamp sheet W2 to the owner's review: a four-winged serpent fly with a true snake's tail (owner, ADR-289, 2026-11-27) | accepted |
 | [356](presentation.md#adr-356-swamp-sheet-w3-to-the-owners-review-six-legged-basilisks-a-cobra-hooded-greater-basilisk-owner-adr-289-2026-11-27) | presentation | Swamp sheet W3 to the owner's review: six-legged basilisks, a cobra-hooded greater basilisk (owner, ADR-289, 2026-11-27) | accepted |
+| [357](presentation.md#adr-357-conflux-earth-spirit-and-earth-elemental-to-the-owners-review-soil-and-clay-not-stone-no-moss-or-roots-owner-adr-320-2026-11-27) | presentation | Conflux earth spirit and earth elemental to the owner's review: soil and clay, not stone, no moss or roots (owner, ADR-320, 2026-11-27) | accepted |
+| [358](presentation.md#adr-358-conflux-psychic-and-magic-elementals-to-the-owners-review-muscular-legless-figures-of-violet-and-rainbow-energy-owner-adr-320-2026-11-27) | presentation | Conflux psychic and magic elementals to the owner's review: muscular legless figures of violet and rainbow energy (owner, ADR-320, 2026-11-27) | accepted |
+| [359](presentation.md#adr-359-conflux-sheet-c1-to-the-owners-review-air-water-storm-and-ice-told-apart-by-shape-size-colour-and-material-owner-adr-320-2026-11-27) | presentation | Conflux sheet C1 to the owner's review: air, water, storm and ice told apart by shape, size, colour and material (owner, ADR-320, 2026-11-27) | accepted |
+| [360](presentation.md#adr-360-creature-portrait-sheets-of-two-base-and-upgrade-side-by-side-each-creature-fitted-whole-in-a-23-cell-owner-adr-341-2026-11-27) | presentation | Creature portrait sheets of two, base and upgrade side by side, each creature fitted whole in a 2:3 cell (owner, ADR-341, 2026-11-27) | accepted |
+| [361](towns-and-economy.md#adr-361-the-shaman-and-the-witch-doctor-swamp-bestiary-creatures-by-lore-neutral-in-the-game-owner-adr-044-2026-11-27) | towns-and-economy | The Shaman and the Witch Doctor: Swamp Bestiary creatures by lore, neutral in the game (owner, ADR-044, 2026-11-27) | implemented |
+| [362](towns-and-economy.md#adr-362-the-peasant-the-gnoll-and-the-halfling-as-neutrals-the-war-mammoth-removed-owner-adr-044-2026-11-27) | towns-and-economy | The Peasant, the Gnoll and the Halfling as neutrals; the War Mammoth removed (owner, ADR-044, 2026-11-27) | implemented |
+| [363](towns-and-economy.md#adr-363-the-mummy-and-the-lich-dragon-necropolis-creatures-by-lore-neutral-in-the-game-owner-adr-044-2026-11-27) | towns-and-economy | The Mummy and the Lich Dragon: Necropolis creatures by lore, neutral in the game (owner, ADR-044, 2026-11-27) | implemented |
+| [364](towns-and-economy.md#adr-364-the-wisp-becomes-the-worldwatcher-one-tier-up-owner-adr-320-2026-11-27) | towns-and-economy | The Wisp becomes the Worldwatcher, one tier up (owner, ADR-320, 2026-11-27) | implemented |
+| [365](presentation.md#adr-365-the-kappa-drawn-as-a-toad-owner-adr-352-2026-11-27) | presentation | The Kappa drawn as a toad (owner, ADR-352, 2026-11-27) | accepted |

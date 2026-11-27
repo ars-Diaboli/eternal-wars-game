@@ -9,6 +9,12 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Creature prompts as sheets of two (ADR-360): the base and its upgrade side by side, each creature whole in a 2:3 cell, files still
+  512 × 512 (the cell centred on a square); every faction's sheets renumbered (Haven H1–H9 … neutral X1–X3); the owner's later
+  reviews folded in (Bestiary W1–W5, Academy A1, Conflux ADR-357 to ADR-359, the toad-like kappa ADR-365). New creatures, all
+  placeholder stats and no portrait yet: the shaman and witch doctor (Bestiary by lore, ADR-361), the peasant, gnoll and halfling
+  (neutral, ADR-362; the War Mammoth removed), the mummy and the lich dragon (Necropolis by lore, ADR-363), the worldwatcher (the
+  wisp's tier-2 upgrade, ADR-364); `MapGenerator.Version` 16.
 - The Plague Bearer is now the Zombie (`necropolis.zombie`, ADR-336; same stats and upgrade; generated maps change, so
   `MapGenerator.Version` 15). The owner's third review of the creature prompts: Dungeon D1–D4, Haven H1–H5, Inferno I1–I6 and
   Necropolis N1–N4 rewritten (ADR-321 to ADR-339), Haven again in one livery (ADR-340), every creature sheet now full height (ADR-341); those sheets wait to be regenerated.

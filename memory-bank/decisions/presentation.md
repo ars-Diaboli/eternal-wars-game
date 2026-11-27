@@ -95,6 +95,11 @@
 | [354](#adr-354-swamp-sheet-w5-to-the-owners-review-a-three-headed-hydra-and-a-five-headed-chaos-hydra-with-maroon-accents-owner-adr-289-2026-11-27) | Swamp sheet W5 to the owner's review: a three-headed hydra and a five-headed chaos hydra with maroon accents (owner, ADR-289, 2026-11-27) | accepted |
 | [355](#adr-355-swamp-sheet-w2-to-the-owners-review-a-four-winged-serpent-fly-with-a-true-snakes-tail-owner-adr-289-2026-11-27) | Swamp sheet W2 to the owner's review: a four-winged serpent fly with a true snake's tail (owner, ADR-289, 2026-11-27) | accepted |
 | [356](#adr-356-swamp-sheet-w3-to-the-owners-review-six-legged-basilisks-a-cobra-hooded-greater-basilisk-owner-adr-289-2026-11-27) | Swamp sheet W3 to the owner's review: six-legged basilisks, a cobra-hooded greater basilisk (owner, ADR-289, 2026-11-27) | accepted |
+| [357](#adr-357-conflux-earth-spirit-and-earth-elemental-to-the-owners-review-soil-and-clay-not-stone-no-moss-or-roots-owner-adr-320-2026-11-27) | Conflux earth spirit and earth elemental to the owner's review: soil and clay, not stone, no moss or roots (owner, ADR-320, 2026-11-27) | accepted |
+| [358](#adr-358-conflux-psychic-and-magic-elementals-to-the-owners-review-muscular-legless-figures-of-violet-and-rainbow-energy-owner-adr-320-2026-11-27) | Conflux psychic and magic elementals to the owner's review: muscular legless figures of violet and rainbow energy (owner, ADR-320, 2026-11-27) | accepted |
+| [359](#adr-359-conflux-sheet-c1-to-the-owners-review-air-water-storm-and-ice-told-apart-by-shape-size-colour-and-material-owner-adr-320-2026-11-27) | Conflux sheet C1 to the owner's review: air, water, storm and ice told apart by shape, size, colour and material (owner, ADR-320, 2026-11-27) | accepted |
+| [360](#adr-360-creature-portrait-sheets-of-two-base-and-upgrade-side-by-side-each-creature-fitted-whole-in-a-23-cell-owner-adr-341-2026-11-27) | Creature portrait sheets of two, base and upgrade side by side, each creature fitted whole in a 2:3 cell (owner, ADR-341, 2026-11-27) | accepted |
+| [365](#adr-365-the-kappa-drawn-as-a-toad-owner-adr-352-2026-11-27) | The Kappa drawn as a toad (owner, ADR-352, 2026-11-27) | accepted |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -1600,7 +1605,7 @@ two-eyed apes).
 - **Regenerate**: Academy sheet A1.
 
 ### ADR-352: Swamp sheet W1 to the owner's review: lean lizardmen, a spear alone and then a spear and shell shield (owner, ADR-289, 2026-11-27)
-**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's lizardman shell shield and the lizard
+**Status**: accepted; partly superseded by ADR-365 (the kappa). Asset prompts only; no rule or format change. Supersedes ADR-289's lizardman shell shield and the lizard
 warrior's toothed sword, and the river creatures' water-filled head hollow.
 
 - **Owner**, on swamp sheet W1: the lizardmen skinnier; the base with a spear and no shield, the upgrade with a spear and a shield;
@@ -1647,3 +1652,68 @@ vapour) and the plain wyvern.
   basilisk has a cobra's flared hood behind a flat broad snake head with slit eyes and long fangs, no bone crest. The owlbears
   unchanged.
 - **Regenerate**: swamp sheet W3.
+
+### ADR-357: Conflux earth spirit and earth elemental to the owner's review: soil and clay, not stone, no moss or roots (owner, ADR-320, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-320's earth spirit (packed earth with stones and
+roots), earth elemental (fitted boulders with lichen) and fire elemental (fire around a charred black core).
+
+- **Owner**, on Conflux sheet C2: both earth creatures earth and soil, not stone; the earth spirit like the classic
+  4th game's earth elemental; no moss or roots; the fire elemental closer to the classic one, no dark tones, a humanoid
+  body with legs.
+- **Subjects**: the earth spirit a big hunched figure of packed dark earth and clay, dried cracked mud, a small head low between
+  massive rounded shoulders, huge blunt clay fists, crumbling soil; the earth elemental dense dark earth and wet clay in layered
+  red-brown and black bands, compacted earthen fists, amber-glowing cracks; neither with rocks, boulders, moss, lichen, roots or
+  plants. The fire elemental a clearly humanoid body of bright yellow, orange and gold flame with a head, arms and two
+  legs standing on the ground, a white-hot heart, no black, smoke or charred core. The fire spirit unchanged.
+- **Regenerate**: Conflux sheet C2.
+
+### ADR-358: Conflux psychic and magic elementals to the owner's review: muscular legless figures of violet and rainbow energy (owner, ADR-320, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-320's slender featureless psychic and magic
+elementals; the Conflux "no face" rule yields here to a bald head with blank glowing eyes.
+
+- **Owner**, on Conflux sheet C3: the psychic and magic elementals very close to the classic ones.
+- **Subjects**: the psychic elemental a muscular humanoid of glowing violet-purple energy, arms raised with crackling energy, a bald
+  head with a heavy brow and blank glowing eyes, no mouth or hair, no legs: below the waist a swirling tail of energy; the magic
+  elemental the same figure shimmering in every rainbow colour, multicoloured energy from both hands, a rainbow tail, no runes. The
+  spare cell 3 of sheet C4 follows. The void and energy elementals unchanged.
+- **Regenerate**: Conflux sheet C3 (and C4's spare).
+
+### ADR-359: Conflux sheet C1 to the owner's review: air, water, storm and ice told apart by shape, size, colour and material (owner, ADR-320, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-320's sheet C1 subjects (four blue-white swirling
+figures).
+
+- **Owner**, on Conflux sheet C1: the four creatures look too similar to each other.
+- **Subjects**: the air spirit small, slender, nearly colourless white and silver, a mostly see-through funnel, a white crystal; the
+  water spirit squat and rounded, glassy deep sea-green and teal water on a low wave, a teal crystal; the storm elemental towering
+  and top-heavy like an anvil cloud, opaque dark charcoal and slate-purple, yellow-white lightning, sheets of rain, a yellow crystal;
+  the ice elemental a solid blocky giant of opaque white and pale cyan glacier ice on two legs, faceted planes and straight edges, a
+  pale cyan crystal. The sheet says the four must differ at a glance.
+- **Regenerate**: Conflux sheet C1.
+
+### ADR-360: Creature portrait sheets of two, base and upgrade side by side, each creature fitted whole in a 2:3 cell (owner, ADR-341, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or file format change. Supersedes the 2 × 2 sheet of every creature prompt (bases
+over upgrades, a town's ninth line with second takes) and the sheet numbering ADR-321 to ADR-359 refer to.
+
+- **Owner**: split every creature sheet into sheets of two creatures, the base and its upgrade; keep the full-height rule; fit each
+  creature into a 2:3 box (3 for the height).
+- **Rules**: a sheet is one row of two upright cells, 1024 × 768, each cell 512 × 768 (2 wide by 3 tall), the base on the left and
+  its upgrade on the right ("the same creature as the one to its left"); the whole creature fits its cell at full height, a long or
+  wide creature drawn smaller to fit the width. A creature without an upgrade shares a sheet with another (Dragon Utopia, the
+  neutrals) or with a second take of itself. Each file stays 512 × 512: the cell centred on a transparent 768 × 768 square, then
+  scaled, so the army strip's and the timeline's 2:3 cut through the middle shows the whole creature and the game needs no change.
+  `NEG-CREATURE` drops "full-body figure for a large creature" (against the full-height rule) for cropped feet and creatures cut off
+  at the cell's edge.
+- **Sheets** are renumbered in the old order, each old sheet's left column, then its right: Haven H1–H9, Sylvan S1–S10, Academy
+  A1–A11, Necropolis N1–N11, Inferno I1–I11, Dungeon D1–D9, Stronghold T1–T9, Swamp Bestiary W1–W10, Conflux C1–C7, Dragon Utopia
+  U1–U5, neutral X1–X3. A sheet's shared notes are reworded for two (Haven's closed helmets); Conflux's "the four must differ at a
+  glance" goes, each creature keeping its own shape, colour and crystal. The bone dragon is drawn whole (ADR-341 had missed it).
+- **Regenerate**: every creature sheet.
+
+### ADR-365: The Kappa drawn as a toad (owner, ADR-352, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-352's turtle-like kappa.
+
+- **Owner**, on the Bestiary's kappa: the base kappa looks more like a toad.
+- **Subjects**: a squat toad-like river creature on thick webbed hind legs, a broad flat toad head, a wide lipless mouth, bulging
+  gold eyes, warty olive-brown skin, a small turtle shell, no beak and no pool on the head; the kappa shaman keeps its face and build,
+  spitting water from its wide mouth.
+- **Regenerate**: Swamp Bestiary sheet W2.

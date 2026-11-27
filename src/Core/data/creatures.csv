@@ -143,7 +143,8 @@ swamp-bestiary.wyvern,Wyvern,swamp-bestiary,4,Medium,swamp-bestiary.wyvern-monar
 swamp-bestiary.wyvern-monarch,Wyvern Monarch,swamp-bestiary,4,Medium,,B,18,16,19,28,128,22,9,13,,,,4872,3,1450,,beast; dragon,Flying; Relentless 10,placeholder stats (ADR-135)
 swamp-bestiary.hydra,Hydra,swamp-bestiary,5,Medium,swamp-bestiary.chaos-hydra,,23,22,28,43,209,13,7,12,,,,12056,1,3300,sulfur 1,reptile,MultiHead; NoEnemyRetaliation,sandbox listed the name only; stats are new
 swamp-bestiary.chaos-hydra,Chaos Hydra,swamp-bestiary,5,Medium,,,26,25,32,46,241,15,8,13,,,,16683,1,4300,sulfur 2,reptile,MultiHead; NoEnemyRetaliation; SpellImmunity poison,sandbox listed the name only; stats are new
-conflux.wisp,Wisp,conflux,1,Small,,,5,4,3,6,11,15,7,15,,,,42,15,65,,elemental,Flying; SpellImmunity mind,sandbox listed the name only; stats are new
+conflux.wisp,Wisp,conflux,1,Small,conflux.worldwatcher,,5,4,3,6,11,15,7,15,,,,42,15,65,,elemental,Flying; SpellImmunity mind,sandbox listed the name only; stats are new
+conflux.worldwatcher,Worldwatcher,conflux,2,Small,,,8,7,4,8,22,16,7,16,,,,139,15,150,,elemental,Flying; SpellImmunity mind,upgrade of the Wisp one tier up (ADR-364); placeholder stats
 conflux.air-spirit,Air Spirit,conflux,2,Medium,conflux.storm-elemental,,9,7,5,8,26,15,7,14,,,,182,9,200,,elemental,Flying; SpellImmunity mind,placeholder stats (ADR-320)
 conflux.storm-elemental,Storm Elemental,conflux,3,Medium,,,12,10,9,13,50,20,9,14,,,,692,5,450,,elemental,Flying; SpellImmunity mind; Caster nature.call-lightning 1,placeholder stats (ADR-320)
 conflux.water-spirit,Water Spirit,conflux,2,Medium,conflux.ice-elemental,,8,9,5,8,30,11,5,11,,,,180,9,200,,elemental,SpellImmunity mind,placeholder stats (ADR-320)
@@ -171,12 +172,18 @@ neutral.troll,Troll,,3,Medium,,,14,10,10,16,54,12,6,9,,,,772,4,560,,,UnlimitedRe
 neutral.dire-wolf,Dire Wolf,,1,Small,,,7,5,4,7,16,17,7,14,,,,70,12,110,,beast,PackHunter 25,sandbox: Grove Dire Wolf (old copy)
 neutral.specter,Specter,,2,Small,neutral.banshee,,9,7,5,9,25,15,7,13,,,,188,8,210,,undead,Flying; SpellImmunity mind,sandbox: Necropolis (old copy)
 neutral.banshee,Banshee,,2,Small,,,10,8,6,9,27,18,7,14,,,,230,8,270,,undead,Flying; SpellImmunity mind; NoEnemyRetaliation,sandbox: Necropolis (old copy)
+neutral.mummy,Mummy,,2,Small,,,9,9,5,8,30,9,5,9,,,,185,8,200,,undead,SpellImmunity mind,"Necropolis by lore, not hired in the town (ADR-363); placeholder stats"
+neutral.lich-dragon,Lich Dragon,,5,Large,,,28,26,55,80,320,22,10,14,,,,47952,1,5500,,undead; dragon,Flying; SpellImmunity mind; Breath; Caster death.death-cloud 1,"Necropolis by lore, not hired in the town, stronger than the Ghost Dragon (ADR-363); placeholder stats"
 neutral.thane,Thane,,3,Medium,neutral.thunder-thane,,13,12,9,13,53,13,6,11,,,,655,5,450,,giant,,"sandbox: Academy tier 3, commented out"
 neutral.thunder-thane,Thunder Thane,,3,Medium,,,14,13,10,15,60,15,7,12,,,,881,5,580,,giant,Caster nature.call-lightning 1; SpellImmunity lightning,"sandbox: Academy tier 3, commented out"
-neutral.mammoth,Mammoth,,4,Medium,neutral.war-mammoth,,16,19,16,23,135,13,6,9,,,,3619,2,1650,,beast,PackHunter 10,was a Stronghold line before Roc moved back to tier 4
-neutral.war-mammoth,War Mammoth,,4,Medium,,,18,21,18,25,148,14,6,10,,,,4693,2,2150,,beast,PackHunter 10; Cleave,upgrade of Mammoth
+neutral.mammoth,Mammoth,,4,Medium,,,16,19,16,23,135,13,6,9,,,,3619,2,1650,,beast,PackHunter 10,was a Stronghold line before Roc moved back to tier 4
 neutral.gog,Gog,,2,Small,neutral.magog,,9,7,5,8,21,10,5,10,10,,,183,8,210,,demon,MeleePenalty,sandbox: Inferno tier 2 (old copy)
 neutral.magog,Magog,,2,Small,,,10,8,6,9,24,11,5,11,12,,,256,8,270,,demon,MeleePenalty; SpellImmunity fire; Caster chaos.fireball 1,lore upgrade of Gog
+neutral.shaman,Shaman,,2,Small,neutral.witch-doctor,,8,7,4,8,22,11,6,11,8,,,173,8,210,,reptile,MeleePenalty; Caster death.weakness 1,"Swamp Bestiary by lore, not hired in the town (ADR-361); placeholder stats"
+neutral.witch-doctor,Witch Doctor,,2,Small,,,9,8,5,9,25,12,6,12,10,,,243,8,270,,reptile,MeleePenalty; Caster death.weakness 1; SpellImmunity poison,lore upgrade of Shaman (ADR-361); placeholder stats
+neutral.peasant,Peasant,,1,Small,,,3,2,1,3,8,9,5,8,,,,10,25,15,,human,,new neutral (ADR-362); placeholder stats
+neutral.gnoll,Gnoll,,1,Small,,,6,4,2,5,12,11,6,10,,,,32,16,50,,beast,,new neutral (ADR-362); placeholder stats
+neutral.halfling,Halfling,,1,Small,,,5,3,2,3,7,10,6,11,12,,,18,20,30,,,MeleePenalty,new neutral (ADR-362); placeholder stats
 neutral.breeder,Breeder,,3,Medium,neutral.fel-breeder,,12,12,9,13,65,9,5,9,,,,786,4,560,,demon,Caster chaos.hellgate 1,"sandbox: Inferno tier 3, commented out; spawns imps (spell hook)"
 neutral.fel-breeder,Fel Breeder,,3,Medium,,,13,13,10,15,77,10,5,10,,,,1106,4,730,,demon,Caster chaos.hellgate 2; SpellImmunity fire,"sandbox: Inferno tier 3, commented out"
 neutral.efreet,Efreet,,4,Medium,,,18,15,21,30,125,22,9,15,,,,5067,3,1450,,elemental; demon,Flying; SpellImmunity fire; Caster chaos.fireball 1,"new: demonic counterpart of the Djinn Sultan, a neutral (one upgrade per line)"

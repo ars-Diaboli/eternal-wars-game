@@ -32,6 +32,10 @@
 | [291](#adr-291-the-capitol-needs-six-dwellings-plots-show-unused-land-and-citizens-homes-town-15-2026-11-22) | The Capitol needs six dwellings; plots show unused land and citizens' homes (TOWN-15, 2026-11-22) | implemented |
 | [295](#adr-295-stronghold-the-wolf-rider-line-is-tier-2-the-centaur-line-tier-3-owner-2026-11-22) | Stronghold: the Wolf Rider line is tier 2, the Centaur line tier 3 (owner, 2026-11-22) | implemented |
 | [320](#adr-320-conflux-roster-the-wisp-four-spirits-becoming-elementals-one-tier-up-psychic-and-void-elementals-owner-adr-030-2026-11-26) | Conflux roster: the wisp, four spirits becoming elementals one tier up, psychic and void elementals (owner, ADR-030, 2026-11-26) | implemented |
+| [361](#adr-361-the-shaman-and-the-witch-doctor-swamp-bestiary-creatures-by-lore-neutral-in-the-game-owner-adr-044-2026-11-27) | The Shaman and the Witch Doctor: Swamp Bestiary creatures by lore, neutral in the game (owner, ADR-044, 2026-11-27) | implemented |
+| [362](#adr-362-the-peasant-the-gnoll-and-the-halfling-as-neutrals-the-war-mammoth-removed-owner-adr-044-2026-11-27) | The Peasant, the Gnoll and the Halfling as neutrals; the War Mammoth removed (owner, ADR-044, 2026-11-27) | implemented |
+| [363](#adr-363-the-mummy-and-the-lich-dragon-necropolis-creatures-by-lore-neutral-in-the-game-owner-adr-044-2026-11-27) | The Mummy and the Lich Dragon: Necropolis creatures by lore, neutral in the game (owner, ADR-044, 2026-11-27) | implemented |
+| [364](#adr-364-the-wisp-becomes-the-worldwatcher-one-tier-up-owner-adr-320-2026-11-27) | The Wisp becomes the Worldwatcher, one tier up (owner, ADR-320, 2026-11-27) | implemented |
 
 
 ### ADR-010: Town roster in four groups; two non-playable towns
@@ -540,7 +544,7 @@ owner's answer to TOWN-15 in the [town screen plan](../../docs/papers/town-scree
 - Test: `CreatureTests.StrongholdWolfRidersAreTierTwo_AndCentaursTierThree`.
 
 ### ADR-320: Conflux roster: the wisp, four spirits becoming elementals one tier up, psychic and void elementals (owner, ADR-030, 2026-11-26)
-**Status**: implemented. Placeholder stats; the portraits are prompts, not generated.
+**Status**: implemented; partly superseded by ADR-364 (the wisp's upgrade). Placeholder stats; the portraits are prompts, not generated.
 
 - **Owner**: the Conflux units are the wisp (tier 1); air spirit (2) to storm elemental (3); water spirit (2) to ice elemental (3); earth
   spirit (2) to earth elemental (3); fire spirit (2) to fire elemental (3); psychic elemental to magic elemental (4); void elemental to
@@ -560,3 +564,42 @@ owner's answer to TOWN-15 in the [town screen plan](../../docs/papers/town-scree
   the four old portraits of removed creatures are deleted; the spirits, the psychic and the void elemental have none yet.
 - Tests: `CreatureTests.Catalog_TakesAnUpgradeOneTierUp_OnlyInANonPlayableTown`,
   `CreatureTests.Conflux_HasTheWisp_FourSpiritsBecomingElementals_AndTwoElementalLines`; the Bind Elemental tests name the spirits.
+
+### ADR-361: The Shaman and the Witch Doctor: Swamp Bestiary creatures by lore, neutral in the game (owner, ADR-044, 2026-11-27)
+**Status**: implemented. Placeholder stats; the portraits are prompts, not generated.
+
+- **Owner**: add the shaman and the witch doctor to the Bestiary's creatures, tier 2, not buildable for now.
+- **Rules**: `neutral.shaman` (Shaman, tier 2, Small) upgrades to `neutral.witch-doctor` (Witch Doctor); like the gogs and the
+  specters they belong to a town by lore but have no town in `creatures.csv`, so the Bestiary keeps its nine dwellings and they
+  appear as neutrals (guards, map dwellings, random maps). Both shoot (Melee Penalty) and cast Weakness; the witch doctor is immune
+  to poison. Fight values are the formula's. The generator version goes up, its pinned maps re-pinned.
+- **Art**: drawn in the Bestiary's style on its backdrop (sheet W10): a stooped lizardfolk shaman with a skull-topped driftwood staff;
+  the witch doctor in a painted wooden mask with a collar of skulls and fetishes.
+
+### ADR-362: The Peasant, the Gnoll and the Halfling as neutrals; the War Mammoth removed (owner, ADR-044, 2026-11-27)
+**Status**: implemented. Placeholder stats; the portraits are prompts, not generated.
+
+- **Owner**: add the peasant, the gnoll and the halfling as neutral creatures; remove the upgraded mammoth.
+- **Rules**: `neutral.peasant`, `neutral.gnoll` and `neutral.halfling`, tier 1, Small, no upgrade; the halfling shoots (a sling).
+  `neutral.war-mammoth` is gone with its portrait; the Mammoth has no upgrade. Fight values are the formula's.
+- **Art**: neutral sheets X1 (peasant, halfling), X2 (gnoll, bandit), X3 (troll, mammoth).
+
+### ADR-363: The Mummy and the Lich Dragon: Necropolis creatures by lore, neutral in the game (owner, ADR-044, 2026-11-27)
+**Status**: implemented. Placeholder stats; the portraits are prompts, not generated.
+
+- **Owner**: add the lich dragon to the Necropolis, not buildable, stronger than the ghost dragon; add the mummy to the Necropolis,
+  not buildable, tier 2.
+- **Rules**: `neutral.mummy` (tier 2, Small, undead, no upgrade) and `neutral.lich-dragon` (tier 5, Large, undead dragon, no upgrade,
+  flying, breath, casts Death Cloud), with no town in `creatures.csv` like the specter, so the Necropolis keeps its nine dwellings.
+  The lich dragon beats the ghost dragon on every stat and in fight value (the formula's).
+- **Art**: drawn in the Necropolis style on its backdrop (sheet N11): a linen-wrapped mummy; a crowned, robed skeletal dragon with a
+  glowing phylactery in its ribs.
+
+### ADR-364: The Wisp becomes the Worldwatcher, one tier up (owner, ADR-320, 2026-11-27)
+**Status**: implemented. Placeholder stats; the portrait is a prompt, not generated. Supersedes ADR-320's wisp without an upgrade.
+
+- **Owner**: add the Worldwatcher as the wisp's upgrade, tier 2, in the Conflux.
+- **Rules**: `conflux.wisp` (tier 1) upgrades to `conflux.worldwatcher` (Worldwatcher, tier 2, flying, immune to mind spells), one
+  tier up as ADR-320 allows outside the playable towns; the same growth. Fight value is the formula's.
+- **Art**: Conflux sheet C7, the wisp and the worldwatcher: a sphere of white and gold light in turning bronze rune bands with one
+  calm eye of light.

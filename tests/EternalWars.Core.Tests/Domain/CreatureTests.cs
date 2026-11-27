@@ -65,14 +65,14 @@ public class CreatureTests
     }
 
     [Fact]
-    public void Conflux_HasTheWisp_FourSpiritsBecomingElementals_AndTwoElementalLines()
+    public void Conflux_HasTheWispBecomingTheWorldwatcher_FourSpiritsBecomingElementals_AndTwoElementalLines()
     {
         var catalog = CreatureCatalog.Default;
         var lines = catalog.BaseCreaturesOf(TownIds.Conflux).Select(c => (c.Id.Value, c.Tier, c.UpgradesTo?.Value)).ToList();
 
         Assert.Equal(
         [
-            ("conflux.wisp", 1, null),
+            ("conflux.wisp", 1, "conflux.worldwatcher"),
             ("conflux.air-spirit", 2, "conflux.storm-elemental"),
             ("conflux.earth-spirit", 2, "conflux.earth-elemental"),
             ("conflux.fire-spirit", 2, "conflux.fire-elemental"),
@@ -83,10 +83,10 @@ public class CreatureTests
         Assert.All(lines.Where(l => l.Item3 is not null), l =>
         {
             var (line, upgrade) = (catalog.Get(l.Item1), catalog.Get(l.Item3!));
-            Assert.Equal(line.Tier == 2 ? 3 : line.Tier, upgrade.Tier);
+            Assert.Equal(line.Tier is 1 or 2 ? line.Tier + 1 : line.Tier, upgrade.Tier);
             Assert.True(upgrade.FightValue > line.FightValue, $"{upgrade.Id} should be stronger than {line.Id}");
         });
-        Assert.Equal(13, catalog.All.Count(c => c.Town == TownIds.Conflux));
+        Assert.Equal(14, catalog.All.Count(c => c.Town == TownIds.Conflux));
     }
 
     [Fact]

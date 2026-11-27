@@ -1,10 +1,10 @@
 # Creature icon prompts (for an image-generating model)
 
 Prompts for the **creature portraits**: the army slots of the hero, town and exchange screens, the tavern, the dwellings, the battle's
-initiative bar and the creature windows. One portrait for each creature in `creatures.csv`, generated as **sheets of 4 (2 × 2)**: a
-town sheet holds two creatures in its top row and **their upgrades directly below them**, so each pair comes out as the same creature;
-a town's ninth pair fills the left column of its last sheet, and the right column takes a second try at each. The designs are
-original: the prompts never imitate another game's creatures.
+initiative bar and the creature windows. One portrait for each creature in `creatures.csv`, generated as **sheets of 2 (one row)**:
+a sheet holds one creature line, **the base on the left and its upgrade on the right**, so the pair comes out as the same creature; a
+creature without an upgrade shares a sheet with another, or with a second take of itself. The designs are original: the prompts never
+imitate another game's creatures.
 
 ## Use a prompt
 
@@ -23,7 +23,7 @@ pixel art, blurry, cropped subject, subjects touching or overlapping, two subjec
 chibi, cute, toy-like, childish, cel shading, flat colours, flat shading, vector art, clip art, sticker, emoji, mobile game icon,
 casual game art, thick black outlines, ink line art, exaggerated proportions, oversized head, big eyes, rounded bubbly shapes, glossy
 plastic, smooth airbrushed gradients, oversaturated colours, candy colours, background scenery, ground, frame, card border, full-body
-figure for a large creature, cropped head, two creatures in one cell, monster-toy look, friendly expression, modern clothes, real-world
+cropped feet, creature cut off at the cell's edge, cropped head, two creatures in one cell, monster-toy look, friendly expression, modern clothes, real-world
 symbols, another game's creature design, faded colours, washed out, low contrast, desaturated, hazy, grey cast, muddy colours, sci-fi,
 robot, mecha, upgrade identical to its base
 ```
@@ -31,18 +31,20 @@ robot, mecha, upgrade identical to its base
 ## Shared wording
 
 Every creature prompt repeats three passages word for word, so that each prompt is ready to paste: the creature style ("Game
-creature portrait sheet in a realistic painterly…"), its faction's look ("Haven creatures: …" and so on) and the grid sentence ("4
-separate icons arranged in a grid…"). Every backdrop prompt starts with the same backdrop style ("Square painted
+creature portrait sheet in a realistic painterly…"), its faction's look ("Haven creatures: …" and so on) and the row sentence ("2
+separate icons side by side…"). Every backdrop prompt starts with the same backdrop style ("Square painted
 background for a creature portrait…"). A change to one of them is made in every prompt that holds it: search the faction files for its
 first words.
 
 ## Output for every portrait
 
-- **Sheet**: 2 × 2 at 1024 × 1024, every cell 512 × 512, transparent background; cut as the icons.
-- **File**: `icon_creature_<creature id>.png` with the id from `creatures.csv` (`icon_creature_haven.footman.png`), 32-bit RGBA, 512 × 512.
-- **Framing**: the army strip and the battle timeline show a portrait cut to 2:3 (taller than wide) through the middle, so the **head
-  (or face) and the weapon stay in the middle two thirds of the cell's width**. Every portrait shows the whole creature at full height
-  (a rider with the whole mount, a dragon or giant creature whole as well), never cropped at the chest.
+- **Sheet**: 1 row of 2 at 1024 × 768, every cell 512 × 768 (2 wide by 3 tall), transparent background; cut as the icons.
+- **File**: `icon_creature_<creature id>.png` with the id from `creatures.csv` (`icon_creature_haven.footman.png`), 32-bit RGBA, 512 × 512:
+  the cell centred on a transparent 768 × 768 square, then scaled to 512 × 512, so the creature fills the square's middle two thirds.
+- **Framing**: the army strip and the battle timeline show a portrait cut to 2:3 (taller than wide) through the middle, which is the
+  cell: **every portrait shows the whole creature at full height inside its 2:3 cell**, from the head (or wings) to the feet, a rider
+  with the whole mount, a dragon or giant creature whole as well, drawn smaller when long or wide so that it fits the cell's width;
+  never cropped.
 - **Facing**: always to the right, the attacker's side; the game mirrors a portrait where it needs the other way.
 - **Telling apart**: a base creature and its upgrade share the face and build; the upgrade is larger, heavier armed, more ornate and
   richer in colour, with at least one new feature that shows at 48 px (a weapon, a crown, a material, a colour). The base stays plain.
@@ -70,11 +72,12 @@ One file a faction: its sheets' prompts, which cell is which file, and its backd
 
 ## Backdrops
 
-One painted backdrop a faction, generated alone from the ready prompt under **Backdrop** in its faction's file, 1024 × 1024, saved
-as `creature_backdrop_<town>.png` (opaque, the game scales it). A creature keeps its own faction's backdrop wherever it is hired; neutral
-creatures use `neutral`, except those that belong to a town by lore, which are drawn in its style and use its backdrop: the
-Academy's thane, thunder thane, efreet and golden golem, the Necropolis' specter and banshee, the Sylvan timber and dire
-wolves, and the Inferno gogs and breeders. Hero portraits use the same backdrops ([hero-town-icon-prompts.md](hero-town-icon-prompts.md)).
+One painted backdrop a faction, generated alone from the ready prompt under **Backdrop** in its faction's file, 1024 × 1024, saved as
+`creature_backdrop_<town>.png` (opaque, the game scales it). A creature keeps its own faction's backdrop wherever it is hired; neutral
+creatures use `neutral`, except those that belong to a town by lore, which are drawn in its style and use its backdrop: the Academy's
+thane, thunder thane, efreet and golden golem, the Necropolis' specter, banshee, mummy and lich dragon, the Sylvan timber and dire
+wolves, the Inferno gogs and breeders, and the Swamp Bestiary shaman and witch doctor. Hero portraits use the same backdrops
+([hero-town-icon-prompts.md](hero-town-icon-prompts.md)).
 
 ## After generating
 

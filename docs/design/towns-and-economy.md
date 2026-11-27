@@ -60,8 +60,8 @@ ADR-030, ADR-050.
   for the price difference. The upgrade does not raise growth (ADR-046).
 - **Neutral creatures** (and Conflux / Dragon Utopia) may lack upgrades; they use the same 1–5 tiers for guard strength, treasure value and
   random-map balance.
-- **An upgrade keeps its base's tier**, except in a non-playable town, where it may be one tier above (ADR-320). Conflux: the Wisp (tier 1,
-  no upgrade); the Air, Water, Earth and Fire Spirits (tier 2) become the Storm, Ice, Earth and Fire Elementals (tier 3); the Psychic
+- **An upgrade keeps its base's tier**, except in a non-playable town, where it may be one tier above (ADR-320). Conflux: the Wisp (tier 1)
+  becomes the Worldwatcher (tier 2); the Air, Water, Earth and Fire Spirits (tier 2) become the Storm, Ice, Earth and Fire Elementals (tier 3); the Psychic
   Elemental becomes the Magic Elemental (tier 4); the Void Elemental the Energy Elemental (tier 5).
 
 ## Growth

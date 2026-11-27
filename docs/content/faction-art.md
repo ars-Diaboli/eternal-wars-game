@@ -106,8 +106,8 @@ The [faction groups](../design/factions.md) keep the colours already given to th
   fence with an open grave; the bones of a great dragon lying on the plain (the bone dragons); a wall and an iron gate in front with
   cyan braziers on skull-carved posts.
 - **Colours**: black, charcoal, ash grey, bone, rusted iron; cyan accents only.
-- **Creatures**: the specter and the banshee are Necropolis creatures by lore, drawn in its style, though not hired in the town
-  (neutral in the game).
+- **Creatures**: the specter, the banshee, the mummy and the lich dragon are Necropolis creatures by lore, drawn in its style, though
+  not hired in the town (neutral in the game).
 - **Avoid**: cartoon skulls, green-and-purple Halloween colours, slime, skulls on every surface.
 
 ### Inferno
@@ -173,6 +173,8 @@ The [faction groups](../design/factions.md) keep the colours already given to th
   huts with plank walks; spawning pools of glowing eggs; a toppled statue head sunk in moss.
 - **Colours**: dark pine green, near-black green, pale algae-stained stone, wet wood, straw thatch, bone and pearly shell; cyan and warm
   gold as the accents.
+- **Creatures**: the shaman and the witch doctor are Swamp Bestiary creatures by lore, drawn in its style, though not hired
+  in the town (neutral in the game).
 - **Avoid**: a wide lake or a long boardwalk filling the foreground, jungle temples of a real culture, tropical colours, toxic green.
 
 ### Conflux (not playable)

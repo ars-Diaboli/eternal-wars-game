@@ -22,10 +22,10 @@ windows still use the lettered placeholders.
 | creature_backdrop_inferno.png | the backdrop behind the Inferno portraits and Inferno heroes |
 | icon_creature_necropolis.<creature id>.png | the eighteen Necropolis creatures (sheets N1–N3) |
 | creature_backdrop_necropolis.png | the backdrop behind the Necropolis portraits and Necropolis heroes |
-| icon_creature_neutral.<creature id>.png | fifteen of the sixteen neutral creatures (sheets X1–X3, X1's mammoth, war mammoth, bandit and troll redone; the timber wolf and the dire wolf from Sylvan sheet S5) |
+| icon_creature_neutral.<creature id>.png | fourteen neutral creatures (the earlier 2 × 2 sheets X1–X3, X1's mammoth, bandit and troll redone; the timber wolf and the dire wolf from Sylvan sheet S5) |
 | creature_backdrop_neutral.png | the backdrop behind the neutral portraits |
 | icon_creature_sylvan.<creature id>.png | the eighteen Sylvan creatures (sheets S1–S5) |
 | creature_backdrop_sylvan.png | the backdrop behind the Sylvan portraits and Sylvan heroes |
 
-Not drawn yet: the other factions; of the neutral creatures, `icon_creature_neutral.banshee.png` (sheet X1's bottom row drew
-two more giants in its cells).
+Not drawn yet: the other factions; of the neutral creatures, the banshee, the shaman, the witch doctor, the mummy, the lich dragon, the
+peasant, the gnoll and the halfling.
