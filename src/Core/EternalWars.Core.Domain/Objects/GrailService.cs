@@ -17,27 +17,47 @@ public sealed class GrailService(ObjectInteractionContext context, ArtifactServi
     /// <summary>
     /// Buries the Grail when the game starts (from <see cref="Game.GameState.Random"/>) on a map with an obelisk, large enough and with no Grail set by
     /// its author: on a cell one could dig, far enough from the edges, away from the towns when such a cell exists. A map without obelisks keeps no
-    /// Grail unless its author buried one. Then the puzzle's place is drawn around the Grail.
+    /// Grail unless its author buried one. Then the puzzle's place is drawn around the Grail. A tournament (ADR-366) buries one in each start zone
+    /// with an obelisk, in zone order, on a cell of the zone away from the zone's towns.
     /// </summary>
     internal void Bury()
     {
         var state = context.State;
-        if (state.Grail.Position is null && state.ObjectsOf<Obelisk>().Any() && state.Artifacts.Grail is not null && HoldsGrail(state.Map))
+        if (!PerZone(state))
+        {
+            Bury(state.Grail.Main, state.ObjectsOf<Obelisk>().Any(), _ => true);
+            return;
+        }
+
+        foreach (var zone in state.Map.StartZoneOwners)
+        {
+            if (state.ObjectsOf<Obelisk>().Any(o => state.Map.GetStartZone(o.VisitPosition) == zone))
+            {
+                Bury(state.Grail.AddZoneSite(zone), obelisks: true, p => state.Map.GetStartZone(p) == zone);
+            }
+        }
+    }
+
+    /// <summary>Buries <paramref name="site"/>'s Grail on a cell <paramref name="inside"/> when it has none and there are obelisks, then draws its puzzle.</summary>
+    private void Bury(GrailSite site, bool obelisks, Func<MapPosition, bool> inside)
+    {
+        var state = context.State;
+        if (site.Position is null && obelisks && state.Artifacts.Grail is not null && HoldsGrail(state.Map))
         {
             var cells = Enumerable.Range(0, state.Map.Levels).SelectMany(state.Map.Positions)
-                .Where(p => FarFromEdge(state.Map, p) && CheckGround(state, p) is null).ToList();
-            var towns = state.ObjectsOf<Town>().Select(t => t.VisitPosition).ToList();
+                .Where(p => inside(p) && FarFromEdge(state.Map, p) && CheckGround(state, p) is null).ToList();
+            var towns = state.ObjectsOf<Town>().Select(t => t.VisitPosition).Where(inside).ToList();
             var away = cells.Where(c => towns.All(t => t.Level != c.Level || Math.Max(Math.Abs(t.X - c.X), Math.Abs(t.Y - c.Y)) > TownDistance)).ToList();
             var pool = away.Count > 0 ? away : cells;
             if (pool.Count > 0)
             {
-                state.Grail.Position = pool[state.Random.Next(pool.Count)];
+                site.Position = pool[state.Random.Next(pool.Count)];
             }
         }
 
-        if (state.Grail.Position is { } grail && state.Grail.PuzzleOrigin is null)
+        if (site.Position is { } grail && site.PuzzleOrigin is null)
         {
-            state.Grail.PuzzleOrigin = new MapPosition(grail.X - Offset(grail.X, state.Map.Width), grail.Y - Offset(grail.Y, state.Map.Height), grail.Level);
+            site.PuzzleOrigin = new MapPosition(grail.X - Offset(grail.X, state.Map.Width), grail.Y - Offset(grail.Y, state.Map.Height), grail.Level);
         }
 
         // The Grail's place in the puzzle along one axis: one of the centre's cells (8 … 11), keeping the puzzle on the map where it can.
@@ -64,9 +84,9 @@ public sealed class GrailService(ObjectInteractionContext context, ArtifactServi
             return;
         }
 
-        if (state.Grail.PuzzleOrigin is not null)
+        if (SiteOf(state, hero.Owner)?.PuzzleOrigin is not null)
         {
-            var obelisks = state.ObjectsOf<Obelisk>().ToList();
+            var obelisks = ObelisksOf(state, hero.Owner);
             var visit = obelisks.Count(o => o.WasVisitedBy(hero.Owner));
             var opened = state.Grail.PiecesOf(hero.Owner);
             var closed = Enumerable.Range(0, PieceCount).Where(i => !opened.Contains(i)).ToList();
@@ -109,7 +129,7 @@ public sealed class GrailService(ObjectInteractionContext context, ArtifactServi
         hero.MovementPoints = 0;
         var position = hero.Position;
         Common.ArtifactId? found = null;
-        if (!state.Grail.IsFound && state.Grail.Position == position && state.Artifacts.Grail is { } grail)
+        if (SiteOf(state, hero.Owner) is { IsFound: false } site && site.Position == position && state.Artifacts.Grail is { } grail)
         {
             if (!artifacts.Grant(hero, grail.Id, ArtifactSource.Found))
             {
@@ -117,7 +137,7 @@ public sealed class GrailService(ObjectInteractionContext context, ArtifactServi
                 return;
             }
 
-            state.Grail.IsFound = true;
+            site.IsFound = true;
             found = grail.Id;
         }
 

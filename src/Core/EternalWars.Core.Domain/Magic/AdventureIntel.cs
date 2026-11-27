@@ -123,11 +123,13 @@ public static partial class AdventureIntel
 
     /// <summary>
     /// Distant Vision: the other players' heroes and the neutral stacks within <paramref name="radius"/> of <paramref name="center"/>, on tiles
-    /// the viewer has explored, or anywhere with <paramref name="underFog"/> (rank III); heroes first, by id, then the stacks by id.
+    /// the viewer has explored, or anywhere with <paramref name="underFog"/> (rank III); heroes first, by id, then the stacks by id. A tournament's player
+    /// sees only inside its own zone (<see cref="TournamentRules.Reaches"/>).
     /// </summary>
     public static IReadOnlyList<ShownArmy> ArmiesAround(GameState state, PlayerId viewer, MapPosition center, int radius, bool underFog)
     {
-        bool Seen(MapPosition position) => FogOfWar.IsWithinRadius(center, position, radius) && (underFog || state.Fog.IsExplored(viewer, position));
+        bool Seen(MapPosition position) =>
+            FogOfWar.IsWithinRadius(center, position, radius) && (underFog || state.Fog.IsExplored(viewer, position)) && TournamentRules.Reaches(state, viewer, position);
         return
         [
             .. state.Heroes.Where(h => h.Owner != viewer && Seen(h.Position)).OrderBy(h => h.Id.Value).Select(h => ShowHero(state, h, viewer)),
@@ -135,11 +137,12 @@ public static partial class AdventureIntel
         ];
     }
 
-    /// <summary>The neutral map stacks within the radius (Grave Whisper III shows their numbers), by id.</summary>
+    /// <summary>The neutral map stacks within the radius (Grave Whisper III shows their numbers), by id; in a tournament only those in the viewer's zone.</summary>
     public static IReadOnlyList<ShownArmy> MonstersAround(GameState state, PlayerId viewer, MapPosition center, int radius, bool underFog = true) =>
     [
         .. state.ObjectsOf<MonsterGuard>()
-            .Where(m => FogOfWar.IsWithinRadius(center, m.Position, radius) && (underFog || state.Fog.IsExplored(viewer, m.Position)))
+            .Where(m => FogOfWar.IsWithinRadius(center, m.Position, radius) && (underFog || state.Fog.IsExplored(viewer, m.Position))
+                && TournamentRules.Reaches(state, viewer, m.Position))
             .OrderBy(m => m.Id.Value).Select(m => ShowMonster(state, m)),
     ];
 
@@ -178,11 +181,13 @@ public static partial class AdventureIntel
 
     /// <summary>
     /// Detect Magic: every map object within <paramref name="radius"/> of <paramref name="center"/> (by its entrance) that holds something, by
-    /// id, with its contents; <paramref name="bankRewards"/> (rank III) adds what creature banks pay.
+    /// id, with its contents; <paramref name="bankRewards"/> (rank III) adds what creature banks pay. A tournament's <paramref name="viewer"/> detects only
+    /// inside its own zone (<see cref="TournamentRules.Reaches"/>).
     /// </summary>
-    public static IReadOnlyList<DetectedObject> ObjectsAround(GameState state, MapPosition center, int radius, bool bankRewards) =>
+    public static IReadOnlyList<DetectedObject> ObjectsAround(GameState state, PlayerId viewer, MapPosition center, int radius, bool bankRewards) =>
     [
-        .. state.Objects.Where(o => FogOfWar.IsWithinRadius(center, o.VisitPosition, radius)).OrderBy(o => o.Id.Value)
+        .. state.Objects.Where(o => FogOfWar.IsWithinRadius(center, o.VisitPosition, radius) && TournamentRules.Reaches(state, viewer, o.VisitPosition))
+            .OrderBy(o => o.Id.Value)
             .Select(o => (Object: o, Contents: Contents(state, o, bankRewards)))
             .Where(o => o.Contents.Count > 0)
             .Select(o => new DetectedObject(o.Object.Id, o.Object.Definition.Name, o.Object.VisitPosition, o.Contents)),

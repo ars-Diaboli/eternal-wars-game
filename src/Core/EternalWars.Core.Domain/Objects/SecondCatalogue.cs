@@ -142,7 +142,8 @@ public static class MapTavernRules
 
     /// <summary>
     /// This week's offers: the roster shuffled from the game seed, the tavern and the week, without the heroes on the map or waiting in a
-    /// player's taverns; the same for every player. A hired hero leaves the pool at once (it is on the map).
+    /// player's taverns; the same for every player. A hired hero leaves the pool at once (it is on the map). In a tournament (ADR-366) only the
+    /// heroes of the player whose zone the tavern is in leave it (<see cref="Towns.TavernRules.Taken"/>).
     /// </summary>
     public static IReadOnlyList<HeroDefinition> Offers(GameState state, MapTavern tavern)
     {
@@ -157,7 +158,7 @@ public static class MapTavernRules
         }
 
         var pool = MapBans.Allowed(heroes, h => state.Rules.Bans.BansHero(h.Id)).Take(OfferCount * 4).ToList(); // the week's pool, before anyone is hired
-        var taken = state.Heroes.Concat(state.RetiredHeroes).Select(h => h.Definition).OfType<string>().ToHashSet(StringComparer.Ordinal);
+        var taken = Towns.TavernRules.Taken(state, state.Rules.Tournament ? state.Map.GetStartZone(tavern.VisitPosition) : null);
         return [.. pool.Where(h => !taken.Contains(h.Id)).Take(OfferCount)];
     }
 

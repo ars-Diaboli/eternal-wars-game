@@ -16,13 +16,16 @@ public enum DecidingBattleResult
     /// <summary>The battle is being fought.</summary>
     Fighting,
 
-    /// <summary><see cref="DecidingBattle.Winner"/> won it, by the battle or because the other side had no army; retreat and surrender lose.</summary>
+    /// <summary>
+    /// <see cref="DecidingBattle.Winner"/> won it: by the battle (a retreat or surrender loses), or without one because the other side had no army or,
+    /// in a tournament, no hero (<see cref="DecidingBattle.Reason"/>).
+    /// </summary>
     Won,
 
-    /// <summary>Both armies fell: a loss for both.</summary>
+    /// <summary>Both armies fell, or neither side could fight (<see cref="DecidingBattle.Reason"/>): a loss for both.</summary>
     Draw,
 
-    /// <summary>No battle could be fought (no enemy side, or a side without a hero): a loss for everyone (<see cref="DecidingBattle.Reason"/>).</summary>
+    /// <summary>No battle could be fought (no enemy side, or in an arena a side without a hero): a loss for everyone (<see cref="DecidingBattle.Reason"/>).</summary>
     NoBattle,
 }
 
@@ -37,7 +40,7 @@ public sealed record DecidingBattle(MapObjectId? CombatPlace, PlayerId? Attacker
     /// <summary>The player whose hero won (<see cref="DecidingBattleResult.Won"/>); its team wins the game.</summary>
     public PlayerId? Winner { get; init; }
 
-    /// <summary>Why no battle was fought (<see cref="DecidingBattleResult.NoBattle"/>).</summary>
+    /// <summary>Why no battle was fought: always for <see cref="DecidingBattleResult.NoBattle"/>, and for a win or a draw without one.</summary>
     public string? Reason { get; init; }
 
     /// <summary>
@@ -73,8 +76,8 @@ public static class DecidingBattles
     /// <summary>The battle's name in messages: "tournament battle" or "arena battle".</summary>
     public static string Name(ScenarioRules rules) => rules.Tournament ? "tournament battle" : "arena battle";
 
-    /// <summary>The battle chosen at the start of its day; both triggers choose it as the arena does (<see cref="ArenaRules.Plan"/>).</summary>
-    public static DecidingBattle Plan(GameState state) => ArenaRules.Plan(state);
+    /// <summary>The battle chosen at the start of its day: <see cref="ArenaRules.Plan"/> or <see cref="TournamentRules.Plan"/> (which tosses a coin).</summary>
+    public static DecidingBattle Plan(GameState state) => state.Rules.Tournament ? TournamentRules.Plan(state) : ArenaRules.Plan(state);
 
     /// <summary>
     /// The team's strongest hero by army value (<see cref="ArmyValue"/>), the lower hero id first on a tie: one on the map, else one in a town's
@@ -88,12 +91,13 @@ public static class DecidingBattles
         return candidates.OrderByDescending(h => ArmyValue(state, h)).ThenBy(h => h.Id.Value).FirstOrDefault();
     }
 
-    /// <summary>Σ count × creature value of the hero's army; a garrison hero leads its town's garrison (ADR-112).</summary>
-    public static long ArmyValue(GameState state, Hero hero)
-    {
-        var army = state.ObjectsOf<Town>().FirstOrDefault(t => t.GarrisonHero == hero) is { } town ? town.Garrison : hero.Army;
-        return army.Stacks.Sum(s => (long)s.Stack.Count * state.Creatures.Get(s.Stack.Creature).FightValue);
-    }
+    /// <summary>Σ count × creature value of the hero's army (<see cref="ArmyOf"/>).</summary>
+    public static long ArmyValue(GameState state, Hero hero) =>
+        ArmyOf(state, hero).Stacks.Sum(s => (long)s.Stack.Count * state.Creatures.Get(s.Stack.Creature).FightValue);
+
+    /// <summary>The army the hero brings to the battle: its own; a garrison hero's is its town's garrison, which it leads (ADR-112).</summary>
+    public static Army ArmyOf(GameState state, Hero hero) =>
+        state.ObjectsOf<Town>().FirstOrDefault(t => t.GarrisonHero == hero) is { } town ? town.Garrison : hero.Army;
 }
 
 /// <summary>
@@ -105,7 +109,8 @@ public sealed class DecidingBattleService(GameState state, IEventPublisher event
     /// <summary>
     /// Chooses the battle (<see cref="DecidingBattles.Plan"/>), moves the champions to the combat place, the defender onto its entrance and the attacker
     /// onto its attack cell, and starts the battle there. A side without an army loses at once, both without armies is a draw; with nobody to fight
-    /// the game just ends.
+    /// the game just ends. A tournament's battle (ADR-366) is fought on neutral ground (<see cref="TournamentRules.Battlefield"/>), with no help from a
+    /// town the defender stands in, and nobody may leave it.
     /// </summary>
     internal void StartBattle()
     {
@@ -124,12 +129,17 @@ public sealed class DecidingBattleService(GameState state, IEventPublisher event
         if (attacker.Army.IsEmpty || defender.Army.IsEmpty)
         {
             state.DecidingBattle = attacker.Army.IsEmpty && defender.Army.IsEmpty
-                ? plan with { Result = DecidingBattleResult.Draw }
-                : plan with { Result = DecidingBattleResult.Won, Winner = attacker.Army.IsEmpty ? defenderId : attackerId };
+                ? plan with { Result = DecidingBattleResult.Draw, Reason = "Neither champion had an army." }
+                : plan with
+                {
+                    Result = DecidingBattleResult.Won, Winner = attacker.Army.IsEmpty ? defenderId : attackerId,
+                    Reason = $"{(attacker.Army.IsEmpty ? attacker : defender).Name} had no army.",
+                };
             return;
         }
 
-        battles.BeginDecidingBattle(attacker, defender, place?.VisitPosition ?? defender.Position);
+        var tournament = state.Rules.Tournament;
+        battles.BeginDecidingBattle(attacker, defender, place?.VisitPosition ?? defender.Position, tournament ? TournamentRules.Battlefield(state) : null, tournament);
     }
 
     /// <summary>

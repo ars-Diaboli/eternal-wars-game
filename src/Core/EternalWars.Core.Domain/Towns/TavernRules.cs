@@ -13,7 +13,8 @@ namespace EternalWars.Core.Domain.Towns;
 /// offers two heroes, an upgraded one four, each slot asking for a rank; a rank with nobody left falls through to the
 /// next ranks (and, last, back to the earlier ones). Heroes on the map are never offered; the order inside a rank is a
 /// shuffle that is new every week and different for every player and town faction (ADR-070). A player's heroes that retreated or
-/// surrendered wait in its taverns ahead of the others (ADR-081).
+/// surrendered wait in its taverns ahead of the others (ADR-081). In a tournament each player has a pool of its own (ADR-366): the other player's
+/// heroes do not leave it (<see cref="Taken"/>).
 /// </summary>
 public static class TavernRules
 {
@@ -130,7 +131,7 @@ public static class TavernRules
             .Select(h => state.HeroRoster.Get(h.Definition!))
             .Take(slots.Count)
             .ToList();
-        var taken = state.Heroes.Concat(state.RetiredHeroes).Select(h => h.Definition).OfType<string>().ToHashSet(StringComparer.Ordinal);
+        var taken = Taken(state, player);
         var pool = PoolOrder(state, player, town.TownType).Where(h => !taken.Contains(h.Id)).ToList();
         var ranks = RankCount(town.TownType);
         foreach (var wanted in slots.Skip(offers.Count))
@@ -146,6 +147,19 @@ public static class TavernRules
         }
 
         return offers;
+    }
+
+    /// <summary>
+    /// The roster heroes no tavern offers <paramref name="player"/>: every hero on the map or waiting in a player's taverns. In a tournament
+    /// (ADR-366) each player has a pool of its own, so only the player's own heroes (on the map, in a garrison or waiting) are taken.
+    /// </summary>
+    public static IReadOnlySet<string> Taken(GameState state, PlayerId? player)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        var heroes = state.Rules.Tournament && player is { } own
+            ? state.Heroes.Concat(state.GarrisonHeroes).Concat(state.RetiredHeroes).Where(h => h.Owner == own)
+            : state.Heroes.Concat(state.RetiredHeroes);
+        return heroes.Select(h => h.Definition).OfType<string>().ToHashSet(StringComparer.Ordinal);
     }
 
     /// <summary>Why <paramref name="hero"/> cannot be hired in the town now, or null when it can.</summary>

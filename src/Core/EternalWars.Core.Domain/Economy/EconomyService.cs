@@ -170,6 +170,11 @@ public sealed class EconomyService(GameState state, IEventPublisher events, IRea
     /// <summary>Sends resources to a teammate (ADR-296): the sender needs a town with a marketplace and the resources; enemies and itself are refused.</summary>
     internal void Send(PlayerId from, PlayerId to, ResourceSet amount)
     {
+        if (state.Rules.Tournament)
+        {
+            throw new CommandRefusedException(Game.TournamentRules.NoTradingRefusal);
+        }
+
         if (!state.Players.Any(p => p.Id == to) || !state.AreAllies(from, to))
         {
             throw new CommandRefusedException("Resources go only to a teammate.");

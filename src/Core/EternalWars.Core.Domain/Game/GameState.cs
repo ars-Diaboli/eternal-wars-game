@@ -67,7 +67,7 @@ public sealed class GameState
         Artifacts = artifacts ?? content?.Artifacts ?? ArtifactCatalog.Default;
         Spells = spells ?? content?.Spells ?? Artifacts.Spells;
         Random = new GameRandom(Options.Seed);
-        Fog = new FogOfWar(map, Options.FogMode);
+        Fog = new FogOfWar(map, Options.FogMode) { Reach = (player, position) => !Rules.Tournament || TournamentRules.Reaches(this, player, position) };
         _guards = new int[map.Levels * map.Width * map.Height];
         _players = players.ToList();
         if (_players.Count is 0 or > MaxPlayers)
@@ -132,6 +132,13 @@ public sealed class GameState
 
     /// <summary>Relics handed out as rewards since the pool was last refilled (<c>ArtifactService.Draw</c>, ADR-068).</summary>
     internal SortedSet<Common.ArtifactId> DrawnRelics { get; } = [];
+
+    /// <summary>A tournament's relics handed out per start zone (ADR-366), by the zone's player.</summary>
+    internal SortedDictionary<int, SortedSet<Common.ArtifactId>> ZoneDrawnRelics { get; } = [];
+
+    /// <summary>The relics drawn for <paramref name="zone"/> (a tournament's start zone), or the map's (<see cref="DrawnRelics"/>) for none.</summary>
+    internal SortedSet<Common.ArtifactId> DrawnRelicsOf(PlayerId? zone) =>
+        zone is not { } z ? DrawnRelics : ZoneDrawnRelics.TryGetValue(z.Value, out var set) ? set : ZoneDrawnRelics[z.Value] = [];
 
     /// <summary>Current state of the game RNG (saves, replay checks).</summary>
     public ulong RandomState => Random.State;

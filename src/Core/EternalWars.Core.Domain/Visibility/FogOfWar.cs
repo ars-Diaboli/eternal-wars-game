@@ -25,6 +25,12 @@ public sealed class FogOfWar(AdventureMap map, FogMode mode)
 
     public FogMode Mode { get; } = mode;
 
+    /// <summary>
+    /// Whether a player may see a tile at all; null when every tile may be seen. A tournament keeps each player's sight inside its own start zone
+    /// (ADR-366, <see cref="TournamentRules.Reaches"/>): no reveal, scouting or sight goes past the zone's edge.
+    /// </summary>
+    public Func<PlayerId, MapPosition, bool>? Reach { get; init; }
+
     /// <summary>Nothing is explored or in sight any more: the map changed its size (the editor's resize, before a game starts).</summary>
     internal void Forget()
     {
@@ -59,7 +65,7 @@ public sealed class FogOfWar(AdventureMap map, FogMode mode)
     {
         var explored = ExploredLayer(player);
         var revealed = new List<MapPosition>();
-        foreach (var position in Circle(center, radius))
+        foreach (var position in Circle(player, center, radius))
         {
             ref var flag = ref explored[position.Level][Index(position)];
             if (!flag)
@@ -121,7 +127,7 @@ public sealed class FogOfWar(AdventureMap map, FogMode mode)
         var done = new HashSet<MapPosition>();
         foreach (var (center, radius) in changed)
         {
-            foreach (var position in Circle(center, radius + margin))
+            foreach (var position in Circle(player, center, radius + margin))
             {
                 if (!done.Add(position))
                 {
@@ -161,7 +167,7 @@ public sealed class FogOfWar(AdventureMap map, FogMode mode)
         var current = new HashSet<MapPosition>();
         foreach (var (center, radius) in observers)
         {
-            foreach (var position in Circle(center, radius + margin))
+            foreach (var position in Circle(player, center, radius + margin))
             {
                 if (previous.Contains(position) || IsWithinRadius(center, position, radius))
                 {
@@ -215,14 +221,15 @@ public sealed class FogOfWar(AdventureMap map, FogMode mode)
     private static long Area(IEnumerable<(MapPosition Center, int Radius)> observers, int margin) =>
         observers.Sum(o => (long)((2 * (o.Radius + margin)) + 1) * ((2 * (o.Radius + margin)) + 1));
 
-    private IEnumerable<MapPosition> Circle(MapPosition center, int radius)
+    /// <summary>The tiles of the circle that <paramref name="player"/> may see (<see cref="Reach"/>).</summary>
+    private IEnumerable<MapPosition> Circle(PlayerId player, MapPosition center, int radius)
     {
         for (var dy = -radius; dy <= radius; dy++)
         {
             for (var dx = -radius; dx <= radius; dx++)
             {
                 var position = center.Offset(dx, dy);
-                if (map.Contains(position) && IsWithinRadius(center, position, radius))
+                if (map.Contains(position) && IsWithinRadius(center, position, radius) && (Reach is null || Reach(player, position)))
                 {
                     yield return position;
                 }

@@ -19,8 +19,10 @@ Detail: [roadmap.md](roadmap.md).
   Step 1 begun: `ScenarioRules.Tournament` (map format v45), `GameOptions.TournamentDays`, `TournamentRules` (lengths, `MapProblems`,
   `WhyNot`), the validator's `TournamentCheck` and `GameSession.Start` refusing an unfit tournament; the game flow: the arena's battle
   generalised to the deciding battle (`DecidingBattles`, `DecidingBattleService`, `GameState.DecidingBattle`), started on day N + 1 before
-  any turn, the map's conditions ignored, never ranked, `MapKind.Tournament`; `TournamentTests`. Next: the battle's own rules (no retreat
-  or surrender, neutral ground, coin toss, the hero's army only, the no-hero endings), then isolation.
+  any turn, the map's conditions ignored, never ranked, `MapKind.Tournament`; the battle (`TournamentRules.Plan` with the coin toss,
+  neutral ground, `BattleState.NoLeaving`, no town help, the no-hero and no-army endings); isolation (`TournamentRules.Reaches` for sight
+  and spells, per-player tavern pools, no sending, a Grail per zone, artifact rolls per zone); `TournamentTests`. Step 1 is done; next:
+  step 2 (templates and their validator).
 - Creature prompts as sheets of two (ADR-360): the base and its upgrade side by side, each creature whole in a 2:3 cell, files still
   512 × 512 (the cell centred on a square); every faction's sheets renumbered (Haven H1–H9 … neutral X1–X3); the owner's later
   reviews folded in (Bestiary W1–W5, Academy A1, Conflux ADR-357 to ADR-359, the toad-like kappa ADR-365). New creatures, all

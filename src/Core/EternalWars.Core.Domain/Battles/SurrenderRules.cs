@@ -5,7 +5,8 @@ namespace EternalWars.Core.Domain.Battles;
 /// <summary>
 /// Leaving a battle early (ADR-070, CMB-1; built ADR-081). A hero may <b>retreat</b> from any battle: its army is lost, the hero waits in
 /// its player's taverns. It may <b>surrender</b> to a player (never to neutrals) for half the gold cost of its surviving creatures, paid to
-/// that player: it keeps its army. Computer players retreat when their army is almost beaten; they do not surrender.
+/// that player: it keeps its army. Computer players retreat when their army is almost beaten; they do not surrender. Nobody leaves a battle locked by
+/// an artifact, nor a tournament's battle (ADR-366).
 /// </summary>
 public static class SurrenderRules
 {
@@ -21,10 +22,13 @@ public static class SurrenderRules
 
     public const string LockedRefusal = "Nobody may leave this battle.";
 
+    public const string TournamentRefusal = "There is no retreat or surrender in the tournament battle.";
+
     /// <summary>Why the side cannot retreat now, or null when it can.</summary>
     public static string? CheckRetreat(BattleState battle, BattleSide side) =>
         battle.Participant(side).Hero is null ? "Only a hero can retreat."
         : IsGarrisonHero(battle.Participant(side)) ? GarrisonRefusal
+        : battle.NoLeaving ? TournamentRefusal
         : IsLocked(battle) ? LockedRefusal
         : null;
 
@@ -45,6 +49,11 @@ public static class SurrenderRules
         if (IsGarrisonHero(participant))
         {
             return GarrisonRefusal;
+        }
+
+        if (battle.NoLeaving)
+        {
+            return TournamentRefusal;
         }
 
         if (IsLocked(battle))

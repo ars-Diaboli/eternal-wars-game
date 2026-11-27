@@ -37,17 +37,29 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
     /// <summary>
     /// Game start: every pickup the map left open gets an artifact of its tier, minus those already placed on the map or carried (relics stay
     /// unique); then every blank scroll on a pickup or a hero gets its spell (<see cref="Inscribe"/>; the generator and the editor's chosen spells
-    /// are kept, ADR-136).
+    /// are kept, ADR-136). In a tournament (ADR-366) the artifacts are unique per start zone, so both zones can hold the same one
+    /// (<see cref="ZoneOf(MapPosition)"/>).
     /// </summary>
     internal void RollUnsetPickups()
     {
-        var taken = state.Heroes.SelectMany(h => h.Artifacts.AllWorn.Select(w => w.Id).Concat(h.Artifacts.Backpack))
-            .Concat(state.ObjectsOf<ArtifactPickup>().Select(p => p.Artifact).OfType<Common.ArtifactId>())
-            .ToHashSet();
+        var taken = new Dictionary<int, HashSet<Common.ArtifactId>>();
+        HashSet<Common.ArtifactId> Taken(PlayerId? zone) =>
+            taken.TryGetValue(zone?.Value ?? -1, out var set) ? set : taken[zone?.Value ?? -1] = [];
+        foreach (var hero in state.Heroes)
+        {
+            Taken(ZoneOf(hero)).UnionWith(hero.Artifacts.AllWorn.Select(w => w.Id).Concat(hero.Artifacts.Backpack));
+        }
+
+        foreach (var placed in state.ObjectsOf<ArtifactPickup>().Where(p => p.Artifact is not null))
+        {
+            Taken(ZoneOf(placed.VisitPosition)).Add(placed.Artifact!.Value);
+        }
+
         foreach (var pickup in state.ObjectsOf<ArtifactPickup>().Where(p => p.Artifact is null).OrderBy(p => p.Id.Value).ToList())
         {
             var tier = OfTier(pickup.Tier);
-            var free = tier.Where(a => !taken.Contains(a.Id)).ToList();
+            var zoneTaken = Taken(ZoneOf(pickup.VisitPosition));
+            var free = tier.Where(a => !zoneTaken.Contains(a.Id)).ToList();
             var pool = free.Count > 0 ? free : [.. tier];
             if (pool.Count == 0)
             {
@@ -56,7 +68,7 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
 
             var rolled = ArtifactRolls.Pick(pool, state.Random).Id;
             pickup.Artifact = rolled;
-            taken.Add(rolled);
+            zoneTaken.Add(rolled);
         }
 
         foreach (var pickup in state.ObjectsOf<ArtifactPickup>().Where(p => p.Artifact is not null).OrderBy(p => p.Id.Value))
@@ -69,6 +81,15 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
             InscribeCarried(hero);
         }
     }
+
+    /// <summary>
+    /// The start zone whose artifacts are kept apart from the others' (ADR-366): in a tournament the zone of <paramref name="position"/>; null (one
+    /// pool for the whole map) on other maps.
+    /// </summary>
+    private PlayerId? ZoneOf(MapPosition position) => TournamentRules.ZoneOf(state, position);
+
+    /// <summary>The zone a hero's artifacts count in: in a tournament its owner's when it has a start zone, null otherwise.</summary>
+    private PlayerId? ZoneOf(Hero hero) => TournamentRules.ZoneOf(state, hero.Owner);
 
     private bool IsBlankScroll(Common.ArtifactId artifact) => state.Artifacts.TryGet(artifact, out var definition) && definition is { IsScroll: true, Spell: null };
 
@@ -94,9 +115,10 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
     /// Draws an artifact of a tier for a map reward (ADR-068): the tier's scroll in <see cref="ArtifactRolls.ScrollPercent"/> of the draws, with its
     /// spell written (ADR-136). Minor and Major artifacts may repeat. Relics come from a pool: neither one drawn
     /// before nor one lying on the map or carried by a hero; when none is left, the pool is refilled and the draw starts anew, so a hero may end
-    /// up with two of one relic. Null only when the catalog has no artifact of the tier.
+    /// up with two of one relic. Null only when the catalog has no artifact of the tier. In a tournament (ADR-366) each player draws relics from a pool of
+    /// its own (<paramref name="finder"/>'s): only what lies in its zone or its heroes carry is left out.
     /// </summary>
-    internal Common.ArtifactId? Draw(ArtifactTier tier)
+    internal Common.ArtifactId? Draw(ArtifactTier tier, PlayerId? finder = null)
     {
         var all = OfTier(tier);
         if (all.Count == 0)
@@ -109,19 +131,21 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
             return Inscribe(ArtifactRolls.Pick(all, state.Random).Id);
         }
 
-        var present = state.Heroes.SelectMany(h => h.Artifacts.AllWorn.Select(w => w.Id).Concat(h.Artifacts.Backpack))
-            .Concat(state.ObjectsOf<ArtifactPickup>().Select(p => p.Artifact).OfType<Common.ArtifactId>())
+        var zone = finder is { } who ? TournamentRules.ZoneOf(state, who) : null;
+        var drawnRelics = state.DrawnRelicsOf(zone);
+        var present = state.Heroes.Where(h => ZoneOf(h) == zone).SelectMany(h => h.Artifacts.AllWorn.Select(w => w.Id).Concat(h.Artifacts.Backpack))
+            .Concat(state.ObjectsOf<ArtifactPickup>().Where(p => ZoneOf(p.VisitPosition) == zone).Select(p => p.Artifact).OfType<Common.ArtifactId>())
             .ToHashSet();
-        var pool = all.Where(a => !state.DrawnRelics.Contains(a.Id) && !present.Contains(a.Id)).ToList();
+        var pool = all.Where(a => !drawnRelics.Contains(a.Id) && !present.Contains(a.Id)).ToList();
         if (pool.Count == 0)
         {
-            state.DrawnRelics.Clear();
+            drawnRelics.Clear();
             pool = all.Where(a => !present.Contains(a.Id)).ToList();
             pool = pool.Count > 0 ? pool : [.. all];
         }
 
         var drawn = ArtifactRolls.Pick(pool, state.Random).Id;
-        state.DrawnRelics.Add(drawn);
+        drawnRelics.Add(drawn);
         return Inscribe(drawn);
     }
 

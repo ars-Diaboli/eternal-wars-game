@@ -185,12 +185,12 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
         var name = DecidingBattles.Name(state.Rules);
         switch (state.DecidingBattle)
         {
-            case { Result: DecidingBattleResult.Won, Winner: { } winner }:
+            case { Result: DecidingBattleResult.Won, Winner: { } winner, Reason: var why }:
                 var player = state.GetPlayer(winner);
-                End(player.Team, $"{player.Name} won the {name}.");
+                End(player.Team, why is null ? $"{player.Name} won the {name}." : $"{player.Name} won the {name}. {why}");
                 break;
-            case { Result: DecidingBattleResult.Draw }:
-                End(null, $"The {name} ended in a draw: both armies fell.");
+            case { Result: DecidingBattleResult.Draw, Reason: var why }:
+                End(null, why is null ? $"The {name} ended in a draw: both armies fell." : $"The {name} ended in a draw. {why}");
                 break;
             case { Result: DecidingBattleResult.NoBattle, Reason: var reason }:
                 End(null, reason ?? $"No {name} was fought.");

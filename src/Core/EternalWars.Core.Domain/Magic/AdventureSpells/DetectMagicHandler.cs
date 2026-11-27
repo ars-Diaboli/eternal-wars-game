@@ -11,6 +11,6 @@ internal sealed class DetectMagicHandler : AdventureSpellHandler
     {
         var hero = cast.Hero;
         var radius = AdventureMagic.DetectMagicRadius(cast.Rank);
-        cast.Events.Publish(new MagicDetected(hero.Id, hero.Owner, hero.Position, radius, AdventureIntel.ObjectsAround(cast.State, hero.Position, radius, bankRewards: cast.Rank >= 3)));
+        cast.Events.Publish(new MagicDetected(hero.Id, hero.Owner, hero.Position, radius, AdventureIntel.ObjectsAround(cast.State, hero.Owner, hero.Position, radius, bankRewards: cast.Rank >= 3)));
     }
 }

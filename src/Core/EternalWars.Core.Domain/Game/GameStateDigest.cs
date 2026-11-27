@@ -79,15 +79,25 @@ public static class GameStateDigest
             Line($"relics drawn {string.Join(',', state.DrawnRelics)}");
         }
 
+        foreach (var (zone, relics) in state.ZoneDrawnRelics.Where(z => z.Value.Count > 0))
+        {
+            Line($"relics drawn zone {zone} {string.Join(',', relics)}");
+        }
+
         foreach (var caravan in state.Caravans)
         {
             Line($"caravan {caravan.Id} owner {caravan.Owner.Value} {caravan.Source}->{caravan.Destination} {caravan.Creature}x{caravan.Count} days {caravan.DaysLeft} paid {caravan.Paid}{(caravan.Cargo is { } cargo ? $" cargo {cargo}" : "")}");
         }
 
-        // The Grail (ADR-140) only on maps that have one or holes, so older replays keep their digests.
-        if (state.Grail.Position is not null || state.Grail.Holes.Count > 0)
+        // The Grail (ADR-140) only on maps that have one or holes, so older replays keep their digests; a tournament's per zone (ADR-366).
+        if (state.Grail.Position is not null || state.Grail.Holes.Count > 0 || state.Grail.Zones.Any())
         {
             Line($"grail {state.Grail.Position} found {state.Grail.IsFound} holes {string.Join(',', state.Grail.Holes.OrderBy(h => h.Level).ThenBy(h => h.Y).ThenBy(h => h.X))} puzzle {state.Grail.PuzzleOrigin}");
+            foreach (var (zone, site) in state.Grail.Zones)
+            {
+                Line($"grail zone {zone.Value} {site.Position} found {site.IsFound} puzzle {site.PuzzleOrigin}");
+            }
+
             foreach (var (player, pieces) in state.Grail.AllPieces)
             {
                 Line($"puzzle {player.Value} {string.Join(',', pieces)}");

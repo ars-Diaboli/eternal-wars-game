@@ -156,11 +156,11 @@ internal sealed class BattleGuardService(
         bank.RewardArtifact = null;
         bank.MoreArtifacts = [];
         economy.Grant(winner.Owner, reward);
-        var found = tier is { } t && artifacts.Draw(t) is { } artifact && artifacts.Grant(winner, artifact, ArtifactSource.Found) ? artifact : (Common.ArtifactId?)null;
+        var found = tier is { } t && artifacts.Draw(t, winner.Owner) is { } artifact && artifacts.Grant(winner, artifact, ArtifactSource.Found) ? artifact : (Common.ArtifactId?)null;
         foreach (var extra in more)
         {
             // Further artifacts (Dragon City) go the same way; a full backpack loses them.
-            if (artifacts.Draw(extra) is { } drawn)
+            if (artifacts.Draw(extra, winner.Owner) is { } drawn)
             {
                 artifacts.Grant(winner, drawn, ArtifactSource.Found);
             }

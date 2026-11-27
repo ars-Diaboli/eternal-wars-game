@@ -399,13 +399,13 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 Two players build up apart, each in a cut-off zone against the neutrals, for a length chosen at the start; then their heroes fight one
 battle with no retreat or surrender, and its winner wins. Lengths: 1–14 days, then whole weeks up to 12. It is played against the computer, hot-seat and over the LAN (every day at once).
 - [x] Step 0: the owner's answers to TRN-1 … TRN-9 recorded in ADR-366 (2026-11-27)
-- [ ] Step 1: Core rules:
+- [x] Step 1: Core rules:
       - the switch, the length option (1–14 days, 3–12 weeks) and the format bump (v45); the map's checks and the start's refusal (done);
       - the game flow: the battle on day N + 1 before any turn, shared with the arena's as the deciding battle; conditions ignored; never
         ranked (done);
-      - the battle's own rules: no retreat or surrender, neutral ground, the coin toss, the hero's army only;
-      - isolation: sight and spells clipped to the zone, per-player taverns, the Grail and artifact rolls per zone, no trading;
-      - the endings.
+      - the battle's own rules: no retreat or surrender, neutral ground, the coin toss, the hero's army only; the endings (done);
+      - isolation: sight and spells clipped to the zone, per-player taverns, the Grail and artifact rolls per zone, no trading (done);
+      - `TournamentTests` (done).
 - [ ] Step 2: Tournament templates and their validator (two players, each zone connected inside, none between them); two or three
       mirrored templates; the map validator's checks for hand-made maps
 - [ ] Step 3: Every tournament day at once on the LAN; per-player battle and question slots on every simultaneous day (any LAN game's

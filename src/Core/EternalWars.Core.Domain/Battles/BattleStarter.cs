@@ -45,14 +45,17 @@ internal sealed class BattleStarter(GameState state, IEventPublisher events, Art
     }
 
     /// <summary>
-    /// The deciding battle of an arena or a tournament (ADR-097, ADR-100, ADR-366): the two champions, already on the battlefield, fight on its terrain;
-    /// never a siege or an ambush.
+    /// The deciding battle of an arena or a tournament (ADR-097, ADR-100, ADR-366): the two champions, already on the battlefield, fight on its terrain
+    /// (a tournament's neutral <paramref name="terrain"/>); never a siege or an ambush.
     /// Both sides have an army (<see cref="DecidingBattleService"/> settles the others). It gives no experience and the AI never leaves it; its result is
-    /// recorded in <see cref="GameState.DecidingBattle"/> (<see cref="BattleAftermath.Finish"/>).
+    /// recorded in <see cref="GameState.DecidingBattle"/> (<see cref="BattleAftermath.Finish"/>). A <paramref name="tournament"/>'s battle is fought with
+    /// the heroes' armies only, so a town the defender stands in lends it nothing, and nobody may leave it (<see cref="BattleState.NoLeaving"/>).
     /// </summary>
-    public void BeginDecidingBattle(Hero attacker, Hero defender, MapPosition location)
+    public void BeginDecidingBattle(Hero attacker, Hero defender, MapPosition location, Map.TerrainType? terrain, bool tournament)
     {
-        var battle = Create(Participant(BattleSide.Attacker, attacker), Participant(BattleSide.Defender, defender), location, isAmbush: false);
+        var battle = Create(
+            Participant(BattleSide.Attacker, attacker), Participant(BattleSide.Defender, defender, awayFromHome: tournament), location, isAmbush: false, terrain,
+            noLeaving: tournament);
         Begin(attacker, battle, Stacks(attacker), Stacks(defender));
     }
 
@@ -170,11 +173,14 @@ internal sealed class BattleStarter(GameState state, IEventPublisher events, Art
 
     /// <summary>
     /// A hero's side; a garrison hero (<paramref name="garrisonOf"/>, ADR-112) leads its town's garrison and holds the town as its guard. A hero defending
-    /// its town (on the entrance or in the garrison) gets the Brotherhood's morale, and in a siege the town's unique buildings' bonus (ADR-138).
+    /// its town (on the entrance or in the garrison) gets the Brotherhood's morale, and in a siege the town's unique buildings' bonus (ADR-138); not
+    /// when it fights <paramref name="awayFromHome"/> (a tournament's battle on neutral ground, ADR-366).
     /// </summary>
-    private BattleParticipant Participant(BattleSide side, Hero hero, Town? garrisonOf = null)
+    private BattleParticipant Participant(BattleSide side, Hero hero, Town? garrisonOf = null, bool awayFromHome = false)
     {
-        var home = side == BattleSide.Defender ? garrisonOf ?? state.ObjectsOf<Town>().FirstOrDefault(t => t.Owner == hero.Owner && t.VisitPosition == hero.Position) : null;
+        var home = side == BattleSide.Defender && !awayFromHome
+            ? garrisonOf ?? state.ObjectsOf<Town>().FirstOrDefault(t => t.Owner == hero.Owner && t.VisitPosition == hero.Position)
+            : null;
         var siege = home is not null && SiegeRules.SpecOf(home) is not null ? UniqueBuildings.SiegeOf(home) : SiegeBonus.None;
         var bonuses = HeroBattleBonuses.For(hero, state.Creatures);
         var caster = BattleCaster.For(hero, state.Spells);
@@ -223,11 +229,18 @@ internal sealed class BattleStarter(GameState state, IEventPublisher events, Art
         return stacks;
     }
 
-    /// <summary>The battlefield at <paramref name="location"/>; an object may fix the terrain (abandoned mines underground, ADR-068).</summary>
-    private BattleState Create(BattleParticipant attacker, BattleParticipant defender, MapPosition location, bool isAmbush, Map.TerrainType? terrain = null)
+    /// <summary>
+    /// The battlefield at <paramref name="location"/>; an object may fix the terrain (abandoned mines underground, ADR-068), and so does a tournament's
+    /// neutral ground (ADR-366).
+    /// </summary>
+    private BattleState Create(
+        BattleParticipant attacker, BattleParticipant defender, MapPosition location, bool isAmbush, Map.TerrainType? terrain = null, bool noLeaving = false)
     {
         var ground = terrain ?? state.Map.GetTerrain(location);
-        return new(attacker, defender, ground, location, isAmbush, state.Random.Fork(), state.Terrains.Get(ground).NativeTowns) { Creatures = state.Creatures, Spells = state.Spells };
+        return new(attacker, defender, ground, location, isAmbush, state.Random.Fork(), state.Terrains.Get(ground).NativeTowns)
+        {
+            Creatures = state.Creatures, Spells = state.Spells, NoLeaving = noLeaving,
+        };
     }
 
     /// <summary>

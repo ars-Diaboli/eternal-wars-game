@@ -1,6 +1,8 @@
 using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Data.Records;
 using EternalWars.Core.Domain.Armies;
+using EternalWars.Core.Domain.Artifacts;
+using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
@@ -8,9 +10,13 @@ using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Magic;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.MapEvents;
+using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Players;
+using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
 using static EternalWars.Core.Tests.TestWorld;
 
@@ -19,7 +25,8 @@ namespace EternalWars.Core.Tests.Domain;
 /// <summary>
 /// The tournament mode (ADR-366): the lengths offered, the map's switch in the map file, what the validator calls faulty, which games refuse to
 /// start, and the game's flow: ordinary building days, then the deciding battle before anyone's turn on the day after the last, which alone
-/// ends the game.
+/// ends the game. The battle: the coin toss, neutral ground, no leaving it, and the endings without one. Isolation: sight and spells kept inside
+/// the start zone, and the taverns, the Grail and the artifact rolls each player's own.
 /// </summary>
 public class TournamentTests
 {
@@ -204,8 +211,11 @@ public class TournamentTests
 
         EndDay(session);
         Assert.Equal(3, state.Date.AbsoluteDay);
-        Assert.Equal((Blue, A, Red, B), (state.DecidingBattle!.Attacker, state.DecidingBattle.AttackerHero, state.DecidingBattle.Defender, state.DecidingBattle.DefenderHero));
-        Assert.Equal((A, B), (state.Battle!.Attacker.Hero, state.Battle.Defender.Hero));
+        var plan = state.DecidingBattle!;
+        Assert.True(plan.Attacker == Blue
+            ? (plan.AttackerHero, plan.Defender, plan.DefenderHero) == (A, Red, B)
+            : (plan.Attacker, plan.AttackerHero, plan.Defender, plan.DefenderHero) == (Red, B, Blue, A)); // the coin toss's sides
+        Assert.Equal((plan.AttackerHero, plan.DefenderHero), (state.Battle!.Attacker.Hero, state.Battle.Defender.Hero));
         Assert.Contains(events, e => e is ChampionsChosen);
         Assert.DoesNotContain(events, e => e is TurnStarted { Date.AbsoluteDay: 3 });
     }
@@ -242,8 +252,8 @@ public class TournamentTests
 
         EndDay(session);
         Assert.True(state.IsOver);
-        Assert.Empty(state.Outcome!.Winners);
-        Assert.Equal("Red had no hero for the tournament battle.", state.Outcome.Reason);
+        Assert.Equal([Blue], state.Outcome!.Winners); // Red, without a hero, loses without a battle
+        Assert.Equal("Blue won the tournament battle. Red had no hero.", state.Outcome.Reason);
     }
 
     [Fact]
@@ -321,5 +331,283 @@ public class TournamentTests
         var state = Tournament(Lasting(2));
         Assert.Null(new PlayTestArguments(1, Day: 2).WhyNot(state));
         Assert.Equal("A tournament's battle is on day 3: the play-test starts before it.", new PlayTestArguments(1, Day: 3).WhyNot(state));
+    }
+
+    /// <summary>
+    /// A one-day tournament on <paramref name="seed"/>, <paramref name="setUp"/> before it starts and <paramref name="started"/> after (a player
+    /// without a hero or a town at the start takes no part), played to its battle.
+    /// </summary>
+    private static GameState AtTheBattle(ulong seed = 1, Action<GameState>? setUp = null, Action<GameState>? started = null, params string[] rows)
+    {
+        var state = Create(Lasting(1) with { Seed = seed }, rows.Length > 0 ? rows : ["A.#..", "..#.B"]);
+        state.SetRules(Rules);
+        setUp?.Invoke(state);
+        var session = Start(state);
+        started?.Invoke(state);
+        EndDay(session);
+        return state;
+    }
+
+    /// <summary>Paints the columns <paramref name="fromX"/> to <paramref name="toX"/> of every row as <paramref name="player"/>'s start zone.</summary>
+    private static void Zone(GameState state, PlayerId player, int fromX, int toX)
+    {
+        for (var y = 0; y < state.Map.Height; y++)
+        {
+            for (var x = fromX; x <= toX; x++)
+            {
+                state.Map.SetStartZone(new MapPosition(x, y), player);
+            }
+        }
+    }
+
+    [Fact]
+    public void TheAttacker_IsChosenByACoinTossFromTheSeed_AndAnnounced()
+    {
+        var attackers = Enumerable.Range(1, 12).Select(seed => AtTheBattle((ulong)seed).DecidingBattle!.Attacker).ToList();
+        Assert.Contains(Blue, attackers);
+        Assert.Contains(Red, attackers);
+        Assert.Equal(AtTheBattle(5).DecidingBattle!.Attacker, AtTheBattle(5).DecidingBattle!.Attacker);
+
+        var plan = AtTheBattle(3).DecidingBattle!;
+        Assert.Matches(@"^(Alpha \(Blue\)|Bravo \(Red\)) won the coin toss and attacked (Alpha \(Blue\)|Bravo \(Red\))\.$", plan.Summary);
+    }
+
+    [Fact]
+    public void TheBattle_IsOnNeutralGround_NeverASiege_AndATownLendsItsDefenderNothing()
+    {
+        string[] rows = [.. Enumerable.Range(0, 8).Select(y => y == 7 ? "A..........B" : "............")];
+        void HomeWithBrotherhood(GameState state)
+        {
+            var home = AddTown(state, TownIds.Haven, 0, 0, Blue);
+            home.SetLevel(BuiltInBuildings.Tavern, MoraleAndLuck.BrotherhoodLevel);
+            state.GetHero(A).Position = home.VisitPosition;
+        }
+
+        // A seed on which Blue defends, standing in its own town with a Brotherhood.
+        var state = Enumerable.Range(1, 20).Select(seed => AtTheBattle((ulong)seed, HomeWithBrotherhood, rows: rows)).First(s => s.DecidingBattle!.Defender == Blue);
+        var battle = state.Battle!;
+
+        Assert.Contains(battle.Terrain, new[] { TerrainType.Sand, TerrainType.Beach, TerrainType.Dirt }); // no town is native to it; the map is grass
+        Assert.Empty(battle.NativeTowns);
+        Assert.Null(battle.Siege);
+        Assert.Equal(0, battle.Defender.ArmyMorale); // no Brotherhood: the hero's army alone
+    }
+
+    [Fact]
+    public void NeitherSide_MayRetreatOrSurrender_NorDoesTheComputerLeave()
+    {
+        var state = AtTheBattle(setUp: s =>
+        {
+            s.GetHero(A).Army.Set(0, new CreatureStack(BuiltInCreatures.Champion, 50));
+            s.GetHero(B).Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, 1));
+        });
+        var battle = state.Battle!;
+        var red = battle.Attacker.Owner == Red ? BattleSide.Attacker : BattleSide.Defender;
+
+        Assert.Equal(SurrenderRules.TournamentRefusal, SurrenderRules.CheckRetreat(battle, red));
+        Assert.Equal(SurrenderRules.TournamentRefusal, SurrenderRules.CheckRetreat(battle, red.Opponent()));
+        Assert.Equal(SurrenderRules.TournamentRefusal, SurrenderRules.Check(state, battle, red));
+        Assert.False(SurrenderRules.ShouldRetreat(battle, red)); // one footman against fifty champions, and still no leaving
+        Assert.True(battle.Copy().NoLeaving);
+    }
+
+    [Fact]
+    public void TheRetreatAndSurrenderCommands_AreRefused()
+    {
+        var state = Tournament(Lasting(1));
+        var session = Start(state);
+        EndDay(session);
+
+        Assert.Equal(SurrenderRules.TournamentRefusal, session.Execute(new BattleRetreatCommand(Red)).Error);
+        Assert.Equal(SurrenderRules.TournamentRefusal, session.Execute(new BattleSurrenderCommand(Blue)).Error);
+        Assert.Equal(DecidingBattleResult.Fighting, state.DecidingBattle!.Result);
+    }
+
+    [Fact]
+    public void ASideWithoutAnArmy_LosesWithoutABattle()
+    {
+        var state = AtTheBattle(setUp: s => s.GetHero(B).Army.Set(0, null));
+
+        Assert.Null(state.Battle);
+        Assert.Equal([Blue], state.Outcome!.Winners);
+        Assert.Equal("Blue won the tournament battle. Bravo had no army.", state.Outcome.Reason);
+    }
+
+    [Fact]
+    public void NeitherSideHavingAHero_OrOneNoHeroAndTheOtherNoArmy_IsADraw()
+    {
+        var none = AtTheBattle(started: s =>
+        {
+            s.RemoveHero(s.GetHero(A));
+            s.RemoveHero(s.GetHero(B));
+        });
+        Assert.Equal(DecidingBattleResult.Draw, none.DecidingBattle!.Result);
+        Assert.Empty(none.Outcome!.Winners);
+        Assert.Matches(@"^The tournament battle ended in a draw\. Neither (Blue nor Red|Red nor Blue) had a hero\.$", none.Outcome.Reason);
+
+        var empty = AtTheBattle(started: s =>
+        {
+            s.RemoveHero(s.GetHero(B));
+            s.GetHero(A).Army.Set(0, null);
+        });
+        Assert.Equal(DecidingBattleResult.Draw, empty.DecidingBattle!.Result);
+        Assert.Empty(empty.Outcome!.Winners);
+        Assert.Equal("The tournament battle ended in a draw. Red had no hero, and Alpha (Blue) no army.", empty.Outcome.Reason);
+        Assert.False(ScoreRules.IsRanked(empty));
+    }
+
+    [Fact]
+    public void SightAndScouting_StopAtTheZonesEdge()
+    {
+        GameState Played(bool tournament)
+        {
+            var state = Create(new GameOptions(FogMode.ShroudWithRefog), ".....#.......", "....A#......B", ".....#.......");
+            if (tournament)
+            {
+                state.SetRules(Rules);
+            }
+
+            Zone(state, Blue, 0, 4);
+            Zone(state, Red, 6, 12);
+            state.GetHero(A).Skills.Set(BuiltInSkills.Scouting, SkillLevel.Expert);
+            Start(state, revealAll: false);
+            return state;
+        }
+
+        var ordinary = Played(tournament: false);
+        Assert.True(ordinary.GetHero(A).ScoutingRadius >= 6);
+        Assert.True(ordinary.Fog.IsExplored(Blue, new MapPosition(8, 1)));
+
+        var state = Played(tournament: true);
+        Assert.True(state.Fog.IsExplored(Blue, new MapPosition(0, 1)));
+        Assert.True(state.Fog.IsInSight(Blue, new MapPosition(0, 1)));
+        Assert.True(state.Fog.IsExplored(Blue, new MapPosition(5, 1))); // the wall, in no zone, stays in sight
+        Assert.False(state.Fog.IsExplored(Blue, new MapPosition(8, 1)));
+        Assert.False(state.Fog.IsInSight(Blue, new MapPosition(8, 1)));
+        Assert.False(state.Fog.IsExplored(Red, new MapPosition(3, 1)));
+        Assert.False(state.CanSee(Blue, state.GetHero(B)));
+    }
+
+    [Fact]
+    public void DimensionDoorAndTownPortal_GoNowhereOutsideTheZone()
+    {
+        string[] rows = [.. Enumerable.Range(0, 8).Select(y => y == 7 ? "....A....#.........B" : ".........#..........")];
+        var state = Create(rows);
+        state.SetRules(Rules);
+        Zone(state, Blue, 0, 8);
+        Zone(state, Red, 10, 19);
+        AddTown(state, TownIds.Haven, 12, 0, Blue); // an own town in Red's zone, entrance (15, 6)
+        var hero = state.GetHero(A);
+        hero.HasSpellBook = true;
+        hero.Knowledge = 10;
+        hero.Learn(AdventureMagic.DimensionDoor);
+        hero.Learn(AdventureMagic.TownPortal);
+        var session = Start(state);
+        CommandResult Cast(string spell, MapPosition? target = null) => session.Execute(new CastAdventureSpellCommand(Blue, A, spell, target));
+
+        Assert.Equal("There is no own town to return to.", Cast(AdventureMagic.TownPortal).Error);
+        Assert.Equal(AdventureMagic.OutsideZoneRefusal, Cast(AdventureMagic.DimensionDoor, new MapPosition(10, 7)).Error);
+        Assert.Equal(new MapPosition(4, 7), hero.Position);
+
+        Assert.True(Cast(AdventureMagic.DimensionDoor, new MapPosition(8, 7)).IsAccepted); // inside the zone it works
+        Assert.Equal(new MapPosition(8, 7), hero.Position);
+    }
+
+    [Fact]
+    public void EachPlayer_HasATavernPoolOfItsOwn()
+    {
+        var hero = HeroCatalog.Default.Standard.First().Id;
+        var state = Tournament();
+        state.GetHero(B).Definition = hero;
+        var ordinary = Create("A.#..", "..#.B");
+        ordinary.GetHero(B).Definition = hero;
+
+        Assert.Contains(hero, TavernRules.Taken(ordinary, Blue));
+        Assert.DoesNotContain(hero, TavernRules.Taken(state, Blue)); // Red's hero is still in Blue's pool
+        Assert.Contains(hero, TavernRules.Taken(state, Red));
+    }
+
+    [Fact]
+    public void AHeroWhoFell_IsReplacedFromTheTavern_StillOneAtATime()
+    {
+        string[] rows = [.. Enumerable.Range(0, 9).Select(y => y == 8 ? "A........B" : "..........")];
+        var state = Create(rows);
+        state.SetRules(Rules);
+        var town = AddTown(state, TownIds.Haven, 0, 0, Blue);
+        town.SetLevel(BuiltInBuildings.Tavern, 1);
+        state.GetPlayer(Blue).Resources = new ResourceSet(Gold: 20_000);
+        var session = Start(state);
+        string Offer() => TavernRules.Offers(state, Blue, town)[0].Id;
+
+        Assert.Contains("at most 1 heroes", session.Execute(new HireHeroCommand(Blue, town.Id, Offer())).Error!, StringComparison.Ordinal);
+
+        state.RemoveHero(state.GetHero(A)); // Alpha fell
+        Assert.True(session.Execute(new HireHeroCommand(Blue, town.Id, Offer())).IsAccepted);
+        Assert.Single(state.HeroesOf(Blue));
+    }
+
+    [Fact]
+    public void ThePlayers_CannotTrade()
+    {
+        var session = Start(Tournament());
+        Assert.Equal(TournamentRules.NoTradingRefusal, session.Execute(new SendResourcesCommand(Blue, Red, new ResourceSet(Gold: 100))).Error);
+    }
+
+    [Fact]
+    public void EachZone_WithAnObelisk_HasAGrailOfItsOwn_AndItsOwnPuzzle()
+    {
+        string[] rows = [.. Enumerable.Range(0, 30).Select(y => y == 2 ? "..A" + new string('.', 54) + "B.." : new string('.', 60))];
+        var state = Create(rows);
+        state.SetRules(Rules);
+        Zone(state, Blue, 0, 29);
+        Zone(state, Red, 30, 59);
+        Add<Obelisk>(state, BuiltInMapObjects.Obelisk, 5, 5);
+        Add<Obelisk>(state, BuiltInMapObjects.Obelisk, 8, 25);
+        Start(state);
+
+        Assert.Null(state.Grail.Position);
+        var site = Assert.IsType<GrailSite>(GrailRules.SiteOf(state, Blue));
+        Assert.Equal(Blue, state.Map.GetStartZone(Assert.IsType<MapPosition>(site.Position)));
+        Assert.Null(GrailRules.SiteOf(state, Red)); // Red's zone has no obelisk
+        var puzzle = GrailRules.Puzzle(state, Blue)!;
+        Assert.Equal(2, puzzle.Obelisks);
+        Assert.All(puzzle.OutOfReach!, cell => Assert.Equal(Red, state.Map.GetStartZone(cell))); // the puzzle hides what lies past the wall
+        Assert.All(puzzle.OutOfReach!, cell => Assert.False(puzzle.Shows(cell)));
+        Assert.Null(GrailRules.Puzzle(state, Red));
+
+        var hero = state.GetHero(A);
+        hero.Position = site.Position!.Value;
+        new GameSession(state).Execute(new DigCommand(Blue, A)).ThrowIfRejected();
+        Assert.True(site.IsFound);
+    }
+
+    [Fact]
+    public void TheArtifactRolls_ArePerZone_SoBothZonesCanHoldTheSameArtifact()
+    {
+        var relics = ArtifactCatalog.Default.OfTier(ArtifactTier.Relic).Select(a => a.Id).Order().ToList();
+        var left = relics[^1];
+        ArtifactId? Rolled(bool tournament, ulong seed)
+        {
+            var width = relics.Count + 3;
+            var state = Create(new GameOptions(Seed: seed), "A" + new string('.', width - 2) + "B", new string('.', width));
+            if (tournament)
+            {
+                state.SetRules(Rules);
+            }
+
+            Zone(state, Blue, 0, width - 3);
+            Zone(state, Red, width - 2, width - 1);
+            for (var i = 0; i < relics.Count - 1; i++)
+            {
+                Add<ArtifactPickup>(state, BuiltInMapObjects.ArtifactId(ArtifactTier.Relic), i + 1, 1).Artifact = relics[i]; // Blue's zone holds all but one
+            }
+
+            var open = Add<ArtifactPickup>(state, BuiltInMapObjects.ArtifactId(ArtifactTier.Relic), width - 1, 1);
+            Start(state);
+            return open.Artifact;
+        }
+
+        Assert.All(Enumerable.Range(1, 5), seed => Assert.Equal(left, Rolled(tournament: false, (ulong)seed))); // only the one left is free
+        Assert.Contains(Enumerable.Range(1, 10), seed => Rolled(tournament: true, (ulong)seed) != left); // Red's zone rolls from every relic
     }
 }

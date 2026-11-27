@@ -342,6 +342,9 @@ public sealed class BattleState
     /// <summary>Whether the field may get a dividing cliff (ADR-146): not in a creature bank's battle (and never in a siege).</summary>
     internal bool CliffsAllowed { get; set; } = true;
 
+    /// <summary>Whether neither side may retreat or surrender: a tournament's battle (ADR-366; <see cref="SurrenderRules.CheckRetreat"/>).</summary>
+    public bool NoLeaving { get; init; }
+
     public int Round { get; internal set; }
 
     public IReadOnlyList<BattleUnit> Units => _units;
@@ -418,6 +421,7 @@ public sealed class BattleState
             DeploymentColumns = DeploymentColumns,
             DeploymentAllowed = DeploymentAllowed,
             CliffsAllowed = CliffsAllowed,
+            NoLeaving = NoLeaving,
             Round = Round,
             AutoResolve = AutoResolve,
             Winner = Winner,

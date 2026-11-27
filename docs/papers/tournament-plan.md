@@ -121,7 +121,7 @@ tournaments before any screen exists.
 ### 0. Record the decisions (done)
 - The owner answered TRN-1 to TRN-9 on 2026-11-27; ADR-366 holds the answers.
 
-### 1. Core rules (engine-free, with tests)
+### 1. Core rules (engine-free, with tests; done)
 - **Switch and option** (done):
   - `ScenarioRules.Tournament` (`rules.tournament`), and the map format bumped with a sample in `FormatSamples`.
   - `GameOptions.TournamentDays`, carried in saves and replays.
@@ -135,18 +135,29 @@ tournaments before any screen exists.
     `ConditionsPanel` treat the tournament as the arena. A map event's end of the game counts for nothing in either.
   - `TurnService` starting the battle instead of a turn on day N + 1. This shares the arena's battle (the champion, the battle, the result),
     generalised to "a deciding battle" (`DecidingBattles`, `DecidingBattleService`, `GameState.DecidingBattle`) with the arena and the
-    tournament as its two triggers. Until the battle's own rules below, the tournament's battle is chosen as the arena's and a side without a
-    hero is a loss for both.
-- **The battle:**
-  - No retreat or surrender for either side (the commands are refused).
-  - The neutral battlefield (terrain and obstacles from the seed) and the coin toss.
-  - The hero's army only.
-  - The draw and no-hero endings.
-- **Isolation:**
-  - `FogOfWar` clips sight and reveals to the owner's start zone.
-  - The movement and information adventure spells are clipped to the zone.
-  - Per-player tavern pools, no trading between players, the Grail per zone and the artifact rolls per zone.
-- **Tests** (`TournamentTests`, using `TestWorld` ASCII maps):
+    tournament as its two triggers.
+- **The battle** (done):
+  - `TournamentRules.Plan` chooses it: a coin toss from the game's random numbers makes one player the attacker (the summary says so), and
+    each side's champion is its one hero, on the map or else in a town's garrison, which it leads as its army (ADR-112).
+  - No retreat or surrender for either side: `BattleState.NoLeaving` makes `SurrenderRules` refuse both commands, and the computer never
+    leaves.
+  - The battlefield is neutral ground (`TournamentRules.Battlefield`): a terrain no town is native to (sand, beach or dirt), drawn from the
+    game's random numbers; the obstacles come from the battle's own numbers, as in every battle. Never a siege, and a town the defender
+    stands in lends it nothing (no Brotherhood, no siege bonuses): the hero's army only.
+  - The endings: a side without a hero loses without a battle, and so does a champion without an army; when neither side can fight it is a
+    draw. The game's end message gives the reason.
+- **Isolation** (done):
+  - `TournamentRules.Reaches`: a player never sees, reveals or aims into the other player's start zone; tiles in no zone (the walls) stay in
+    reach. `FogOfWar.Reach` clips every reveal and the sight (scouting, revealing objects, View Terrain), and the puzzle map hides those tiles.
+  - The adventure spells: none is aimed outside the zone, Town Portal goes only to towns inside it, and Distant Vision, Detect Magic and
+    Grave Whisper show only the zone.
+  - `TavernRules.Taken`: each player's tavern pools (towns and map taverns in its zone) leave out only its own heroes.
+  - Sending resources is refused.
+  - `GrailState.Zones`: a Grail buried in each start zone that has an obelisk, with that zone's obelisks for its puzzle (`GrailRules.SiteOf`,
+    `ObelisksOf`); the map author's Grail does not count.
+  - The artifact rolls are unique per zone (`TournamentRules.ZoneOf`; a player without a zone shares the map's pool): the pickups rolled at the start and the relics drawn as rewards (`GameState.DrawnRelicsOf`).
+    That both zones get the same content is the mirrored templates' (step 2).
+- **Tests** (`TournamentTests`, using `TestWorld` ASCII maps; done):
   - the battle on day N + 1;
   - no retreat or surrender;
   - no hero, no army, a draw;

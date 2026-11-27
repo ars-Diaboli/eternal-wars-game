@@ -1,4 +1,6 @@
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Map;
 
 namespace EternalWars.Core.Domain.Game;
 
@@ -10,6 +12,9 @@ namespace EternalWars.Core.Domain.Game;
 /// </summary>
 public static class TournamentRules
 {
+    /// <summary>Why a player of a tournament cannot send the other resources (ADR-366): the two never trade.</summary>
+    public const string NoTradingRefusal = "There is no trading between the players of a tournament.";
+
     /// <summary>The length when the game names none: two weeks.</summary>
     public const int DefaultDays = 14;
 
@@ -40,6 +45,87 @@ public static class TournamentRules
 
     /// <summary>The day the battle starts by itself, before anyone's turn: the day after the last building day (<see cref="Days"/> + 1).</summary>
     public static int BattleDay(GameOptions options) => Days(options) + 1;
+
+    /// <summary>
+    /// Whether <paramref name="player"/> may see, reveal or reach <paramref name="position"/> (ADR-366): anywhere on a map that is no tournament; in a
+    /// tournament never inside the other player's start zone, so sight, scouting, revealing objects, the puzzle map and the adventure spells stop at
+    /// its edge. Tiles in no zone (the walls between them) stay in reach, so a map painted only in part is not blind.
+    /// </summary>
+    public static bool Reaches(GameState state, PlayerId player, MapPosition position)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        return !state.Rules.Tournament || state.Map.GetStartZone(position) is not { } zone || zone == player;
+    }
+
+    /// <summary>
+    /// The start zone whose shares <paramref name="player"/> keeps apart from the other's (a tournament's artifact rolls, ADR-366): its own when the
+    /// tournament's map gives it one; null (the map's single share) otherwise.
+    /// </summary>
+    public static PlayerId? ZoneOf(GameState state, PlayerId player)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        return state.Rules.Tournament && state.Map.StartZoneOwners.Contains(player) ? player : null;
+    }
+
+    /// <summary>The start zone of <paramref name="position"/> whose shares are kept apart in a tournament (<see cref="ZoneOf(GameState, PlayerId)"/>); null otherwise.</summary>
+    public static PlayerId? ZoneOf(GameState state, MapPosition position)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        return state.Rules.Tournament ? state.Map.GetStartZone(position) : null;
+    }
+
+    /// <summary>
+    /// The tournament's battle, chosen at the start of its day: a coin toss from <see cref="GameState.Random"/> makes one of the two players the attacker,
+    /// and each fights with its one hero (<see cref="DecidingBattles.Champion"/>: on the map, else in a town's garrison). There is no combat place: the
+    /// battlefield is neutral ground (<see cref="Battlefield"/>). A side without a hero loses without a battle, and so does one whose hero has no army
+    /// when the other has a hero; when neither side can fight it is a draw. Draws once from the game's random numbers, so it is called once, by the
+    /// battle's start.
+    /// </summary>
+    public static DecidingBattle Plan(GameState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        var name = DecidingBattles.Name(state.Rules);
+        var players = state.Players.Where(p => p.TookPart && !p.IsDefeated).ToList();
+        if (players.Count < 2)
+        {
+            return new(null, null, null, null, null) { Result = DecidingBattleResult.NoBattle, Reason = $"Nobody was left to fight the {name}." };
+        }
+
+        var (attacker, defender) = state.Random.Next(2) == 0 ? (players[0], players[1]) : (players[1], players[0]);
+        var attackerHero = DecidingBattles.Champion(state, attacker.Team);
+        var defenderHero = DecidingBattles.Champion(state, defender.Team);
+        var plan = new DecidingBattle(null, attacker.Id, attackerHero?.Id, defender.Id, defenderHero?.Id)
+        {
+            Summary = attackerHero is null || defenderHero is null ? null
+                : $"{attackerHero.Name} ({attacker.Name}) won the coin toss and attacked {defenderHero.Name} ({defender.Name}).",
+        };
+        return (attackerHero, defenderHero) switch
+        {
+            (null, null) => plan with { Result = DecidingBattleResult.Draw, Reason = $"Neither {attacker.Name} nor {defender.Name} had a hero." },
+            (null, { } hero) => NoHero(plan, attacker.Name, hero, defender.Id),
+            ({ } hero, null) => NoHero(plan, defender.Name, hero, attacker.Id),
+            _ => plan,
+        };
+
+        DecidingBattle NoHero(DecidingBattle plan, string without, Hero other, PlayerId otherPlayer) =>
+            DecidingBattles.ArmyOf(state, other).IsEmpty
+                ? plan with { Result = DecidingBattleResult.Draw, Reason = $"{without} had no hero, and {other.Name} ({state.GetPlayer(otherPlayer).Name}) no army." }
+                : plan with { Result = DecidingBattleResult.Won, Winner = otherPlayer, Reason = $"{without} had no hero." };
+    }
+
+    /// <summary>
+    /// The tournament battle's ground: neutral, so a terrain no town is native to (sand, beach, dirt with the default terrains), drawn from
+    /// <see cref="GameState.Random"/>; any passable terrain when the terrains give none. Its obstacles come from the battle's own random numbers, forked
+    /// from the game's as every battle's.
+    /// </summary>
+    public static TerrainType Battlefield(GameState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        var passable = state.Terrains.All.Where(t => t.Class == TerrainClass.Passable).OrderBy(t => t.Terrain).ToList();
+        var neutral = passable.Where(t => t.NativeTowns.Count == 0).ToList();
+        var choices = neutral.Count > 0 ? neutral : passable;
+        return choices[state.Random.Next(choices.Count)].Terrain;
+    }
 
     /// <summary>
     /// What keeps the map of <paramref name="scenario"/> from being a tournament, in order (none when it is one, or is no tournament): an arena

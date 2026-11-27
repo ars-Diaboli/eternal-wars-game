@@ -49,7 +49,8 @@ public partial class NoticePanel : PanelContainer
                 : "The obelisk's carvings tell of a Grail, but no Grail lies on this map."));
         this.SubscribeWhileInTree<HoleDug>(session.Events, e =>
             Show(e.Hero, e.Grail is { } grail ? $"{_session.State.GetHero(e.Hero).Name} digs up the {_session.State.Artifacts.Get(grail).Name}! Bring it into one of your towns."
-                : _session.State.Grail.Position == e.Position && !_session.State.Grail.IsFound ? "Something lies here, but there is no room left to carry it."
+                : Core.Domain.Objects.GrailRules.SiteOf(_session.State, _session.State.GetHero(e.Hero).Owner) is { IsFound: false } site && site.Position == e.Position
+                    ? "Something lies here, but there is no room left to carry it."
                 : "Nothing here but earth and stones."));
         this.SubscribeWhileInTree<GrailBuildingRaised>(session.Events, e =>
             Show(e.Hero, $"The Grail is laid to rest, and {e.Name} rises in {(_session.State.FindObject(e.Town) is Core.Domain.Towns.Town raisedIn ? raisedIn.Name : "your town")}: +5000 gold a day, +50 % growth, and stronger defenders in a siege."));

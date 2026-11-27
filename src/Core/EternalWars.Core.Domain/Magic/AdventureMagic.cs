@@ -138,7 +138,8 @@ public static class AdventureMagic
         : AdventureIntel.TownAt(state, cell) is { } town && PortalOpen(state, hero, town) ? town : null;
 
     private static bool PortalOpen(GameState state, Hero hero, Town town) =>
-        town.Owner == hero.Owner && town.VisitPosition != hero.Position && state.HeroAt(town.VisitPosition) is null;
+        town.Owner == hero.Owner && town.VisitPosition != hero.Position && state.HeroAt(town.VisitPosition) is null
+        && TournamentRules.Reaches(state, hero.Owner, town.VisitPosition);
 
     /// <summary>The adventure spells the hero could cast (it knows them, from its book or its artifacts, and they are built), whether or not it can pay now.</summary>
     public static IEnumerable<SpellDefinition> Known(GameState state, Hero hero) =>
@@ -154,7 +155,8 @@ public static class AdventureMagic
     /// false: the cell is still to be picked). Dimension Door: once a day (twice at rank III), up to 6 tiles (9 from rank II) in a straight line
     /// on the same level to an explored, free, passable and unguarded tile. Town Portal: an own town with a free entrance (at rank I only the
     /// nearest). Distant Vision: a cell in sight. Eavesdrop: a town of another player, not an ally, or a neutral one, in sight (rank I) or
-    /// explored (from rank II).
+    /// explored (from rank II). In a tournament no spell is aimed outside the player's own zone, and Town Portal goes only to towns inside it
+    /// (ADR-366, <see cref="TournamentRules.Reaches"/>).
     /// </summary>
     public static string? Refusal(GameState state, Hero hero, Common.SpellId spell, MapPosition? target, bool aimed = true)
     {
@@ -183,8 +185,16 @@ public static class AdventureMagic
             return $"Casting {definition.Name} needs {MovementCost} movement points.";
         }
 
+        if (aimed && target is { } cell && state.Map.Contains(cell) && !TournamentRules.Reaches(state, hero.Owner, cell))
+        {
+            return OutsideZoneRefusal;
+        }
+
         return AdventureSpellHandlers.For(spell).Refusal(state, hero, RankOf(state, hero, spell), target, aimed);
     }
+
+    /// <summary>Why a spell aimed outside a tournament player's zone is refused.</summary>
+    public const string OutsideZoneRefusal = "In a tournament, spells reach only the player's own zone.";
 
     /// <summary>The town an aimed Eavesdrop listens to, or null.</summary>
     public static Town? EavesdropTown(GameState state, MapPosition? target) => target is { } cell ? AdventureIntel.TownAt(state, cell) : null;

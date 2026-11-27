@@ -40,7 +40,7 @@ internal sealed class MapObjectRewardVisits(
         {
             // The artifact outcome (ADR-068): no choice, the chest is emptied; a full backpack loses it.
             context.Steps.RemoveObject(chest);
-            var found = artifacts.Draw(ArtifactTier.Minor) is { } minor && artifacts.Grant(hero, minor, ArtifactSource.Found) ? minor : (Common.ArtifactId?)null;
+            var found = artifacts.Draw(ArtifactTier.Minor, hero.Owner) is { } minor && artifacts.Grant(hero, minor, ArtifactSource.Found) ? minor : (Common.ArtifactId?)null;
             Events.Publish(new LootFound(hero.Id, chest.Id, ResourceSet.Empty, found));
             return;
         }
@@ -211,7 +211,7 @@ internal sealed class MapObjectRewardVisits(
             }
 
             context.Economy.Grant(hero.Owner, roll.Resources);
-            var found = roll.Artifact is { } tier && artifacts.Draw(tier) is { } artifact && artifacts.Grant(hero, artifact, ArtifactSource.Found) ? artifact : (Common.ArtifactId?)null;
+            var found = roll.Artifact is { } tier && artifacts.Draw(tier, hero.Owner) is { } artifact && artifacts.Grant(hero, artifact, ArtifactSource.Found) ? artifact : (Common.ArtifactId?)null;
             Events.Publish(new LootFound(hero.Id, site.Id, roll.Resources, found));
         }
         else

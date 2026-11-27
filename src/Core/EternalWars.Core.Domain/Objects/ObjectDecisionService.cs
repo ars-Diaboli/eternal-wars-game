@@ -204,7 +204,7 @@ public sealed class ObjectDecisionService(
             return;
         }
 
-        if (State.Random.Next(2) == 0 && artifacts.Draw(ArtifactTier.Major) is { } artifact)
+        if (State.Random.Next(2) == 0 && artifacts.Draw(ArtifactTier.Major, hero.Owner) is { } artifact)
         {
             var kept = artifacts.Grant(hero, artifact, ArtifactSource.Found);
             Events.Publish(new SphinxAnswered(sphinx.Id, hero.Id, Right: true, Artifact: kept ? artifact : (Common.ArtifactId?)null));

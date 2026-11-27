@@ -22,6 +22,9 @@ public sealed class AdventureMap
     /// <summary>Each tile's start zone: the player's number, or -1 for none (MP-4).</summary>
     private sbyte[][] _startZones;
 
+    /// <summary><see cref="StartZoneOwners"/>, worked out once until a start zone changes.</summary>
+    private IReadOnlyList<PlayerId>? _startZoneOwners;
+
     public AdventureMap(int width, int height, int levels = 1, TerrainType fill = TerrainType.Grass)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(width, 1);
@@ -137,14 +140,15 @@ public sealed class AdventureMap
         }
 
         _startZones[position.Level][Index(position)] = (sbyte)(owner?.Value ?? -1);
+        _startZoneOwners = null;
     }
 
     /// <summary>Whether any tile is in a start zone.</summary>
-    public bool HasStartZones => _startZones.Any(level => level.Any(z => z >= 0));
+    public bool HasStartZones => StartZoneOwners.Count > 0;
 
     /// <summary>The players that have a start zone, in number order.</summary>
     public IReadOnlyList<PlayerId> StartZoneOwners =>
-        [.. _startZones.SelectMany(level => level).Where(z => z >= 0).Distinct().Order().Select(z => new PlayerId(z))];
+        _startZoneOwners ??= [.. _startZones.SelectMany(level => level).Where(z => z >= 0).Distinct().Order().Select(z => new PlayerId(z))];
 
     /// <summary>The tiles of <paramref name="owner"/>'s start zone, on every level.</summary>
     public IEnumerable<MapPosition> StartZoneTiles(PlayerId owner) =>
@@ -218,6 +222,7 @@ public sealed class AdventureMap
         _rivers = [.. other._rivers.Select(l => (RiverType[])l.Clone())];
         _ground = [.. other._ground.Select(l => (sbyte[])l.Clone())];
         _startZones = [.. other._startZones.Select(l => (sbyte[])l.Clone())];
+        _startZoneOwners = null;
     }
 
     private int Index(MapPosition position)

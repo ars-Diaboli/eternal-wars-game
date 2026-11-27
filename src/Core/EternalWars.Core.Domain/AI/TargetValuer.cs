@@ -223,7 +223,7 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
 
     /// <summary>Where the Grail lies when the player's puzzle is whole and nobody has dug it up yet (ADR-140), else null.</summary>
     public MapPosition? GrailSpot(PlayerId player) =>
-        _state.Grail.IsFound ? null : GrailRules.Puzzle(_state, player)?.Grail;
+        GrailRules.SiteOf(_state, player) is not { IsFound: false } ? null : GrailRules.Puzzle(_state, player)?.Grail;
 
     /// <summary>
     /// What a Pandora's Box is worth to the hero, by the AI's values (ADR-100): resources at their gold value, experience 1:1, a primary stat as a
@@ -558,7 +558,7 @@ internal sealed partial class TargetValuer(AiContext ai, ThreatMap threats)
                 case SkillSchool school when visit != hero.Position && SchoolValue(hero, school) is > 0 and var schoolWorth && Plausible(GuardPower(visit)):
                     yield return new(visit, schoolWorth, GuardArmy(visit), MaxLoss: _weights.MonsterLoss);
                     break;
-                case Obelisk obelisk when _state.Grail.Position is not null && !_state.Grail.IsFound && visit != hero.Position
+                case Obelisk obelisk when GrailRules.SiteOf(_state, hero.Owner) is { Position: not null, IsFound: false } && visit != hero.Position
                                           && !obelisk.WasVisitedBy(owner) && Plausible(GuardPower(visit)):
                     yield return new(visit, _weights.ObeliskValue, GuardArmy(visit), MaxLoss: _weights.MonsterLoss, Later: true);
                     break;

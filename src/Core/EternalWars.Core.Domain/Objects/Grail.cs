@@ -29,21 +29,48 @@ public sealed class Obelisk(MapObjectId id, MapObjectDefinition definition, MapP
 }
 
 /// <summary>
-/// Where the Grail lies (ADR-140): <see cref="Position"/> is set by the map's author or drawn when the game starts (<see cref="GrailRules"/>); null
-/// when the map has none. <see cref="PuzzleOrigin"/> is the map cell under the puzzle's top-left corner, drawn at game start so the Grail falls in
-/// the puzzle's centre 4×4 cells. Each player's opened pieces (indices 0 … 99, row by row) are kept per player. <see cref="IsFound"/> once a hero
-/// has dug it up; <see cref="Holes"/> are the cells dug so far, which stay.
+/// One buried Grail (ADR-140): where it lies (<see cref="Position"/>, null for none), the map cell under its puzzle's top-left corner
+/// (<see cref="PuzzleOrigin"/>, drawn at game start so the Grail falls in the puzzle's centre 4×4 cells) and whether a hero has dug it up.
 /// </summary>
-public sealed class GrailState
+public sealed class GrailSite
 {
-    private readonly HashSet<MapPosition> _holes = [];
-    private readonly SortedDictionary<int, SortedSet<int>> _pieces = [];
-
     public MapPosition? Position { get; internal set; }
 
     public MapPosition? PuzzleOrigin { get; internal set; }
 
     public bool IsFound { get; internal set; }
+}
+
+/// <summary>
+/// Where the Grail lies (ADR-140): <see cref="Position"/> is set by the map's author or drawn when the game starts (<see cref="GrailRules"/>); null
+/// when the map has none. <see cref="PuzzleOrigin"/> is the map cell under the puzzle's top-left corner, drawn at game start so the Grail falls in
+/// the puzzle's centre 4×4 cells. Each player's opened pieces (indices 0 … 99, row by row) are kept per player. <see cref="IsFound"/> once a hero
+/// has dug it up; <see cref="Holes"/> are the cells dug so far, which stay. A tournament (ADR-366) has a Grail per start zone instead
+/// (<see cref="Zones"/>), and the map's own one does not count there.
+/// </summary>
+public sealed class GrailState
+{
+    private readonly HashSet<MapPosition> _holes = [];
+    private readonly SortedDictionary<int, SortedSet<int>> _pieces = [];
+    private readonly SortedDictionary<int, GrailSite> _zones = [];
+
+    /// <summary>The map's Grail (<see cref="Position"/>, <see cref="PuzzleOrigin"/>, <see cref="IsFound"/>).</summary>
+    public GrailSite Main { get; } = new();
+
+    public MapPosition? Position { get => Main.Position; internal set => Main.Position = value; }
+
+    public MapPosition? PuzzleOrigin { get => Main.PuzzleOrigin; internal set => Main.PuzzleOrigin = value; }
+
+    public bool IsFound { get => Main.IsFound; internal set => Main.IsFound = value; }
+
+    /// <summary>A tournament's Grails, one per start zone that has an obelisk, by the zone's player.</summary>
+    public IEnumerable<(PlayerId Zone, GrailSite Site)> Zones => _zones.Select(z => (new PlayerId(z.Key), z.Value));
+
+    /// <summary>The Grail of <paramref name="zone"/>'s start zone, or null when it has none.</summary>
+    public GrailSite? ZoneSite(PlayerId zone) => _zones.GetValueOrDefault(zone.Value);
+
+    /// <summary>The Grail of <paramref name="zone"/>'s start zone, made when it has none yet.</summary>
+    internal GrailSite AddZoneSite(PlayerId zone) => _zones.TryGetValue(zone.Value, out var site) ? site : _zones[zone.Value] = new GrailSite();
 
     public IReadOnlyCollection<MapPosition> Holes => _holes;
 
@@ -84,9 +111,10 @@ public sealed record PuzzlePiece(int X, int Y, bool Revealed);
 /// The puzzle map of a player (ADR-140): <see cref="Size"/> × <see cref="Size"/> cells on the Grail's level cut into pieces of
 /// <see cref="GrailRules.PieceSize"/>, row by row; <see cref="Origin"/> is the map cell under its top-left corner. The player has visited
 /// <see cref="Visited"/> of the map's <see cref="Obelisks"/> obelisks (its own visits only). <see cref="Grail"/> is given once the centre is open:
-/// the spot is marked.
+/// the spot is marked. A tournament's player never sees past its start zone on it (<see cref="OutOfReach"/>, ADR-366).
 /// </summary>
-public sealed record PuzzleMap(MapPosition Origin, int Size, IReadOnlyList<PuzzlePiece> Pieces, int Obelisks, int Visited, MapPosition? Grail)
+public sealed record PuzzleMap(
+    MapPosition Origin, int Size, IReadOnlyList<PuzzlePiece> Pieces, int Obelisks, int Visited, MapPosition? Grail, IReadOnlySet<MapPosition>? OutOfReach = null)
 {
     public int Revealed => Pieces.Count(p => p.Revealed);
 
@@ -96,7 +124,7 @@ public sealed record PuzzleMap(MapPosition Origin, int Size, IReadOnlyList<Puzzl
     public bool Shows(MapPosition cell)
     {
         var (dx, dy) = (cell.X - Origin.X, cell.Y - Origin.Y);
-        return cell.Level == Origin.Level && dx >= 0 && dy >= 0 && dx < Size && dy < Size
+        return cell.Level == Origin.Level && dx >= 0 && dy >= 0 && dx < Size && dy < Size && OutOfReach?.Contains(cell) != true
                && Pieces[(dy / GrailRules.PieceSize * GrailRules.PiecesPerSide) + (dx / GrailRules.PieceSize)].Revealed;
     }
 }
@@ -117,6 +145,8 @@ public sealed record PuzzleMap(MapPosition Origin, int Size, IReadOnlyList<Puzzl
 /// cell puts the Grail artifact into its backpack (a full backpack leaves it buried).</item>
 /// <item>A hero carrying the Grail into one of its owner's towns without a Grail building raises it at once (not the day's building) and gives the
 /// Grail up. The building: ADR-130.</item>
+/// <item>A tournament (ADR-366) buries a Grail in each start zone that has an obelisk, drawn inside the zone, and a player's puzzle counts its own
+/// zone's obelisks only (<see cref="SiteOf"/>, <see cref="ObelisksOf"/>). The map author's Grail does not count there.</item>
 /// </list>
 /// </summary>
 public static class GrailRules
@@ -195,22 +225,39 @@ public static class GrailRules
     public static bool Carries(GameState state, Hero hero) =>
         state.Artifacts.Grail is { } grail && hero.Artifacts.Has(grail.Id);
 
+    /// <summary>Whether the game keeps a Grail per start zone: a tournament whose map has start zones (ADR-366).</summary>
+    public static bool PerZone(GameState state) => state.Rules.Tournament && state.Map.HasStartZones;
+
+    /// <summary>
+    /// The Grail <paramref name="player"/> hunts: the map's; in a tournament the one of its own start zone (null when the zone has none, or the player
+    /// no zone).
+    /// </summary>
+    public static GrailSite? SiteOf(GameState state, PlayerId player) => PerZone(state) ? state.Grail.ZoneSite(player) : state.Grail.Main;
+
+    /// <summary>The obelisks that open <paramref name="player"/>'s puzzle: every one on the map; in a tournament those in its own start zone.</summary>
+    public static IReadOnlyList<Obelisk> ObelisksOf(GameState state, PlayerId player) =>
+        [.. state.ObjectsOf<Obelisk>().Where(o => !PerZone(state) || state.Map.GetStartZone(o.VisitPosition) == player)];
+
     /// <summary>
     /// The puzzle map of <paramref name="player"/>, or null when there is no Grail: its opened pieces, and the Grail's cell once the centre is open.
     /// </summary>
     public static PuzzleMap? Puzzle(GameState state, PlayerId player)
     {
-        if (state.Grail.Position is not { } grail || state.Grail.PuzzleOrigin is not { } origin)
+        if (SiteOf(state, player) is not { Position: { } grail, PuzzleOrigin: { } origin })
         {
             return null;
         }
 
-        var obelisks = state.ObjectsOf<Obelisk>().ToList();
+        var obelisks = ObelisksOf(state, player);
         var opened = state.Grail.PiecesOf(player);
         var pieces = Enumerable.Range(0, PieceCount)
             .Select(i => new PuzzlePiece(i % PiecesPerSide * PieceSize, i / PiecesPerSide * PieceSize, opened.Contains(i)))
             .ToList();
         var centreOpen = Enumerable.Range(0, PieceCount).Where(i => RingOf(i % PiecesPerSide, i / PiecesPerSide) == PuzzleRing.Centre).All(opened.Contains);
-        return new PuzzleMap(origin, PuzzleSize, pieces, obelisks.Count, obelisks.Count(o => o.WasVisitedBy(player)), centreOpen ? grail : null);
+        var outOfReach = PerZone(state)
+            ? Enumerable.Range(0, PuzzleSize * PuzzleSize).Select(i => origin.Offset(i % PuzzleSize, i / PuzzleSize))
+                .Where(c => state.Map.Contains(c) && !Game.TournamentRules.Reaches(state, player, c)).ToHashSet()
+            : null;
+        return new PuzzleMap(origin, PuzzleSize, pieces, obelisks.Count, obelisks.Count(o => o.WasVisitedBy(player)), centreOpen ? grail : null, outOfReach);
     }
 }
