@@ -284,7 +284,7 @@ public sealed record TemplateConnection
 public sealed record MapTemplate
 {
     /// <summary>Version of the <c>*.ewtemplate.json</c> format this model reads and writes; older files keep loading (bump on a format change).</summary>
-    public const int CurrentFormatVersion = 9;
+    public const int CurrentFormatVersion = 10;
 
     public int FormatVersion { get; init; } = CurrentFormatVersion;
 
@@ -336,6 +336,13 @@ public sealed record MapTemplate
     /// <summary>Mirrored templates (format v8, ADR-117): how the map is symmetric; the zones name their images (<see cref="TemplateZone.Mirror"/>).</summary>
     public TemplateSymmetry Symmetry { get; init; } = TemplateSymmetry.None;
 
+    /// <summary>
+    /// A tournament template (format v10, ADR-366): its maps are tournaments (<see cref="ScenarioRules.Tournament"/>) for exactly two players, each
+    /// in a part of the map of its own: the zones its start zone's connections reach (<see cref="Reach"/>), with no connection, gate or portal to
+    /// the other's. The generator makes each part the player's start zone and allows one hero a player.
+    /// </summary>
+    public bool Tournament { get; init; }
+
     public IReadOnlyList<TemplateZone> Zones { get; init; } = [];
 
     public IReadOnlyList<TemplateConnection> Connections { get; init; } = [];
@@ -346,6 +353,31 @@ public sealed record MapTemplate
     public int Levels => Underground ? 2 : 1;
 
     public TemplateZone? Zone(string id) => Zones.FirstOrDefault(z => z.Id == id);
+
+    /// <summary>The zones the connections (of every kind) reach from zone <paramref name="from"/>, itself included; empty for an unknown zone.</summary>
+    public IReadOnlySet<string> Reach(string from)
+    {
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        if (Zone(from) is null)
+        {
+            return seen;
+        }
+
+        seen.Add(from);
+        var queue = new Queue<string>([from]);
+        while (queue.TryDequeue(out var current))
+        {
+            foreach (var next in Connections.Where(c => c.From == current || c.To == current).Select(c => c.From == current ? c.To : c.From))
+            {
+                if (Zone(next) is not null && seen.Add(next))
+                {
+                    queue.Enqueue(next);
+                }
+            }
+        }
+
+        return seen;
+    }
 
     /// <summary>The guard a connection's passages get: its own, else the template's; only a normal connection has other than monsters.</summary>
     public ConnectionGuard GuardOf(TemplateConnection connection) =>

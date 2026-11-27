@@ -15,7 +15,7 @@ Core `MapGenerator` (`EternalWars.Core.Generation`, version 8). Shipped template
 - **Deterministic** from (template, size, players, seed, generator version), so a seed shares a map; each stage has its own seed stream
   (`SeedStreams`). Output is a scenario `GameState` (ADR-064), saved as an ordinary map by `MapConverter.ToDocument`.
 
-## The template (`MapTemplate`, format v8)
+## The template (`MapTemplate`, format v10)
 - Name, description, supported sizes, player range, max humans, underground or not, **heroes per player 1–8** (default 8; written into the
   scenario's rules; `MapGenerator.Build` / `EditorMapGenerator.Generate`, the editor's Generate panel and the new-game screen may override it;
   one limit for every player).
@@ -54,6 +54,13 @@ Core `MapGenerator` (`EternalWars.Core.Generation`, version 8). Shipped template
   `mirror`; mirrors form cycles of 1 (a middle zone) or the symmetry's order, of alike zones on one level; a start zone is never its own
   image; every connection's image must be a connection like it. The layout keeps the symmetry (Voronoi, symmetric centres, the grid copied
   tile by tile) and mirrored zones share their rolls, so content is the same on every side.
+- **Tournament templates** (format v10, ADR-366): `tournament` makes every map of the template a
+  [tournament](victory-and-modes.md#game-modes). The zone graph is in two parts, one per player: a player's part is the zones the
+  connections reach from its start zone. The validator wants exactly two players who are not allies, every zone in one part, and no
+  connection, gate or portal between the parts (it names the way it finds); the whole graph need not be connected, and a part may be a lone
+  start zone. A hero limit other than 1 is ignored, with a warning. A border guard's colour gets a Keymaster's Tent in each part that has
+  one. The generator refuses a setup of other than two players, or of two allies; the template batch does not ask its players to reach
+  each other, and the map validator does not warn that the parts touch (they do across the wall between them).
 - **Validator** (`TemplateValidator`): errors for players, sizes, zones, start zones, connections, passages, empty levels, connectivity,
   teams; warnings for unfair start zones.
 
@@ -98,10 +105,11 @@ Core `MapGenerator` (`EternalWars.Core.Generation`, version 8). Shipped template
   - The picked hero (else one of the town's) stands at the first town with 2–3 stacks of tier-1 and tier-2 creatures, 1000–1500 power.
   - Neutral towns keep the default start; an untaken slot keeps its town, neutral, garrisoned by the zone's strength.
   - Each player's start zone (the template zone of its start town) is written into the map as its start zone (MP-4, ADR-197), for the
-    simultaneous first week; an untaken slot's zone is nobody's.
-  - Standard rules; difficulty and fog from the new-game screen; named "template size×size #seed".
+    simultaneous first week; an untaken slot's zone is nobody's. In a tournament it is the player's whole part.
+  - Standard rules (a tournament template's: `rules.tournament` and one hero a player, whatever the caller asks); difficulty and fog from the new-game screen; named "template size×size #seed".
 - **Fairness** (RMG-8, ADR-117, `MapFairness.Check`): every start town reaches every other, and every town, mine and treasure item is
-  reachable from some start (at step costs, through gates, portals, guards, pickups, garrisons). Each start gets **mine distance** (nearest
+  reachable from some start (at step costs, through gates, portals, guards, pickups, garrisons). In a tournament neither start town reaches
+  the other or anything in the other's part, and a start has no rival to measure guard power to (0). Each start gets **mine distance** (nearest
   mine per resource, summed), **treasure value** (each item split between starts by 1 / distance²) and **guard power** (least on the way to
   the nearest rival). Teams are compared (a team sums its members), only among alike zones. A number more than **±15 %** off its group's
   average *and* beyond a slack (4 tiles, 1500 gold, 300 power) is a problem. No separate richness setting (RMG-12): bands and mine minimums

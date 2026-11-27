@@ -406,8 +406,11 @@ battle with no retreat or surrender, and its winner wins. Lengths: 1–14 days, 
       - the battle's own rules: no retreat or surrender, neutral ground, the coin toss, the hero's army only; the endings (done);
       - isolation: sight and spells clipped to the zone, per-player taverns, the Grail and artifact rolls per zone, no trading (done);
       - `TournamentTests` (done).
-- [ ] Step 2: Tournament templates and their validator (two players, each zone connected inside, none between them); two or three
-      mirrored templates; the map validator's checks for hand-made maps
+- [ ] Step 2: Random maps and validation:
+      - tournament templates, their validator and the generator's tournament (two players, each part connected inside, none between
+        them; the rules, one hero, each part as its player's start zone; template format v10) (done);
+      - two or three mirrored templates;
+      - the map validator's checks for hand-made maps.
 - [ ] Step 3: Every tournament day at once on the LAN; per-player battle and question slots on every simultaneous day (any LAN game's
       first week and an arena's day 1 too, TRN-7); a LAN week replayed exactly
 - [ ] Step 4: The computer: its zone played for the deadline, its hero kept alive, the last day spent on the battle's army; `sim game --runs`

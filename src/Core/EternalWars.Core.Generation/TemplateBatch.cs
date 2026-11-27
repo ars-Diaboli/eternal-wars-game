@@ -102,7 +102,9 @@ public static class TemplateBatch
         var map = Generate(template, size, seed, content);
         var again = Generate(template, size, seed, content);
         var state = map.Scenario;
-        var unreachable = MapConnectivity.UnreachableRivalTowns(state)
+        var unreachable = state.Rules.Tournament
+            ? [] // a tournament's players never reach each other (ADR-366); MapFairness checks they stay apart
+            : MapConnectivity.UnreachableRivalTowns(state)
             .Select(u => $"{u.Player.Name} cannot reach the town of {state.GetPlayer(u.Town.Owner!.Value).Name} at {u.Town.VisitPosition}")
             .ToList();
         var errors = map.Issues.Where(i => i.Severity == IssueSeverity.Error).Select(i => i.Message).ToList();

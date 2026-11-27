@@ -10,7 +10,8 @@ public sealed record TemplateIssue(IssueSeverity Severity, string Message);
 
 /// <summary>
 /// Checks a <see cref="MapTemplate"/> before anything is generated from it: errors make it unusable (a start zone without an
-/// owner, a zone nobody can reach), warnings point at things that will probably play badly (start zones that differ).
+/// owner, a zone nobody can reach), warnings point at things that will probably play badly (start zones that differ). A tournament template's
+/// zone graph is checked per player (ADR-366): two parts, one around each start zone, with nothing between them.
 /// </summary>
 public static class TemplateValidator
 {
@@ -75,6 +76,7 @@ public static class TemplateValidator
 
         StartZones(template, Error);
         Connections(template, Error, Warn);
+        Tournament(template, Error, Warn);
         Symmetry(template, Error);
         Fairness(template, Warn);
         return issues;
@@ -363,7 +365,7 @@ public static class TemplateValidator
             }
         }
 
-        if (template.Zones.Count > 1)
+        if (template.Zones.Count > 1 && !template.Tournament) // a tournament's parts are checked per player (Tournament)
         {
             foreach (var zone in template.Zones.Where(z => !template.Connections.Any(c => c.From == z.Id || c.To == z.Id)))
             {
@@ -376,6 +378,83 @@ public static class TemplateValidator
                 error($"The zone graph is not connected: {string.Join(", ", unreachable)} cannot be reached from '{template.Zones[0].Id}'.");
             }
         }
+    }
+
+    /// <summary>
+    /// A tournament template (ADR-366): exactly two players who are no allies, and the zone graph in two parts, one per player: every zone is reached
+    /// from one start zone by the connections (so each part is connected inside) and no connection, gate or portal joins the two. The hero limit is
+    /// always 1, whatever the template says.
+    /// </summary>
+    private static void Tournament(MapTemplate template, Action<string> error, Action<string> warn)
+    {
+        if (!template.Tournament)
+        {
+            return;
+        }
+
+        if (template.MinPlayers != 2 || template.MaxPlayers != 2)
+        {
+            error("A tournament template is for exactly two players.");
+        }
+
+        if (template.MaxHeroes != 1)
+        {
+            warn($"A tournament allows one hero a player: the hero limit of {template.MaxHeroes} is ignored.");
+        }
+
+        var starts = template.Zones.Where(z => z.Type is ZoneType.PlayerStart or ZoneType.AiStart).ToList();
+        if (starts.Count != 2)
+        {
+            return; // StartZones says so
+        }
+
+        if (starts[0].Team is { } team && starts[1].Team == team)
+        {
+            error($"Start zones '{starts[0].Id}' and '{starts[1].Id}' are on team {team}: the two players of a tournament cannot be allies.");
+        }
+
+        var parts = starts.Select(s => template.Reach(s.Id)).ToList();
+        if (parts[0].Contains(starts[1].Id))
+        {
+            error($"Start zones '{starts[0].Id}' and '{starts[1].Id}' are joined ({string.Join(" – ", Way(template, starts[0].Id, starts[1].Id))}): no connection, gate or portal may lead from one player's zones to the other's.");
+            return;
+        }
+
+        foreach (var zone in template.Zones.Where(z => !parts[0].Contains(z.Id) && !parts[1].Contains(z.Id)))
+        {
+            error($"Zone '{zone.Id}' is no player's: no connection leads to it from a start zone.");
+        }
+    }
+
+    /// <summary>The zones on a shortest way over the connections from one zone to another (both included), or just the two if there is none.</summary>
+    private static List<string> Way(MapTemplate template, string from, string to)
+    {
+        var back = new Dictionary<string, string>(StringComparer.Ordinal) { [from] = from };
+        var queue = new Queue<string>([from]);
+        while (queue.TryDequeue(out var current) && current != to)
+        {
+            foreach (var next in template.Connections.Where(c => c.From == current || c.To == current).Select(c => c.From == current ? c.To : c.From))
+            {
+                if (back.TryAdd(next, current))
+                {
+                    queue.Enqueue(next);
+                }
+            }
+        }
+
+        if (!back.ContainsKey(to))
+        {
+            return [from, to];
+        }
+
+        var way = new List<string> { to };
+        while (way[^1] != from)
+        {
+            way.Add(back[way[^1]]);
+        }
+
+        way.Reverse();
+        return way;
     }
 
     /// <summary>

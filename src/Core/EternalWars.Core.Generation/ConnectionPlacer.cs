@@ -52,7 +52,10 @@ public static class ConnectionPlacer
         int Border(int c) => map.Walls.TryGetValue(index[template.Connections[c].From] < index[template.Connections[c].To]
             ? (index[template.Connections[c].From], index[template.Connections[c].To]) : (index[template.Connections[c].To], index[template.Connections[c].From]), out var w) ? w.Count : 0;
         var present = Present(template, seed);
-        var keymasters = new HashSet<ObjectColour>();
+        // One Keymaster's Tent per colour, and in a tournament per colour in each player's part, which the other never reaches (ADR-366).
+        var starts = template.Tournament ? template.Zones.Where(z => z.Type is ZoneType.PlayerStart or ZoneType.AiStart).Select(z => template.Reach(z.Id)).ToList() : [];
+        int PartOf(string zone) => starts.FindIndex(p => p.Contains(zone));
+        var keymasters = new HashSet<(int Part, ObjectColour Colour)>();
         foreach (var c in Enumerable.Range(0, template.Connections.Count).Where(c => present[c]).OrderBy(Border).ThenBy(c => c).ToList())
         {
             var connection = template.Connections[c];
@@ -73,7 +76,7 @@ public static class ConnectionPlacer
                 var first = template.Connections[template.RollConnection(c)];
                 var steps = map.Layout.MirrorSteps(index[first.From], index[first.To], a, b);
                 Cut(map, connection, guard, colour, c, a, b, random, creatures, steps);
-                if (border && map.Passages.Any(p => p.Connection == c) && keymasters.Add(colour))
+                if (border && map.Passages.Any(p => p.Connection == c) && keymasters.Add((PartOf(connection.From), colour)))
                 {
                     PlaceKeymaster(map, template, connection, colour, a, b, random, creatures);
                 }

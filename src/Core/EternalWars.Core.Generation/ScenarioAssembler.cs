@@ -34,7 +34,8 @@ public sealed record PlayerSetup(int Slot, string Name, bool IsHuman, string Tow
 /// </list>
 /// The map is used up: its terrain and objects become the game's. The game has the standard rules (<see cref="ScenarioRules.Default"/>) with the hero
 /// limit of the template (<see cref="MapTemplate.MaxHeroes"/>) or of the caller (<c>maxHeroes</c>, ADR-068), and the
-/// options of the new-game screen; the map is named after the template, size and seed. The game's content tables are the map's
+/// options of the new-game screen; the map is named after the template, size and seed. A tournament template (<see cref="MapTemplate.Tournament"/>,
+/// ADR-366) makes a tournament with one hero a player, whatever the caller asks, and each player's start zone in the map is its whole part of it. The game's content tables are the map's
 /// (<see cref="GeneratedMap.Content"/>). Streams: <c>heroes</c>, <c>dwellings</c>, <c>armies</c>,
 /// <c>garrisons</c> per slot.
 /// </summary>
@@ -93,7 +94,7 @@ public static class ScenarioAssembler
             var id = new PlayerId(i);
             var zone = template.Zones.First(z => z.Owner == setup.Slot && z.Type is ZoneType.PlayerStart or ZoneType.AiStart);
             made.Add(new Player(id, setup.Name, setup.IsHuman, new TeamId(teams[i])));
-            MarkStartZone(map, zone, id);
+            MarkStartZone(map, template, zone, id);
 
             var start = map.Towns.Where(t => t.Slot == setup.Slot).Select(t => StartTown(map, t.Town, zone, setup, id, creatures, content.Buildings, streams.For("dwellings", setup.Slot))).ToList();
             var hero = setup.Hero is { } picked ? heroRoster.Get(picked) : Draw(heroRoster, setup.TownType, taken, heroRandom);
@@ -114,25 +115,31 @@ public static class ScenarioAssembler
         var state = new GameState(map.Map, made, heroes, map.Objects, options, content: content);
         state.SetTeamsLocked(template.TeamsLocked);
         state.SetTeamCounts(template.MinTeams, template.MaxTeams);
-        state.SetRules(ScenarioRules.Default with { MaxHeroes = maxHeroes ?? template.MaxHeroes, WeekEvents = template.WeekEvents.ToSettings() });
+        state.SetRules(ScenarioRules.Default with
+        {
+            MaxHeroes = template.Tournament ? 1 : maxHeroes ?? template.MaxHeroes,
+            WeekEvents = template.WeekEvents.ToSettings(),
+            Tournament = template.Tournament,
+        });
         return state;
     }
 
-    /// <summary>The template zone of a player's start town is its start zone in the map (MP-4, ADR-197); an empty slot's zone is nobody's.</summary>
-    private static void MarkStartZone(GeneratedMap map, TemplateZone zone, PlayerId owner)
+    /// <summary>
+    /// The template zone of a player's start town is its start zone in the map (MP-4, ADR-197); in a tournament, every zone of the player's part
+    /// (<see cref="MapTemplate.Reach"/>, ADR-366). An empty slot's zone is nobody's.
+    /// </summary>
+    private static void MarkStartZone(GeneratedMap map, MapTemplate template, TemplateZone zone, PlayerId owner)
     {
-        var index = map.Layout.ZoneIds.ToList().IndexOf(zone.Id);
-        if (index < 0)
+        var ids = map.Layout.ZoneIds.ToList();
+        foreach (var index in (template.Tournament ? template.Reach(zone.Id) : new HashSet<string> { zone.Id }).Select(id => ids.IndexOf(id)).Where(i => i >= 0))
         {
-            return;
-        }
-
-        foreach (var (x, y, level) in map.Layout.Tiles(index))
-        {
-            var position = new MapPosition(x, y, level);
-            if (map.Map.Contains(position))
+            foreach (var (x, y, level) in map.Layout.Tiles(index))
             {
-                map.Map.SetStartZone(position, owner);
+                var position = new MapPosition(x, y, level);
+                if (map.Map.Contains(position))
+                {
+                    map.Map.SetStartZone(position, owner);
+                }
             }
         }
     }
@@ -197,11 +204,16 @@ public static class ScenarioAssembler
 
     /// <summary>
     /// Refuses (<see cref="ArgumentException"/>) a setup whose teams the template's team counts do not allow (ADR-117); <see cref="MapGenerator.Build"/>
-    /// checks it before generating, so a wrong setup costs no map.
+    /// checks it before generating, so a wrong setup costs no map. A tournament (ADR-366) takes exactly two players who are not allies.
     /// </summary>
     public static void CheckTeams(MapTemplate template, IReadOnlyList<PlayerSetup> players)
     {
         var teams = Teams(template, players.OrderBy(p => p.Slot).ToList()).Distinct().Count();
+        if (template.Tournament && (players.Count != 2 || teams != 2))
+        {
+            throw new ArgumentException($"{template.Name} is a tournament: two players who are not allies.", nameof(players));
+        }
+
         if (teams < (template.MinTeams ?? 1) || teams > (template.MaxTeams ?? int.MaxValue))
         {
             throw new ArgumentException(

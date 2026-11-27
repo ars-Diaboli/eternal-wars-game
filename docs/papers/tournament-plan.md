@@ -168,12 +168,16 @@ tournaments before any screen exists.
   - the map format round trip, with the previous version still loading.
 
 ### 2. Random maps and validation
-- **Template support:**
-  - A template's `tournament` flag (template version bump).
-  - Its validator requires two players, start zones that are each connected inside, and no connection, gate or portal between the two
-    players' zones. The connectivity check runs per player instead of across the whole map.
-  - The generator writes `rules.tournament`, the start zones and `MaxHeroes` = 1. A generator version bump is needed if output changes
-    for existing templates; it should not.
+- **Template support** (done):
+  - `MapTemplate.Tournament` (template format v10).
+  - A player's part is the zones the connections reach from its start zone (`MapTemplate.Reach`). The validator wants two players who are
+    not allies, every zone in one part, and no connection, gate or portal between the parts; it names the way it finds. It checks
+    connectivity per part, not across the whole map, and warns that a hero limit other than 1 is ignored.
+  - The generator writes `rules.tournament`, `MaxHeroes` = 1 and each player's whole part as its start zone. `MapFairness` checks the
+    opposite of its usual connectivity: neither start town may walk to the other or into the other's part. A border guard's colour gets a
+    Keymaster's Tent in each part. The generator refuses a setup of other than two players, or of allies; the template batch (`sim maps`)
+    skips its rivals-reach-each-other check, and the start zones' touch warning is off in a tournament. Existing templates give the same
+    maps, so the generator's version stays.
 - **Shipped templates:** two or three mirrored ones (small, medium, large) with a neutral spread fit for a month, for example "Twin
   Vales". `sim maps` checks them in CI as it does the others.
 - **Map validator (hand-made maps):**

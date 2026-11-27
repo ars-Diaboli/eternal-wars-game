@@ -23,8 +23,10 @@ Detail: [roadmap.md](roadmap.md).
   generalised to the deciding battle (`DecidingBattles`, `DecidingBattleService`, `GameState.DecidingBattle`), started on day N + 1 before
   any turn, the map's conditions ignored, never ranked, `MapKind.Tournament`; the battle (`TournamentRules.Plan` with the coin toss,
   neutral ground, `BattleState.NoLeaving`, no town help, the no-hero and no-army endings); isolation (`TournamentRules.Reaches` for sight
-  and spells, per-player tavern pools, no sending, a Grail per zone, artifact rolls per zone); `TournamentTests`. Step 1 is done; next:
-  step 2 (templates and their validator).
+  and spells, per-player tavern pools, no sending, a Grail per zone, artifact rolls per zone); `TournamentTests`. Step 1 is done. Step 2
+  begun: `MapTemplate.Tournament` (template format v10), the validator's per-player parts (`MapTemplate.Reach`), the generator's
+  tournament (the rules, one hero, each part as its player's start zone) and `MapFairness` keeping the starts apart;
+  `TournamentTemplateTests`. Next: the shipped tournament templates, then the map validator's checks for hand-made maps.
 - Creature prompts as sheets of two (ADR-360): the base and its upgrade side by side, each creature whole in a 2:3 cell, files still
   512 × 512 (the cell centred on a square); every faction's sheets renumbered (Haven H1–H9 … neutral X1–X3); the owner's later
   reviews folded in (Bestiary W1–W5, Academy A1, Conflux ADR-357 to ADR-359, the toad-like kappa ADR-365). New creatures, all

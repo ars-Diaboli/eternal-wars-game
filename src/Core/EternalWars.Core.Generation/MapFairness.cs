@@ -24,7 +24,9 @@ public sealed record FairnessReport(IReadOnlyList<StartMeasure> Starts, IReadOnl
 /// <list type="bullet">
 /// <item><b>Connectivity</b>: every start town can walk to every other start town, and every town, mine and treasure item can be walked to from some
 /// start town. Walking is the game's: 8 ways over passable ground around blocked object cells, through guards (they are fought), pickups, border
-/// guards and garrisons, by gates and portals; any other entrance ends a way.</item>
+/// guards and garrisons, by gates and portals; any other entrance ends a way. A tournament (ADR-366) wants the opposite between the players: neither
+/// start town can walk to the other or to anything in the other's part of the map (<see cref="MapTemplate.Reach"/>), and its starts have no
+/// rival to measure a guarded way to.</item>
 /// <item><b>Fairness</b>: start zones the template makes alike (the same size, towns, mines, piles, treasure and monsters) are compared by
 /// <see cref="StartMeasure.MineDistance"/>, <see cref="StartMeasure.TreasureValue"/> and <see cref="StartMeasure.GuardPower"/>. Each must be within
 /// <see cref="TolerancePercent"/> of the group's average, or within a small slack of it (<see cref="DistanceSlack"/> tiles, <see cref="TreasureSlack"/>
@@ -61,9 +63,14 @@ public static class MapFairness
         {
             for (var j = 0; j < starts.Count; j++)
             {
-                if (i != j && walk.At(distances[i], starts[j].Town.VisitPosition) == Unreached)
+                var reached = i != j && walk.At(distances[i], starts[j].Town.VisitPosition) != Unreached;
+                if (i != j && !reached && !template.Tournament)
                 {
                     problems.Add($"The start town of slot {starts[i].Slot} cannot walk to the start town of slot {starts[j].Slot}.");
+                }
+                else if (reached && template.Tournament)
+                {
+                    problems.Add($"The start town of slot {starts[i].Slot} can walk to the start town of slot {starts[j].Slot}: a tournament's players stay apart.");
                 }
             }
         }
@@ -72,6 +79,22 @@ public static class MapFairness
         foreach (var place in starts.Count == 0 ? [] : places.Where(p => distances.All(d => walk.At(d, p.VisitPosition) == Unreached)))
         {
             problems.Add($"The {place.Definition.Name} at {place.VisitPosition} cannot be walked to from any start town.");
+        }
+
+        if (template.Tournament)
+        {
+            var parts = starts.Select(s => template.Reach(template.Zones[s.Zone].Id)).ToList();
+            foreach (var place in places.Where(p => map.Map.Contains(p.VisitPosition)))
+            {
+                var zone = map.Layout.IdAt(place.VisitPosition.X, place.VisitPosition.Y, place.VisitPosition.Level);
+                for (var i = 0; i < starts.Count; i++)
+                {
+                    if (!parts[i].Contains(zone) && walk.At(distances[i], place.VisitPosition) != Unreached)
+                    {
+                        problems.Add($"The {place.Definition.Name} at {place.VisitPosition} in zone {zone} can be walked to from the start town of slot {starts[i].Slot}, whose part of the tournament it is not in.");
+                    }
+                }
+            }
         }
 
         // The measures.
@@ -107,7 +130,9 @@ public static class MapFairness
                 mineDistance += nearest;
             }
 
-            var rivals = starts.Where((s, j) => j != i && !Allies(template, zone, template.Zones[s.Zone])).Select(s => s.Town.VisitPosition).ToList();
+            var rivals = template.Tournament
+                ? []
+                : starts.Where((s, j) => j != i && !Allies(template, zone, template.Zones[s.Zone])).Select(s => s.Town.VisitPosition).ToList();
             var guard = rivals.Count == 0 ? 0 : walk.LeastGuard(starts[i].Town.VisitPosition, rivals);
             measures.Add(new StartMeasure(slot, zone.Id, (int)(mineDistance / 2), (int)Math.Round(treasure[i]), guard));
         }
