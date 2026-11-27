@@ -151,6 +151,7 @@ public class TournamentScreenTests
 
         Assert.Equal($"A tournament allows one hero a player, and Blue has {hero.Name}. Another may be hired only once it has fallen.", refusal);
         Assert.Same(hero, Assert.Single(state.AllHeroesOf(Blue)));
+        Assert.True(state.HeroLimitReached(Blue)); // a map event's hero, a prison and the map taverns ask the same
         session.Execute(new LeaveGarrisonCommand(Blue, town.Id)).ThrowIfRejected(); // coming out keeps it the one hero
         Assert.Same(hero, Assert.Single(state.HeroesOf(Blue)));
     }

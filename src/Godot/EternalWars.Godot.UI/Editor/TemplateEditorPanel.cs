@@ -624,9 +624,9 @@ public partial class TemplateEditorPanel : PanelContainer
         _inspector.AddRow(label, labelWidth: 150).AddChild(option);
     }
 
-    private void Check(string label, bool value, Action<bool> changed)
+    private void Check(string label, bool value, Action<bool> changed, string tooltip = "")
     {
-        var box = new CheckBox { ButtonPressed = value };
+        var box = new CheckBox { ButtonPressed = value, TooltipText = tooltip };
         box.Toggled += on => changed(on);
         _inspector.AddRow(label, labelWidth: 150).AddChild(box);
     }
@@ -698,7 +698,15 @@ public partial class TemplateEditorPanel : PanelContainer
         Spin("Teams from", t.MinTeams ?? 0, 0, 8, v => _session.UpdateTemplate(x => x with { MinTeams = v < 2 ? null : v }), tooltip: "0 = no limit");
         Spin("Teams to", t.MaxTeams ?? 0, 0, 8, v => _session.UpdateTemplate(x => x with { MaxTeams = v < 2 ? null : v }), tooltip: "0 = no limit");
         Check("Teams locked", t.TeamsLocked, v => _session.UpdateTemplate(x => x with { TeamsLocked = v }));
-        Spin("Hero limit", t.MaxHeroes, 1, 8, v => _session.UpdateTemplate(x => x with { MaxHeroes = v }));
+        Check("Tournament", t.Tournament, v =>
+        {
+            _session.UpdateTemplate(x => TemplateEditorSession.WithTournament(x, v)); // two players build up apart, then one battle (ADR-366)
+            _replaced.Request(); // the hero limit row follows
+        }, "Its maps are tournaments: two players, each in its own part of the zone graph, then one battle. The problems list checks the parts.");
+        if (!t.Tournament)
+        {
+            Spin("Hero limit", t.MaxHeroes, 1, 8, v => _session.UpdateTemplate(x => x with { MaxHeroes = v }));
+        }
         Check("Underground", t.Underground, v => _session.UpdateTemplate(x => x with { Underground = v }));
         Choice("Symmetry", Enum.GetValues<TemplateSymmetry>(), t.Symmetry, v => _session.UpdateTemplate(x => x with { Symmetry = v }), icon: SymmetryIcon);
         Choice("Connection guard", Enum.GetValues<ConnectionGuard>(), t.ConnectionGuard, v => _session.UpdateTemplate(x => x with { ConnectionGuard = v }),

@@ -164,8 +164,8 @@ Escape, Ctrl+X, C, V, D, Delete) work on the graph: copied zones take the connec
 Duplicate beside the originals, each zone with a new id (its name's stem and the next free number), a start zone with the lowest free
 player slot (refused when too few are free), a mirror kept only inside the copy. The clipboard stays while another template is opened.
 
-**The inspector** (ADR-273) edits every field of the file. The template: name, description, players, humans, teams, hero limit,
-underground, symmetry, connection guard, sizes, roads (on, type, the mines and gates they reach) and week events (on, the weeks before
+**The inspector** (ADR-273) edits every field of the file. The template: name, description, players, humans, teams, tournament (ADR-366:
+ticked, the hero limit is 1 and its row goes), hero limit, underground, symmetry, connection guard, sizes, roads (on, type, the mines and gates they reach) and week events (on, the weeks before
 the first, the weekly and monthly factions, the playable towns when left alone). A zone: type, slot, team, towns, size, level, monsters,
 mine guards, obstacles, mirror, mines, resource piles, obelisks, three treasure bands, and pickers for its terrains (the passable ones)
 and neutral town types (the playable towns), where none ticked means any; a start zone also its start buildings besides the default

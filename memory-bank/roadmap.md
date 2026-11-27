@@ -425,7 +425,7 @@ battle with no retreat or surrender, and its winner wins. Lengths: 1–14 days, 
         and the taverns' reason; no Thieves' Guild or sending; smoke `game-tournament-setup` (done);
       - the battle without retreat or surrender, the result screen; smoke `game-tournament` (done);
       - the hot-seat hand-over
-- [ ] Step 6: The editor: the Tournament switch, the validator's problems and fix-its, the template inspector's flag
+- [x] Step 6: The editor: the Tournament switch, the validator's problems and fix-its, the template inspector's flag
 - [ ] Step 7: Seen in Godot against the computer, hot-seat and on the LAN; AI runs; the rules moved into victory-and-modes.md
 
 ## Phase 6: Story campaign

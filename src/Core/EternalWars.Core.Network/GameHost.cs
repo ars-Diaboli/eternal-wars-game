@@ -264,7 +264,7 @@ public sealed class GameHost : ICommandRoute, IDisposable
     }
 
     /// <summary>
-    /// "Play again" on an arena map's result screen (ADR-159, ADR-199): the same colours go on in <paramref name="next"/> (a new game of the same
+    /// "Play again" on an arena's or a tournament's result screen (ADR-159, ADR-199, ADR-366): the same colours go on in <paramref name="next"/> (a new game of the same
     /// map, started), each client getting its view as on joining. Refused while the game is not over.
     /// </summary>
     public CommandResult PlayAgain(GameSession next)

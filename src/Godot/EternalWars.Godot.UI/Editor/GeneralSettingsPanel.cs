@@ -9,8 +9,10 @@ namespace EternalWars.Godot.UI.Editor;
 
 /// <summary>
 /// The map settings window's General tab (EDIT-1, ADR-256): the map's name and description, its difficulty (what a game with "Map default"
-/// complexity counts as in the ranking, ADR-101), the hero limit per player (ADR-068) and the arena switch (ADR-097, ARN-2: the map becomes
-/// one battle and its victory and loss conditions count for nothing). Every change is an undoable <see cref="MapEditorSession"/> edit.
+/// complexity counts as in the ranking, ADR-101), the hero limit per player (ADR-068), the arena switch (ADR-097, ARN-2: the map becomes
+/// one battle and its victory and loss conditions count for nothing) and the tournament switch (ADR-366: the two players build up apart,
+/// then one battle decides; it fixes the hero limit at 1 and hides the arena switch, and the Victory and loss tab greys out). Every change is an
+/// undoable <see cref="MapEditorSession"/> edit.
 /// </summary>
 public partial class GeneralSettingsPanel : VBoxContainer
 {
@@ -27,6 +29,13 @@ public partial class GeneralSettingsPanel : VBoxContainer
         Text = "Arena: a day to prepare, then one battle decides the game",
         TooltipText = "Day 1: unlimited movement and building. Day 2 starts with the battle of the two sides' strongest heroes at a combat place; "
                       + "its winner wins the game. The map needs a combat place.",
+    };
+
+    private readonly CheckBox _tournament = new()
+    {
+        Text = "Tournament: two players build up apart, then their heroes fight one battle",
+        TooltipText = "Each player builds up in its own start zone, cut off from the other's, for the length chosen when the game is created; "
+                      + "then the two heroes meet in one battle with no retreat, and its winner wins the game. One hero a player.",
     };
 
     private readonly Label _status = new();
@@ -59,6 +68,8 @@ public partial class GeneralSettingsPanel : VBoxContainer
         AddChild(_maxHeroes);
         _arena.Toggled += on => Change(r => r with { Arena = on });
         AddChild(_arena);
+        _tournament.Toggled += on => Change(r => TournamentRules.Switched(r, on));
+        AddChild(_tournament);
         AddChild(_status);
 
         Refresh();
@@ -82,7 +93,11 @@ public partial class GeneralSettingsPanel : VBoxContainer
         var rules = scenario.Rules;
         _difficulty.Selected = _difficulty.GetItemIndex(rules.Difficulty is { } difficulty ? (int)difficulty : DifficultyNotSet);
         _maxHeroes.SetValueNoSignal(rules.MaxHeroes);
+        _maxHeroes.Editable = !rules.Tournament;
+        _maxHeroes.TooltipText = rules.Tournament ? "A tournament allows one hero a player." : "";
         _arena.SetPressedNoSignal(rules.Arena);
+        _arena.Visible = !rules.Tournament;
+        _tournament.SetPressedNoSignal(rules.Tournament);
     }
 
     private void Change(Func<ScenarioRules, ScenarioRules> change)

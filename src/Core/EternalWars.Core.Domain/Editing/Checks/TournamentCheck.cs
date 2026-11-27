@@ -13,7 +13,8 @@ namespace EternalWars.Core.Domain.Editing.Checks;
 /// A tournament map (ADR-366). Errors for what keeps it from being one (<see cref="TournamentRules.MapProblems"/>, so such a game does not start:
 /// an arena too, not exactly two players, the two allied, or a player allowed other than one hero); for a player without a start zone; and for
 /// the two start zones joined (<see cref="Joined"/>), either way. A warning for each way one zone is much richer than the other
-/// (<see cref="Richer"/>). The start zone and joined errors are the validator's only: a game on such a map still starts.
+/// (<see cref="Richer"/>). The start zone and joined errors are the validator's only: a game on such a map still starts. A missing start zone
+/// has a fix when its ground is clear (<see cref="MissingZone"/>).
 /// </summary>
 internal sealed class TournamentCheck : IMapCheck
 {
@@ -35,7 +36,10 @@ internal sealed class TournamentCheck : IMapCheck
         var zoned = scenario.Players.Where(p => map.StartZoneOwners.Contains(p.Id)).ToList();
         foreach (var player in scenario.Players.Where(p => !map.StartZoneOwners.Contains(p.Id)))
         {
-            yield return new(IssueSeverity.Error, $"{player.Name} has no start zone: each player of a tournament builds up in a zone of its own.");
+            yield return new(IssueSeverity.Error, $"{player.Name} has no start zone: each player of a tournament builds up in a zone of its own.")
+            {
+                Fix = MissingZone(scenario, player.Id) is not null ? new StartZoneFix($"Paint {player.Name}'s start zone over the ground it reaches", player.Id) : null,
+            };
         }
 
         if (scenario.Players.Count != 2 || zoned.Count != 2)
@@ -103,6 +107,71 @@ internal sealed class TournamentCheck : IMapCheck
                 open.Enqueue(position);
             }
         }
+    }
+
+    /// <summary>
+    /// The start zone <paramref name="player"/> lacks, when the answer is clear (the fix of its error): every tile its heroes and its towns'
+    /// entrances reach by walking (passable ground no object blocks, in 8 directions, over tiles in no start zone), and the whole footprint of each
+    /// object whose entrance is among them. Null when the player has a zone already or nothing to start from, or when the ground is not clearly
+    /// its own: another player's hero or town entrance is on it, or a step leads from it into another player's zone.
+    /// </summary>
+    internal static IReadOnlyList<MapPosition>? MissingZone(GameState scenario, PlayerId player)
+    {
+        var map = scenario.Map;
+        if (map.StartZoneOwners.Contains(player))
+        {
+            return null;
+        }
+
+        var starts = scenario.Heroes.Where(h => h.Owner == player).Select(h => h.Position)
+            .Concat(scenario.ObjectsOf<Town>().Where(t => t.Owner == player).Select(t => t.VisitPosition))
+            .ToList();
+        var others = scenario.Heroes.Where(h => h.Owner != player).Select(h => h.Position)
+            .Concat(scenario.ObjectsOf<Town>().Where(t => t.Owner is { } owner && owner != player).Select(t => t.VisitPosition))
+            .ToHashSet();
+        var reached = new HashSet<MapPosition>();
+        var open = new Queue<MapPosition>();
+        foreach (var start in starts.Where(Walkable))
+        {
+            if (reached.Add(start))
+            {
+                open.Enqueue(start);
+            }
+        }
+
+        while (open.TryDequeue(out var position))
+        {
+            if (others.Contains(position))
+            {
+                return null;
+            }
+
+            foreach (var next in DirectionExtensions.All.Select(position.Step).Where(Walkable))
+            {
+                if (map.GetStartZone(next) is not null)
+                {
+                    return null; // the ground runs into another player's zone: whose it is, is not clear
+                }
+
+                if (reached.Add(next))
+                {
+                    open.Enqueue(next);
+                }
+            }
+        }
+
+        if (reached.Count == 0)
+        {
+            return null;
+        }
+
+        var footprints = scenario.Objects.Where(o => o.Definition.Footprint.HasVisit && reached.Contains(o.VisitPosition))
+            .SelectMany(o => o.OccupiedCells().Select(c => c.Position))
+            .Where(p => map.Contains(p) && map.GetStartZone(p) is null);
+        return [.. reached.Concat(footprints).Distinct().OrderBy(p => p.Level).ThenBy(p => p.Y).ThenBy(p => p.X)];
+
+        bool Walkable(MapPosition position) =>
+            map.Contains(position) && scenario.Terrains.IsPassable(map.GetTerrain(position)) && scenario.ObjectCellAt(position) is not { Cell: FootprintCell.Blocked };
     }
 
     /// <summary>

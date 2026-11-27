@@ -92,7 +92,7 @@ public class GarrisonHeroTests
         // TOWN-8: the garrison hero does not count, so another hero may come; then it cannot leave.
         var other = new Hero(new HeroId(9), "Other", Blue, new MapPosition(6, 6), Army.Of(new CreatureStack(BuiltInCreatures.Footman, 1)));
         state.AddHero(other);
-        Assert.Contains("heroes on the map", session.Execute(new LeaveGarrisonCommand(Blue, town.Id)).Error);
+        Assert.Equal("You already have a hero on the map.", session.Execute(new LeaveGarrisonCommand(Blue, town.Id)).Error);
 
         state.RemoveHero(other);
         session.Execute(new LeaveGarrisonCommand(Blue, town.Id)).ThrowIfRejected();

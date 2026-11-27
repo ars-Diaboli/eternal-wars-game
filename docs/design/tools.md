@@ -53,7 +53,8 @@ template's unsaved work, then the map's.
 **Map settings** (EDIT-1, ADR-256): one window over the editor, opened with Map → Map settings or F7 (the Map menu's other entries
 open it at a tab). Its tabs:
 - **General**: the map's name and description ("Apply name and description" sets both), its difficulty (ADR-101), the hero limit per
-  player (ADR-068) and the arena switch (ADR-161);
+  player (ADR-068), the arena switch (ADR-161) and the tournament switch (ADR-366: it fixes the hero limit at 1, turns the arena off and hides
+  its switch, and greys out the Victory and loss tab);
 - **Players**: the player slots (name, human or computer by default, team, own hero limit, the factions it may take; add a slot,
   remove the last), whether the setup screen may change teams, and the team counts it must keep to (ADR-117). The factions are a menu of
   the playable towns to tick, or "Any faction"; the new-game screen offers only the ticked ones (ADR-257);
@@ -431,7 +432,8 @@ while Ctrl is held, and on the Template tab. A shortcut pressed in the middle of
   belongs to a missing player neutral, give a player without a start the one neutral town in its start zone, give a player without a
   town the neutral town nearest its heroes (when no other neutral town and no other such player's hero is as near), give a hero without an army what a hired hero
   brings (its type's starter stack; for a hero of no type, a week of the first creature with a growth of its owner's nearest town on its
-  level, not a random one). The Fix button runs the
+  level, not a random one), paint a tournament player's missing start zone over the ground its heroes and towns reach (when that ground
+  touches no other player's zone and holds no other player's start). The Fix button runs the
   selected problem's fix as one undo step; if the map changed since it was checked, nothing happens and Output says so.
   - **Hero problems**: an owner that does not exist; a hero on impassable ground or inside an object (its own town's entrance
     excepted), without an army, or with known spells and no spell book; unknown hero types, creatures or artifacts.

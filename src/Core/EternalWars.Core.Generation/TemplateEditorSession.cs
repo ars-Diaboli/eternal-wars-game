@@ -756,6 +756,16 @@ public sealed class TemplateEditorSession : IUndoSession
         };
     }
 
+    /// <summary>
+    /// The template with the inspector's "Tournament" flag (ADR-366) set to <paramref name="on"/>: on, its maps are tournaments and the hero limit
+    /// is 1 (a tournament's); off, the hero limit stays as it was. Exactly two players and the zone graph in two parts are the validator's checks.
+    /// </summary>
+    public static MapTemplate WithTournament(MapTemplate template, bool on)
+    {
+        ArgumentNullException.ThrowIfNull(template);
+        return on ? template with { Tournament = true, MaxHeroes = 1 } : template with { Tournament = false };
+    }
+
     private void ChangeSynced(string description, MapTemplate template) => Change(description, SyncPlayers(template));
 
     /// <summary>Puts <paramref name="template"/> in place as the step <paramref name="description"/>, or as part of the open step.</summary>

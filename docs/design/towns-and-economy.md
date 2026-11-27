@@ -122,7 +122,7 @@ ADR-060, ADR-070, ADR-081.
   all its taverns and all week while what it names stays: drawn by the game's seed, the player and the week, like the tavern's offers. A line may name things the game fills
   in: the player with the strongest armies, the most gold or the most towns, or an artifact lying on the map and the part of the land it
   lies in (a third of the map, or the underground); a line naming something the game has not got is not told. In a tournament (ADR-366) the
-  lines name no player and only artifacts in the player's own zone.
+  lines name no player and only artifacts in the player's own reach (its zone and the ground in no zone).
 - **Offers**: a pool per player and town faction, reshuffled weekly (same offers in a player's towns of one faction); never heroes on the
   map. Ranked by the [ring](../content/lore.md): native, adjacent, not opposing, opposing (Stronghold, Swamp Bestiary: native, warriors,
   others); an empty rank falls through:

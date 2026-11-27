@@ -180,6 +180,16 @@ public static class TournamentRules
     }
 
     /// <summary>
+    /// The map's rules with the editor's "Tournament" switch (ADR-366) turned <paramref name="on"/>: on, the map becomes a tournament with the hero
+    /// limit of 1 and no arena; off, it is none, and the hero limit stays as it was.
+    /// </summary>
+    public static ScenarioRules Switched(ScenarioRules rules, bool on)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        return on ? rules with { Tournament = true, MaxHeroes = 1, Arena = false } : rules with { Tournament = false };
+    }
+
+    /// <summary>
     /// What keeps the map of <paramref name="scenario"/> from being a tournament, in order (none when it is one, or is no tournament): an arena
     /// too, not exactly two players, the two allied, or a player allowed other than one hero. The editor's validator lists them as errors.
     /// </summary>

@@ -45,6 +45,18 @@ public sealed record GateExitFix(string Text, MapObjectId Entrance, MapObjectId 
             : EditResult.InvalidTarget;
 }
 
+/// <summary>
+/// Paints a tournament player's missing start zone (ADR-366): the ground its heroes and towns reach, when that answer is clear
+/// (<see cref="Checks.TournamentCheck.MissingZone"/>); refused once the player has a zone, or when the ground is no longer clearly its own.
+/// </summary>
+public sealed record StartZoneFix(string Text, PlayerId Player) : MapFix(Text)
+{
+    internal override EditResult Apply(MapEditorSession session) =>
+        Checks.TournamentCheck.MissingZone(session.Scenario, Player) is { } tiles && session.Terrain.PaintStartZone(tiles, Player) > 0
+            ? EditResult.Ok
+            : EditResult.InvalidTarget;
+}
+
 /// <summary>Gives a hero without an army a starter stack (ADR-279): refused once the hero has an army.</summary>
 public sealed record HeroArmyFix(string Text, HeroId Hero, CreatureStack Stack) : MapFix(Text)
 {

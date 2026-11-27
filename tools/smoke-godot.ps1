@@ -441,6 +441,11 @@ $scenarios = @(
     # tab, both undone with the window's Undo; F7 closes it on the Bans tab and opens it again there.
     @{ Name = 'editor-map-settings'; App = 'EternalWars.MapEditor'; Frames = 60
        Input = '3:key:F7;6:click:@Players;10:click:@Add player;14:click:@Victory and loss;18:click:@Bans;22:click:@Week events;26:click:@General;30:click:@Arena: a day to prepare, then one battle decides the game;34:click:@Undo;38:click:@Undo;41:click:@Bans;44:key:F7;48:key:F7' },
+    # The tournament switch (ADR-366) on a blank map's General tab: the hero limit fixed at 1 and the arena switch hidden; the Victory and loss
+    # tab greyed out; closed, Problems lists the two missing start zones; then the template editor's Tournament ticked: the hero limit row goes,
+    # and the issues say the start zones are joined through the middle zone.
+    @{ Name = 'editor-tournament'; App = 'EternalWars.MapEditor'; Frames = 54
+       Input = '3:key:F7;6:click:@General;10:click:@Tournament: two players build up apart, then their heroes fight one battle;14:click:@Victory and loss;18:click:@General;22:key:F7;26:click:@Problems;34:click:@Template;40:click:1141,471' },
     # The map's content (EDIT-12, ADR-257) on a blank map: the map settings window's Rumours tab, a rumour typed and applied; the Players tab
     # with its Factions column ("Any faction"); Escape closes the window. Then a treasure chest placed, selected and named "Hoard" in the
     # inspector's Name field.

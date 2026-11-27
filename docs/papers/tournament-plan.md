@@ -287,11 +287,21 @@ tournaments before any screen exists.
 - **Smoke scenario `game-tournament`** (done): a one-day tournament against the computer, from the Tournaments tab to the battle on day 2,
   quick combat, the result screen and "Play again".
 
-### 6. The map editor
-- The "Tournament" switch on the map settings window's General tab: it greys out the victory and loss tab, sets the hero limit to 1 and
-  hides the arena switch.
-- The validator's checks from step 2 shown in Problems, with fix-its where one exists (painting the missing start zone).
-- The template editor's `tournament` flag in the template inspector, with the per-player connectivity check.
+### 6. The map editor (done)
+- **The "Tournament" switch** on the map settings window's General tab (`TournamentRules.Switched`):
+  - Turned on, it sets the hero limit to 1 and greys it out, turns the arena off and hides its switch, and the Victory and loss tab
+    greys out. Turned off, the hero limit stays at 1 until changed.
+  - It is refused, as any hero limit is, while a player has more than one hero on the map.
+- **Problems** lists step 2's checks. A player without a start zone has a fix, "Paint Red's start zone over the ground it reaches"
+  (`StartZoneFix`, `TournamentCheck.MissingZone`):
+  - It paints the tiles the player's heroes and town entrances walk to, over ground in no zone, and the footprint of each object whose
+    entrance is among them.
+  - There is no fix when that ground is not clearly the player's: another player's hero or town is on it, or a step leads from it into
+    another player's zone.
+- **The template inspector's "Tournament" row** (`TemplateEditorSession.WithTournament`): ticked, the hero limit becomes 1 and its row goes.
+  The issues list shows the per-player checks: two players, no allies, the two parts kept apart.
+- **Checks:** `TournamentEditorTests`, and the smoke `editor-tournament` (the switch, the greyed Victory and loss tab, Problems' missing
+  start zones, the template's Tournament row and its joined-zones error).
 
 ### 7. Check
 - **Seen in Godot:**
