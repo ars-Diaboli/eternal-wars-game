@@ -135,6 +135,63 @@ public class TournamentScreenTests
         Assert.Equal(refusal, TavernRules.CheckHire(state, town, TavernRules.Offers(state, Blue, town)[0].Id));
     }
 
+    [Fact]
+    public void AHeroInTheGarrison_IsStillTheOneHero_SoTheTavernRefusesASecond()
+    {
+        var state = Tournament();
+        var town = AddTown(state, TownIds.Haven, 0, 0, Blue); // entrance (3, 6)
+        town.SetLevel(BuiltInBuildings.Tavern, 1);
+        state.GetPlayer(Blue).Resources = new ResourceSet(Gold: 20_000);
+        var hero = state.GetHero(A);
+        hero.Position = new MapPosition(3, 6);
+        var session = Start(state);
+        session.Execute(new EnterGarrisonCommand(Blue, town.Id)).ThrowIfRejected();
+
+        var refusal = session.Execute(new HireHeroCommand(Blue, town.Id, TavernRules.Offers(state, Blue, town)[0].Id)).Error;
+
+        Assert.Equal($"A tournament allows one hero a player, and Blue has {hero.Name}. Another may be hired only once it has fallen.", refusal);
+        Assert.Same(hero, Assert.Single(state.AllHeroesOf(Blue)));
+        session.Execute(new LeaveGarrisonCommand(Blue, town.Id)).ThrowIfRejected(); // coming out keeps it the one hero
+        Assert.Same(hero, Assert.Single(state.HeroesOf(Blue)));
+    }
+
+    [Fact]
+    public void AMapTavern_RefusesASecondHero_SayingATournamentAllowsOne()
+    {
+        var state = Tournament();
+        var tavern = Add<MapTavern>(state, BuiltInMapObjects.MapTavern, 0, 6); // entrance (1, 7)
+        state.GetPlayer(Blue).Resources = new ResourceSet(Gold: 20_000);
+        var session = Start(state);
+        session.Step(A, Direction.NorthEast);
+
+        var refusal = session.Execute(new HireAtMapTavernCommand(Blue, tavern.Id, MapTavernRules.Offers(state, tavern)[0].Id)).Error;
+
+        Assert.Equal(TavernRules.LimitRefusal(state, Blue), refusal);
+        Assert.StartsWith("A tournament allows one hero a player", refusal, StringComparison.Ordinal);
+        Assert.Single(state.HeroesOf(Blue));
+    }
+
+    [Fact]
+    public void TheRumours_TellNothingOfTheOtherPlayer_InATournament()
+    {
+        var state = Tournament();
+        AddTown(state, TownIds.Haven, 0, 0, Blue);
+        var redTreasure = Add<ArtifactPickup>(state, BuiltInMapObjects.ArtifactId(Core.Domain.Artifacts.ArtifactTier.Minor), 8, 2);
+        var artifact = state.Artifacts.All.OrderBy(a => a.Id).First();
+        redTreasure.Artifact = artifact.Id;
+        Start(state);
+        string[] treasure = ["The {treasure} lies in the {where}."];
+
+        Assert.Null(Rumours.OfWeek(state, Blue, ["{mosttowns} is strong."])); // no ranks
+        Assert.Null(Rumours.OfWeek(state, Blue, treasure)); // Red's zone is out of Blue's reach
+        Assert.Equal($"The {artifact.Name} lies in the north-east.", Rumours.OfWeek(state, Red, treasure));
+
+        var ordinary = Tournament(tournament: false);
+        AddTown(ordinary, TownIds.Haven, 0, 0, Blue);
+        Start(ordinary);
+        Assert.Equal("Blue is strong.", Rumours.OfWeek(ordinary, Blue, ["{mosttowns} is strong."]));
+    }
+
     [Theory]
     [InlineData(1, "Blue may have only one hero on this map.")]
     [InlineData(2, "Blue may have at most 2 heroes on this map.")]

@@ -271,15 +271,21 @@ tournaments before any screen exists.
   - **The hero card** shows "Hero 1/1", and its hover text says why (`HeroCard.Limit`). A town's tavern, a map tavern and a prison
     refuse a second hero with the tournament's reason (`TavernRules.LimitRefusal`).
   - **No trading or other-player panels:** the town's "Send to an ally" is never shown. The Thieves' Guild and the Den of Thieves say only
-    that the thieves have nothing to tell (`ThievesGuild.Closed`), and the tavern's guild button is greyed out with that reason.
+    that the thieves have nothing to tell (`ThievesGuild.Closed`), and the tavern's guild button is greyed out with that reason. The
+    taverns' rumours name no ranks and only treasures in the player's own reach.
+  - **The one hero** counts a garrison's too: a hero in a town's garrison still stops a second being hired.
   - **Checks:** `TournamentScreenTests`, and the smoke `game-tournament-setup` (the Tournaments tab, the stepper, a one-day tournament
     started on the last day's notice).
 - **Hot-seat:** the hand-over screen between turns, so one person does not see the other's zone.
-- **Battle:**
-  - The final battle opens by itself, both armies shown.
-  - The retreat and surrender buttons greyed out, with "No retreat in the tournament's battle" on the status bar.
-- **Result screen:** the arena's, with the tournament's wording.
-- **Smoke scenario `game-tournament`:** a short tournament against the computer played to the battle and the result.
+- **Battle** (done):
+  - The final battle opens by itself at the start of the battle's day, both armies shown on the neutral battlefield.
+  - The retreat and surrender buttons are greyed out. Their hover text on the status bar, and the first round's prompt, say "No retreat or
+    surrender in the tournament's battle." (`SurrenderRules.TournamentRefusal`).
+- **Result screen** (done): the arena's, with the tournament's wording: the winner of the tournament battle, who won the coin toss and
+  attacked whom, the day "after 14 days (2 weeks) of building up", "Tournaments are not ranked.", "Save replay" and "Play again" (the same
+  map and length with a new seed; on the LAN the host's).
+- **Smoke scenario `game-tournament`** (done): a one-day tournament against the computer, from the Tournaments tab to the battle on day 2,
+  quick combat, the result screen and "Play again".
 
 ### 6. The map editor
 - The "Tournament" switch on the map settings window's General tab: it greys out the victory and loss tab, sets the hero limit to 1 and

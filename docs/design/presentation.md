@@ -224,7 +224,8 @@ rim take its player's colour, neutrals bone grey. No mirror: the attacker stays 
 - **Action grid**: bottom right, 4 × 2 square icon buttons: Wait (W), Defend (D), Quick combat (Q), Combat settings; Retreat (R),
   Surrender, Spell book (C), Menu (F10). A creature caster's own spell adds a fifth column while it acts (its spell's icon, else the cast
   icon). No labels: the name, key and, when greyed, the reason go to the status bar on hover; Surrender has no key and shows its price
-  there. Quick combat is off between two computers (ADR-195).
+  there. Quick combat is off between two computers (ADR-195). In a tournament's battle Retreat and Surrender are greyed out, and the first
+  round's prompt says so (ADR-366).
 - **Spell book** (C): a window over the battle with the hero's battle spells by school, rank and cost, and the warcries it knows as a
   category of their own (ADR-067), each greyed with its reason (cast this round, not enough mana). A spell aimed at a side or the whole
   field is cast at once; any other is armed: the status bar asks for its target ("Teleport: click the stack, then where it goes (Esc

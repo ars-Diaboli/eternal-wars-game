@@ -648,8 +648,9 @@ public partial class Main : Node3D
     }
 
     /// <summary>
-    /// "Play again" on an arena map's result screen (ADR-159): the game's start map with the same players, teams, factions and options, and a new
-    /// seed, so the luck of the rematch is its own. A LAN host's rematch keeps its players: each client gets the new game (ADR-199).
+    /// "Play again" on an arena's or a tournament's result screen (ADR-159, ADR-366): the game's start map with the same players, teams, factions and
+    /// options (a tournament's length too), and a new seed, so the luck of the rematch is its own. A LAN host's rematch keeps its players: each
+    /// client gets the new game (ADR-199).
     /// </summary>
     private void PlayAgain()
     {

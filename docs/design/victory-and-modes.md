@@ -83,7 +83,8 @@ In priority order:
     everyone, and so is a side without a hero (or no enemy to fight). A side without an army loses without a battle. Never ranked.
   - **In the game** (ADR-159): an arena map on the new-game screen says what the mode is, and each player is set to Human or Computer
     (hot-seat, or against the computer; at least one human). Day 2's battle opens by itself, both armies shown in full, and the status line
-    names the two champions. The result screen tells who attacked whom, that arena maps are not ranked, and offers **"Play again"** (the
+    names the two champions. The result screen tells who attacked whom, that arena maps are not ranked (a tournament's says the same of
+    tournaments, and how long the building up lasted, ADR-366), and offers **"Play again"** (the
     same map, players, teams, factions and options, a new seed) and "Save replay".
   - **The computer on day 1** (ADR-160) spends everything on the battle's army: its towns buy what waits, then build the dwellings (with
     the buildings they need) whose first creatures they can still buy, and the dwelling upgrades worth it, best army per gold first, then

@@ -22,7 +22,8 @@ public static class SurrenderRules
 
     public const string LockedRefusal = "Nobody may leave this battle.";
 
-    public const string TournamentRefusal = "There is no retreat or surrender in the tournament battle.";
+    /// <summary>Why nobody leaves a tournament's battle: the greyed buttons' hover text, and the battle's first prompt (ADR-366).</summary>
+    public const string TournamentRefusal = "No retreat or surrender in the tournament's battle.";
 
     /// <summary>Why the side cannot retreat now, or null when it can.</summary>
     public static string? CheckRetreat(BattleState battle, BattleSide side) =>

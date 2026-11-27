@@ -114,13 +114,15 @@ ADR-054, ADR-073, ADR-075, ADR-079.
 ADR-060, ADR-070, ADR-081.
 - A hero costs **2500 gold** and appears on the town's entrance (must be free). A tavern offers **2**, the Brotherhood (level 2) **4**.
 - **Hero limit** (ADR-068, ADR-072): at most **8 heroes** a player, or the map's lower limit (1–8, also per player on campaign-like maps).
-  Only heroes on the map count: not prisoners, garrison heroes, or heroes waiting in a tavern.
+  Only heroes on the map count: not prisoners, garrison heroes, or heroes waiting in a tavern. In a tournament (one hero, ADR-366) a garrison
+  hero counts too.
 - **Rumours** (ADR-257): a map may have rumours (one line each); every tavern (a town's and the map's) tells one a week, the map's first in the first week,
   in order, starting over after the last. They are the same for every player and draw nothing.
 - On a map without its own rumours, a player's taverns tell one from the **rumour table** (`src/Core/data/rumours.csv`, ADR-296), the same in
   all its taverns and all week while what it names stays: drawn by the game's seed, the player and the week, like the tavern's offers. A line may name things the game fills
   in: the player with the strongest armies, the most gold or the most towns, or an artifact lying on the map and the part of the land it
-  lies in (a third of the map, or the underground); a line naming something the game has not got is not told.
+  lies in (a third of the map, or the underground); a line naming something the game has not got is not told. In a tournament (ADR-366) the
+  lines name no player and only artifacts in the player's own zone.
 - **Offers**: a pool per player and town faction, reshuffled weekly (same offers in a player's towns of one faction); never heroes on the
   map. Ranked by the [ring](../content/lore.md): native, adjacent, not opposing, opposing (Stronghold, Swamp Bestiary: native, warriors,
   others); an empty rank falls through:

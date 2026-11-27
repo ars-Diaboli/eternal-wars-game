@@ -398,8 +398,11 @@ public sealed class GameState
     /// <summary>How many heroes the player may have: its own limit, else the map's (<see cref="ScenarioRules.MaxHeroes"/>, ADR-068).</summary>
     public int HeroLimit(PlayerId owner) => GetPlayer(owner).MaxHeroes ?? Rules.MaxHeroes;
 
-    /// <summary>Whether the player already has as many heroes as it may (<see cref="HeroLimit"/>).</summary>
-    public bool HeroLimitReached(PlayerId owner) => HeroesOf(owner).Count() >= HeroLimit(owner);
+    /// <summary>
+    /// Whether the player already has as many heroes as it may (<see cref="HeroLimit"/>): those on the map (a garrison hero does not count,
+    /// ADR-112); in a tournament every hero, a garrison's too, as it may have only one (ADR-366).
+    /// </summary>
+    public bool HeroLimitReached(PlayerId owner) => (Rules.Tournament ? AllHeroesOf(owner) : HeroesOf(owner)).Count() >= HeroLimit(owner);
 
     /// <summary>Scenario setting (map loading, editor): a player's own hero limit, 1 to 8, or null for the map's (ADR-068).</summary>
     public void SetHeroLimit(PlayerId owner, int? limit)

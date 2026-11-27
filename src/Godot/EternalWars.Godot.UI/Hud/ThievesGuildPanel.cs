@@ -69,7 +69,6 @@ public partial class ThievesGuildPanel : PanelContainer
             return;
         }
 
-
         var players = state.Players.Where(p => !p.IsDefeated).OrderBy(p => p.Id.Value).ToList();
         _table.Columns = players.Count + 1;
         _table.AddChild(new Label { Text = "" });

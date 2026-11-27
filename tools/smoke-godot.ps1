@@ -252,6 +252,11 @@ $scenarios = @(
     # time down to 1 day, Start: the last day's notice, "Last day before the battle" by the date and "Hero 1/1" on the hero card.
     @{ Name = 'game-tournament-setup'; App = 'EternalWars.Game'; Frames = 90; Seed = 1
        Input = ((@('6:press:Tournaments', '10:click:@Twin Vales Small', '14:press:Longer') + (0..13 | ForEach-Object { "$(18 + 2 * $_):press:Shorter" }) + @('50:click:@Start')) -join ';') },
+    # A one-day tournament against the computer (ADR-366) played to the end: Blue ends its only building day, the battle opens by itself on
+    # day 2 (retreat and surrender greyed out, the first prompt saying why), quick combat, the battle's result, the result screen (the
+    # tournament's length, not ranked), then "Play again".
+    @{ Name = 'game-tournament'; App = 'EternalWars.Game'; Frames = 230; Seed = 1
+       Input = ((@('6:press:Tournaments', '10:click:@Twin Vales Small') + (0..12 | ForEach-Object { "$(14 + 2 * $_):press:Shorter" }) + @('44:click:@Start', '100:press:End turn', '104:key:Enter', '150:key:Q', '185:key:Enter', '215:press:Play again')) -join ';') },
     # The main menu (ADR-101, ADR-163) over its picture: Leaderboard opens, Escape returns; "Watch a replay" (ADR-164) opens the Replays and
     # Saves tabs, Saves, Escape back to the main menu; New game, Enter on Start. Pressed by name: Continue has the focus when there is a
     # save, New game when not. The only game scenario without --new-game.

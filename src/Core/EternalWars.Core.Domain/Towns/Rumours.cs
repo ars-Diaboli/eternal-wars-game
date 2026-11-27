@@ -8,7 +8,8 @@ namespace EternalWars.Core.Domain.Towns;
 /// <summary>
 /// The rumour table (<c>src/Core/data/rumours.csv</c>, TOWN-17 h, ADR-296): <c>id, text, notes</c>. A text may name things the game fills in:
 /// <c>{strongest}</c> (the player with the strongest armies), <c>{richest}</c> (the most gold), <c>{mosttowns}</c> and <c>{towns}</c> (the player with
-/// the most towns and how many), <c>{treasure}</c> and <c>{where}</c> (an artifact lying on the map and the part of the land it lies in).
+/// the most towns and how many), <c>{treasure}</c> and <c>{where}</c> (an artifact lying on the map and the part of the land it lies in). In a
+/// tournament (ADR-366) the rumours tell nothing of the other player: no ranks, and only treasures in the player's own reach.
 /// </summary>
 public static partial class Rumours
 {
@@ -45,7 +46,10 @@ public static partial class Rumours
         ArgumentNullException.ThrowIfNull(state);
         var week = (ulong)state.Date.AbsoluteWeek;
         var random = new GameRandom((state.Options.Seed * 0xD1B54A32D192ED03UL) ^ ((ulong)(player.Value + 1) * 0x9E3779B97F4A7C15UL) ^ (week * 0xBF58476D1CE4E5B9UL));
-        var treasures = state.ObjectsOf<ArtifactPickup>().Where(a => a.Artifact is not null).OrderBy(a => a.Id.Value).ToList();
+        var treasures = state.ObjectsOf<ArtifactPickup>()
+            .Where(a => a.Artifact is not null && TournamentRules.Reaches(state, player, a.Position))
+            .OrderBy(a => a.Id.Value)
+            .ToList();
         var treasure = treasures.Count == 0 ? null : treasures[random.Next(treasures.Count)];
         var values = Values(state, treasure);
         var fit = (table ?? Default).Select(t => Fill(t, values)).OfType<string>().ToList();
@@ -57,7 +61,7 @@ public static partial class Rumours
         var values = new Dictionary<string, string>(StringComparer.Ordinal);
         string Best(ThievesGuildRow row, out long value)
         {
-            var best = ThievesGuild.Rank(state, row).FirstOrDefault();
+            var best = ThievesGuild.Closed(state) is null ? ThievesGuild.Rank(state, row).FirstOrDefault() : null; // a tournament ranks nobody
             value = best?.Value ?? 0;
             return best is null || best.Value <= 0 ? "" : state.GetPlayer(best.Player).Name;
         }

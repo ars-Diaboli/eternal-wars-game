@@ -112,6 +112,7 @@ HoMM4-style (ADR-042): **at most 5** special rules per creature, every rule coun
 
 ## Leaving a battle
 - **Retreat**: the army is lost and the hero leaves the map; it waits in its player's taverns ([tavern](towns-and-economy.md#tavern)).
+  Nobody retreats or surrenders in a tournament's battle (ADR-366).
 - **Surrender** (CMB-1, ADR-081): pay **half the gold cost of the surviving creatures** (rounded up, to the enemy player) and leave with the
   army. Not against neutrals. The winner gets no hero bonus and no loot.
 - **Necromancy** after a victory, before any level-up: [magic.md](magic.md); not when the enemy retreated or surrendered.

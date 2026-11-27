@@ -670,7 +670,7 @@ public partial class BattleHud : Control
             : ArmedSpell is { } armed && _session.State.Spells.TryGet(armed, out var spell)
                 ? $"{spell.Name}: click {(SecondAim(battle) ? "its second aim" : "a target")} (Esc cancels)."
             : commander is not null && battle.ActiveUnit is { } acting
-                ? $"{_session.State.GetPlayer(commander.Value).Name}: {acting.Creature.Name} to act. Click to move, attack or shoot."
+                ? $"{_session.State.GetPlayer(commander.Value).Name}: {acting.Creature.Name} to act. Click to move, attack or shoot.{LeavingNote(battle)}"
             : _view.WaitingFor is { } other
                 ? $"{_session.State.GetPlayer(other).Name} plays on another computer: waiting for their move."
                 : string.Empty);
@@ -731,6 +731,9 @@ public partial class BattleHud : Control
         ShowLog();
         ShowUnit(null);
     }
+
+    /// <summary>A tournament's battle (ADR-366) says in its first round why retreat and surrender are greyed out.</summary>
+    private static string LeavingNote(BattleState battle) => battle.NoLeaving && battle.Round <= 1 ? $" {SurrenderRules.TournamentRefusal}" : string.Empty;
 
     private static void Enable(Button button, string? refusal, string tooltip)
     {

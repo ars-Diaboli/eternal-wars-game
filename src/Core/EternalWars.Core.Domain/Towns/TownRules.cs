@@ -326,7 +326,8 @@ public static class TownRules
             return $"{hero.Name} has no troops to lead out.";
         }
 
-        return state.HeroLimitReached(hero.Owner) ? $"You already have {state.HeroLimit(hero.Owner)} heroes on the map." : null;
+        // Coming out adds a hero to the map, not to the player: only the map's heroes count.
+        return state.HeroesOf(hero.Owner).Count() >= state.HeroLimit(hero.Owner) ? $"You already have {state.HeroLimit(hero.Owner)} heroes on the map." : null;
     }
 
     /// <summary>

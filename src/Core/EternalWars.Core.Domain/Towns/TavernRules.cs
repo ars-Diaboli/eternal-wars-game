@@ -173,7 +173,7 @@ public static class TavernRules
         var limit = state.HeroLimit(owner);
         if (state.Rules.Tournament)
         {
-            var hero = state.HeroesOf(owner).FirstOrDefault()?.Name ?? "a hero";
+            var hero = state.AllHeroesOf(owner).FirstOrDefault()?.Name ?? "a hero";
             return $"A tournament allows one hero a player, and {name} has {hero}. Another may be hired only once it has fallen.";
         }
 

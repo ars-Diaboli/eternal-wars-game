@@ -11,7 +11,8 @@ namespace EternalWars.Godot.UI.Hud;
 /// what is left is to look at the map or go back to the main menu.
 /// A won game on a map that is not campaign-like also shows each human winner's score and rank title (ADR-101, <see cref="ScoreRules"/>): the
 /// winners type their names, and "Enter the ranking" (or leaving the panel) puts the game into the ranking table, which is then shown with the
-/// new rows highlighted. Every end screen offers "Save replay"; an arena map's also says who fought and offers "Play again" (ADR-159).
+/// new rows highlighted. Every end screen offers "Save replay"; an arena's or a tournament's also says who fought and offers "Play again"
+/// (ADR-159, ADR-366); a tournament's names its length.
 /// </summary>
 public partial class GameResultPanel : CenterContainer
 {
@@ -34,7 +35,7 @@ public partial class GameResultPanel : CenterContainer
     /// <summary>The player asked to go back to the main menu (the game is entered into the ranking first).</summary>
     public event Action? MainMenuRequested;
 
-    /// <summary>"Play again" on an arena map's result screen (ADR-159): the same map with the same players, from the start.</summary>
+    /// <summary>"Play again" on an arena's or a tournament's result screen (ADR-159, ADR-366): the same map with the same players, from the start.</summary>
     public event Action? PlayAgainRequested;
 
     /// <summary>A won campaign map's "Next map" (or "Finish the campaign" after the last one, ADR-241).</summary>
@@ -46,7 +47,7 @@ public partial class GameResultPanel : CenterContainer
     /// <summary>The game is a campaign's map (ADR-241): what its result screen offers; null for a single game.</summary>
     public CampaignResult? Campaign { get; set; }
 
-    /// <summary>Whether this computer may start the arena again: not a LAN client, whose host does (ADR-199).</summary>
+    /// <summary>Whether this computer may start the arena or the tournament again: not a LAN client, whose host does (ADR-199).</summary>
     public bool CanPlayAgain { get; set; } = true;
 
     /// <summary>Whether a colour is played on this computer: in a LAN game the headline is its own players' victory or defeat (ADR-199).</summary>
@@ -155,9 +156,9 @@ public partial class GameResultPanel : CenterContainer
     public void ShowOutcome(GameState state, GameOutcome outcome)
     {
         var lines = new List<string> { outcome.Reason };
-        if (state.DecidingBattle?.Summary is { } arena)
+        if (state.DecidingBattle?.Summary is { } battle)
         {
-            lines.Add(arena);
+            lines.Add(battle);
         }
 
         if (outcome.HasWinner)
@@ -165,11 +166,14 @@ public partial class GameResultPanel : CenterContainer
             lines.Add($"Winners: {string.Join(", ", outcome.Winners.Select(w => state.GetPlayer(w).Name))}");
         }
 
-        lines.Add($"Day {outcome.Date.AbsoluteDay} ({outcome.Date})");
+        lines.Add(state.Rules.Tournament
+            ? $"Day {outcome.Date.AbsoluteDay} ({outcome.Date}), after {TournamentRules.LengthText(TournamentRules.Days(state.Options))} of building up"
+            : $"Day {outcome.Date.AbsoluteDay} ({outcome.Date})");
         var scores = ScoreRules.Scores(state);
-        if (state.Rules.Arena)
+        if (DecidingBattles.Decides(state.Rules))
         {
-            lines.Add(CanPlayAgain ? "Arena maps are not ranked." : "Arena maps are not ranked. The host may start the game again.");
+            var unranked = state.Rules.Tournament ? "Tournaments are not ranked." : "Arena maps are not ranked.";
+            lines.Add(CanPlayAgain ? unranked : $"{unranked} The host may start the game again.");
         }
         else if (Campaign is { } campaign)
         {
@@ -180,7 +184,7 @@ public partial class GameResultPanel : CenterContainer
             lines.Add("This map is not ranked.");
         }
 
-        _playAgain.Visible = state.Rules.Arena && CanPlayAgain;
+        _playAgain.Visible = DecidingBattles.Decides(state.Rules) && CanPlayAgain;
         _campaignOn.Visible = Campaign is { Won: true };
         _campaignOn.Text = Campaign is { Next: null } ? "Finish the campaign" : "Next map";
         _campaignRetry.Visible = Campaign is { Won: false };

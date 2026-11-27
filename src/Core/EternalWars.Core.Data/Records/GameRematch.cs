@@ -4,8 +4,8 @@ using EternalWars.Core.Domain.Game;
 namespace EternalWars.Core.Data.Records;
 
 /// <summary>
-/// "Play again" on an arena map's result screen (ADR-159, ADR-199, ADR-231): the game's start map with the same players, teams, factions and
-/// options, and a new seed, so the luck of the rematch is its own.
+/// "Play again" on an arena's or a tournament's result screen (ADR-159, ADR-199, ADR-231, ADR-366): the game's start map with the same players,
+/// teams, factions and options (a tournament's length too), and a new seed, so the luck of the rematch is its own.
 /// </summary>
 public static class GameRematch
 {

@@ -47,8 +47,9 @@ Detail: [roadmap.md](roadmap.md).
   `sim game --length` prints the champions' armies at the battle; `TournamentAiTests`. Step 5 in part: the new-game screen's
   Tournaments tab (the length stepper, `TournamentRules.Step` / `LengthText`) and the adventure HUD (the calendar's
   `TournamentRules.Countdown`, the last day's notice, `HeroCard.Limit`, `TavernRules.LimitRefusal`, `ThievesGuild.Closed`);
-  `TournamentScreenTests`, smoke `game-tournament-setup`. Next: the rest of step 5 (hot-seat hand-over, the battle's greyed buttons,
-  the result screen, smoke `game-tournament`).
+  `TournamentScreenTests`, smoke `game-tournament-setup`; the battle's greyed Retreat and Surrender (`SurrenderRules.TournamentRefusal`
+  in the first prompt), the result screen's wording and "Play again", smoke `game-tournament`; a garrison hero counts towards the one
+  hero, and rumours tell nothing of the other player. Next: the rest of step 5 (the hot-seat hand-over).
 - Creature prompts as sheets of two (ADR-360): the base and its upgrade side by side, each creature whole in a 2:3 cell, files still
   512 × 512 (the cell centred on a square); every faction's sheets renumbered (Haven H1–H9 … neutral X1–X3); the owner's later
   reviews folded in (Bestiary W1–W5, Academy A1, Conflux ADR-357 to ADR-359, the toad-like kappa ADR-365). New creatures, all
