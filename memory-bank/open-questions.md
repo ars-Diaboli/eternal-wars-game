@@ -7,7 +7,7 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-11-25**: HUD-1 and HUD-2 answered (ADR-317).
+**Updated 2026-11-27**: TRN-1 to TRN-9 (the tournament mode) answered (ADR-366).
 
 ## 🚧 Blocking now
 
@@ -81,5 +81,7 @@ One line per question; the ADR holds the detail.
 - **Editor overhaul**: EDIT-1 … EDIT-12 (the plan's proposals) ADR-250.
 - **Town screen overhaul**: TOWN-15 (plots, the Capitol's dwellings) ADR-291; TOWN-14, TOWN-16 … TOWN-23 ADR-292.
 - **Arena**: ARN-1 and ARN-2 (before 1.0, with LAN, three shipped maps) ADR-100.
+- **Tournament**: TRN-1 … TRN-9 (maps, lengths, the battle, draws, a lost hero, what players know, battles at the same time on every
+  simultaneous day, shared content, score) ADR-366.
 - **Assumptions** of ADR-070 … ADR-072: confirmed in ADR-073; of ADR-073: confirmed in ADR-075.
 ~~~~

@@ -395,6 +395,25 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 
 **Exit**: two players on two computers play a random map from the lobby to the end, save it and load it again.
 
+## Tournament mode (ADR-366; [plan](../docs/papers/tournament-plan.md#plan), TRN-1 … TRN-9 answered)
+Two players build up apart, each in a cut-off zone against the neutrals, for a length chosen at the start; then their heroes fight one
+battle with no retreat or surrender, and its winner wins. Lengths: 1–14 days, then whole weeks up to 12. It is played against the computer, hot-seat and over the LAN (every day at once).
+- [x] Step 0: the owner's answers to TRN-1 … TRN-9 recorded in ADR-366 (2026-11-27)
+- [ ] Step 1: Core rules:
+      - the switch, the length option (1–14 days, 3–12 weeks) and the format bump;
+      - the battle on day N + 1, shared with the arena's, with no retreat or surrender, on neutral ground;
+      - isolation: sight and spells clipped to the zone, per-player taverns, the Grail and artifact rolls per zone, no trading;
+      - the endings.
+- [ ] Step 2: Tournament templates and their validator (two players, each zone connected inside, none between them); two or three
+      mirrored templates; the map validator's checks for hand-made maps
+- [ ] Step 3: Every tournament day at once on the LAN; per-player battle and question slots on every simultaneous day (any LAN game's
+      first week and an arena's day 1 too, TRN-7); a LAN week replayed exactly
+- [ ] Step 4: The computer: its zone played for the deadline, its hero kept alive, the last day spent on the battle's army; `sim game --runs`
+- [ ] Step 5: The game app: the Tournaments tab and the length row, the calendar's countdown, the hot-seat hand-over, the battle without
+      retreat or surrender, the result screen; smoke `game-tournament`
+- [ ] Step 6: The editor: the Tournament switch, the validator's problems and fix-its, the template inspector's flag
+- [ ] Step 7: Seen in Godot against the computer, hot-seat and on the LAN; AI runs; the rules moved into victory-and-modes.md
+
 ## Phase 6: Story campaign
 - [ ] Prologue / tutorial: one small map, Haven against neutrals and a Necropolis vanguard, hints through the map events, a "Hints" setting; playable from the main menu as "Prologue" (ADR-116, ADR-118)
 - [x] Scenario chaining and hero carry-over (ADR-241): campaigns of maps won one after another, carried heroes and campaign variables, campaign

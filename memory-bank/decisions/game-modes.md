@@ -1,6 +1,6 @@
 # Decisions: Game flow and modes
 
-**Covers**: Victory and defeat, saves, the turn timer, score, ranking and difficulty, replays and the viewer, the main menu and new-game screen, the arena.
+**Covers**: Victory and defeat, saves, the turn timer, score, ranking and difficulty, replays and the viewer, the main menu and new-game screen, the arena, the tournament.
 
 **Current rules**: [docs/design/victory-and-modes.md](../../docs/design/victory-and-modes.md). The design and technical docs state the rules as they are now; the ADRs below are the reasons and the history. A later ADR can change an earlier one: check the status and the [index](README.md) before relying on one.
 
@@ -29,6 +29,7 @@
 | [233](#adr-233-the-replay-viewer-takes-over-a-battle-played-in-one-command-the-computers-from-its-start-quick-combat-from-just-before-it-adr-164-adr-185-2026-11-19) | The replay viewer takes over a battle played in one command: the computer's from its start, quick combat from just before it (ADR-164, ADR-185, 2026-11-19) | implemented |
 | [234](#adr-234-replays-measured-the-viewers-forward-jumps-play-on-unheard-instead-of-a-state-snapshot-adr-058-adr-164-2026-11-19) | Replays measured; the viewer's forward jumps play on unheard instead of a state snapshot (ADR-058, ADR-164, 2026-11-19) | implemented |
 | [241](#adr-241-campaigns-maps-played-one-after-another-heroes-and-campaign-variables-carried-the-sample-campaign-border-watch-flow-1-adr-131-adr-126-2026-11-19) | Campaigns: maps played one after another, heroes and campaign variables carried, the sample campaign Border Watch (FLOW-1, ADR-131, ADR-126, 2026-11-19) | implemented |
+| [366](#adr-366-tournament-mode-two-players-build-up-apart-then-one-battle-decides-owner-adr-097-adr-158-adr-197-2026-11-27) | Tournament mode: two players build up apart, then one battle decides (owner, ADR-097, ADR-158, ADR-197, 2026-11-27) | accepted |
 
 
 ### ADR-057: Victory and defeat
@@ -645,3 +646,44 @@ the agent's and stand unless the owner changes them.
   shows the intro before each map, the outro after it and the days each map took at the end; the result screen offers "Next map", "Finish the
   campaign" or "Try again" (`GameResultPanel.Campaign`). Smoke scenario `game-campaign`.
 - **Not done**: a campaign editor, cutscenes, per-map starting bonuses, the prologue map (CAMP-1, its own roadmap item).
+
+### ADR-366: Tournament mode: two players build up apart, then one battle decides (owner, ADR-097, ADR-158, ADR-197, 2026-11-27)
+**Status**: accepted (2026-11-27), not built. [tournament-plan.md](../../docs/papers/tournament-plan.md) holds the guide and the plan; the
+roadmap's "Tournament mode" section tracks it. The owner answered TRN-1 to TRN-9 the same day (below).
+
+- **The owner's request**:
+  - A new game mode for two players, with at most one hero each.
+  - The length is set when the game is created (such as 2 weeks or 1 month).
+  - Each player plays against the map in their own zone and cannot reach the other.
+  - When the time is up, the two heroes meet in one battle with no retreat and no surrender, and its winner wins the game.
+  - Over the LAN every day is played at once.
+  - It is offered against the computer, hot-seat and over the LAN.
+- **Built on what exists**:
+  - The arena's deciding battle (ADR-158), result screen (ADR-159), last-day AI (ADR-160) and LAN battle (ADR-199).
+  - Start zones and the simultaneous days (ADR-197, ADR-217), here for every day instead of the first week.
+  - The hero limit (ADR-068), fixed at 1.
+  - Mirrored templates (ADR-117), for zones with the same content.
+- **Rules** (the plan's guide):
+  - A map switch `rules.tournament` and a game option for the length.
+  - The map's conditions do not count.
+  - The zones are cut off, and sight, reveals and the moving and showing spells stop at the zone's edge.
+  - What players would share (tavern pools, the Grail) becomes each player's own.
+  - On the day after the last building day, the heroes fight on neutral ground, with no retreat, no surrender and no experience.
+  - The winner wins. A side without a hero or army loses; both such sides, or both armies fallen, is a draw. Never ranked.
+- **Why**: a mode where both players race to the strongest army in the same time and on the same ground, decided by one fight. It suits a
+  short LAN evening, because the players never wait on each other's turns.
+- **The owner's answers** (TRN-1 to TRN-9, 2026-11-27): the proposals, except where noted.
+  - **Maps** (TRN-1): tournament templates first, then the editor's switch for hand-made maps, checked by the validator.
+  - **Lengths** (TRN-2, the owner's own): 1 to 14 days a day at a time, then whole weeks up to 12 (3 months, the upper limit); the default
+    is 14 days.
+  - **The battle** (TRN-3): on neutral ground with the terrain and obstacles from the seed, never a siege; a coin toss from the game's random
+    numbers picks the attacker and is announced; the hero fights with its own army only.
+  - **A draw** (TRN-4): no winner, as in the arena.
+  - **A lost hero** (TRN-5): another may be hired, still one at a time, from the player's own tavern pool.
+  - **What players know** (TRN-6): the opponent's name, colour and town; on the LAN, when the opponent ended the day; nothing shows the
+    other zone.
+  - **Battles at the same time** (TRN-7, widened by the owner): per-player battle and question slots on **every** simultaneous day, not only
+    in tournaments: an ordinary LAN game's first week and an arena's preparation day too.
+  - **Shared map content** (TRN-8): a tavern pool per player; one Grail per zone (none without obelisks); artifact rolls mirrored per zone;
+    the week's events and rumours shared.
+  - **Score** (TRN-9): not ranked; "Play again" and "Save replay".
