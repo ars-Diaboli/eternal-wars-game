@@ -166,12 +166,18 @@ separate icons side by side in one row, each alone in its own equal upright cell
 its cell from the top of the head to the feet with about 8 % empty margin, a long or wide creature (a rider, a beast, a dragon) drawn
 smaller so that its whole length fits the cell's width, both at the same scale and with the same light; nothing crosses into the other
 cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, left to
-right: 1 a young dark-elf witch, slender and severe, ash-grey skin and long straight white hair, a close-fitting black lacquered
-bodice with a high pointed collar and violet silk sashes, bare arms with silver bracers, one hand raised with a bolt of violet shadow
-coiling between her clawed fingers, no orb, no staff; 2 the same creature as the one to its left, clearly upgraded and told apart at a
-glance: the same face and build but larger, heavier armed, more ornate and richer in colour: the same young face, never old, no
-wrinkles; a tall crown of black and silver spikes fanning up behind her head, spiked black pauldrons over a long layered gown of black
-and deep violet, both hands raised with violet shadow streaming from them, violet glowing eyes
+right: 1 a young dark-elf witch, a lean and sinister battle sorceress, never a lady in a ball gown: cold slate blue-grey skin, a sharp
+angular face with high cheekbones, black lips and narrow glowing violet eyes, long white hair pulled up into a high tail,
+close-fitting armour of black lacquered leather moulded to the body with thin silver edges, a ribbed corset, a high blade-like collar,
+small angular pauldrons, long split panels of dark crimson and black cloth hanging from the belt to the ankles over fitted black
+leggings, tall pointed black boots, long black gloves, one hand thrust forward with a coil of violet shadow between her clawed
+fingers, no orb, no staff, no frills, ruffles or layered skirts; 2 the same creature as the one to its left, clearly upgraded and told
+apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: the same young face, never
+old, no wrinkles; a tall angular headdress of black steel blades fanning up and back from her brow, heavier black-and-silver armour
+with long curved spikes on the shoulders, a long black cape lined in dark crimson trailing behind her, the same narrow split cloth
+panels and fitted silhouette, never a wide gown, both hands raised with violet shadow streaming from them, violet glowing eyes. Both
+in a sleek, bold, stylised game-art look: hard angular shapes, blades and spikes, black and dark crimson with violet magic, menacing
+and warlike rather than gothic or regal
 ```
 
 | # | File |
@@ -224,11 +230,18 @@ separate icons side by side in one row, each alone in its own equal upright cell
 its cell from the top of the head to the feet with about 8 % empty margin, a long or wide creature (a rider, a beast, a dragon) drawn
 smaller so that its whole length fits the cell's width, both at the same scale and with the same light; nothing crosses into the other
 cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, left to
-right: 1 a floating round ball of thick mottled brown and dull purple hide, one great yellow eye in the middle of its front, a wide
-mouth of jagged teeth beneath the eye, a few short eyestalks on top each ending in a small eye, no tendrils or tentacles below; 2 the
-same creature as the one to its left, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed,
-more ornate and richer in colour: larger and darker hide, a crown of many long writhing eyestalks on top each ending in a small
-glaring eye, a wider fanged mouth, no tendrils or tentacles below
+right: 1 a sinister floating eye horror of the lightless deep, half bloated flesh and half living shadow: a heavy rounded head-body a
+little taller than wide, its upper half sheathed in overlapping plates of dark slate-grey chitin like a beetle's shell, its underside
+soft, dark and veined; one great eye set deep in the front under a heavy brow of chitin, a cold glowing violet iris with a slit pupil,
+never a cartoon eyeball; a broad mouth beneath it, a dark jagged slit lined with needle teeth, half open and grim, never a gaping
+comic maw or a lolling tongue; four or five short eyestalks rising between the plates on top, each with a small glowing violet eye; a
+curtain of long slender ink-black tentacles hanging from the underside, their ends dissolving into wisps of black smoke, a faint
+violet haze clinging to the body; 2 the same creature as the one to its left, clearly upgraded and told apart at a glance: the same
+face and build but larger, heavier armed, more ornate and richer in colour: larger, the chitin plates black with thin violet-glowing
+seams and jagged spines along the brow, the great eye blazing violet, a wider mouth of longer needle teeth, eight or nine longer
+eyestalks fanning out from the crown, a thicker mass of longer black tentacles trailing into smoke and shadow. Both in black, slate
+grey and deep violet, dark and menacing, a believable monster of the deep, never cute, never cartoonish, never a bright pink or olive
+ball of flesh
 ```
 
 | # | File |
@@ -253,9 +266,17 @@ separate icons side by side in one row, each alone in its own equal upright cell
 its cell from the top of the head to the feet with about 8 % empty margin, a long or wide creature (a rider, a beast, a dragon) drawn
 smaller so that its whole length fits the cell's width, both at the same scale and with the same light; nothing crosses into the other
 cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, left to
-right: 1 a tall creature of living darkness with long blade-like arms and a pale mask-like face; 2 the same creature as the one to its
-left, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in
-colour: a hood of shadow, a huge violet-edged scythe, black smoke streaming off it
+right: 1 a towering gaunt humanoid half flesh and half living darkness, far taller than a man: a smooth eyeless, featureless head with
+no face at all, only a blank curved plate of dark blue-grey skin, a mane of long thin black tendrils trailing back from the skull, a
+lean ribbed torso of dark blue-grey skin cracked with thin glowing violet seams, very long arms ending in long black claws, the body
+breaking up into drifting black smoke and shadow from the hips down, the legs only half-formed shapes of darkness that still stand on
+the ground, wisps of shadow peeling off the shoulders and arms, a faint violet glow in its chest, no weapon, no cloth; 2 the same
+creature as the one to its left, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more
+ornate and richer in colour: the same blank faceless head with more and longer tendrils fanning back like a crown, jagged plates of
+black shadow-stuff grown over the shoulders and chest like armour, the forearms ending in long curved blades of solid darkness edged
+in violet light instead of hands, a brighter violet core blazing through the cracks of its chest, a thick mantle of black smoke
+streaming off it, still standing on smoke-wreathed legs. Both menacing and alien, darkness made flesh, black, deep blue-grey and
+violet, never a hooded ghost, never a dragon, no wings
 ```
 
 | # | File |

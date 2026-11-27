@@ -2,7 +2,7 @@
 
 Painted creature portraits with transparency (512 × 512, facing right) and one opaque painted backdrop a faction (1024 × 1024), generated
 for this project by the owner (2026-11-21: Academy, Conflux, Dragon Utopia, Dungeon, Haven, Inferno, Necropolis, neutral; 2026-11-26: Sylvan, redone
-from the ADR-293 prompts, and neutral sheet X1 from the ADR-289 prompt; 2026-11-27: Academy, Haven and Sylvan redone from the paired sheets of ADR-360) as portrait sheets and cut into one file per creature (prompts in
+from the ADR-293 prompts, and neutral sheet X1 from the ADR-289 prompt; 2026-11-27: Academy, Haven, Sylvan and Dungeon redone from the paired sheets of ADR-360) as portrait sheets and cut into one file per creature (prompts in
 `docs/content/prompts/creature-icon-prompts.md` and its faction files). Shown in the battle's initiative bar; the army slots and the creature
 windows still use the lettered placeholders.
 
@@ -14,7 +14,7 @@ windows still use the lettered placeholders.
 | creature_backdrop_conflux.png | the backdrop behind the Conflux portraits and Conflux heroes |
 | icon_creature_dragon-utopia.<creature id>.png | the nine Dragon Utopia creatures (sheets U1–U2; the black dragon is U2's third cell, the take with the violet void in its jaws) |
 | creature_backdrop_dragon-utopia.png | the backdrop behind the Dragon Utopia portraits and Dragon Utopia heroes |
-| icon_creature_dungeon.<creature id>.png | the eighteen Dungeon creatures (sheets D1–D3) |
+| icon_creature_dungeon.<creature id>.png | the eighteen Dungeon creatures (sheets D1–D9) |
 | creature_backdrop_dungeon.png | the backdrop behind the Dungeon portraits and Dungeon heroes |
 | icon_creature_haven.<creature id>.png | the eighteen Haven creatures (sheets H1–H9) |
 | creature_backdrop_haven.png | the backdrop behind the Haven portraits and Haven heroes |

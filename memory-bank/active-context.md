@@ -9,6 +9,8 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Dungeon portraits regenerated from the paired sheets and cut (D1–D9 and the backdrop, 2026-11-27), with the reviewed
+  shadow mistress and matriarch (ADR-372), spectator and beholder (ADR-373) and shadow horror and reaper (ADR-374).
 - Sylvan portraits regenerated from the paired sheets and cut (S1–S10 and the backdrop, 2026-11-27), the wolf and dire wolf
   with them; the masked dancers (ADR-370) and the pixie and sprite (ADR-371) are in.
 - Haven portraits regenerated from the paired sheets and cut (H1–H9 and the backdrop, 2026-11-27).

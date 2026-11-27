@@ -105,6 +105,9 @@
 | [369](#adr-369-the-giant-and-the-titan-closer-to-the-series-classic-look-owner-adr-318-2026-11-27) | The giant and the titan closer to the series' classic look (owner, ADR-318, 2026-11-27) | accepted |
 | [370](#adr-370-the-blade-dancer-and-war-dancer-masked-owner-2026-11-27) | The blade dancer and war dancer masked (owner, 2026-11-27) | accepted |
 | [371](#adr-371-the-pixie-and-sprite-with-bigger-wings-a-slim-sprite-gown-and-stronger-contrast-owner-2026-11-27) | The pixie and sprite with bigger wings, a slim sprite gown and stronger contrast (owner, 2026-11-27) | accepted |
+| [372](#adr-372-the-shadow-mistress-and-matriarch-as-lean-dark-elf-battle-sorceresses-owner-2026-11-27) | The shadow mistress and matriarch as lean dark-elf battle sorceresses (owner, 2026-11-27) | accepted |
+| [373](#adr-373-the-spectator-and-beholder-with-the-classic-beholders-shape-and-anatomy-owner-adr-323-2026-11-27) | The spectator and beholder with the classic beholder's shape and anatomy (owner, ADR-323, 2026-11-27) | accepted |
+| [374](#adr-374-the-shadow-horror-and-reaper-as-faceless-beings-of-living-darkness-owner-2026-11-27) | The shadow horror and reaper as faceless beings of living darkness (owner, 2026-11-27) | accepted |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -1278,7 +1281,7 @@ robes and the shadow matriarch's old age and spider-leg headdress.
 - **Regenerate**: Dungeon sheet D3 (its raider cells may be kept from the last take).
 
 ### ADR-323: Dungeon sheet D4 to the owner's review: a maroon scorpicore without armour or glow, eye-and-mouth spheres with eyestalks (owner, ADR-289, 2026-11-26)
-**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's Dungeon sheet D4 scorpicore carapace and
+**Status**: accepted; partly superseded by ADR-373 (the spectator and beholder). Asset prompts only; no rule or format change. Supersedes ADR-289's Dungeon sheet D4 scorpicore carapace and
 glowing stinger and the spectator's and beholder's jellyfish tendrils.
 
 - **Owner**, on Dungeon sheet D4: the scorpicore without the violet glow and without the carapace on its lion body, its fur more
@@ -1774,3 +1777,39 @@ spear-armed titan.
   violet and gold, more muted than the pixie's and never neon; deep shadows and rich colour on both, the glow cut to a shimmer on
   the wing edges with no halo or haze.
 - **Regenerate**: Sylvan sheet S1.
+
+### ADR-372: The shadow mistress and matriarch as lean dark-elf battle sorceresses (owner, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change.
+
+- **Owner**, on Dungeon sheet D6: the visual style much closer to HoMM5's dark-elf equivalent (the shadow witch).
+- **Subjects** (described from memory, no game named in the prompt): slate blue-grey skin, sharp angular faces, black lips, white
+  hair in a high tail; fitted black lacquered leather armour with a ribbed corset and blade-like collar, long split crimson-and-black
+  cloth panels over leggings, tall pointed boots, no ball gown, frills or layered skirts; the matriarch adds a headdress of steel
+  blades, spiked black-and-silver armour and a crimson-lined cape, still fitted and never a wide gown. Black and dark crimson with
+  violet magic, sleek and warlike rather than gothic or regal.
+- **Regenerate**: Dungeon sheet D6.
+
+### ADR-373: The spectator and beholder with the classic beholder's shape and anatomy (owner, ADR-323, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-323's spectator and beholder (the round balls
+with no tendrils below).
+
+- **Owner**, on Dungeon sheet D8: the shape and anatomy very close to HoMM3's beholder and evil eye; on the regenerated sheet,
+  still too bad: something between HoMM3's evil eye and HoMM6's shadow watcher.
+- **Subjects** (described from memory, no game named in the prompt): the classic layout kept (one great eye, a mouth beneath it,
+  eyestalks on top, tentacles below; a body a little taller than wide) but dark and menacing: the upper body sheathed in dark
+  slate chitin plates, one deep-set glowing violet slit-pupilled eye, a grim slit mouth of needle teeth (no gaping maw or tongue),
+  long ink-black tentacles dissolving into smoke, a faint violet haze. The spectator four or five short eyestalks; the beholder
+  larger, black plates with violet seams and brow spines, eight or nine longer eyestalks and a thicker mass of tentacles. Black,
+  slate grey and deep violet; never cartoonish, never a bright pink or olive ball of flesh.
+- **Regenerate**: Dungeon sheet D8.
+
+### ADR-374: The shadow horror and reaper as faceless beings of living darkness (owner, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change.
+
+- **Owner**, on Dungeon sheet D9: both shadow horrors something between HoMM6's Faceless and its darkness elemental.
+- **Subjects** (described from memory, no game named in the prompt): a towering gaunt humanoid with a blank featureless head and a
+  mane of black tendrils (the Faceless), dark blue-grey skin cracked with violet seams, long clawed arms, the body breaking into
+  smoke and shadow from the hips down (the elemental) yet still standing on the ground, as walking shadows; the reaper larger,
+  with a crown of tendrils, plates of shadow over shoulders and chest, forearms ending in curved blades of darkness instead of a
+  scythe, a blazing violet core and a mantle of smoke. Never a hooded ghost, never a dragon, no wings.
+- **Regenerate**: Dungeon sheet D9.
