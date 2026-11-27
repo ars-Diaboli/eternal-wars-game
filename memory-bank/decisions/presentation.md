@@ -83,6 +83,12 @@
 | [342](#adr-342-inferno-sheet-i1-to-the-owners-second-review-a-long-plain-trident-for-the-familiar-rhinoceros-horns-for-the-horned-demons-owner-adr-330-2026-11-27) | Inferno sheet I1 to the owner's second review: a long plain trident for the familiar, rhinoceros horns for the horned demons (owner, ADR-330, 2026-11-27) | accepted |
 | [343](#adr-343-inferno-sheet-i2-to-the-owners-second-review-hounds-without-fire-an-upright-charred-lacerator-unlike-the-tormentor-owner-adr-331-2026-11-27) | Inferno sheet I2 to the owner's second review: hounds without fire, an upright charred lacerator unlike the tormentor (owner, ADR-331, 2026-11-27) | accepted |
 | [344](#adr-344-inferno-sheet-i3-to-the-owners-second-review-a-plain-succubus-and-a-regal-crimson-mistress-a-bare-jet-black-charger-a-nightmare-in-orange-fire-owner-adr-332-2026-11-27) | Inferno sheet I3 to the owner's second review: a plain succubus and a regal crimson mistress, a bare jet-black charger, a nightmare in orange fire (owner, ADR-332, 2026-11-27) | accepted |
+| [345](#adr-345-inferno-sheet-i4-to-the-owners-second-review-the-pit-fiends-juggernaut-and-ravager-after-the-later-3d-games-creatures-of-those-names-owner-adr-333-2026-11-27) | Inferno sheet I4 to the owner's second review: the pit fiends, juggernaut and ravager after the later 3D game's creatures of those names (owner, ADR-333, 2026-11-27) | accepted |
+| [346](#adr-346-inferno-sheet-i5-to-the-owners-second-review-a-war-scythe-for-the-arch-devil-owner-adr-335-2026-11-27) | Inferno sheet I5 to the owner's second review: a war scythe for the arch devil (owner, ADR-335, 2026-11-27) | accepted |
+| [347](#adr-347-stronghold-sheet-t1-to-the-owners-review-armless-harpies-the-wings-in-place-of-the-arms-owner-adr-289-2026-11-27) | Stronghold sheet T1 to the owner's review: armless harpies, the wings in place of the arms (owner, ADR-289, 2026-11-27) | accepted |
+| [348](#adr-348-stronghold-sheet-t3-to-the-owners-review-a-long-scimitar-for-the-wolf-raider-owner-adr-289-2026-11-27) | Stronghold sheet T3 to the owner's review: a long scimitar for the wolf raider (owner, ADR-289, 2026-11-27) | accepted |
+| [349](#adr-349-stronghold-sheet-t4-to-the-owners-review-bald-one-eyed-olive-green-cyclopes-owner-adr-289-2026-11-27) | Stronghold sheet T4 to the owner's review: bald one-eyed olive-green cyclopes (owner, ADR-289, 2026-11-27) | accepted |
+| [350](#adr-350-stronghold-sheet-t2-to-the-owners-review-centaurs-without-a-shield-owner-adr-289-2026-11-27) | Stronghold sheet T2 to the owner's review: centaurs without a shield (owner, ADR-289, 2026-11-27) | accepted |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -1521,3 +1527,59 @@ hell charger's flaming mane and bronze barding and the nightmare's blue-white fi
   embers only at the mane and tail tips, faintly burning hooves; the nightmare jet-black, spiked barding, a mane and tail of orange
   and red fire.
 - **Regenerate**: Inferno sheet I3.
+
+### ADR-345: Inferno sheet I4 to the owner's second review: the pit fiends, juggernaut and ravager after the later 3D game's creatures of those names (owner, ADR-333, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-333's pit fiend and pit lord (forward horns, a
+bronze glaive, a two-headed pit lord) and ADR-289's slag-plated juggernaut.
+
+- **Owner**, on the regenerated Inferno sheet I4: all four like the creatures of the same names in the later 3D game.
+- **Subjects**: the pit fiend a towering hunched brute, a small head in huge shoulders, an underbite jaw with tusks, horns curling back
+  and down, blackened iron slabs bolted on, a long-hafted iron cleaver-blade; the pit lord the same with one head only, great bat
+  wings, bronze-ringed horns, bronze-edged armour, the blade in fire; the juggernaut a four-legged charging beast, bull and rhinoceros
+  in one, a bony-plated head with two great forward horns, a shoulder hump, spine spikes, leathery hide, not stone or lava; the
+  ravager the same beast plated in riveted iron, iron-capped horns, spikes, hooks and chains.
+- **Regenerate**: Inferno sheet I4.
+
+### ADR-346: Inferno sheet I5 to the owner's second review: a war scythe for the arch devil (owner, ADR-335, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-335's arch devil trident.
+
+- **Owner**, on the regenerated Inferno sheet I5: the arch devil's trident replaced with a scythe.
+- **Subjects**: the arch devil holds a great war scythe, a long black haft taller than he is and a huge curved blackened steel blade
+  edged in fire; the devil keeps the black trident, the gogs unchanged.
+- **Regenerate**: Inferno sheet I5.
+
+### ADR-347: Stronghold sheet T1 to the owner's review: armless harpies, the wings in place of the arms (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Narrows ADR-289's Stronghold sheet T1 harpy and fury.
+
+- **Owner**, on Stronghold sheet T1: the harpy's hands and shoulders must not show; the goblins angry, not smiling.
+- **Subjects**: the harpy and the fury have no arms or hands; the wings grow from where the arms would be, feathered up to the neck, so
+  no human shoulders, arms, elbows or hands show, even behind the wings. The goblin and hobgoblin
+  have an angry snarling face, no smile or grin.
+- **Regenerate**: Stronghold sheet T1.
+
+### ADR-348: Stronghold sheet T3 to the owner's review: a long scimitar for the wolf raider (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's wolf raider spear and the ogre's one tusk.
+
+- **Owner**, on Stronghold sheet T3: the wolf raider's spear replaced with a long scimitar-like weapon; the ogre with two big tusks.
+- **Subjects**: the wolf raider raises a long curved scrap-iron scimitar, longer and broader than the wolf rider's blade, no spear; the
+  ogre and ogre shaman have two big curved tusks, one on each side of the jaw; both goblin riders snarl, no smile.
+- **Regenerate**: Stronghold sheet T3.
+
+### ADR-349: Stronghold sheet T4 to the owner's review: bald one-eyed olive-green cyclopes (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's grey hide-clad cyclopes (drawn as hairy
+two-eyed apes).
+
+- **Owner**, on Stronghold sheet T4: the cyclops and cyclops king much closer to the classic ones.
+- **Subjects**: the cyclops a towering olive-green giant, bald with one huge eye in the middle of the face, a jutting jaw with short
+  tusks, no hair or beard, not an ape, a hide loincloth, a boulder raised in one hand; the cyclops king darker olive, a crown of
+  rusted iron spikes, iron bracers, red-ochre war paint, a much larger boulder overhead in both hands. The roc and thunderbird
+  unchanged.
+- **Regenerate**: Stronghold sheet T4.
+
+### ADR-350: Stronghold sheet T2 to the owner's review: centaurs without a shield (owner, ADR-289, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-289's centaur hide shield.
+
+- **Owner**, on Stronghold sheet T2: no shield on the centaur.
+- **Subjects**: the centaur holds its spear in both hands, no shield; the upgrade keeps its feathered long spear, still no shield. The
+  orcs unchanged.
+- **Regenerate**: Stronghold sheet T2.

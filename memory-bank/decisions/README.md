@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-345**. A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-351**. A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -371,3 +371,9 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [342](presentation.md#adr-342-inferno-sheet-i1-to-the-owners-second-review-a-long-plain-trident-for-the-familiar-rhinoceros-horns-for-the-horned-demons-owner-adr-330-2026-11-27) | presentation | Inferno sheet I1 to the owner's second review: a long plain trident for the familiar, rhinoceros horns for the horned demons (owner, ADR-330, 2026-11-27) | accepted |
 | [343](presentation.md#adr-343-inferno-sheet-i2-to-the-owners-second-review-hounds-without-fire-an-upright-charred-lacerator-unlike-the-tormentor-owner-adr-331-2026-11-27) | presentation | Inferno sheet I2 to the owner's second review: hounds without fire, an upright charred lacerator unlike the tormentor (owner, ADR-331, 2026-11-27) | accepted |
 | [344](presentation.md#adr-344-inferno-sheet-i3-to-the-owners-second-review-a-plain-succubus-and-a-regal-crimson-mistress-a-bare-jet-black-charger-a-nightmare-in-orange-fire-owner-adr-332-2026-11-27) | presentation | Inferno sheet I3 to the owner's second review: a plain succubus and a regal crimson mistress, a bare jet-black charger, a nightmare in orange fire (owner, ADR-332, 2026-11-27) | accepted |
+| [345](presentation.md#adr-345-inferno-sheet-i4-to-the-owners-second-review-the-pit-fiends-juggernaut-and-ravager-after-the-later-3d-games-creatures-of-those-names-owner-adr-333-2026-11-27) | presentation | Inferno sheet I4 to the owner's second review: the pit fiends, juggernaut and ravager after the later 3D game's creatures of those names (owner, ADR-333, 2026-11-27) | accepted |
+| [346](presentation.md#adr-346-inferno-sheet-i5-to-the-owners-second-review-a-war-scythe-for-the-arch-devil-owner-adr-335-2026-11-27) | presentation | Inferno sheet I5 to the owner's second review: a war scythe for the arch devil (owner, ADR-335, 2026-11-27) | accepted |
+| [347](presentation.md#adr-347-stronghold-sheet-t1-to-the-owners-review-armless-harpies-the-wings-in-place-of-the-arms-owner-adr-289-2026-11-27) | presentation | Stronghold sheet T1 to the owner's review: armless harpies, the wings in place of the arms (owner, ADR-289, 2026-11-27) | accepted |
+| [348](presentation.md#adr-348-stronghold-sheet-t3-to-the-owners-review-a-long-scimitar-for-the-wolf-raider-owner-adr-289-2026-11-27) | presentation | Stronghold sheet T3 to the owner's review: a long scimitar for the wolf raider (owner, ADR-289, 2026-11-27) | accepted |
+| [349](presentation.md#adr-349-stronghold-sheet-t4-to-the-owners-review-bald-one-eyed-olive-green-cyclopes-owner-adr-289-2026-11-27) | presentation | Stronghold sheet T4 to the owner's review: bald one-eyed olive-green cyclopes (owner, ADR-289, 2026-11-27) | accepted |
+| [350](presentation.md#adr-350-stronghold-sheet-t2-to-the-owners-review-centaurs-without-a-shield-owner-adr-289-2026-11-27) | presentation | Stronghold sheet T2 to the owner's review: centaurs without a shield (owner, ADR-289, 2026-11-27) | accepted |

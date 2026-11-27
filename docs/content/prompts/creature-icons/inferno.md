@@ -139,17 +139,20 @@ and ash-grey skin cracked with seams glowing red like lava, natural orange fire,
 4 separate icons arranged in a grid of 2 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty
 margin, all at the same scale and with the same light; nothing crosses into another cell. No grid lines, no borders, no frames, no
 text, no labels, no numbers. Transparent background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a pit fiend,
-a towering hulking demon brute: a living face of flesh, not a skull, broad and heavy-jawed with tusk-like fangs and burning eyes,
-great thick horns curving forward from the brow, deep crimson and black hide cracked with lava, enormous shoulders and arms, spiked
-blackened bronze pauldrons and bracers, a ragged loincloth, a huge two-handed glaive of blackened bronze with a broad curved blade
-held across the body; 2 a massive beast armoured in
-plates of black slag like a rhino, one great horn, lava glowing between the plates; 3 the same creature as the one above it, clearly
-upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: two horned
-heads, folded bat wings, a whip of fire beside the glaive; 4 the same creature as the one above it, clearly upgraded and told apart at
-a glance: the same face and build but larger, heavier armed, more ornate and richer in colour: a bigger, wilder siege beast of
-flesh and iron, raw dark-red muscle showing between plates of blackened iron riveted and bolted into its hide, a low armoured head
-like a battering ram under a heavy iron brow plate, curved tusks and spiked horns sweeping forward, rows of iron spikes and hooks
-along the spine, chains hanging from its flanks, embers glowing in its open fanged maw
+a towering hunched demon brute shown whole: a small head sunk between enormous shoulders, a long heavy underbite jaw with tusks
+jutting up, burning eyes under a heavy brow, thick ridged horns curling back and down around the head, dark red-brown hide with a few
+ember-red cracks, slabs of blackened iron armour bolted onto the shoulders, forearms and shins, a ragged loincloth on a chain belt,
+digitigrade legs on hooves, a huge two-handed blackened iron cleaver-blade on a long haft held low across the body; 2 a juggernaut, a
+massive four-legged charging demon beast shown whole, like a monstrous bull and rhinoceros in one: a huge low head armoured with a
+thick bony plate, two great horns sweeping forward from it and a fanged maw beneath, a hump of muscle over the shoulders, rows of
+black bony spikes along the spine, dark red-brown leathery hide with ember-red cracks, not stone and not lava rock, thick legs on
+cloven hooves; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but
+larger, heavier armed, more ornate and richer in colour: a pit lord, one head only, never two heads, great dark-red bat wings spread
+behind it, the horns larger and ringed with bronze, darker crimson hide with brighter ember cracks, heavier black iron armour edged in
+bronze, the cleaver-blade wreathed in fire; 4 the same creature as the one above it, clearly upgraded and told apart at a glance: the
+same face and build but larger, heavier armed, more ornate and richer in colour: a ravager, bigger and wilder, plates of blackened iron
+riveted into its hide over the head, back and flanks, the horns capped in iron and longer, iron spikes and hooks along the spine,
+chains hanging from its flanks, embers glowing in its open fanged maw
 ```
 
 | # | File |
@@ -182,7 +185,7 @@ skin, a long pointed face with a wide mouth of small fangs, big pointed ears, a 
 down the spine, long thin arms and clawed hands, bent clawed legs, a ragged loincloth, a ball of orange fire held up ready to throw,
 no wings; 3 the same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but larger,
 heavier armed, more ornate and richer in colour: darker crimson skin, larger horns ringed with gold, wings edged in ember red,
-ornate black and gold half-armour, a crown of black iron spikes, the trident's prongs wrapped in fire; 4 the same creature as the one
+ornate black and gold half-armour, a crown of black iron spikes, no trident: a great war scythe instead, a long black haft taller than he is and a huge curved blade of blackened steel edged in fire; 4 the same creature as the one
 above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in
 colour: deeper red skin, a taller crest of spikes, blackened bronze bracers and collar, a large fireball blazing in both hands
 ```

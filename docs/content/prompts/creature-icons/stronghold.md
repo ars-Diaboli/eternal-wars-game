@@ -21,12 +21,15 @@ Not a photograph, not a plastic CGI render, no pixel art. Stronghold creatures: 
 rope, bone and rusted scrap iron, ochre dust, red-ochre war paint; rough and enduring. 4 separate icons arranged in a grid of 2
 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the
 same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent
-background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a small wiry green goblin with big ears and a sly
-grin, a hide vest and a crude spear; 2 a harpy with a wild-haired human head and torso, dusty grey wings and taloned bird legs; 3 the
+background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a small wiry green goblin with big ears and an angry
+face, a furious scowl, brows knotted, teeth bared in a snarl, no smile and no grin, a hide vest and a crude spear; 2 a harpy with a wild-haired human head and torso, dusty grey wings and taloned bird legs; she has no arms and no hands: the
+wings grow straight out of her body where the arms would be, the wing roots covered in feathers up to the neck, so no human
+shoulders, upper arms, elbows or hands show anywhere, even half hidden behind the wings; 3 the
 same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed,
-more ornate and richer in colour: taller, a dented scrap-iron helmet, a spiked club, red-ochre war paint; 4 the same creature as the
+more ornate and richer in colour: taller, the same angry snarling face, no smile, a dented scrap-iron helmet, a spiked club, red-ochre war paint; 4 the same creature as the
 one above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer
-in colour: black wings, a red-ochre painted face, iron caps on the talons
+in colour: black wings, still no arms, hands or bare shoulders, the wings growing from where the arms would be, a red-ochre painted
+face, iron caps on the talons
 ```
 
 | # | File |
@@ -52,11 +55,11 @@ rope, bone and rusted scrap iron, ochre dust, red-ochre war paint; rough and end
 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the
 same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent
 background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a muscular grey-green orc with tusks, a leather
-harness and a heavy cleaver; 2 a centaur with a dusty dun horse body and a weathered human torso, a spear and a hide shield; 3 the
+harness and a heavy cleaver; 2 a centaur with a dusty dun horse body and a weathered human torso, a spear held in both hands, no shield; 3 the
 same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed,
 more ornate and richer in colour: a bare chest covered in red-ochre scars, an axe in each hand, a bone necklace, a furious roar; 4 the
 same creature as the one above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed,
-more ornate and richer in colour: a horned beast-skull helmet, a red-ochre painted war cape, a long spear hung with feathers
+more ornate and richer in colour: a horned beast-skull helmet, a red-ochre painted war cape, a long spear hung with feathers, still no shield
 ```
 
 | # | File |
@@ -81,12 +84,13 @@ Not a photograph, not a plastic CGI render, no pixel art. Stronghold creatures: 
 rope, bone and rusted scrap iron, ochre dust, red-ochre war paint; rough and enduring. 4 separate icons arranged in a grid of 2
 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the
 same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent
-background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a huge pot-bellied ogre with grey skin and one tusk,
-a tree-trunk club on the shoulder; 2 a goblin rider on a big grey wolf, a curved blade raised; 3 the same creature as the one above
+background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a huge pot-bellied ogre with grey skin and two big
+tusks, one on each side of the jaw, thick and curved, jutting up from the lower jaw past the upper lip, both clearly visible,
+a tree-trunk club on the shoulder; 2 a goblin rider on a big grey wolf, a curved blade raised, the goblin's face angry and snarling, no smile and no grin; 3 the same creature as the one above
 it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in colour:
-a shaman's headdress of horns, red-ochre runes on its skin, a bone staff, a small flame in its palm; 4 the same creature as the one
+the same two big tusks, a shaman's headdress of horns, red-ochre runes on its skin, a bone staff, a small flame in its palm; 4 the same creature as the one
 above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in
-colour: the wolf armoured in scrap-iron plates, the rider in a horned helmet with a spear
+colour: the wolf armoured in scrap-iron plates, the rider in a horned helmet, the same angry snarling face, raising a long curved scimitar-like blade of scrap iron, longer and broader than the wolf rider's, no spear
 ```
 
 | # | File |
@@ -112,11 +116,17 @@ rope, bone and rusted scrap iron, ochre dust, red-ochre war paint; rough and end
 columns and 2 rows, each alone in its own equal square cell, centred with about 10 % empty margin, all at the same scale and with the
 same light; nothing crosses into another cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent
 background, PNG with alpha. The icons, top row left to right, then bottom row: 1 a giant eagle-like bird with dusty plumage, wings
-spread, a hooked beak; 2 a one-eyed giant with grey skin and hide clothing, a boulder held overhead; 3 the same creature as the one
+spread, a hooked beak; 2 a cyclops, a towering
+muscular giant with olive-green skin: a completely bald, smooth head with one single huge round eye in the middle of the face and no
+other eyes, no eyebrows, a heavy brow, a wide mouth with a jutting lower jaw and two short tusks, no beard and no hair anywhere, not
+an ape, a broad bare chest and long powerful arms, a loincloth of hide on a rope belt, bare feet, a rough boulder raised in one hand
+ready to throw; 3 the same creature as the one
 above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer in
 colour: dark grey-blue feathers crackling with lightning, a crest of white feathers, eyes glowing white; 4 the same creature as the
 one above it, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and richer
-in colour: a crown of beast teeth and rusted iron, red-ochre war paint, a larger boulder
+in colour: a cyclops king, the same bald one-eyed olive-green giant, still no hair or beard, darker olive skin, a crude crown of
+rusted iron spikes on the bald head, iron bracers, red-ochre war paint across the chest, a much larger boulder raised overhead in
+both hands
 ```
 
 | # | File |
