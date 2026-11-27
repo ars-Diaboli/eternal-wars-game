@@ -37,11 +37,11 @@ public sealed record FairnessReport(IReadOnlyList<StartMeasure> Starts, IReadOnl
 /// </summary>
 public static class MapFairness
 {
-    public const int TolerancePercent = 15;
+    public const int TolerancePercent = Domain.Analysis.MapAnalysis.AlikePercent;
 
     public const int DistanceSlack = 4;
 
-    public const int TreasureSlack = 1500;
+    public const int TreasureSlack = Domain.Analysis.MapAnalysis.AlikeTreasureSlack;
 
     public const int GuardSlack = 300;
 

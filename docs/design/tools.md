@@ -444,6 +444,12 @@ while Ctrl is held, and on the Template tab. A shortcut pressed in the middle of
     zone on a map that has them, a zone without its player's towns; a town given to a player whose factions do not include its own.
   - **Rule problems**: victory and loss conditions that point at nothing, or a game that cannot end; the grace period on for a player
     who starts without a town; more heroes than a player may have; an arena map without a combat place, or whose enemies meet on day 1.
+    A [tournament](../papers/tournament-plan.md) map (ADR-366) that is an arena too, has other than two players, allies, or a hero limit
+    other than 1; a player of it without a start zone; and its two start zones joined, a tile of one reached from the other, or from
+    where its player's heroes stand or towns are, over passable ground no object blocks (guards, garrisons and entrances stop nobody) or
+    by a gate, portal or teleporter, either way. These two do not keep a game from starting; the others do. A warning when one
+    zone is much richer than the other by what stands in it: more towns, more mines of a resource, or treasure further apart than the
+    generator lets alike starts be (15 % of their mean, at least 1500 gold).
   - **Content problems**: a ban naming nothing, or something the author placed by hand; a random monster whose tier has no creatures.
   - **Event problems**: what stops a map event loading (errors) and its warnings, such as a place an action names that is off the map.
 - **History**: the start, then every undo step, oldest first; the undone steps are dim. A click on a row jumps there.

@@ -5,7 +5,8 @@
 > [open-questions.md](../../memory-bank/open-questions.md).
 
 Core `MapGenerator` (`EternalWars.Core.Generation`, version 8). Shipped templates in `src/Core/data/templates` (`duel`, `ffa-4`, `2v2`,
-`mirror-duel`, `ffa-8`); CI checks each with `sim maps` (no problems, deterministic, starts reachable, AI play and replay work).
+`mirror-duel`, `ffa-8`, and the tournaments `twin-vales-small`, `twin-vales`, `twin-vales-large`); CI checks each with `sim maps` (no
+problems, deterministic, starts reachable (a tournament's apart), no map validator error, AI play and replay work).
 
 ## Goals
 - **Game and editor both generate**: the new-game screen (template, size, players, seed, options; ADR-086) and the editor's
@@ -60,7 +61,10 @@ Core `MapGenerator` (`EternalWars.Core.Generation`, version 8). Shipped template
   connection, gate or portal between the parts (it names the way it finds); the whole graph need not be connected, and a part may be a lone
   start zone. A hero limit other than 1 is ignored, with a warning. A border guard's colour gets a Keymaster's Tent in each part that has
   one. The generator refuses a setup of other than two players, or of two allies; the template batch does not ask its players to reach
-  each other, and the map validator does not warn that the parts touch (they do across the wall between them).
+  each other, and the map validator does not warn that the parts touch (they do across the wall between them). The shipped ones are the
+  mirrored **Twin Vales** at 72 (Small: a start and a vale behind it), 96 (a start, a vale with a town, strongly held heights) and 128
+  (Large: a start between a meadow and a fen, heights beyond both): guards from weak at the start to strong at the far end, for a
+  tournament of two weeks to a month or more.
 - **Validator** (`TemplateValidator`): errors for players, sizes, zones, start zones, connections, passages, empty levels, connectivity,
   teams; warnings for unfair start zones.
 

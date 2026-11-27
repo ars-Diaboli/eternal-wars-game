@@ -32,10 +32,13 @@ public class TournamentTests
 {
     private static readonly ScenarioRules Rules = ScenarioRules.Default with { Tournament = true, MaxHeroes = 1 };
 
+    /// <summary>A fit tournament: Blue's start zone left of the wall, Red's right of it.</summary>
     private static GameState Tournament(GameOptions? options = null, ScenarioRules? rules = null)
     {
         var state = Create(options ?? GameOptions.Default, "A.#..", "..#.B");
         state.SetRules(rules ?? Rules);
+        Zone(state, Blue, 0, 1);
+        Zone(state, Red, 3, 4);
         return state;
     }
 
@@ -143,6 +146,94 @@ public class TournamentTests
         red.SetHeroLimit(Red, 2);
         Assert.Equal("A tournament allows one hero a player; Red may have 2.", Assert.Single(Errors(red)).Message);
         Assert.NotNull(TournamentRules.WhyNot(red));
+    }
+
+    /// <summary>A wider fit tournament: Blue's zone the columns 0–7, the wall column 8, Red's zone 9–16; Alpha and Bravo by the wall.</summary>
+    private static GameState Valleys()
+    {
+        var rows = Enumerable.Repeat("........#........", 9).Append(".......A#B.......").ToArray();
+        var state = Create(rows);
+        state.SetRules(Rules);
+        Zone(state, Blue, 0, 7);
+        Zone(state, Red, 9, 16);
+        return state;
+    }
+
+    private static List<string> TournamentWarnings(GameState state) =>
+        [.. MapValidator.Validate(state).Where(i => i.Severity == IssueSeverity.Warning && i.Message.Contains("much richer", StringComparison.Ordinal)).Select(i => i.Message)];
+
+    [Fact]
+    public void ATournament_NeedsAStartZoneForEachPlayer()
+    {
+        Assert.Empty(Errors(Valleys()));
+
+        var state = Valleys();
+        Zone(state, null, 9, 16);
+
+        Assert.Equal("Red has no start zone: each player of a tournament builds up in a zone of its own.", Assert.Single(Errors(state)).Message);
+        Assert.DoesNotContain(MapValidator.Validate(state), i => i.Message.Contains("a simultaneous first week", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void AWayBetweenTheStartZones_IsAnError_ThroughAGapOrAPortal()
+    {
+        var gap = Valleys();
+        gap.Map.SetTerrain(new MapPosition(8, 3), TerrainType.Grass); // a tile of neither zone
+        var error = Assert.Single(Errors(gap));
+        Assert.Equal("Blue's and Red's start zones are joined: a hero can walk, or go through a gate, portal or teleporter, from one into the other.", error.Message);
+        Assert.Equal(Red, gap.Map.GetStartZone(Assert.IsType<MapPosition>(error.Position)));
+
+        var portal = Valleys();
+        Link(Add<TwoWayGate>(portal, BuiltInMapObjects.TwoWayMonolith, 2, 2), Add<TwoWayGate>(portal, BuiltInMapObjects.TwoWayMonolith, 13, 2));
+        Assert.Contains(Errors(portal), i => i.Message.Contains("start zones are joined", StringComparison.Ordinal));
+
+        foreach (var (from, to) in new[] { (13, 2), (2, 13) }) // a one-way portal joins them whichever way it leads
+        {
+            var oneWay = Valleys();
+            var exit = Add<OneWayGateExit>(oneWay, BuiltInMapObjects.OneWayMonolithExit, to, 2);
+            Add<OneWayGateEntrance>(oneWay, BuiltInMapObjects.OneWayMonolithEntrance, from, 2).Exit = exit.Id;
+            Assert.Contains(Errors(oneWay), i => i.Message.Contains("start zones are joined", StringComparison.Ordinal));
+        }
+
+        var town = Valleys(); // Blue's town in Red's zone: a hero hired there stands in it
+        AddTown(town, TownIds.Haven, 10, 0, Blue);
+        Assert.Contains(Errors(town), i => i.Message.Contains("start zones are joined", StringComparison.Ordinal));
+
+        var guarded = Valleys(); // a guard or a mine in the way stops nobody; only a blocked cell does
+        Add<Mine>(guarded, BuiltInMapObjects.MineId(ResourceType.Gold), 7, 2); // its entrance (8, 3) on the gap
+        guarded.Map.SetTerrain(new MapPosition(8, 3), TerrainType.Grass);
+        Assert.Contains(Errors(guarded), i => i.Message.Contains("start zones are joined", StringComparison.Ordinal));
+        guarded.Map.SetTerrain(new MapPosition(8, 3), TerrainType.Rock);
+        guarded.Map.SetTerrain(new MapPosition(8, 2), TerrainType.Grass); // under the mine's blocked middle cell
+        Assert.DoesNotContain(Errors(guarded), i => i.Message.Contains("start zones are joined", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void AMuchRicherStartZone_IsAWarning_ByTownsMinesAndTreasure()
+    {
+        var state = Valleys();
+        AddTown(state, TownIds.Haven, 0, 0, Blue);
+        Add<Mine>(state, BuiltInMapObjects.MineId(ResourceType.Ore), 0, 7);
+        Add<Mine>(state, BuiltInMapObjects.MineId(ResourceType.Ore), 10, 2);
+        Add<Mine>(state, BuiltInMapObjects.MineId(ResourceType.Gold), 10, 4);
+        Add<ResourcePile>(state, BuiltInMapObjects.PileId(ResourceType.Gold), 12, 6).Amount = 3000;
+
+        Assert.Equal(
+        [
+            "Blue's start zone is much richer than Red's: 1 town against 0.",
+            "Red's start zone is much richer than Blue's: 1 gold mine against 0.",
+        ], TournamentWarnings(state));
+
+        Add<ResourcePile>(state, BuiltInMapObjects.PileId(ResourceType.Gold), 13, 6).Amount = 1000;
+        Assert.Contains(
+            "Red's start zone is much richer than Blue's: treasure worth 4000 gold against 0 (the generator lets alike starts be 15 % off their mean, at least 1500 gold).",
+            TournamentWarnings(state));
+
+        Assert.Empty(TournamentWarnings(Valleys()));
+        var ordinary = Valleys();
+        ordinary.SetRules(ScenarioRules.Default);
+        AddTown(ordinary, TownIds.Haven, 0, 0, Blue);
+        Assert.Empty(TournamentWarnings(ordinary));
     }
 
     [Theory]
@@ -348,8 +439,8 @@ public class TournamentTests
         return state;
     }
 
-    /// <summary>Paints the columns <paramref name="fromX"/> to <paramref name="toX"/> of every row as <paramref name="player"/>'s start zone.</summary>
-    private static void Zone(GameState state, PlayerId player, int fromX, int toX)
+    /// <summary>Paints the columns <paramref name="fromX"/> to <paramref name="toX"/> of every row as <paramref name="player"/>'s start zone (null: nobody's).</summary>
+    private static void Zone(GameState state, PlayerId? player, int fromX, int toX)
     {
         for (var y = 0; y < state.Map.Height; y++)
         {

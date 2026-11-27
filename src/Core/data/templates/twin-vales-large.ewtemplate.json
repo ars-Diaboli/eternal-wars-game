@@ -1,0 +1,90 @@
+{
+  "formatVersion": 10,
+  "name": "Twin Vales Large",
+  "description": "A tournament for two: each player builds up in a valley of its own, cut off from the other's and the same as it. A start between a meadow and a fen, and strongly held heights beyond both, enough for one to three months.",
+  "tournament": true,
+  "minPlayers": 2,
+  "maxPlayers": 2,
+  "maxHeroes": 1,
+  "sizes": [128],
+  "underground": false,
+  "minTeams": 2,
+  "maxTeams": 2,
+  "symmetry": "RandomAxis",
+  "zones": [
+    {
+      "id": "start-1", "type": "PlayerStart", "owner": 0, "size": 4, "mirror": "start-2",
+      "playerTowns": { "min": 1, "max": 1 },
+      "mines": { "Gold": 1, "Lumber": 1, "Ore": 1 },
+      "extraPiles": 4,
+      "treasure": [ { "minValue": 500, "maxValue": 1500, "count": 5 }, { "minValue": 1500, "maxValue": 3000, "count": 2 } ],
+      "monsters": "Weak"
+    },
+    {
+      "id": "start-2", "type": "PlayerStart", "owner": 1, "size": 4, "mirror": "start-1",
+      "playerTowns": { "min": 1, "max": 1 },
+      "mines": { "Gold": 1, "Lumber": 1, "Ore": 1 },
+      "extraPiles": 4,
+      "treasure": [ { "minValue": 500, "maxValue": 1500, "count": 5 }, { "minValue": 1500, "maxValue": 3000, "count": 2 } ],
+      "monsters": "Weak"
+    },
+    {
+      "id": "meadow-1", "type": "Treasure", "size": 3, "mirror": "meadow-2",
+      "neutralTowns": { "min": 0, "max": 1 },
+      "mines": { "Lumber": 1, "Ore": 1, "Crystal": 1 },
+      "extraPiles": 2,
+      "treasure": [ { "minValue": 1500, "maxValue": 4000, "count": 5 }, { "minValue": 4000, "maxValue": 8000, "count": 1 } ],
+      "monsters": "Average"
+    },
+    {
+      "id": "meadow-2", "type": "Treasure", "size": 3, "mirror": "meadow-1",
+      "neutralTowns": { "min": 0, "max": 1 },
+      "mines": { "Lumber": 1, "Ore": 1, "Crystal": 1 },
+      "extraPiles": 2,
+      "treasure": [ { "minValue": 1500, "maxValue": 4000, "count": 5 }, { "minValue": 4000, "maxValue": 8000, "count": 1 } ],
+      "monsters": "Average"
+    },
+    {
+      "id": "fen-1", "type": "Treasure", "size": 3, "mirror": "fen-2",
+      "neutralTowns": { "min": 0, "max": 1 },
+      "mines": { "Mercury": 1, "Sulfur": 1 },
+      "extraPiles": 2,
+      "treasure": [ { "minValue": 1500, "maxValue": 4000, "count": 5 }, { "minValue": 4000, "maxValue": 8000, "count": 1 } ],
+      "monsters": "Average"
+    },
+    {
+      "id": "fen-2", "type": "Treasure", "size": 3, "mirror": "fen-1",
+      "neutralTowns": { "min": 0, "max": 1 },
+      "mines": { "Mercury": 1, "Sulfur": 1 },
+      "extraPiles": 2,
+      "treasure": [ { "minValue": 1500, "maxValue": 4000, "count": 5 }, { "minValue": 4000, "maxValue": 8000, "count": 1 } ],
+      "monsters": "Average"
+    },
+    {
+      "id": "heights-1", "type": "Treasure", "size": 3, "mirror": "heights-2",
+      "neutralTowns": { "min": 1, "max": 1 },
+      "mines": { "Gold": 1 },
+      "extraPiles": 2,
+      "treasure": [ { "minValue": 4000, "maxValue": 8000, "count": 4 }, { "minValue": 8000, "maxValue": 12000, "count": 1 } ],
+      "monsters": "Strong"
+    },
+    {
+      "id": "heights-2", "type": "Treasure", "size": 3, "mirror": "heights-1",
+      "neutralTowns": { "min": 1, "max": 1 },
+      "mines": { "Gold": 1 },
+      "extraPiles": 2,
+      "treasure": [ { "minValue": 4000, "maxValue": 8000, "count": 4 }, { "minValue": 8000, "maxValue": 12000, "count": 1 } ],
+      "monsters": "Strong"
+    }
+  ],
+  "connections": [
+    { "from": "start-1", "to": "meadow-1", "kind": "Normal", "guardValue": 1500 },
+    { "from": "start-2", "to": "meadow-2", "kind": "Normal", "guardValue": 1500 },
+    { "from": "start-1", "to": "fen-1", "kind": "Normal", "guardValue": 2500 },
+    { "from": "start-2", "to": "fen-2", "kind": "Normal", "guardValue": 2500 },
+    { "from": "meadow-1", "to": "heights-1", "kind": "Normal", "guardValue": 6000 },
+    { "from": "meadow-2", "to": "heights-2", "kind": "Normal", "guardValue": 6000 },
+    { "from": "fen-1", "to": "heights-1", "kind": "Normal", "guardValue": 6000 },
+    { "from": "fen-2", "to": "heights-2", "kind": "Normal", "guardValue": 6000 }
+  ]
+}

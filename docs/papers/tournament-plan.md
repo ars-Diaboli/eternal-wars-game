@@ -167,7 +167,7 @@ tournaments before any screen exists.
   - conditions ignored;
   - the map format round trip, with the previous version still loading.
 
-### 2. Random maps and validation
+### 2. Random maps and validation (done)
 - **Template support** (done):
   - `MapTemplate.Tournament` (template format v10).
   - A player's part is the zones the connections reach from its start zone (`MapTemplate.Reach`). The validator wants two players who are
@@ -178,15 +178,18 @@ tournaments before any screen exists.
     Keymaster's Tent in each part. The generator refuses a setup of other than two players, or of allies; the template batch (`sim maps`)
     skips its rivals-reach-each-other check, and the start zones' touch warning is off in a tournament. Existing templates give the same
     maps, so the generator's version stays.
-- **Shipped templates:** two or three mirrored ones (small, medium, large) with a neutral spread fit for a month, for example "Twin
-  Vales". `sim maps` checks them in CI as it does the others.
-- **Map validator (hand-made maps):**
+- **Shipped templates** (done): the mirrored Twin Vales Small (72), Twin Vales (96) and Twin Vales Large (128), guards from weak at the
+  start to strong at the far end. `sim maps` checks them in CI as it does the others; for a tournament it skips the rivals-reach-each-other
+  check, and the map validator's errors fail it.
+- **Map validator (hand-made maps)** (done):
   - **Errors:**
-    - a tournament map without two start zones;
-    - a passable route, a portal or a teleporter between the zones;
+    - a tournament map without a start zone for each player;
+    - a passable route, a gate, a portal or a teleporter between the zones, either way, also from a player's heroes or towns standing
+      outside its zone (guards, garrisons and entrances stop nobody);
     - an arena switch on as well;
-    - a hero limit above 1.
-  - **Warning:** a zone much richer than the other, using the generator's fairness numbers.
+    - a hero limit other than 1.
+  - **Warning:** a zone much richer than the other: more towns, more mines of a resource, or treasure further apart than the generator
+    lets alike starts be (`MapAnalysis.AlikePercent`, 15 %, at least 1500 gold).
 
 ### 3. Simultaneous days: the whole tournament, and battles at the same time (Core and Network)
 - **Every day at once:** `SimultaneousDayCoordinator` opens every day of a tournament at once on the LAN, not only the first week's.

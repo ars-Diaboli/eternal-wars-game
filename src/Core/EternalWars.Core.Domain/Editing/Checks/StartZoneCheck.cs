@@ -7,9 +7,9 @@ namespace EternalWars.Core.Domain.Editing.Checks;
 
 /// <summary>
 /// Start zones (MP-4, ADR-197): a zone of a player the map does not have is an error. Warnings: a player of a map with start zones that has
-/// none (the simultaneous first week needs one for each, MP-2); a zone without any of its player's towns, or holding another player's town or
-/// hero (the zones overlap the starts); two enemies' zones that touch (a hero steps from one into the other at once; allies' zones may touch,
-/// ADR-199, and a tournament's zones touch across the wall between them, ADR-366).
+/// none (the simultaneous first week needs one for each, MP-2; the tournament's own check makes it an error there, ADR-366); a zone without
+/// any of its player's towns, or holding another player's town or hero (the zones overlap the starts); two enemies' zones that touch (a hero
+/// steps from one into the other at once; allies' zones may touch, ADR-199, and a tournament's zones touch across the wall between them, ADR-366).
 /// </summary>
 internal sealed class StartZoneCheck : IMapCheck
 {
@@ -34,7 +34,11 @@ internal sealed class StartZoneCheck : IMapCheck
             var towns = scenario.ObjectsOf<Town>().Where(t => t.Owner == player.Id).ToList();
             if (!owners.Contains(player.Id))
             {
-                yield return new(IssueSeverity.Warning, $"{player.Name} has no start zone: a simultaneous first week needs one for every player.");
+                if (!scenario.Rules.Tournament) // a tournament's check calls it an error
+                {
+                    yield return new(IssueSeverity.Warning, $"{player.Name} has no start zone: a simultaneous first week needs one for every player.");
+                }
+
                 continue;
             }
 

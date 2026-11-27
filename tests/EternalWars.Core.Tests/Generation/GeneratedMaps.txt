@@ -4,3 +4,6 @@ duel size 72 seed 1: 89F1D42ADA469BA0
 ffa-4 size 96 seed 1: E8F1B72659A487D0
 ffa-8 size 128 seed 1: 103ADA98FCF243D1
 mirror-duel size 72 seed 1: 98594E27F0D54195
+twin-vales-large size 128 seed 1: E729D3F51BC2D1DA
+twin-vales-small size 72 seed 1: F344E1DA6C0B3035
+twin-vales size 96 seed 1: AEC216590E3D07A7

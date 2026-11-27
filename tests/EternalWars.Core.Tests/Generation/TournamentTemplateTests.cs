@@ -11,7 +11,7 @@ namespace EternalWars.Core.Tests.Generation;
 
 /// <summary>
 /// Tournament templates (ADR-366, tournament-plan step 2): the template's flag, its validator's per-player checks, the generator's tournament
-/// (the rules, one hero, each player's part as its start zone) and the generated map's isolation check.
+/// (the rules, one hero, each player's part as its start zone), the generated map's isolation check, and the shipped tournament templates.
 /// </summary>
 public class TournamentTemplateTests
 {
@@ -195,5 +195,38 @@ public class TournamentTemplateTests
     {
         Assert.Throws<ArgumentException>(() => MapGenerator.Build(Apart(), 72, 7, [Players[0] with { Team = 0 }, Players[1] with { Team = 0 }]));
         Assert.Throws<ArgumentException>(() => MapGenerator.Build(Apart(), 72, 7, [Players[0]]));
+    }
+
+    [Fact]
+    public void TheShippedTournaments_AreTheTwinVales_SmallMediumAndLarge_MirroredAndValid()
+    {
+        var shipped = BuiltInTemplates.All.Where(t => t.Tournament).ToList();
+
+        Assert.Equal(["Twin Vales Large", "Twin Vales Small", "Twin Vales"], shipped.Select(t => t.Name)); // by file name
+        Assert.Equal([[128], [72], [96]], shipped.Select(t => t.Sizes));
+        Assert.All(shipped, t =>
+        {
+            Assert.NotEqual(TemplateSymmetry.None, t.Symmetry);
+            Assert.Equal(1, t.MaxHeroes);
+            Assert.Empty(TemplateValidator.Validate(t));
+        });
+    }
+
+    [Theory]
+    [InlineData("twin-vales-small", 3UL)]
+    [InlineData("twin-vales", 4UL)]
+    [InlineData("twin-vales-large", 5UL)]
+    public void AShippedTournament_MakesAMapTheValidatorPasses_WithTwoAlikeZones(string key, ulong seed)
+    {
+        var template = BuiltInTemplates.Find(key)!;
+
+        var (state, generation) = MapGenerator.Build(template, template.Sizes[0], seed, Players);
+
+        Assert.Empty(generation.Problems);
+        Assert.True(state.Rules.Tournament);
+        Assert.Empty(MapValidator.Validate(state).Where(i => i.Severity == IssueSeverity.Error));
+        Assert.DoesNotContain(MapValidator.Validate(state), i => i.Message.Contains("much richer", StringComparison.Ordinal));
+        var (first, second) = (generation.Map.Fairness!.Starts[0], generation.Map.Fairness.Starts[1]);
+        Assert.Equal(first.TreasureValue, second.TreasureValue);
     }
 }

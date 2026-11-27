@@ -78,6 +78,15 @@ public sealed class MapAnalysis(GameState state)
     /// <summary>How far a start's number may be from the starts' mean, in percent, before a warning (a placeholder, EDIT-9).</summary>
     public const int WarningPercent = 20;
 
+    /// <summary>
+    /// How far the treasure of places meant to be alike may differ from their mean, in percent: the generator's fairness check of alike starts
+    /// (RMG-8) and the validator's of a tournament's two start zones (ADR-366). A gap within <see cref="AlikeTreasureSlack"/> is always allowed.
+    /// </summary>
+    public const int AlikePercent = 15;
+
+    /// <summary>The treasure gap, in gold, allowed whatever <see cref="AlikePercent"/> says, so that small sums do not differ by a pile.</summary>
+    public const int AlikeTreasureSlack = 1500;
+
     /// <summary>What a unit of a resource is worth in gold for treasure (placeholder until marketplace rates, TOWN-2).</summary>
     public static int GoldValue(ResourceType resource) => resource switch
     {

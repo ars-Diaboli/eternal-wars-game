@@ -9,7 +9,7 @@ namespace EternalWars.Tools.Sim.Commands;
 /// <summary>
 /// <c>sim maps [--template T] [--maps N] [--days D] [--seed S]</c>, the CI check of the shipped templates (or one): N maps each, cycling through
 /// the template's sizes and player counts (from the most players down, so empty slots come up too). Each map must generate without problems and
-/// the same way twice, let every start town reach every other one, and survive D days of AI-vs-AI play with no refused command and a replay of
+/// the same way twice, let every start town reach every other one (a tournament's none), pass the map validator, and survive D days of AI-vs-AI play with no refused command and a replay of
 /// the record through JSON to the same state.
 /// </summary>
 internal sealed class MapsCommand : SimCommand
@@ -72,6 +72,7 @@ internal sealed class MapsCommand : SimCommand
         }
 
         errors.AddRange(MapConnectivity.UnreachableRivalTowns(game.State)
+            .Where(_ => !game.State.Rules.Tournament) // a tournament's players never meet (ADR-366): the map validator checks they cannot
             .Select(u => $"{u.Player.Name} cannot reach the town of {game.State.GetPlayer(u.Town.Owner!.Value).Name} at {u.Town.VisitPosition}"));
         errors.AddRange(MapValidator.Validate(game.State).Where(i => i.Severity == IssueSeverity.Error).Select(i => $"map validator: {i.Message}"));
 
