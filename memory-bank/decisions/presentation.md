@@ -100,6 +100,9 @@
 | [359](#adr-359-conflux-sheet-c1-to-the-owners-review-air-water-storm-and-ice-told-apart-by-shape-size-colour-and-material-owner-adr-320-2026-11-27) | Conflux sheet C1 to the owner's review: air, water, storm and ice told apart by shape, size, colour and material (owner, ADR-320, 2026-11-27) | accepted |
 | [360](#adr-360-creature-portrait-sheets-of-two-base-and-upgrade-side-by-side-each-creature-fitted-whole-in-a-23-cell-owner-adr-341-2026-11-27) | Creature portrait sheets of two, base and upgrade side by side, each creature fitted whole in a 2:3 cell (owner, ADR-341, 2026-11-27) | accepted |
 | [365](#adr-365-the-kappa-drawn-as-a-toad-owner-adr-352-2026-11-27) | The Kappa drawn as a toad (owner, ADR-352, 2026-11-27) | accepted |
+| [367](#adr-367-the-naga-with-the-naga-heros-super-pale-skin-owner-adr-318-2026-11-27) | The Naga with the naga hero's super pale skin (owner, ADR-318, 2026-11-27) | accepted |
+| [368](#adr-368-the-efreet-as-a-fire-djinn-and-the-golden-golem-as-a-gold-iron-golem-owner-adr-318-2026-11-27) | The efreet as a fire djinn and the golden golem as a gold iron golem (owner, ADR-318, 2026-11-27) | accepted |
+| [369](#adr-369-the-giant-and-the-titan-closer-to-the-series-classic-look-owner-adr-318-2026-11-27) | The giant and the titan closer to the series' classic look (owner, ADR-318, 2026-11-27) | accepted |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -1717,3 +1720,34 @@ over upgrades, a town's ninth line with second takes) and the sheet numbering AD
   gold eyes, warty olive-brown skin, a small turtle shell, no beak and no pool on the head; the kappa shaman keeps its face and build,
   spitting water from its wide mouth.
 - **Regenerate**: Swamp Bestiary sheet W2.
+
+### ADR-367: The Naga with the naga hero's super pale skin (owner, ADR-318, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change.
+
+- **Owner**, on Academy sheet A8: the naga's skin super pale, as on the Academy's naga hero.
+- **Subjects**: the naga and the naga queen with super pale bone-white skin, fine white scales at the temples and throat, a still
+  face, pale gold slit-pupilled eyes and long straight black hair bound with gold rings, as in the naga hero's portrait prompt.
+- **Regenerate**: Academy sheet A8.
+
+### ADR-368: The efreet as a fire djinn and the golden golem as a gold iron golem (owner, ADR-318, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change.
+
+- **Owner**, on Academy sheet A11: the golden golem closer to the other golems; the efreet without horns, like the djinns.
+- **Subjects**: the efreet a muscular bald man of smooth glowing red-orange skin, a stern face, no horns and no flames on the head,
+  a swirl of flame and smoke below the waist, gold rune shackles with broken chains, drawn like the djinn; the golden golem a hulking
+  faceless statue of riveted gold plates built like the iron golem, an ice-blue eye slit, huge bare fists, a royal-blue enamel star.
+- **Regenerate**: Academy sheet A11.
+
+### ADR-369: The giant and the titan closer to the series' classic look (owner, ADR-318, 2026-11-27)
+**Status**: accepted. Asset prompts only; no rule or format change. Supersedes ADR-318's old bearded colossus and the crowned,
+spear-armed titan.
+
+- **Owner**, on Academy sheet A9: both titans much closer to HoMM3's look; skin of metal, any clothing grey, Greek-style helmets
+  on both.
+- **Subjects** (described from memory, no game named in the prompt): the colossus a towering clean-shaven giant with skin of
+  burnished grey-silver metal, a plain grey steel Greek helmet with cheek guards, bare-chested in a grey loincloth, belt, bracers and
+  sandals, bare fists, no weapon; the titan the same metal-skinned giant in a polished, gold-edged Greek helmet with a grey crest and
+  polished silver steel classical armour with gold edges (breastplate, layered pauldrons, armoured skirt over grey cloth, greaves),
+  hurling a bolt of lightning from his bare hand, no spear, cape, crown or storm cloud. The colossus is drawn whole, not as head and
+  shoulders.
+- **Regenerate**: Academy sheet A9.

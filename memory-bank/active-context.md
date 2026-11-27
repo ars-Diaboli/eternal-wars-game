@@ -9,10 +9,11 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Haven portraits regenerated from the paired sheets and cut (H1–H9 and the backdrop, 2026-11-27).
 - Academy portraits regenerated from the paired sheets and cut (A1–A11 and the backdrop, 2026-11-27): the eighteen Academy
   creatures, the thanes, the efreet and the golden golem; each cell centred on a square so the whole figure sits in the middle 2:3.
-  Prompt follow-ups not yet regenerated: the pale naga (ADR-366), the efreet and golden golem (ADR-367), metal-skinned titans in
-  Greek helmets (ADR-368).
+  Prompt follow-ups not yet regenerated: the pale naga (ADR-367), the efreet and golden golem (ADR-368), metal-skinned titans in
+  Greek helmets (ADR-369).
 - Tournament mode planned (ADR-366, owner): [tournament-plan.md](../docs/papers/tournament-plan.md) and the roadmap's section; TRN-1 …
   TRN-9 answered (the proposals; lengths 1–14 days then whole weeks up to 12; battles at the same time on every simultaneous day).
   Step 1 begun: `ScenarioRules.Tournament` (map format v45), `GameOptions.TournamentDays`, `TournamentRules` (lengths, `MapProblems`,

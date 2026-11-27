@@ -245,10 +245,13 @@ its cell from the top of the head to the feet with about 8 % empty margin, a lon
 smaller so that its whole length fits the cell's width, both at the same scale and with the same light; nothing crosses into the other
 cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, left to
 right: 1 a guardian with a woman's upper body in steel scale armour with gold trim and a coiled serpent tail of dark steel-blue
-scales, two very long, narrow, slightly curved swords, each slender blade longer than her arm; no cloth; 2 the same creature as the
-one to its left, clearly upgraded and told apart at a glance: the same face and build but larger, heavier armed, more ornate and
-richer in colour: four arms each holding a very long, narrow, slightly curved sword longer than her arm, a tall gold crown with an
-ice-blue gem, gold bands on the tail; no sash, no cloth, only armour and scales
+scales, super pale bone-white skin on her face, neck and bare arms, never tanned, olive or pink, fine white scales at the temples and
+down the throat, a long perfectly still face that shows no feeling, unblinking pale gold eyes with slit pupils, long straight black
+hair bound high with gold rings, two very long, narrow, slightly curved swords, each slender blade longer than her arm; no cloth; 2
+the same creature as the one to its left, clearly upgraded and told apart at a glance: the same face and build but larger, heavier
+armed, more ornate and richer in colour: the same super pale bone-white skin and still face, four arms each holding a very long,
+narrow, slightly curved sword longer than her arm, a tall gold crown with an ice-blue gem, gold bands on the tail; no sash, no cloth,
+only armour and scales
 ```
 
 | # | File |
@@ -274,13 +277,16 @@ separate icons side by side in one row, each alone in its own equal upright cell
 its cell from the top of the head to the feet with about 8 % empty margin, a long or wide creature (a rider, a beast, a dragon) drawn
 smaller so that its whole length fits the cell's width, both at the same scale and with the same light; nothing crosses into the other
 cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, left to
-right: 1 the head and shoulders of a giant, an old bearded man of living flesh with weathered frost-grey skin, snow in his beard and
-hair, a plain gold circlet, a raised clenched bare fist, no weapon and no armour; a living giant, not a statue, not stone, not a
-golem; 2 the same creature as the one to its left, clearly upgraded and told apart at a glance: the same face and build but larger,
-heavier armed, more ornate and richer in colour: the same living giant now clean-shaven with no beard and short cropped grey hair, a
-stern face of frost-grey skin, in heavy classical armour like an ancient hero's: a sculpted muscle cuirass of polished bright steel
-with gold trim, broad rounded layered pauldrons, steel bracers and a wide gold-buckled belt, a gold crown, a spear of crackling
-lightning, storm clouds around the shoulders; flesh in armour, not a statue, not made of steel
+right: 1 a giant, a towering living man built like a heroic statue, huge broad shoulders and heavy muscles, clean-shaven with a square
+jaw, his skin of smooth burnished grey-silver metal with a soft sheen over every muscle, a plain open-faced Greek helmet of dull grey
+steel with cheek guards, bare-chested, a plain grey cloth loincloth under a wide grey leather belt, grey bracers on the wrists and
+laced grey sandals, both bare fists clenched, no weapon, no armour and no beard; alive and moving, not a stone statue, not a golem; 2
+the same creature as the one to its left, clearly upgraded and told apart at a glance: the same face and build but larger, more ornate
+and richer in colour: a titan, the same giant with the same burnished grey-silver metal skin, a tall Greek helmet of polished steel
+with gold edges, cheek guards and a high grey horsehair crest, in gleaming classical armour of polished silver steel with gold edges:
+a sculpted breastplate, broad layered pauldrons, a skirt of armoured strips over grey cloth, steel greaves and bracers, no cape, one
+arm raised high hurling a jagged bolt of white-blue lightning from his bare hand, no spear and no other weapon, no storm cloud; alive
+and moving, not a statue
 ```
 
 | # | File |
@@ -335,10 +341,13 @@ separate icons side by side in one row, each alone in its own equal upright cell
 its cell from the top of the head to the feet with about 8 % empty margin, a long or wide creature (a rider, a beast, a dragon) drawn
 smaller so that its whole length fits the cell's width, both at the same scale and with the same light; nothing crosses into the other
 cell. No grid lines, no borders, no frames, no text, no labels, no numbers. Transparent background, PNG with alpha. The icons, left to
-right: 1 a bound fire spirit with a muscular upper body of red-orange flame, black horns, a trail of smoke instead of legs, gold
-shackles with ice-blue runes and broken chains on its wrists; 2 a tall slender golem cast of polished gold by the Academy's smiths, a
-calm engraved face like a statue, ice-blue rune eyes, finely engraved gold plates with a royal-blue enamel star on the chest, no
-weapon; a forged statue, not a robot
+right: 1 a bound fire spirit drawn like the Academy's djinn: a muscular bald man with smooth deep red-orange skin glowing faintly like
+embers from within, a stern face, no horns, no hair and no flames on the head, his body below the waist a swirl of orange flame and
+dark smoke instead of legs, gold shackles with ice-blue runes and broken chains on his wrists; 2 a hulking golem hammered from thick
+plates of polished gold by the Academy's smiths, built like the iron golem: a crude forged statue of a broad heavy man, a blank head
+of riveted gold plates with no face, no eyes, no nose and no mouth, only a narrow slit glowing ice-blue, huge bare gold fists and no
+weapon, heavy rivets and fine engraved runes on the plates, a royal-blue enamel star on the chest; not slender, not a man in armour,
+not a robot, no cloth
 ```
 
 | # | File |

@@ -2,13 +2,13 @@
 
 Painted creature portraits with transparency (512 × 512, facing right) and one opaque painted backdrop a faction (1024 × 1024), generated
 for this project by the owner (2026-11-21: Academy, Conflux, Dragon Utopia, Dungeon, Haven, Inferno, Necropolis, neutral; 2026-11-26: Sylvan, redone
-from the ADR-293 prompts, and neutral sheet X1 from the ADR-289 prompt) as portrait sheets and cut into one file per creature (prompts in
+from the ADR-293 prompts, and neutral sheet X1 from the ADR-289 prompt; 2026-11-27: Academy and Haven redone from the paired sheets of ADR-360) as portrait sheets and cut into one file per creature (prompts in
 `docs/content/prompts/creature-icon-prompts.md` and its faction files). Shown in the battle's initiative bar; the army slots and the creature
 windows still use the lettered placeholders.
 
 | File | Used for |
 |---|---|
-| icon_creature_academy.<creature id>.png | the eighteen Academy creatures (sheets A1–A3) |
+| icon_creature_academy.<creature id>.png | the eighteen Academy creatures (sheets A1–A9) |
 | creature_backdrop_academy.png | the backdrop behind the Academy portraits and Academy heroes |
 | icon_creature_conflux.<creature id>.png | the wisp and the earth, fire, storm, ice, magic and energy elementals, drawn before the roster's change (sheets C1–C2; the magic elemental is C2's fifth cell, the four-faced take); the four spirits and the psychic and void elementals are not drawn yet (ADR-320) |
 | creature_backdrop_conflux.png | the backdrop behind the Conflux portraits and Conflux heroes |
@@ -16,13 +16,13 @@ windows still use the lettered placeholders.
 | creature_backdrop_dragon-utopia.png | the backdrop behind the Dragon Utopia portraits and Dragon Utopia heroes |
 | icon_creature_dungeon.<creature id>.png | the eighteen Dungeon creatures (sheets D1–D3) |
 | creature_backdrop_dungeon.png | the backdrop behind the Dungeon portraits and Dungeon heroes |
-| icon_creature_haven.<creature id>.png | the eighteen Haven creatures (sheets H1–H3) |
+| icon_creature_haven.<creature id>.png | the eighteen Haven creatures (sheets H1–H9) |
 | creature_backdrop_haven.png | the backdrop behind the Haven portraits and Haven heroes |
 | icon_creature_inferno.<creature id>.png | the eighteen Inferno creatures (sheets I1–I3) |
 | creature_backdrop_inferno.png | the backdrop behind the Inferno portraits and Inferno heroes |
 | icon_creature_necropolis.<creature id>.png | the eighteen Necropolis creatures (sheets N1–N3) |
 | creature_backdrop_necropolis.png | the backdrop behind the Necropolis portraits and Necropolis heroes |
-| icon_creature_neutral.<creature id>.png | fourteen neutral creatures (the earlier 2 × 2 sheets X1–X3, X1's mammoth, bandit and troll redone; the timber wolf and the dire wolf from Sylvan sheet S5) |
+| icon_creature_neutral.<creature id>.png | fourteen neutral creatures (the earlier 2 × 2 sheets X1–X3, X1's mammoth, bandit and troll redone; the thanes, the efreet and the golden golem from Academy sheets A10–A11; the timber wolf and the dire wolf from Sylvan sheet S5) |
 | creature_backdrop_neutral.png | the backdrop behind the neutral portraits |
 | icon_creature_sylvan.<creature id>.png | the eighteen Sylvan creatures (sheets S1–S5) |
 | creature_backdrop_sylvan.png | the backdrop behind the Sylvan portraits and Sylvan heroes |

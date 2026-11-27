@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-367**. A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-370**. A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -20,7 +20,7 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [game-modes.md](game-modes.md) | Victory and defeat, saves, the turn timer, score, ranking and difficulty, replays and the viewer, the main menu and new-game screen, the arena, the tournament. | 24 |
 | [random-maps-and-editor.md](random-maps-and-editor.md) | Templates and the generator, scenery density, relief, the standalone editor and the template editor. | 48 |
 | [multiplayer.md](multiplayer.md) | The host and clients, each client's view, the lobby, live battles, LAN saves, start zones and the simultaneous first week. | 16 |
-| [presentation.md](presentation.md) | Art direction, the camera, terrain and fog drawing, the HUD, layout and theme, information windows, icons, cursors and heraldry. | 94 |
+| [presentation.md](presentation.md) | Art direction, the camera, terrain and fog drawing, the HUD, layout and theme, information windows, icons, cursors and heraldry. | 97 |
 | [project-and-scope.md](project-and-scope.md) | Scope and phases, the owner's batches of answers that touch several areas, phase close-outs and the Godot checks, closing reviews. | 21 |
 
 ## All decisions
@@ -393,3 +393,6 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [364](towns-and-economy.md#adr-364-the-wisp-becomes-the-worldwatcher-one-tier-up-owner-adr-320-2026-11-27) | towns-and-economy | The Wisp becomes the Worldwatcher, one tier up (owner, ADR-320, 2026-11-27) | implemented |
 | [365](presentation.md#adr-365-the-kappa-drawn-as-a-toad-owner-adr-352-2026-11-27) | presentation | The Kappa drawn as a toad (owner, ADR-352, 2026-11-27) | accepted |
 | [366](game-modes.md#adr-366-tournament-mode-two-players-build-up-apart-then-one-battle-decides-owner-adr-097-adr-158-adr-197-2026-11-27) | game-modes | Tournament mode: two players build up apart, then one battle decides (owner, ADR-097, ADR-158, ADR-197, 2026-11-27) | accepted |
+| [367](presentation.md#adr-367-the-naga-with-the-naga-heros-super-pale-skin-owner-adr-318-2026-11-27) | presentation | The Naga with the naga hero's super pale skin (owner, ADR-318, 2026-11-27) | accepted |
+| [368](presentation.md#adr-368-the-efreet-as-a-fire-djinn-and-the-golden-golem-as-a-gold-iron-golem-owner-adr-318-2026-11-27) | presentation | The efreet as a fire djinn and the golden golem as a gold iron golem (owner, ADR-318, 2026-11-27) | accepted |
+| [369](presentation.md#adr-369-the-giant-and-the-titan-closer-to-the-series-classic-look-owner-adr-318-2026-11-27) | presentation | The giant and the titan closer to the series' classic look (owner, ADR-318, 2026-11-27) | accepted |
