@@ -49,6 +49,9 @@ public partial class BattleView3D : Node3D
     private MultiMesh _reach = null!;
     private GameSession _session = null!;
     private bool _instant;
+
+    /// <summary>The turn whose battle the scene shows (<see cref="GameState.SlotPlayer"/>): a simultaneous day's person, or null for the shared one.</summary>
+    private PlayerId? _slot;
     private bool _showGrid = true;
     private bool _showReach = true;
     private int _width;
@@ -260,48 +263,48 @@ public partial class BattleView3D : Node3D
         var events = session.Events;
         this.SubscribeWhileInTree<BattleStarted>(events, Open);
         Tell<BattleRoundStarted>(events);
-        this.SubscribeWhileInTree<BattleTurnStarted>(events, e => Step(null, () => SetActive(e.Unit)));
-        this.SubscribeWhileInTree<BattleUnitMoved>(events, _stage.OnMoved);
-        this.SubscribeWhileInTree<BattleUnitTeleported>(events, _stage.OnTeleported);
+        On<BattleTurnStarted>(events, e => Step(null, () => SetActive(e.Unit)));
+        On<BattleUnitMoved>(events, _stage.OnMoved);
+        On<BattleUnitTeleported>(events, _stage.OnTeleported);
         Tell<BattleUnitTurnRegained>(events);
         Tell<BattleDeploymentStarted>(events);
-        this.SubscribeWhileInTree<BattleUnitDeployed>(events, _stage.OnDeployed);
-        this.SubscribeWhileInTree<BattleDeploymentEnded>(events, e => Step(null, _stage.Then(e, () =>
+        On<BattleUnitDeployed>(events, _stage.OnDeployed);
+        On<BattleDeploymentEnded>(events, e => Step(null, _stage.Then(e, () =>
         {
             Pick(null);
             ShowPlacement(null, false);
         })));
-        this.SubscribeWhileInTree<BattleUnitAttacked>(events, _stage.OnAttacked);
-        this.SubscribeWhileInTree<BattleUnitDied>(events, _stage.OnDied);
-        this.SubscribeWhileInTree<BattleMoraleTriggered>(events, _stage.OnMorale);
-        this.SubscribeWhileInTree<BattleUnitHealed>(events, _stage.OnHealed);
-        this.SubscribeWhileInTree<SiegeStructureShot>(events, _stage.OnStructureShot);
-        this.SubscribeWhileInTree<BattleUnitSiegeDamaged>(events, _stage.OnSiegeDamaged);
-        this.SubscribeWhileInTree<SiegeStructureDamaged>(events, _stage.OnStructureDamaged);
-        this.SubscribeWhileInTree<BattleUnitSummoned>(events, _stage.OnSummoned);
-        this.SubscribeWhileInTree<BattleUnitCopied>(events, _stage.OnCopied);
+        On<BattleUnitAttacked>(events, _stage.OnAttacked);
+        On<BattleUnitDied>(events, _stage.OnDied);
+        On<BattleMoraleTriggered>(events, _stage.OnMorale);
+        On<BattleUnitHealed>(events, _stage.OnHealed);
+        On<SiegeStructureShot>(events, _stage.OnStructureShot);
+        On<BattleUnitSiegeDamaged>(events, _stage.OnSiegeDamaged);
+        On<SiegeStructureDamaged>(events, _stage.OnStructureDamaged);
+        On<BattleUnitSummoned>(events, _stage.OnSummoned);
+        On<BattleUnitCopied>(events, _stage.OnCopied);
         Tell<BattleCopyVanished>(events);
-        this.SubscribeWhileInTree<BattleUnitRaised>(events, _stage.OnRaised);
-        this.SubscribeWhileInTree<BattleUnitSplit>(events, _stage.OnSplit);
-        this.SubscribeWhileInTree<BattleUnitShielded>(events, _stage.OnShielded);
+        On<BattleUnitRaised>(events, _stage.OnRaised);
+        On<BattleUnitSplit>(events, _stage.OnSplit);
+        On<BattleUnitShielded>(events, _stage.OnShielded);
         Tell<BattleManaGained>(events);
         Tell<BattleUnitActsAgain>(events);
-        this.SubscribeWhileInTree<BattleUnitReborn>(events, _stage.OnReborn);
-        this.SubscribeWhileInTree<BattleUnitRevived>(events, _stage.OnRevived);
+        On<BattleUnitReborn>(events, _stage.OnReborn);
+        On<BattleUnitRevived>(events, _stage.OnRevived);
         Tell<BattleSpellDispelled>(events);
         Tell<BattleUnitSpellbound>(events);
         Tell<BattleUnitStunned>(events);
         Tell<BattleCreatureCast>(events);
         Tell<BattleUnitLeftKeep>(events);
         Tell<BattleSpellCast>(events);
-        this.SubscribeWhileInTree<BattleUnitSpellDamaged>(events, _stage.OnSpellDamaged);
-        this.SubscribeWhileInTree<BattleZoneCreated>(events, _stage.OnZoneCreated);
-        this.SubscribeWhileInTree<BattleZoneExpired>(events, _stage.OnZoneExpired);
-        this.SubscribeWhileInTree<BattleRubbleFell>(events, _stage.OnRubbleFell);
+        On<BattleUnitSpellDamaged>(events, _stage.OnSpellDamaged);
+        On<BattleZoneCreated>(events, _stage.OnZoneCreated);
+        On<BattleZoneExpired>(events, _stage.OnZoneExpired);
+        On<BattleRubbleFell>(events, _stage.OnRubbleFell);
         Tell<BattleManaStolen>(events);
         Tell<BattleSpellPowerSapped>(events);
         Tell<BattleSpellApplied>(events);
-        this.SubscribeWhileInTree<BattleUnitSideChanged>(events, _stage.OnSideChanged);
+        On<BattleUnitSideChanged>(events, _stage.OnSideChanged);
         Tell<BattleSpellResisted>(events);
         Tell<BattleSpellExpired>(events);
         Tell<BattleRageGained>(events);
@@ -309,7 +312,7 @@ public partial class BattleView3D : Node3D
         Tell<BattleUnitTerrified>(events);
         Tell<BattleUnitWaited>(events);
         Tell<BattleUnitDefended>(events);
-        this.SubscribeWhileInTree<BattleEnded>(events, e =>
+        On<BattleEnded>(events, e =>
         {
             var line = _stage.Line(e);
             Step(null, () =>
@@ -437,6 +440,13 @@ public partial class BattleView3D : Node3D
             return; // another computer's battle (ADR-195): its players see it, the others only its result on the map
         }
 
+        if (IsOpen && state.SlotPlayer != _slot)
+        {
+            return; // another turn's battle while this one is shown (a simultaneous day, ADR-366): the replay shows it once this one is closed
+        }
+
+        _slot = state.SlotPlayer;
+
         _queue.Reset();
         Clear();
         IsOpen = true;
@@ -479,7 +489,21 @@ public partial class BattleView3D : Node3D
     /// <summary>An event that only adds its log line: a step without animation that narrates it.</summary>
     private void Tell<T>(IEventSubscriber events)
         where T : IEvent =>
-        this.SubscribeWhileInTree<T>(events, e => Step(null, _stage.Then(e, () => { })));
+        On<T>(events, e => Step(null, _stage.Then(e, () => { })));
+
+    /// <summary>
+    /// A battle event, heard only from the turn whose battle the scene shows: on a simultaneous day each person fights their own battle, and every
+    /// battle's events reach this computer (ADR-366).
+    /// </summary>
+    private void On<T>(IEventSubscriber events, Action<T> handler)
+        where T : IEvent =>
+        this.SubscribeWhileInTree<T>(events, e =>
+        {
+            if (_session.State.SlotPlayer == _slot)
+            {
+                handler(e);
+            }
+        });
 
     private void OnIdle()
     {

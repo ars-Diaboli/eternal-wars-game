@@ -26,7 +26,7 @@ namespace EternalWars.Core.Network;
 /// host runs may be a loaded save.
 /// </para>
 /// <para>
-/// The simultaneous first week (MP-2, ADR-197): the people play each day at once, each from its own computer. On a conflict the host goes back to
+/// The simultaneous first week (MP-2, ADR-197; a tournament's every day before its battle, ADR-366): the people play each day at once, each from its own computer. On a conflict the host goes back to
 /// the day's start (its record up to <see cref="GameSession.SimultaneousDayStart"/>) and plays it again turn by turn: a new session
 /// (<see cref="SessionReplaced"/>), whose view every client gets again.
 /// </para>
@@ -54,7 +54,7 @@ public sealed class GameHost : ICommandRoute, IDisposable
     private bool _viewsStale;
 
     /// <summary>Who fights the current battle, or fought the last one: they see its events.</summary>
-    private IReadOnlyCollection<PlayerId> _battleSides = [];
+    private readonly Dictionary<int, IReadOnlyCollection<PlayerId>> _battleSides = []; // the sides of each turn's last battle, by its person (-1: shared)
 
     /// <summary>When each colour was last sent the game's record (ADR-203): the colour's, not the link's, so a new link does not start it over.</summary>
     private readonly Dictionary<PlayerId, DateTimeOffset> _recordSent = [];
@@ -294,7 +294,7 @@ public sealed class GameHost : ICommandRoute, IDisposable
         _session = next;
         next.Route = this;
         _subscription = next.Events.Subscribe<IEvent>(Capture);
-        _battleSides = [];
+        _battleSides.Clear();
         _clockSent = null;
         foreach (var peer in _seats.Seated)
         {
@@ -318,7 +318,7 @@ public sealed class GameHost : ICommandRoute, IDisposable
             return paused;
         }
 
-        if (command is AutoResolveBattleCommand && IsFoughtBetweenComputers())
+        if (command is AutoResolveBattleCommand && IsFoughtBetweenComputers(command.Player))
         {
             return CommandResult.Rejected("A battle between players on two computers is fought by hand, each side by its own player.");
         }
@@ -328,9 +328,9 @@ public sealed class GameHost : ICommandRoute, IDisposable
             : null;
     }
 
-    /// <summary>Whether people on two computers command the two sides of the battle being fought.</summary>
-    private bool IsFoughtBetweenComputers() =>
-        _session.State.Battle is { Attacker: { IsComputer: false, Owner: { } attacker }, Defender: { IsComputer: false, Owner: { } defender } }
+    /// <summary>Whether people on two computers command the two sides of the battle <paramref name="player"/> fights.</summary>
+    private bool IsFoughtBetweenComputers(PlayerId player) =>
+        _session.State.BattleOf(player) is { Attacker: { IsComputer: false, Owner: { } attacker }, Defender: { IsComputer: false, Owner: { } defender } }
         && (IsRemote(attacker) || IsRemote(defender));
 
     public void Dispose()
@@ -483,17 +483,23 @@ public sealed class GameHost : ICommandRoute, IDisposable
         }
     }
 
-    /// <summary>Notes each event of the game for the clients that may see it.</summary>
+    /// <summary>
+    /// Notes each event of the game for the clients that may see it. A battle's events are published in the turn whose battle it is (on a
+    /// simultaneous day each person's own, ADR-366), so its sides are those of the battle the game is in.
+    /// </summary>
     private void Capture(IEvent e)
     {
+        // The sides are kept per turn, so a battle's last event, published once it is over, still reaches its sides.
+        var turn = _session.State.SlotPlayer?.Value ?? -1;
         if (_session.State.Battle is { } battle)
         {
-            _battleSides = new[] { battle.Attacker.Owner, battle.Defender.Owner }.OfType<PlayerId>().ToHashSet();
+            _battleSides[turn] = new[] { battle.Attacker.Owner, battle.Defender.Owner }.OfType<PlayerId>().ToHashSet();
         }
 
+        var sides = _battleSides.GetValueOrDefault(turn) ?? [];
         foreach (var peer in _seats.Peers)
         {
-            peer.Feed?.Capture(e, _battleSides);
+            peer.Feed?.Capture(e, sides);
         }
 
         _viewsStale = true;

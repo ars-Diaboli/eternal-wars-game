@@ -75,7 +75,7 @@ public sealed class ProgressionService(GameState state, IEventPublisher events) 
 
     /// <summary>
     /// Resolves computer heroes' level-ups at once and, if nothing else is pending, asks the current human player
-    /// about the first of its heroes with a level-up due.
+    /// about the first of its heroes with a level-up due (on a simultaneous day, in that player's own turn, ADR-366).
     /// </summary>
     internal void OfferNext()
     {
@@ -98,9 +98,9 @@ public sealed class ProgressionService(GameState state, IEventPublisher events) 
             return;
         }
 
-        // The current player's heroes; on a simultaneous day, those of every open turn (ADR-197).
-        var people = state.PlayersToAct.Where(p => state.GetPlayer(p).IsHuman).ToList();
-        foreach (var hero in people.SelectMany(p => state.AllHeroesOf(p)).Where(h => h.PendingLevelUps > 0).ToList())
+        // The current player's heroes; on a simultaneous day the current player is the turn the game is in, with its own questions (ADR-366).
+        var person = state.CurrentPlayer;
+        foreach (var hero in (person.IsHuman ? state.AllHeroesOf(person.Id) : []).Where(h => h.PendingLevelUps > 0).ToList())
         {
             var options = Offers(hero);
             var stat = RollStat(hero);

@@ -144,6 +144,23 @@ public sealed class GameSession
     /// <summary>The simultaneous days: open turns, whose turn a command runs in, the conflict watch (ADR-217).</summary>
     private SimultaneousDayCoordinator Days { get; }
 
+    /// <summary>
+    /// Whether the battle and question the state holds now (<see cref="GameState.Battle"/>, <see cref="GameState.PendingDecision"/>) are those it
+    /// shows between commands (ADR-366): always but on a simultaneous day while a command of another open turn runs, whose battle and question are
+    /// that person's. Views leave the battle and question events of such a command alone; the map's events are everyone's.
+    /// </summary>
+    public bool InShownTurn => Days.InShownTurn;
+
+    /// <summary>
+    /// On a simultaneous day, the open turn whose battle and question the state shows between commands (ADR-366): null, the default, is the LAN
+    /// host's colour (<see cref="GameOptions.HostPlayer"/>), else the first open turn. The replay viewer follows the battle it shows. It changes no
+    /// rule: every command runs in its own player's turn.
+    /// </summary>
+    public Common.PlayerId? Watched => Days.Watched;
+
+    /// <inheritdoc cref="Watched"/>
+    public void Watch(Common.PlayerId? player) => Days.Watched = player;
+
     public GameState State { get; }
 
     /// <summary>
@@ -388,10 +405,10 @@ public sealed class GameSession
             return $"Unknown player {command.Player}.";
         }
 
-        // In battle each side is commanded by its own player, whoever's turn it is on the map.
+        // In battle each side is commanded by its own player, whoever's turn it is on the map; on a simultaneous day in the battle of its own (ADR-366).
         if (command is IBattleCommand)
         {
-            return State.Battle is null ? "No battle is being fought." : null;
+            return Days.BattleRefusal(command.Player);
         }
 
         // A player setting, changed whenever the player likes; the computer taking a player over and a simultaneous day played again turn by turn,
@@ -401,7 +418,7 @@ public sealed class GameSession
             return null;
         }
 
-        // Its own turn; on a simultaneous day one battle or question at a time: the others wait for it (ADR-197).
+        // Its own turn; on a simultaneous day each turn with its own battle and question, so nobody waits for another's (ADR-366).
         if (Days.Refusal(command.Player) is { } notNow)
         {
             return notNow;

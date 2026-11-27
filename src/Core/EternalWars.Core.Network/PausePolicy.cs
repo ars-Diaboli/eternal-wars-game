@@ -30,9 +30,8 @@ internal sealed class PausePolicy(SeatManager seats)
             return [];
         }
 
-        var sides = state.Battle is { } battle
-            ? new[] { battle.Attacker, battle.Defender }.Where(p => !p.IsComputer).Select(p => p.Owner).ToList()
-            : [];
+        // Every open battle's: on a simultaneous day each person may fight one (ADR-366).
+        var sides = state.OpenBattles.SelectMany(b => new[] { b.Attacker, b.Defender }).Where(p => !p.IsComputer).Select(p => p.Owner).ToList();
         var waiting = new List<(PlayerId, string)>();
         foreach (var seat in seats.RemoteSeats.Where(s => seats.PlayerAt(s) is null && !state.GetPlayer(s).IsDefeated))
         {

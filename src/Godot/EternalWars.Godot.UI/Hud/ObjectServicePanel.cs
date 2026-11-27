@@ -82,6 +82,12 @@ public partial class ObjectServicePanel : PanelContainer
 
     private void Refresh()
     {
+        // Another person's command of a simultaneous day: its battle and question are theirs, this screen keeps the one it shows (ADR-366).
+        if (!_session.InShownTurn)
+        {
+            return;
+        }
+
         var state = _session.State;
         if (_object is not { } id || state.FindObject(id) is not { } mapObject || !Serves(mapObject)
             || state.HeroAt(mapObject.VisitPosition) is not { } hero || hero.Owner != state.CurrentPlayer.Id || state.PendingDecision is not null)

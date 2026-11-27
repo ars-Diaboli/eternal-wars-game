@@ -42,6 +42,7 @@ public partial class DecisionPanel : PanelContainer
     private readonly PanelContainer _picture = new() { Name = "Picture", CustomMinimumSize = new Vector2(0, 0) };
     private string? _pictureId;
     private GameSession _session = null!;
+    private object? _shownDecision; // the question the panel was last refreshed with
     private Func<Core.Domain.Common.PlayerId, bool> _playsHere = null!;
 
     /// <summary>The dialogue being read (ADR-242) and the line shown; a new dialogue starts at its first line.</summary>
@@ -75,11 +76,26 @@ public partial class DecisionPanel : PanelContainer
         this.SubscribeWhileInTree<BattleStarted>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<BattleRoundStarted>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<DecisionResolved>(session.Events, _ => Refresh());
+        // A question resolved in another person's command of a simultaneous day (a defeat) is seen once the game is back in the shown turn (ADR-366).
+        this.SubscribeWhileInTree<CommandExecuted>(session.Events, _ =>
+        {
+            if (!ReferenceEquals(_session.State.PendingDecision, _shownDecision))
+            {
+                Refresh();
+            }
+        });
         Refresh(); // a loaded game may already be waiting for an answer
     }
 
     private void Refresh()
     {
+        // Another person's command of a simultaneous day: its battle and question are theirs, this screen keeps the one it shows (ADR-366).
+        if (!_session.InShownTurn)
+        {
+            return;
+        }
+
+        _shownDecision = _session.State.PendingDecision;
         _buttons.ClearChildren(detach: true);
         _list.ClearChildren(detach: true);
         _closer = null;

@@ -15,7 +15,15 @@ public static class GameStateDigest
     public const int FirstVersion = 1;
 
     /// <summary>Version 2 adds the scenario tracking (<see cref="GameState.Tracking"/>, ADR-213).</summary>
-    public const int CurrentVersion = 2;
+    public const int SecondVersion = 2;
+
+    /// <summary>
+    /// Version 3 adds each person's battle, question and map events of a simultaneous day (ADR-366), slot by slot, and gives that day's current
+    /// player as its host's turn (<see cref="GameState.HostTurn"/>, whichever turn a view watches); before it the game had one battle and question
+    /// at a time, which the digest gave without saying whose turn's.
+    /// </summary>
+
+    public const int CurrentVersion = 3;
 
     /// <summary>The digest of <paramref name="state"/> in <paramref name="version"/> (<see cref="CurrentVersion"/> when left out).</summary>
     public static string Compute(GameState state, int version = CurrentVersion) =>
@@ -30,7 +38,9 @@ public static class GameStateDigest
         }
 
         var text = new StringBuilder();
-        Line($"date {state.Date} player {state.CurrentPlayerIndex} rng {state.RandomState} started {state.IsStarted}");
+        // From version 3 a simultaneous day's current player is its host's turn, whichever open turn a view watches (GameSession.Watch, ADR-366).
+        var current = version >= 3 && state.IsSimultaneous ? state.IndexOf(state.HostTurn) : state.CurrentPlayerIndex;
+        Line($"date {state.Date} player {current} rng {state.RandomState} started {state.IsStarted}");
 
         // The simultaneous days (ADR-197) only when they are on, so older replays keep their digests.
         if (state.IsSimultaneous || state.SimultaneousEnded || state.SimultaneousConflict is not null)
@@ -105,7 +115,10 @@ public static class GameStateDigest
         }
 
         // Map events (ADR-115) only on maps that have them, so older replays keep their digests.
-        if (state.MapEvents.Describe() is { Length: > 0 } mapEvents)
+        // From version 3 the running events are the shared slot's (a person's are in its slot's line); before it the one slot's, whichever turn's.
+        var slots = state.Slots.ToList();
+        var shown = version >= 3 || slots.Count == 0 ? state.SharedSlot : slots[0].Slot;
+        if (state.MapEvents.Describe(shown.Events) is { Length: > 0 } mapEvents)
         {
             Line($"events {mapEvents}");
         }
@@ -119,14 +132,38 @@ public static class GameStateDigest
 
         // The scenario tracking (ADR-213) from version 2 on, once the game has started (a scenario not started tracks nothing, so the generator's
         // and the editor's pinned texts hold).
-        if (version >= 2 && state.IsStarted)
+        if (version >= SecondVersion && state.IsStarted)
         {
             Line($"{state.Tracking.Describe()}");
         }
 
         Line($"outcome {state.Outcome?.Winners.Count} {state.Outcome?.Date}");
-        Line($"decision {state.PendingDecision}");
-        if (state.Battle is { } battle)
+
+        // The shared slot as ever (on a day played turn by turn it is the only one); before version 3 there was one slot, whichever turn's.
+        Slot(shown);
+        if (version >= 3)
+        {
+            foreach (var (player, slot) in slots.Where(s => s.Player is not null))
+            {
+                Line($"slot {player!.Value.Value}{slot.Events.Describe()}");
+                Slot(slot);
+            }
+        }
+
+        return text.ToString();
+
+        void Line(FormattableString line) => text.Append(FormattableString.Invariant(line)).Append('\n');
+
+        void Slot(TurnSlot slot)
+        {
+            Line($"decision {slot.Decision}");
+            if (slot.Battle is { } battle)
+            {
+                Battle(battle);
+            }
+        }
+
+        void Battle(Battles.BattleState battle)
         {
             Line($"battle {battle.Phase} width {battle.Width} round {battle.Round} active {battle.ActiveUnit?.Id}");
             foreach (var (side, mana) in battle.ManaLeft.OrderBy(m => m.Key))
@@ -145,10 +182,6 @@ public static class GameStateDigest
                 Line($"siege {structure.Id} {structure.Kind} {structure.Health}/{structure.MaxHealth}");
             }
         }
-
-        return text.ToString();
-
-        void Line(FormattableString line) => text.Append(FormattableString.Invariant(line)).Append('\n');
     }
 
     internal static string Slots(Armies.Army army) => string.Join(",", army.Slots.Select(s => s is null ? "-" : $"{s.Creature}:{s.Count}"));

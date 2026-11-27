@@ -30,7 +30,13 @@ Detail: [roadmap.md](roadmap.md).
   tournament (the rules, one hero, each part as its player's start zone) and `MapFairness` keeping the starts apart; the shipped
   mirrored Twin Vales (72, 96, 128) in `sim maps`, which skips a tournament's rivals check; the map validator's `TournamentCheck` also
   wants a start zone each, no way between them (`Joined`) and warns of a much richer zone (`MapAnalysis.AlikePercent`);
-  `TournamentTemplateTests`. Next: step 3, every tournament day at once on the LAN.
+  `TournamentTemplateTests`. Step 3 done: `SimultaneousDayCoordinator` opens every tournament day before the battle at once (the
+  start zone each); the LAN lobby hides its switch for a tournament and always sets the option (`RandomMapChoice.Tournament`); each open
+  turn of a simultaneous day has its own battle, question and map events (`TurnSlot`; `GameState.OpenBattles` / `BattleOf` /
+  `DecisionFor` / `SlotPlayer`), nobody waits for another's, a battle between two people or against what another person fights is a
+  conflict, a slot left open waits for its person's turn; digest version 3; the replay viewer follows one battle at a time
+  (`GameSession.Watch`), views hear only their turn's (`InShownTurn`); `SimultaneousBattleTests`, `LanSimultaneousBattleTests`,
+  `LanTournamentTests`. Next: step 4, the computer.
 - Creature prompts as sheets of two (ADR-360): the base and its upgrade side by side, each creature whole in a 2:3 cell, files still
   512 × 512 (the cell centred on a square); every faction's sheets renumbered (Haven H1–H9 … neutral X1–X3); the owner's later
   reviews folded in (Bestiary W1–W5, Academy A1, Conflux ADR-357 to ADR-359, the toad-like kappa ADR-365). New creatures, all

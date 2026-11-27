@@ -50,6 +50,10 @@ publish/subscribe layer.
   queued before views react to the original event. `GameSession.Events` is a bus of its own for everyone outside the rules (views,
   tools, a LAN host), fed by the rules' bus after every rule has heard each event; `GameSession.Unheard()` leaves those subscribers
   out for a while (the replay viewer's jumps, ADR-234) while the rules still hear everything.
+- **A view hears its own turn's battle and question** (ADR-366): on a simultaneous day each open turn has its own battle and question, and
+  a command's events are published while the game is in that command's turn. A view that shows a battle or a question hears only its own
+  turn's: `BattleView3D` the events while `GameState.SlotPlayer` is the turn whose battle it opened, the HUD's question panels while
+  `GameSession.InShownTurn`; the map's events are everyone's.
 - Animation gating (delaying presentation until an animation ends) belongs in a Tier 2 queue (as in `BattleView3D`),
   never in the core bus.
 

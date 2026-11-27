@@ -468,7 +468,8 @@ public partial class Main : Node3D
 
         // The simultaneous first week of a LAN game (ADR-197): the status line says how today is played.
         _game.SubscribeWhileInTree<SimultaneousDayStarted>(_session.Events, e =>
-            Tell($"Day {e.Date.AbsoluteDay}: every person plays at once, each on their own computer; the computer players after them."));
+            Tell($"Day {e.Date.AbsoluteDay}: every person plays at once, each on their own computer"
+                 + (_session.State.Players.Any(p => !p.IsHuman && !p.IsDefeated) ? "; the computer players after them." : ".")));
         _game.SubscribeWhileInTree<SimultaneousDaysEnded>(_session.Events, e => Tell($"{e.Reason} From now on the days are played turn by turn."));
 
         _game.SubscribeWhileInTree<TurnStarted>(_session.Events, e =>
@@ -488,7 +489,13 @@ public partial class Main : Node3D
                 ShowTurn(e.Player);
             }
         });
-        _game.SubscribeWhileInTree<DecisionRequested>(_session.Events, e => FocusOnEventPlace(e.Decision));
+        _game.SubscribeWhileInTree<DecisionRequested>(_session.Events, e =>
+        {
+            if (_session.InShownTurn)
+            {
+                FocusOnEventPlace(e.Decision); // not another person's question of a simultaneous day (ADR-366)
+            }
+        });
         _context.HeroStepShown += FollowStep;
         _game.SubscribeWhileInTree<HeroDefeated>(_session.Events, e =>
         {

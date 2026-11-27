@@ -12,7 +12,7 @@ namespace EternalWars.Core.Domain.Turns;
 /// the session's participants, in their order (<see cref="ITurnPhaseParticipant"/>); the service itself moves the calendar, publishes it
 /// and rolls the week's events. The deciding battle's day of an arena or a tournament (ADR-097, ADR-366) replaces the day, so the battle is not a participant.
 /// <para>
-/// A simultaneous day (MP-2, ADR-197; <see cref="GameOptions.SimultaneousFirstWeek"/>): every person's turn begins at once when the day opens
+/// A simultaneous day (MP-2, ADR-197, ADR-366; <see cref="GameOptions.SimultaneousFirstWeek"/>): every person's turn begins at once when the day opens
 /// (<see cref="GameState.OpenTurns"/>), each ends its own, and once all have, the computer players play theirs one by one. A turn begins once a
 /// day, so a day played again turn by turn (<see cref="PlayTurnByTurn"/>) brings no second income. Which days are played at once and the open
 /// turns are <see cref="SimultaneousDayCoordinator"/>'s (ADR-217); this service begins and passes the turns.

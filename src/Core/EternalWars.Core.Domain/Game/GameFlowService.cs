@@ -106,8 +106,9 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
 
     internal void Evaluate()
     {
-        // A battle in progress is settled first; a scenario without any participant has nothing to decide.
-        if (!state.IsStarted || state.IsOver || state.Battle is not null)
+        // Every battle in progress is settled first (on a simultaneous day each open turn may fight one, ADR-366); a scenario without any
+        // participant has nothing to decide.
+        if (!state.IsStarted || state.IsOver || state.OpenBattles.Count > 0)
         {
             return;
         }
@@ -283,6 +284,17 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
             if (state.PendingDecision is { } decision && decision.Hero == hero.Id)
             {
                 _steps.Resolve(decision);
+            }
+
+            // A question of the hero in another open turn's slot (a simultaneous day, ADR-366) goes too.
+            foreach (var (_, slot) in state.Slots.ToList())
+            {
+                if (slot.Decision is { } asked && asked.Hero == hero.Id)
+                {
+                    slot.Decision = null;
+                    slot.DecisionPlayer = null;
+                    events.Publish(new DecisionResolved(asked));
+                }
             }
 
             events.Publish(new HeroDefeated(hero.Id, hero.Owner, Retreated: false));

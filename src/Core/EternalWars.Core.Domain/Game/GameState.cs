@@ -68,6 +68,7 @@ public sealed class GameState
         Spells = spells ?? content?.Spells ?? Artifacts.Spells;
         Random = new GameRandom(Options.Seed);
         Fog = new FogOfWar(map, Options.FogMode) { Reach = (player, position) => !Rules.Tournament || TournamentRules.Reaches(this, player, position) };
+        MapEvents = new MapEventState(_sharedSlot.Events, () => Slot.Events);
         _guards = new int[map.Levels * map.Width * map.Height];
         _players = players.ToList();
         if (_players.Count is 0 or > MaxPlayers)
@@ -143,8 +144,16 @@ public sealed class GameState
     /// <summary>Current state of the game RNG (saves, replay checks).</summary>
     public ulong RandomState => Random.State;
 
-    /// <summary>The battle being fought, if any (a <see cref="Decisions.BattleDecision"/> is pending meanwhile).</summary>
-    public BattleState? Battle { get; internal set; }
+    /// <summary>
+    /// The battle being fought in the turn the game is in, if any (a <see cref="Decisions.BattleDecision"/> is pending meanwhile). On a simultaneous
+    /// day each person's open turn has its own (ADR-366): a command runs in its player's, and between commands this is the one
+    /// <see cref="GameSession.InShownTurn"/> tells of; <see cref="OpenBattles"/> are all of them.
+    /// </summary>
+    public BattleState? Battle
+    {
+        get => Slot.Battle;
+        internal set => Slot.Battle = value;
+    }
 
     public FogOfWar Fog { get; }
 
@@ -212,20 +221,88 @@ public sealed class GameState
     /// <summary>The deciding battle of an arena or a tournament (ADR-097, ADR-366), chosen at the start of its day (<see cref="DecidingBattles.Day"/>); null before, and on every other map.</summary>
     public DecidingBattle? DecidingBattle { get; internal set; }
 
+    /// <summary>The question waiting for an answer in the turn the game is in, if any (as <see cref="Battle"/>, a simultaneous day's person each has their own).</summary>
     public PendingDecision? PendingDecision
     {
-        get => _pendingDecision;
+        get => Slot.Decision;
         internal set
         {
-            _pendingDecision = value;
-            DecisionPlayer = value is null ? null : HeroOwner(value.Hero) ?? CurrentPlayer.Id;
+            var slot = Slot;
+            slot.Decision = value;
+            slot.DecisionPlayer = value is null ? null : HeroOwner(value.Hero) ?? CurrentPlayer.Id;
         }
     }
 
     /// <summary>Whose question <see cref="PendingDecision"/> is: its hero's owner, else the player whose turn asked it; null without one.</summary>
-    public PlayerId? DecisionPlayer { get; private set; }
+    public PlayerId? DecisionPlayer => Slot.DecisionPlayer;
 
-    private PendingDecision? _pendingDecision;
+    // The turns' battles and questions (ADR-366) -----------------------------------------------------------
+
+    private readonly TurnSlot _sharedSlot = new();
+    private readonly SortedDictionary<int, TurnSlot> _turnSlots = []; // by player number
+
+    /// <summary>
+    /// The slot of the turn the game is in: the current player's own while it has one (a simultaneous day's open turn, or one kept from it until
+    /// its battle and question are done), else the one every turn of a day played turn by turn shares.
+    /// </summary>
+    internal TurnSlot Slot =>
+        CurrentPlayerIndex >= 0 && CurrentPlayerIndex < _players.Count && _turnSlots.TryGetValue(_players[CurrentPlayerIndex].Id.Value, out var own)
+            ? own
+            : _sharedSlot;
+
+    /// <summary>Whose own slot <see cref="Battle"/> and <see cref="PendingDecision"/> are now (a simultaneous day's person); null for the shared one.</summary>
+    public PlayerId? SlotPlayer =>
+        CurrentPlayerIndex >= 0 && CurrentPlayerIndex < _players.Count && _turnSlots.ContainsKey(_players[CurrentPlayerIndex].Id.Value)
+            ? _players[CurrentPlayerIndex].Id
+            : null;
+
+    /// <summary>Every slot with something open: the shared one first, then the people's by player number.</summary>
+    internal IEnumerable<(PlayerId? Player, TurnSlot Slot)> Slots =>
+        new[] { ((PlayerId?)null, _sharedSlot) }.Concat(_turnSlots.Select(s => ((PlayerId?)new PlayerId(s.Key), s.Value))).Where(s => !s.Item2.IsIdle);
+
+    /// <summary>The shared slot: on a simultaneous day nothing may be open in it.</summary>
+    internal TurnSlot SharedSlot => _sharedSlot;
+
+    /// <summary>The slots <paramref name="viewer"/> looks at first: its own, the shared one, then the others'.</summary>
+    private IEnumerable<TurnSlot> SlotsFor(PlayerId viewer) =>
+        (_turnSlots.TryGetValue(viewer.Value, out var own) ? [own] : Array.Empty<TurnSlot>())
+        .Append(_sharedSlot)
+        .Concat(_turnSlots.Where(s => s.Key != viewer.Value).Select(s => s.Value));
+
+    /// <summary>Every battle being fought: one on a day played turn by turn, one per person at most on a simultaneous day (ADR-366).</summary>
+    public IReadOnlyList<BattleState> OpenBattles => [.. Slots.Select(s => s.Slot.Battle).OfType<BattleState>()];
+
+    /// <summary>The battle <paramref name="player"/> commands a side of, if any.</summary>
+    public BattleState? BattleOf(PlayerId player) => SlotsFor(player).FirstOrDefault(s => s.Fights(player))?.Battle;
+
+    /// <summary>The question waiting for <paramref name="player"/>'s answer: a battle's while it fights it, else one asked of it; null for none.</summary>
+    public PendingDecision? DecisionFor(PlayerId player) => SlotsFor(player).Select(s => s.DecisionFor(player)).FirstOrDefault(d => d is not null);
+
+    /// <summary>The person whose open turn's slot holds the battle <paramref name="player"/> commands a side of; null when none does.</summary>
+    internal PlayerId? TurnFighting(PlayerId player) =>
+        _turnSlots.TryGetValue(player.Value, out var own) && own.Fights(player) ? player
+        : _turnSlots.Where(s => s.Value.Fights(player)).Select(s => (PlayerId?)new PlayerId(s.Key)).FirstOrDefault();
+
+    /// <summary>A simultaneous day opened: each of <paramref name="people"/> gets a slot of its own.</summary>
+    internal void OpenSlots(IEnumerable<PlayerId> people)
+    {
+        foreach (var person in people)
+        {
+            _turnSlots.TryAdd(person.Value, new TurnSlot());
+        }
+    }
+
+    /// <summary>The slots with nothing open of the players without an open turn go; the others stay until their battle and question are done.</summary>
+    internal void CloseIdleSlots()
+    {
+        foreach (var key in _turnSlots.Where(s => s.Value.IsIdle && !_openTurns.Contains(new PlayerId(s.Key))).Select(s => s.Key).ToList())
+        {
+            _turnSlots.Remove(key);
+        }
+    }
+
+    /// <summary><paramref name="player"/>'s slot goes, with whatever is open in it (a player out of the game).</summary>
+    internal void DropSlot(PlayerId player) => _turnSlots.Remove(player.Value);
 
     private PlayerId? HeroOwner(HeroId hero) => (_heroById.GetValueOrDefault(hero) ?? GarrisonHero(hero))?.Owner;
 
@@ -243,6 +320,12 @@ public sealed class GameState
 
     /// <summary>Whether several people's turns are open at once (<see cref="OpenTurns"/>).</summary>
     public bool IsSimultaneous => _openTurns.Count > 0;
+
+    /// <summary>
+    /// The open turn that is the current player between commands of a simultaneous day unless a view watches another
+    /// (<see cref="GameSession.Watch"/>): the LAN host's colour while its turn is open, else the first open turn.
+    /// </summary>
+    internal PlayerId HostTurn => Options.HostPlayer is { } host && _openTurns.Contains(host) ? host : _openTurns[0];
 
     /// <summary>Whether <paramref name="player"/> may act on the map now: its turn is open (a simultaneous day) or it is the current player.</summary>
     public bool IsTurnOf(PlayerId player) => IsSimultaneous ? _openTurns.Contains(player) : CurrentPlayer.Id == player;
@@ -477,7 +560,7 @@ public sealed class GameState
     }
 
     /// <summary>The map events (ADR-115): the author's events and what changed while the game ran.</summary>
-    public MapEventState MapEvents { get; } = new();
+    public MapEventState MapEvents { get; }
 
     /// <summary>Where the Grail lies, whether it was found, and the holes dug (ADR-140).</summary>
     public Objects.GrailState Grail { get; } = new();

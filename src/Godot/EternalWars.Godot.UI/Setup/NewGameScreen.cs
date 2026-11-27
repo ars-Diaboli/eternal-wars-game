@@ -42,7 +42,8 @@ public sealed record RandomMapResult(GameState State, IReadOnlyList<string> Prob
 
 /// <summary>
 /// A random map template the player can start (ADR-086): its sizes, the player count range, the start slots, a factory that generates the game
-/// and its hero limit. Refused setups (too many humans, a hero picked twice, ...) throw <see cref="ArgumentException"/>, which the screen shows.
+/// and its hero limit, and whether it makes a tournament (ADR-366). Refused setups (too many humans, a hero picked twice, ...) throw
+/// <see cref="ArgumentException"/>, which the screen shows.
 /// </summary>
 public sealed record RandomMapChoice(
     string Name,
@@ -54,7 +55,8 @@ public sealed record RandomMapChoice(
     Func<RandomMapRequest, RandomMapResult> Create,
     int? MinTeams = null,
     int? MaxTeams = null,
-    int MaxHeroes = ScenarioRules.HeroLimit);
+    int MaxHeroes = ScenarioRules.HeroLimit,
+    bool Tournament = false);
 
 /// <summary>
 /// New-game setup (ADR-201: four tabs, Scenarios, Random maps, Arenas and Campaign, each a list of its maps on the left, sorted and filtered by
@@ -548,6 +550,7 @@ public partial class NewGameScreen : PanelContainer
         _seatTowns.Clear();
         _lanPlayers.Clear();
         _zoneOwners = null;
+        _tournamentMap = false;
         _startTowns.Clear();
         _randomPlayers.Clear();
         _colours.Clear();
@@ -616,6 +619,7 @@ public partial class NewGameScreen : PanelContainer
 
         // An arena map (ADR-097, ADR-159): its mode said in one line, and each player played by a person (hot-seat) or the computer.
         _zoneOwners = [.. preview.Map.StartZoneOwners];
+        _tournamentMap = preview.Rules.Tournament;
         _arena.Visible = preview.Rules.Arena;
         _arena.Text = ArenaLine;
         _players.AddChild(new Label { Text = "Player" });

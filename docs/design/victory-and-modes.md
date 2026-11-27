@@ -46,8 +46,9 @@ ADR-092, ADR-101, built ADR-102 … ADR-104, the viewer ADR-164.
   command on the map and in battles, computer turns and battles in full; it issues no command of its own. A bar along the bottom:
   play / pause (Space), four speeds (heroes and battles alike), next turn, next day, a slider by day with a mark per week and "Day 5 / 34" (a click or a let-go drag goes to that day: forward,
   the game plays on to it at once; back, it is replayed from the start to that day's first turn), the whole map or a player's eyes, and the main menu. In a battle, **"Skip to the result"** plays its moves at
-  once and shows the result, which closes by itself after a moment (Enter at once). A save plays to its last command and stops. Nothing is
-  ranked, saved or autosaved.
+  once and shows the result, which closes by itself after a moment (Enter at once). On a simultaneous day (ADR-366) it shows one battle at a
+  time, to its end; another person's battle fought meanwhile is shown from where it is once that one closes. A save plays to its last
+  command and stops. Nothing is ranked, saved or autosaved.
 - **"Play from here"**, in a battle: the battle goes on by hand as a separate game, not ranked, the computer's side played as usual; when
   its result screen is left, the viewer comes back paused where it was, the replay unchanged. A battle a person commands goes on from the
   move shown, one ended by quick combat from just before it. A battle only the computer fights starts again from its start, the viewer
@@ -116,14 +117,16 @@ In priority order:
   that colour or the host lets the computer play it from then on (mid-battle too). **Saves**: the host saves and autosaves the game; a
   client's save and replay are the host's whole record of the game, sent when asked. Any save goes on in a LAN game ("Host a saved game":
   each colour a person plays is played here, by a LAN player or by the computer) or on one computer (a save with several people's colours
-  asks which play here, hot-seat, and which the computer plays from then on; F9's quick load keeps them all here). **Simultaneous first week** (the host's switch in the lobby; maps with
+  asks which play here, hot-seat, and which the computer plays from then on; F9's quick load keeps them all here). **Simultaneous first week** (the host's switch in the lobby, always on without one in a tournament; maps with
   a start zone for every person, which random maps have and the editor paints; one colour played on the host; the lobby says when the map
-  lacks one): the people play each day of the first week (an arena's preparation day) at once, each on their own computer, and the computer players after them. One battle or question at a time: while one person
-  fights or answers, the others wait. A hero entering another person's start zone, a person seeing another person's hero it did not see when
-  the day began, or a hero visiting an object another person's hero visited that day discards the day for all (an ally's zone, hero or
-  visit never does): the host goes back to the
-  day's start and it is played again turn by turn (no second income), and so is every day after it. A save made during a simultaneous day
-  goes on turn by turn when loaded on one computer. The turn timer is the host's, one clock for all. No internet play.
+  lacks one): the people play each day of the first week (an arena's preparation day; a tournament's every day before its battle, ADR-366) at once, each on their own computer, and the computer players after them. Each person fights their own battles and answers their own
+  questions while the others play on: nobody waits for another's battle or question (ADR-366). A hero entering another person's start zone,
+  a person seeing another person's hero it did not see when the day began, a hero visiting an object another person's hero visited that day
+  (an ally's zone, hero or visit never is), a battle between two people's armies, or a battle against a hero, monster or town another
+  person is fighting at that moment (an ally's too) discards the day for all: the host goes back to the day's start, the battles open then going with the day, and it is played again
+  turn by turn (no second income), and so is every day after it. A save made during a simultaneous day goes on turn by turn when loaded on
+  one computer, each battle or question still open waiting for its person's turn. The turn timer is the host's, one clock for all; when it
+  is up, each turn ends but one whose battle or question has no default answer. No internet play.
 
 ## Game options
 The new-game screen has four tabs (ADR-201): **Scenarios** (hand-made maps played to win: the shipped ones and the editor's), **Random

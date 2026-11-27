@@ -411,8 +411,10 @@ battle with no retreat or surrender, and its winner wins. Lengths: 1–14 days, 
         them; the rules, one hero, each part as its player's start zone; template format v10) (done);
       - the mirrored Twin Vales Small, Twin Vales and Twin Vales Large, checked by `sim maps` (done);
       - the map validator's checks for hand-made maps: a start zone each, no way between them, a much richer zone warned of (done).
-- [ ] Step 3: Every tournament day at once on the LAN; per-player battle and question slots on every simultaneous day (any LAN game's
-      first week and an arena's day 1 too, TRN-7); a LAN week replayed exactly
+- [x] Step 3: Simultaneous days:
+      - every tournament day before the battle at once on the LAN, always: the lobby has no switch for a tournament (done);
+      - per-player battle and question slots on every simultaneous day (any LAN game's first week and an arena's day 1 too, TRN-7);
+        a LAN week replayed exactly (done).
 - [ ] Step 4: The computer: its zone played for the deadline, its hero kept alive, the last day spent on the battle's army; `sim game --runs`
 - [ ] Step 5: The game app: the Tournaments tab and the length row, the calendar's countdown, the hot-seat hand-over, the battle without
       retreat or surrender, the result screen; smoke `game-tournament`

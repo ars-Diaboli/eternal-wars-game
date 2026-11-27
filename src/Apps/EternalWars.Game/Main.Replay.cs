@@ -102,6 +102,11 @@ public partial class Main
             _battle.Closed += BackToReplay; // the battle is over and its result seen
             _replayBar.SetStatus(replay.TakeOverStatus);
         }
+        else
+        {
+            // On a simultaneous day the replay shows one battle at a time (ADR-366): another person's, fought meanwhile, is shown from where it is.
+            _battle.Closed += () => _battle.Restore();
+        }
     }
 
     /// <summary>A turn started in the replay: a short pause before its first command.</summary>

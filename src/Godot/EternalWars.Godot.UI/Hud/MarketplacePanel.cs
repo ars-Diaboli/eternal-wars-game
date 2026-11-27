@@ -93,6 +93,12 @@ public partial class MarketplacePanel : PanelContainer
 
     private void Refresh()
     {
+        // Another person's command of a simultaneous day: its battle and question are theirs, this screen keeps the one it shows (ADR-366).
+        if (!_session.InShownTurn)
+        {
+            return;
+        }
+
         if (!_isOpen)
         {
             return;

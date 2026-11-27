@@ -174,16 +174,14 @@ public sealed record GameView(
 {
     /// <summary>
     /// The game as <paramref name="viewer"/> sees it: on a simultaneous day (ADR-197) whose turn is open, it is the current player on its own
-    /// computer; a question is shown only to the player it asks.
+    /// computer; a question is shown only to the player it asks, a battle only to the players fighting it, each its own when several are open at
+    /// once (ADR-366).
     /// </summary>
     public static GameView Of(GameState state, PlayerId viewer)
     {
         ArgumentNullException.ThrowIfNull(state);
-        var fights = state.Battle is { } battle && (battle.Attacker.Owner == viewer || battle.Defender.Owner == viewer);
-        var decision = state.PendingDecision is BattleDecision ? (fights ? state.PendingDecision : null)
-            : state.DecisionPlayer == viewer ? state.PendingDecision : null;
         var current = state.OpenTurns.Contains(viewer) ? state.IndexOf(viewer) : state.CurrentPlayerIndex;
-        return new(state.Date, state.WeekEvent, current, state.IsStarted, state.Outcome, state.DecidingBattle, decision, fights ? state.Battle : null);
+        return new(state.Date, state.WeekEvent, current, state.IsStarted, state.Outcome, state.DecidingBattle, state.DecisionFor(viewer), state.BattleOf(viewer));
     }
 
     /// <summary>Whom a question asks: its hero's owner, else the current player (whose turn asked it).</summary>

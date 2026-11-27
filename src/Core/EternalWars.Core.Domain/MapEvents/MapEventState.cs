@@ -6,10 +6,29 @@ namespace EternalWars.Core.Domain.MapEvents;
 /// <summary>
 /// The map events of a game (ADR-115): the author's <see cref="Set"/>, and what changes while it runs (variables, enabled events, removed cells,
 /// the "defeated by" records), and the events running or waiting to run (<see cref="Runs"/>, <see cref="Current"/>), which
-/// <see cref="MapEventService"/> drives.
+/// <see cref="MapEventService"/> drives. The runs are a turn's (<see cref="MapEventQueue"/>): on a simultaneous day each person's own (ADR-366).
 /// </summary>
 public sealed class MapEventState
 {
+    private readonly MapEventQueue _shared;
+    private readonly Func<MapEventQueue> _active;
+
+    /// <summary>Map events whose runs are all in one queue (a scenario not started).</summary>
+    public MapEventState()
+        : this(null, null)
+    {
+    }
+
+    /// <summary>
+    /// Map events whose runs are those of the turn the game is in (<paramref name="active"/>); <paramref name="shared"/> is the one of the days
+    /// played turn by turn, which <see cref="Describe()"/> tells.
+    /// </summary>
+    internal MapEventState(MapEventQueue? shared, Func<MapEventQueue>? active)
+    {
+        _shared = shared ?? new MapEventQueue();
+        _active = active ?? (() => _shared);
+    }
+
     private readonly Dictionary<string, int> _variables = new(StringComparer.Ordinal);
     private readonly HashSet<string> _disabled = new(StringComparer.Ordinal);
     private readonly Dictionary<MapPosition, string> _cells = [];
@@ -34,8 +53,8 @@ public sealed class MapEventState
 
     internal HashSet<HeroId> WatchedHeroes { get; } = [];
 
-    /// <summary>The events waiting to run, in order.</summary>
-    internal Queue<MapEventRun> Runs { get; } = new();
+    /// <summary>The events waiting to run, in order (the turn's).</summary>
+    internal Queue<MapEventRun> Runs => _active().Runs;
 
     /// <summary>
     /// Queues the hero event <paramref name="name"/> for the hero (a step onto its <paramref name="cell"/>, or an opened Pandora's Box, MAP-35);
@@ -52,11 +71,19 @@ public sealed class MapEventState
         return true;
     }
 
-    /// <summary>The event running now (perhaps waiting for an answer or a battle), or null.</summary>
-    internal MapEventRun? Current { get; set; }
+    /// <summary>The event running now (perhaps waiting for an answer or a battle), or null (the turn's).</summary>
+    internal MapEventRun? Current
+    {
+        get => _active().Current;
+        set => _active().Current = value;
+    }
 
-    /// <summary>The battle being fought, as it began (for the "defeated by" records), or null.</summary>
-    internal MapEventFight? Fight { get; set; }
+    /// <summary>The battle being fought, as it began (for the "defeated by" records), or null (the turn's).</summary>
+    internal MapEventFight? Fight
+    {
+        get => _active().Fight;
+        set => _active().Fight = value;
+    }
 
     /// <summary>The player's quest log (EVT-5): the quests its heroes were shown, in the order they were first shown; empty for none.</summary>
     public IReadOnlyList<QuestLogEntry> QuestLog(PlayerId player) => _questLogs.TryGetValue(player, out var log) ? log : [];
@@ -185,7 +212,10 @@ public sealed class MapEventState
     /// The digest line (empty for a map without events, so older replays keep their digests); the running events only while there are any.
     /// The fight record is not in it: it is the battle's, which the digest has.
     /// </summary>
-    internal string Describe() =>
+    internal string Describe() => Describe(_shared);
+
+    /// <summary>The digest's text with <paramref name="runs"/> as the running and waiting events (an older digest's one queue).</summary>
+    internal string Describe(MapEventQueue runs) =>
         Set.IsEmpty
             ? ""
             : $"variables {string.Join(',', _variables.OrderBy(v => v.Key, StringComparer.Ordinal).Select(v => $"{v.Key}={v.Value}"))} "
@@ -193,8 +223,32 @@ public sealed class MapEventState
               + $"monsters {string.Join(',', _monstersDefeated.OrderBy(m => m.Key.Value).Select(m => $"{m.Key.Value}:{m.Value.Value}"))} "
               + $"heroes {string.Join(',', _heroesDefeated.OrderBy(h => h.Key.Value).Select(h => $"{h.Key.Value}:{h.Value.Value}"))}"
               + (_questLogs.Count == 0 ? "" : $" quests {string.Join(';', _questLogs.OrderBy(l => l.Key.Value).Select(l => $"{l.Key.Value}:{string.Join(',', l.Value.Select(e => $"{e.Site.Value}/{e.Stage}{(e.Done ? "!" : "")}"))}"))}")
-              + (Current is null ? "" : $" running {Current.Describe()}")
-              + (Runs.Count == 0 ? "" : $" queued {string.Join(" | ", Runs.Select(r => r.Describe()))}");
+              + runs.Describe();
+}
+
+/// <summary>
+/// The map events of one turn (ADR-115, ADR-366): the one running (perhaps waiting for an answer or a battle), those waiting to run and the battle
+/// being fought. A day played turn by turn has one; on a simultaneous day each person's turn has its own, so one person's question or battle does
+/// not hold another's events.
+/// </summary>
+internal sealed class MapEventQueue
+{
+    /// <summary>The events waiting to run, in order.</summary>
+    public Queue<MapEventRun> Runs { get; } = new();
+
+    /// <summary>The event running now, or null.</summary>
+    public MapEventRun? Current { get; set; }
+
+    /// <summary>The battle being fought, as it began (for the "defeated by" records), or null.</summary>
+    public MapEventFight? Fight { get; set; }
+
+    /// <summary>Whether no event runs or waits, and no battle is being fought.</summary>
+    public bool IsIdle => Current is null && Runs.Count == 0 && Fight is null;
+
+    /// <summary>The digest's words for the running and waiting events (empty for none).</summary>
+    public string Describe() =>
+        (Current is null ? "" : $" running {Current.Describe()}")
+        + (Runs.Count == 0 ? "" : $" queued {string.Join(" | ", Runs.Select(r => r.Describe()))}");
 }
 
 /// <summary>Walks an event tree.</summary>

@@ -8,7 +8,9 @@ namespace EternalWars.Core.Domain.Turns;
 /// <summary>
 /// Watches a simultaneous day (MP-2 b, ADR-197) for what one person does that concerns another, which the day played at once would hide or get
 /// wrong: a hero entering another person's start zone, a hero visiting an object another person's hero visited that day, a person seeing another
-/// person's hero it did not see when the day began. Allies (one team) share their land and plans, so what an ally does is no conflict (ADR-199).
+/// person's hero it did not see when the day began. Allies (one team) share their land and plans, so what an ally does is no conflict (ADR-199),
+/// but for a battle against a hero, monster or town another person is fighting at that moment (each turn fights its own, ADR-366); and a
+/// battle between two people's armies is always one (one person's battle in the other's turn, ADR-366).
 /// The first one is the day's conflict (<see cref="GameState.SimultaneousConflict"/>,
 /// <see cref="SimultaneousDayConflicted"/>): the session then refuses every command, and the LAN host plays the day again turn by turn.
 /// </summary>
@@ -48,7 +50,49 @@ internal sealed class SimultaneousDayWatch(GameState state, IEventPublisher even
         _visited.TryAdd(mapObject, visitor.Owner);
     }
 
+    /// <summary>
+    /// A battle began in the turn the game is in: a conflict when its other side is another person's (a hero, town or garrison of someone who
+    /// plays today: that person would fight in another's turn while playing their own), or, allies' too, when another person's battle has one of
+    /// its heroes or what it attacks (two battles against one foe at once would both take it).
+    /// </summary>
+    internal void BattleStarted()
+    {
+        if (!state.IsSimultaneous || state.SimultaneousConflict is not null || state.Battle is not { } battle)
+        {
+            return;
+        }
+
+        if (battle.Attacker.Owner is { } attacking && battle.Defender.Owner is { } defending && attacking != defending
+            && People.Contains(attacking) && People.Contains(defending))
+        {
+            Conflict($"{state.GetPlayer(attacking).Name} attacked {state.GetPlayer(defending).Name}.");
+            return;
+        }
+
+        var foes = Parts(battle);
+        foreach (var (player, slot) in state.Slots)
+        {
+            if (slot.Battle is { } other && !ReferenceEquals(other, battle) && player is { } fighting && Parts(other).Intersect(foes).Any())
+            {
+                var attacker = battle.Attacker.Owner is { } owner ? state.GetPlayer(owner).Name : "A player";
+                Conflict($"{attacker} attacked what {state.GetPlayer(fighting).Name} is fighting.");
+                return;
+            }
+        }
+    }
+
+    /// <summary>Whether two battles have a hero or a guarded object in common.</summary>
+    internal static bool Share(Battles.BattleState one, Battles.BattleState other) => Parts(one).Overlaps(Parts(other));
+
+    /// <summary>The heroes and the guarded object (monster, town, garrison) a battle has, as one set of names.</summary>
+    private static HashSet<string> Parts(Battles.BattleState battle) =>
+    [
+        .. new[] { battle.Attacker.Hero, battle.Defender.Hero }.OfType<HeroId>().Select(h => $"hero {h.Value}"),
+        .. new[] { battle.Attacker.Guard, battle.Defender.Guard }.OfType<MapObjectId>().Select(g => $"object {g.Value}"),
+    ];
+
     /// <summary>After a command of a simultaneous day: a hero in another person's start zone, or a person seeing another's hero, is a conflict.</summary>
+
     internal void Check()
     {
         if (!state.IsSimultaneous || state.SimultaneousConflict is not null)

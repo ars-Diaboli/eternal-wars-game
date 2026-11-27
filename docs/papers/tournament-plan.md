@@ -192,22 +192,30 @@ tournaments before any screen exists.
     lets alike starts be (`MapAnalysis.AlikePercent`, 15 %, at least 1500 gold).
 
 ### 3. Simultaneous days: the whole tournament, and battles at the same time (Core and Network)
-- **Every day at once:** `SimultaneousDayCoordinator` opens every day of a tournament at once on the LAN, not only the first week's.
-  The final battle's day is no simultaneous day.
-- **Battles and questions per player**, on every simultaneous day (a tournament's, an ordinary LAN game's first week, an arena's
+- **Every day at once** (done): `SimultaneousDayCoordinator` opens every day of a tournament at once on the LAN, not only the first
+  week's, with a start zone each; a conflict still ends the simultaneous days for good. The final battle's day is no simultaneous day:
+  the battle starts before any turn opens. The LAN lobby has no switch for a tournament (owner, 2026-11-27): it always sets the
+  simultaneous option, says "Every day before the battle is played at once" and wants one colour played on the host.
+- **Battles and questions per player** (done), on every simultaneous day (a tournament's, an ordinary LAN game's first week, an arena's
   preparation day):
-  - `GameState.Battle` and `PendingDecision` become per-player slots; on a day played turn by turn there is only ever one.
-  - "Wait: a battle is being fought." goes; a conflict that ends the day while battles are open discards them with the day.
-  - The command log stays the host's order, so replays stay exact.
-  - `PlayerViewFeed` sends each client its own battle.
-  - This is the largest technical item: the battle and decision services, `GameStateDigest`, the replay viewer and the LAN views all read
-    a single battle today.
-- **Tests:**
-  - a LAN tournament played at once for a week, with both players fighting neutrals in the same day;
-  - an ordinary LAN game's first week with two battles open at once, and a conflict during one;
-  - the record replayed;
-  - a save loaded on one computer going on turn by turn;
-  - the final battle live.
+  - Each open turn has a `TurnSlot` of its own: its battle, its question and the map events' runs. `GameState.Battle`, `PendingDecision`
+    and `MapEventState`'s runs are the slot of the turn a command runs in (a battle command's: the turn whose battle its player fights), so
+    the battle and decision services are unchanged; on a day played turn by turn there is one, shared, slot.
+  - "Wait: a battle is being fought." is gone. A battle between two people's armies is a conflict, and so is one against a hero, monster or
+    town another person is fighting at that moment, allies' too. A conflict has the LAN host play the day again from its start, so the
+    battles open then go with it; played on without the host, a slot still open waits for its person's turn, and of two battles against one
+    foe the later person's goes unfought.
+  - The command log stays the host's order, so replays stay exact; digest version 3 adds each person's slot and gives the day's current
+    player as the host's turn.
+  - `GameView.Of` sends each client its own battle and question (`BattleOf`, `DecisionFor`); the host's views hear only its own turn's
+    battle and question events (`GameSession.InShownTurn`, `BattleView3D` by `GameState.SlotPlayer`).
+  - The turn timer ends each turn but one held by a battle or a question without a default; the replay viewer follows one battle at a
+    time (`GameSession.Watch`).
+- **Tests** (done): `SimultaneousBattleTests` (two battles at once, a question beside a battle, map event questions at once, the same-foe
+  conflict played on turn by turn, a battle between two people, the timer, the computer taking over in a battle, a save loaded on one
+  computer, the replay viewer, the shown turn, the older digest);
+  `LanSimultaneousBattleTests` (two battles on two computers, each sent its own; a conflict during a battle); `LanTournamentTests` (a
+  tournament day past the first week with both fighting neutrals, the record replayed, the final battle live).
 
 ### 4. The computer
 - **Building phase:** the ordinary adventure AI plays its zone. It never looks for an enemy, since there is none it can reach.
@@ -222,7 +230,7 @@ tournaments before any screen exists.
   - A **Tournaments** tab (ADR-201's tabs) lists the tournament templates and maps, with the length row and the two players
     (Human / Computer here, and Here / LAN player / Computer in the lobby). The length is a stepper: a day a step up to 14 days, then a
     week a step up to 12 weeks.
-  - The LAN lobby notes that every day is played at once.
+  - The LAN lobby notes that every day is played at once (done in step 3).
 - **Adventure HUD:**
   - The calendar's countdown and the last day's notice.
   - The hero card shows the limit of 1 (the tavern refuses with the reason).

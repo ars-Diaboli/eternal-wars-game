@@ -393,27 +393,63 @@ public class TournamentTests
     }
 
     [Fact]
-    public void OnSimultaneousDays_TheBattleStillStartsOnTheDayAfterTheLast_BeforeAnyTurn()
+    public void OnSimultaneousDays_EveryDayBeforeTheBattle_IsPlayedAtOnce_PastTheFirstWeek_AndTheBattlesDayOpensNoTurns()
     {
-        var state = SimultaneousDayTests.Duel(new GameOptions(FogMode.ShroudWithRefog) { SimultaneousFirstWeek = true, TournamentDays = 2 });
-        state.SetRules(Rules);
-        var session = SimultaneousDayTests.Started(state);
-        Assert.Equal([Blue, Red], state.OpenTurns);
+        var session = SimultaneousDayTests.Started(SimultaneousTournament(days: 9));
+        var state = session.State;
+        var opened = new List<int>();
+        session.Events.Subscribe<SimultaneousDayStarted>(e => opened.Add(e.Date.AbsoluteDay));
+        opened.Add(state.Date.AbsoluteDay);
 
-        void EndBoth()
+        for (var day = 1; day <= 9; day++)
         {
+            Assert.Equal(day, state.Date.AbsoluteDay);
+            Assert.Equal([Blue, Red], state.OpenTurns);
             session.Execute(new EndTurnCommand(Red)).ThrowIfRejected();
+            Assert.Equal([Blue], state.OpenTurns); // Blue goes on
             session.Execute(new EndTurnCommand(Blue)).ThrowIfRejected();
         }
 
-        EndBoth();
-        Assert.Equal([Blue, Red], state.OpenTurns);
-        EndBoth();
-
-        Assert.Equal(3, state.Date.AbsoluteDay);
+        Assert.Equal(Enumerable.Range(1, 9), opened);
+        Assert.Equal(10, state.Date.AbsoluteDay);
         Assert.NotNull(state.Battle);
-        Assert.Empty(state.OpenTurns);
+        Assert.False(state.IsSimultaneous);
         Assert.Equal(DecidingBattleResult.Fighting, state.DecidingBattle!.Result);
+    }
+
+    [Fact]
+    public void ATournamentsSimultaneousDays_NeedTheOption_AndAConflictEndsThem_TheRestTurnByTurn()
+    {
+        var off = SimultaneousDayTests.Started(SimultaneousTournament(days: 9, simultaneous: false));
+        Assert.False(off.State.IsSimultaneous);
+
+        var session = SimultaneousDayTests.Started(SimultaneousTournament(days: 9));
+        var state = session.State;
+        for (var day = 1; day <= 7; day++)
+        {
+            session.Execute(new EndTurnCommand(Blue)).ThrowIfRejected();
+            session.Execute(new EndTurnCommand(Red)).ThrowIfRejected();
+        }
+
+        Assert.True(state.IsSimultaneous); // day 8, the second week
+        session.Execute(new PlayTurnByTurnCommand(Blue, "a test")).ThrowIfRejected();
+        Assert.False(state.IsSimultaneous);
+        Assert.Equal(Blue, state.CurrentPlayer.Id);
+        EndDay(session);
+
+        Assert.Equal(9, state.Date.AbsoluteDay);
+        Assert.False(state.IsSimultaneous);
+        Assert.Equal(Blue, state.CurrentPlayer.Id);
+        EndDay(session);
+        Assert.NotNull(state.Battle);
+    }
+
+    /// <summary>A tournament of <paramref name="days"/> on two start zones far apart, played by two people, at once when <paramref name="simultaneous"/>.</summary>
+    private static GameState SimultaneousTournament(int days, bool simultaneous = true)
+    {
+        var state = SimultaneousDayTests.Duel(new GameOptions(FogMode.ShroudWithRefog) { SimultaneousFirstWeek = simultaneous, TournamentDays = days });
+        state.SetRules(Rules);
+        return state;
     }
 
     [Fact]

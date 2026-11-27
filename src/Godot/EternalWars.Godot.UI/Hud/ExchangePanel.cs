@@ -29,6 +29,7 @@ public partial class ExchangePanel : PanelContainer
     private readonly Label _hint = new();
     private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(600, 0) };
     private GameSession _session = null!;
+    private object? _shownDecision; // the question the panel was last refreshed with
     private Widgets.ArmyBarGroup _bars = null!;
     private ArtifactInHand? _artifact;
 
@@ -84,6 +85,14 @@ public partial class ExchangePanel : PanelContainer
 
         this.SubscribeWhileInTree<DecisionRequested>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<DecisionResolved>(session.Events, _ => Refresh());
+        // A question resolved in another person's command of a simultaneous day (a defeat) is seen once the game is back in the shown turn (ADR-366).
+        this.SubscribeWhileInTree<CommandExecuted>(session.Events, _ =>
+        {
+            if (!ReferenceEquals(_session.State.PendingDecision, _shownDecision))
+            {
+                Refresh();
+            }
+        });
         this.SubscribeWhileInTree<ArmyChanged>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<WarMachineGiven>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<ArtifactGiven>(session.Events, _ => Refresh());
@@ -118,6 +127,13 @@ public partial class ExchangePanel : PanelContainer
 
     private void Refresh()
     {
+        // Another person's command of a simultaneous day: its battle and question are theirs, this screen keeps the one it shows (ADR-366).
+        if (!_session.InShownTurn)
+        {
+            return;
+        }
+
+        _shownDecision = _session.State.PendingDecision;
         Clear(_columns);
         if (_session.State.PendingDecision is not HeroExchangeDecision exchange)
         {

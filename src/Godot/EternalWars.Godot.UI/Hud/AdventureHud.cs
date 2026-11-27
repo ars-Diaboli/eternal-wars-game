@@ -317,7 +317,7 @@ public partial class AdventureHud : CanvasLayer
                  {
                      a => this.SubscribeWhileInTree<TurnStarted>(_session.Events, _ => { EndTurnQuestion.Visible = false; a(); }),
                      a => this.SubscribeWhileInTree<HeroMoved>(_session.Events, _ => { EndTurnQuestion.Visible = false; a(); }),
-                     a => this.SubscribeWhileInTree<DecisionRequested>(_session.Events, _ => { EndTurnQuestion.Visible = false; a(); }),
+                     a => this.SubscribeWhileInTree<DecisionRequested>(_session.Events, _ => { if (_session.InShownTurn) { EndTurnQuestion.Visible = false; a(); } }), // not another person's (ADR-366)
                      a => this.SubscribeWhileInTree<HeroHired>(_session.Events, _ => { EndTurnQuestion.Visible = false; a(); }),
                      a => this.SubscribeWhileInTree<ArtifactGained>(_session.Events, _ => a()),
                      a => this.SubscribeWhileInTree<ArtifactLost>(_session.Events, _ => a()),

@@ -43,7 +43,18 @@ public partial class NewGameScreen
     /// <summary>The players of the selected hand-made map with a start zone; null for a random map, whose generator gives each one (ADR-197).</summary>
     private HashSet<PlayerId>? _zoneOwners;
 
-    /// <summary>The simultaneous first week's switch (a LAN host's lobby only: made when first asked for, so a screen out of the tree holds no node).</summary>
+    /// <summary>The selected map is a tournament's (ADR-366): its every day before the battle is played at once.</summary>
+    private bool _tournamentMap;
+
+    private bool IsTournament => SelectedTemplate?.Tournament ?? _tournamentMap;
+
+    /// <summary>The days are played at once: always in a tournament (ADR-366, which has no switch for it), else when the host ticks the switch.</summary>
+    private bool SimultaneousOn => IsTournament || _simultaneousBox?.ButtonPressed == true;
+
+    /// <summary>
+    /// The simultaneous first week's switch (a LAN host's lobby only: made when first asked for, so a screen out of the tree holds no node; hidden
+    /// for a tournament, whose days are always played at once).
+    /// </summary>
     private CheckBox? _simultaneousBox;
 
     private CheckBox Simultaneous => _simultaneousBox ??= new()
@@ -114,17 +125,19 @@ public partial class NewGameScreen
     }
 
     /// <summary>
-    /// The simultaneous first week in words (an arena map's preparation day, ADR-199), naming the people's colours without a start zone, which keep
+    /// The simultaneous first week in words (an arena map's preparation day, ADR-199; a tournament's every day before the battle, ADR-366), naming the people's colours without a start zone, which keep
     /// every day turn by turn.
     /// </summary>
     private string SimultaneousLine()
     {
-        if (_simultaneousBox?.ButtonPressed != true)
+        if (!SimultaneousOn)
         {
             return "Every day is played turn by turn.";
         }
 
-        var days = _arena.Visible ? "The preparation day is played at once" : "The first week's days are played at once";
+        var days = _arena.Visible ? "The preparation day is played at once"
+            : IsTournament ? "Every day before the battle is played at once"
+            : "The first week's days are played at once";
         var people = _seatNames.Where((s, i) => LanSeatKind.Computer != (SelectedTemplate is not null && i < _randomPlayers.Count
             ? KindOf(_randomPlayers[i].Control)
             : _controllers.TryGetValue(s.Id, out var c) ? KindOf(c) : LanSeatKind.Computer)).ToList();
@@ -162,9 +175,14 @@ public partial class NewGameScreen
         if (shown != _lanShown)
         {
             _lanShown = shown;
+            if (_simultaneousBox is not null)
+            {
+                _simultaneousBox.Visible = !IsTournament;
+            }
+
             if (_simultaneousNote is not null)
             {
-                _simultaneousNote.Text = _simultaneousBox?.ButtonPressed == true ? SimultaneousLine() : "";
+                _simultaneousNote.Text = SimultaneousOn ? SimultaneousLine() : "";
             }
 
             foreach (var (id, label) in _lanPlayers)
@@ -235,10 +253,10 @@ public partial class NewGameScreen
     }
 
     /// <summary>
-    /// A LAN game's options: the simultaneous first week (MP-2, ADR-197), with the colour played here as the host's; off outside a LAN host's
-    /// lobby.
+    /// A LAN game's options: the simultaneous first week (MP-2, ADR-197; a tournament's every day, always, ADR-366), with the colour played here
+    /// as the host's; off outside a LAN host's lobby.
     /// </summary>
-    private GameOptions WithLan(GameOptions options) => Lan is null || _simultaneousBox?.ButtonPressed != true
+    private GameOptions WithLan(GameOptions options) => Lan is null || !SimultaneousOn
         ? options
         : options with { SimultaneousFirstWeek = true, HostPlayer = DescribeLan().Seats.FirstOrDefault(s => s.Kind == LanSeatKind.Here)?.Id };
 
@@ -287,9 +305,11 @@ public partial class NewGameScreen
             return "Play at least one colour here, on this computer.";
         }
 
-        if (_simultaneousBox?.ButtonPressed == true && seats.Count(s => s.Kind == LanSeatKind.Here) > 1)
+        if (SimultaneousOn && seats.Count(s => s.Kind == LanSeatKind.Here) > 1)
         {
-            return "A simultaneous first week needs each person on their own computer: play one colour here, or turn it off.";
+            return IsTournament
+                ? "A tournament over the LAN plays every day at once, each person on their own computer: play one colour here."
+                : "A simultaneous first week needs each person on their own computer: play one colour here, or turn it off.";
         }
 
         var open = seats.Where(s => s.Kind == LanSeatKind.Remote && _lanPlayerAt(s.Id) is null).Select(s => s.Colour).ToList();

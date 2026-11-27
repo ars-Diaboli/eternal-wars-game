@@ -107,5 +107,6 @@ internal static class NewGameChoices
         },
         template.MinTeams,
         template.MaxTeams,
-        template.MaxHeroes);
+        template.MaxHeroes,
+        template.Tournament);
 }

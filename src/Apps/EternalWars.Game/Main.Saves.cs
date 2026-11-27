@@ -356,7 +356,7 @@ public partial class Main
     private static SavedGameView ViewOfSave(LoadedSave saved)
     {
         var state = saved.Session.State;
-        var lines = new List<string> { $"{state.Date}, {state.CurrentPlayer.Name}'s turn{(state.Battle is null ? "" : ", in a battle")}" };
+        var lines = new List<string> { $"{state.Date}, {state.CurrentPlayer.Name}'s turn{(state.OpenBattles.Count == 0 ? "" : ", in a battle")}" };
         return new SavedGameView(
             $"{saved.Record.Map.Name}: '{saved.Record.Save?.Name ?? Path.GetFileName(saved.Path)}'",
             lines,

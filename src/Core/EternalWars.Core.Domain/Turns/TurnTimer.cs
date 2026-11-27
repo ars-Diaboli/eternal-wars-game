@@ -35,7 +35,7 @@ public sealed class TurnTimer(GameSession session, Func<GameCommand, CommandResu
     public double? SecondsLeft => Timed ? Math.Max(0, _left) : null;
 
     /// <summary>The clock stands still: a battle between two human players is being fought.</summary>
-    public bool IsStopped => session.State.Battle is { } battle && !battle.Attacker.IsComputer && !battle.Defender.IsComputer;
+    public bool IsStopped => session.State.OpenBattles.Any(b => !b.Attacker.IsComputer && !b.Defender.IsComputer);
 
     /// <summary>The time is up and the turn waits to be ended (an answer the player still has to give, a battle, the front-end).</summary>
     public bool IsUp => Timed && _left <= 0;
@@ -134,20 +134,30 @@ public sealed class TurnTimer(GameSession session, Func<GameCommand, CommandResu
     }
 
     /// <summary>
-    /// The day's time is up (a simultaneous day): the question being asked gets its default, then each open turn ends, until the day is over. A
-    /// question without a default or a battle holds every turn until it is answered or fought.
+    /// The day's time is up (a simultaneous day): each open turn's question gets its default, then the turn ends, until the day is over. A
+    /// question without a default or a battle holds its own turn only (each turn has its own, ADR-366) until it is answered or fought.
     /// </summary>
     private void EndDay(GameDate date)
     {
         var state = session.State;
-        for (var i = 0; i < 64 && state.IsSimultaneous && state.Date == date; i++)
+        var moved = true;
+        for (var i = 0; i < 64 && moved; i++)
         {
-            var command = state.PendingDecision is { } decision
-                ? Default(state.DecisionPlayer ?? state.CurrentPlayer.Id, decision)
-                : new EndTurnCommand(state.OpenTurns[0]);
-            if (command is null || !_execute(command).IsAccepted)
+            moved = false;
+            foreach (var player in state.OpenTurns.ToList())
             {
-                return;
+                if (!state.IsSimultaneous || state.Date != date)
+                {
+                    return;
+                }
+
+                if (!state.OpenTurns.Contains(player))
+                {
+                    continue;
+                }
+
+                var command = state.DecisionFor(player) is { } decision ? Default(player, decision) : new EndTurnCommand(player);
+                moved |= command is not null && _execute(command).IsAccepted;
             }
         }
     }

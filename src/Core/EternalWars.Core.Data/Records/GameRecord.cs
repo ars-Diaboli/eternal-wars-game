@@ -123,7 +123,7 @@ public static class GameReplay
                 DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture),
                 session.State.Date.ToString(),
                 session.State.CurrentPlayer.Name,
-                session.State.Battle is not null,
+                session.State.OpenBattles.Count > 0,
                 initialMap.Name),
     };
 

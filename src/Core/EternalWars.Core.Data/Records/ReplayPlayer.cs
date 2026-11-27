@@ -94,6 +94,7 @@ public sealed class ReplayPlayer
                }))
         {
             session.Start();
+            Follow(session, null);
             var inBattle = new bool[record.Commands.Count + 1];
             var commanded = new bool[record.Commands.Count + 1];
             inBattle[0] = session.State.Battle is not null;
@@ -102,7 +103,7 @@ public sealed class ReplayPlayer
             {
                 position = i + 1; // a turn that starts during this command starts after it
                 computerAttacker = null;
-                var result = session.Execute(record.Commands[i]);
+                var result = Execute(session, record.Commands[i]);
                 if (!result.IsAccepted)
                 {
                     throw new InvalidOperationException($"Replay diverged at command {i} ({record.Commands[i]}): {result.Error}");
@@ -116,6 +117,7 @@ public sealed class ReplayPlayer
                 }
             }
 
+            session.Watch(null); // an older digest gives the current player as it was between the commands, the host's turn
             record.CheckFinalDigest(session.State);
             return new ReplayPlayer(record, Create, turns, inBattle, commanded, computerBattles);
         }
@@ -129,7 +131,7 @@ public sealed class ReplayPlayer
             return false;
         }
 
-        var result = Session.Execute(Record.Commands[Position]);
+        var result = Execute(Session, Record.Commands[Position]);
         if (!result.IsAccepted)
         {
             // Only a command from outside the viewer could make the watched game differ from its record.
@@ -318,9 +320,10 @@ public sealed class ReplayPlayer
     {
         var session = _create();
         session.Start();
+        Follow(session, null);
         for (var i = 0; i < position; i++)
         {
-            var result = session.Execute(Record.Commands[i]);
+            var result = Execute(session, Record.Commands[i]);
             if (!result.IsAccepted)
             {
                 throw new InvalidOperationException($"Replay diverged at command {i}: {result.Error}");
@@ -328,5 +331,42 @@ public sealed class ReplayPlayer
         }
 
         return session;
+    }
+
+    /// <summary>Runs one of the record's commands on <paramref name="session"/>, then follows its battles (<see cref="Follow"/>).</summary>
+    private static CommandResult Execute(GameSession session, GameCommand command)
+    {
+        var state = session.State;
+        var before = state.OpenTurns.ToDictionary(p => p, state.BattleOf);
+        var result = session.Execute(command);
+        var began = state.OpenTurns.Where(p => state.BattleOf(p) is { } battle && !ReferenceEquals(battle, before.GetValueOrDefault(p)))
+            .Cast<PlayerId?>().FirstOrDefault();
+        Follow(session, began);
+        return result;
+    }
+
+    /// <summary>
+    /// On a simultaneous day the viewer shows one battle at a time (ADR-366): the one it watches while it lasts, else the one the last command
+    /// began (<paramref name="began"/>), else the first person's in turn order that is being fought; the others are fought off screen. Every
+    /// session of the record follows them alike, so the battle positions noted when it opened are those it shows.
+    /// </summary>
+    private static void Follow(GameSession session, PlayerId? began)
+    {
+        var state = session.State;
+        if (!state.IsSimultaneous)
+        {
+            return;
+        }
+
+        if (session.Watched is { } watched && state.OpenTurns.Contains(watched) && state.BattleOf(watched) is not null)
+        {
+            return;
+        }
+
+        var next = began ?? state.OpenTurns.Where(p => state.BattleOf(p) is not null).Cast<PlayerId?>().FirstOrDefault();
+        if (next != session.Watched)
+        {
+            session.Watch(next);
+        }
     }
 }

@@ -219,7 +219,7 @@ cannot look under its fog). *(proposal)* marks the agent's choices.
   own, so loading it asks again who plays each.
 
 ### ADR-197: Start zones in the map and the simultaneous first week (MP-2, MP-4, ADR-098, ADR-099, roadmap, 2026-11-16)
-**Status**: implemented (2026-11-16), the roadmap's start zones and simultaneous first week. *(proposal)* marks the agent's choices.
+**Status**: implemented (2026-11-16), the roadmap's start zones and simultaneous first week; its one battle or question at a time replaced by ADR-366 (2026-11-27: each open turn fights and answers its own). *(proposal)* marks the agent's choices.
 
 - **Start zones** (MP-4): a cell layer of the map, each tile in one player's zone or none. **Map format v40** (`startZones`, one character
   per tile: `.` none, `0`–`7` the player's number; omitted = none; older maps have none, so no upgrade step). The **generator** writes each

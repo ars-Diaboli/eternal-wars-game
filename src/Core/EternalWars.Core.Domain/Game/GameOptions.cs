@@ -91,8 +91,8 @@ public sealed record GameOptions(
 
     /// <summary>
     /// The simultaneous first week (MP-2, ADR-098, ADR-197): on a map with a start zone for every person, the people play each day of the first
-    /// week at once, the computer players after them, until a conflict has the day played again turn by turn (<see cref="Commands.PlayTurnByTurnCommand"/>)
-    /// and every day after it. A LAN host's choice; false plays every day turn by turn.
+    /// week (of a tournament, every day before its battle, ADR-366) at once, the computer players after them, until a conflict has the day played
+    /// again turn by turn (<see cref="Commands.PlayTurnByTurnCommand"/>) and every day after it. A LAN host's choice (a LAN tournament's always); false plays every day turn by turn.
     /// </summary>
     public bool SimultaneousFirstWeek { get; init; }
 
