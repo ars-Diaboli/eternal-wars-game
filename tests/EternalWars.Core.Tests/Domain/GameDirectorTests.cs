@@ -224,4 +224,73 @@ public class GameDirectorTests
         Assert.False(director.TurnStarted(Red, showingComputerMoves: true));
         Assert.False(director.HasTurnToShow);
     }
+
+    [Fact]
+    public void AHotSeatTournament_OpensEachPersonsTurn_BehindTheHandOverScreen_TheClockStandingStill()
+    {
+        var session = Start(Tournament(TwoMinutes with { TournamentDays = 7 })); // Blue's turn
+        var director = new GameDirector(session);
+
+        Assert.True(director.HandsOver(Blue));
+        Assert.False(director.Resumed()); // a loaded game's turn waits too
+        Assert.Equal(Blue, director.HandOver);
+        Assert.Equal(120, director.RunClock(1000, showingComputerMoves: false, screensOpen: false)!.Value.SecondsLeft);
+        Assert.Equal(Blue, session.State.CurrentPlayer.Id);
+        Assert.Equal(Blue, director.TakeHandOver());
+        Assert.Null(director.HandOver);
+        Assert.Equal(119, director.RunClock(1, showingComputerMoves: false, screensOpen: false)!.Value.SecondsLeft);
+
+        session.EndTurn();
+        Assert.False(director.TurnStarted(Red, showingComputerMoves: false)); // the map stays under the screen
+        Assert.Equal(Red, director.TakeHandOver());
+        Assert.Null(director.TakeHandOver());
+    }
+
+    [Fact]
+    public void NoHandOver_AgainstTheComputer_OverTheLan_OrOutsideATournament()
+    {
+        var computer = Tournament(GameOptions.Default);
+        computer.GetPlayer(Red).IsHuman = false;
+        var lan = Tournament(GameOptions.Default);
+        var ordinary = Create("A...", "...B");
+
+        foreach (var director in new[]
+                 {
+                     new GameDirector(Start(computer)), new GameDirector(Start(lan), new LocalSeats { PlaysElsewhere = p => p == Red }),
+                     new GameDirector(Start(ordinary)),
+                 })
+        {
+            Assert.False(director.HandsOver(Blue));
+            Assert.True(director.Resumed());
+            Assert.True(director.TurnStarted(Blue, showingComputerMoves: false));
+            Assert.Null(director.HandOver);
+        }
+    }
+
+    [Fact]
+    public void TheHandOverScreen_SaysWhoseTurn_TheDayWithTheCountdown_AndThatTheOthersLookAway()
+    {
+        var state = Tournament(GameOptions.Default with { TournamentDays = 7 });
+
+        Assert.Equal(
+            ("Blue's turn", "Day 1 · Battle in 7 days", "Hand the screen to Blue. Everyone else looks away: each player sees only their own zone.",
+                "Start Blue's turn"),
+            TournamentRules.HandOver(state, Blue));
+    }
+
+    /// <summary>A tournament: Blue's start zone left of the wall, Red's right of it.</summary>
+    private static GameState Tournament(GameOptions options)
+    {
+        var state = Create(options, "A.#..", "..#.B");
+        state.SetRules(ScenarioRules.Default with { Tournament = true, MaxHeroes = 1 });
+        for (var y = 0; y < state.Map.Height; y++)
+        {
+            for (var x = 0; x < state.Map.Width; x++)
+            {
+                state.Map.SetStartZone(new MapPosition(x, y), x < 2 ? Blue : x > 2 ? Red : null);
+            }
+        }
+
+        return state;
+    }
 }

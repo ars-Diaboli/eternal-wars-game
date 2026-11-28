@@ -15,6 +15,18 @@ public static class TournamentRules
     /// <summary>Why a player of a tournament cannot send the other resources (ADR-366): the two never trade.</summary>
     public const string NoTradingRefusal = "There is no trading between the players of a tournament.";
 
+    /// <summary>
+    /// Whether a screen shows <paramref name="battle"/> (ADR-366): in a tournament only a battle a person fights, so the computer's fights in its
+    /// own zone tell the person nothing of its army; in other games every battle. A LAN game's screens show only their own players' battles
+    /// besides (ADR-195).
+    /// </summary>
+    public static bool Shown(GameState state, Battles.BattleState battle)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(battle);
+        return !state.Rules.Tournament || new[] { battle.Attacker, battle.Defender }.Any(p => !p.IsComputer && p.Owner is not null);
+    }
+
     /// <summary>The length when the game names none: two weeks.</summary>
     public const int DefaultDays = 14;
 
@@ -89,6 +101,19 @@ public static class TournamentRules
             > 1 and var left => $"Battle in {left} days",
             _ => null,
         };
+    }
+
+    /// <summary>
+    /// What the hot-seat hand-over screen says before <paramref name="player"/>'s turn (ADR-366): whose turn it is, the day with the countdown,
+    /// that the others look away, and its button.
+    /// </summary>
+    public static (string Title, string Day, string Text, string Button) HandOver(GameState state, PlayerId player)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        var name = state.GetPlayer(player).Name;
+        var day = $"Day {state.Date.AbsoluteDay}" + (Countdown(state) is { } countdown ? $" · {countdown}" : "");
+        return ($"{name}'s turn", day, $"Hand the screen to {name}. Everyone else looks away: each player sees only their own zone.",
+            $"Start {name}'s turn");
     }
 
     /// <summary>Whether today is a tournament's last building day, when each person's turn opens with <see cref="LastDayNotice"/>.</summary>

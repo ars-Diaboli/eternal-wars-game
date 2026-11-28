@@ -420,13 +420,16 @@ battle with no retreat or surrender, and its winner wins. Lengths: 1–14 days, 
         days, mines and buildings weighed by the days left, the last days' gold on the army, the last day's army gathered into the hero
         (Town Portal home when out of reach) (done);
       - `sim game --length` and the champions' armies at the battle; the median army at the battle 3–22× the old AI's (done).
-- [ ] Step 5: The game app:
+- [x] Step 5: The game app:
       - the Tournaments tab with the length stepper and the two players; the calendar's countdown and the last day's notice; "Hero 1/1"
         and the taverns' reason; no Thieves' Guild or sending; smoke `game-tournament-setup` (done);
       - the battle without retreat or surrender, the result screen; smoke `game-tournament` (done);
-      - the hot-seat hand-over
+      - the hot-seat hand-over: each person's turn behind a screen until they take it, the clock still meanwhile (done)
 - [x] Step 6: The editor: the Tournament switch, the validator's problems and fix-its, the template inspector's flag
-- [ ] Step 7: Seen in Godot against the computer, hot-seat and on the LAN; AI runs; the rules moved into victory-and-modes.md
+- [x] Step 7: Seen in Godot against the computer (smokes `game-tournament`, `game-tournament-week`), hot-seat
+      (`game-tournament-hot-seat`) and on the LAN (two processes on one computer); 120 AI runs, every one to the battle; the rules in
+      victory-and-modes.md and the plan turned into the report. Fixed: the computer's battles shown to the person, the final battle not
+      opening on a LAN client, the host telling of the other's battles
 
 ## Phase 6: Story campaign
 - [ ] Prologue / tutorial: one small map, Haven against neutrals and a Necropolis vanguard, hints through the map events, a "Hints" setting; playable from the main menu as "Prologue" (ADR-116, ADR-118)

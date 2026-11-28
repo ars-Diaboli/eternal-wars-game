@@ -83,8 +83,7 @@ In priority order:
     everyone, and so is a side without a hero (or no enemy to fight). A side without an army loses without a battle. Never ranked.
   - **In the game** (ADR-159): an arena map on the new-game screen says what the mode is, and each player is set to Human or Computer
     (hot-seat, or against the computer; at least one human). Day 2's battle opens by itself, both armies shown in full, and the status line
-    names the two champions. The result screen tells who attacked whom, that arena maps are not ranked (a tournament's says the same of
-    tournaments, and how long the building up lasted, ADR-366), and offers **"Play again"** (the
+    names the two champions. The result screen tells who attacked whom, that arena maps are not ranked, and offers **"Play again"** (the
     same map, players, teams, factions and options, a new seed) and "Save replay".
   - **The computer on day 1** (ADR-160) spends everything on the battle's army: its towns buy what waits, then build the dwellings (with
     the buildings they need) whose first creatures they can still buy, and the dwelling upgrades worth it, best army per gold first, then
@@ -108,6 +107,37 @@ In priority order:
     Computer. Each player prepares in its own view; day 1 is played turn by turn, or at once with the simultaneous switch on a map with a
     start zone for every person. Day 2's battle opens by itself on both sides' computers and is fought live. The result screen tells each
     computer its own victory or defeat; the host's "Play again" starts the rematch for everyone, with the same colours.
+- **Tournament** (ADR-366): two players build up apart, each in a zone of their own against the map's neutrals, then their heroes fight one
+  battle that decides the game. The map's "Tournament" switch (map format v45) turns it on; random maps get it from a tournament template (the
+  shipped Twin Vales Small, Twin Vales and Twin Vales Large, mirrored, see [random-maps.md](random-maps.md)).
+  - **The map**: exactly two players who are not allies, at most one hero each (a hero in a town's garrison counts), never an arena too.
+    Each player has a start zone, and no passage, gate, portal or teleporter joins the two. The map's victory and defeat conditions, the
+    last team standing and the elimination do not count: nobody is out before the battle.
+  - **The length** is chosen when the game is created: 1 to 14 days, then whole weeks up to 12 (14 days by default).
+  - **The building days** are ordinary days. The calendar counts down ("Battle in 5 days", then "Last day before the battle"), and each
+    person's last day opens with a notice to gather the troops into the hero. A fallen hero may be replaced from the player's own tavern
+    pool, still one at a time.
+  - **Isolation**: a player never sees, reveals or reaches the other's zone (tiles in no zone stay in reach). Sight, scouting, revealing
+    objects and the adventure spells stop at the zone's edge: none is aimed outside it, Town Portal goes only to towns inside it, and
+    Distant Vision, Detect Magic and Grave Whisper show only it. Each player has its own tavern pools, a Grail of its own when its zone has
+    an obelisk, and its own artifact rolls. There is no trading; the Thieves' Guild and the Den of Thieves tell nothing, and rumours name
+    only treasures in the player's own reach. The week's events stay shared. The players know each other's name, colour and town and
+    nothing more: while the game is played the computer's battles are shown on no screen, and over the LAN only the chat's line says when
+    the other has ended the day.
+  - **The battle**, at the start of the day after the last, before anyone's turn: each player's champion is its one hero, on the map or
+    else in a town's garrison, with its own army only. It is fought on neutral ground (sand, beach or dirt, from the game's random numbers),
+    never as a siege, and a coin toss from the game's random numbers makes one player the attacker. Neither side may retreat or surrender
+    (the buttons greyed out, the first prompt saying why), and it gives no experience.
+  - **The end**: the battle's winner wins. A side without a hero, or whose champion has no army, loses without a battle; when both sides
+    are so, or both armies fall, it is a draw. Never ranked. The result screen is the arena's: who won the coin toss and attacked whom, how
+    long the building up lasted, "Tournaments are not ranked", "Play again" and "Save replay".
+  - **Where it is played**: against the computer, which plays its zone for the deadline; hot-seat, each turn showing its player's zone and
+    the battle fought on the shared screen. In hot-seat each person's turn opens behind the **hand-over screen**, which covers the map and
+    the HUD with "Blue's turn", the day and the countdown, and "Hand the screen to Blue. Everyone else looks away". "Start Blue's turn"
+    (or Enter or Space) shows that person's zone, and the turn timer stands still until then; and over the LAN, where every day before the battle is played at once (below) and the battle is
+    fought live on both computers.
+  - **In the editor**: the map settings' Tournament switch and Problems' fix for a missing start zone ([tools.md](tools.md)); the
+    template inspector's Tournament row ([random-maps.md](random-maps.md)).
 - **LAN multiplayer** *(before 1.0, ADR-088, ADR-098; MP-3, MP-4 ❓; network, view, lobby, live battles, drop-outs, saves, start zones, the simultaneous first week, the turn timer and arena maps built: ADR-192 to ADR-199)*: the **host** runs
   the game and computer players; clients send commands and get only what they may see. **Lobby**: Multiplayer lists the games found on the
   network (or an address is typed); the host sets the game up on the new-game screen, each colour played here, by a LAN player or by the
@@ -120,7 +150,7 @@ In priority order:
   each colour a person plays is played here, by a LAN player or by the computer) or on one computer (a save with several people's colours
   asks which play here, hot-seat, and which the computer plays from then on; F9's quick load keeps them all here). **Simultaneous first week** (the host's switch in the lobby, always on without one in a tournament; maps with
   a start zone for every person, which random maps have and the editor paints; one colour played on the host; the lobby says when the map
-  lacks one): the people play each day of the first week (an arena's preparation day; a tournament's every day before its battle, ADR-366) at once, each on their own computer, and the computer players after them. Each person fights their own battles and answers their own
+  lacks one): the people play each day of the first week (an arena's preparation day; a tournament's every day before its battle, ADR-366) at once, each on their own computer, and the computer players after them. A line in the chat tells everyone when a person has ended the day. Each person fights their own battles and answers their own
   questions while the others play on: nobody waits for another's battle or question (ADR-366). A hero entering another person's start zone,
   a person seeing another person's hero it did not see when the day began, a hero visiting an object another person's hero visited that day
   (an ally's zone, hero or visit never is), a battle between two people's armies, or a battle against a hero, monster or town another

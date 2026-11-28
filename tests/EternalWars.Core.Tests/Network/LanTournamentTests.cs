@@ -1,8 +1,13 @@
 using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Data.Records;
 using EternalWars.Core.Domain.Commands;
+using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Creatures;
+using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Towns;
+using EternalWars.Core.Events;
 using EternalWars.Core.Network;
 using EternalWars.Core.Tests.Domain;
 using static EternalWars.Core.Tests.TestWorld;
@@ -60,6 +65,105 @@ public class LanTournamentTests
         Assert.NotNull(state.Battle);
         Assert.False(state.IsOver);
         Assert.False(red.Session.State.IsOver);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void TheBattleOpens_OnBothComputers_WhoeverEndsTheLastDayLast(bool clientEndsLast)
+    {
+        var state = SimultaneousDayTests.Duel(Options with { TournamentDays = 2 });
+        state.SetRules(ScenarioRules.Default with { Tournament = true, MaxHeroes = 1 });
+        var session = new GameSession(state);
+        session.Start();
+        var host = new GameHost(session, [Red]);
+        var red = Join(host, "Bob", Red);
+        var opened = new List<string>();
+        session.Events.Subscribe<BattleStarted>(_ => opened.Add(session.InShownTurn ? "host" : "host, not shown"));
+        red.Session!.Events.Subscribe<BattleStarted>(_ => opened.Add(red.Session.InShownTurn ? "client" : "client, not shown"));
+
+        for (var day = 1; day <= 2; day++)
+        {
+            if (clientEndsLast)
+            {
+                session.Execute(new EndTurnCommand(Blue)).ThrowIfRejected();
+                Pump(host, red);
+                red.Session.Execute(new EndTurnCommand(Red)).ThrowIfRejected();
+            }
+            else
+            {
+                red.Session.Execute(new EndTurnCommand(Red)).ThrowIfRejected();
+                Pump(host, red);
+                session.Execute(new EndTurnCommand(Blue)).ThrowIfRejected();
+            }
+
+            Pump(host, red);
+        }
+
+        Assert.NotNull(red.Session.State.Battle);
+        Assert.Equal(["client", "host"], opened.Order()); // both screens open it, each in its shown turn
+    }
+
+    [Fact]
+    public void AChampionFromItsTownsGarrison_IsShownToTheOther_ButItsTownNever()
+    {
+        // Blue's zone with its town left, Red's right, far apart.
+        var state = Create(Options with { TournamentDays = 1 }, [.. Enumerable.Repeat(new string('.', 30), 9), "A" + new string('.', 28) + "B"]);
+        state.SetRules(ScenarioRules.Default with { Tournament = true, MaxHeroes = 1 });
+        for (var y = 0; y < state.Map.Height; y++)
+        {
+            for (var x = 0; x < 10; x++)
+            {
+                state.Map.SetStartZone(new MapPosition(x, y), Blue);
+                state.Map.SetStartZone(new MapPosition(29 - x, y), Red);
+            }
+        }
+
+        var town = AddTown(state, TownIds.Haven, 2, 0, Blue);
+        state.GetHero(A).Army.Set(0, new CreatureStack(BuiltInCreatures.Champion, 5));
+        state.GetHero(B).Army.Set(0, new CreatureStack(BuiltInCreatures.Champion, 5));
+        var session = new GameSession(state);
+        session.Start();
+        var host = new GameHost(session, [Red]);
+        var red = Join(host, "Bob", Red);
+
+        session.Execute(new MoveHeroCommand(Blue, A, town.VisitPosition)).ThrowIfRejected();
+        session.Execute(new EnterGarrisonCommand(Blue, town.Id)).ThrowIfRejected();
+        Assert.Same(state.GetHero(A), town.GarrisonHero);
+        red.Session!.Execute(new EndTurnCommand(Red)).ThrowIfRejected();
+        Pump(host, red);
+        session.Execute(new EndTurnCommand(Blue)).ThrowIfRejected();
+        Pump(host, red);
+
+        Assert.NotNull(state.Battle);
+        Assert.NotNull(red.Session.State.Battle); // Blue's champion came out of its town to fight
+        Assert.Equal(state.GetHero(A).Army.Slots, red.Session.State.GetHero(A).Army.Slots);
+        Assert.Null(red.Session.State.FindObject(town.Id)); // its town, its buildings and garrison, never seen
+    }
+
+    [Fact]
+    public void APersonEndingTheDay_IsToldToEveryone_TheOnlyNewsOfTheOther()
+    {
+        var state = SimultaneousDayTests.Duel(Options);
+        state.SetRules(ScenarioRules.Default with { Tournament = true, MaxHeroes = 1 });
+        var session = new GameSession(state);
+        session.Start();
+        var host = new GameHost(session, [Red]);
+        var red = Join(host, "Bob", Red);
+        var onHost = new List<string>();
+        var onClient = new List<string>();
+        host.ChatReceived += (_, line) => onHost.Add(line);
+        red.ChatReceived += (_, line) => onClient.Add(line);
+
+        red.Session!.Execute(new EndTurnCommand(Red)).ThrowIfRejected();
+        Pump(host, red);
+        Assert.Equal(["Red has ended the day."], onHost);
+        Assert.Equal(["Red has ended the day."], onClient);
+
+        session.Execute(new EndTurnCommand(Blue)).ThrowIfRejected(); // the last: the next day opens, no line
+        Pump(host, red);
+        Assert.Single(onHost);
+        Assert.Equal(2, red.Session.State.Date.AbsoluteDay);
     }
 
     [Fact]

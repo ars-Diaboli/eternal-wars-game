@@ -1,11 +1,11 @@
-# Tournament mode: guide and plan
+# Tournament mode: report
 
-The plan for a new game mode, the **tournament** (owner, 2026-11-27; ADR-366). Two players build up apart from each other, each in a zone
+How the **tournament** mode was built (owner, 2026-11-27; ADR-366). Two players build up apart from each other, each in a zone
 of their own against the map's neutrals, for a time chosen when the game is created. When the time is up their heroes meet in one battle
 with no retreat and no surrender, and its winner wins the game. It is played against the computer, hot-seat and over the LAN, where both
-players play every day at once. The guide states the rules as the owner decided them (TRN-1 to TRN-9, 2026-11-27: the proposals, with
-the lengths up to 3 months, and battles at the same time on every simultaneous day, not only in tournaments). Once built, the rules move
-into [victory-and-modes.md](../design/victory-and-modes.md#game-modes) and this file becomes the report.
+players play every day at once. The owner answered TRN-1 to TRN-9 on 2026-11-27: the proposals, with the lengths up to 3 months, and
+battles at the same time on every simultaneous day, not only in tournaments. The rules as built are in
+[victory-and-modes.md](../design/victory-and-modes.md#game-modes); this file tells what each step built and what the checks found.
 
 ## Guide
 
@@ -34,84 +34,6 @@ battle that decides the game. The tournament stretches that phase from one day t
 | One turn timer | ADR-198 | The optional turn timer, one clock for both players |
 | Hero limit | ADR-068, ADR-134 | `ScenarioRules.MaxHeroes`, fixed at 1 |
 | Mirrored templates | ADR-117 | The two zones get the same content, because mirrored zones share their rolls |
-
-### Rules
-
-**Turning it on.**
-- The map's `rules.tournament` switch makes a map a tournament map, as `rules.arena` does for the arena. The generator writes it from a
-  tournament template, and the editor sets it on hand-made maps. The templates come first, the editor's switch after them.
-- The length is a game option, `GameOptions.TournamentDays`, chosen on the new-game screen: any number of days from 1 to 14, then whole
-  weeks from 3 to 12 (21, 28, … 84 days; 3 months is the upper limit). The default is 14 days.
-- A tournament map always has exactly two players, no teams and a hero limit of 1.
-- The map's victory and defeat conditions do not count, nor do the last team standing or elimination. Nobody is out before the battle.
-
-**The building phase (days 1 to N).**
-- These are ordinary days: income, building one structure a day, the week's growth, map events and the neutrals.
-- Each player has one hero.
-- A player whose hero falls may hire another in a town's tavern, still at most one, from their own tavern pool.
-- The status bar's calendar says how many days remain before the battle. The last day says so too.
-
-**Isolation.**
-- Each player's start zone is cut off from the other's. No passage, gate, portal or teleporter connects them; the generator and
-  the validator make sure of this.
-- A player never sees, reveals or reaches a tile outside their own zone:
-  - **Sight:** sight, scouting and revealing objects stop at the zone's edge, so a Scouting hero cannot look over the wall.
-  - **Movement spells:** Dimension Door, Town Portal and the other spells that move a hero work only inside the zone.
-  - **Information spells:** spells that show the map or other players (Distant Vision, Detect Magic, Eavesdrop, …) show only the zone.
-- What players would otherwise share becomes each player's own:
-  - the taverns' hero pools: a pool per player;
-  - the Grail: one per zone (with the zone's own obelisks), none when the template has no obelisks;
-  - the artifact rolls: mirrored per zone, so both zones can hold the same artifact.
-- The week's events and rumours stay shared, since they treat both players alike.
-- Trading between the players is off.
-- The players learn nothing about each other before the battle beyond the opponent's name, colour and town. On the LAN, a line says when
-  the opponent has ended the day.
-
-**The battle (the start of day N + 1).**
-- When the calendar reaches the day after the last building day, the battle opens before anyone's turn, as on an arena's day 2.
-- **Champions:** each player's champion is their one hero: on the map, else in a town's garrison. It fights with its own army only, not
-  the garrison it stands by, so a player must gather the army into the hero by the last day.
-- **The battlefield** is neutral ground, not either player's zone, with its terrain and obstacles drawn from the seed. It is never a
-  siege. The attacker is chosen by a coin toss from the game's random numbers and announced.
-- **No retreat and no surrender:** both buttons are off for both sides, and so is the computer's leaving. The battle gives no experience.
-- **The end:**
-  - The battle's winner wins the game.
-  - A side whose champion has no army, or that has no hero at all, loses without a battle. When this happens to both sides, it is a draw.
-  - When both armies fall in the battle, it is a draw.
-  - A draw ends the game with no winner. Tournaments are never ranked.
-
-**Where it is played.**
-- **Against the computer:** one person and the computer, each in their own zone, turn by turn.
-- **Hot-seat:** two people on one screen, turn by turn. Each turn shows only the zone of the player whose turn it is, and the battle is fought on the
-  shared screen.
-- **Over the LAN:**
-  - **Days:** every day is played at once (the simultaneous days of ADR-197, here from the first day to the last).
-  - **Conflicts:** because the zones are cut off and sight stops at their edges, conflicts cannot happen. The conflict watch stays as a
-    safety net, and a conflict there would be a bug.
-  - **Battles and questions:** each player fights their own neutral battles and answers their own questions without waiting for the other.
-    This holds on every simultaneous day, not only in tournaments: an ordinary LAN game's first week and an arena's preparation day too.
-  - **The final battle** is fought live on both computers.
-  - **Turn timer:** the host's turn timer is optional and is one clock for both.
-
-**The result screen** is the arena's: who won, the champions and their armies, "Tournaments are not ranked", "Play again" (same map
-and options, new seed) and "Save replay".
-
-### Screen at a glance
-
-```text
-New-game screen, Tournaments tab
-+-------------------------------------------+--------------------------------------+
-| Templates and maps                        | Twin Vales  (2 players)              |
-|  Twin Vales            M                  | Two mirrored valleys, cut off.       |
-|  Twin Vales Large      L                  |                                      |
-|  Island Gauntlet       S   (hand-made)    | Length: [<]  14 days (2 weeks)  [>]  |
-|                                           | Blue  Haven   Human                  |
-|                                           | Red   Inferno Computer               |
-+-------------------------------------------+--------------------------------------+
-
-Adventure map, status bar calendar:  Month 1, Week 2, Day 3 · Battle in 5 days
-Last building day:                   Last day before the battle
-```
 
 ## Plan
 
@@ -191,7 +113,7 @@ tournaments before any screen exists.
   - **Warning:** a zone much richer than the other: more towns, more mines of a resource, or treasure further apart than the generator
     lets alike starts be (`MapAnalysis.AlikePercent`, 15 %, at least 1500 gold).
 
-### 3. Simultaneous days: the whole tournament, and battles at the same time (Core and Network)
+### 3. Simultaneous days: the whole tournament, and battles at the same time (Core and Network; done)
 - **Every day at once** (done): `SimultaneousDayCoordinator` opens every day of a tournament at once on the LAN, not only the first
   week's, with a start zone each; a conflict still ends the simultaneous days for good. The final battle's day is no simultaneous day:
   the battle starts before any turn opens. The LAN lobby has no switch for a tournament (owner, 2026-11-27): it always sets the
@@ -250,10 +172,9 @@ tournaments before any screen exists.
   | Twin Vales Large | 4 351 | 16 535 | 38 764 |
 
   - **What it brings:** the towns' weeks of growth, with no refused command.
-  - **Not yet measured:** whether that is in the range a person reaches. No person's tournament is recorded to compare with; step 7's
-    games against the computer are the check.
+  - **Not yet measured:** whether that is in the range a person reaches. No person's tournament is recorded to compare with (step 7).
 
-### 5. The game app
+### 5. The game app (done)
 - **New-game screen** (done):
   - A **Tournaments** tab (ADR-201's tabs) lists the tournament templates and the hand-made tournament maps (`MapKind.Tournament`).
   - Under the map's name, a line says what a tournament is. The template's hero limit row is hidden: it is 1.
@@ -276,7 +197,11 @@ tournaments before any screen exists.
   - **The one hero** counts a garrison's too: a hero in a town's garrison still stops a second being hired.
   - **Checks:** `TournamentScreenTests`, and the smoke `game-tournament-setup` (the Tournaments tab, the stepper, a one-day tournament
     started on the last day's notice).
-- **Hot-seat:** the hand-over screen between turns, so one person does not see the other's zone.
+- **Hot-seat hand-over** (done): each person's turn opens behind a screen that covers the map, the HUD and the timer, so neither sees the
+  other's zone. It names whose turn it is, the day with the countdown, and asks the others to look away; "Start Blue's turn", Enter or
+  Space shows that person's zone, and the last day's notice after it. The map stays drawn for the last person under it, and the turn
+  timer stands still meanwhile (`GameDirector.HandOver`, `TournamentRules.HandOver`, `HandOverPanel`). A loaded hot-seat tournament opens
+  behind it too. Checks: `GameDirectorTests`, and the smoke `game-tournament-hot-seat`.
 - **Battle** (done):
   - The final battle opens by itself at the start of the battle's day, both armies shown on the neutral battlefield.
   - The retreat and surrender buttons are greyed out. Their hover text on the status bar, and the first round's prompt, say "No retreat or
@@ -288,26 +213,62 @@ tournaments before any screen exists.
   quick combat, the result screen and "Play again".
 
 ### 6. The map editor (done)
-- **The "Tournament" switch** on the map settings window's General tab (`TournamentRules.Switched`):
-  - Turned on, it sets the hero limit to 1 and greys it out, turns the arena off and hides its switch, and the Victory and loss tab
-    greys out. Turned off, the hero limit stays at 1 until changed.
+- **The "Tournament" switch** on the map settings window's General tab (`MapPropertiesEditor.SetTournament`, `TournamentRules.Switched`):
+  - Turned on, in one undo step, it sets the hero limit to 1 and greys it out, clears the players' own hero limits, turns the arena off
+    and hides its switch, and the Victory and loss tab greys out. Turned off, the hero limit stays at 1 until changed. A loaded map with
+    both switches on still shows the arena's.
   - It is refused, as any hero limit is, while a player has more than one hero on the map.
 - **Problems** lists step 2's checks. A player without a start zone has a fix, "Paint Red's start zone over the ground it reaches"
   (`StartZoneFix`, `TournamentCheck.MissingZone`):
   - It paints the tiles the player's heroes and town entrances walk to, over ground in no zone, and the footprint of each object whose
     entrance is among them.
-  - There is no fix when that ground is not clearly the player's: another player's hero or town is on it, or a step leads from it into
-    another player's zone.
+  - There is no fix when that ground is not clearly the player's: one of its heroes or town entrances stands in another player's zone,
+    another player's hero or town is on the ground, or a step leads from it into another player's zone.
 - **The template inspector's "Tournament" row** (`TemplateEditorSession.WithTournament`): ticked, the hero limit becomes 1 and its row goes.
   The issues list shows the per-player checks: two players, no allies, the two parts kept apart.
 - **Checks:** `TournamentEditorTests`, and the smoke `editor-tournament` (the switch, the greyed Victory and loss tab, Problems' missing
   start zones, the template's Tournament row and its joined-zones error).
 
-### 7. Check
-- **Seen in Godot:**
-  - a tournament against the computer to the end;
-  - a hot-seat tournament;
-  - a LAN tournament between two computers, with days played at once and both players fighting neutrals in the same day.
-- **AI runs:** the AI against itself over the templates (`sim game --runs`), checking that both sides reach the battle and how often the
-  first seat wins.
-- **Docs:** `victory-and-modes.md` states the rules; this file becomes the report; roadmap and active context updated.
+### 7. Check (done)
+- **Against the computer, seen in Godot** (smokes `game-tournament`, one day, and `game-tournament-week`, seven days): the countdown, the
+  last day's notice, the computer building up while the person ends each day, the battle on day 8 against its grown army with Retreat and
+  Surrender greyed out, and the result screen.
+  - **Found:** the person watched the computer's battles in the computer's zone (a siege of a neutral town, its whole army shown). Now a
+    tournament battle no person fights is shown on no screen (`TournamentRules.Shown`, `BattleView3D`).
+- **Hot-seat, seen in Godot** (smoke `game-tournament-hot-seat`, two days): each turn shows only its player's zone and the countdown, each
+  person's last day opens with the notice, the two people's battle on day 3 (its deployment step, then quick combat), the result screen.
+  - **Found:** the screen turned to the next person's zone as soon as a turn ended. The hand-over screen (step 5) now opens each turn,
+    seen in the same smoke: at the game's start, between the two people's turns and before each last day's notice.
+- **Over the LAN, seen in Godot**: two Godot processes on one computer (`--host`, `--join=127.0.0.1`), Twin Vales Small with seed 10, two
+  days. Both played day 1 at once. Each was asked by its own skeletons at the same moment, and each fought them on its own computer, the
+  two battles at the same time. Each ended its days, the last day's notice opened each person's day 2, and the final battle opened on both
+  computers. There each side's moves were seen live on the other ("Red plays on another computer: waiting for their move").
+  - **Found:**
+    - The final battle did not open on the client. Its player had never seen the other's champion, and a client drops an event that
+      names a hero it does not hold. Now a player's view holds the heroes of the battle it fights (`PlayerViewFeed`;
+      `LanTournamentTests`, whichever side ends the last day last). A champion from its town's garrison comes out onto the map when the
+      battle starts, so the other player is never sent its town (`LanTournamentTests`).
+    - Once its day was over, the host said "Red fight a battle on another computer". In a tournament that panel now says nothing, and
+      elsewhere it says "fights" for one player (`DecisionPanel`).
+    - Nothing told a player that the other had ended the day (TRN-6). The host now says it in the chat, "Red has ended the day.", on
+      every day played at once while others still play it (`GameHost`).
+  - **The final battle fought by hand to its end** (seed 10, two days without the neutral fights): Blue only defended, while Red's
+    hunters shot and its satyrs walked over and struck, until Red won in round 17. Each move showed on both computers, then the battle's
+    result (Victory for Red, Defeat for Blue, the same losses) and the tournament's result screen on each: who won the coin toss and
+    attacked whom, after 2 days of building up, not ranked, with "Play again" on the host and "The host may start the game again" on the
+    client.
+- **AI runs** (`sim game --template T --length L --runs N`; the AI plays both seats):
+
+  | Template | 7 days (10 runs) | 14 days (20 runs) | 28 days (10 runs) |
+  |---|---|---|---|
+  | Twin Vales Small | first seat won 6; median army 4 913 | 12; 14 572 | 4; 44 946 |
+  | Twin Vales | 4; 4 206 | 12; 16 402 | 5; 44 283 |
+  | Twin Vales Large | 5; 5 653 | 7; 16 754 | 5; 41 295 |
+
+  - All 120 games reached the battle on the day after the last, both champions with an army, no command refused, none a draw.
+  - The first seat won 60 of 120. The coin toss's attacker won 73 (61 %), and the side with the bigger army 83 (69 %).
+  - Still not measured: how the computer's army compares with a person's. That needs games played by people.
+- **Review of step 7** (fixed): the battle view's rule said plainly, a start off the map asked about no zone, the switch's undo step named
+  when turned off, and tests for the switch turned off, a refused switch recording nothing and a hero walled in another zone.
+- **Review of step 6** (fixed): the switch also clears the players' own hero limits; the fix never takes a tile of another player's zone;
+  a loaded map with both switches on shows the arena's; a loaded tournament template with another hero limit shows its row.

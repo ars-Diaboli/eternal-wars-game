@@ -747,6 +747,30 @@ public class TournamentTests
         Assert.Contains("A tournament allows one hero a player", session.Execute(new HireHeroCommand(Blue, town.Id, Offer())).Error!, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData(true, true, true)] // a person's fight
+    [InlineData(true, false, false)] // the computer's fight in its zone
+    [InlineData(false, false, true)] // the computer's fight in another game
+    public void ABattleNoPersonFights_IsShownOnNoScreen_InATournament(bool tournament, bool person, bool shown)
+    {
+        var state = Create("A........B");
+        if (tournament)
+        {
+            state.SetRules(Rules);
+        }
+
+        state.GetPlayer(Blue).IsHuman = person;
+        var monster = Add<MonsterGuard>(state, BuiltInMapObjects.Monster, 1, 0);
+        (monster.Creature, monster.Count, monster.Disposition) = (BuiltInCreatures.Troll, 50, GuardDisposition.Savage);
+        var session = Start(state);
+        bool? seen = null;
+        session.Events.Subscribe<BattleStarted>(_ => seen = TournamentRules.Shown(state, state.Battle!));
+
+        session.Execute(new StepHeroCommand(Blue, A, Direction.East)).ThrowIfRejected();
+
+        Assert.Equal(shown, seen);
+    }
+
     [Fact]
     public void ThePlayers_CannotTrade()
     {

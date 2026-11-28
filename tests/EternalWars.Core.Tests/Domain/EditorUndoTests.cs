@@ -354,6 +354,7 @@ public class EditorUndoTests
         },
         ["MapPropertiesEditor.SetRules"] = f => Ok(f.Editor.Map.SetRules(f.Editor.Scenario.Rules with { Difficulty = Difficulty.Expert, MaxHeroes = 4 })),
         ["MapPropertiesEditor.SetRules (rumours)"] = f => Ok(f.Editor.Map.SetRules(f.Editor.Scenario.Rules with { Rumours = ["The bridge is guarded.", "Gold flows east."] })),
+        ["MapPropertiesEditor.SetTournament"] = f => Ok(f.Editor.Map.SetTournament(on: true)),
         ["MapPropertiesEditor.SetGrail"] = f => Ok(f.Editor.Map.SetGrail(new MapPosition(20, 19))),
     };
 

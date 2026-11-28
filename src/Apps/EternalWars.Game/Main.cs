@@ -74,6 +74,9 @@ public partial class Main : Node3D
     private AdventureInputController _mapInput = null!;
     private AutoCombatPanel? _autoCombat;
     private TurnTimerPanel? _timerPanel;
+
+    /// <summary>The hot-seat hand-over screen of a tournament (ADR-366); null in the replay viewer.</summary>
+    private HandOverPanel? _handOver;
     private GameResultPanel _result = null!;
 
     /// <summary>The session last put into the ranking, so a game is entered once.</summary>
@@ -237,6 +240,7 @@ public partial class Main : Node3D
         _focus = null!;
         _autosave = null;
         _timerPanel = null;
+        _handOver = null;
         _autoCombat = null;
         _chat = null;
         _pause = null;
@@ -283,7 +287,38 @@ public partial class Main : Node3D
             ShowTurn(player);
         }
 
+        OpenHandOver(director); // a turn that waited for the computer's moves may wait for its person now
+
         director.PlayComputer(_screens.HoldTheGame);
+    }
+
+    /// <summary>
+    /// The hot-seat hand-over screen of a tournament (ADR-366) over the map, the HUD and the turn timer: the turn waiting behind it is shown once its
+    /// person takes the screen.
+    /// </summary>
+    private void BuildHandOver(GameDirector director)
+    {
+        var layer = new CanvasLayer { Name = "HandOver", Layer = 5 };
+        _game!.AddChild(layer);
+        _handOver = new HandOverPanel();
+        layer.AddChild(_handOver);
+        _handOver.Bind(_session);
+        _handOver.Taken += () =>
+        {
+            if (director.TakeHandOver() is { } player)
+            {
+                ShowTurn(player);
+            }
+        };
+    }
+
+    /// <summary>Covers the window while a person's turn waits for them to take the screen (<see cref="GameDirector.HandOver"/>).</summary>
+    private void OpenHandOver(GameDirector director)
+    {
+        if (director.HandOver is { } player && _handOver is { IsOpen: false } handOver)
+        {
+            handOver.Open(player);
+        }
     }
 
     /// <summary>Hot-seat: the map is drawn through the eyes of whoever plays now, with their first hero selected.</summary>
@@ -359,7 +394,8 @@ public partial class Main : Node3D
             return;
         }
 
-        if (_context is null || _menu.Visible || _autoCombat?.Visible == true || ShowingComputerMoves || _director?.HasTurnToShow == true)
+        if (_context is null || _menu.Visible || _autoCombat?.Visible == true || ShowingComputerMoves || _director?.HasTurnToShow == true
+            || _director?.HandOver is not null)
         {
             return;
         }
@@ -442,6 +478,7 @@ public partial class Main : Node3D
         {
             BuildResult(director);
             BuildTimer();
+            BuildHandOver(director);
             if (state.Options.PlayTest is { Cheats: true })
             {
                 BuildCheats(); // a play-test's cheats (ADR-267)
@@ -450,6 +487,7 @@ public partial class Main : Node3D
         else
         {
             _timerPanel = null;
+            _handOver = null;
             BuildReplayBar(); // the viewer's controls; no ranking, end screen, clock or autosave (ADR-164)
         }
 
@@ -488,6 +526,10 @@ public partial class Main : Node3D
             {
                 ShowTurn(e.Player);
             }
+            else
+            {
+                OpenHandOver(director); // a hot-seat tournament's turn waits for its person to take the screen
+            }
         });
         _game.SubscribeWhileInTree<DecisionRequested>(_session.Events, e =>
         {
@@ -515,6 +557,11 @@ public partial class Main : Node3D
 
         if (resume)
         {
+            if (playing && !director.Resumed())
+            {
+                OpenHandOver(director);
+            }
+
             _mapInput.Select(_focus.FirstHeroOf(_context.Viewer ?? state.CurrentPlayer.Id), focus: true);
             _battle.Restore();
             if (playing)

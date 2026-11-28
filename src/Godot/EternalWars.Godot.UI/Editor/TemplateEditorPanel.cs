@@ -703,7 +703,7 @@ public partial class TemplateEditorPanel : PanelContainer
             _session.UpdateTemplate(x => TemplateEditorSession.WithTournament(x, v)); // two players build up apart, then one battle (ADR-366)
             _replaced.Request(); // the hero limit row follows
         }, "Its maps are tournaments: two players, each in its own part of the zone graph, then one battle. The problems list checks the parts.");
-        if (!t.Tournament)
+        if (!t.Tournament || t.MaxHeroes != 1) // a loaded tournament with another limit shows the row its warning names
         {
             Spin("Hero limit", t.MaxHeroes, 1, 8, v => _session.UpdateTemplate(x => x with { MaxHeroes = v }));
         }

@@ -2,6 +2,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Map;
+using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Generation;
 using static EternalWars.Core.Tests.TestWorld;
 
@@ -13,10 +14,14 @@ namespace EternalWars.Core.Tests.Domain;
 /// </summary>
 public class TournamentEditorTests
 {
-    /// <summary>Blue's ground the columns 0–7, a wall at column 8, Red's ground 9–16; Alpha and Bravo by the wall. Only Blue's zone is painted.</summary>
-    private static MapEditorSession Valleys(bool tournament = true)
+    /// <summary>
+    /// Blue's ground the columns 0–7, a wall at column 8, Red's ground 9–16; Alpha and Bravo by the wall (unless <paramref name="last"/>, the
+    /// bottom row, says otherwise). Only Blue's zone is painted.
+    /// </summary>
+    private static MapEditorSession Valleys(bool tournament = true, string last = ".......A#B.......", Action<GameState>? setup = null)
     {
-        var state = Create([.. Enumerable.Repeat("........#........", 9).Append(".......A#B.......")]);
+        var state = Create([.. Enumerable.Repeat("........#........", 9).Append(last)]);
+        setup?.Invoke(state);
         state.SetRules(tournament ? TournamentRules.Switched(ScenarioRules.Default, on: true) : ScenarioRules.Default);
         for (var y = 0; y < state.Map.Height; y++)
         {
@@ -54,8 +59,36 @@ public class TournamentEditorTests
         var state = Create("A.C......#........B");
         var editor = new MapEditorSession(state);
 
-        Assert.Equal(EditResult.HeroLimit, editor.Map.SetRules(TournamentRules.Switched(editor.Scenario.Rules, on: true)));
+        Assert.Equal(EditResult.HeroLimit, editor.Map.SetTournament(on: true));
         Assert.False(editor.Scenario.Rules.Tournament);
+        Assert.Equal(0, editor.History.Count); // no step recorded
+    }
+
+    [Fact]
+    public void TheTournamentSwitch_TurnedOff_KeepsTheHeroLimit_AsAStepOfItsOwn()
+    {
+        var editor = Valleys();
+
+        Assert.Equal(EditResult.Ok, editor.Map.SetTournament(on: false));
+        Assert.Equal((false, 1), (editor.Scenario.Rules.Tournament, editor.Scenario.Rules.MaxHeroes));
+        Assert.Equal("Make the map no tournament", editor.History.UndoDescription);
+
+        editor.Undo();
+        Assert.True(editor.Scenario.Rules.Tournament);
+    }
+
+    [Fact]
+    public void TheTournamentSwitch_TakesThePlayersOwnHeroLimits_InTheSameStep()
+    {
+        var editor = Valleys(tournament: false);
+        editor.Players.SetHeroLimit(Blue, 3);
+
+        Assert.Equal(EditResult.Ok, editor.Map.SetTournament(on: true));
+        Assert.Equal((null, 1), (editor.Scenario.GetPlayer(Blue).MaxHeroes, editor.Scenario.HeroLimit(Blue)));
+        Assert.DoesNotContain(MapValidator.Validate(editor.Scenario), i => i.Message.StartsWith("A tournament allows one hero", StringComparison.Ordinal));
+
+        editor.Undo();
+        Assert.Equal((false, (int?)3), (editor.Scenario.Rules.Tournament, editor.Scenario.GetPlayer(Blue).MaxHeroes));
     }
 
     [Fact]
@@ -84,9 +117,44 @@ public class TournamentEditorTests
     public void AMissingStartZone_HasNoFix_WhenItsGroundRunsIntoTheOtherZone()
     {
         var editor = Valleys();
-        editor.Scenario.Map.SetTerrain(new MapPosition(8, 3), TerrainType.Grass); // a gap in the wall
+        editor.Terrain.Paint(new MapPosition(8, 3), TerrainType.Grass); // a gap in the wall
 
         Assert.Null(NoZone(editor, "Red").Fix);
+    }
+
+    [Fact]
+    public void AMissingStartZone_HasNoFix_WhenAnotherPlayersHeroStandsOnItsGround()
+    {
+        var editor = Valleys(last: ".......A#B....C.."); // Charlie, Blue's, on Red's side of the wall
+
+        Assert.Null(NoZone(editor, "Red").Fix);
+    }
+
+    [Fact]
+    public void AMissingStartZone_HasNoFix_WhenThePlayersHeroStandsInAnotherZone()
+    {
+        // Bravo on Blue's ground, walled in by rock: no step leads anywhere, so only its own tile tells that the ground is not Red's.
+        var editor = Valleys(last: "...B...A#........", setup: state =>
+        {
+            foreach (var (x, y) in new[] { (2, 9), (4, 9), (2, 8), (3, 8), (4, 8) })
+            {
+                state.Map.SetTerrain(new MapPosition(x, y), TerrainType.Rock);
+            }
+        });
+
+        Assert.Null(NoZone(editor, "Red").Fix);
+    }
+
+    [Fact]
+    public void AMissingStartZone_TakesTheWholeFootprint_OfATownWhoseEntranceItReaches()
+    {
+        Town town = null!;
+        var editor = Valleys(last: ".......A#........", setup: state => town = AddTown(state, "haven", 10, 2, Red));
+
+        Assert.Equal(EditResult.Ok, editor.Fix(NoZone(editor, "Red").Fix!));
+
+        var map = editor.Scenario.Map;
+        Assert.All(town.OccupiedCells().Select(c => c.Position).Where(map.Contains), p => Assert.Equal(Red, map.GetStartZone(p)));
     }
 
     [Fact]

@@ -257,6 +257,15 @@ $scenarios = @(
     # tournament's length, not ranked), then "Play again".
     @{ Name = 'game-tournament'; App = 'EternalWars.Game'; Frames = 230; Seed = 1
        Input = ((@('6:press:Tournaments', '10:click:@Twin Vales Small') + (0..12 | ForEach-Object { "$(14 + 2 * $_):press:Shorter" }) + @('44:click:@Start', '100:press:End turn', '104:key:Enter', '150:key:Q', '185:key:Enter', '215:press:Play again')) -join ';') },
+    # A hot-seat tournament (ADR-366): Red made Human, two days. Each turn opens behind the hand-over screen (Blue's taken by its button, the
+    # rest by Enter), then shows only its player's zone and the countdown; each person's last day opens with the notice, the battle on day 3 is
+    # the two people's (its deployment step, then quick combat), and the result screen.
+    @{ Name = 'game-tournament-hot-seat'; App = 'EternalWars.Game'; Frames = 340; Seed = 1
+       Input = ((@('6:press:Tournaments', '10:click:@Twin Vales Small', '14:click:@Computer', '18:choose:Human') + (0..11 | ForEach-Object { "$(22 + 2 * $_):press:Shorter" }) + @('48:click:@Start', '70:press:Start Blue''s turn', '80:press:End turn', '84:key:Enter', '100:key:Enter', '110:press:End turn', '114:key:Enter', '130:key:Enter', '140:press:Continue', '144:press:End turn', '148:key:Enter', '165:key:Enter', '175:press:Continue', '179:press:End turn', '183:key:Enter', '245:key:Q', '285:key:Enter')) -join ';') },
+    # A week's tournament against the computer (ADR-366): Blue ends seven days while the computer builds up; the computer's fights in its zone
+    # are shown on no screen; on day 8 the battle with the computer's grown army, greyed retreat and surrender, the result screen.
+    @{ Name = 'game-tournament-week'; App = 'EternalWars.Game'; Frames = 400; Seed = 1
+       Input = ((@('6:press:Tournaments', '10:click:@Twin Vales Small') + (0..6 | ForEach-Object { "$(14 + 2 * $_):press:Shorter" }) + @('40:click:@Start') + (0..6 | ForEach-Object { "$(80 + 30 * $_):press:End turn;$(84 + 30 * $_):key:Enter" }) + @('320:key:Q', '360:key:Enter')) -join ';') },
     # The main menu (ADR-101, ADR-163) over its picture: Leaderboard opens, Escape returns; "Watch a replay" (ADR-164) opens the Replays and
     # Saves tabs, Saves, Escape back to the main menu; New game, Enter on Start. Pressed by name: Continue has the focus when there is a
     # save, New game when not. The only game scenario without --new-game.

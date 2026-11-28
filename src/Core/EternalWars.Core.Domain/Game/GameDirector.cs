@@ -96,6 +96,49 @@ public sealed class GameDirector
     /// </summary>
     public bool PlaysHere(PlayerId player) => _session.State.GetPlayer(player).IsHuman && !PlaysElsewhere(player);
 
+    /// <summary>
+    /// The person whose turn waits behind the hot-seat hand-over screen (ADR-366), until they take the screen (<see cref="TakeHandOver"/>); null
+    /// when none waits. Meanwhile the map stays with the last person, under the screen, and the turn clock stands still.
+    /// </summary>
+    public PlayerId? HandOver { get; private set; }
+
+    /// <summary>
+    /// Whether <paramref name="player"/>'s turn opens behind the hand-over screen (ADR-366): in a tournament played hot-seat, where more than
+    /// one person plays at this screen, so neither sees the other's zone.
+    /// </summary>
+    public bool HandsOver(PlayerId player) =>
+        _session.State.Rules.Tournament && PlaysHere(player) && _session.State.Players.Count(p => !p.IsDefeated && PlaysHere(p.Id)) > 1;
+
+    /// <summary>The person waiting behind the hand-over screen has taken it: their turn is shown now. That person, or null when none waited.</summary>
+    public PlayerId? TakeHandOver()
+    {
+        var player = HandOver;
+        HandOver = null;
+        return player;
+    }
+
+    /// <summary>
+    /// A saved game was loaded and is shown as it stands: true when the map turns to the current player now, false when its turn waits behind
+    /// the hand-over screen (<see cref="HandOver"/>). Not while a battle is open: the battle shows both sides anyway.
+    /// </summary>
+    public bool Resumed()
+    {
+        var player = _session.State.CurrentPlayer.Id;
+        return _session.State.Battle is not null || _session.State.IsSimultaneous || !WaitsForHandOver(player);
+    }
+
+    /// <summary>Whether <paramref name="player"/>'s turn waits behind the hand-over screen; if so it is <see cref="HandOver"/>.</summary>
+    private bool WaitsForHandOver(PlayerId player)
+    {
+        if (!HandsOver(player))
+        {
+            return false;
+        }
+
+        HandOver = player;
+        return true;
+    }
+
     /// <summary>Whose eyes the map is drawn through when the game is shown: the current player if it plays here, else the first who does.</summary>
     public PlayerId Viewer()
     {
@@ -105,17 +148,17 @@ public sealed class GameDirector
 
     /// <summary>
     /// Runs the clock for <paramref name="seconds"/>: this computer's turn timer, or the shared clock it only shows; null when there is neither.
-    /// The timer stands still while computer moves are shown and while the game is paused. When its time is up it ends the turn unless computer
-    /// moves are shown, the game is paused, or <paramref name="screensOpen"/> on this computer while a timed colour plays here (a LAN host ends a
-    /// client's turn whatever it shows).
+    /// The timer stands still while computer moves are shown, while the game is paused and while a turn waits behind the hand-over screen
+    /// (<see cref="HandOver"/>). When its time is up it ends the turn unless it stands still, or <paramref name="screensOpen"/> on this computer
+    /// while a timed colour plays here (a LAN host ends a client's turn whatever it shows).
     /// </summary>
     public ClockFrame? RunClock(double seconds, bool showingComputerMoves, bool screensOpen)
     {
         if (Timer is { } timer)
         {
-            var paused = IsPaused;
-            var canEnd = !showingComputerMoves && !paused && (!screensOpen || !timer.TimedPlayers.Any(PlaysHere));
-            var warning = timer.Tick(showingComputerMoves || paused ? 0 : seconds, canEnd);
+            var still = showingComputerMoves || IsPaused || HandOver is not null;
+            var canEnd = !still && (!screensOpen || !timer.TimedPlayers.Any(PlaysHere));
+            var warning = timer.Tick(still ? 0 : seconds, canEnd);
             var frame = new ClockFrame(timer.SecondsLeft, timer.IsStopped, timer.IsUp, warning);
             _seats.ShareClock?.Invoke(timer.Clock);
             return frame;
@@ -133,7 +176,8 @@ public sealed class GameDirector
 
     /// <summary>
     /// A turn started: true when the map turns to its player now. A colour not played here leaves the map with the last person here; while
-    /// computer moves are shown, the turn waits for them (<see cref="TakeTurnToShow"/>).
+    /// computer moves are shown, the turn waits for them (<see cref="TakeTurnToShow"/>); in a hot-seat tournament it waits behind the hand-over
+    /// screen (<see cref="HandOver"/>).
     /// </summary>
     public bool TurnStarted(PlayerId player, bool showingComputerMoves)
     {
@@ -148,15 +192,18 @@ public sealed class GameDirector
             return false;
         }
 
-        return true;
+        return !WaitsForHandOver(player);
     }
 
-    /// <summary>The person's turn that waited for the computer's moves to be shown, once; null when none waits.</summary>
+    /// <summary>
+    /// The person's turn that waited for the computer's moves to be shown, once; null when none waits, or when it now waits behind the
+    /// hand-over screen (<see cref="HandOver"/>).
+    /// </summary>
     public PlayerId? TakeTurnToShow()
     {
         var player = _turnToShow;
         _turnToShow = null;
-        return player;
+        return player is { } waited && WaitsForHandOver(waited) ? null : player;
     }
 
     /// <summary>

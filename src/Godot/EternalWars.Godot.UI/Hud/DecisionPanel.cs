@@ -333,8 +333,15 @@ public partial class DecisionPanel : PanelContainer
         else if (new[] { BattleSide.Attacker, BattleSide.Defender }.Select(_session.Battles.Commander).OfType<Core.Domain.Common.PlayerId>().ToList()
                  is { Count: > 0 } people && !people.Any(_playsHere))
         {
-            // A LAN battle of other computers (ADR-195): its players fight it; this screen only waits.
-            _prompt.Text = $"{string.Join(" and ", people.Select(p => _session.State.GetPlayer(p).Name))} fight a battle on another computer.";
+            // A LAN battle of other computers (ADR-195): its players fight it; this screen only waits. In a tournament it says nothing: the players
+            // learn nothing of each other before their battle (ADR-366).
+            if (_session.State.Rules.Tournament)
+            {
+                Visible = false;
+                return;
+            }
+
+            _prompt.Text = $"{string.Join(" and ", people.Select(p => _session.State.GetPlayer(p).Name))} {(people.Count == 1 ? "fights" : "fight")} a battle on another computer.";
         }
         else
         {

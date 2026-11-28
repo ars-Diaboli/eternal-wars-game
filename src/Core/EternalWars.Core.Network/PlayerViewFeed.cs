@@ -22,14 +22,15 @@ namespace EternalWars.Core.Network;
 /// player's fog and memory; this sends
 /// <list type="bullet">
 /// <item>the player's own heroes, towns and everything it owns, as they are;</item>
-/// <item>other heroes while the player sees them, taken away when it no longer does;</item>
+/// <item>other heroes while the player sees them, taken away when it no longer does, and the heroes of the battle it fights while it lasts
+/// (a tournament's champions meet from zones that never saw each other, ADR-366);</item>
 /// <item>map objects while any of their cells is in the player's sight; out of sight the client keeps them as last sent ("as last seen"), and
 /// an object the player remembers but has not seen since joining comes as a bare object of its kind;</item>
 /// <item>the game's date, whose turn it is and the outcome; a question only when it is the player's; a battle only when the player fights it;</item>
 /// <item>of other players their name, team and whether they are out, never their resources;</item>
 /// <item>the events the player may see (<see cref="Shows"/>).</item>
 /// </list>
-/// Nothing under the player's fog is ever sent: no hero it does not see, no object it has not seen, not the seed.
+/// Nothing else under the player's fog is ever sent: no other hero it does not see, no other object it has not seen, not the seed.
 /// </summary>
 internal sealed class PlayerViewFeed(GameState state, PlayerId viewer)
 {
@@ -206,6 +207,14 @@ internal sealed class PlayerViewFeed(GameState state, PlayerId viewer)
 
     private Hero? FindHero(HeroId id) => state.Heroes.FirstOrDefault(h => h.Id == id) ?? state.GarrisonHeroes.FirstOrDefault(h => h.Id == id);
 
+    /// <summary>
+    /// The heroes of the battle the player fights: its view holds them while it lasts, seen or not, so its screen can show the battle. A
+    /// tournament's champions meet from zones that never saw each other (ADR-366). A champion from its town's garrison has come out onto the
+    /// map by then, so its town stays unseen.
+    /// </summary>
+    private HashSet<HeroId> Fought() =>
+        state.BattleOf(viewer) is { } battle ? [.. new[] { battle.Attacker.Hero, battle.Defender.Hero }.OfType<HeroId>()] : [];
+
     /// <summary>The player's own heroes, those it sees, and one it was shown that is gone now (its defeat, its removal).</summary>
     private bool SeesHero(HeroId id) => FindHero(id) is { } hero
         ? hero.Owner == viewer || (state.Heroes.Contains(hero) ? state.CanSee(viewer, hero) : SeesObject(state.GarrisonOf(id)!.Id))
@@ -225,7 +234,8 @@ internal sealed class PlayerViewFeed(GameState state, PlayerId viewer)
 
     private void PutHeroes(List<ViewChange> changes)
     {
-        var shown = state.Heroes.Where(h => state.CanSee(viewer, h)).ToList();
+        var foes = Fought();
+        var shown = state.Heroes.Where(h => state.CanSee(viewer, h) || foes.Contains(h.Id)).ToList();
         foreach (var hero in shown)
         {
             Put(changes, "hero", hero.Id.Value, hero);

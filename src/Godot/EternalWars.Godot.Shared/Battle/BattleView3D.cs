@@ -182,9 +182,13 @@ public partial class BattleView3D : Node3D
 
     private bool Here(PlayerId player) => PlaysHere?.Invoke(player) ?? true;
 
-    /// <summary>Whether this computer shows <paramref name="battle"/>: always on one computer; in a LAN game, when a person here commands a side.</summary>
-    private bool Shows(BattleState battle) =>
-        PlaysHere is null || new[] { battle.Attacker, battle.Defender }.Any(p => !p.IsComputer && p.Owner is { } owner && Here(owner));
+    /// <summary>
+    /// Whether this computer shows <paramref name="battle"/>: on one computer, every battle but a tournament's that no person fights (ADR-366);
+    /// in a LAN game, one whose side a person here commands (ADR-195).
+    /// </summary>
+    private bool Shows(BattleState battle) => PlaysHere is null
+        ? TournamentRules.Shown(_session.State, battle)
+        : new[] { battle.Attacker, battle.Defender }.Any(p => !p.IsComputer && p.Owner is { } owner && Here(owner));
 
     /// <summary>The stack picked for placing during the deployment step.</summary>
     public int? Picked { get; private set; }
@@ -437,7 +441,7 @@ public partial class BattleView3D : Node3D
         var battle = state.Battle!;
         if (!Watching && !Shows(battle))
         {
-            return; // another computer's battle (ADR-195): its players see it, the others only its result on the map
+            return; // another computer's battle (ADR-195), or the computer's in a tournament (ADR-366): only its result shows on the map
         }
 
         if (IsOpen && state.SlotPlayer != _slot)

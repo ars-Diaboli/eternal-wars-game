@@ -113,7 +113,8 @@ internal sealed class TournamentCheck : IMapCheck
     /// The start zone <paramref name="player"/> lacks, when the answer is clear (the fix of its error): every tile its heroes and its towns'
     /// entrances reach by walking (passable ground no object blocks, in 8 directions, over tiles in no start zone), and the whole footprint of each
     /// object whose entrance is among them. Null when the player has a zone already or nothing to start from, or when the ground is not clearly
-    /// its own: another player's hero or town entrance is on it, or a step leads from it into another player's zone.
+    /// its own: a hero or town entrance of its stands in another player's zone, another player's hero or town entrance is on the ground, or a
+    /// step leads from it into another player's zone.
     /// </summary>
     internal static IReadOnlyList<MapPosition>? MissingZone(GameState scenario, PlayerId player)
     {
@@ -126,6 +127,11 @@ internal sealed class TournamentCheck : IMapCheck
         var starts = scenario.Heroes.Where(h => h.Owner == player).Select(h => h.Position)
             .Concat(scenario.ObjectsOf<Town>().Where(t => t.Owner == player).Select(t => t.VisitPosition))
             .ToList();
+        if (starts.Any(s => map.Contains(s) && map.GetStartZone(s) is not null))
+        {
+            return null; // it starts inside another player's zone
+        }
+
         var others = scenario.Heroes.Where(h => h.Owner != player).Select(h => h.Position)
             .Concat(scenario.ObjectsOf<Town>().Where(t => t.Owner is { } owner && owner != player).Select(t => t.VisitPosition))
             .ToHashSet();

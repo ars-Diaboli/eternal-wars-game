@@ -11,7 +11,8 @@ namespace EternalWars.Godot.UI.Editor;
 /// The map settings window's General tab (EDIT-1, ADR-256): the map's name and description, its difficulty (what a game with "Map default"
 /// complexity counts as in the ranking, ADR-101), the hero limit per player (ADR-068), the arena switch (ADR-097, ARN-2: the map becomes
 /// one battle and its victory and loss conditions count for nothing) and the tournament switch (ADR-366: the two players build up apart,
-/// then one battle decides; it fixes the hero limit at 1 and hides the arena switch, and the Victory and loss tab greys out). Every change is an
+/// then one battle decides; it fixes the hero limit at 1, the players' own limits too, and hides the arena switch, and the Victory and loss
+/// tab greys out). Every change is an
 /// undoable <see cref="MapEditorSession"/> edit.
 /// </summary>
 public partial class GeneralSettingsPanel : VBoxContainer
@@ -68,7 +69,7 @@ public partial class GeneralSettingsPanel : VBoxContainer
         AddChild(_maxHeroes);
         _arena.Toggled += on => Change(r => r with { Arena = on });
         AddChild(_arena);
-        _tournament.Toggled += on => Change(r => TournamentRules.Switched(r, on));
+        _tournament.Toggled += on => Show(_editor.Map.SetTournament(on));
         AddChild(_tournament);
         AddChild(_status);
 
@@ -96,13 +97,14 @@ public partial class GeneralSettingsPanel : VBoxContainer
         _maxHeroes.Editable = !rules.Tournament;
         _maxHeroes.TooltipText = rules.Tournament ? "A tournament allows one hero a player." : "";
         _arena.SetPressedNoSignal(rules.Arena);
-        _arena.Visible = !rules.Tournament;
+        _arena.Visible = !rules.Tournament || rules.Arena; // a loaded map with both shows the arena that Problems names
         _tournament.SetPressedNoSignal(rules.Tournament);
     }
 
-    private void Change(Func<ScenarioRules, ScenarioRules> change)
+    private void Change(Func<ScenarioRules, ScenarioRules> change) => Show(_editor.Map.SetRules(change(_editor.Scenario.Rules)));
+
+    private void Show(EditResult result)
     {
-        var result = _editor.Map.SetRules(change(_editor.Scenario.Rules));
         _status.Text = RulesRefusal(result);
         if (result != EditResult.Ok)
         {

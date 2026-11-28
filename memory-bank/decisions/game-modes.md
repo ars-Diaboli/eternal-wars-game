@@ -648,7 +648,7 @@ the agent's and stand unless the owner changes them.
 - **Not done**: a campaign editor, cutscenes, per-map starting bonuses, the prologue map (CAMP-1, its own roadmap item).
 
 ### ADR-366: Tournament mode: two players build up apart, then one battle decides (owner, ADR-097, ADR-158, ADR-197, 2026-11-27)
-**Status**: accepted (2026-11-27), being built: the switch, the length and their checks; the game flow to the deciding battle; the battle's rules; isolation; tournament templates, the generator's tournament, the shipped Twin Vales and the map validator's checks; every tournament day at once on the LAN; battles and questions per player on every simultaneous day (each open turn's own, replacing ADR-197's one at a time); the computer's play for the deadline; the new-game screen's Tournaments tab, the adventure HUD, the battle's greyed buttons and the result screen; the editor's switch, the missing start zone's fix and the template inspector's flag. [tournament-plan.md](../../docs/papers/tournament-plan.md) holds the guide and the plan; the
+**Status**: accepted (2026-11-27), built and checked (2026-11-28): the switch, the length and their checks; the game flow to the deciding battle; the battle's rules; isolation; tournament templates, the generator's tournament, the shipped Twin Vales and the map validator's checks; every tournament day at once on the LAN; battles and questions per player on every simultaneous day (each open turn's own, replacing ADR-197's one at a time); the computer's play for the deadline; the new-game screen's Tournaments tab, the adventure HUD, the battle's greyed buttons and the result screen; the editor's switch, the missing start zone's fix and the template inspector's flag; the checks in Godot and the AI runs. [tournament-plan.md](../../docs/papers/tournament-plan.md) is the report; the
 roadmap's "Tournament mode" section tracks it. The owner answered TRN-1 to TRN-9 the same day (below).
 
 - **The owner's request**:
@@ -704,8 +704,16 @@ roadmap's "Tournament mode" section tracks it. The owner answered TRN-1 to TRN-9
   - A garrison hero counts towards the tournament's one hero (it does not on other maps, ADR-112), so it cannot be doubled by hiding one.
   - The battle's Retreat and Surrender are greyed out with the reason; the result screen is the arena's, saying tournaments are not
     ranked and how long the building up lasted, with "Play again".
+  - Hot-seat, each person's turn opens behind a hand-over screen that covers the map and the HUD until that person takes it; the turn
+    timer stands still meanwhile.
 - **The editor** (plan step 6; the wording is the agent's):
-  - The General tab's Tournament switch sets the hero limit to 1 and turns the arena off.
+  - The General tab's Tournament switch sets the hero limit to 1, clears the players' own limits and turns the arena off, in one step.
   - A missing start zone is fixed only when the ground is clearly the player's: what its heroes and towns walk to without meeting the
     other player's start or zone.
   - The template inspector's Tournament flag sets the template's hero limit to 1.
+- **The checks** (plan step 7; the rules are the agent's, from TRN-6):
+  - A tournament battle no person fights is shown on no screen: the computer's fights in its zone would show the person its army.
+  - Over the LAN a player's view holds the heroes of the battle it fights, seen or not, so the final battle opens on the computer of a
+    player who never saw the other champion. A champion from a garrison has come out of its town by then; the town stays unseen.
+  - Over the LAN nothing tells a tournament player of the other's battles. The end of the other's day is the only news: on every day
+    played at once the host's chat says "Red has ended the day." while others still play it.

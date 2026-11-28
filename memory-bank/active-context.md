@@ -9,6 +9,13 @@ ADR-242). The November refactoring plan is closed (ADR-226; the plan is in [docs
 Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- Swamp Bestiary portraits generated from the paired sheets and cut (W1–W10 and the backdrop, 2026-11-28), the faction's first,
+  with the neutral shaman and witch doctor from W10; the reviewed W1, W2, W4 to W10 (ADR-394 to ADR-402): athletic lizardmen, a
+  turtle-like kappa shaman, a yellow-brown serpent fly, a teal greater basilisk, plated and teal-to-maroon gorgons, great-horned-owl
+  owlbears, lithe wyverns, a teal-accented hydra and a hooded shaman.
+- Stronghold portraits generated from the paired sheets and cut (T1–T9 and the backdrop, 2026-11-28), the faction's first; the
+  reviewed T2, T5, T8 and T9 (ADR-390 to ADR-393): harpies with semi-folded bird wings, leaner ogres with short tusks and a
+  fireless shaman, grey cyclopes and hunched ape-like behemoths after the owner's reference.
 - Inferno portraits regenerated from the paired sheets and cut (I1–I11 and the backdrop, 2026-11-27), with the reviewed I1–I8 and
   I10 (ADR-381 to ADR-389): the hounds, tormentors, succubi, pit fiends, juggernauts and horned demons follow the owner's reference
   art; the gog, magog and breeders are the neutral portraits from I10–I11.
@@ -24,7 +31,7 @@ Detail: [roadmap.md](roadmap.md).
   creatures, the thanes, the efreet and the golden golem; each cell centred on a square so the whole figure sits in the middle 2:3.
   Prompt follow-ups not yet regenerated: the pale naga (ADR-367), the efreet and golden golem (ADR-368), metal-skinned titans in
   Greek helmets (ADR-369).
-- Tournament mode planned (ADR-366, owner): [tournament-plan.md](../docs/papers/tournament-plan.md) and the roadmap's section; TRN-1 …
+- Tournament mode (ADR-366, owner): [tournament-plan.md](../docs/papers/tournament-plan.md) and the roadmap's section; TRN-1 …
   TRN-9 answered (the proposals; lengths 1–14 days then whole weeks up to 12; battles at the same time on every simultaneous day).
   Step 1 begun: `ScenarioRules.Tournament` (map format v45), `GameOptions.TournamentDays`, `TournamentRules` (lengths, `MapProblems`,
   `WhyNot`), the validator's `TournamentCheck` and `GameSession.Start` refusing an unfit tournament; the game flow: the arena's battle
@@ -51,7 +58,11 @@ Detail: [roadmap.md](roadmap.md).
   in the first prompt), the result screen's wording and "Play again", smoke `game-tournament`; a garrison hero counts towards the one
   hero, and rumours tell nothing of the other player. Step 6 done: the editor's Tournament switch (`TournamentRules.Switched`), the
   missing start zone's fix (`StartZoneFix`), the template inspector's flag (`TemplateEditorSession.WithTournament`);
-  `TournamentEditorTests`, smoke `editor-tournament`. Next: the rest of step 5 (the hot-seat hand-over), then step 7's checks.
+  `TournamentEditorTests`, smoke `editor-tournament`. Step 7 done: seen in Godot against the computer, hot-seat and on the LAN, 120 AI
+  runs; the rules in victory-and-modes.md, the plan is the report. Fixed: `TournamentRules.Shown` (the computer's battles on no screen),
+  `PlayerViewFeed` (a battle's heroes in its sides' views), `DecisionPanel` (no word of the other's battles); built: `GameHost`'s
+  "Red has ended the day." (TRN-6). Step 5's hot-seat hand-over built: `GameDirector.HandOver` (the clock still meanwhile),
+  `HandOverPanel`, smoke `game-tournament-hot-seat`. The tournament is done.
 - Creature prompts as sheets of two (ADR-360): the base and its upgrade side by side, each creature whole in a 2:3 cell, files still
   512 × 512 (the cell centred on a square); every faction's sheets renumbered (Haven H1–H9 … neutral X1–X3); the owner's later
   reviews folded in (Bestiary W1–W5, Academy A1, Conflux ADR-357 to ADR-359, the toad-like kappa ADR-365). New creatures, all

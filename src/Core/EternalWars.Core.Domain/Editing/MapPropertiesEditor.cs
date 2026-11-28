@@ -55,6 +55,46 @@ public sealed class MapPropertiesEditor
     }
 
     /// <summary>
+    /// The tournament switch (ADR-366, <see cref="TournamentRules.Switched"/>), as one undo step. Turned on, the hero limit becomes 1 for the map
+    /// and for every player (the players' own limits go) and the arena goes; refused while a player has more than one hero. Turned off, only the
+    /// switch goes.
+    /// </summary>
+    public EditResult SetTournament(bool on)
+    {
+        var result = EditResult.Ok;
+        if (!on)
+        {
+            _context.AsOneStep("Make the map no tournament", () => result = SetRules(TournamentRules.Switched(Scenario.Rules, on: false)));
+            return result;
+        }
+
+        if (Scenario.Players.Any(p => Scenario.HeroesOf(p.Id).Count() > 1))
+        {
+            return EditResult.HeroLimit;
+        }
+
+        _context.AsOneStep("Make the map a tournament", () =>
+        {
+            result = SetRules(TournamentRules.Switched(Scenario.Rules, on: true));
+            if (result != EditResult.Ok)
+            {
+                return;
+            }
+
+            foreach (var player in Scenario.Players.Where(p => p.MaxHeroes is not null))
+            {
+                var id = player.Id;
+                _context.Edit($"Set hero limit of {player.Name}", () => Scenario.GetPlayer(id).MaxHeroes, value =>
+                {
+                    Scenario.SetHeroLimit(id, value);
+                    _context.Publish(new PlayerSlotsChanged());
+                }, null);
+            }
+        });
+        return result;
+    }
+
+    /// <summary>
     /// Buries the Grail at <paramref name="position"/> (ADR-140), or takes it away (null: drawn when the game starts on a map with obelisks). Refused
     /// off the map, nearer the edge than <see cref="GrailRules.EdgeDistance"/> (or on a map too small for a Grail) and where a hero could not
     /// dig (impassable ground, a road, an object).

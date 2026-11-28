@@ -489,6 +489,13 @@ public sealed class GameHost : ICommandRoute, IDisposable
     /// </summary>
     private void Capture(IEvent e)
     {
+        if (e is TurnEnded ended && _session.State.IsSimultaneous)
+        {
+            // A person ended its turn of a day played at once while others still play it: everyone is told (ADR-366, TRN-6), the only news a
+            // tournament's players get of each other. The last one's end opens the next day, which says so itself.
+            _chat.Announce($"{_session.State.GetPlayer(ended.Player).Name} has ended the day.");
+        }
+
         // The sides are kept per turn, so a battle's last event, published once it is over, still reaches its sides.
         var turn = _session.State.SlotPlayer?.Value ?? -1;
         if (_session.State.Battle is { } battle)
